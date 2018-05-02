@@ -1,3 +1,14 @@
 # FSArl
-Perform Fluid-Structure interactions using the Arlequin method
-The fluid-structure problem is solved in a partitioned way, with a block Gauss-Seidel with Aitken relaxation scheme.
+Perform Fluid-Structure interactions using the Arlequin method.
+
+- To compile use the command 
+
+	<CODE> make f </CODE>
+
+- To run use
+
+	<CODE> make run4(run8,run16,etc.) </CODE>
+
+- To clear all files created running the program use
+
+	<CODE> make clear </CODE>

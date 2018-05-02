@@ -92,13 +92,13 @@ int main(int argc, char **args) {
      
     coarseModel.dataReading("coarse_cyl.txt","mirror_coarse.txt");
  
-    control.dataReading("control.txt","mirror_control.txt");
+    control.dataReading("fluid_interaction3.txt","mirror_control.txt");
 
-    //char in_solid[32] = "cantilever.txt";
+    char in_solid[32] = "cantilever.txt";
      
-    //coupledProblem.setFluidAndSolidModels(control,in_solid);
+    coupledProblem.setFluidAndSolidModels(control,in_solid);
  
-    //coupledProblem.solveFSIProblemGaussSeidel(1000);
+    coupledProblem.solveFSIProblemGaussSeidel(1000);
 
     //control.dataReading(".txt","mirror_coarse.txt");
   
@@ -134,9 +134,9 @@ int main(int argc, char **args) {
     //   1 - Transient problem 
  
     
-    arlequinProblem.setFluidModels(coarseModel, fineModel) ;
+    // arlequinProblem.setFluidModels(coarseModel, fineModel) ;
       
-    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
+    // arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
          
    
   
