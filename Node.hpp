@@ -15,6 +15,8 @@
 #define NODE_H
 
 #include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+
 
 #include <utility>
 #include <vector>
@@ -36,51 +38,51 @@ public:
 
 private:
     //Main variables
-    VecLocD          coord_;                //Nodal coordinate
-    VecLocD          initialCoord_;         //Nodal coordinate
-    VecLocD          coordUpdated_;         //Nodal coordinate
-    int              index_;                //Node index
-    VecLocD          previousCoord_;         //Nodal coordinate
+    VecLocD          coord_;                  //Nodal coordinate vector
+    VecLocD          initialCoord_;           //Initial nodal coordinate vector
+    VecLocD          coordUpdated_;           //Updated nodal coordinate vector
+    int              index_;                  //Node index
+    VecLocD          previousCoord_;          //Previous nodal coordinate vector
 
 
     //Fluid
-    int              constrainType[3];      //Constrain direction
-    double           constrainValue[3];     //Nodal prescribed velocity
+    int              constrainType[3];        //Constrain direction
+    double           constrainValue[3];       //Nodal prescribed velocity
 
-    int              constrainTypeLaplace[3];//Constrain direction
-    double           constrainValueLaplace[3];//Nodal prescribed velocity
+    int              constrainTypeLaplace[3]; //Constrain direction Laplace
+    double           constrainValueLaplace[3];//Nodal prescribed value
 
-    VecLocD          velocity_;             //Nodal velocity
-    VecLocD          previousVelocity_;     //Previous time step velocit
+    VecLocD          velocity_;               //Nodal velocity
+    VecLocD          previousVelocity_;       //Previous time step velocity
 
-    VecLocD          acceleration_;         //Nodal acceleration
-    VecLocD          previousAcceleration_; //Previous time step acceleration
+    VecLocD          acceleration_;           //Nodal acceleration
+    VecLocD          previousAcceleration_;   //Previous time step acceleration
 
-    double           pressure_;             //Nodal pressure 
-    double           previousPressure_;     //Previous time step pressure
+    double           pressure_;               //Nodal pressure 
+    double           previousPressure_;       //Previous time step pressure
 
-    double           divergent_;            //Velocity divergent
+    double           divergent_;              //Velocity divergent
 
-    VecLocD          meshVelocity_;         //Nodal velocity
-    VecLocD          previousMeshVelocity_; //Previous time step velocit
+    VecLocD          meshVelocity_;           //Nodal mesh velocity
+    VecLocD          previousMeshVelocity_;   //Previous time step mesh velocity
 
     //Arlequin
-    int              elemCorresp;           //Element correspondence 
-    VecLocD          xsiCorresp;            //Adim coord correspond
+    int              elemCorresp;             //Element correspondence
+    VecLocD          xsiCorresp;              //Adimensional coord correspond
 
-    double           presArlequin_;         //Glue zone pressure    
-    VecLocD          velArlequin_;          //Glue zone velocity
+    double           presArlequin_;           //Glue zone pressure    
+    VecLocD          velArlequin_;            //Glue zone velocity
 
-    VecLocD          lagMultiplier_;        //Nodal Lagrange Multiplier value
-    double           weightFunction_;       //Nodal Energy Weight Function
-    double           distGlueZone;
+    VecLocD          lagMultiplier_;          //Nodal Lagrange Multiplier value
+    double           weightFunction_;         //Nodal Energy Weight Function
+    double           distGlueZone;            //Signaled distance to glue zone
 
     //Potential problem
-    VecLocD          gradient_;             //Potential gradient
-    double           potential_;            //Potential value
+    VecLocD          gradient_;               //Potential gradient
+    double           potential_;              //Potential value
     
 public:
-    //Defines a node with index and coordinates
+    //!Constructor - Defines a node with index and coordinates
     Node(VecLocD& coor, int index){
         coord_ = coor;
         initialCoord_ = coor;
@@ -106,12 +108,16 @@ public:
     //Clear all nodal variables
     void clearVariables();
 
-    //Returns the nodal vector of coordinates
+    //Returns the nodal coordinate vector
     VecLocD getCoordinates() {return coord_;};
     VecLocD getInitialCoordinates() {return initialCoord_;};
     VecLocD getPreviousCoordinates() {return previousCoord_;;}
     VecLocD getUpdatedCoordinates() {return coordUpdated_;};
+
+    //Increment coordinate vector
     void incrementCoordinate(int dir, double u);
+
+    //Sets previous coordinate vector
     void setPreviousCoordinates(int dir, double u);
 
     //Set the nodal coordinates
@@ -119,13 +125,18 @@ public:
         coord_ = coor;};
     void setUpdatedCoordinates(VecLocD& coor){
         coordUpdated_ = coor;};
+
+    //Updates nodal coordinates
     void updateCoordinate(int dir, double val){
         coord_(dir) = val;};
+    
+    //Sets nodal correspondence of overlapped mesh
     void setNodalCorrespondence(double elem, const VecLocD& xsi){
         elemCorresp = elem;
         xsiCorresp = xsi;
     };
 
+    //Gets nodal correspondence of overlapped mesh
     int getNodalElemCorrespondence() {return elemCorresp;}
     VecLocD getNodalXsiCorrespondence() {return xsiCorresp;}
     
@@ -184,10 +195,10 @@ public:
     double getWeightFunction() {return weightFunction_;};
     void setPressureArlequin(double p) {presArlequin_ = p;};
     double getPressureArlequin() {return presArlequin_;};
-    
     void setVelocityArlequin(int dir, double v) {velArlequin_(dir) = v;};
     double getVelocityArlequin(int dir) {return velArlequin_(dir);};
-    
+
+    //Signaled distance
     void setDistFunction(double dist) {distGlueZone = dist;};
     double getDistFunction(){return distGlueZone;};
 
@@ -210,7 +221,6 @@ public:
 //------------------------------------------------------------------------------
 template<>
 void Node<2>::clearVariables(){
-
     pressure_ = 0.;          previousPressure_ = 0.;  divergent_ = 0.;
     elemCorresp = 0;
 
@@ -272,7 +282,7 @@ void Node<3>::clearVariables(){
 //------------------------------------------------------------------------------
 template<>
 void Node<2>::setVelocity(double *u){
-    ///Sets Velocity value
+    //Sets Velocity value
     velocity_(0) = u[0];
     velocity_(1) = u[1]; 
     return;
@@ -280,7 +290,7 @@ void Node<2>::setVelocity(double *u){
 
 template<>
 void Node<3>::setVelocity(double *u){
-    //All element nodes
+    //Sets Velocity value
     velocity_(0) = u[0];
     velocity_(1) = u[1]; 
     velocity_(2) = u[2]; 

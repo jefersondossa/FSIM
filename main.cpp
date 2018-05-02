@@ -30,30 +30,18 @@
 static char help[] = "Solves the Incompressible flow problem";
 
 // C++ standard libraries
-#include <cassert>
 #include <climits>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <limits>
-#include <math.h>
 #include <string>
-#include <utility>
-#include <vector>
 #include <bitset>
  
 // Boost libraries
-#include <boost/array.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/progress.hpp>
 #include <boost/thread.hpp>
-#include <boost/timer.hpp> 
 
-// PETSc libraries
-#include <metis.h>
-#include <petscksp.h> 
+
  
 // Developed Header Files
 #include "FSInteraction.hpp"
@@ -92,13 +80,13 @@ int main(int argc, char **args) {
      
     coarseModel.dataReading("coarse_cyl.txt","mirror_coarse.txt");
  
-    control.dataReading("fluid_interaction3.txt","mirror_control.txt");
+    // control.dataReading("fluid_interaction3.txt","mirror_control.txt");
 
-    char in_solid[32] = "cantilever.txt";
+    // char in_solid[32] = "cantilever.txt";
      
-    coupledProblem.setFluidAndSolidModels(control,in_solid);
+    // coupledProblem.setFluidAndSolidModels(control,in_solid);
  
-    coupledProblem.solveFSIProblemGaussSeidel(1000);
+    // coupledProblem.solveFSIProblemGaussSeidel(1000);
 
     //control.dataReading(".txt","mirror_coarse.txt");
   
@@ -134,9 +122,9 @@ int main(int argc, char **args) {
     //   1 - Transient problem 
  
     
-    // arlequinProblem.setFluidModels(coarseModel, fineModel) ;
+    arlequinProblem.setFluidModels(coarseModel, fineModel) ;
       
-    // arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
          
    
   

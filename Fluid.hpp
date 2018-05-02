@@ -17,6 +17,10 @@
 #include "Element.hpp"
 #include "Boundary.hpp"
 
+// PETSc libraries
+#include <metis.h>
+#include <petscksp.h> 
+
 template<int DIM>
 class Fluid{
 public:

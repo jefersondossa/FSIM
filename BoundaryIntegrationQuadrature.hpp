@@ -14,6 +14,8 @@
 #ifndef BOUND_INTEG_QUADRATURE_H
 #define BOUND_INTEG_QUADRATURE_H
 
+#include "BoundaryShapeFunction.hpp"
+
 template<int DIM>
 class BoundaryIntegQuadrature{
 public:
