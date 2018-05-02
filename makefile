@@ -22,7 +22,7 @@ porticomb.o: porticomb.for
 	@ ${FCOMPILER} -c porticomb.for
 
 clear:
-	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida
+	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt
 
 run1:
 	@$ mpirun -np 1 ./f
