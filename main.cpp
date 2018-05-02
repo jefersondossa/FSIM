@@ -5,19 +5,19 @@
 //------------------------------Sao Carlos - 2017-------------------------------
 //------------------------------------------------------------------------------
  
-//------------------------------------------------------------------------------
-//-----Software developed for analysis of Fluid-Structure Interaction (FSI)-----
-//----problems with shell structures and incompressible fluid. The fluid is-----
-//----modeled in Arlequin framework and Arbitrary Lagrangian-Eulerian (ALE)-----
-//----description in mixed formulation, with triangular/tetrahedral elements----
-//-with quadratic (six/ten nodes) and linear (four/three nodes) approximations--
-//---for velocity and pressure fields, respectively. The structure is modeled---
-//--with shell elements free rotations as degrees of freedom in the nonlinear---
-//--Positional Finite Element Method framework. Triangular elements with cubic--
-//-approximation (ten nodes) and seven degrees of freedom per node (three nodal-
-//---positions, three components of unconstrained vector and strain rate. The---
-//--fluid-shell coupling is performed by a partitioned loosely coupled scheme.--
-//------------------------------------------------------------------------------
+///-----------------------------------------------------------------------------
+///----Software developed for analysis of Fluid-Structure Interaction (FSI)-----
+///---problems with shell structures and incompressible fluid. The fluid is-----
+///---modeled in Arlequin framework and Arbitrary Lagrangian-Eulerian (ALE)-----
+///---description in mixed formulation, with triangular/tetrahedral elements----
+///with quadratic (six/ten nodes) and linear (four/three nodes) approximations--
+///--for velocity and pressure fields, respectively. The structure is modeled---
+///-with shell elements free rotations as degrees of freedom in the nonlinear---
+///-Positional Finite Element Method framework. Triangular elements with cubic--
+///approximation (ten nodes) and seven degrees of freedom per node (three nodal-
+///--positions, three components of unconstrained vector and strain rate. The---
+///-fluid-shell coupling is performed by a partitioned loosely coupled scheme.--
+///-----------------------------------------------------------------------------
  
 //------------------------------------------------------------------------------
 //---------------------------------Developed by---------------------------------
