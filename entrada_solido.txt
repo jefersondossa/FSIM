@@ -1,0 +1,148 @@
+quer ler posicao inicial diferente de repouso (sim=1, nao=0)
+0
+nnos(numero de nos),nel(numero de elementos),nfc(numero de fases de carga),tol,ngf(no para saida),ngf1(nopara saida)
+31,10,1000,0.0000000001,7,24
+numero de nós multiplos (colocar zero se nao for colapso progressivo)
+0
+nos multiplos, substitutos (até 4) (não colocar nada se nao for colapso)
+pontos de gauss altura, frequencia de impressao
+5,1
+elemento, numero de nos
+1	4
+2	4
+3	4
+4	4
+5 4
+6 4
+7 4
+8 4
+9 4
+10 4
+incidencia      
+elemento,no1.....nofinal
+1	1	2	3	4
+2	4 5	6	7	
+3	7 8 9	10	
+4	10 11 12 13	
+5 13 14 15 16
+6 16 17 18 19
+7	19	20	21	22
+8	22	23	24	25
+9	25	26	27	28
+10	28	29	30	31
+tipo do no de extremidade
+elemento, no1, tipo, nof, tipo !0 restrito !1 livre
+1	0	0
+2	0	0
+3	0	0
+4	0	0
+5 0 0
+6 0 0
+7 0 0
+8 0 0
+9 0 0
+10 0 0
+coordenadas
+ no,x,y
+1	0	0	0
+2	0.0333333333	0	0
+3	0.0666666667	0	0
+4	0.1	0	0
+5	0.1333333333	0	0
+6	0.1666666667	0	0
+7	0.2	0	0
+8	0.2333333333	0	0
+9	0.2666666667	0	0
+10	0.3	0	0
+11	0.3333333333	0	0
+12	0.3666666667	0	0
+13	0.4	0	0
+14	0.4333333333	0	0
+15	0.4666666667	0	0
+16	0.5	0	0
+17	0.5333333333	0	0
+18	0.5666666667	0	0
+19	0.6	0	0
+20	0.6333333333	0	0
+21	0.6666666667	0	0
+22	0.7	0	0
+23	0.7333333333	0	0
+24	0.7666666667	0	0
+25	0.8	0	0
+26	0.8333333333	0	0
+27	0.8666666667	0	0
+28	0.9	0	0
+29	0.9333333333	0	0
+30	0.9666666667	0	0
+31	1	0	0
+propriedades dos elementos
+elemento,e   ,mi,altura,area,ybarra,momin,ro,cm
+1	250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+2	250	0	0.002 0.002	0.001	6.6667E-010	500.  0
+3	250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+4	250	0	0.002	0.002	0.001	6.6667E-010	500.  0
+5	250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+6	250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+7	250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+8	250	0	0.002	0.002	0.001	6.6667E-010	500.  0
+9	250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+10 250	0	0.002	0.002	0.001	6.6667E-010	500.	0
+resistencia dos elementos
+elemento, nrd,vrd,mrd (valores altos quando nao estiver simulando colapso)
+1	60790000	37485000	10318000
+2	60790000	37485000	10318000
+3	60790000	37485100	10318100
+4	60790000	37485100	10318100
+5	60790000	37485100	10318100
+6	60790000	37485100	10318100
+7	60790000	37485100	10318100
+8	60790000	37485100	10318100
+9	60790000	37485100	10318100
+10 60790000	37485100	10318100
+numero de nos com velocidade inicial
+1
+no, velox, vely, velz
+1 0 0 
+Impacto sem atrito, região quadrada
+Entrar com o centro e a distância das faces ao centro
+xp,yp,xc,yc,coeficiente de atrito ao impacto
+-100000,-100000,1000000,100000,0.
+primeira fase de carga
+numero de nos restritos, numero de nos carregados na fase, num. passos de tempo
+2,1,20000
+nelcar(num. ele. carr. qx,qy),nelnco(num. ele. carr. qn,qt),num. ele. temp.
+6,1,1
+leitura dos parametros de Newmark e passo de tempo
+beta, gama, dt !0.25 0.5, dt normal ! 0.5 1.5 dt (impacto)
+.25,.5,.1
+restricao de graus de liberdade
+no,ko1,ko2,ko3
+1,1,1,0
+31,1,1,0
+leitura dos valores prescritos
+no,ux,uy,tetaz
+1,0,0,0
+31,0,0,0
+comportamento temporal do movimento de bas (ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk)
+0,1,0,0,0,0,0,0,0,0,0
+nos com carregamento prescrito
+no,f1,f2,m
+16 0.0  -.0 0.0
+cargas distribuidas nas extremidades
+elemeto, qx no inicial, qx no final, qy no inicial, qy no final coordenadas
+1	0	0	-0.00 -0.00 
+2	0	0	-0.00 -0.00 
+3	0	0	-0.00 -0.00 
+4	0	0	-0.00 -0.00 
+5	0	0	-0.00 -0.00 
+6	0	0	-0.00 -0.00 
+cargas distribuidas nas extremidades nao conservativas
+elemeto, qn no inicial, qn no final, qt no inicial, qt no final coordenadas
+1 0 0 0 0
+temeratura constante ao longo do elemento
+elemento temp. acima, temp. abaixo, coeficiente de dilatacao termica
+1,.0,0,.0
+comportamento temporal da carga (ca,cb,cc,cd,ce,cf,cg,ch,ci,cj,ck)
+1,0,0,0,0,0,0,0,0,0,0 !terminou a fase 1 
+
+
