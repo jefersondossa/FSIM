@@ -17,6 +17,8 @@
 #include "Fluid.hpp"
 #include "Glue.hpp"
 
+#include <math.h>
+
 template<int DIM>
 class Arlequin{
 public:

@@ -15,7 +15,10 @@
 #define FSINTERACTION_H
 
 #include "Arlequin.hpp"
-#include <string>
+
+#include <boost/timer.hpp> 
+#include <boost/progress.hpp>
+
 
 extern "C" {void preprocessing_(char *solid_reading);};
 extern "C" {void solveframestructure_(int *ipt);};

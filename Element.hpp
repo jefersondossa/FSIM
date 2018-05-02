@@ -16,7 +16,6 @@
 
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
-#include "BoundaryShapeFunction.hpp"
 #include "IntegrationQuadrature.hpp"
 #include "IntegrationQuadrature11.hpp"
 //#include "PartitionedQuadrature2.hpp"
@@ -52,7 +51,6 @@ public:
 
 private:
     QuadShapeFunction<DIM> shapeQuad; //Quadratic shape function
-    LinShapeFunction<DIM>  shapeLin;  //Linear shape function  
     BoundShapeFunction<DIM>shapeBound;//Boundary shape function
     SpecialQuad            sQuad;     //Integration quadrature
     NormalQuad             nQuad;     //Integration quadrature
@@ -580,13 +578,10 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
     
     typename QuadShapeFunction<2>::ValueDDeriv ddphi;
     typename QuadShapeFunction<2>::ValueDeriv  dphi;
-    typename LinShapeFunction<2>::ValueDeriv   dphip;
     
     shapeQuad.evaluateGradient(xsi,dphi);
     shapeQuad.evaluateHessian(xsi,ddphi);
     
-    shapeLin.evaluateGradient(xsi,dphip);
-
     dphi_dx.clear();
     ddphi_dx.clear();
 
@@ -615,12 +610,9 @@ void Element<3>::getSpatialDerivatives(ublas::bounded_vector<double,3>& xsi) {
 
     typename QuadShapeFunction<3>::ValueDDeriv ddphi;    
     typename QuadShapeFunction<3>::ValueDeriv  dphi;
-    typename LinShapeFunction<3>::ValueDeriv   dphip;
 
     shapeQuad.evaluateGradient(xsi,dphi);
     shapeQuad.evaluateHessian(xsi,ddphi);
-
-    shapeLin.evaluateGradient(xsi,dphip);
 
     dphi_dx.clear();
     ddphi_dx.clear();

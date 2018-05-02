@@ -15,7 +15,7 @@
 #define INTEG_QUADRATURE_H
 
 #include "QuadraticShapeFunction.hpp"
-#include "LinearShapeFunction.hpp"
+//#include "LinearShapeFunction.hpp"
 
 template<int DIM>
 class IntegQuadrature{
@@ -36,7 +36,6 @@ public:
 
     //Defines vector of nodal values
     typedef ublas::bounded_vector<double, 4*DIM-2>      NodalValuesQuad;
-    typedef ublas::bounded_vector<double, DIM+1>        NodalValuesLin;
 
 public:
     //Returns the index of the first integration point
@@ -57,7 +56,7 @@ public:
   
     //Interpolate variables
     double interpolateQuadraticVariable(NodalValuesQuad nValues, int point);
-    double interpolateLinearVariable(NodalValuesLin nValues, int point);
+
 
 private:
     //List of integration points coordinates
@@ -68,12 +67,10 @@ private:
 
     //Defines shape functions
     QuadShapeFunction<DIM> shapeQuad;
-    LinShapeFunction<DIM>  shapeLin;
 
     //Values of velocity shape functins
     typename QuadShapeFunction<DIM>::Values      phi_;     
-    //Values of pressure shape functins
-    typename LinShapeFunction<DIM>::Values       phip_;    
+
 };
 
 //------------------------------------------------------------------------------
@@ -272,27 +269,5 @@ double IntegQuadrature<3>::interpolateQuadraticVariable(NodalValuesQuad nValues,
     return int_value;
 };
 
-//------------------------------------------------------------------------------
-//-----------COMPUTES THE VALUE INTERPOLATED IN THE INTEGRATION POINT-----------
-//------------------------------------------------------------------------------
-template<>
-double IntegQuadrature<2>::interpolateLinearVariable(NodalValuesLin nValues, 
-                                                     int point){
-    
-    ublas::bounded_vector<double, 2> xsi;
-
-    double int_value = 0.;
-
-    xsi(0) = PointList(point,0);
-    xsi(1) = PointList(point,1);
-    
-    shapeLin.evaluate(xsi,phip_);
-    
-    for (int i = 0; i < 3; i++){
-        int_value += nValues(i) * phip_(i);
-    };
-
-    return int_value;
-};
 
 #endif
