@@ -1,0 +1,26 @@
+/** \file mainpage.dox
+
+\mainpage Presentation
+
+This project aims to solve 2D Fluid-Structure Interaction (FSI) problems with frame structures and incompressible flow. The fluid is modeled in the Arlequin framework and Arbitrary Lagrangian-Eulerian (ALE) description with mixed fomulation and stabilized finite elements (PSPG,SUPG and LSIC) with quadratic approximation for both velocity and pressure. The frame structure is modeled with a nonlinear geometric formulation with positions as degrees of freedom. The fluid-structure coupling is performed by a block Gauss-Seidel with Aitken relaxation scheme.
+
+The Arlequin method allows to overlap two or more sobdomains in a global one. With this technique one can decrease the number of dregrees of freedom needed to solve the FSI problem by refining only regions of interest in a more flexible way than the h and p methods.
+
+Currently, this project can solve incompressible flow problems with the Arlequin method for non-moving domains and FSI problems with a monomodel for the fluid domain.
+
+The project is developed in C++ and Fortran and the following external packages are employed:
+
+1. boost C++ library (https://www.boost.org/) - algebraic manipulation of matrices and vectors;
+2. ParMETIS (http://glaros.dtc.umn.edu/gkhome/metis/parmetis/overview) - parallel domain partitioning;
+3. MUMPS (http://mumps.enseeiht.fr/) - for parallel solving linear systems;
+4. PETSc (https://www.mcs.anl.gov/petsc/) - for parallel solving linear systems and to make the interface with MUMPS and ParMETIS.
+
+Most of this documentation covers the C++ implementation. 
+
+This software is mainly developed at the Structural Engineering Department - EESC/USP (São Carlos - Brazil).
+
+- For more information access https://wikimechanica.eesc.usp.br/start
+- Contact: Jeferson W. D. Fernandes (e-mail:jefersondossa@usp.br)
+- Contributors: J. W. D. Fernandes, R. A. K. Sanches.
+
+ */
