@@ -1074,27 +1074,14 @@ void Element<2>::getElemMatrix(int index){
             double KLSyx = dphi_dx(1,i) * dphi_dx(0,j) * tLSIC_ * dens_;
             double KLSyy = dphi_dx(1,i) * dphi_dx(1,j) * tLSIC_ * dens_;
 
-            double LM = 0.;
-    
-            // if (glueZone){
-            //     if (model){
-            //         //Fine
-            //         // LM = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-            //         //     * phi_(j) * tSUPG_;
-            //     }else{
-            //         //Coarse
-            //         // LM = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-            //         //     * phi_(j) * tSUPG_;
-            //     };
-            // };
             
             jacobianNRMatrix(2*i  ,2*j  ) += (mM + timeScheme_ * dTime_ * 
-                                              (sMxx + Kxx + LM + KLSxx / 
+                                              (sMxx + Kxx + KLSxx / 
                                                timeScheme_ + Cxx + Cuu + Quu))
                 * weight_ * djac_ * intPointWeightFunction(index);
 
             jacobianNRMatrix(2*i+1,2*j+1) += (mM + timeScheme_ * dTime_ *
-                                              (sMyy + Kyy + LM + KLSyy / 
+                                              (sMyy + Kyy + KLSyy / 
                                                timeScheme_ + Cyy + Cvv + Qvv))
                 * weight_ * djac_ * intPointWeightFunction(index);
 
@@ -1106,32 +1093,25 @@ void Element<2>::getElemMatrix(int index){
                 (Kyx + sMyx + Cvu + Qvu) + KLSyx * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index); 
 
-
-            double Qx = 0.;
-            double Qy = 0.;
-            double QSUPGx = 0.;
-            double QSUPGy = 0.;
-
-            //if (compressibility == false){
-                 //SINAL DA PARCELA QUE MULTIPLICA O TSUPG ESTA
-                 //COM SINAL TROCADO NA FORMULAÇAO DO TEZDUYAR
-                 //multipy pressure direction x
-                 QSUPGx = - (dphi_dx(0,i) * phi_(j) + 
-                             (dphi_dx(0,i) * (u_ - umesh_) + 
-                              dphi_dx(1,i) * (v_ - vmesh_)) * 
-                             dphi_dx(0,j) * tSUPG_);
-                 //multiply pressure direction y
-                 QSUPGy = - (dphi_dx(1,i) * phi_(j) +
-                             (dphi_dx(0,i) * (u_ - umesh_) + 
-                              dphi_dx(1,i) * (v_ - vmesh_)) *   
-                             dphi_dx(1,j) * tSUPG_);
-                 //multiply velocity direction x
-                 Qx = dphi_dx(0,i) * phi_(j);
-                 //multiply velocity direction y
-                 Qy = dphi_dx(1,i) * phi_(j);
-                
-                 // };
-                       
+            
+            //SINAL DA PARCELA QUE MULTIPLICA O TSUPG ESTA
+            //COM SINAL TROCADO NA FORMULAÇAO DO TEZDUYAR
+            //multipy pressure direction x
+            double QSUPGx = - (dphi_dx(0,i) * phi_(j) + 
+                               (dphi_dx(0,i) * (u_ - umesh_) + 
+                                dphi_dx(1,i) * (v_ - vmesh_)) * 
+                               dphi_dx(0,j) * tSUPG_);
+            //multiply pressure direction y
+            double QSUPGy = - (dphi_dx(1,i) * phi_(j) +
+                               (dphi_dx(0,i) * (u_ - umesh_) + 
+                                dphi_dx(1,i) * (v_ - vmesh_)) *   
+                               dphi_dx(1,j) * tSUPG_);
+            //multiply velocity direction x
+            double Qx = dphi_dx(0,i) * phi_(j);
+            //multiply velocity direction y
+            double Qy = dphi_dx(1,i) * phi_(j);
+            
+            
             jacobianNRMatrix(12+j,2*i  ) += Qx * dTime_ * weight_ * djac_ 
                 * intPointWeightFunction(index);
             jacobianNRMatrix(12+j,2*i+1) += Qy * dTime_ * weight_ * djac_ 
@@ -1141,71 +1121,38 @@ void Element<2>::getElemMatrix(int index){
             jacobianNRMatrix(2*i+1,12+j) += QSUPGy * dTime_ * weight_ * djac_
                 * intPointWeightFunction(index);
 
+
+            double Hx = dphi_dx(0,i) * phi_(j) * tPSPG_;
+            double Hy = dphi_dx(1,i) * phi_(j) * tPSPG_;
             
-
-            double Hx = 0.;
-            double Hy = 0.;
-            double Gx = 0.;
-            double Gy = 0.;
-            double Guu = 0.;
-            double Gvv = 0.;
-            double Q = 0.;
-
-//if (compressibility == false){
-
-            Hx = dphi_dx(0,i) * phi_(j) * tPSPG_;
-            Hy = dphi_dx(1,i) * phi_(j) * tPSPG_;
-            
-            Gx = dphi_dx(0,i) * ((u_ - umesh_) * dphi_dx(0,j) + 
-                                 (v_ - vmesh_) * dphi_dx(1,j)) * 
+            double Gx = dphi_dx(0,i) * ((u_ - umesh_) * dphi_dx(0,j) + 
+                                        (v_ - vmesh_) * dphi_dx(1,j)) * 
                 tPSPG_;
-            Gy = dphi_dx(1,i) * ((u_ - umesh_) * dphi_dx(0,j) + 
-                                 (v_ - vmesh_) * dphi_dx(1,j)) * 
+            double Gy = dphi_dx(1,i) * ((u_ - umesh_) * dphi_dx(0,j) + 
+                                        (v_ - vmesh_) * dphi_dx(1,j)) * 
                 tPSPG_;
             
+            double Guu = (dphi_dx(0,i) * du_dx * phi_(j) + 
+                          dphi_dx(1,i) * dv_dx * phi_(j)) * tPSPG_;
+            double Gvv = (dphi_dx(0,i) * du_dy * phi_(j) + 
+                          dphi_dx(1,i) * dv_dy * phi_(j)) * tPSPG_;
             
-            Guu = (dphi_dx(0,i) * du_dx * phi_(j) + 
-                   dphi_dx(1,i) * dv_dx * phi_(j)) * tPSPG_;
-            Gvv = (dphi_dx(0,i) * du_dy * phi_(j) + 
-                   dphi_dx(1,i) * dv_dy * phi_(j)) * tPSPG_;
+            double Q = (dphi_dx(0,i) * dphi_dx(0,j) + 
+                        dphi_dx(1,i) * dphi_dx(1,j)) * tPSPG_ / (dens_);
             
-            Q = (dphi_dx(0,i) * dphi_dx(0,j) + 
-                 dphi_dx(1,i) * dphi_dx(1,j)) * tPSPG_ / (dens_);
-            
-//          };
-            double Lx = 0.;
-            double Ly = 0.;
-            
-            // if (glueZone){
-            //     if (model){
-            //         //Fine
-            //         Lx = -dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
-            //         Ly = -dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
-            //     }else{
-            //         //Coarse
-            //         Lx = dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
-            //         Ly = dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
-            //     };
-            // };
 
-
-            jacobianNRMatrix(12+j,2*i  ) += (Hx + (Gx + Guu + Lx) * 
+            jacobianNRMatrix(12+j,2*i  ) += (Hx + (Gx + Guu) * 
                                               timeScheme_ * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index);
-            jacobianNRMatrix(12+j,2*i+1) += (Hy + (Gy + Gvv + Ly) * 
+            jacobianNRMatrix(12+j,2*i+1) += (Hy + (Gy + Gvv) * 
                                               timeScheme_ * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index);
-            jacobianNRMatrix(12+j,12+i) += Q * dTime_ * weight_ * djac_ 
+            jacobianNRMatrix(12+j,12+i) += Q * dTime_ * weight_ * djac_
                 * intPointWeightFunction(index);
         };
     };
 
-    // if(compressibility){
-    //     for (int i = 0; i < 6; i++){
-    //         jacobianNRMatrix(12+i,12+i) = 1.e-15;
-    //     };
-    // };
-    
+   
 
     return;
 };
@@ -1408,25 +1355,6 @@ void Element<2>::getResidualVector(int index){
             ((una_ - umesh_) * dphi_dx(0,i) + (vna_ - vmesh_) * dphi_dx(1,i)) *
             ((una_ - umesh_) * dv_dx + (vna_ - vmesh_) * dv_dy) * tSUPG_ *dens_;
 
-        double LMx = 0.;
-        double LMy = 0.;
-        
-        if (glueZone){
-            if (model){
-                //Fine
-                // LMx = - ((u_ - umesh_) * phi_ + (v_ - vmesh_) * phi_(i))
-                //     * (-lagMx_) * tPSPG_;
-                // LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                //     * (-lagMy_) * tPSPG_;
-            }else{
-                //Coarse
-                // LMx = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                //     * tARLQ_;
-                // LMy = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                //     * tARLQ_;
-            };
-        };
-
         mx *= intPointWeightFunction(index);
         my *= intPointWeightFunction(index);
         Kx *= intPointWeightFunction(index);
@@ -1435,53 +1363,32 @@ void Element<2>::getResidualVector(int index){
         KLSy *= intPointWeightFunction(index);
         Cx *= intPointWeightFunction(index);
         Cy *= intPointWeightFunction(index);
-        // LMx *= intPointWeightFunction(index);
-        // LMy *= intPointWeightFunction(index);
-
-        double Px = 0.;
-        double Py = 0.;
-
-        
-        Px = - (dphi_dx(0,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
-                                           dphi_dx(1,i) * (vna_ - vmesh_))
-                                          * dp_dx * tSUPG_);
-        Py = - (dphi_dx(1,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
-                                           dphi_dx(1,i) * (vna_ - vmesh_))
-                                          * dp_dy * tSUPG_);
+  
+       
+        double Px = - (dphi_dx(0,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
+                                              dphi_dx(1,i) * (vna_ - vmesh_))
+                                             * dp_dx * tSUPG_);
+        double Py = - (dphi_dx(1,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
+                                              dphi_dx(1,i) * (vna_ - vmesh_))
+                                             * dp_dy * tSUPG_);
            
         Px *= intPointWeightFunction(index);
         Py *= intPointWeightFunction(index);
 
-        double Q = 0.;
-        
-//  if(compressibility == false){
-        Q = ((du_dx + dv_dy) * phi_(i)) +//* intPointWeightFunction(index) + 
-            (dphi_dx(0,i) * dp_dx + dphi_dx(1,i) * dp_dy) * 
-            tPSPG_ / dens_ +
-            dphi_dx(0,i) * (u_ - uPrev_) / dTime_ * tPSPG_ +//* intPointWeightFunction(index)+ 
-            dphi_dx(1,i) * (v_ - vPrev_) / dTime_ * tPSPG_ +//* intPointWeightFunction(index) + 
+        double Q = ((du_dx + dv_dy) * phi_(i)) +
+            (dphi_dx(0,i) * dp_dx + dphi_dx(1,i) * dp_dy) * tPSPG_ / dens_ +
+            dphi_dx(0,i) * (u_ - uPrev_) / dTime_ * tPSPG_ +
+            dphi_dx(1,i) * (v_ - vPrev_) / dTime_ * tPSPG_ +
             dphi_dx(0,i) * ((una_ - umesh_) * du_dx +
-                            (vna_ - vmesh_) * du_dy) * tPSPG_ +//* intPointWeightFunction(index) +
+                            (vna_ - vmesh_) * du_dy) * tPSPG_ +
             dphi_dx(1,i) * ((una_ - umesh_) * dv_dx +
-                            (vna_ - vmesh_) * dv_dy) * tPSPG_;// * intPointWeightFunction(index);
-            // if (glueZone){
-            //     if (model){
-            //         //Fine
-            //         Q -= -dphi_dx(0,i) * (-lagMx_) * tPSPG_ / dens_;
-            //         Q -= -dphi_dx(1,i) * (-lagMy_) * tPSPG_ / dens_;
-            //     }else{
-            //         //Coarse
-            //         // Q -= dphi_dx(0,i) * 0. * tARLQ_ / dens_;
-            //         // Q -= dphi_dx(1,i) * 0. * tARLQ_ / dens_;
-            //     };
-            // };
-// };
+                            (vna_ - vmesh_) * dv_dy) * tPSPG_;
 
         Q *= intPointWeightFunction(index);
 
-        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - LMx) * dTime_ * timeScheme_ 
+        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx) * dTime_ * timeScheme_ 
                              - KLSx * dTime_) * weight_ * djac_;
-        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - LMy) * dTime_ * timeScheme_
+        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy) * dTime_ * timeScheme_
                              - KLSy * dTime_) * weight_ * djac_;
         rhsVector(12+i) += -Q * dTime_ * weight_ * djac_;
                               
@@ -2132,11 +2039,22 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                     * phi_(j) * tSUPG_;
             
                 jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
-                    * weight_ * djac_ * intPointWeightFunction(index);
+                    * weight_ * djac_;
                 
                 jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
-                    * weight_ * djac_ * intPointWeightFunction(index);
+                    * weight_ * djac_;
         
+
+                double Lx = 0.;
+                double Ly = 0.;
+                
+                Lx = -dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
+                Ly = -dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
+
+                jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
+                    * weight_ * djac_;
+                jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
+                    * weight_ * djac_;
 
             };
 
@@ -2144,9 +2062,11 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
             double LMy = 0.;
             
             LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                * (-lagMx_) * tSUPG_;
+                * (-lagMx_) * tSUPG_
+                - dphi_dx(0,i) * (-lagMx_) * tPSPG_ / dens_;
             LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                * (-lagMy_) * tSUPG_;
+                * (-lagMy_) * tSUPG_
+                - dphi_dx(0,i) * (-lagMy_) * tPSPG_ / dens_;
 
             rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
             rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
@@ -2192,8 +2112,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
 
 
     //!!!!! O erro é que não pode somar aqui porque senão vai adicionar isso na equação dos multiplicadores também e só deve adicionar na parte da equação do momentum
-    lagrMultMatrix += jacobianNRMatrix;
-    rhsVectorLM += rhsVectorLM;
+    // lagrMultMatrix += jacobianNRMatrix;
+    // rhsVectorLM += rhsVectorLM;
 
 
     return;
@@ -2278,110 +2198,51 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
                     lagrMultMatrix(2*i+1,2*j+1) += 
                         (phiLM_(i) * phi_(j))
                         * weight_ * djac_ * k1;
-                    // jacobianNRMatrix(2*i  ,2*j  ) = 
-                    //     (phiLM_(i) * phi_(j))
-                    //     * weight_ * djac_ * k1;
-                    // jacobianNRMatrix(2*i+1,2*j+1) = 
-                    //     (phiLM_(i) * phi_(j))
-                    //     * weight_ * djac_ * k1;
-                    // jacobianNRMatrix(2*i  ,2*j  ) += 
-                    //     (phiLM_(i) * phi_(j))
-                    //     * weight_ * djac_ * tARLQ_;
-                    // jacobianNRMatrix(2*i+1,2*j+1) += 
-                    //     (phiLM_(i) * phi_(j))
-                    //     * weight_ * djac_ * tARLQ_;
+
+                    //Coarse
+                    double LM = 0.;
+                    LM = ((u_ - umesh_) * phi_(j) + (v_ - vmesh_) * phi_(j))
+                        * phiLM_(i) * tSUPG_;
+                    
+                    jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
+                        * weight_ * djac_;
+                    
+                    jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
+                        * weight_ * djac_;
+                    
+                    
+                    double Lx = 0.;
+                    double Ly = 0.;
+                    
+                    Lx = dphi_dx(0,j) * phiLM_(i) * tPSPG_ / dens_;
+                    Ly = dphi_dx(1,j) * phiLM_(i) * tPSPG_ / dens_;
+                    
+                    jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
+                        * weight_ * djac_;
+                    jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
+                        * weight_ * djac_;    
+                    
                 };
+
+          
+                double LMx = 0.;
+                double LMy = 0.;
+                
+                LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                    * (lagMx_) * tSUPG_
+                    - dphi_dx(0,i) * (lagMx_) * tPSPG_ / dens_;
+                LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                    * (lagMy_) * tSUPG_
+                    - dphi_dx(0,i) * (lagMy_) * tPSPG_ / dens_;
+                
+                rhsVector(2*i  ) += (LMx * dTime_ * timeScheme_) * 
+                    weight_ * djac_;
+                rhsVector(2*i+1) += (LMy * dTime_ * timeScheme_) * 
+                    weight_ * djac_;
             };
 
 
-            // if(xsi(0) > 0.5){
-            //     for (int i = 0; i < 12; i++){
-            //         jacobianNRMatrix(2*0  ,i) = 0.;
-            //         jacobianNRMatrix(2*0+1,i) = 0.;
-            //         jacobianNRMatrix(i,2*0  ) = 0.;
-            //         jacobianNRMatrix(i,2*0+1) = 0.;
-
-            //         jacobianNRMatrix(2*2  ,i) = 0.;
-            //         jacobianNRMatrix(2*2+1,i) = 0.;
-            //         jacobianNRMatrix(i,2*2  ) = 0.;
-            //         jacobianNRMatrix(i,2*2+1) = 0.;
-
-            //         jacobianNRMatrix(2*5  ,i) = 0.;
-            //         jacobianNRMatrix(2*5+1,i) = 0.;
-            //         jacobianNRMatrix(i,2*5  ) = 0.;
-            //         jacobianNRMatrix(i,2*5+1) = 0.;
-            //     };
-            // }else{
-            //     if(xsi(1) > 0.5){
-            //         for (int i = 0; i < 12; i++){
-            //             jacobianNRMatrix(2*0  ,i) = 0.;
-            //             jacobianNRMatrix(2*0+1,i) = 0.;
-            //             jacobianNRMatrix(i,2*0  ) = 0.;
-            //             jacobianNRMatrix(i,2*0+1) = 0.;
-                        
-            //             jacobianNRMatrix(2*1  ,i) = 0.;
-            //             jacobianNRMatrix(2*1+1,i) = 0.;
-            //             jacobianNRMatrix(i,2*1  ) = 0.;
-            //             jacobianNRMatrix(i,2*1+1) = 0.;
-                        
-            //             jacobianNRMatrix(2*3  ,i) = 0.;
-            //             jacobianNRMatrix(2*3+1,i) = 0.;
-            //             jacobianNRMatrix(i,2*3  ) = 0.;
-            //             jacobianNRMatrix(i,2*3+1) = 0.;
-            //         };
-            //     }else{
-            //         if(xsi(1) < (0.5 - xsi(0))) {
-            //             for (int i = 0; i < 12; i++){
-            //                 jacobianNRMatrix(2*1  ,i) = 0.;
-            //                 jacobianNRMatrix(2*1+1,i) = 0.;
-            //                 jacobianNRMatrix(i,2*1  ) = 0.;
-            //                 jacobianNRMatrix(i,2*1+1) = 0.;
-                            
-            //                 jacobianNRMatrix(2*4  ,i) = 0.;
-            //                 jacobianNRMatrix(2*4+1,i) = 0.;
-            //                 jacobianNRMatrix(i,2*4  ) = 0.;
-            //                 jacobianNRMatrix(i,2*4+1) = 0.;
-                            
-            //                 jacobianNRMatrix(2*2  ,i) = 0.;
-            //                 jacobianNRMatrix(2*2+1,i) = 0.;
-            //                 jacobianNRMatrix(i,2*2  ) = 0.;
-            //                 jacobianNRMatrix(i,2*2+1) = 0.;
-            //             };
-            //         }else{
-            //             for (int i = 0; i < 12; i++){
-            //                 jacobianNRMatrix(2*0  ,i) = 0.;
-            //                 jacobianNRMatrix(2*0+1,i) = 0.;
-            //                 jacobianNRMatrix(i,2*0  ) = 0.;
-            //                 jacobianNRMatrix(i,2*0+1) = 0.;
-                            
-            //                 jacobianNRMatrix(2*1  ,i) = 0.;
-            //                 jacobianNRMatrix(2*1+1,i) = 0.;
-            //                 jacobianNRMatrix(i,2*1  ) = 0.;
-            //                 jacobianNRMatrix(i,2*1+1) = 0.;
-                            
-            //                 jacobianNRMatrix(2*2  ,i) = 0.;
-            //                 jacobianNRMatrix(2*2+1,i) = 0.;
-            //                 jacobianNRMatrix(i,2*2  ) = 0.;
-            //                 jacobianNRMatrix(i,2*2+1) = 0.;
-            //             };
-            //         };
-            //     };
-            // };
-            
-            //lagrMultMatrix += jacobianNRMatrix;
-
-
-            // for (int i = 0; i < 6; i++){
-            //     for (int j = 0; j < 6; j++){        
-            // //         jacobianNRMatrix(2*i  ,2*j  ) += 
-            // //             (phiLM_(i) * phi_(j))
-            // //             * weight_ * djac_ * k1;
-            // //         jacobianNRMatrix(2*i+1,2*j+1) += 
-            // //             (phiLM_(i) * phi_(j))
-            // //             * weight_ * djac_ * k1;
-
-            //     };
-            // };
+     
             
             
         };
