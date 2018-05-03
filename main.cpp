@@ -30,22 +30,12 @@
 static char help[] = "Solves the Incompressible flow problem";
 
 // C++ standard libraries
-#include <climits>
 #include <fstream>
-#include <functional>
-#include <iostream>
-#include <limits>
-#include <string>
-#include <bitset>
- 
-// Boost libraries
-#include <boost/thread.hpp>
 
-
- 
 // Developed Header Files
 #include "FSInteraction.hpp"
-//#include "Arlequin.hpp"
+
+
 int main(int argc, char **args) {
 
     // Starts main program invoking PETSc
