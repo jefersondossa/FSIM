@@ -17,10 +17,6 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 
-
-#include <utility>
-#include <vector>
-#include <cassert>
 using namespace boost::numeric;
 
 template<int DIM>

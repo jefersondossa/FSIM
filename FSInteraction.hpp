@@ -14,10 +14,10 @@
 #ifndef FSINTERACTION_H
 #define FSINTERACTION_H
 
-#include "Arlequin.hpp"
-
 #include <boost/timer.hpp> 
-#include <boost/progress.hpp>
+#include <boost/thread.hpp>
+
+#include "Arlequin.hpp"
 
 
 extern "C" {void preprocessing_(char *solid_reading);};
@@ -40,8 +40,6 @@ extern "C" {void setposition_(int *dof, double *p);};
 extern "C" {void getvelocity_(int *dof, double *p);};
 extern "C" {void getpreviousvelocity_(int *dof, double *p);};
 extern "C" {void updatesolid_(int *ipt);};
-
-#include <boost/math/constants/constants.hpp>
 
 
 template<int DIM>

@@ -714,6 +714,9 @@ void Element<2>::getVelAndDerivatives() {
         // dvmesh_dy += nodes_[connect_(i)] -> getMeshVelocity(1) * dphi_dx(1,i);
         // std::cout << "velocity " << phi_(i) << " " << nodes_[connect_(i)] -> getVelocity(0) << std::endl;
 
+        lagMx_ += nodes_[connect_(i)] -> getLagrangeMultiplier(0) * phi_(i);
+        lagMy_ += nodes_[connect_(i)] -> getLagrangeMultiplier(1) * phi_(i);
+
     };  
 
     ax_ = (u_ - uPrev_) / dTime_;
@@ -1073,17 +1076,17 @@ void Element<2>::getElemMatrix(int index){
 
             double LM = 0.;
     
-            if (glueZone){
-                if (model){
-                    //Fine
-                    // LM = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                    //     * phi_(j) * tSUPG_;
-                }else{
-                    //Coarse
-                    // LM = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                    //     * phi_(j) * tSUPG_;
-                };
-            };
+            // if (glueZone){
+            //     if (model){
+            //         //Fine
+            //         // LM = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+            //         //     * phi_(j) * tSUPG_;
+            //     }else{
+            //         //Coarse
+            //         // LM = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+            //         //     * phi_(j) * tSUPG_;
+            //     };
+            // };
             
             jacobianNRMatrix(2*i  ,2*j  ) += (mM + timeScheme_ * dTime_ * 
                                               (sMxx + Kxx + LM + KLSxx / 
@@ -1173,17 +1176,17 @@ void Element<2>::getElemMatrix(int index){
             double Lx = 0.;
             double Ly = 0.;
             
-            if (glueZone){
-                if (model){
-                    //Fine
-                    Lx = -dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
-                    Ly = -dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
-                }else{
-                    //Coarse
-                    Lx = dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
-                    Ly = dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
-                };
-            };
+            // if (glueZone){
+            //     if (model){
+            //         //Fine
+            //         Lx = -dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
+            //         Ly = -dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
+            //     }else{
+            //         //Coarse
+            //         Lx = dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
+            //         Ly = dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
+            //     };
+            // };
 
 
             jacobianNRMatrix(12+j,2*i  ) += (Hx + (Gx + Guu + Lx) * 
@@ -1461,17 +1464,17 @@ void Element<2>::getResidualVector(int index){
                             (vna_ - vmesh_) * du_dy) * tPSPG_ +//* intPointWeightFunction(index) +
             dphi_dx(1,i) * ((una_ - umesh_) * dv_dx +
                             (vna_ - vmesh_) * dv_dy) * tPSPG_;// * intPointWeightFunction(index);
-            if (glueZone){
-                if (model){
-                    //Fine
-                    Q -= -dphi_dx(0,i) * (-lagMx_) * tPSPG_ / dens_;
-                    Q -= -dphi_dx(1,i) * (-lagMy_) * tPSPG_ / dens_;
-                }else{
-                    //Coarse
-                    // Q -= dphi_dx(0,i) * 0. * tARLQ_ / dens_;
-                    // Q -= dphi_dx(1,i) * 0. * tARLQ_ / dens_;
-                };
-            };
+            // if (glueZone){
+            //     if (model){
+            //         //Fine
+            //         Q -= -dphi_dx(0,i) * (-lagMx_) * tPSPG_ / dens_;
+            //         Q -= -dphi_dx(1,i) * (-lagMy_) * tPSPG_ / dens_;
+            //     }else{
+            //         //Coarse
+            //         // Q -= dphi_dx(0,i) * 0. * tARLQ_ / dens_;
+            //         // Q -= dphi_dx(1,i) * 0. * tARLQ_ / dens_;
+            //     };
+            // };
 // };
 
         Q *= intPointWeightFunction(index);
@@ -2121,21 +2124,41 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                 lagrMultMatrix(2*i+1,2*j+1) += 
                     (phi_(i) * phi_(j))
                     * weight_ * djac_ * k1;
-                // jacobianNRMatrix(2*i  ,2*j  ) -= 
-                //     (phi_(i) * phi_(j))
-                //     * weight_ * djac_ * tARLQ_;
-                // jacobianNRMatrix(2*i+1,2*j+1) -= 
-                //     (phi_(i) * phi_(j))
-                //     * weight_ * djac_ * tARLQ_;
+
+                double LM = 0.;
+    
+                //Fine
+                LM = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                    * phi_(j) * tSUPG_;
+            
+                jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
+                    * weight_ * djac_ * intPointWeightFunction(index);
+                
+                jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
+                    * weight_ * djac_ * intPointWeightFunction(index);
+        
 
             };
+
+            double LMx = 0.;
+            double LMy = 0.;
+            
+            LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                * (-lagMx_) * tSUPG_;
+            LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                * (-lagMy_) * tSUPG_;
+
+            rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
+            rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
+
+
         };         
         
         index++;        
     }; 
 
     //jacobianNRMatrix.clear();
-    jacobianNRMatrix += diffMatrix;
+    // jacobianNRMatrix += diffMatrix;
 
 
     //lagrMultMatrix += diffMatrix;
@@ -2156,7 +2179,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
     // Set boundary conditions to the Lagrange Multipliers
     //setBoundaryConditionsLagrangeMultipliers();
 
-    rhsVector.clear();  
+    rhsVectorLM.clear();  
     LocalVector U_;
     U_.clear();
 
@@ -2165,7 +2188,13 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
         U_(2*i+1) = nodes_[connect_(i)] -> getVelocity(1);
     };
 
-    noalias(rhsVector) = - prod(lagrMultMatrix,U_); 
+    noalias(rhsVectorLM) = - prod(lagrMultMatrix,U_); 
+
+
+    //!!!!! O erro é que não pode somar aqui porque senão vai adicionar isso na equação dos multiplicadores também e só deve adicionar na parte da equação do momentum
+    lagrMultMatrix += jacobianNRMatrix;
+    rhsVectorLM += rhsVectorLM;
+
 
     return;
 };
