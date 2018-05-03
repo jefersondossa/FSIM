@@ -59,16 +59,16 @@ int main(int argc, char **args) {
     typedef Fluid<dimension>         FluidModel;
     typedef Arlequin<dimension>      Arlequin;
     typedef FSInteraction<dimension> FSI;
-
+ 
     //Create problem variables 
     FluidModel coarseModel, fineModel, control; 
     Arlequin   arlequinProblem;
     FSI        coupledProblem; 
    
     //Data reading   
-    fineModel.dataReading("fine_cyl.txt","mirror_fine.txt"); 
+    fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
      
-    coarseModel.dataReading("coarse_cyl.txt","mirror_coarse.txt");
+    coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
  
     // control.dataReading("fluid_interaction3.txt","mirror_control.txt");
 
