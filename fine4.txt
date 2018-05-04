@@ -17,7 +17,7 @@ DENSITY      TEMPERATURE      VISCOSITY      THERMAL CONDITIVITY
 --------------------------------------------------------------------------------
 TIME STEP       TIME INTEGRATION SCHEME (1- Implicit Euler, 2- Adams-Bashforth)
 --------------------------------------------------------------------------------
-0.100            1
+0.100            .5
 
 --------------------------------------------------------------------------------
 EXTERNAL FIELD FORCES CONSTANTS

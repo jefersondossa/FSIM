@@ -1007,9 +1007,9 @@ template<>
 void Element<2>::getElemMatrix(int index){
     
     tARLQ_ = 0.;
-    tSUPG_ = 0.;
+    //tSUPG_ = 0.;
     //tPSPG_ = 0.;
-    tLSIC_ = 0.;
+    //tLSIC_ = 0.;
 
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -2081,7 +2081,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
     // jacobianNRMatrix += diffMatrix;
 
 
-    //lagrMultMatrix += diffMatrix;
+    lagrMultMatrix += diffMatrix;
 
     //lagrMultMatrix.clear();
 

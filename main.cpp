@@ -61,14 +61,18 @@ int main(int argc, char **args) {
     typedef FSInteraction<dimension> FSI;
  
     //Create problem variables 
-    FluidModel coarseModel, fineModel, control; 
-    Arlequin   arlequinProblem;
+    FluidModel coarseModel, fineModel, control;  
+    Arlequin   arlequinProblem; 
     FSI        coupledProblem; 
    
     //Data reading   
+    // fineModel.dataReading("fine_cyl.txt","mirror_fine.txt");  
+     
+    // coarseModel.dataReading("coarse_cyl.txt","mirror_coarse.txt");
+ 
     fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
      
-    coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
+    coarseModel.dataReading("coarse_uns.txt","mirror_coarse.txt");
  
     // control.dataReading("fluid_interaction3.txt","mirror_control.txt");
 
@@ -97,7 +101,7 @@ int main(int argc, char **args) {
    
     //control.solveTransientProblem(1, 1.e-6, 2); 
   
-    //coarseModel.solveTransientProblem(2, 1.e-16, 1); 
+    //coarseModel.solveTransientProblem(2, 1.e-16, 2); 
 
     // fineModel.solveSteadyLaplaceProblem(8, 1.e-16, 2);
      
@@ -114,7 +118,7 @@ int main(int argc, char **args) {
     
     arlequinProblem.setFluidModels(coarseModel, fineModel) ;
       
-    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1);
          
    
   
