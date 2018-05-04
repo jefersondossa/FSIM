@@ -518,39 +518,43 @@ void Arlequin<2>::setSignaledDistance(){
     for (int ino = 0; ino < numNodesFine; ino++){
         x = nodesFine_[ino] -> getCoordinates();
         
+        double h = 1.0;
+        double T = 50.;        
         double swd = 3.;
         double cswd = 8.;//1.-swd;
+        double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
+        double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
         double distx1 = -x(0)+swd;
         double distx2 = -cswd + x(0);
-        double disty1 = -x(1)+swd;
-        double disty2 = -cswd + x(1);
+        double disty1 = -x(1)+(swdy);
+        double disty2 = -(cswdy) + x(1);
         
         double dist = 0.;
-        if((x(0)<=swd) && (x(1)<=swd)){
-            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swd)*(x(1)-swd));
+           if((x(0)<=swd) && (x(1)<=swdy)){
+            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
         };
-        if((x(0)<=swd) && (x(1)>=cswd)){
-            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswd)*(x(1)-cswd));
+        if((x(0)<=swd) && (x(1)>=cswdy)){
+            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
         };
-        if((x(0)>=cswd) && (x(1)>=cswd)){
-            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswd)*(x(1)-cswd));
+        if((x(0)>=cswd) && (x(1)>=cswdy)){
+            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
         };
-        if((x(0)>=cswd) && (x(1)<=swd)){
-            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swd)*(x(1)-swd));
+        if((x(0)>=cswd) && (x(1)<=swdy)){
+            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
         };
-        if((x(0)<=swd) && ((x(1)>swd)&&(x(1)<cswd))){
+        if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
             dist = distx1;
         };
-        if((x(0)>=cswd) && ((x(1)>swd)&&(x(1)<cswd))){
+        if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
             dist = distx2;
         };        
-        if((x(1)<=swd) && ((x(0)>swd)&&(x(0)<cswd))){
+        if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
             dist = disty1;
         };
-        if((x(1)>=cswd) && ((x(0)>swd)&&(x(0)<cswd))){
+        if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
             dist = disty2;
         };        
-        if(((x(1)>swd)&&(x(1)<cswd)) && ((x(0)>swd)&&(x(0)<cswd))){
+        if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
             dist = distx1;
             if (fabs(dist)>=fabs(distx2)){
                 dist=distx2;
@@ -571,39 +575,43 @@ void Arlequin<2>::setSignaledDistance(){
         
             x = elementsFine_[i] -> getIntegPointCoordinatesValue(j);
         
+            double h = 1.0;
+            double T = 50.;        
             double swd = 3.;
             double cswd = 8.;//1.-swd;
+            double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
+            double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
             double distx1 = -x(0)+swd;
             double distx2 = -cswd + x(0);
-            double disty1 = -x(1)+swd;
-            double disty2 = -cswd + x(1);
+            double disty1 = -x(1)+(swdy);
+            double disty2 = -(cswdy) + x(1);
             
             double dist = 0.;
-            if((x(0)<=swd) && (x(1)<=swd)){
-                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swd)*(x(1)-swd));
+            if((x(0)<=swd) && (x(1)<=swdy)){
+                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
             };
-            if((x(0)<=swd) && (x(1)>=cswd)){
-                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswd)*(x(1)-cswd));
+            if((x(0)<=swd) && (x(1)>=cswdy)){
+                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
             };
-            if((x(0)>=cswd) && (x(1)>=cswd)){
-                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswd)*(x(1)-cswd));
+            if((x(0)>=cswd) && (x(1)>=cswdy)){
+                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
             };
-            if((x(0)>=cswd) && (x(1)<=swd)){
-                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swd)*(x(1)-swd));
+            if((x(0)>=cswd) && (x(1)<=swdy)){
+                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
             };
-            if((x(0)<=swd) && ((x(1)>swd)&&(x(1)<cswd))){
+            if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
                 dist = distx1;
             };
-            if((x(0)>=cswd) && ((x(1)>swd)&&(x(1)<cswd))){
+            if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
                 dist = distx2;
             };        
-            if((x(1)<=swd) && ((x(0)>swd)&&(x(0)<cswd))){
+            if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
                 dist = disty1;
             };
-            if((x(1)>=cswd) && ((x(0)>swd)&&(x(0)<cswd))){
+            if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
                 dist = disty2;
             };        
-            if(((x(1)>swd)&&(x(1)<cswd)) && ((x(0)>swd)&&(x(0)<cswd))){
+            if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
                 dist = distx1;
                 if (fabs(dist)>=fabs(distx2)){
                     dist=distx2;
@@ -626,7 +634,7 @@ void Arlequin<2>::setSignaledDistance(){
     for (int ino = 0; ino < numNodesCoarse; ino++){
         x = nodesCoarse_[ino] -> getCoordinates();
 
-        double h = .5;
+        double h = 1.0;
         double T = 50.;        
         double swd = 3.;
         double cswd = 8.;//1.-swd;
@@ -683,7 +691,7 @@ void Arlequin<2>::setSignaledDistance(){
         
             x = elementsCoarse_[i] -> getIntegPointCoordinatesValue(j);
         
-            double h = .5;
+            double h = 1.0;
             double T = 50.;    
 
             double swd = 3.;
@@ -749,7 +757,7 @@ void Arlequin<2>::setCouplingZone(){
     // double dist;
     int flag;
     int nodesCZ[numNodesFine];
-    int nodesCZ2[numNodesFine];
+    int nodesCZ2[numNodesCoarse];
 
     double lim1 = 2.99;
     double lim2 = 8.01;
@@ -762,6 +770,8 @@ void Arlequin<2>::setCouplingZone(){
     glueZoneFine_.reserve(numNodesFine / 3);
     int index = 0;
   
+
+
     //Defines a criterion to select the elements that are in the glue zone
     for (int jel = 0; jel < numElemFine; jel++){
         
@@ -798,7 +808,7 @@ void Arlequin<2>::setCouplingZone(){
         };        
     };
 
-  
+
     //Defines which nodes are in the glue zone
     numElemGlueZoneFine = elementsGlueZoneFine_.size();
     for (int i = 0; i < numElemGlueZoneFine; i++){
@@ -817,7 +827,7 @@ void Arlequin<2>::setCouplingZone(){
             nodesGlueZoneFine_.push_back(i);
         };
     };
-      
+
     if (rank == 0) std::cout << "GLUE ZONE - Nodes = " << numNodesGlueZoneFine 
                              << " Elements = " 
                              << elementsGlueZoneFine_.size() << std::endl;
@@ -848,130 +858,116 @@ void Arlequin<2>::setCouplingZone(){
         glueZoneFine_[i] -> setNodes(nodesLagrangeFine_);
 
     };
-    std::cout << "AQUI 1 " << rank << std::endl;     
-    MPI_Barrier(PETSC_COMM_WORLD);      
 
     // Glue Zone in coarse mesh
-
     for (int i = 0; i < numNodesCoarse; i++) nodesCZ2[i] = 0;    
 
     elementsGlueZoneCoarse_.reserve(numElemCoarse / 3);
     nodesGlueZoneCoarse_.reserve(numNodesCoarse / 3);
 
-    std::cout << "AQUI 2 " << rank << std::endl;     
-    MPI_Barrier(PETSC_COMM_WORLD);          
-
     //Defines a criterion to select the elements that are in the glue zone
-    // for (int jel = 0; jel < numElemCoarse; jel++){
+    for (int jel = 0; jel < numElemCoarse; jel++){
         
-    //     connec = elementsCoarse_[jel] -> getConnectivity();
-    //     flag = 0;
+        connec = elementsCoarse_[jel] -> getConnectivity();
+        flag = 0;
 
-    //     for (int ino = 0; ino < 6; ino++){
-    //         x = nodesCoarse_[connec(ino)] -> getCoordinates();
+        for (int ino = 0; ino < 6; ino++){
+            x = nodesCoarse_[connec(ino)] -> getCoordinates();
 
-    //         if ((x(0) < lim1) || (x(0) > lim2) || 
-    //             (x(1) < lim1) || (x(1) > lim2)){
+            if ((x(0) < lim1) || (x(0) > lim2) || 
+                (x(1) < lim1) || (x(1) > lim2)){
 
-    //         }else{
-    //             if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
-    //                 (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
+            }else{
+                if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
+                    (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
 
-    //             }else{
-    //                 flag = 1;
-    //                 break;
-    //             };
-    //         };
-    //     };
-    //     if (flag > 0) {
-    //         elementsGlueZoneCoarse_.push_back(jel);
-    //         elementsCoarse_[jel] -> setGlueZone();
+                }else{
+                    flag = 1;
+                    break;
+                };
+            };
+        };
+        if (flag > 0) {
+            elementsGlueZoneCoarse_.push_back(jel);
+            elementsCoarse_[jel] -> setGlueZone();
 
-    //         GlueZone *el = new GlueZone(index++,jel);
-    //         glueZoneCoarse_.push_back(el);
+            GlueZone *el = new GlueZone(index++,jel);
+            glueZoneCoarse_.push_back(el);
             
-    //         for (int i=0; i < elementsCoarse_[jel] -> 
-    //                  getNumberOfIntegrationPoints(); i++){
+            for (int i=0; i < elementsCoarse_[jel] -> 
+                     getNumberOfIntegrationPoints(); i++){
                 
-    //             x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);  
+                x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);  
 
-    //             if ((x(0) < lim1) || (x(0) > lim2) || 
-    //                 (x(1) < lim1) || (x(1) > lim2)){
+                if ((x(0) < lim1) || (x(0) > lim2) || 
+                    (x(1) < lim1) || (x(1) > lim2)){
 
-    //             }else{
-    //                 if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
-    //                     (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
+                }else{
+                    if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
+                        (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
 
-    //                 }else{
-    //                 elementsCoarse_[jel] -> setIntegPointInGlueZone(i);
-    //                 };
-    //             };
-    //         };
-    //     };        
-    // };
-    // std::cout << "AQUI 3 " << rank << std::endl;     
-    // MPI_Barrier(PETSC_COMM_WORLD);      
-    // //Defines which nodes are in the glue zone
-    // numElemGlueZoneCoarse = elementsGlueZoneCoarse_.size();
-    // for (int i = 0; i < numElemGlueZoneCoarse; i++){
-    //     connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
-    //         getConnectivity();
+                    }else{
+                    elementsCoarse_[jel] -> setIntegPointInGlueZone(i);
+                    };
+                };
+            };
+        };        
+    };
 
-    //     for (int ino = 0; ino < 6; ino++){
-    //         nodesCZ2[connec(ino)] += 1;
-    //     };
-    // };
-    // std::cout << "AQUI 3.5 " << rank << std::endl;     
-    // MPI_Barrier(PETSC_COMM_WORLD);      
+    //Defines which nodes are in the glue zone
+    numElemGlueZoneCoarse = elementsGlueZoneCoarse_.size();
+    for (int i = 0; i < numElemGlueZoneCoarse; i++){
+        connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
+            getConnectivity();
 
-    // //Compute number of nodes in the glue zone
-    // numNodesGlueZoneCoarse = 0;
-    // for (int i = 0; i < numNodesCoarse; i++){
-    //     if(nodesCZ2[i] > 0) {
-    //         numNodesGlueZoneCoarse += 1;
-    //         nodesGlueZoneCoarse_.push_back(i);
-    //     };
-    // };
-    //     std::cout << "AQUI 4 " << rank << std::endl;     
-    // MPI_Barrier(PETSC_COMM_WORLD);      
-    // if (rank == 0) std::cout << "GLUE ZONE - Nodes = " << numNodesGlueZoneCoarse
-    //                          << " Elements = " 
-    //                          << elementsGlueZoneCoarse_.size() << std::endl;
+        for (int ino = 0; ino < 6; ino++){
+            nodesCZ2[connec(ino)] += 1;
+        };
+    };
 
-    // for (int i = 0; i < numNodesGlueZoneCoarse; i++){
-    //     typename Nodes::VecLocD x;
-    //     x = nodesCoarse_[nodesGlueZoneCoarse_[i]] -> getCoordinates();
+    //Compute number of nodes in the glue zone
+    numNodesGlueZoneCoarse = 0;
+    for (int i = 0; i < numNodesCoarse; i++){
+        if(nodesCZ2[i] > 0) {
+            numNodesGlueZoneCoarse += 1;
+            nodesGlueZoneCoarse_.push_back(i);
+        };
+    };
+
+    if (rank == 0) std::cout << "GLUE ZONE - Nodes = " << numNodesGlueZoneCoarse
+                             << " Elements = " 
+                             << elementsGlueZoneCoarse_.size() << std::endl;
+
+    for (int i = 0; i < numNodesGlueZoneCoarse; i++){
+        typename Nodes::VecLocD x;
+        x = nodesCoarse_[nodesGlueZoneCoarse_[i]] -> getCoordinates();
         
-    //     Nodes *no = new Nodes(x,i);
-    //     nodesLagrangeCoarse_.push_back(no);
-    // };
+        Nodes *no = new Nodes(x,i);
+        nodesLagrangeCoarse_.push_back(no);
+    };
 
-    // for (int i = 0; i < numElemGlueZoneCoarse; i++){
-    //     typename Elements::Connectivity connecAux;
+    for (int i = 0; i < numElemGlueZoneCoarse; i++){
+        typename Elements::Connectivity connecAux;
 
-    //     connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
-    //         getConnectivity();
+        connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
+            getConnectivity();
         
-    //     for (int ino = 0; ino < numNodesGlueZoneCoarse; ino++){
-    //         if (nodesGlueZoneCoarse_[ino] == connec(0)) connecAux(0) = ino;
-    //         if (nodesGlueZoneCoarse_[ino] == connec(1)) connecAux(1) = ino;
-    //         if (nodesGlueZoneCoarse_[ino] == connec(2)) connecAux(2) = ino;
-    //         if (nodesGlueZoneCoarse_[ino] == connec(3)) connecAux(3) = ino;
-    //         if (nodesGlueZoneCoarse_[ino] == connec(4)) connecAux(4) = ino;
-    //         if (nodesGlueZoneCoarse_[ino] == connec(5)) connecAux(5) = ino;
-    //     };
+        for (int ino = 0; ino < numNodesGlueZoneCoarse; ino++){
+            if (nodesGlueZoneCoarse_[ino] == connec(0)) connecAux(0) = ino;
+            if (nodesGlueZoneCoarse_[ino] == connec(1)) connecAux(1) = ino;
+            if (nodesGlueZoneCoarse_[ino] == connec(2)) connecAux(2) = ino;
+            if (nodesGlueZoneCoarse_[ino] == connec(3)) connecAux(3) = ino;
+            if (nodesGlueZoneCoarse_[ino] == connec(4)) connecAux(4) = ino;
+            if (nodesGlueZoneCoarse_[ino] == connec(5)) connecAux(5) = ino;
+        };
         
-    //     glueZoneCoarse_[i] -> setConnectivity(connecAux);
-    //     glueZoneCoarse_[i] -> setNodes(nodesLagrangeCoarse_);
+        glueZoneCoarse_[i] -> setConnectivity(connecAux);
+        glueZoneCoarse_[i] -> setNodes(nodesLagrangeCoarse_);
 
-    // };
+    };
      
-
     setSignaledDistance();
 
-    std::cout << "AQUI 6 " << rank << std::endl;     
-    MPI_Barrier(PETSC_COMM_WORLD);      
-    std::cout << "AQUI 7 " << rank << std::endl;     
 };
 
 
@@ -992,7 +988,7 @@ void Arlequin<2>::setFreeZone(){
     elementsFreeZone_.reserve(numElemCoarse / 5);
     nodesFreeZone_.reserve(numNodesCoarse / 5);
 
-    double h = .5;
+    double h = 1.0;
     double T = 50.;
     double d1 = 3.;
     double d2 = 8.;
@@ -1268,7 +1264,7 @@ void Arlequin<2>::setWeightFunction(double val){
     int numIntPoints;
     double wFuncValue;
 
-    double epsilon = 1.e-4;
+    double epsilon = 1.e-2;
     double lambda = 1.0;
  
     for (int jelCoarse = 0; jelCoarse < numElemCoarse; jelCoarse++){
@@ -1562,24 +1558,12 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
     
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Free Zone\" format=\"ascii\">" << std::endl;
-     int cont=0;
-    for (int i=0; i<numElemCoarse; i++){
-        if (elementsFreeZone_[cont] == i){
-            output_v << 1.0 << std::endl;
-            cont++;
-        }else{
-            output_v << 0.0 << std::endl;
-        };
-    };
-    output_v << "      </DataArray> " << std::endl;
+    int cont=0;
 
     // output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //          << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-    // cont = 0;
+    //          << "Name=\"Free Zone\" format=\"ascii\">" << std::endl;
     // for (int i=0; i<numElemCoarse; i++){
-    //     if (elementsGlueZoneCoarse_[cont] == i){
+    //     if (elementsFreeZone_[cont] == i){
     //         output_v << 1.0 << std::endl;
     //         cont++;
     //     }else{
@@ -1587,6 +1571,19 @@ void Arlequin<2>::printVelocity(int step) {
     //     };
     // };
     // output_v << "      </DataArray> " << std::endl;
+
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+             << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
+    cont = 0;
+    for (int i=0; i<numElemCoarse; i++){
+        if (elementsGlueZoneCoarse_[cont] == i){
+            output_v << 1.0 << std::endl;
+            cont++;
+        }else{
+            output_v << 0.0 << std::endl;
+        };
+    };
+    output_v << "      </DataArray> " << std::endl;
 
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
@@ -1940,6 +1937,7 @@ void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
     //Sets the element boxes for all elements in both coarse and fine models
     setElementBoxes();
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);      
+
 
 };
 
@@ -2537,8 +2535,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
     PetscScalar       val;
     //MatNullSpace      nullsp;
 
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);      
-
     if ((problem_type < 1) || (problem_type > 2)){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
         return 0;
@@ -2548,12 +2544,10 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
     
     iTimeStep = 0.;
 
+
     //Construct the glue zone based on some defined criterion
     setCouplingZone();
-    
-    std::cout << "AQUI saiu " << rank << std::endl;     
-    MPI_Barrier(PETSC_COMM_WORLD);      
-
+   
     //Computes the Weight function for all the finite elements
     setWeightFunction(4.);
 
@@ -2561,7 +2555,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
     setNodalCorrespondenceFine();
 
     //Construct the free zone in coarse model
-    setFreeZone();
+    //setFreeZone();
 
     if(rank == 0) printVelocity(0);
     MPI_Barrier(PETSC_COMM_WORLD);      
@@ -4685,7 +4679,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             nodesFine_[i] -> setPreviousVelocity(u);      
 
             double T = 50.;
-            double h = .5;
+            double h = 1.0;
             u[0] = 0.;
             u[1] = h * pi / T * cos(pi * iTimeStep * dTime / T);
             nodesFine_[i] -> setMeshVelocity(u);
@@ -5027,8 +5021,9 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     
                     //Gets element matrice and rhs vectors
                     Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
-                    Rhs = - elementsFine_[jel] -> getRhsVector();
-                    // AjacAnt = - elementsFine_[jel] -> getJacNRMatrix();
+                    Rhs = - elementsFine_[jel] -> getRhsVectorLagMult();
+                    AStab = elementsFine_[jel] -> getJacNRMatrix();
+                    RhsStab = elementsFine_[jel] -> getRhsVector();
                     Ajac = trans(Ajac);
 
                     // elementsFine_[jel] -> getLMStabilizationSameMesh();
@@ -5068,10 +5063,11 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                 ierr = MatSetValues(A,1,&d_j,1,&d_i,
                                                     &Ajac(2*i  ,2*j  ),
                                                     ADD_VALUES);
+                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                    &AStab(2*i  ,2*j  ),
+                                                    ADD_VALUES);
                             };
-                            // ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //           &AStab(2*i  ,2*j  ),ADD_VALUES);
-
+                    
                             if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
                                 int d_i = 3 * numNodesCoarse + 3 * numNodesFine
                                     + 2 * connecL(i) + 1;
@@ -5083,9 +5079,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                     &Ajac(2*i+1,2*j  ),
                                                     ADD_VALUES);
                             };
-                            // ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                     &AStab(2*i+1,2*j  ),ADD_VALUES);
-
+                            
                             if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
                                 int d_i = 3 * numNodesCoarse + 3 * numNodesFine
                                     + 2 * connecL(i) + 1;
@@ -5096,9 +5090,10 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                 ierr = MatSetValues(A,1,&d_j,1,&d_i,
                                                     &Ajac(2*i+1,2*j+1),
                                                     ADD_VALUES);
+                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                    &AStab(2*i+1,2*j+1),
+                                                    ADD_VALUES);
                             };
-                            // ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                     &AStab(2*i+1,2*j+1),ADD_VALUES);
 
                             if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
                                 int d_i = 3 * numNodesCoarse + 3 * numNodesFine
@@ -5111,54 +5106,48 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                     &Ajac(2*i  ,2*j+1),
                                                     ADD_VALUES);
                             };
-                            // ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                     &AStab(2*i  ,2*j+1),ADD_VALUES);
-                            // if (fabs(AjacAnt(2*i  ,2*j  )) >= 1.e-15){
-                            //     int d_i = 3 * numNodesCoarse + 3 * numNodesFine
-                            //         + 2 * connecL(i);
-                            //     int d_j = 3 * numNodesCoarse + 3 * numNodesFine
-                            //         + 2 * connecL(j);
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &AjacAnt(2*i  ,2*j  )
-                            //                         ,ADD_VALUES);
-                            // };
 
-                            // if (fabs(AjacAnt(2*i+1,2*j+1)) >= 1.e-15){
-                            //     int d_i = 3 * numNodesCoarse + 3 * numNodesFine
-                            //         + 2 * connecL(i) + 1;
-                            //     int d_j = 3 * numNodesCoarse + 3 * numNodesFine
-                            //         + 2 * connecL(j) + 1;
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &AjacAnt(2*i+1,2*j+1)
-                            //                         ,ADD_VALUES);
-                            // };
+                            if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
+                                int dof_i = 3 * numNodesCoarse + 2 * connec(i);
+                                int dof_j = 3 * numNodesCoarse + 
+                                    2 * numNodesFine + connec(j);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                    &AStab(2*i  ,12+j),
+                                                    ADD_VALUES);
+                            };
+                            if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
+                                int dof_i = 3 * numNodesCoarse + 
+                                    2 * connec(i) + 1;
+                                int dof_j = 3 * numNodesCoarse + 
+                                    2 * numNodesFine + connec(j);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                    &AStab(2*i+1,12+j),
+                                                    ADD_VALUES);
+                            };
                         };
+
                         //Rhs vector
 
                         int dof_i = 3 * numNodesCoarse + 3 * numNodesFine +
                             2 * connecL(i);
                         ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
                                             ADD_VALUES);
-                        // ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  ),
-                        //                     ADD_VALUES);
-                        // ierr = VecSetValues(b,1,&dof_i,&lagStab(2*i  ),
-                        //                     ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 3 * numNodesFine + 
                             2 * connecL(i) + 1;
                         ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
                                             ADD_VALUES);
-                        // ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1),
-                        //                     ADD_VALUES);
-                        // ierr = VecSetValues(b,1,&dof_i,&lagStab(2*i+1),
-                        //                     ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i);
                         ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
                                             ,ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
+                                            ,ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                         ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
+                                            ,ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
                                             ,ADD_VALUES);
                     };      
 
@@ -5173,11 +5162,13 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     std::vector<int> ele, diffElem;
                     ele.clear();
                     diffElem.clear();
+
                     ele.reserve(3);
                     for (int i=0; i<numberIntPoints; i++){
                         aux = elementsFine_[jel] -> 
                             getIntegPointCorrespondenceElement(i);
                         ele.push_back(aux);
+                        //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
 
                     };
                     
@@ -5211,8 +5202,9 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                         //Computes element matrix
                         Ajac = elementsFine_[jel] -> getLagrMultMatrix();
                         Ajac = trans(Ajac);
-                        // AjacAnt = elementsFine_[jel] -> getJacNRMatrix();
-                        // AjacAnt = trans(AjacAnt);
+                        AStab = elementsFine_[jel] -> getJacNRMatrix();
+                        AStab = trans(AStab);
+                        RhsStab = elementsFine_[jel] -> getRhsVector();
 
                         connecC = elementsCoarse_[iElemCoarse] -> 
                             getConnectivity();
@@ -5254,6 +5246,9 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                     ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
                                                     &lagMult.second(2*i  ,2*j  )
                                                         ,ADD_VALUES);
+                                    ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+                                                    &AStab(2*i  ,2*j  )
+                                                        ,ADD_VALUES);
                                 };
 
                                 if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
@@ -5277,6 +5272,9 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                         ,ADD_VALUES);
                                     ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
                                                     &lagMult.second(2*i+1,2*j+1)
+                                                        ,ADD_VALUES);
+                                    ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+                                                    &AStab(2*i+1,2*j+1)
                                                         ,ADD_VALUES);
                                 };
 
@@ -5318,27 +5316,27 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                             ierr = VecSetValues(b,1,&d_i,
                                                 &lagMult.first(2*i  ),
                                                 ADD_VALUES);
-                            // ierr = VecSetValues(b,1,&d_i,
-                            //                     &lagStab(2*i  ),
-                            //                     ADD_VALUES);
 
                             d_i = 3 * numNodesCoarse 
                                 + 3 * numNodesFine + 2 * connecL(i) + 1;
                             ierr = VecSetValues(b,1,&d_i,
                                                 &lagMult.first(2*i+1),
                                                 ADD_VALUES);
-                            // ierr = VecSetValues(b,1,&d_i,
-                            //                     &lagStab(2*i+1),
-                            //                     ADD_VALUES);
 
                             int dof_i = 2 * connecC(i);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &rhsLagMult(2*i  ),
                                                 ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &RhsStab(2*i  ),
+                                                ADD_VALUES);
 
                             dof_i = 2 * connecC(i) + 1;
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &rhsLagMult(2*i+1),
+                                                ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &RhsStab(2*i+1),
                                                 ADD_VALUES);
                         };                                 
                     }; //Number of intersections

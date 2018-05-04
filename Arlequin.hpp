@@ -505,7 +505,7 @@ void Arlequin<2>::setCouplingZone(){
     // double dist;
     int flag;
     int nodesCZ[numNodesFine];
-    int nodesCZ2[numNodesFine];
+    int nodesCZ2[numNodesCoarse];
 
     double lim1 = 0.06251;
     double lim2 = 0.93749;
