@@ -507,9 +507,9 @@ void Arlequin<2>::setCouplingZone(){
     int nodesCZ[numNodesFine];
     int nodesCZ2[numNodesCoarse];
 
-    double lim1 = 0.06251;
-    double lim2 = 0.93749;
-    double tick = 0.1249;
+    double lim1 = 0.1251;
+    double lim2 = 0.8749;
+    double tick = 0.06249;
 
 
     for (int i = 0; i < numNodesFine; i++) nodesCZ[i] = 0;    
@@ -1255,8 +1255,8 @@ void Arlequin<2>::setWeightFunction(double val){
     int numIntPoints;
     double wFuncValue;
 
-    double epsilon = 1.e-2;
-    double lambda = .125;
+    double epsilon = 1.e-6;
+    double lambda = .0625;
  
     for (int jelCoarse = 0; jelCoarse < numElemCoarse; jelCoarse++){
         

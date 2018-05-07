@@ -63,16 +63,16 @@ int main(int argc, char **args) {
     //Create problem variables 
     FluidModel coarseModel, fineModel, control;  
     Arlequin   arlequinProblem; 
-    FSI        coupledProblem; 
-   
-    //Data reading   
-    // fineModel.dataReading("fine_cyl.txt","mirror_fine.txt");  
+    FSI        coupledProblem;  
+    
+    //Data reading    
+    fineModel.dataReading("cyl_fine_coin.txt","mirror_fine.txt");  
      
-    // coarseModel.dataReading("coarse_cyl.txt","mirror_coarse.txt");
+    coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
  
-    fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
+    // fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
      
-    coarseModel.dataReading("coarse_uns.txt","mirror_coarse.txt");
+    // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
  
     // control.dataReading("fluid_interaction3.txt","mirror_control.txt");
 
