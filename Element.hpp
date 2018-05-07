@@ -17,8 +17,8 @@
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
-#include "IntegrationQuadrature11.hpp"
-//#include "PartitionedQuadrature2.hpp"
+//#include "IntegrationQuadrature11.hpp"
+#include "PartitionedQuadrature2.hpp"
 
 template<int DIM>
 class Element{
@@ -40,8 +40,8 @@ public:
     //for DIM=2 and 34x34 for DIM=3
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
     //Defines the integration quadrature rule
-    //typedef PartQuadrature<DIM>                                 SpecialQuad;
-    typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+    typedef PartQuadrature<DIM>                                 SpecialQuad;
+    //typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
     typedef IntegQuadrature<DIM>                                NormalQuad;
 
     typedef BoundaryIntegQuadrature<DIM>                        BoundaryQuad;
@@ -275,9 +275,9 @@ public:
 };
 
 template<>
-double const Element<2>::k1 = 1.0;
+double const Element<2>::k1 = 1.e0;
 template<>
-double const Element<2>::k2 = 0.00000;
+double const Element<2>::k2 = 0.0;
 
 
 //------------------------------------------------------------------------------
@@ -2021,7 +2021,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
         
         Baux = prod(Maux,Bmatrix);
         
-        diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
+        //diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
         
         for (int i = 0; i < 6; i++){
             for (int j = 0; j < 6; j++){        
@@ -2031,6 +2031,15 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                 lagrMultMatrix(2*i+1,2*j+1) += 
                     (phi_(i) * phi_(j))
                     * weight_ * djac_ * k1;
+
+                diffMatrix(2*i  ,2*j  ) += dphi_dx(0,i) * dphi_dx(0,j) *
+                    weight_ * djac_ * k2;
+                diffMatrix(2*i+1,2*j  ) += dphi_dx(1,i) * dphi_dx(0,j) *
+                    weight_ * djac_ * k2;
+                diffMatrix(2*i  ,2*j+1) += dphi_dx(0,i) * dphi_dx(1,j) *
+                    weight_ * djac_ * k2;
+                diffMatrix(2*i+1,2*j+1) += dphi_dx(1,i) * dphi_dx(1,j) *
+                    weight_ * djac_ * k2;
 
                 double LM = 0.;
     
@@ -2188,7 +2197,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
             
             Baux = prod(Maux,Bmatrix);
             
-            diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
+            //diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
             
             for (int i = 0; i < 6; i++){
                 for (int j = 0; j < 6; j++){        
@@ -2198,6 +2207,15 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
                     lagrMultMatrix(2*i+1,2*j+1) += 
                         (phiLM_(i) * phi_(j))
                         * weight_ * djac_ * k1;
+
+                    diffMatrix(2*i  ,2*j  ) += dphiL_dx(0,i) * dphi_dx(0,j) *
+                        weight_ * djac_ * k2;
+                    diffMatrix(2*i+1,2*j  ) += dphiL_dx(1,i) * dphi_dx(0,j) *
+                        weight_ * djac_ * k2;
+                    diffMatrix(2*i  ,2*j+1) += dphiL_dx(0,i) * dphi_dx(1,j) *
+                        weight_ * djac_ * k2;
+                    diffMatrix(2*i+1,2*j+1) += dphiL_dx(1,i) * dphi_dx(1,j) *
+                        weight_ * djac_ * k2;
 
                     //Coarse
                     double LM = 0.;

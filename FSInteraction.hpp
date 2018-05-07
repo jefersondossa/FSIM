@@ -17,7 +17,7 @@
 #include <boost/timer.hpp> 
 #include <boost/thread.hpp>
 
-#include "Arlequin.hpp"
+#include "Arlequin_cyl.hpp"
 
 
 extern "C" {void preprocessing_(char *solid_reading);};
