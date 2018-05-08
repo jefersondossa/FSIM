@@ -16,6 +16,8 @@
 
 using namespace boost::numeric;
 
+/// Defines the fluid boundary shape functions
+
 template<int DIM>
 class BoundShapeFunction {
 public:
@@ -28,13 +30,21 @@ public:
 
 public:
     
-    //Evaluates the shape function value
+    /// Evaluates the shape function value
+    /// @param double Adimensional coordinate
     void evaluate(double Xsi);
 
+    /// Returns the shape function value
+    /// @param double Adimensional coordinates 
+    /// @return boundary shape function value
     Values getShapeFunction(double Xsi){
         evaluate(Xsi);
         return phi_;
     };
+
+    /// Returns the shape function derivative value
+    /// @param double Adimensional coordinates 
+    /// @return boundary shape function derivative value
     Values getShapeFunctionDerivative(double Xsi){
         evaluate(Xsi);
         return dphi_;

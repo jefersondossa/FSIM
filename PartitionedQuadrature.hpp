@@ -14,8 +14,8 @@
 #define PART_QUADRATURE_H
 
 #include "QuadraticShapeFunction.hpp"
-#include "LinearShapeFunction.hpp"
 
+/// Defines the domain integration sub-element partitioned Hammer quadrature
 
 template<int DIM>
 class PartQuadrature{
@@ -38,28 +38,33 @@ public:
 
     //Defines vector of nodal values
     typedef ublas::bounded_vector<double, 4*DIM-2>      NodalValuesQuad;
-    typedef ublas::bounded_vector<double, DIM+1>        NodalValuesLin;
 
 public:
-    //Returns the index of the first integration point
-    QuadratureListIt begin() {
+    /// Returns the index of the first integration point
+    /// @return first integration point index    QuadratureListIt begin() {
         return pointWeight.begin();
     }
 
-    //Returns the index of the last integration point
+    /// Returns the index of the last integration point
+    /// @return last integration point index
     QuadratureListIt end() {
         return pointWeight.end();
     }
 
-    //Returns the integration point coordinate
+    /// Returns the integration point coordinate
+    /// @param int integration point index @param int adimensional direction
+    /// @return integration point adimensional coordinates
     double PointList(int i, int j); 
 
-    //Retuns the integration point weight
+    /// Retuns the integration point weight
+    /// @param int integration point index @return integration point weight
     double WeightList(int i);
-  
-    //Interpolate variables
+
+    /// Interpolate quadratic variables
+    /// @param NodalValuesQuad element variable nodal values
+    /// @param Integration point index
+    /// @return Interpolated variable value
     double interpolateQuadraticVariable(NodalValuesQuad nValues, int point);
-    double interpolateLinearVariable(NodalValuesLin nValues, int point);
 
 private:
     //List of integration points coordinates
@@ -70,12 +75,9 @@ private:
 
     //Defines shape functions
     QuadShapeFunction<DIM> shapeQuad;
-    LinShapeFunction<DIM>  shapeLin;
 
     //Values of velocity shape functins
     typename QuadShapeFunction<DIM>::Values      phi_;     
-    //Values of pressure shape functins
-    typename LinShapeFunction<DIM>::Values       phip_;        
 };
 
 //------------------------------------------------------------------------------
@@ -306,30 +308,5 @@ double PartQuadrature<3>::interpolateQuadraticVariable(
 
     return int_value;
 };
-
-//------------------------------------------------------------------------------
-//-----------COMPUTES THE VALUE INTERPOLATED IN THE INTEGRATION POINT-----------
-//------------------------------------------------------------------------------
-template<>
-double PartQuadrature<2>::interpolateLinearVariable(
-                                                     NodalValuesLin nValues, 
-                                                     int point){
-    
-    ublas::bounded_vector<double, 2> xsi;
-
-    double int_value = 0.;
-
-    xsi(0) = PointList(point,0);
-    xsi(1) = PointList(point,1);
-    
-    shapeLin.evaluate(xsi,phip_);
-    
-    for (int i = 0; i < 3; i++){
-        int_value += nValues(i) * phip_(i);
-    };
-
-    return int_value;
-};
-
 
 #endif

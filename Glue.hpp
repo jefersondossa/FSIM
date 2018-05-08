@@ -8,13 +8,15 @@
 //------------------------------------------------------------------------------
  
 //------------------------------------------------------------------------------
-//-----------------------------------ELEMENT------------------------------------
+//----------------------------------GLUE ZONE-----------------------------------
 //------------------------------------------------------------------------------
 
 #ifndef GLUE_H
 #define GLUE_H
 
 #include "Node.hpp"
+
+/// Defines the gluing zone mesh
 
 template<int DIM>
 class Glue{
@@ -62,18 +64,28 @@ private:
 
 
 public:
-    //Element definition
+    /// Glue Zone Element constructor
+    /// @param int glue zone element index 
+    /// @param int fluid element correspondent
     Glue(int index, int elemCorrespondent){
         index_ = index;
         elemCorrespondent_ = elemCorrespondent;
-        
-        // setLocalNodes();
-        // getIntegPointCoordinates();
     };
 
+    /// Returns the fluid element correspondence
+    /// @return fluid element correspondence
     int getElemCorrespondent(){return elemCorrespondent_;};
+
+    /// Sets the element connectivity
+    /// @param Connectivity element connectivity
     void setConnectivity(Connectivity& connect){connect_ = connect;};
+
+    /// Sets the vector of nodes of the gluing zone mesh
+    /// @param vector<Nodes> gluing zone mesh nodes
     void setNodes(std::vector<Nodes *> nodes){nodes_ = nodes;};
+
+    /// Gets the element connectivity
+    /// @return gluing zone element connectivity
     Connectivity getConnectivity(){return connect_;};
     
 };
@@ -89,26 +101,6 @@ double const Glue<2>::k2 = 0.0;
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-//----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
-//------------------------------------------------------------------------------
-// template<>
-// void Element<2>::setIntersectionParameters(DimVector x, DimVector X, 
-//                                            double *Dk, double *dk,
-//                            std::vector<ublas::bounded_vector<double,2> > dii) {
-//     xK = x; XK = X; 
-//     dCk[0] = Dk[0];
-//     dCk[1] = Dk[1]; 
-//     dCk[2] = Dk[2];  
-    
-//     dck[0] = dk[0];
-//     dck[1] = dk[1];
-//     dck[2] = dk[2];   
-    
-//     di = dii;
-    
-//     return;
-// };
 
 #endif
 
