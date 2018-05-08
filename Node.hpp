@@ -19,6 +19,8 @@
 
 using namespace boost::numeric;
 
+/// Defines the node object and stores all nodal variables information
+
 template<int DIM>
 
 class Node{
@@ -78,7 +80,7 @@ private:
     double           potential_;              //Potential value
     
 public:
-    //!Constructor - Defines a node with index and coordinates
+    ///Constructor - Defines a node with index and coordinates
     Node(VecLocD& coor, int index){
         coord_ = coor;
         initialCoord_ = coor;
@@ -101,109 +103,249 @@ public:
 
     };
 
-    //Clear all nodal variables
+    /// Clear all node object variables
     void clearVariables();
 
-    //Returns the nodal coordinate vector
+    /// Returns the node coordinate vector
+    /// @return node coordinate vector
     VecLocD getCoordinates() {return coord_;};
+
+    /// Returns the node initial coordinate vector
+    /// @return node initial coordinate vector
     VecLocD getInitialCoordinates() {return initialCoord_;};
-    VecLocD getPreviousCoordinates() {return previousCoord_;;}
+
+    /// Returns the node coordinate vector at the previous time step
+    /// @return node coordinate vector at the previous time step
+    VecLocD getPreviousCoordinates() {return previousCoord_;}
+
+    /// Returns the node updated coordinate vector
+    /// @return node coordinate updated vector
     VecLocD getUpdatedCoordinates() {return coordUpdated_;};
 
-    //Increment coordinate vector
+    /// Increment the coordinate vector
+    /// @param int direction @param double increment value
     void incrementCoordinate(int dir, double u);
 
-    //Sets previous coordinate vector
+    /// Sets the previous coordinate vector
+    /// @param int direction @param double value
     void setPreviousCoordinates(int dir, double u);
 
-    //Set the nodal coordinates
-    void setCoordinates(VecLocD& coor){
-        coord_ = coor;};
-    void setUpdatedCoordinates(VecLocD& coor){
-        coordUpdated_ = coor;};
+    /// Sets the node coordinate vector
+    /// @param VecLocD Coordinate
+    void setCoordinates(VecLocD& coor){coord_ = coor;};
 
-    //Updates nodal coordinates
-    void updateCoordinate(int dir, double val){
-        coord_(dir) = val;};
+    /// Sets the updated coordinate vector
+    /// @param VecLocD Updated Coordinate
+    void setUpdatedCoordinates(VecLocD& coor){coordUpdated_ = coor;};
+
+    /// Updates node coordinate vector
+    /// @param int direction @param double updated value
+    void updateCoordinate(int dir, double val){coord_(dir) = val;};
     
-    //Sets nodal correspondence of overlapped mesh
+    /// Sets nodal correspondence of overlapped mesh
+    /// @param double element @param VecLocD adimensional coordinates
     void setNodalCorrespondence(double elem, const VecLocD& xsi){
         elemCorresp = elem;
         xsiCorresp = xsi;
     };
 
-    //Gets nodal correspondence of overlapped mesh
+    /// Gets nodal correspondence of overlapped mesh - element
+    /// @return Element correspondence of overlapped mesh
     int getNodalElemCorrespondence() {return elemCorresp;}
+
+    /// Gets nodal correspondence of overlapped mesh - adim. coordinate
+    /// @return Adim. coordinate correspondence of overlapped mesh
     VecLocD getNodalXsiCorrespondence() {return xsiCorresp;}
     
-    //Velocity functions
+    //............................Velocity functions............................
+    /// Sets the velocity vector
+    /// @param double* velocity vector
     void setVelocity(double *u);
+
+    /// Sets the previous velocity vector
+    /// @param double* previous time step velocity vector
     void setPreviousVelocity(double *u);
+
+    /// Increment the velocity vector
+    /// @param int direction @param double increment value
     void incrementVelocity(int dir, double u);
+
+    /// Returns the node velocity vector
+    /// @return node velocity vector
     double getVelocity(int dir) {return velocity_(dir);}
+
+    /// Returns the node previous time step velocity vector
+    /// @return node previous time step velocity vector
     double getPreviousVelocity(int dir) {return previousVelocity_(dir);}
+
+    /// Sets the velocity divergent at the node
+    /// @param double velocity divergent
     void setVelocityDivergent(double div) {divergent_ = div;}
+
+    /// Returns the node velocity divergent
+    /// @return node velocity divergent
     double getVelocityDivergent() {return divergent_;}
 
-    //Acceleration functions
+    //..........................Acceleration functions..........................
+    /// Sets the acceleration vector
+    /// @param double* acceleration vector
     void setAcceleration(double *u);
+
+    /// Sets the previous time step acceleration vector
+    /// @param double* previous time step acceleration vector
     void setPreviousAcceleration(double *u);
+
+    /// Gets the acceleration vector
+    /// @return acceleration vector
     double getAcceleration(int dir) {return acceleration_(dir);}
+
+    /// Gets the previous time step acceleration vector
+    /// @return previous time step acceleration vector
     double getPreviousAcceleration(int dir) {return previousAcceleration_(dir);}
 
-    //Pressure functions
+    //............................Pressure functions............................
+    /// Sets the nodal pressure
+    /// @param double pressure
     void setPressure(double p);
+
+    /// Increments the nodal pressure
+    /// @param double pressure increment
     void incrementPressure(double p);
+
+    /// Gets the nodal pressure value
+    /// @return nodal pressure value
     double getPressure() {return pressure_;};
+
+    /// Sets the previous time step nodal pressure
+    /// @param double previous time step nodal pressure
     void setPreviousPressure(double p);
+
+    /// Gets the previous time step nodal pressure
+    /// @return previous time step nodal pressure
     double getPreviousPressure() {return previousPressure_;}
 
-    //Mesh Velocity functions
+    //.........................Mesh Velocity functions..........................
+    /// Sets the node mesh velocity
+    /// @param double* mesh velocity
     void setMeshVelocity(double *u);
+
+    /// Sets the previous time step mesh velocity
+    /// @param int direction @param double previous time step mesh velocity valu
     void setPreviousMeshVelocity(int dir, double u);
+
+    /// Gets the node mesh velocity
+    /// @param int direction @return mesh velocity component
     double getMeshVelocity(int dir) {return meshVelocity_(dir);}
+
+    /// Gets the previous time step mesh velocity
+    /// @param int direction @return previous time step mesh velocity component
     double getPreviousMeshVelocity(int dir) {return previousMeshVelocity_(dir);}
 
-    //Constrain functions
+    //...........................Constrains functions...........................
+
+    /// Sets all node constrains     
+    /// @param int direction 
+    /// @param int type: 0 - free, 1 - constrained, 2 - glue zone, 
+    /// 3 - fluid-structure interface @param double constrain value
     void setConstrains(int dir, int type, double value){
         constrainType[dir] = type;
         constrainValue[dir] = value;
         velocity_(dir) = value;
         previousVelocity_(dir) = value;
     };
+
+    /// Gets node constrain type
+    /// @return constrain type
     int getConstrains(int dir) {return constrainType[dir];}
+
+    /// Gets node constrain value
+    /// @return constrain value
     double getConstrainValue(int dir) {return constrainValue[dir];}
 
+    /// Sets constrains for solving the mesh moving problem
+    /// @param int direction 
+    /// @param int constrain type: 0 - free, 1 - constrained
+    /// @param double constrain value
     void setConstrainsLaplace(int dir, int type, double value){
         constrainTypeLaplace[dir] = type;
         constrainValueLaplace[dir] = value;
     };
+
+    /// Gets constrains of mesh moving problem
+    /// @return constrain type
     int getConstrainsLaplace(int dir) {return constrainTypeLaplace[dir];}
+
+    /// Gets constrain value of mesh moving problem
+    /// return constrain value
     double getConstrainValueLaplace(int dir){return constrainValueLaplace[dir];}
 
-    //Arlequin functions
+    //............................Arlequin functions............................
+    /// Sets Lagrange Multiplier value
+    /// @param int direction @param double component value
     void setLagrangeMultiplier(int dir, double lMult){
         lagMultiplier_(dir) = lMult;};
+
+    /// Increment the Lagrange Multiplier vector
+    /// @param int direction @param double increment value
     void incrementLagrangeMultiplier(int dir, double lMult){
         lagMultiplier_(dir) += lMult;};
+
+    /// Gets Lagrange Multiplier component value
+    /// @param int direction @return component value
     double getLagrangeMultiplier(int dir) {return lagMultiplier_(dir);};
+
+    /// Sets the nodal energy weight function value
+    /// @param double weight function value
     void setWeightFunction(double val) {weightFunction_ = val;};
+
+    /// Gets the nodal energy weight function value
+    /// @return weight function value
     double getWeightFunction() {return weightFunction_;};
+
+    /// Sets the interpolated Arlequin pressure 
+    /// @param double interpolated pressure value
     void setPressureArlequin(double p) {presArlequin_ = p;};
+
+    /// Gets interpolated Arlequin pressure
+    /// @return interpolated Arlequin pressure
     double getPressureArlequin() {return presArlequin_;};
+
+    /// Sets the interpolated Arlequin velocity
+    /// @param int direction @param double interpolated velocity component value
     void setVelocityArlequin(int dir, double v) {velArlequin_(dir) = v;};
+
+    /// Gets the interpolated Arlequin velocity component
+    /// @param int direction @return interpolated Arlequin velocity component
     double getVelocityArlequin(int dir) {return velArlequin_(dir);};
 
-    //Signaled distance
+    //.......................Signaled distance functions........................
+    /// Sets the Signaled distance function value
+    /// @param double signaled distance value
     void setDistFunction(double dist) {distGlueZone = dist;};
+
+    /// Gets the Signaled distance function value
+    /// @return signaled distance value
     double getDistFunction(){return distGlueZone;};
 
-
-    //Potential problem functions
+    //.......................Potential problem functions........................
+    /// Sets the potential gradient component value
+    /// @param int direction @param double potential gradient component value
     void setGradientComponent(double val, int dir) {gradient_(dir) = val;};
+
+    /// Gets the potential gradient component value
+    /// @param int direction @return potential gradient component value
     double getGradientComponent(int dir) {return gradient_(dir);};
+
+    /// Sets the nodal potential value
+    /// @param double potential 
     void setPotential(double p) {potential_ = p;};
+
+    /// Increments the nodal potential value
+    /// @param double potential increment value
     void incrementPotential(double p) {potential_ += p;};
+
+    /// Gets the nodal potential value
+    /// @return potential value
     double getPotential() {return potential_;};
 
 };

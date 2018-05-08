@@ -16,6 +16,8 @@
 
 #include "BoundaryShapeFunction.hpp"
 
+/// Defines the gauss quadrature rule for the boundary integration
+
 template<int DIM>
 class BoundaryIntegQuadrature{
 public:
@@ -40,17 +42,20 @@ private:
     double pi = M_PI;
 
 public:
-    //Returns the index of the first integration point
+    /// Returns the index of the first integration point
+    /// @return First integration point index
     QuadratureListIt begin() {
         return pointWeight.begin();
     }
 
-    //Returns the index of the last integration point
+    /// Returns the index of the last integration point
+    /// @return Last integration point index
     QuadratureListIt end() {
         return pointWeight.end();
     }
 
-    //Returns the integration point coordinate
+    /// Returns the integration point adimensional coordinate and weight
+    /// @return Adimensional coordinate and weight of the integration point
     std::pair<PointCoord,PointWeight> GaussQuadrature(){
 
         double xmga, xlga, zga, p1ga, p2ga, p3ga, ppga, z1ga;

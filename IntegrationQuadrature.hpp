@@ -15,7 +15,8 @@
 #define INTEG_QUADRATURE_H
 
 #include "QuadraticShapeFunction.hpp"
-//#include "LinearShapeFunction.hpp"
+
+/// Defines the domain integration Hammer quadrature
 
 template<int DIM>
 class IntegQuadrature{
@@ -38,23 +39,31 @@ public:
     typedef ublas::bounded_vector<double, 4*DIM-2>      NodalValuesQuad;
 
 public:
-    //Returns the index of the first integration point
+    /// Returns the index of the first integration point
+    /// @return first integration point index
     QuadratureListIt begin() {
         return pointWeight.begin();
     }
 
-    //Returns the index of the last integration point
+    /// Returns the index of the last integration point
+    /// @return last integration point index
     QuadratureListIt end() {
         return pointWeight.end();
     }
 
-    //Returns the integration point coordinate
+    /// Returns the integration point coordinate
+    /// @param int integration point index @param int adimensional direction
+    /// @return integration point adimensional coordinates
     double PointList(int i, int j); 
 
-    //Retuns the integration point weight
+    /// Retuns the integration point weight
+    /// @param int integration point index @return integration point weight
     double WeightList(int i);
   
-    //Interpolate variables
+    /// Interpolate quadratic variables
+    /// @param NodalValuesQuad element variable nodal values
+    /// @param Integration point index
+    /// @return Interpolated variable value
     double interpolateQuadraticVariable(NodalValuesQuad nValues, int point);
 
 

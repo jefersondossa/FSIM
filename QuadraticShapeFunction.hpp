@@ -16,7 +16,10 @@
 
 using namespace boost::numeric;
 
+/// Defines the quadratic shape functions and its derivatives
+
 template<int DIM>
+
 class QuadShapeFunction {
 public:
 
@@ -39,13 +42,19 @@ public:
 
 public:
     
-    //Evaluates the shape function value
+    /// Evaluates the shape function value
+    /// @param Coords Adimensional coordinates 
+    /// @param Values Shape function values
     void evaluate(const Coords& xi, Values& phi) const;
     
-    //Evaluates the values of the shape funtion derivatives
+    /// Evaluates the values of the shape funtion derivatives
+    /// @param Coords Adimensional coordinates 
+    /// @param ValueDeriv Shape function derivatives values
     void evaluateGradient(const Coords& xi, ValueDeriv& dphi) const;   
 
-    //Evaluates the values of the shape funtion second derivatives    
+    /// Evaluates the values of the shape funtion second derivatives    
+    /// @param Coords Adimensional coordinates 
+    /// @param ValueDeriv Shape function second derivatives values
     void evaluateHessian(const Coords& xi, ValueDDeriv& ddphi) const;   
 };
 

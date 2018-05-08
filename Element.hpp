@@ -18,7 +18,9 @@
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
 //#include "IntegrationQuadrature11.hpp"
-#include "PartitionedQuadrature2.hpp"
+#include "PartitionedQuadrature.hpp"
+
+/// Defines the fluid element object and all the element information
 
 template<int DIM>
 class Element{
@@ -128,9 +130,11 @@ private:
     std::vector<int>                    intPointCorrespElem;
 
 public:
-    //Element definition
+    /// fluid element constructor
+    /// @param int element index @param Connectivity element connectivity
+    /// @param vector<Nodes> 
     Element(int index, Connectivity& connect, std::vector<Nodes *> nodes){
-     index_ = index;
+        index_ = index;
         connect_ = connect;
         nodes_ = nodes;
 
@@ -166,42 +170,118 @@ public:
         getJacobianMatrix(xsi);
     };
 
-    //Element basic information
+    //........................Element basic information.........................
+    /// Clear all element variables
     void clearVariables();
+
+    /// Sets the element connectivity
+    /// @param Connectivity element connectivity
     void setConnectivity(Connectivity& connect){connect_ = connect;};
+
+    /// Gets the element connectivity
+    /// @return element connectivity
     Connectivity getConnectivity(){return connect_;};
+
+    /// Sets the element density
+    /// @param double element density
     void setDensity(double& dens){dens_ = dens;}
+
+    /// Sets the element viscosity
+    /// @param double element viscosity
     void setViscosity(double& visc){visc_ = visc;}
+
+    /// Sets the time step size
+    /// @param double time step size
     void setTimeStep(double& dt){dTime_ = dt;}
+
+    /// Sets the time integration scheme
+    /// @param double time integration scheme: 0.0 - Explicit forward Euler;
+    /// 1.0 - Implicit backward Euler;
+    /// 0.5 - Implicit Trapezoidal Rule.
     void setTimeIntegrationScheme(double& b){timeScheme_ = b;}
+
+    /// Sets the body forces
+    /// @param double* body forces
     void setFieldForce(double* ff);
+
+    /// Sets the element vector of local nodes
     void setLocalNodes();
+
+    /// Compute and store the spatial jacobian matrix
+    /// @param bounded_vector integration point adimensional coordinates
     void getJacobianMatrix(ublas::bounded_vector<double, DIM>& xsi);
+
+    /// Compute and store the shape function spatial derivatives
+    /// @param bounded_vector integration point adimensional coordinates
     void getSpatialDerivatives(ublas::bounded_vector<double, DIM>& xsi);
+
+    /// Compute and stores the interpolated velocities, mesh velocities, 
+    /// previous mesh velocity, acceleration, among others
     void getVelAndDerivatives();
+
+    /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG();
     void getParameterSUPG2();
+
+    /// Gets the element jacobian determinant
+    /// @return element jacobinan determinant
     double getJacobian(){return djac_;};
+
+    /// Compute and store the velocity divergent
     void computeVelocityDivergent();
+
+    /// Compute and store the drag and lift forces at the element boundary
     ublas::bounded_vector<double,DIM> getDragAndLiftForces();
+
+    /// Compute and store the boundary forces
     ublas::bounded_vector<double,DIM> getBoundaryLoad(DimVector xsi);
+
+    /// Gets the spatial jacobian matrix
+    /// @param bounded_vector integration point coordinates
+    /// @return spatial jacobian matrix
     DimMatrix getJacobianMatrixValues(ublas::bounded_vector<double, DIM>& xsi){
         getJacobianMatrix(xsi);
         return ainv_;};
+
+    /// Gets the nodal gradient value for potential problem
+    /// @param int direction @param int element node 
+    /// @return nodal gradient value
     double getNodalGradientValue(int dir, int node){return gradient_(node,dir);}
 
-    //Element intersection and correspondence 
+    //.................Element intersection and correspondence..................
+    /// Gets the element intersection parameters 
+    /// @param minimum coordinates @param maximum coordinates 
+    /// @param minimum inner product @param maximum inner product
+    /// @param side lenght
     void setIntersectionParameters(DimVector x, DimVector X, 
                                    double *Dk, double *dk,
                            std::vector<ublas::bounded_vector<double,DIM> > dii);
+
+    /// Gets the coordinates intersection parameters
+    /// @return minimum and maximum coordinates
     std::pair<DimVector,DimVector> getXIntersectionParameter()
     {return std::make_pair(xK,XK);};
+
+    /// Gets the inner product intersection parameters
+    /// @return minimum and maximum inner products
     std::pair<double*,double*> getDIntersectionParameter()
     {return std::make_pair(dck,dCk);};
+
+    /// Gets the side lenght intersection parameter
+    /// @return side lenght intersection parameter
     std::vector<ublas::bounded_vector<double,DIM> >getDiIntersectionParameter()
     {return di;};
+
+    //.............................Model functions..............................
+    /// Sets if the element is in the gluing zone
+    /// @param glueZone: if true is in the glue zone
     void setGlueZone(){glueZone = true;}
+
+    /// Sets which model the fluid element belongs
+    /// @param bool model: true = fine; false = coarse.
     void setModel(bool m){model = m;};
+
+    /// 
     void setFSIInterface(){FSIInterface = true;};
     void setCompressibility(){compressibility = true;};
     void clearCompressibility(){compressibility = false;};
@@ -687,7 +767,8 @@ void Element<2>::getVelAndDerivatives() {
         u_ += nodes_[connect_(i)] -> getVelocity(0) * phi_(i);
         v_ += nodes_[connect_(i)] -> getVelocity(1) * phi_(i);
 
-        uPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(0) * phi_(i);
+        uPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(0) * phi_(i);vecloc
+
         vPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(1) * phi_(i);
 
         // ax_ += nodes_[connect_(i)] -> getAcceleration(0) * phi_(i);
@@ -705,13 +786,13 @@ void Element<2>::getVelAndDerivatives() {
         dp_dx += nodes_[connect_(i)] -> getPressure() * dphi_dx(0,i);
         dp_dy += nodes_[connect_(i)] -> getPressure() * dphi_dx(1,i);
 
-        // umesh_ += nodes_[connect_(i)] -> getMeshVelocity(0) * phi_(i);
-        // vmesh_ += nodes_[connect_(i)] -> getMeshVelocity(1) * phi_(i);
+        umesh_ += nodes_[connect_(i)] -> getMeshVelocity(0) * phi_(i);
+        vmesh_ += nodes_[connect_(i)] -> getMeshVelocity(1) * phi_(i);
         
-        // dumesh_dx += nodes_[connect_(i)] -> getMeshVelocity(0) * dphi_dx(0,i);
-        // dumesh_dy += nodes_[connect_(i)] -> getMeshVelocity(0) * dphi_dx(1,i);
-        // dvmesh_dx += nodes_[connect_(i)] -> getMeshVelocity(1) * dphi_dx(0,i);
-        // dvmesh_dy += nodes_[connect_(i)] -> getMeshVelocity(1) * dphi_dx(1,i);
+        dumesh_dx += nodes_[connect_(i)] -> getMeshVelocity(0) * dphi_dx(0,i);
+        dumesh_dy += nodes_[connect_(i)] -> getMeshVelocity(0) * dphi_dx(1,i);
+        dvmesh_dx += nodes_[connect_(i)] -> getMeshVelocity(1) * dphi_dx(0,i);
+        dvmesh_dy += nodes_[connect_(i)] -> getMeshVelocity(1) * dphi_dx(1,i);
         // std::cout << "velocity " << phi_(i) << " " << nodes_[connect_(i)] -> getVelocity(0) << std::endl;
 
         lagMx_ += nodes_[connect_(i)] -> getLagrangeMultiplier(0) * phi_(i);
