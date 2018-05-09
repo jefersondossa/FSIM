@@ -22,26 +22,27 @@ class PartQuadrature{
 
 public:
 public:
-    //Defines the type "PointCoord" which stores the 
-    //integration points coordinates
+    /// Defines the type "PointCoord" which stores the 
+    /// integration points coordinates
     typedef ublas::bounded_matrix<double, 28,DIM>  PointCoord;
 
-    //Defines the type "PointWeight" which stores the
-    //integration points weights
+    /// Defines the type "PointWeight" which stores the
+    /// integration points weights
     typedef ublas::bounded_vector<double, 28>      PointWeight;
 
-    //Integration point logical vector
+    /// Integration point logical vector
     typedef ublas::bounded_vector<bool, 28>        PointLogical;
 
-    //Defines the numerical integration iterator
+    /// Defines the numerical integration iterator
     typedef typename PointWeight::iterator              QuadratureListIt;
 
-    //Defines vector of nodal values
+    /// Defines vector of nodal values
     typedef ublas::bounded_vector<double, 4*DIM-2>      NodalValuesQuad;
 
 public:
     /// Returns the index of the first integration point
-    /// @return first integration point index    QuadratureListIt begin() {
+    /// @return first integration point index 
+    QuadratureListIt begin() {
         return pointWeight.begin();
     }
 

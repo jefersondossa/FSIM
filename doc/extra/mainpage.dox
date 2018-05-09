@@ -15,6 +15,8 @@ The project is developed in C++ and Fortran and the following external packages 
 3. MUMPS (http://mumps.enseeiht.fr/) - for parallel solving linear systems;
 4. PETSc (https://www.mcs.anl.gov/petsc/) - for parallel solving linear systems and to make the interface with MUMPS and ParMETIS.
 
+Post-processing is carried out with ParaView (https://www.paraview.org/).
+
 Most of this documentation covers the C++ implementation. 
 
 This software is mainly developed at the Structural Engineering Department - EESC/USP (São Carlos - Brazil).

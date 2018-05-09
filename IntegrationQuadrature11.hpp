@@ -16,9 +16,11 @@
 
 #include "QuadraticShapeFunction.hpp"
 
+/// Defines a special quadrature rule (equal to the normal quadradure rule) used for the integration of problems with coincident meshes
+
 template<int DIM>
 class IntegQuadratureSpecial{
-
+ 
 public:
     //Defines the type "PointCoord" which stores the 
     //integration points coordinates

@@ -21,15 +21,15 @@
 template<int DIM>
 class BoundaryIntegQuadrature{
 public:
-    //Defines the type "PointCoord" which stores the 
-    //integration points coordinates
+    /// Defines the type "PointCoord" which stores the 
+    /// integration points coordinates
     typedef ublas::bounded_vector<double, DIM>  PointCoord;
 
-    //Defines the type "PointWeight" which stores the
-    //integration points weights
+    /// Defines the type "PointWeight" which stores the
+    /// integration points weights
     typedef ublas::bounded_vector<double, DIM>      PointWeight;
 
-    //Defines the numerical integration iterator
+    /// Defines the numerical integration iterator
     typedef typename PointWeight::iterator              QuadratureListIt;
 
 private:

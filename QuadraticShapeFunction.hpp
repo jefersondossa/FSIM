@@ -23,20 +23,21 @@ template<int DIM>
 class QuadShapeFunction {
 public:
 
-    //Defines type "Coords" to allocate the integration points coordinates
+    /// Defines type "Coords" to allocate the integration points coordinates
     typedef ublas::bounded_vector<double, DIM>     Coords;
 
     //Number of interpolation notes    
     static const int numIntpNodes = 4*DIM-2;
     
-    //Defines the type "Values" which stores the shape function values
+    /// Defines the type "Values" which stores the shape function values
     typedef ublas::bounded_vector<double, numIntpNodes>           Values;
 
-    //Defines the type "ValuesDeriv" which stores the shape function derivatives
+    /// Defines the type "ValuesDeriv" which stores the shape function
+    /// derivatives
     typedef ublas::bounded_matrix<double, DIM, numIntpNodes>      ValueDeriv;
 
-    //Defines the type "ValuesDDeriv" which stores 
-    //the shape function second derivatives
+    /// Defines the type "ValuesDDeriv" which stores 
+    /// the shape function second derivatives
     typedef ublas::bounded_vector<double, numIntpNodes>           ValueDDphi;
     typedef ublas::bounded_matrix<ValueDDphi, DIM, DIM>           ValueDDeriv;
 

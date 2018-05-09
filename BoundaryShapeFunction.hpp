@@ -22,10 +22,11 @@ template<int DIM>
 class BoundShapeFunction {
 public:
    
-    //Defines the type "Values" which stores the shape function values
+    /// Defines the type "Values" which stores the shape function values
     typedef ublas::bounded_vector<double, 3*(DIM-1)>           Values;
 
-    //Defines the type "ValuesDeriv" which stores the shape function derivatives
+    /// Defines the type "ValuesDeriv" which stores the shape function
+    /// derivatives
     typedef ublas::bounded_vector<double, 3*(DIM-1)>           ValueDeriv;
 
 public:
