@@ -17,7 +17,7 @@
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
-//#include "IntegrationQuadrature11.hpp"
+#include "IntegrationQuadrature11.hpp"
 #include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
@@ -26,30 +26,41 @@ template<int DIM>
 class Element{
  
 public:
-    //Defines de class Node
+    /// Defines the class Node locally
     typedef Node<DIM>                                           Nodes;
-    //Defines the element mesh connectivity - velocity
+
+    /// Defines a type to store the element mesh connectivity
     typedef ublas::bounded_vector<int, 4*DIM-2>                 Connectivity;
-    //Defines a blas-type vector with dimension = DIM
+
+    /// Defines a blas-type vector with dimension = DIM
     typedef ublas::bounded_vector<double, DIM>                  DimVector;
-    //Defines a blas-type matrix with dimension = DIM x DIM
+
+    /// Defines a blas-type matrix with dimension = DIM x DIM
     typedef ublas::bounded_matrix<double, DIM, DIM>             DimMatrix;
-    //Defines the vector which contains the element nodal coordinates
+
+    /// Defines the vector which contains the element nodal coordinates
     typedef ublas::bounded_matrix<double, 4*DIM-2, DIM>         LocalNodes;
-    //Defines the local vector type with dimension 15 for DIM=2 and 34 for DIM=3
+
+    /// Defines the local vector type with dimension 15 for DIM=2 
+    /// and 34 for DIM=3
     typedef ublas::bounded_vector<double, 22*DIM-26>            LocalVector;
-    //Defines the local matrix type with dimension 15x15
-    //for DIM=2 and 34x34 for DIM=3
+
+    /// Defines the local matrix type with dimension 15x15
+    /// for DIM=2 and 34x34 for DIM=3
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
-    //Defines the integration quadrature rule
-    typedef PartQuadrature<DIM>                                 SpecialQuad;
-    //typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+
+    ///Defines the partitioned integration quadrature rule class locally
+    //typedef PartQuadrature<DIM>                                 SpecialQuad;
+    typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+
+    /// Defines the normal integration quadrature rule class locally
     typedef IntegQuadrature<DIM>                                NormalQuad;
 
+    /// Defines the boundary integration quadrature rule class locally
     typedef BoundaryIntegQuadrature<DIM>                        BoundaryQuad;
     
+    /// Define the type VecLocD from class Node locally
     typedef typename Nodes::VecLocD                             VecLoc;
-    typedef ublas::bounded_vector<double, 4*DIM-2>              NodalValue;
 
 private:
     QuadShapeFunction<DIM> shapeQuad; //Quadratic shape function
@@ -248,6 +259,28 @@ public:
     /// @return nodal gradient value
     double getNodalGradientValue(int dir, int node){return gradient_(node,dir);}
 
+    /// Sets the element side in boundary
+    /// @param int side in boundary
+    void setElemSideInBoundary(int side){sideBoundary_ = side;};
+
+    /// Gets the element side in boundary
+    /// @return side in boundary
+    int getElemSideInBoundary(){return sideBoundary_;};
+
+    /// Gets the results in a specific point for the potential problem
+    /// @param VecLoc point adimensional coordinates
+    /// @return potential results for the specific point
+    std::pair<double, ublas::bounded_vector<double,DIM> >
+    getPotentialResultsInPoint(VecLoc xsi);
+
+    /// Sets the mesh moving weighting parameter for solving the Laplace problem
+    /// @param double parameter value
+    void setMeshMovingParameter(double value) {meshMovingParameter = value;};
+
+    /// Gets the mesh moving weighting parameter
+    /// @return mesh moving weighting parameter
+    double getMeshMovingParameter(){return meshMovingParameter;};
+
     //.................Element intersection and correspondence..................
     /// Gets the element intersection parameters 
     /// @param minimum coordinates @param maximum coordinates 
@@ -281,76 +314,170 @@ public:
     /// @param bool model: true = fine; false = coarse.
     void setModel(bool m){model = m;};
 
-    /// 
+    /// Sets if the element belongs to the fluid structure interface
     void setFSIInterface(){FSIInterface = true;};
+
+    /// Sets if the element must be incompressible
+    /// If true, the element is compressible else it is incompressible
     void setCompressibility(){compressibility = true;};
+
+    /// Clears the element compressibility condition setting false. 
+    /// @see Element::setCompressibility()
     void clearCompressibility(){compressibility = false;};
+
+    /// Gets the element compressibility constrain
+    /// @return compressibility constrain @see Element::setCompressibility()
     bool getCompressibility(){return compressibility;};
 
-    //Integration Points information
+    //......................Integration Points Information......................
+    /// Gets the number of integration points of the special quadrature rule
+    /// @retunr number of integration point of the special quadrature rule
     int getNumberOfIntegrationPoints(){return (sQuad.end() - sQuad.begin());};
+
+    /// Sets the integration point correspondence to the overlapped mesh
+    /// @param int element correspondent @param VecLoc Adimensional coordinates
     void setIntegrationPointCorrespondence(int elem, VecLoc x){
         intPointCorrespElem.push_back(elem);
-        intPointCorrespXsi.push_back(x);
-    };
+        intPointCorrespXsi.push_back(x); };
+
+    /// Gets the integration point correspondence - element
+    /// @return overlapped element correspondence
     int getIntegPointCorrespondenceElement(int index)
     {return intPointCorrespElem[index];};
+
+    /// Compute and store the integration points global coordinates
     void getIntegPointCoordinates();
+
+    /// Gets the integration point global coordinates
+    /// @param int integration point index @return integration point coordinates
     VecLoc getIntegPointCoordinatesValue(int index)
     {return intPointCoordinates[index];};
+
+    /// Sets the integration point energy weight function
+    /// @param int integration point index 
+    /// @param double energy weight function value
     void setIntegPointWeightFunction(int index, double val)
     {intPointWeightFunction(index) = val;};
+
+    /// Gets the integration point energy weight function
+    /// @param int integration point index @return energy weight function value
     double getIntegPointWeightFunction(int index)
     {return intPointWeightFunction(index);};
+
+    /// Sets if the integration point is the gluing zone
+    /// @param int integration point index 
     void setIntegPointInGlueZone(int index){intPointGlueZone(index) = true;};
+
+    /// Gets true if the integration point is in the gluing zone
+    /// @param int integration point index @return If is in the gluing zone
     bool getIntegPointInGlueZone(int index){return intPointGlueZone(index);};
+
+    /// Sets the integration point signaled distance function
+    /// @param int integration point index
+    /// @param signaled distance function valye
     void setIntegPointDistFunction(int index, double val)
     {intPointDistGlueZone(index) = val;};
+
+    /// Gets the integration point signaled distance function value
+    /// @return integration point signaled distance function value
     double getIntegPointDistFunction(int index)
     {return intPointDistGlueZone(index);};
 
-    //Element vectors and matrices
+    //.......................Element vectors and matrices.......................
+    /// Compute and store the element matrix for the incompressible flow problem
+    /// @param int integration point index
     void getElemMatrix(int index);
+
+    /// Compute and store the element matrix for the Laplace/Poisson problem
     void getElemLaplMatrix();
+
+    /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions();
+
+    /// Sets the boundary conditions for the Laplace/Poisson problem
     void setBoundaryConditionsLaplace();
+
+    ///Compute and store the residual vector for the incompressible flow problem
+    /// @param int integration point index
     void getResidualVector(int index);
+
+    /// Compute and store the residual vector for the Laplace/Poisson problem
     void getResidualVectorLaplace();
+
+    /// Gets the Newton-Raphson's jacobian matrix
+    /// @return Newton-Raphson's jacobian matrix
     LocalMatrix getJacNRMatrix(){return jacobianNRMatrix;};
+
+    /// Gets the Lagrange multiplier operator matrix
+    /// @return Lagrange multiplier operator matrix
     LocalMatrix getLagrMultMatrix(){return lagrMultMatrix;};
+
+    /// Gets the residual vector
+    /// @return residual vecot
     LocalVector getRhsVector(){return rhsVector;};
+
+    /// Gets the Lagrange multiplier residual vector
+    /// @return Lagrange multiplier residual vector
     LocalVector getRhsVectorLagMult(){return rhsVectorLM;};
+
+    /// Apply the boundary conditions and returns the matrix and residual vector
+    /// for the Lagrange multiplier operator matrix, used when computing the 
+    /// operator term from different meshes
+    /// @param LocalMatrix Lagrange multiplier operator matrix
+    /// @return residual vector and Lagrange multiplier operator matrix with
+    /// boundary conditions applied
     std::pair<LocalVector,LocalMatrix> 
     getRhsVectorAndBoundaryConditions(LocalMatrix Ajac){
         jacobianNRMatrix = Ajac;
         setBoundaryConditionsLagrangeMultipliers();       
-        return std::make_pair(rhsVector,jacobianNRMatrix);
-    };
+        return std::make_pair(rhsVector,jacobianNRMatrix);    };
+
+    /// Sets the boundary conditions to the Lagrange multiplier operator
     void setBoundaryConditionsLagrangeMultipliers();
+
+    /// Compute and store the nodal gradient value (for potential problems)
     void computeNodalGradient();
 
-    //Problem type
-    void getSteadyStokes();
-    void getSteadyNavierStokes();
-    void getTransientStokes();
-    void getTransientNavierStokes();
-    void getSteadyLaplace();
-    void getTransientLaplace();
+    /// Compute and store the Lagrange multiplier operator when integrating 
+    /// the same mesh portion
     void getLagrangeMultipliersSameMesh();
-    void getLMStabilizationSameMesh();
-    void getStabCoarse(int ielem);
+
+    /// Compute and store the Lagrange multiplier operator when integrationg
+    /// the different mesh portion
+    /// @param int element of the coarse mesh (used to verify which integration
+    /// point belongs to the coarse mesh element)
     void getLagrangeMultipliersDifferentMesh(int ielem);
-    
-    void setMeshMovingParameter(double value) {meshMovingParameter = value;};
-    double getMeshMovingParameter(){return meshMovingParameter;};
 
-    void setElemSideInBoundary(int side){sideBoundary_ = side;};
-    int getElemSideInBoundary(){return sideBoundary_;};
+    /// Compute and store the stabilization for the Lagrange multiplier operator
+    /// for the same mesh portion
+    void getLMStabilizationSameMesh();
 
+    /// Compute and store the stabilization for the Lagrange multiplier operator
+    /// for the different mesh portion
+    /// @param int element of the coarse mesh 
+    /// @see Element::getLagrangeMultipliersDifferentMesh(int ielem)
+    void getStabCoarse(int ielem);
 
-    std::pair<double, ublas::bounded_vector<double,DIM> >
-    getPotentialResultsInPoint(VecLoc xsi);
+    //...............................Problem type...............................
+    /// Compute the Steady Stokes problem matrices and vectors
+    void getSteadyStokes();
 
+    /// Compute the Steady Navier-Stokes problem matrices and vectors
+    void getSteadyNavierStokes();
+
+    /// Compute the Transient Stokes problem matrices and vectors
+    void getTransientStokes();
+
+    /// Compute the Transient Navier-Stokes problem matrices and vectors
+    void getTransientNavierStokes();
+
+    /// Compute the Steady Laplace problem matrices and vectors 
+    /// (usually for the mesh moving step)
+    void getSteadyLaplace();
+
+    /// Compute the Transient Laplace problem matrices and vectors
+    /// (usually for the mesh moving step)
+    void getTransientLaplace();
 
 };
 
@@ -406,39 +533,6 @@ void Element<3>::setFieldForce(double *ff) {
 };
 
 //------------------------------------------------------------------------------
-//------------------------SEARCH THE ELEMENT LOCAL NODES------------------------
-//------------------------------------------------------------------------------
-//Creates a vector with the local nodes coordinates
-template<>
-void Element<2>::setLocalNodes() {
-    
-    typename Nodes::VecLocD x;
-
-    for (int i=0; i<6; i++){
-        x = nodes_[connect_(i)] -> getCoordinates();
-        localNodes_(i,0) = x(0);
-        localNodes_(i,1) = x(1);
-    };
-
-    return;
-};
-
-template<>
-void Element<3>::setLocalNodes() {
-    
-    typename Nodes::VecLocD x;
-
-    for (int i=0; i<10; i++){
-        x = nodes_[connect_(i)] -> getCoordinates();
-        localNodes_(i,0) = x(0);
-        localNodes_(i,1) = x(1);
-        localNodes_(i,2) = x(2);
-    };
-
-    return;
-};
-
-//------------------------------------------------------------------------------
 //------------------COMPUTES THE INTEGRATION POINT COORDINATE-------------------
 //------------------------------------------------------------------------------
 template<>
@@ -483,6 +577,41 @@ void Element<3>::getIntegPointCoordinates(){
         x(2) = sQuad.interpolateQuadraticVariable(nodalCoordz, i);
 
         intPointCoordinates.push_back(x);
+    };
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//------------------------SEARCH THE ELEMENT LOCAL NODES------------------------
+//------------------------------------------------------------------------------
+//Creates a vector with the local nodes coordinates
+template<>
+void Element<2>::setLocalNodes() {
+    
+    typename Nodes::VecLocD x;
+
+    for (int i=0; i<6; i++){
+        x = nodes_[connect_(i)] -> getCoordinates();
+        localNodes_(i,0) = x(0);
+        localNodes_(i,1) = x(1);
+    };
+
+    getIntegPointCoordinates();
+
+    return;
+};
+
+template<>
+void Element<3>::setLocalNodes() {
+    
+    typename Nodes::VecLocD x;
+
+    for (int i=0; i<10; i++){
+        x = nodes_[connect_(i)] -> getCoordinates();
+        localNodes_(i,0) = x(0);
+        localNodes_(i,1) = x(1);
+        localNodes_(i,2) = x(2);
     };
 
     return;
@@ -767,8 +896,7 @@ void Element<2>::getVelAndDerivatives() {
         u_ += nodes_[connect_(i)] -> getVelocity(0) * phi_(i);
         v_ += nodes_[connect_(i)] -> getVelocity(1) * phi_(i);
 
-        uPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(0) * phi_(i);vecloc
-
+        uPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(0) * phi_(i);
         vPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(1) * phi_(i);
 
         // ax_ += nodes_[connect_(i)] -> getAcceleration(0) * phi_(i);
@@ -1075,12 +1203,6 @@ void Element<2>::getParameterSUPG() {
     return;
 };
 
-template<>
-void Element<3>::getParameterSUPG() {
-
-    return;
-};
-
 //------------------------------------------------------------------------------
 //----------------------ELEMENT DIFFUSION/VISCOSITY MATRIX----------------------
 //------------------------------------------------------------------------------
@@ -1238,13 +1360,6 @@ void Element<2>::getElemMatrix(int index){
     return;
 };
 
-template<>
-void Element<3>::getElemMatrix(int index){
-
- 
-
-    return;
-};
 
 //------------------------------------------------------------------------------
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
@@ -1305,12 +1420,6 @@ void Element<2>::setBoundaryConditions(){
     //     };
     // };
 
-    return;
-};
-
-template<>
-void Element<3>::setBoundaryConditions(){
-    
     return;
 };
 
@@ -1480,12 +1589,6 @@ void Element<2>::getResidualVector(int index){
 
 
 
-    return;
-};
-
-template<>
-void Element<3>::getResidualVector(int index){
-    
     return;
 };
 
@@ -1815,11 +1918,6 @@ void Element<2>::getSteadyStokes(){
     return;
 };
 
-template<>
-void Element<3>::getSteadyStokes(){
-
-    return;
-};
 
 //------------------------------------------------------------------------------
 //-------------------------STEADY NAVIER-STOKES PROBEM--------------------------
@@ -1870,12 +1968,6 @@ void Element<2>::getSteadyNavierStokes(){
     return;
 };
 
-template<>
-void Element<3>::getSteadyNavierStokes(){
-
-    return;
-};
-
 //------------------------------------------------------------------------------
 //---------------------------TRANSIENT STOKES PROBEM----------------------------
 //------------------------------------------------------------------------------
@@ -1921,12 +2013,6 @@ void Element<2>::getTransientStokes(){
     
     //Apply boundary conditions
     setBoundaryConditions();
-
-    return;
-};
-
-template<>
-void Element<3>::getTransientStokes(){
 
     return;
 };
@@ -1984,13 +2070,6 @@ void Element<2>::getTransientNavierStokes(){
 
     return;
 };
-
-template<>
-void Element<3>::getTransientNavierStokes(){
-
-    return;
-};
-
 
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------

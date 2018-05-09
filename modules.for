@@ -2,8 +2,10 @@ c     ******************************************
 c     O significado de cada variável dinâmica está 
 c     listado no subprograma alocadin.for
 c     *******************************************
-      MODULE BIG_STUFF
 
+      !>Stores the frame structure dynamic variables
+
+      MODULE BIG_STUFF
       integer*4,allocatable:: IRN(:),ICN(:),IW(:),IKEEP(:,:),IW1(:)
      $     ,ic(:,:),ko(:),ko1(:),inct(:,:),kn(:),im(:,:),itip(:,:)
      $     ,indx(:),in(:,:),irna(:),icna(:),glgl(:,:) ,itr(:,:),ngl(:)
@@ -39,6 +41,7 @@ c     *************************************************************
       
       END MODULE BIG_STUFF
 
+      !>Stores the frame structure static variables
 
       MODULE BLOCLAGATBIG
 

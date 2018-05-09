@@ -20,6 +20,7 @@ template<int DIM>
 class Boundary{
 
 public: 
+    /// Defines a type to store the boundary element connectivity vector
     typedef ublas::bounded_vector<int, 3*(DIM-1)>         BoundConnect;
 
     /// Boundary element constructor

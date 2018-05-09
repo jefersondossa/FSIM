@@ -25,11 +25,15 @@ template<int DIM>
 
 class Node{
 public:
-    //store doubles to the dimension size
+    /// Defines a type to store double variables with the dimension size
     typedef ublas::bounded_vector<double,DIM>        VecLocD;
-    //poir integer double (help to set constraints)
+
+    /// Defines a pair with integer and  double variables
+    /// which helps to setting the constraints
     typedef std::vector<std::pair<int, double> >     VecConstrD;
-    //help to build loops in order to enforce bcs
+
+    /// Defines the node iterator for helping to build loops in order
+    /// to enforce bcs
     typedef VecConstrD::iterator                     VecConstrDIt;
 
     static const int spaceDim = DIM;

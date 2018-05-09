@@ -21,20 +21,27 @@
 #include <metis.h>
 #include <petscksp.h> 
 
+/// Mounts the incompressible flow problem
+
 template<int DIM>
 class Fluid{
 public:
-    //Defines the class Element
+    /// Defines the class Element locally
     typedef Element<DIM> Elements;
-    //Defines the class Node
+
+    /// Defines the class Node locally
     typedef typename Elements::Nodes  Node;
-    //Defines the class Boundary
+
+    /// Defines the class Boundary locally
     typedef Boundary<DIM> Boundaries;
-    //Defines the vector of fluid quadratic mesh nodes
+
+    /// Defines the vector of fluid nodes
     std::vector<Node *>       nodes_;
-    //Defines the vector of fluid elements
+
+    /// Defines the vector of fluid elements
     std::vector<Elements *>   elements_;
-    //Defines the vector of fluid boundaries mesh nodes
+ 
+    /// Defines the vector of fluid boundaries mesh nodes
     std::vector<Boundaries *> boundary_;
 
 private:
@@ -64,42 +71,69 @@ private:
     double liftCoefficient;
 
 public:
-    //Data reading and preprocessing functions
+    /// Reads the input file and perform the preprocessing operations
+    /// @param std::string input file @param std::string mirror file
     void dataReading(std::string inputFile, std::string mirror);
 
-    //Performs the domain decomposition for parallel processing
+    /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
-    std::pair<idx_t*,idx_t*> getDomainDecomposition(){
-        return std::make_pair(part_elem,part_nodes);
-    };
 
-    //Return number of time steps and its lenght
+    /// Export the domain decomposition 
+    /// @return pair with the elements and nodes domain decompositions
+    std::pair<idx_t*,idx_t*> getDomainDecomposition(){
+        return std::make_pair(part_elem,part_nodes);};
+
+    /// Gets the number of time steps
+    /// @return number of time steps
     int getNumberOfTimeSteps(){return numTimeSteps;};
+
+    /// Gets the time step size
+    /// @return time step size
     double getTimeStep(){return dTime;};
+
+    /// Gets the number of fluid-structure interfaces
+    /// @return number of fluid boundaries which composes the 
+    /// fluid structure interface
     int getNumberofFSIInterfaces(){return numFSIInterfaces;};
 
+    /// Mounts and solve the steady incompressible flow steady problem    
+    /// @param int maximum number of Newton-Raphson's iterations
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int problem type: 1 - Stokes problem; 2 - Navier-Stokes problem.
+    int solveSteadyProblem(int iterNumber, double tolerance, int problem_type);
 
-    //Types of problems solved
-    int solveSteadyProblem(int iterNumber, 
-                           double tolerance, 
-                           int problem_type);
+    /// Mounts and solve the transient incompressible flow problem    
+    /// @param int maximum number of Newton-Raphson's iterations
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int problem type: 1 - Stokes problem; 2 - Navier-Stokes problem.
+    int solveTransientProblem(int iterNumber,double tolerance,int problem_type);
 
-    int solveTransientProblem(int iterNumber,
-                              double tolerance,
-                              int problem_type);
+    /// Mounts and solve the steady Laplace problem
+    /// @param int maximum number of Newton-Raphson's iterations
+    /// @param double tolerance of the Newton-Raphson's process
+    int solveSteadyLaplaceProblem(int iterNumber, double tolerance);
 
-    int solveSteadyLaplaceProblem(int iterNumber, 
-                                  double tolerance);
-
+    /// Mounts and solve the transient incompressible flow problem for 
+    /// for fluid structure interaction problems
+    /// @param int maximum number of Newton-Raphson's iterations
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int problem type: 1 - Stokes problem; 2 - Navier-Stokes problem.
     int solveFSIFluid(int iterNumber,
                       double tolerance,
                       int problem_type);
 
-    //Printing Results and postprocessing
+    /// Print the results for Paraview post-processing
+    /// @param int time step
     void printVelocity(int step);
 
-    //Return fluid properties for Arlequin computation
+    /// Gets the fluid model nodes and export for solving the overlapping
+    /// mesh problem with the Arlequin method
+    /// @return fluid model nodes information
     std::vector<Node *> getNodesVelocity(){return nodes_;}
+
+    /// Gets the fluid model elements and export for solving the overlapping
+    /// mesh problem with the Arlequin method
+    /// @return fluid model elements information
     std::vector<Elements *> getElements(){return elements_;}
 };
 

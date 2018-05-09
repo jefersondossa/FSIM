@@ -17,6 +17,8 @@
 #include "Fluid.hpp"
 #include "Glue.hpp"
 
+/// Mounts the overlapping mesh problem for solving the incompressible flow problem
+
 template<int DIM>
 class Arlequin{
 public:
@@ -52,6 +54,8 @@ private:
 
     int numElemCoarse;
     int numElemFine;
+    int numBoundElemCoarse;
+    int numBoundElemFine;
     int numElemGlueZoneFine;
     int numElemGlueZoneCoarse;
     int numNodesCoarse;
@@ -63,39 +67,106 @@ private:
     int numTimeSteps;
     double dTime;
     int rank;
+    int iTimeStep;
 
     std::pair<idx_t*,idx_t*> domDecompCoarse;//Coarse Model Domain Decomposition
     std::pair<idx_t*,idx_t*> domDecompFine;  //Fine Model Domain Decomposition
 
     Quadrature quad;
 
-public:
+    double pi = M_PI;
 
+public:
+    /// Sets the coarse and mesh models. It is considered that the fine model
+    /// is completely immersed on the coarse model.
+    /// @param Fluid coarse model @param Fluid fine model
     void setFluidModels(FluidMesh coarse, FluidMesh fine);
 
+    /// Mounts and solve the moving mesh Steady Laplace problem. At each step
+    /// the fine model is moved and a new steady problem is computed,
+    /// independently from the previous.
+    /// @param int maximum number of iterations of the Newton-Raphson's process
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int number of steps
     int solveSteadyArlequinMovingLaplaceProblem(int iterNumber, 
                                                 double tolerance, int steps);
 
+    /// Mounts and solve the incompressible flow problem with overlapping meshes
+    /// using the Arlequin method whit the gluing zone defined in the fine model
+    /// @param int maximum number of iterations of the Newton-Raphson's process
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int type of problem to be solved: 1 - Stokes; 2 - Navier-Stokes.
+    /// @param int 0 - Steady problem; 1 - Transient problem.
     int solveArlequinProblem(int iterNumber, double tolerance,
                              int problem_type, int time_dependency);
+
+    /// Mounts and solve the incompressible flow problem with overlapping meshes
+    /// using the Arlequin method with the gluing zone defined in the fine model
+    /// and the fine model can be moved arbitrarily in an ALE description 
+    /// framework
+    /// @param int maximum number of iterations of the Newton-Raphson's process
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int type of problem to be solved: 1 - Stokes; 2 - Navier-Stokes.
+    /// @param int 0 - Steady problem; 1 - Transient problem.
+    int solveArlequinProblemMoving(int iterNumber, double tolerance,
+                                   int problem_type, int time_dependency);
+
+    /// Mounts and solve the incompressible flow problem with overlapping meshes
+    /// using the Arlequin method whit the gluing zone defined in the coarse
+    ///  model
+    /// @param int maximum number of iterations of the Newton-Raphson's process
+    /// @param double tolerance of the Newton-Raphson's process
+    /// @param int type of problem to be solved: 1 - Stokes; 2 - Navier-Stokes.
+    /// @param int 0 - Steady problem; 1 - Transient problem.
     int solveArlequinProblemCoarse(int iterNumber, double tolerance,
                                    int problem_type, int time_dependency);
 
+    /// Compute and store the element boxes for improving the correspondence 
+    /// searching process
     void setElementBoxes();
+
+    /// Defines the gluing (or coupling) zone
     void setCouplingZone();
+
+    /// Compute and store the signaled distance function
+    void setSignaledDistance();
+
+    /// Compute and store the free zone (obsolete)
     void setFreeZone();
+
+    /// Sets the energy weight function 
+    /// @param double reference value for computing the energy weight function
     void setWeightFunction(double val);
+
+    /// Compute the energy weight function for the coarse model
+    /// @param double reference value (radius from the reference value)
+    /// @param double epsilon for the Arlequin method to be relevant
     double weightFunctionCoarseValue(double r, double epsilon);
+
+    /// Compute the energy weight function for the fine model
+    /// @param double reference value (radius from the reference value)
+    /// @param double epsilon for the Arlequin method to be relevant
     double weightFunctionFineValue(double r, double epsilon);
+
+    /// Sets the nodal correspondence of the fine to the coarse models
     void setNodalCorrespondenceFine();
+
+    /// Sets the nodal correspondence of the fine to the coarse models
     void setNodalCorrespondenceCoarse();
 
+    /// Searchs the point correspondence in a fluid model
+    /// @param VecLocD point
+    /// @param vector<Nodes> vector of fluid model nodes
+    /// @param vector<Elements> vector of fluid model elements
+    /// @param int number of elements of the fluid model
     std::pair<int,ublas::bounded_vector<double,2> > 
                       searchNodeCorrespondence(typename Nodes::VecLocD x,
                                                std::vector<Nodes *> nodes,
                                                std::vector<Elements *> elements,
                                                int numElem);
 
+    /// Print the results for Paraview post-processing
+    /// @param int time step
     void printVelocity(int step);
 
 };

@@ -16,6 +16,8 @@
 
 using namespace boost::numeric;
 
+/// Defines the linear shape functions and its derivatives (obsolete)
+
 template<int DIM>
 class LinShapeFunction {
 public:

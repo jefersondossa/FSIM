@@ -22,24 +22,14 @@ template<int DIM>
 class Glue{
 
 public:
-    //Defines de class Node
+    /// Defines de class Node locally
     typedef Node<DIM>                                           Nodes;
-    //Defines the element mesh connectivity - velocity
-    typedef ublas::bounded_vector<int, 4*DIM-2>                 Connectivity;
-    //Defines a blas-type vector with dimension = DIM
-    typedef ublas::bounded_vector<double, DIM>                  DimVector;
-    //Defines a blas-type matrix with dimension = DIM x DIM
-    typedef ublas::bounded_matrix<double, DIM, DIM>             DimMatrix;
-    //Defines the vector which contains the element nodal coordinates
-    typedef ublas::bounded_matrix<double, 4*DIM-2, DIM>         LocalNodes;
-    //Defines the local vector type with dimension 15 for DIM=2 and 34 for DIM=3
-    typedef ublas::bounded_vector<double, 22*DIM-26>            LocalVector;
-    //Defines the local matrix type with dimension 15x15
-    //for DIM=2 and 34x34 for DIM=3
-    typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
-    typedef typename Nodes::VecLocD                             VecLoc;
-    typedef ublas::bounded_vector<double, 4*DIM-2>              NodalValue;
+    /// Defines the element mesh connectivity
+    typedef ublas::bounded_vector<int, 4*DIM-2>                 Connectivity;
+ 
+    /// Defines the vector which contains the element nodal coordinates
+    typedef ublas::bounded_matrix<double, 4*DIM-2, DIM>         LocalNodes;
 
 private:
     QuadShapeFunction<DIM> shapeQuad; //Quadratic shape function
@@ -47,9 +37,6 @@ private:
     Connectivity  connect_;           //Velocity mesh connectivity 
     int           index_;             //Element index
     LocalNodes    localNodes_;        //Nodal coordinates - velocity
- 
-    LocalMatrix   jacobianNRMatrix;   //Newton's method jacobian
-    LocalVector   rhsVector;          //RHS vector of Newton's method
     int elemCorrespondent_;
  
     static const double k1;

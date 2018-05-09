@@ -19,7 +19,7 @@
 
 #include "Arlequin_cyl.hpp"
 
-
+//Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
 extern "C" {void solveframestructure_(int *ipt);};
 extern "C" {void getnumberofnodessolid_(int *n);};
@@ -41,14 +41,18 @@ extern "C" {void getvelocity_(int *dof, double *p);};
 extern "C" {void getpreviousvelocity_(int *dof, double *p);};
 extern "C" {void updatesolid_(int *ipt);};
 
+/// Mounts and solve the Fluid-Structure interaction problem.
 
 template<int DIM>
 class FSInteraction{
 public:
-    //Defines the class Element
+    /// Defines locally the class Fluid
     typedef Fluid<DIM>                     FluidMesh;
+    /// Defines locally the class Element
     typedef typename FluidMesh::Elements   Elements;
+    /// Defines locally the class Node
     typedef typename FluidMesh::Node       Nodes;
+    /// Defines locally the class Boundary
     typedef typename FluidMesh::Boundaries Boundary;
    
 private:
@@ -60,7 +64,6 @@ private:
     std::vector<std::vector<Nodes *> > nodesSolid_;
     std::vector<Elements *>  elementsFluid_;
     std::vector<Boundary *>  boundaryFluid_;
-
 
     int numElemFluid;
     int numElemFluidBoundary;
@@ -76,25 +79,48 @@ private:
 
     double pi = M_PI;
 
-
     std::vector<int>         groupInterfaces;
 
-    std::pair<idx_t*,idx_t*> domDecompFluid;//Fluid Model Domain Decomposition
+    std::pair<idx_t*,idx_t*> domDecompFluid; //Fluid Model Domain Decomposition
 
 public:
+
+    /// Sets the fluid and solid models and perform the preprocessing tasks
+    /// @param Fluid fluid model @param char* solid input file
     void setFluidAndSolidModels(FluidMesh fluid, char *in_solid);
     
+    /// Perform the preprocessing tasks
     void preProcess();
 
+    /// Compute and store the element boxes for improving the element 
+    /// correspondence searching process
     void setElementBoxes();
+
+    /// Searchs the solid node correspondence into the fluid mesh
+    /// @param int fluid boundary interface index @param int interface index
     void searchSolidNodeCorrespondence(int interface, int i);
+
+    /// Searchs the solid node correspondence into the fluid mesh
+    /// @param int fluid boundary interface index
     void searchFluidNodeCorrespondence(int interface);
 
+    /// Updates the fluid mesh solving the Laplace problem
     void updateFluidMesh();
+
+    /// Transfer solid velocity to the fluid nodes
     void transferSolidVelocity();
+
+    /// Transfer fluid loads to the solid nodes
     void transferFluidLoad();
 
+    /// Solves the partitioned weakly coupled Dirichlet-Neumann fluid-structure
+    /// interaction problem 
+    /// @param int number of time steps
     void solveFSIProblem(int numTimeSteps);
+
+    /// Solves the partitioned strong coupled fixed-point block Gauss-Seidel
+    /// with Aitken relaxation fluid-structure interaction problem 
+    /// @param int number of time steps
     void solveFSIProblemGaussSeidel(int numTimeSteps);
 
 
