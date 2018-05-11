@@ -66,13 +66,13 @@ int main(int argc, char **args) {
     FSI        coupledProblem;  
     
     //Data reading    
-    fineModel.dataReading("cyl_fine_coin.txt","mirror_fine.txt");  
+    // fineModel.dataReading("cyl_fine_coin.txt","mirror_fine.txt");  
      
-    coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
+    // coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
  
-    // fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
+    fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
      
-    // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
+    coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
  
     // control.dataReading("fluid_interaction3.txt","mirror_control.txt");
 
@@ -118,7 +118,7 @@ int main(int argc, char **args) {
     
     arlequinProblem.setFluidModels(coarseModel, fineModel) ;
       
-    arlequinProblem.solveArlequinProblemMoving(2, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1);
          
    
   
