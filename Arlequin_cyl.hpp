@@ -451,7 +451,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
     // };
 
     //Compute correspondence of integration points
-    int numberIntPoints = elementsFine_[0] -> getNumberOfIntegrationPoints();
+    //int numberIntPoints = elementsFine_[0] -> getNumberOfIntegrationPoints();
     //if (rank == 0) std::cout << "Int Points " << numberIntPoints << std::endl;
 
     for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
@@ -591,7 +591,7 @@ void Arlequin<2>::setSignaledDistance(){
         x = nodesFine_[ino] -> getCoordinates();
         
         double h = 0.0;
-        double T = 50.;        
+        double T = 100.;        
         double swd = 3.;
         double cswd = 8.;//1.-swd;
         double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
@@ -648,7 +648,7 @@ void Arlequin<2>::setSignaledDistance(){
             x = elementsFine_[i] -> getIntegPointCoordinatesValue(j);
         
             double h = 0.0;
-            double T = 50.;        
+            double T = 100.;        
             double swd = 3.;
             double cswd = 8.;//1.-swd;
             double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
@@ -707,7 +707,7 @@ void Arlequin<2>::setSignaledDistance(){
         x = nodesCoarse_[ino] -> getCoordinates();
 
         double h = 0.0;
-        double T = 50.;        
+        double T = 100.;        
         double swd = 3.;
         double cswd = 8.;//1.-swd;
         double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
@@ -764,7 +764,7 @@ void Arlequin<2>::setSignaledDistance(){
             x = elementsCoarse_[i] -> getIntegPointCoordinatesValue(j);
         
             double h = 0.0;
-            double T = 50.;    
+            double T = 100.;    
 
             double swd = 3.;
             double cswd = 8.;//1.-swd;
@@ -1064,7 +1064,7 @@ void Arlequin<2>::setFreeZone(){
     nodesFreeZone_.reserve(numNodesCoarse / 5);
 
     double h = 0.0;
-    double T = 50.;
+    double T = 100.;
     double d1 = 3.;
     double d2 = 8.;
     double d3 = 3. + h * sin(pi * iTimeStep * dTime / T);
@@ -1340,7 +1340,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-5;
-    double lambda = 1.0;
+    // double lambda = 1.0;
  
     for (int jelCoarse = 0; jelCoarse < numElemCoarse; jelCoarse++){
         
@@ -4736,6 +4736,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
     //Computes the Weight function for all the finite elements
     setWeightFunction(4.);
+    setWeightFunction(4.);
    
     //Computes the Nodal correspondence between fine nodes and coarse elements
     setNodalCorrespondenceFine();
@@ -4771,7 +4772,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 
         };
 
-        double T = 50.;
+        double T = 100.;
         double h = 0.40;
 
         for (int i = 0; i < numNodesFine; i++){
@@ -4804,7 +4805,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             x(1) = x_ini(1) + h * sin(pi * iTimeStep * dTime / T);
             nodesFine_[i] -> setCoordinates(x);
         };
-
+        
         setWeightFunction(4. + h * sin(pi * iTimeStep * dTime / T));
         setNodalCorrespondenceFine();
 
