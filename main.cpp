@@ -66,15 +66,19 @@ int main(int argc, char **args) {
     FSI        coupledProblem;  
     
     //Data reading    
+    // Cylinder
     // fineModel.dataReading("cyl_fine_coin.txt","mirror_fine.txt");  
-     
     // coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
  
-    fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
-     
-    coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
+    // Cavity
+    // fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
+    // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
+
+    // Helice
+    fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
+    coarseModel.dataReading("coarse_uns.txt","mirror_coarse.txt");
  
-    // control.dataReading("fluid_interaction3.txt","mirror_control.txt");
+    //control.dataReading("cavpropf3.txt","mirror_control.txt");
 
     // char in_solid[32] = "cantilever.txt";
      
@@ -94,12 +98,12 @@ int main(int argc, char **args) {
     //   2- Steady Navier-Stokes problem (solves the steady Stokes
     //      in the first step to perform the initial guess);  
    
-    //coarseModel.solveSteadyProblem(10, 1.e-15, 2);
+    //coarseModel.solveTransientProblem(1, 1.e-15, 2);
 
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
-    //control.solveTransientProblem(1, 1.e-6, 2); 
+    // control.solveTransientProblem(1, 1.e-6, 2); 
   
     //coarseModel.solveTransientProblem(2, 1.e-16, 2); 
 
@@ -118,7 +122,7 @@ int main(int argc, char **args) {
     
     arlequinProblem.setFluidModels(coarseModel, fineModel) ;
       
-    arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblemMoving(2, 1.e-7, 2, 1);
          
    
   

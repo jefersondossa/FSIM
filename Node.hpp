@@ -45,8 +45,8 @@ private:
     VecLocD          coordUpdated_;           //Updated nodal coordinate vector
     int              index_;                  //Node index
     VecLocD          previousCoord_;          //Previous nodal coordinate vector
-
-
+    VecLocD          nNodal_;                 //Nodal normal vector
+    
     //Fluid
     int              constrainType[3];        //Constrain direction
     double           constrainValue[3];       //Nodal prescribed velocity
@@ -150,8 +150,20 @@ public:
     /// @param double element @param VecLocD adimensional coordinates
     void setNodalCorrespondence(double elem, const VecLocD& xsi){
         elemCorresp = elem;
-        xsiCorresp = xsi;
-    };
+        xsiCorresp = xsi;};
+
+    /// Gets the nodal normal vector
+    /// @return nodal normal vector
+    VecLocD getInnerNormal() {return nNodal_;};
+
+    /// Sets nodal normal vector
+    /// @param VecLocD nodal normal vector
+    void setInnerNormal(VecLocD& n){
+        nNodal_ += n;};
+
+    /// Clears nodal normal vector
+    /// @param VecLocD nodal normal vector
+    void clearInnerNormal(){nNodal_.clear();};
 
     /// Gets nodal correspondence of overlapped mesh - element
     /// @return Element correspondence of overlapped mesh

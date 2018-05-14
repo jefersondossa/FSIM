@@ -64,7 +64,7 @@ public:
 
     /// Gets the boundary element group
     /// @return boundary element group
-    int getBoundaryGroup(){return group_;}
+    int getBoundaryGroup(){return group_;};
 
     /// Sets the fluid element correspondence
     /// @param int fluid element correspondence
@@ -90,7 +90,6 @@ private:
     int          element_;          //Fluid Element
     int          elementSide_;      //Fluid Element Side
     int          group_;            //Element boundary group
-
 };
 
 

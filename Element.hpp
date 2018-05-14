@@ -116,6 +116,7 @@ private:
     static const double k2;
 
     typename SpecialQuad::PointWeight   intPointWeightFunction;
+    typename SpecialQuad::PointWeight   intPointWeightFunctionPrev;
     typename SpecialQuad::PointWeight   intPointDistGlueZone;
     typename SpecialQuad::PointLogical  intPointGlueZone;
     bool          glueZone;
@@ -171,6 +172,7 @@ public:
 
         for (int i=0; i < (sQuad.end() - sQuad.begin()); i++){
             intPointWeightFunction(i) = 1.;
+            intPointWeightFunctionPrev(i) = 1.;
         };
 
         setLocalNodes();
@@ -356,8 +358,7 @@ public:
     /// Sets the integration point energy weight function
     /// @param int integration point index 
     /// @param double energy weight function value
-    void setIntegPointWeightFunction(int index, double val)
-    {intPointWeightFunction(index) = val;};
+    void setIntegPointWeightFunction();
 
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
@@ -508,6 +509,41 @@ void Element<2>::setIntersectionParameters(DimVector x, DimVector X,
     dck[2] = dk[2];   
     
     di = dii;
+    
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
+//------------------------------------------------------------------------------
+template<>
+void Element<2>::setIntegPointWeightFunction() {
+    
+    typename QuadShapeFunction<2>::Coords xsi;
+
+    intPointWeightFunction.clear();
+
+    int index=0;
+
+    for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
+        it != sQuad.end(); it++){
+        
+       xsi(0) = sQuad.PointList(index,0);
+       xsi(1) = sQuad.PointList(index,1);
+            
+       //Computes the velocity shape functions
+       shapeQuad.evaluate(xsi,phi_);
+
+       for (int j=0; j<6; j++){
+           intPointWeightFunction(index) += phi_(j) * nodes_[connect_(j)] -> 
+               getWeightFunction();
+       };
+
+       // intPointWeightFunction(index) = 1.;
+
+       index++;
+    }; 
+
     
     return;
 };
@@ -1355,6 +1391,16 @@ void Element<2>::getElemMatrix(int index){
         };
     };
 
+    if (model){
+        //        std::cout << " asas " << dens_ << " " << visc_ << " " << intPointWeightFunction(index) << std::endl;
+    // std::cout << "matrix " << std::endl;
+    // for (int i=0; i<18; i++){
+    //     for (int j=0; j<18; j++){        
+    //         std::cout << jacobianNRMatrix(i,j)<< " " ;
+    //     };
+    //     std::cout << std::endl;
+    // };
+    };
    
 
     return;
@@ -1517,8 +1563,17 @@ void Element<2>::getResidualVector(int index){
         dvna_dy += vna_ * dphi_dx(1,i);
     };
 
+    // double da_dx = 0.;
+    // double da_dy = 0.;
+    
+    // for (int i=0; i<6; i++){
+    //     da_dx += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(0,i);
+    //     da_dy += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(1,i);
+    // };
+    
+
+
     for (int i = 0; i < 6; i++){
-        //!!!! MULTIPLICAR NO FIM PELO PESO DE GAUSS E JACOBIANO
         double mx = phi_(i) * (u_ - uPrev_) * dens_ + 
             ((una_ - umesh_) * dphi_dx(0,i) + (vna_ - vmesh_) * dphi_dx(1,i)) * 
             (u_ - uPrev_) * tSUPG_ * dens_;
@@ -1575,6 +1630,21 @@ void Element<2>::getResidualVector(int index){
                             (vna_ - vmesh_) * dv_dy) * tPSPG_;
 
         Q *= intPointWeightFunction(index);
+
+        // double dAx = 0.;
+        // double dAy = 0.;
+        // if (model){
+        //     dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
+        //     dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
+        //     // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
+        // } else {
+        //     // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
+        //     //                     intPointWeightFunctionPrev(index)) / dTime_;
+        //     my -= dens_ * v_ * (intPointWeightFunction(index) - 
+        //                         intPointWeightFunctionPrev(index)) / dTime_;
+        //       // std::cout << "AQUI " << (intPointWeightFunction(index) - 
+        //       //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
+        // };
 
         rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx) * dTime_ * timeScheme_ 
                              - KLSx * dTime_) * weight_ * djac_;
