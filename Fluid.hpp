@@ -286,6 +286,15 @@ void Fluid<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
 
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodes; i++){
+        output_v << nodes_[i] -> getMeshVelocity(0) << " "                \
+                 << nodes_[i] -> getMeshVelocity(1) << " " << 0. << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
+
     // output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
     //          << "Name=\"Divergent\" format=\"ascii\">" << std::endl;
 
@@ -294,11 +303,12 @@ void Fluid<2>::printVelocity(int step) {
     // };
     // output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodes; i++){
-        output_v << nodes_[i] -> getPressure() << std::endl;
+        output_v << 0. << " " << 0. << " " 
+                 << nodes_[i] -> getPressure() << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
 
@@ -633,7 +643,86 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
                                      boundary_[ibound] -> getConstrainValue(1));
             nodes_[no3] -> setConstrains(1,boundary_[ibound] -> getConstrain(1),
                                      boundary_[ibound] -> getConstrainValue(1));
-        };               
+        };     
+
+
+
+
+
+
+
+        // Problema hélice - velocidade imposta na borda
+        // if (boundary_[ibound] -> getConstrain(0) == 3){
+        //     typename Node::VecLocD x, R, T;
+        //     x = nodes_[no1] -> getCoordinates();
+        //     R(0) = x(0) - 0.5;
+        //     R(1) = x(1) - 0.5;
+
+        //     T(0) =  R(1) / norm_2(R);
+        //     T(1) = -R(0) / norm_2(R);
+
+        //     nodes_[no1] -> setConstrains(0,3,T(0)*.455);
+        //     nodes_[no1] -> setConstrains(1,3,T(1)*.455);
+
+        //     x = nodes_[no2] -> getCoordinates();
+        //     R(0) = x(0) - 0.5;
+        //     R(1) = x(1) - 0.5;
+
+        //     T(0) =  R(1) / norm_2(R);
+        //     T(1) = -R(0) / norm_2(R);
+
+        //     nodes_[no2] -> setConstrains(0,3,T(0)*.455);
+        //     nodes_[no2] -> setConstrains(1,3,T(1)*.455);
+
+        //     x = nodes_[no3] -> getCoordinates();
+        //     R(0) = x(0) - 0.5;
+        //     R(1) = x(1) - 0.5;
+
+        //     T(0) =  R(1) / norm_2(R);
+        //     T(1) = -R(0) / norm_2(R);
+
+        //     nodes_[no3] -> setConstrains(0,3,T(0)*.455);
+        //     nodes_[no3] -> setConstrains(1,3,T(1)*.455);
+        // };
+        
+
+        // Problema hélice - velocidade imposta na helice
+        if (boundary_[ibound] -> getConstrain(0) == 3){                
+            typename Node::VecLocD x, R, T;
+            x = nodes_[no1] -> getCoordinates();
+            R(0) = x(0) - 0.5;
+            R(1) = x(1) - 0.5;
+            
+            T(0) =  R(1);
+            T(1) = -R(0);
+            
+            nodes_[no1] -> setConstrains(0,3,T(0));
+            nodes_[no1] -> setConstrains(1,3,T(1));
+            
+            x = nodes_[no2] -> getCoordinates();
+            R(0) = x(0) - 0.5;
+            R(1) = x(1) - 0.5;
+            
+            T(0) =  R(1);
+            T(1) = -R(0);
+            
+            nodes_[no2] -> setConstrains(0,3,T(0));
+            nodes_[no2] -> setConstrains(1,3,T(1));
+            
+            x = nodes_[no3] -> getCoordinates();
+            R(0) = x(0) - 0.5;
+            R(1) = x(1) - 0.5;
+            
+            T(0) =  R(1);
+            T(1) = -R(0);
+            
+            nodes_[no3] -> setConstrains(0,3,T(0));
+            nodes_[no3] -> setConstrains(1,3,T(1));
+        };
+
+
+
+          
     };
     
     //Print nodal constrains
@@ -1053,6 +1142,121 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             // //Updates acceleration
             // nodes_[i] -> setPreviousAcceleration(accel);
             
+            typename Node::VecLocD x, x_ini, R;
+            x = nodes_[i] -> getCoordinates();
+            x_ini = x;
+
+            R(0) = x(0) - .5;
+            R(1) = x(1) - .5;
+            double modR = norm_2(R);
+            double cosT = R(0) / modR;
+            double sinT = R(1) / modR;
+           
+            double alpha = 0.;
+            
+            if(iTimeStep <= 19){
+                alpha = 5. * dTime * (iTimeStep+1) * dTime;
+
+                for (int ibound = 0; ibound < numBoundElems; ibound++){
+                    
+                    Boundaries::BoundConnect connectB;
+                    connectB = boundary_[ibound] -> getBoundaryConnectivity();
+                    int no1 = connectB(0);
+                    int no2 = connectB(1);
+                    int no3 = connectB(2);
+                    
+                // Problema hélice - velocidade imposta na helice
+                    if (boundary_[ibound] -> getConstrain(0) == 3){ 
+                        typename Node::VecLocD x2, R2, T2;
+                        x2 = nodes_[no1] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodes_[no1] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+                        nodes_[no1] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+                        
+                        x2 = nodes_[no2] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodes_[no2] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+                        nodes_[no2] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+                        
+                        x2 = nodes_[no3] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodes_[no3] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+                        nodes_[no3] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+                    };
+                };
+            }else{
+                alpha = 5. * dTime * 20. * dTime;
+
+                for (int ibound = 0; ibound < numBoundElems; ibound++){
+                    
+                    Boundaries::BoundConnect connectB;
+                    connectB = boundary_[ibound] -> getBoundaryConnectivity();
+                    int no1 = connectB(0);
+                    int no2 = connectB(1);
+                    int no3 = connectB(2);
+                    
+                    // Problema hélice - velocidade imposta na helice
+                    if (boundary_[ibound] -> getConstrain(0) == 3){
+                        typename Node::VecLocD x2, R2, T2;
+                        x2 = nodes_[no1] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodes_[no1] -> setConstrains(0,3,-T2(0));
+                        nodes_[no1] -> setConstrains(1,3,-T2(1));
+                        
+                        x2 = nodes_[no2] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodes_[no2] -> setConstrains(0,3,-T2(0));
+                        nodes_[no2] -> setConstrains(1,3,-T2(1));
+                        
+                        x2 = nodes_[no3] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodes_[no3] -> setConstrains(0,3,-T2(0));
+                        nodes_[no3] -> setConstrains(1,3,-T2(1));
+                    };
+                };
+            };
+            
+            nodes_[i] -> setPreviousCoordinates(0,x(0));
+            nodes_[i] -> setPreviousCoordinates(1,x(1));
+            x(0) = 0.5 + modR * (cosT * cos(alpha) - sinT * sin(alpha));
+            x(1) = 0.5 + modR * (sinT * cos(alpha) + cosT * sin(alpha));
+            nodes_[i] -> setCoordinates(x);
+
+            u[0] = (x(0) - x_ini(0)) / dTime;
+            u[1] = (x(1) - x_ini(1)) / dTime;
+            nodes_[i] -> setMeshVelocity(u);
+
+
         };
 
         double duNorm=100.;

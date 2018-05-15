@@ -20,7 +20,7 @@ Post-processing is carried out with ParaView (https://www.paraview.org/).
 
 Most of this documentation covers the C++ implementation. 
 
-This software is mainly developed at the Structural Engineering Department - EESC/USP (São Carlos - Brazil).
+This software is mainly developed at the Structural Engineering Department - EESC/USP (Sao Carlos - Brazil).
 
 - For more information access https://wikimechanica.eesc.usp.br/start
 - Contact: Jeferson W. D. Fernandes (e-mail:jefersondossa@usp.br)
