@@ -1245,11 +1245,13 @@ void Element<2>::getParameterSUPG() {
 template<>
 void Element<2>::getElemMatrix(int index){
     
-    tARLQ_ = 0.;
+    //tARLQ_ = 0.;
     //tSUPG_ = 0.;
     //tPSPG_ = 0.;
     //tLSIC_ = 0.;
 
+    //    if(model) std::cout << "umesh " << umesh_ << " vmesh " << vmesh_ << std::endl;
+ 
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
 
@@ -1360,16 +1362,11 @@ void Element<2>::getElemMatrix(int index){
             jacobianNRMatrix(2*i+1,12+j) += QSUPGy * dTime_ * weight_ * djac_
                 * intPointWeightFunction(index);
 
-
             double Hx = dphi_dx(0,i) * phi_(j) * tPSPG_;
             double Hy = dphi_dx(1,i) * phi_(j) * tPSPG_;
             
-            double Gx = dphi_dx(0,i) * ((u_ - umesh_) * dphi_dx(0,j) + 
-                                        (v_ - vmesh_) * dphi_dx(1,j)) * 
-                tPSPG_;
-            double Gy = dphi_dx(1,i) * ((u_ - umesh_) * dphi_dx(0,j) + 
-                                        (v_ - vmesh_) * dphi_dx(1,j)) * 
-                tPSPG_;
+            double Gx = dphi_dx(0,i) * wSUPGj * tPSPG_;
+            double Gy = dphi_dx(1,i) * wSUPGj * tPSPG_;
             
             double Guu = (dphi_dx(0,i) * du_dx * phi_(j) + 
                           dphi_dx(1,i) * dv_dx * phi_(j)) * tPSPG_;
@@ -1453,7 +1450,8 @@ void Element<2>::setBoundaryConditions(){
     // for (int i = 0; i < 6; i++){
     //     //if(model){
     //     x = nodes_[connect_(i)] -> getCoordinates();
-    //     if((x(0) > 0.999) && (x(1) > 0.999)){
+    //     double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+    //     if(dist < 0.001){
     //         // std::cout << "AQUI  " << index_ << std::endl;
             
     //         for (int j = 0; j < 18; j++){
@@ -1551,18 +1549,6 @@ void Element<2>::getResidualVector(int index){
     double una_ = timeScheme_ * u_ + (1. - timeScheme_) * uPrev_;
     double vna_ = timeScheme_ * v_ + (1. - timeScheme_) * vPrev_;
 
-    double duna_dx = 0.;
-    double duna_dy = 0.;
-    double dvna_dx = 0.;
-    double dvna_dy = 0.;
-
-    for (int i = 0; i < 6; i++){
-        duna_dx += una_ * dphi_dx(0,i);
-        duna_dy += una_ * dphi_dx(1,i);        
-        dvna_dx += vna_ * dphi_dx(0,i);
-        dvna_dy += vna_ * dphi_dx(1,i);
-    };
-
     // double da_dx = 0.;
     // double da_dy = 0.;
     
@@ -1570,9 +1556,8 @@ void Element<2>::getResidualVector(int index){
     //     da_dx += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(0,i);
     //     da_dy += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(1,i);
     // };
+
     
-
-
     for (int i = 0; i < 6; i++){
         double mx = phi_(i) * (u_ - uPrev_) * dens_ + 
             ((una_ - umesh_) * dphi_dx(0,i) + (vna_ - vmesh_) * dphi_dx(1,i)) * 
@@ -1654,11 +1639,17 @@ void Element<2>::getResidualVector(int index){
                               
     };
 
-    
+    // if(model) {
+    //     if (index_ == 601){
+    //         std::cout << "RHS " << index << std::endl;
+    //         for (int i=0; i<18; i++){
+    //             std::cout << rhsVector(i) << " ";
+    //         };
+    //         std::cout << std::endl;
+    //     };
+    // };
 
-
-
-
+   
     return;
 };
 
@@ -2137,6 +2128,8 @@ void Element<2>::getTransientNavierStokes(){
     
     //Apply boundary conditions
     setBoundaryConditions();
+
+  
 
     return;
 };

@@ -76,7 +76,7 @@ int main(int argc, char **args) {
 
     // Helice
     fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
-    coarseModel.dataReading("coarse_uns.txt","mirror_coarse.txt");
+    coarseModel.dataReading("fluid_interaction3.txt","mirror_coarse.txt");
  
     //control.dataReading("cavpropf3.txt","mirror_control.txt");
 
@@ -99,14 +99,14 @@ int main(int argc, char **args) {
     //      in the first step to perform the initial guess);  
    
     //coarseModel.solveTransientProblem(1, 1.e-15, 2);
-
+ 
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
     // control.solveTransientProblem(1, 1.e-6, 2); 
-  
-    //coarseModel.solveTransientProblem(2, 1.e-16, 2); 
-
+   
+    fineModel.solveTransientProblem(2, 1.e-16, 2);  
+ 
     // fineModel.solveSteadyLaplaceProblem(8, 1.e-16, 2);
      
  
