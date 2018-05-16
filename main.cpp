@@ -33,7 +33,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include <fstream>
 
 // Developed Header Files
-#include "FSInteraction.hpp"
+#include "FSInteraction.hpp"  
 
 
 int main(int argc, char **args) {
@@ -105,7 +105,7 @@ int main(int argc, char **args) {
    
     // control.solveTransientProblem(1, 1.e-6, 2); 
    
-    fineModel.solveTransientProblem(2, 1.e-16, 2);  
+    //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
     // fineModel.solveSteadyLaplaceProblem(8, 1.e-16, 2);
      
@@ -116,15 +116,15 @@ int main(int argc, char **args) {
     //   1- Stokes problem;  
     //   2- Navier-Stokes problem (solves the steady Stokes
     //      in the first step to perform the initial guess);
-    //4- 0 - Steady problem
+    //4- 0 - Steady problem 
     //   1 - Transient problem 
- 
+   
     
     arlequinProblem.setFluidModels(coarseModel, fineModel) ;
-      
+       
     arlequinProblem.solveArlequinProblemMoving(2, 1.e-7, 2, 1);
-         
-   
+
+     
   
     //Finalize main program
     PetscFinalize();

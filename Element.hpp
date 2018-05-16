@@ -62,6 +62,14 @@ public:
     /// Define the type VecLocD from class Node locally
     typedef typename Nodes::VecLocD                             VecLoc;
 
+    /// Define the type Integration Point interger variable
+    /// from class Partitioned Quadrature
+    typedef typename SpecialQuad::PointIntVar                   IntPointInteger;
+
+    /// Define the type Integration Point coordinates variable
+    /// from class Partitioned Quadrature
+    typedef typename SpecialQuad::PointCoord                    IntPointCoord;
+
 private:
     QuadShapeFunction<DIM> shapeQuad; //Quadratic shape function
     BoundShapeFunction<DIM>shapeBound;//Boundary shape function
@@ -137,9 +145,9 @@ private:
     //Values of velocity shape functins
     typename BoundShapeFunction<DIM>::ValueDeriv dphib_;     
 
-    std::vector<VecLoc>                 intPointCorrespXsi;
-    std::vector<VecLoc>                 intPointCoordinates;
-    std::vector<int>                    intPointCorrespElem;
+    IntPointCoord                       intPointCorrespXsi;
+    IntPointCoord                       intPointCoordinates;
+    IntPointInteger                     intPointCorrespElem;
 
 public:
     /// fluid element constructor
@@ -338,22 +346,26 @@ public:
 
     /// Sets the integration point correspondence to the overlapped mesh
     /// @param int element correspondent @param VecLoc Adimensional coordinates
-    void setIntegrationPointCorrespondence(int elem, VecLoc x){
-        intPointCorrespElem.push_back(elem);
-        intPointCorrespXsi.push_back(x); };
+    void setIntegrationPointCorrespondence(int ipoint, int elem, VecLoc x){
+        intPointCorrespElem(ipoint) = elem;
+        intPointCorrespXsi(ipoint,0) = x(0);
+        intPointCorrespXsi(ipoint,1) = x(1); };
 
     /// Gets the integration point correspondence - element
     /// @return overlapped element correspondence
     int getIntegPointCorrespondenceElement(int index)
-    {return intPointCorrespElem[index];};
+    {return intPointCorrespElem(index);};
 
     /// Compute and store the integration points global coordinates
     void getIntegPointCoordinates();
 
     /// Gets the integration point global coordinates
     /// @param int integration point index @return integration point coordinates
-    VecLoc getIntegPointCoordinatesValue(int index)
-    {return intPointCoordinates[index];};
+    VecLoc getIntegPointCoordinatesValue(int index){
+        VecLoc x;
+        x(0) = intPointCoordinates(index,0);
+        x(1) = intPointCoordinates(index,1);
+        return x;};
 
     /// Sets the integration point energy weight function
     /// @param int integration point index 
@@ -588,7 +600,8 @@ void Element<2>::getIntegPointCoordinates(){
         x(0) = sQuad.interpolateQuadraticVariable(nodalCoordx, i);
         x(1) = sQuad.interpolateQuadraticVariable(nodalCoordy, i);
 
-        intPointCoordinates.push_back(x);
+        intPointCoordinates(i,0) = x(0);
+        intPointCoordinates(i,1) = x(1);
     };
 
     return;
@@ -612,7 +625,9 @@ void Element<3>::getIntegPointCoordinates(){
         x(1) = sQuad.interpolateQuadraticVariable(nodalCoordy, i);
         x(2) = sQuad.interpolateQuadraticVariable(nodalCoordz, i);
 
-        intPointCoordinates.push_back(x);
+        intPointCoordinates(i,0) = x(0);
+        intPointCoordinates(i,1) = x(1);
+        intPointCoordinates(i,2) = x(2);
     };
 
     return;
@@ -1549,13 +1564,13 @@ void Element<2>::getResidualVector(int index){
     double una_ = timeScheme_ * u_ + (1. - timeScheme_) * uPrev_;
     double vna_ = timeScheme_ * v_ + (1. - timeScheme_) * vPrev_;
 
-    // double da_dx = 0.;
-    // double da_dy = 0.;
+    double da_dx = 0.;
+    double da_dy = 0.;
     
-    // for (int i=0; i<6; i++){
-    //     da_dx += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(0,i);
-    //     da_dy += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(1,i);
-    // };
+    for (int i=0; i<6; i++){
+        da_dx += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(0,i);
+        da_dy += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(1,i);
+    };
 
     
     for (int i = 0; i < 6; i++){
@@ -1616,24 +1631,24 @@ void Element<2>::getResidualVector(int index){
 
         Q *= intPointWeightFunction(index);
 
-        // double dAx = 0.;
-        // double dAy = 0.;
-        // if (model){
-        //     dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
-        //     dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
-        //     // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
-        // } else {
-        //     // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
-        //     //                     intPointWeightFunctionPrev(index)) / dTime_;
-        //     my -= dens_ * v_ * (intPointWeightFunction(index) - 
-        //                         intPointWeightFunctionPrev(index)) / dTime_;
-        //       // std::cout << "AQUI " << (intPointWeightFunction(index) - 
-        //       //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
-        // };
+        double dAx = 0.;
+        double dAy = 0.;
+        if (model){
+            // dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
+            // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
+            // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
+        } else {
+            // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
+            //                     intPointWeightFunctionPrev(index)) / dTime_;
+            // my -= dens_ * v_ * (intPointWeightFunction(index) - 
+            //                     intPointWeightFunctionPrev(index)) / dTime_;
+              // std::cout << "AQUI " << (intPointWeightFunction(index) - 
+              //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
+        };
 
-        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx) * dTime_ * timeScheme_ 
+        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ * timeScheme_ 
                              - KLSx * dTime_) * weight_ * djac_;
-        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy) * dTime_ * timeScheme_
+        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAx) * dTime_ * timeScheme_
                              - KLSy * dTime_) * weight_ * djac_;
         rhsVector(12+i) += -Q * dTime_ * weight_ * djac_;
                               
@@ -2357,7 +2372,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
 template<>
 void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
 
-    typename QuadShapeFunction<2>::Coords xsi;
+    typename QuadShapeFunction<2>::Coords xsi,xsi_intp;
     int index = 0;
 
     typename QuadShapeFunction<2>::Values phiLM_; 
@@ -2370,7 +2385,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
     for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
         it != sQuad.end(); it++){
         
-        if ((intPointCorrespElem[index] == ielem)){
+        if ((intPointCorrespElem(index) == ielem)){
             // std::cout << "Corresp " << intPointCorrespElem[index] << " " << index << " " << index_ << std::endl;
             //Defines the integration points adimentional coordinates
             xsi(0) = sQuad.PointList(index,0);
@@ -2379,8 +2394,11 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
             //Computes the velocity shape functions
             shapeQuad.evaluate(xsi,phi_);
             
+            xsi_intp(0) = intPointCorrespXsi(index,0);
+            xsi_intp(1) = intPointCorrespXsi(index,1);
+
             //Computes the coarse mesh shape functions
-            shapeQuad.evaluate(intPointCorrespXsi[index],phiLM_);
+            shapeQuad.evaluate(xsi,phiLM_);
             
             //Returns the quadrature integration weight
             weight_ = sQuad.WeightList(index);
@@ -2392,7 +2410,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
 
             dphiL_dx = dphi_dx;
 
-            getSpatialDerivatives(intPointCorrespXsi[index]);
+            getSpatialDerivatives(xsi_intp);
 
             ublas::bounded_matrix<double, 3,18> Bmatrix, Baux;
             ublas::bounded_matrix<double, 18,3> BmatrixT; 
@@ -2607,7 +2625,7 @@ void Element<2>::getLMStabilizationSameMesh(){
 template<>
 void Element<2>::getStabCoarse(int ielem){
 
-    typename QuadShapeFunction<2>::Coords xsi;
+    typename QuadShapeFunction<2>::Coords xsi, xsi_intp;
     int index = 0;
 
     typename QuadShapeFunction<2>::Values phiLM_; 
@@ -2620,7 +2638,7 @@ void Element<2>::getStabCoarse(int ielem){
     for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
         it != sQuad.end(); it++){
         
-        if ((intPointCorrespElem[index] == ielem)){
+        if ((intPointCorrespElem(index) == ielem)){
 
             //Defines the integration points adimentional coordinates
             xsi(0) = sQuad.PointList(index,0);
@@ -2629,8 +2647,11 @@ void Element<2>::getStabCoarse(int ielem){
             //Computes the velocity shape functions
             shapeQuad.evaluate(xsi,phi_);
             
+            xsi_intp(0) = intPointCorrespXsi(index,0);
+            xsi_intp(1) = intPointCorrespXsi(index,1);
+
             //Computes the coarse mesh shape functions
-            shapeQuad.evaluate(intPointCorrespXsi[index],phiLM_);
+            shapeQuad.evaluate(xsi_intp,phiLM_);
             
             //Returns the quadrature integration weight
             weight_ = sQuad.WeightList(index);
@@ -2642,7 +2663,7 @@ void Element<2>::getStabCoarse(int ielem){
 
             dphiL_dx = dphi_dx;
 
-            getSpatialDerivatives(intPointCorrespXsi[index]);
+            getSpatialDerivatives(xsi_intp);
 
             double LM = 0.;
 

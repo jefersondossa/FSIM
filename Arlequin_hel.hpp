@@ -441,7 +441,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
 
     //Compute correspondence of integration points
     int numberIntPoints = elementsFine_[0] -> getNumberOfIntegrationPoints();
-    if (rank == 0) std::cout << "Int Points " << numberIntPoints << std::endl;
+    //if (rank == 0) std::cout << "Int Points " << numberIntPoints << std::endl;
 
     for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
         
@@ -475,7 +475,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
                                                    elementsCoarse_.size());
                 
                 elementsFine_[elementsGlueZoneFine_[ielem]] -> 
-                    setIntegrationPointCorrespondence(corresp.first,
+                    setIntegrationPointCorrespondence(i,corresp.first,
                                                       corresp.second);
                 // };
 
@@ -524,7 +524,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
 
     //Compute correspondence of integration points
     int numberIntPoints = elementsCoarse_[0] -> getNumberOfIntegrationPoints();
-    std::cout << "inT Points " << numberIntPoints << std::endl;
+    //std::cout << "inT Points " << numberIntPoints << std::endl;
 
     for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
         
@@ -559,7 +559,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
                 
                 
                 elementsCoarse_[elementsGlueZoneFine_[ielem]] -> 
-                    setIntegrationPointCorrespondence(corresp.first,
+                    setIntegrationPointCorrespondence(i,corresp.first,
                                                       corresp.second);
             };
         };
@@ -1345,7 +1345,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = .06;
+    double lambda = .05;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -4695,10 +4695,99 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
            
             double alpha = 0.;
             
-            if(iTimeStep <= 20){
+            if(iTimeStep <= 19){
+
                 alpha = 5. * dTime * (iTimeStep+1) * dTime;
+
+                for (int ibound = 0; ibound < numBoundElemFine; ibound++){
+                    
+                    Boundary::BoundConnect connectB;
+                    connectB = boundaryFine_[ibound] -> 
+                        getBoundaryConnectivity();
+                    int no1 = connectB(0);
+                    int no2 = connectB(1);
+                    int no3 = connectB(2);
+                    
+                // Problema hélice - velocidade imposta na helice
+                    if (boundaryFine_[ibound] -> getConstrain(0) == 3){ 
+                        typename Nodes::VecLocD x2, R2, T2;
+                        x2 = nodesFine_[no1] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodesFine_[no1] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+                        nodesFine_[no1] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+                        
+                        x2 = nodesFine_[no2] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodesFine_[no2] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+                        nodesFine_[no2] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+                        
+                        x2 = nodesFine_[no3] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodesFine_[no3] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+                        nodesFine_[no3] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+                    };
+                };
             }else{
                 alpha = 5. * dTime * 20. * dTime;
+
+                for (int ibound = 0; ibound < numBoundElemFine; ibound++){
+                    
+                    Boundary::BoundConnect connectB;
+                    connectB = boundaryFine_[ibound] -> 
+                        getBoundaryConnectivity();
+                    int no1 = connectB(0);
+                    int no2 = connectB(1);
+                    int no3 = connectB(2);
+                    
+                    // Problema hélice - velocidade imposta na helice
+                    if (boundaryFine_[ibound] -> getConstrain(0) == 3){
+                        typename Nodes::VecLocD x2, R2, T2;
+                        x2 = nodesFine_[no1] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodesFine_[no1] -> setConstrains(0,3,-T2(0));
+                        nodesFine_[no1] -> setConstrains(1,3,-T2(1));
+                        
+                        x2 = nodesFine_[no2] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodesFine_[no2] -> setConstrains(0,3,-T2(0));
+                        nodesFine_[no2] -> setConstrains(1,3,-T2(1));
+                        
+                        x2 = nodesFine_[no3] -> getCoordinates();
+                        R2(0) = x2(0) - 0.5;
+                        R2(1) = x2(1) - 0.5;
+                        
+                        T2(0) =  R2(1);
+                        T2(1) = -R2(0);
+                        
+                        nodesFine_[no3] -> setConstrains(0,3,-T2(0));
+                        nodesFine_[no3] -> setConstrains(1,3,-T2(1));
+                    };
+                };
             };
             
             nodesFine_[i] -> setPreviousCoordinates(0,x(0));
@@ -4762,6 +4851,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             //------------------------------------------------------------------
             //------------------BEGIN OF LINEAR SYSTEM ASSEMBLY-----------------
             //------------------------------------------------------------------
+            
+            for (int i=0; i<sysSize; i++){
+                double val = 1.e-20;
+                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
+            };
+
 
             //Coarse mesh
             
@@ -5178,17 +5273,17 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                         ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
                                             ADD_VALUES);
 
-                        // dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                        // ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
-                        //                     ,ADD_VALUES);
-                        // ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
-                        //                     ,ADD_VALUES);
+                        dof_i = 3 * numNodesCoarse + 2 * connec(i);
+                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
+                                            ,ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
+                                            ,ADD_VALUES);
 
-                        // dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                        // ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
-                        //                     ,ADD_VALUES);
-                        // ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
-                        //                     ,ADD_VALUES);
+                        dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
+                                            ,ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
+                                            ,ADD_VALUES);
                     };      
 
                     //COAESE MESH
@@ -5230,7 +5325,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                             };
                         };
                     };
-                    //std::cout << "JEL " << jel << " " << numElemIntersect << std::endl;
+                    // if((jel) == 456) std::cout << "JEL " << jel << " " << numElemIntersect << " " << diffElem[0] << " " << diffElem[1] << " " << diffElem[2] << " " << diffElem[3] << std::endl;
                     //Compute the Lagrange Multiplier element matrix
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
                         
@@ -5364,17 +5459,17 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                 ADD_VALUES);
 
                             int dof_i = 2 * connecC(i);
-                            // ierr = VecSetValues(b,1,&dof_i,
-                            //                     &rhsLagMult(2*i  ),
-                            //                     ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &rhsLagMult(2*i  ),
+                                                ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i  ),
                                                 ADD_VALUES);
 
                             dof_i = 2 * connecC(i) + 1;
-                            // ierr = VecSetValues(b,1,&dof_i,
-                            //                     &rhsLagMult(2*i+1),
-                            //                     ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &rhsLagMult(2*i+1),
+                                                ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i+1),
                                                 ADD_VALUES);
@@ -5414,6 +5509,18 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
 
 
+            if (iTimeStep < 2){
+            
+#if defined(PETSC_HAVE_MUMPS)
+            ierr = KSPSetType(ksp,KSPPREONLY);
+            ierr = KSPGetPC(ksp,&pc);
+            ierr = PCSetType(pc, PCLU);
+#endif
+            
+            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            ierr = KSPSetUp(ksp);
+            } else {
+
             ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
                                     1000);CHKERRQ(ierr);
             
@@ -5421,26 +5528,15 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             
             ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
             
-            ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
+            ierr = PCSetType(pc,PCASM);CHKERRQ(ierr);
             
             //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            //ierr = KSPSetType(ksp,KSPBICG); CHKERRQ(ierr);
+            ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
             
             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 
-
-
-            
-// #if defined(PETSC_HAVE_MUMPS)
-//             ierr = KSPSetType(ksp,KSPPREONLY);
-//             ierr = KSPGetPC(ksp,&pc);
-//             ierr = PCSetType(pc, PCLU);
-// #endif
-            
-//             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-//             ierr = KSPSetUp(ksp);
-            
+            };
 
 
 
@@ -5518,12 +5614,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[0] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(0,u_[0]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
                 
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[1] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(1,u_[1]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(1,u_[1]);
                 
                 // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
             };
