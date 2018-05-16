@@ -33,6 +33,9 @@ public:
     //Integration point logical vector
     typedef ublas::bounded_vector<bool, 4*DIM-1>        PointLogical;
 
+    /// integration points int variable
+    typedef ublas::bounded_vector<int, 4*DIM-1>         PointIntVar;
+
     //Defines the numerical integration iterator
     typedef typename PointWeight::iterator              QuadratureListIt;
 
