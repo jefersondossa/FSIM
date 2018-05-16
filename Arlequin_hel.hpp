@@ -5509,34 +5509,34 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
 
 
-            if (iTimeStep < 2){
+        //     if (iTimeStep < 2){
             
-#if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
-#endif
+// #if defined(PETSC_HAVE_MUMPS)
+//                 ierr = KSPSetType(ksp,KSPPREONLY);
+//                 ierr = KSPGetPC(ksp,&pc);
+//                 ierr = PCSetType(pc, PCLU);
+// #endif
             
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            ierr = KSPSetUp(ksp);
-            } else {
+//                 ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//                 ierr = KSPSetUp(ksp);
+//             } else {
+              
+                ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
+                                        1000);CHKERRQ(ierr);
+            
+                //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+            
+                ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+            
+                ierr = PCSetType(pc,PCLU);CHKERRQ(ierr);
+            
+                //ierr = KSPSetPCSide(ksp, PC_RIGHT);
+                ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
+            
+                ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+                // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 
-            ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-                                    1000);CHKERRQ(ierr);
-            
-            //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-            
-            ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-            
-            ierr = PCSetType(pc,PCASM);CHKERRQ(ierr);
-            
-            //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
-            
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-
-            };
+            // };
 
 
 

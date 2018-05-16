@@ -122,7 +122,7 @@ int main(int argc, char **args) {
     
     arlequinProblem.setFluidModels(coarseModel, fineModel) ;
        
-    arlequinProblem.solveArlequinProblemMoving(2, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblemMoving(1, 1.e-7, 2, 1);
 
      
   
