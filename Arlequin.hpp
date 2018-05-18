@@ -475,7 +475,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
                                                    elementsCoarse_.size());
                 
                 elementsFine_[elementsGlueZoneFine_[ielem]] -> 
-                    setIntegrationPointCorrespondence(corresp.first,
+                    setIntegrationPointCorrespondence(i, corresp.first,
                                                       corresp.second);
                 // };
         };
@@ -554,7 +554,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
                 
                 
                 elementsCoarse_[elementsGlueZoneFine_[ielem]] -> 
-                    setIntegrationPointCorrespondence(corresp.first,
+                    setIntegrationPointCorrespondence(i,corresp.first,
                                                       corresp.second);
             };
         };
@@ -580,7 +580,7 @@ void Arlequin<2>::setCouplingZone(){
 
     double lim1 = 0.1251;
     double lim2 = 0.8749;
-    double tick = 0.06249;
+    double tick = 0.0649;
 
 
     for (int i = 0; i < numNodesFine; i++) nodesCZ[i] = 0;    
@@ -1326,95 +1326,36 @@ void Arlequin<2>::setWeightFunction(double val){
     int numIntPoints;
     double wFuncValue;
 
-    double epsilon = 1.e-6;
+    double epsilon = 1.e-2;
     double lambda = .0625;
  
-    for (int jelCoarse = 0; jelCoarse < numElemCoarse; jelCoarse++){
-        
-        numIntPoints = elementsCoarse_[jelCoarse] -> 
-            getNumberOfIntegrationPoints();
-        
-        for (int i = 0; i < numIntPoints; i++){
-            
-            double r = elementsCoarse_[jelCoarse]->getIntegPointDistFunction(i);
+    for (int i = 0; i < numNodesCoarse; i++){
+       
+        double r = nodesCoarse_[i] -> getDistFunction();
 
-            if (r < 0){
-                wFuncValue = 1.;
-            } else {
-                if (r >= lambda){
-                    wFuncValue = epsilon;
-                } else {
-                    wFuncValue = 1. - (1. - epsilon) / lambda * r;
-                    //wFuncValue = epsilon;
-                    // wFuncValue = 1. - 3.*(1.-epsilon)/(lambda*lambda) * r * r
-                    //     - 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
-
-                    if (wFuncValue < epsilon) wFuncValue = epsilon;
-                };
-            };            
-
-            //wFuncValue = weightFunctionCoarseValue(r,epsilon);
-
-            elementsCoarse_[jelCoarse] -> 
-                setIntegPointWeightFunction(i,wFuncValue);
-        };    
-        
-        typename Elements::Connectivity connec;
-
-        connec = elementsCoarse_[jelCoarse] -> getConnectivity();
-
-        for (int i = 0; i < 6; i++){        
-            double r = nodesCoarse_[connec(i)] -> getDistFunction();
-
-            if (r < 0){
-                wFuncValue = 1.;
-            } else {
-                if (r >= lambda){
-                    wFuncValue = epsilon;
-                } else {
-                    wFuncValue = 1. - (1. - epsilon) / lambda * r;
-                    //wFuncValue = epsilon;
-                    // wFuncValue = 1. - 3.*(1.-epsilon)/(lambda*lambda) * r * r
-                    //     - 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
-
-                    if (wFuncValue < epsilon) wFuncValue = epsilon;
-                };
-            };  
-      
-            //wFuncValue = weightFunctionCoarseValue(r,epsilon);
-            
-            elementsCoarse_[jelCoarse] -> 
-                setIntegPointWeightFunction(i,wFuncValue);
-                      
-            //wFuncValue = weightFunctionCoarseValue(r,epsilon);
-
-            nodesCoarse_[connec(i)] -> 
-                setWeightFunction(wFuncValue);
-        };         
-    };
-
-
-    for (int jelFine = 0; jelFine < numElemFine; jelFine++){      
-        numIntPoints = elementsFine_[jelFine] -> getNumberOfIntegrationPoints();
-
-        for (int i = 0; i < numIntPoints; i++){
-
-            double r = elementsFine_[jelFine] -> getIntegPointDistFunction(i);
-
+        if (r < 0){
+            wFuncValue = 1.;
+        } else {
             if (r >= lambda){
-                wFuncValue = 1. - epsilon;
+                wFuncValue = epsilon;
             } else {
-                wFuncValue = (1. - epsilon) / lambda * r;
-                //wFuncValue = 1. - epsilon;
-                // wFuncValue = 3.*(1.-epsilon)/(lambda*lambda) * r * r
-                //     + 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
+                wFuncValue = 1. - (1. - epsilon) / lambda * r;
+                //wFuncValue = epsilon;
+                // wFuncValue = 1. - 3.*(1.-epsilon)/(lambda*lambda) * r * r
+                //     - 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
+                
+                if (wFuncValue < epsilon) wFuncValue = epsilon;
+            };
+        };  
+        
+        nodesCoarse_[i] -> setWeightFunction(wFuncValue);
+    };        
 
-                if (wFuncValue > (1. - epsilon)) wFuncValue = 1. - epsilon;
-            };  
 
-            elementsFine_[jelFine] -> setIntegPointWeightFunction(i,wFuncValue);
-        };
+    for (int jelCoarse = 0; jelCoarse < numElemCoarse; jelCoarse++){
+        elementsCoarse_[jelCoarse] -> setIntegPointWeightFunction(); 
     };
+
 
     for (int i=0; i<numNodesFine; i++){
 
@@ -1435,8 +1376,13 @@ void Arlequin<2>::setWeightFunction(double val){
         // wFuncValue = weightFunctionFineValue(r,epsilon);
 
         nodesFine_[i] -> setWeightFunction(wFuncValue);
+
     };
     
+    for (int jelFine = 0; jelFine < numElemFine; jelFine++){
+        elementsFine_[jelFine] -> setIntegPointWeightFunction();
+    };
+
 
      
     return;
@@ -3106,24 +3052,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                     &Ajac(2*i  ,2*j+1),
                                                     ADD_VALUES);
                             };
-
-                            if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
-                                int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                                int dof_j = 3 * numNodesCoarse + 
-                                    2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &AStab(2*i  ,12+j),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
-                                int dof_i = 3 * numNodesCoarse + 
-                                    2 * connec(i) + 1;
-                                int dof_j = 3 * numNodesCoarse + 
-                                    2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &AStab(2*i+1,12+j),
-                                                    ADD_VALUES);
-                            };
                         };
 
                         //Rhs vector
@@ -3131,24 +3059,25 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                         int dof_i = 3 * numNodesCoarse + 3 * numNodesFine +
                             2 * connecL(i);
                         ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
-                                            ADD_VALUES);
+                                            ADD_VALUES); 
 
                         dof_i = 3 * numNodesCoarse + 3 * numNodesFine + 
                             2 * connecL(i) + 1;
                         ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
-                                            ADD_VALUES);
+                                             ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i);
                         ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
                                             ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
                                             ,ADD_VALUES);
-
+                        
                         dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                         ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
                                             ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
                                             ,ADD_VALUES);
+                      
                     };      
 
                     //COAESE MESH
@@ -3246,9 +3175,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                     ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
                                                     &lagMult.second(2*i  ,2*j  )
                                                         ,ADD_VALUES);
-                                    ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &AStab(2*i  ,2*j  )
-                                                        ,ADD_VALUES);
                                 };
 
                                 if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
@@ -3273,9 +3199,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                     ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
                                                     &lagMult.second(2*i+1,2*j+1)
                                                         ,ADD_VALUES);
-                                    ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &AStab(2*i+1,2*j+1)
-                                                        ,ADD_VALUES);
                                 };
 
                                 if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
@@ -3289,25 +3212,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                     &lagMult.second(2*i  ,2*j+1)
                                                         ,ADD_VALUES);
                                 };
-
-                                // if (fabs(AjacAnt(2*i  ,2*j  )) >= 1.e-15){
-                                //     int d_i = 3 * numNodesCoarse + 
-                                //         3 * numNodesFine + 2 * connecL(i);
-                                //     int d_j = 3 * numNodesCoarse + 
-                                //         3 * numNodesFine + 2 * connecL(j);
-                                //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                //                         &AjacAnt(2*i  ,2*j  ),
-                                //                         ADD_VALUES);
-                                // };
-                                // if (fabs(AjacAnt(2*i+1,2*j+1)) >= 1.e-15){
-                                //     int d_i = 3 * numNodesCoarse + 
-                                //         3 * numNodesFine + 2 * connecL(i) + 1;
-                                //     int d_j = 3 * numNodesCoarse + 
-                                //         3 * numNodesFine + 2 * connecL(j) + 1;
-                                //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                //                         &AjacAnt(2*i+1,2*j+1),
-                                //                         ADD_VALUES);
-                                // };
                             };
                             //Rhs vector
 
@@ -3329,7 +3233,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                 ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i  ),
-                                                ADD_VALUES);
+                                                ADD_VALUES); 
 
                             dof_i = 2 * connecC(i) + 1;
                             ierr = VecSetValues(b,1,&dof_i,

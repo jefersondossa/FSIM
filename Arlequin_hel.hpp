@@ -394,7 +394,7 @@ Arlequin<2>::searchNodeCorrespondence(typename Nodes::VecLocD x,
         };           
     };
 
-    if (fabs(xsi(0)) > 2.) std::cout << "PROBEM SEARCHING NODE CORRESPONDENCE " 
+    if (norm_2(xsi) > 2.) std::cout << "PROBEM SEARCHING NODE CORRESPONDENCE " 
                                      << std::endl;
 
     return std::make_pair(elemC, xsiC);
@@ -888,7 +888,7 @@ void Arlequin<2>::setCouplingZone(){
             x = nodesFine_[connec(ino)] -> getCoordinates();
             double sigDist = nodesFine_[connec(ino)] -> getDistFunction();
             //  std::cout << "Sig DIst " << sigDist << " " << connec(ino) << std::endl;
-            if (sigDist <= 0.05){
+            if (sigDist <= 0.08){
                 flag = 1;
                 break;
             };
@@ -981,7 +981,7 @@ void Arlequin<2>::setCouplingZone(){
             x = nodesCoarse_[connec(ino)] -> getCoordinates();
             double sigDist = nodesCoarse_[connec(ino)] -> getDistFunction();
             
-            if ((sigDist <= 0.05) && (sigDist >= 0.)){
+            if ((sigDist <= 0.08) && (sigDist >= 0.)){
                 flag = 1;
                 break;
             };
@@ -1345,7 +1345,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = .05;
+    double lambda = .08;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -1569,11 +1569,12 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodesCoarse; i++){
-        output_v << nodesCoarse_[i] -> getPressure() << std::endl;
+        output_v << 0. << " " << 0. << " " 
+                 << nodesCoarse_[i] -> getPressure() << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
     output_v << "    </PointData>" << std::endl; 
@@ -1764,10 +1765,11 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_vf << "      </DataArray> " << std::endl;
 
-    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
     for (int i=0; i<numNodesFine; i++){
-        output_vf << nodesFine_[i] -> getPressure() << std::endl;
+        output_vf << 0. << " " << 0. << " " 
+                  << nodesFine_[i] -> getPressure() << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
 
@@ -4803,8 +4805,21 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             
         };
 
+
+        boost::posix_time::ptime t1 =
+            boost::posix_time::microsec_clock::local_time();
+
         setNodalCorrespondenceFine();
 
+        boost::posix_time::ptime t2 =
+            boost::posix_time::microsec_clock::local_time();
+            
+        if(rank == 0){
+            boost::posix_time::time_duration diff = t2 - t1;
+                
+            std::cout<< "Time Searching Correspondence (s) = " << std::fixed <<
+                diff.total_milliseconds()/1000. << std::endl;
+        };
 
         //STARTS NEWTON-RAPHSON
         for (int inewton = 0; inewton < iterNumber; inewton++){
@@ -5274,14 +5289,14 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                             ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
-                                            ,ADD_VALUES);
+                        // ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
+                        //                     ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
                                             ,ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
-                                            ,ADD_VALUES);
+                        // ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
+                        //                     ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
                                             ,ADD_VALUES);
                     };      
@@ -5459,17 +5474,17 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                 ADD_VALUES);
 
                             int dof_i = 2 * connecC(i);
-                            ierr = VecSetValues(b,1,&dof_i,
-                                                &rhsLagMult(2*i  ),
-                                                ADD_VALUES);
+                            // ierr = VecSetValues(b,1,&dof_i,
+                            //                     &rhsLagMult(2*i  ),
+                            //                     ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i  ),
                                                 ADD_VALUES);
 
                             dof_i = 2 * connecC(i) + 1;
-                            ierr = VecSetValues(b,1,&dof_i,
-                                                &rhsLagMult(2*i+1),
-                                                ADD_VALUES);
+                            // ierr = VecSetValues(b,1,&dof_i,
+                            //                     &rhsLagMult(2*i+1),
+                            //                     ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i+1),
                                                 ADD_VALUES);
@@ -5511,27 +5526,27 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
         //     if (iTimeStep < 2){
             
-// #if defined(PETSC_HAVE_MUMPS)
-//                 ierr = KSPSetType(ksp,KSPPREONLY);
-//                 ierr = KSPGetPC(ksp,&pc);
-//                 ierr = PCSetType(pc, PCLU);
-// #endif
+#if defined(PETSC_HAVE_MUMPS)
+                ierr = KSPSetType(ksp,KSPPREONLY);
+                ierr = KSPGetPC(ksp,&pc);
+                ierr = PCSetType(pc, PCLU);
+#endif
             
-//                 ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-//                 ierr = KSPSetUp(ksp);
+                ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+                ierr = KSPSetUp(ksp);
 //             } else {
               
-                ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-                                        1000);CHKERRQ(ierr);
+                // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
+                //                         5000);CHKERRQ(ierr);
             
-                //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+                //ierr = KSPGMRESSetRestart(ksp, 200); CHKERRQ(ierr);
             
                 ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
             
-                ierr = PCSetType(pc,PCLU);CHKERRQ(ierr);
+                //ierr = PCSetType(pc,PCLU);CHKERRQ(ierr);
             
                 //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-                ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
+                //ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
             
                 ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
                 // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
@@ -5614,12 +5629,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[0] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(0,u_[0]);
                 
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[1] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(1,u_[1]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(1,u_[1]);
                 
                 // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
             };
