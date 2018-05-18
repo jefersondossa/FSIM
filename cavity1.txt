@@ -17,7 +17,7 @@ DENSITY      TEMPERATURE      VISCOSITY      THERMAL CONDITIVITY
 --------------------------------------------------------------------------------
 TIME STEP       TIME INTEGRATION SCHEME (1- Implicit Euler, .5- Trapezium)
 --------------------------------------------------------------------------------
-.1            1.
+.01            1.
 
 --------------------------------------------------------------------------------
 EXTERNAL FIELD FORCES CONSTANTS
@@ -3912,7 +3912,7 @@ BOUNDARY 2 - CONNECTIVITY
 BOUNDARY 2        CONSTRAINS (0-free 1-const 2-glue)  VALUES (default = 0.)
 NUMB. OF ELEM.    Ux     Uy     Uz                    Ux     Uy     Uz  
 --------------------------------------------------------------------------------
-6               1     1      0                     0.     0.     0.
+6               0      0      0                     0.     0.     0.
 
 --------------------------------------------------------------------------------
 BOUNDARY 1 - CONNECTIVITY
@@ -3928,7 +3928,7 @@ BOUNDARY 1 - CONNECTIVITY
 BOUNDARY 3        CONSTRAINS (0-free 1-const 2-glue)  VALUES (default = 0.)
 NUMB. OF ELEM.    Ux     Uy     Uz                    Ux     Uy     Uz  
 --------------------------------------------------------------------------------
-21                1     1      0                      0.01     0.     0.
+21                0     1      0                      0.     0.     0.
 
 --------------------------------------------------------------------------------
 BOUNDARY 1 - CONNECTIVITY

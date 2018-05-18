@@ -17,8 +17,8 @@
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
-//#include "IntegrationQuadrature11.hpp"
-#include "PartitionedQuadrature.hpp"
+#include "IntegrationQuadrature11.hpp"
+//#include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
 
@@ -50,8 +50,8 @@ public:
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
     ///Defines the partitioned integration quadrature rule class locally
-    typedef PartQuadrature<DIM>                                 SpecialQuad;
-    //typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+    //typedef PartQuadrature<DIM>                                 SpecialQuad;
+    typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
 
     /// Defines the normal integration quadrature rule class locally
     typedef IntegQuadrature<DIM>                                NormalQuad;
@@ -105,7 +105,6 @@ private:
     double        tSUPG_;             //SUPG parameter
     double        tPSPG_;             //PSPG parameter
     double        tLSIC_;             //LSIC parameter
-    double        tARLQ_;             //Arlequin Stabilization parameter
     double        tSUGN1_;
     double        tSUGN2_;
     double        tSUGN3_;
@@ -123,10 +122,10 @@ private:
     static const double k1;
     static const double k2;
 
-    typename SpecialQuad::PointWeight   intPointWeightFunction;
-    typename SpecialQuad::PointWeight   intPointWeightFunctionPrev;
-    typename SpecialQuad::PointWeight   intPointDistGlueZone;
-    typename SpecialQuad::PointLogical  intPointGlueZone;
+    typename NormalQuad::PointWeight   intPointWeightFunction;
+    typename NormalQuad::PointWeight   intPointWeightFunctionPrev;
+    typename NormalQuad::PointWeight   intPointDistGlueZone;
+    typename NormalQuad::PointLogical  intPointGlueZone;
     bool          glueZone;
     bool          compressibility;   //True if the element is compressible
     bool          model; //true for local and false for global
@@ -178,7 +177,7 @@ public:
         intPointGlueZone.clear();
         sideBoundary_ = 0;
 
-        for (int i=0; i < (sQuad.end() - sQuad.begin()); i++){
+        for (int i=0; i < (nQuad.end() - nQuad.begin()); i++){
             intPointWeightFunction(i) = 1.;
             intPointWeightFunctionPrev(i) = 1.;
         };
@@ -242,7 +241,6 @@ public:
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG();
-    void getParameterSUPG2();
 
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
@@ -497,7 +495,7 @@ public:
 template<>
 double const Element<2>::k1 = 1.e0;
 template<>
-double const Element<2>::k2 = 0.0;
+double const Element<2>::k2 = 0.00;
 
 
 //------------------------------------------------------------------------------
@@ -537,11 +535,11 @@ void Element<2>::setIntegPointWeightFunction() {
 
     int index=0;
 
-    for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
-        it != sQuad.end(); it++){
+    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
+        it != nQuad.end(); it++){
         
-       xsi(0) = sQuad.PointList(index,0);
-       xsi(1) = sQuad.PointList(index,1);
+       xsi(0) = nQuad.PointList(index,0);
+       xsi(1) = nQuad.PointList(index,1);
             
        //Computes the velocity shape functions
        shapeQuad.evaluate(xsi,phi_);
@@ -553,6 +551,7 @@ void Element<2>::setIntegPointWeightFunction() {
 
        // intPointWeightFunction(index) = 1.;
 
+     
        index++;
     }; 
 
@@ -767,7 +766,7 @@ void Element<2>::getJacobianMatrix(ublas::bounded_vector<double,2>& xsi) {
 
     //Computing the jacobian determinant
     djac_ = dx_dxsi1 * dy_dxsi2 - dx_dxsi2 * dy_dxsi1;
-    //    djac_ = fabs(djac_);
+    djac_ = fabs(djac_);
 
     //Computing Jacobian inverse
     ainv_(0,0) =  dy_dxsi2 / djac_;
@@ -1248,8 +1247,7 @@ void Element<2>::getParameterSUPG() {
                        1. / (tSUGN3_ * tSUGN3_));
    
     tPSPG_ = tSUPG_;
-    tLSIC_ = tSUPG_ * uNorm;
-    tARLQ_ = tSUPG_;
+    tLSIC_ = tSUPG_ * uNorm * uNorm;
  
     return;
 };
@@ -1260,12 +1258,10 @@ void Element<2>::getParameterSUPG() {
 template<>
 void Element<2>::getElemMatrix(int index){
     
-    //tARLQ_ = 0.;
+
     //tSUPG_ = 0.;
     //tPSPG_ = 0.;
     //tLSIC_ = 0.;
-
-    //    if(model) std::cout << "umesh " << umesh_ << " vmesh " << vmesh_ << std::endl;
  
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -1633,18 +1629,18 @@ void Element<2>::getResidualVector(int index){
 
         double dAx = 0.;
         double dAy = 0.;
-        if (model){
-            // dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
-            // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
-            // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
-        } else {
-            // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
-            //                     intPointWeightFunctionPrev(index)) / dTime_;
-            // my -= dens_ * v_ * (intPointWeightFunction(index) - 
-            //                     intPointWeightFunctionPrev(index)) / dTime_;
-              // std::cout << "AQUI " << (intPointWeightFunction(index) - 
-              //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
-        };
+        // if (model){
+        //     // dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
+        //     // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
+        //     // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
+        // } else {
+        //     // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
+        //     //                     intPointWeightFunctionPrev(index)) / dTime_;
+        //     // my -= dens_ * v_ * (intPointWeightFunction(index) - 
+        //     //                     intPointWeightFunctionPrev(index)) / dTime_;
+        //       // std::cout << "AQUI " << (intPointWeightFunction(index) - 
+        //       //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
+        // };
 
         rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ * timeScheme_ 
                              - KLSx * dTime_) * weight_ * djac_;
@@ -1655,7 +1651,7 @@ void Element<2>::getResidualVector(int index){
     };
 
     // if(model) {
-    //     if (index_ == 601){
+    //     if (index_ == 601){ 
     //         std::cout << "RHS " << index << std::endl;
     //         for (int i=0; i<18; i++){
     //             std::cout << rhsVector(i) << " ";
@@ -2055,6 +2051,7 @@ void Element<2>::getTransientStokes(){
 
     rhsVector.clear();
     jacobianNRMatrix.clear();
+    setIntegPointWeightFunction();
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
         it != nQuad.end(); it++){
@@ -2105,6 +2102,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
+    setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
@@ -2259,7 +2257,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
         
         Baux = prod(Maux,Bmatrix);
         
-        //diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
+        diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
         
         for (int i = 0; i < 6; i++){
             for (int j = 0; j < 6; j++){        
@@ -2270,14 +2268,14 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                     (phi_(i) * phi_(j))
                     * weight_ * djac_ * k1;
 
-                diffMatrix(2*i  ,2*j  ) += dphi_dx(0,i) * dphi_dx(0,j) *
-                    weight_ * djac_ * k2;
-                diffMatrix(2*i+1,2*j  ) += dphi_dx(1,i) * dphi_dx(0,j) *
-                    weight_ * djac_ * k2;
-                diffMatrix(2*i  ,2*j+1) += dphi_dx(0,i) * dphi_dx(1,j) *
-                    weight_ * djac_ * k2;
-                diffMatrix(2*i+1,2*j+1) += dphi_dx(1,i) * dphi_dx(1,j) *
-                    weight_ * djac_ * k2;
+                // diffMatrix(2*i  ,2*j  ) += dphi_dx(0,i) * dphi_dx(0,j) *
+                //     weight_ * djac_ * k2;
+                // diffMatrix(2*i+1,2*j  ) += dphi_dx(1,i) * dphi_dx(0,j) *
+                //     weight_ * djac_ * k2;
+                // diffMatrix(2*i  ,2*j+1) += dphi_dx(0,i) * dphi_dx(1,j) *
+                //     weight_ * djac_ * k2;
+                // diffMatrix(2*i+1,2*j+1) += dphi_dx(1,i) * dphi_dx(1,j) *
+                //     weight_ * djac_ * k2;
 
                 double LM = 0.;
     
@@ -2398,7 +2396,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
             xsi_intp(1) = intPointCorrespXsi(index,1);
 
             //Computes the coarse mesh shape functions
-            shapeQuad.evaluate(xsi,phiLM_);
+            shapeQuad.evaluate(xsi_intp,phiLM_);
             
             //Returns the quadrature integration weight
             weight_ = sQuad.WeightList(index);
@@ -2438,7 +2436,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
             
             Baux = prod(Maux,Bmatrix);
             
-            //diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
+            diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
             
             for (int i = 0; i < 6; i++){
                 for (int j = 0; j < 6; j++){        
@@ -2449,14 +2447,14 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
                         (phiLM_(i) * phi_(j))
                         * weight_ * djac_ * k1;
 
-                    diffMatrix(2*i  ,2*j  ) += dphiL_dx(0,i) * dphi_dx(0,j) *
-                        weight_ * djac_ * k2;
-                    diffMatrix(2*i+1,2*j  ) += dphiL_dx(1,i) * dphi_dx(0,j) *
-                        weight_ * djac_ * k2;
-                    diffMatrix(2*i  ,2*j+1) += dphiL_dx(0,i) * dphi_dx(1,j) *
-                        weight_ * djac_ * k2;
-                    diffMatrix(2*i+1,2*j+1) += dphiL_dx(1,i) * dphi_dx(1,j) *
-                        weight_ * djac_ * k2;
+                    // diffMatrix(2*i  ,2*j  ) += dphiL_dx(0,i) * dphi_dx(0,j) *
+                    //     weight_ * djac_ * k2;
+                    // diffMatrix(2*i+1,2*j  ) += dphiL_dx(1,i) * dphi_dx(0,j) *
+                    //     weight_ * djac_ * k2;
+                    // diffMatrix(2*i  ,2*j+1) += dphiL_dx(0,i) * dphi_dx(1,j) *
+                    //     weight_ * djac_ * k2;
+                    // diffMatrix(2*i+1,2*j+1) += dphiL_dx(1,i) * dphi_dx(1,j) *
+                    //     weight_ * djac_ * k2;
 
                     //Coarse
                     double LM = 0.;
@@ -2479,7 +2477,8 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
                     jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
                         * weight_ * djac_;
                     jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
-                        * weight_ * djac_;    
+                        * weight_ * djac_;  
+                    
                     
                 };
 
@@ -2520,6 +2519,16 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
     // lagrMultMatrix(12,12) = 0.;
     // lagrMultMatrix(13,13) = 0.;
     // lagrMultMatrix(14,14) = 0.;
+
+
+    // std::cout << "ELEM " << index_ << std::endl;
+    // for (int i=0; i<12; i++){
+    //     for (int j=0; j<12; j++){
+    //         std::cout << lagrMultMatrix(i,j) << " " ;
+    //     };
+    //     std::cout << std::endl;
+    // };
+            
 
 
     //Computes the Newton's method jacobian
@@ -2625,95 +2634,95 @@ void Element<2>::getLMStabilizationSameMesh(){
 template<>
 void Element<2>::getStabCoarse(int ielem){
 
-    typename QuadShapeFunction<2>::Coords xsi, xsi_intp;
-    int index = 0;
+    // typename QuadShapeFunction<2>::Coords xsi, xsi_intp;
+    // int index = 0;
 
-    typename QuadShapeFunction<2>::Values phiLM_; 
+    // typename QuadShapeFunction<2>::Values phiLM_; 
    
-    diffMatrix.clear();
-    jacobianNRMatrix.clear();
-    rhsVector.clear();
-    lagrMultMatrix.clear();
+    // diffMatrix.clear();
+    // jacobianNRMatrix.clear();
+    // rhsVector.clear();
+    // lagrMultMatrix.clear();
     
-    for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
-        it != sQuad.end(); it++){
+    // for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
+    //     it != sQuad.end(); it++){
         
-        if ((intPointCorrespElem(index) == ielem)){
+    //     if ((intPointCorrespElem(index) == ielem)){
 
-            //Defines the integration points adimentional coordinates
-            xsi(0) = sQuad.PointList(index,0);
-            xsi(1) = sQuad.PointList(index,1);
+    //         //Defines the integration points adimentional coordinates
+    //         xsi(0) = sQuad.PointList(index,0);
+    //         xsi(1) = sQuad.PointList(index,1);
             
-            //Computes the velocity shape functions
-            shapeQuad.evaluate(xsi,phi_);
+    //         //Computes the velocity shape functions
+    //         shapeQuad.evaluate(xsi,phi_);
             
-            xsi_intp(0) = intPointCorrespXsi(index,0);
-            xsi_intp(1) = intPointCorrespXsi(index,1);
+    //         xsi_intp(0) = intPointCorrespXsi(index,0);
+    //         xsi_intp(1) = intPointCorrespXsi(index,1);
 
-            //Computes the coarse mesh shape functions
-            shapeQuad.evaluate(xsi_intp,phiLM_);
+    //         //Computes the coarse mesh shape functions
+    //         shapeQuad.evaluate(xsi_intp,phiLM_);
             
-            //Returns the quadrature integration weight
-            weight_ = sQuad.WeightList(index);
+    //         //Returns the quadrature integration weight
+    //         weight_ = sQuad.WeightList(index);
             
-            //Computes the jacobian matrix
-            getJacobianMatrix(xsi);
+    //         //Computes the jacobian matrix
+    //         getJacobianMatrix(xsi);
                         
-            getSpatialDerivatives(xsi);
+    //         getSpatialDerivatives(xsi);
 
-            dphiL_dx = dphi_dx;
+    //         dphiL_dx = dphi_dx;
 
-            getSpatialDerivatives(xsi_intp);
+    //         getSpatialDerivatives(xsi_intp);
 
-            double LM = 0.;
+    //         double LM = 0.;
 
-            for (int i = 0; i < 6; i++){
-                for (int j = 0; j < 6; j++){
-                    LM = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                        * phiLM_(j) * tARLQ_;
+    //         for (int i = 0; i < 6; i++){
+    //             for (int j = 0; j < 6; j++){
+    //                 LM = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+    //                     * phiLM_(j) * tARLQ_;
             
-                    jacobianNRMatrix(2*i  ,2*j  ) += timeScheme_ * dTime_ * LM
-                        * weight_ * djac_ * intPointWeightFunction(index);
+    //                 jacobianNRMatrix(2*i  ,2*j  ) += timeScheme_ * dTime_ * LM
+    //                     * weight_ * djac_ * intPointWeightFunction(index);
                     
-                    jacobianNRMatrix(2*i+1,2*j+1) += timeScheme_ * dTime_ * LM
-                        * weight_ * djac_ * intPointWeightFunction(index);
+    //                 jacobianNRMatrix(2*i+1,2*j+1) += timeScheme_ * dTime_ * LM
+    //                     * weight_ * djac_ * intPointWeightFunction(index);
                     
           
-                    double Lx = 0.;
-                    double Ly = 0.;
+    //                 double Lx = 0.;
+    //                 double Ly = 0.;
                     
-                    if (glueZone){
-                        if (model){
-                            //Fine
-                            Lx = -dphi_dx(0,i) * phi_(j) * tARLQ_ / dens_;
-                            Ly = -dphi_dx(1,i) * phi_(j) * tARLQ_ / dens_;
-                        }else{
-                            //Coarse
-                            Lx = dphi_dx(0,i) * phi_(j) * tARLQ_ / dens_ * 0.;
-                            Ly = dphi_dx(1,i) * phi_(j) * tARLQ_ / dens_ * 0.;
-                        };
-                    };
+    //                 if (glueZone){
+    //                     if (model){
+    //                         //Fine
+    //                         Lx = -dphi_dx(0,i) * phi_(j) * tARLQ_ / dens_;
+    //                         Ly = -dphi_dx(1,i) * phi_(j) * tARLQ_ / dens_;
+    //                     }else{
+    //                         //Coarse
+    //                         Lx = dphi_dx(0,i) * phi_(j) * tARLQ_ / dens_ * 0.;
+    //                         Ly = dphi_dx(1,i) * phi_(j) * tARLQ_ / dens_ * 0.;
+    //                     };
+    //                 };
                     
                     
-                    jacobianNRMatrix(12+j,2*i  ) +=  ((Lx) * 
-                                                      timeScheme_ * dTime_) * 
-                        weight_ * djac_;// * intPointWeightFunction(index);
-                    jacobianNRMatrix(12+j,2*i+1) +=  ((Ly) * 
-                                                      timeScheme_ * dTime_)
-                        * weight_ * djac_;// * intPointWeightFunction(index);
-                };
+    //                 jacobianNRMatrix(12+j,2*i  ) +=  ((Lx) * 
+    //                                                   timeScheme_ * dTime_) * 
+    //                     weight_ * djac_;// * intPointWeightFunction(index);
+    //                 jacobianNRMatrix(12+j,2*i+1) +=  ((Ly) * 
+    //                                                   timeScheme_ * dTime_)
+    //                     * weight_ * djac_;// * intPointWeightFunction(index);
+    //             };
 
-                // double LMx = 0.; double LMy = 0.;
-                // LMx = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i)) 
-                //     * lagMx_ * tARLQ_;
-                // LMx = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i)) 
-                //     * lagMy_ * tARLQ_;   
+    //             // double LMx = 0.; double LMy = 0.;
+    //             // LMx = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i)) 
+    //             //     * lagMx_ * tARLQ_;
+    //             // LMx = ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i)) 
+    //             //     * lagMy_ * tARLQ_;   
                 
 
-            };
-        };
-        index++;
-    };
+    //         };
+    //     };
+    //     index++;
+    // };
     
     return;
 };
