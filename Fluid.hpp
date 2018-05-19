@@ -686,39 +686,41 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
         // };
         
 
-        // Problema hélice - velocidade imposta na helice
-        if (boundary_[ibound] -> getConstrain(0) == 3){                
-            typename Node::VecLocD x, R, T;
-            x = nodes_[no1] -> getCoordinates();
-            R(0) = x(0) - 0.5;
-            R(1) = x(1) - 0.5;
+        // // Problema hélice - velocidade imposta na helice
+        // if (boundary_[ibound] -> getConstrain(0) == 3){                
+        //     typename Node::VecLocD x, R, T;
+        //     x = nodes_[no1] -> getCoordinates();
+        //     R(0) = x(0) - 0.5;
+        //     R(1) = x(1) - 0.5;
             
-            T(0) =  R(1);
-            T(1) = -R(0);
+        //     T(0) =  R(1);
+        //     T(1) = -R(0);
             
-            nodes_[no1] -> setConstrains(0,3,T(0));
-            nodes_[no1] -> setConstrains(1,3,T(1));
+        //     std::cout << "T2 " << R(0) << " " << R(1) << " " << T(0)/norm_2(R) << " " << T(1)/norm_2(R) << std::endl;
             
-            x = nodes_[no2] -> getCoordinates();
-            R(0) = x(0) - 0.5;
-            R(1) = x(1) - 0.5;
+        //     nodes_[no1] -> setConstrains(0,3,T(0));
+        //     nodes_[no1] -> setConstrains(1,3,T(1));
             
-            T(0) =  R(1);
-            T(1) = -R(0);
+        //     x = nodes_[no2] -> getCoordinates();
+        //     R(0) = x(0) - 0.5;
+        //     R(1) = x(1) - 0.5;
             
-            nodes_[no2] -> setConstrains(0,3,T(0));
-            nodes_[no2] -> setConstrains(1,3,T(1));
+        //     T(0) =  R(1);
+        //     T(1) = -R(0);
             
-            x = nodes_[no3] -> getCoordinates();
-            R(0) = x(0) - 0.5;
-            R(1) = x(1) - 0.5;
+        //     nodes_[no2] -> setConstrains(0,3,T(0));
+        //     nodes_[no2] -> setConstrains(1,3,T(1));
             
-            T(0) =  R(1);
-            T(1) = -R(0);
+        //     x = nodes_[no3] -> getCoordinates();
+        //     R(0) = x(0) - 0.5;
+        //     R(1) = x(1) - 0.5;
             
-            nodes_[no3] -> setConstrains(0,3,T(0));
-            nodes_[no3] -> setConstrains(1,3,T(1));
-        };
+        //     T(0) =  R(1);
+        //     T(1) = -R(0);
+            
+        //     nodes_[no3] -> setConstrains(0,3,T(0));
+        //     nodes_[no3] -> setConstrains(1,3,T(1));
+        // };
 
 
 
