@@ -2199,9 +2199,10 @@ int Arlequin<2>::solveSteadyArlequinMovingLaplaceProblem(int iterNumber,
                 for (int ielem = 0; ielem < numElemIntersect; ielem++){
                     
                     int iElemCoarse = diffElem[ielem];
-                    
+                    double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
+
                     elementsFine_[jel] -> 
-                        getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                        getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                     
                     //Computes element matrix
                     Ajac = elementsFine_[jel] -> getJacNRMatrix();
@@ -3124,9 +3125,10 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
                         
                         int iElemCoarse = diffElem[ielem];
-                       
+                        double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
+
                         elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                         
                         //Computes element matrix
                         Ajac = elementsFine_[jel] -> getLagrMultMatrix();

@@ -2175,9 +2175,9 @@ int Arlequin<2>::solveSteadyArlequinMovingLaplaceProblem(int iterNumber,
                 for (int ielem = 0; ielem < numElemIntersect; ielem++){
                     
                     int iElemCoarse = diffElem[ielem];
-                    
+                    double pspg = 0;
                     elementsFine_[jel] -> 
-                        getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                        getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                     
                     //Computes element matrix
                     Ajac = elementsFine_[jel] -> getJacNRMatrix();
@@ -3110,8 +3110,9 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                         
                         int iElemCoarse = diffElem[ielem];
                        
+                        double pspg = 0.;
                         elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                         
                         //Computes element matrix
                         Ajac = elementsFine_[jel] -> getLagrMultMatrix();
@@ -4722,7 +4723,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                         
                         nodesFine_[no1] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
                         nodesFine_[no1] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
-                        
+
                         x2 = nodesFine_[no2] -> getCoordinates();
                         R2(0) = x2(0) - 0.5;
                         R2(1) = x2(1) - 0.5;
@@ -5289,14 +5290,14 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                             ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                        // ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
-                        //                     ,ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
+                                            ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
                                             ,ADD_VALUES);
 
                         dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                        // ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
-                        //                     ,ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
+                                            ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
                                             ,ADD_VALUES);
                     };      
@@ -5345,9 +5346,13 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
                         
                         int iElemCoarse = diffElem[ielem];
-                       
+                        
+                        //std::cout << "PSPG Coarse " << iElemCoarse << " " << elementsCoarse_[ielem] -> getPSPG() << std::endl;
+                        
+                        double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
+
                         elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                         
                         //Computes element matrix
                         Ajac = elementsFine_[jel] -> getLagrMultMatrix();
@@ -5474,17 +5479,17 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                 ADD_VALUES);
 
                             int dof_i = 2 * connecC(i);
-                            // ierr = VecSetValues(b,1,&dof_i,
-                            //                     &rhsLagMult(2*i  ),
-                            //                     ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &rhsLagMult(2*i  ),
+                                                ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i  ),
                                                 ADD_VALUES);
 
                             dof_i = 2 * connecC(i) + 1;
-                            // ierr = VecSetValues(b,1,&dof_i,
-                            //                     &rhsLagMult(2*i+1),
-                            //                     ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &rhsLagMult(2*i+1),
+                                                ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i+1),
                                                 ADD_VALUES);
@@ -5629,12 +5634,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[0] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(0,u_[0]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
                 
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[1] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(1,u_[1]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(1,u_[1]);
                 
                 // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
             };

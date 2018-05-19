@@ -17,8 +17,8 @@
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
-#include "IntegrationQuadrature11.hpp"
-//#include "PartitionedQuadrature.hpp"
+//#include "IntegrationQuadrature11.hpp"
+#include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
 
@@ -50,8 +50,8 @@ public:
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
     ///Defines the partitioned integration quadrature rule class locally
-    //typedef PartQuadrature<DIM>                                 SpecialQuad;
-    typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+    typedef PartQuadrature<DIM>                                 SpecialQuad;
+    //typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
 
     /// Defines the normal integration quadrature rule class locally
     typedef IntegQuadrature<DIM>                                NormalQuad;
@@ -124,8 +124,8 @@ private:
 
     typename NormalQuad::PointWeight   intPointWeightFunction;
     typename NormalQuad::PointWeight   intPointWeightFunctionPrev;
-    typename NormalQuad::PointWeight   intPointDistGlueZone;
-    typename NormalQuad::PointLogical  intPointGlueZone;
+    typename SpecialQuad::PointWeight   intPointDistGlueZone;
+    typename SpecialQuad::PointLogical  intPointGlueZone;
     bool          glueZone;
     bool          compressibility;   //True if the element is compressible
     bool          model; //true for local and false for global
@@ -241,6 +241,8 @@ public:
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG();
+    double getPSPG(){return tPSPG_;};
+
 
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
@@ -457,7 +459,7 @@ public:
     /// the different mesh portion
     /// @param int element of the coarse mesh (used to verify which integration
     /// point belongs to the coarse mesh element)
-    void getLagrangeMultipliersDifferentMesh(int ielem);
+    void getLagrangeMultipliersDifferentMesh(int ielem,double tPSPG2_);
 
     /// Compute and store the stabilization for the Lagrange multiplier operator
     /// for the same mesh portion
@@ -495,7 +497,7 @@ public:
 template<>
 double const Element<2>::k1 = 1.e0;
 template<>
-double const Element<2>::k2 = 0.00;
+double const Element<2>::k2 = 0.000;
 
 
 //------------------------------------------------------------------------------
@@ -1259,9 +1261,9 @@ template<>
 void Element<2>::getElemMatrix(int index){
     
 
-    //tSUPG_ = 0.;
+    tSUPG_ = 0.;
     //tPSPG_ = 0.;
-    //tLSIC_ = 0.;
+    tLSIC_ = 0.;
  
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -1595,17 +1597,7 @@ void Element<2>::getResidualVector(int index){
                      dv_dy * (vna_ - vmesh_)) * phi_(i) * dens_ +
             ((una_ - umesh_) * dphi_dx(0,i) + (vna_ - vmesh_) * dphi_dx(1,i)) *
             ((una_ - umesh_) * dv_dx + (vna_ - vmesh_) * dv_dy) * tSUPG_ *dens_;
-
-        mx *= intPointWeightFunction(index);
-        my *= intPointWeightFunction(index);
-        Kx *= intPointWeightFunction(index);
-        Ky *= intPointWeightFunction(index);
-        KLSx *= intPointWeightFunction(index);
-        KLSy *= intPointWeightFunction(index);
-        Cx *= intPointWeightFunction(index);
-        Cy *= intPointWeightFunction(index);
-  
-       
+ 
         double Px = - (dphi_dx(0,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
                                               dphi_dx(1,i) * (vna_ - vmesh_))
                                              * dp_dx * tSUPG_);
@@ -1613,9 +1605,6 @@ void Element<2>::getResidualVector(int index){
                                               dphi_dx(1,i) * (vna_ - vmesh_))
                                              * dp_dy * tSUPG_);
            
-        Px *= intPointWeightFunction(index);
-        Py *= intPointWeightFunction(index);
-
         double Q = ((du_dx + dv_dy) * phi_(i)) +
             (dphi_dx(0,i) * dp_dx + dphi_dx(1,i) * dp_dy) * tPSPG_ / dens_ +
             dphi_dx(0,i) * (u_ - uPrev_) / dTime_ * tPSPG_ +
@@ -1624,8 +1613,6 @@ void Element<2>::getResidualVector(int index){
                             (vna_ - vmesh_) * du_dy) * tPSPG_ +
             dphi_dx(1,i) * ((una_ - umesh_) * dv_dx +
                             (vna_ - vmesh_) * dv_dy) * tPSPG_;
-
-        Q *= intPointWeightFunction(index);
 
         double dAx = 0.;
         double dAy = 0.;
@@ -1643,10 +1630,13 @@ void Element<2>::getResidualVector(int index){
         // };
 
         rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ * timeScheme_ 
-                             - KLSx * dTime_) * weight_ * djac_;
+                             - KLSx * dTime_)
+            * weight_ * djac_ * intPointWeightFunction(index);
         rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAx) * dTime_ * timeScheme_
-                             - KLSy * dTime_) * weight_ * djac_;
-        rhsVector(12+i) += -Q * dTime_ * weight_ * djac_;
+                             - KLSy * dTime_)
+            * weight_ * djac_ * intPointWeightFunction(index);
+        rhsVector(12+i) += -Q * dTime_ 
+            * weight_ * djac_ * intPointWeightFunction(index);
                               
     };
 
@@ -2283,11 +2273,11 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                 LM = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
                     * phi_(j) * tSUPG_;
             
-                jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
-                    * weight_ * djac_;
+                // jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
+                //     * weight_ * djac_;
                 
-                jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
-                    * weight_ * djac_;
+                // jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
+                //     * weight_ * djac_;
         
 
                 double Lx = 0.;
@@ -2296,10 +2286,10 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                 Lx = -dphi_dx(0,i) * phi_(j) * tPSPG_ / dens_;
                 Ly = -dphi_dx(1,i) * phi_(j) * tPSPG_ / dens_;
 
-                jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
-                    * weight_ * djac_;
-                jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
-                    * weight_ * djac_;
+                // jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
+                //     * weight_ * djac_;
+                // jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
+                //     * weight_ * djac_;
 
             };
 
@@ -2313,8 +2303,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                 * (-lagMy_) * tSUPG_
                 - dphi_dx(0,i) * (-lagMy_) * tPSPG_ / dens_;
 
-            rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
-            rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
+            // rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
+            // rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
 
 
         };         
@@ -2368,7 +2358,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
+void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem, double tPSPG2_){
 
     typename QuadShapeFunction<2>::Coords xsi,xsi_intp;
     int index = 0;
@@ -2379,7 +2369,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     lagrMultMatrix.clear();
-    
+    //    std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
     for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
         it != sQuad.end(); it++){
         
@@ -2461,23 +2451,23 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
                     LM = ((u_ - umesh_) * phi_(j) + (v_ - vmesh_) * phi_(j))
                         * phiLM_(i) * tSUPG_;
                     
-                    jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
-                        * weight_ * djac_;
+                    // jacobianNRMatrix(2*i  ,2*j  ) += (timeScheme_ * dTime_ * LM)
+                    //     * weight_ * djac_;
                     
-                    jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
-                        * weight_ * djac_;
+                    // jacobianNRMatrix(2*i+1,2*j+1) += (timeScheme_ * dTime_ * LM)
+                    //     * weight_ * djac_;
                     
                     
                     double Lx = 0.;
                     double Ly = 0.;
                     
-                    Lx = dphi_dx(0,j) * phiLM_(i) * tPSPG_ / dens_;
-                    Ly = dphi_dx(1,j) * phiLM_(i) * tPSPG_ / dens_;
+                    Lx = dphi_dx(0,j) * phiLM_(i) * tPSPG2_ / dens_;
+                    Ly = dphi_dx(1,j) * phiLM_(i) * tPSPG2_ / dens_;
                     
-                    jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
-                        * weight_ * djac_;
-                    jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
-                        * weight_ * djac_;  
+                    // jacobianNRMatrix(2*i  ,12+j) += (Lx * timeScheme_ * dTime_)
+                    //     * weight_ * djac_;
+                    // jacobianNRMatrix(2*i+1,12+j) += (Ly * timeScheme_ * dTime_)
+                    //     * weight_ * djac_;  
                     
                     
                 };
@@ -2488,15 +2478,15 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem){
                 
                 LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
                     * (lagMx_) * tSUPG_
-                    - dphi_dx(0,i) * (lagMx_) * tPSPG_ / dens_;
+                    - dphi_dx(0,i) * (lagMx_) * tPSPG2_ / dens_;
                 LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
                     * (lagMy_) * tSUPG_
-                    - dphi_dx(0,i) * (lagMy_) * tPSPG_ / dens_;
+                    - dphi_dx(0,i) * (lagMy_) * tPSPG2_ / dens_;
                 
-                rhsVector(2*i  ) += (LMx * dTime_ * timeScheme_) * 
-                    weight_ * djac_;
-                rhsVector(2*i+1) += (LMy * dTime_ * timeScheme_) * 
-                    weight_ * djac_;
+                // rhsVector(2*i  ) += (LMx * dTime_ * timeScheme_) * 
+                //     weight_ * djac_;
+                // rhsVector(2*i+1) += (LMy * dTime_ * timeScheme_) * 
+                //     weight_ * djac_;
             };
 
 

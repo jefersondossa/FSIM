@@ -267,7 +267,7 @@ public:
         constrainType[dir] = type;
         constrainValue[dir] = value;
         velocity_(dir) = value;
-        previousVelocity_(dir) = value;
+        // previousVelocity_(dir) = value;
     };
 
     /// Gets node constrain type
