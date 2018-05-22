@@ -1536,6 +1536,16 @@ void Arlequin<2>::printVelocity(int step) {
     output_v << "      </DataArray> " << std::endl;
 
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesCoarse; i++){        
+        output_v << nodesCoarse_[i] -> getVelocityArlequin(0) << " " 
+                 << nodesCoarse_[i] -> getVelocityArlequin(1) << " " 
+                 << 0. << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
+
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Lagrange Multipliers\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodesCoarse; i++){        
@@ -1577,6 +1587,16 @@ void Arlequin<2>::printVelocity(int step) {
                  << nodesCoarse_[i] -> getPressure() << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
+
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesCoarse; i++){
+        output_v << 0. << " " << 0. << " " 
+                 << nodesCoarse_[i] -> getPressureArlequin() << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
+
     output_v << "    </PointData>" << std::endl; 
 
     //WRITE ELEMENT RESULTS
@@ -1721,6 +1741,16 @@ void Arlequin<2>::printVelocity(int step) {
                   << 0. << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
+    
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesFine; i++){
+        output_vf << nodesFine_[i] -> getVelocityArlequin(0) << " "
+                  << nodesFine_[i] -> getVelocityArlequin(1) << " " 
+                  << 0. << std::endl;
+    };
+    output_vf << "      </DataArray> " << std::endl;
 
     output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
@@ -1770,6 +1800,14 @@ void Arlequin<2>::printVelocity(int step) {
     for (int i=0; i<numNodesFine; i++){
         output_vf << 0. << " " << 0. << " " 
                   << nodesFine_[i] -> getPressure() << std::endl;
+    };
+    output_vf << "      </DataArray> " << std::endl;
+
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<numNodesFine; i++){
+        output_vf << 0. << " " << 0. << " " 
+                  << nodesFine_[i] -> getPressureArlequin() << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
 
@@ -3441,6 +3479,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
         //Compute real velocity
         
+        
         QuadShapeFunction<2>                       shapeQuad;
         typename QuadShapeFunction<2>::Values      phi_;
         
@@ -3449,15 +3488,17 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                  getVelocity(0));
             nodesFine_[i] -> setVelocityArlequin(1,nodesFine_[i] -> 
                                                  getVelocity(1));
+            nodesFine_[i] -> setPressureArlequin(nodesFine_[i] ->getPressure());
         };
         
         for (int i = 0; i<numNodesGlueZoneFine; i++){
             typename Nodes::VecLocD xsi;
-            typename Quadrature::NodalValuesQuad u_coarse, v_coarse;
+            typename Quadrature::NodalValuesQuad u_coarse, v_coarse, p_coarse;
             typename Elements::Connectivity connecCoarse;
             
             double u = 0.;
             double v = 0.;
+            double p = 0.;
             
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getNodalElemCorrespondence();
@@ -3469,6 +3510,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(0);
                 v_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(1);
+                p_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getPressure();
             };
             
             shapeQuad.evaluate(xsi,phi_);
@@ -3476,6 +3518,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u += u_coarse(j) * phi_(j);
                 v += v_coarse(j) * phi_(j);
+                p += p_coarse(j) * phi_(j);
             };
             
             double wFunc = nodesFine_[nodesGlueZoneFine_[i]] -> 
@@ -3485,9 +3528,12 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 getVelocity(0) * wFunc + u * (1. - wFunc);
             double v_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getVelocity(1) * wFunc + v * (1. - wFunc);
+            double p_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
+                getPressure() * wFunc + p * (1. - wFunc);
             
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+            nodesFine_[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
             
         };
         
@@ -3496,6 +3542,8 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 setVelocityArlequin(0,nodesCoarse_[i] -> getVelocity(0));
             nodesCoarse_[i] -> 
                 setVelocityArlequin(1,nodesCoarse_[i] -> getVelocity(1));
+            nodesCoarse_[i] -> 
+                setPressureArlequin(nodesCoarse_[i] -> getPressure());
         };
         
         //Compute real pressure
@@ -5682,6 +5730,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
         //Compute real velocity
         
+         
         QuadShapeFunction<2>                       shapeQuad;
         typename QuadShapeFunction<2>::Values      phi_;
         
@@ -5690,15 +5739,17 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                  getVelocity(0));
             nodesFine_[i] -> setVelocityArlequin(1,nodesFine_[i] -> 
                                                  getVelocity(1));
+            nodesFine_[i] -> setPressureArlequin(nodesFine_[i] ->getPressure());
         };
         
         for (int i = 0; i<numNodesGlueZoneFine; i++){
             typename Nodes::VecLocD xsi;
-            typename Quadrature::NodalValuesQuad u_coarse, v_coarse;
+            typename Quadrature::NodalValuesQuad u_coarse, v_coarse, p_coarse;
             typename Elements::Connectivity connecCoarse;
             
             double u = 0.;
             double v = 0.;
+            double p = 0.;
             
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getNodalElemCorrespondence();
@@ -5710,6 +5761,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(0);
                 v_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(1);
+                p_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getPressure();
             };
             
             shapeQuad.evaluate(xsi,phi_);
@@ -5717,6 +5769,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u += u_coarse(j) * phi_(j);
                 v += v_coarse(j) * phi_(j);
+                p += p_coarse(j) * phi_(j);
             };
             
             double wFunc = nodesFine_[nodesGlueZoneFine_[i]] -> 
@@ -5726,9 +5779,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 getVelocity(0) * wFunc + u * (1. - wFunc);
             double v_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getVelocity(1) * wFunc + v * (1. - wFunc);
+            double p_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
+                getPressure() * wFunc + p * (1. - wFunc);
             
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+            nodesFine_[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
             
         };
         
@@ -5737,6 +5793,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 setVelocityArlequin(0,nodesCoarse_[i] -> getVelocity(0));
             nodesCoarse_[i] -> 
                 setVelocityArlequin(1,nodesCoarse_[i] -> getVelocity(1));
+            nodesCoarse_[i] -> 
+                setPressureArlequin(nodesCoarse_[i] -> getPressure());
         };
         
         //Compute real pressure
