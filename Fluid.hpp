@@ -1135,128 +1135,121 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             //Updates velocity
             nodes_[i] -> setPreviousVelocity(u);
             
-            //Computes predictor
-            // u[0] += dTime * accel[0];
-            // u[1] += dTime * accel[1];
-            
-            // nodes_[i] -> setVelocity(u);
-            
-            // //Updates acceleration
-            // nodes_[i] -> setPreviousAcceleration(accel);
-            
-            typename Node::VecLocD x, x_ini, R;
-            x = nodes_[i] -> getCoordinates();
-            x_ini = x;
 
-            R(0) = x(0) - .5;
-            R(1) = x(1) - .5;
-            double modR = norm_2(R);
-            double cosT = R(0) / modR;
-            double sinT = R(1) / modR;
+            
+            // typename Node::VecLocD x, x_ini, R;
+            // x = nodes_[i] -> getCoordinates();
+            // x_ini = x;
+
+            // R(0) = x(0) - .5;
+            // R(1) = x(1) - .5;
+            // double modR = norm_2(R);
+            // double cosT = R(0) / modR;
+            // double sinT = R(1) / modR;
            
-            double alpha = 0.;
+            // double alpha = 0.;
             
-            if(iTimeStep <= 19){
-                alpha = 5. * dTime * (iTimeStep+1) * dTime;
+            // if(iTimeStep <= 19){
+            //     alpha = 5. * dTime * (iTimeStep+1) * dTime;
 
-                for (int ibound = 0; ibound < numBoundElems; ibound++){
+            //     for (int ibound = 0; ibound < numBoundElems; ibound++){
                     
-                    Boundaries::BoundConnect connectB;
-                    connectB = boundary_[ibound] -> getBoundaryConnectivity();
-                    int no1 = connectB(0);
-                    int no2 = connectB(1);
-                    int no3 = connectB(2);
+            //         Boundaries::BoundConnect connectB;
+            //         connectB = boundary_[ibound] -> getBoundaryConnectivity();
+            //         int no1 = connectB(0);
+            //         int no2 = connectB(1);
+            //         int no3 = connectB(2);
                     
-                // Problema hélice - velocidade imposta na helice
-                    if (boundary_[ibound] -> getConstrain(0) == 3){ 
-                        typename Node::VecLocD x2, R2, T2;
-                        x2 = nodes_[no1] -> getCoordinates();
-                        R2(0) = x2(0) - 0.5;
-                        R2(1) = x2(1) - 0.5;
+             //    // Problema hélice - velocidade imposta na helice
+            //         if (boundary_[ibound] -> getConstrain(0) == 3){ 
+            //             typename Node::VecLocD x2, R2, T2;
+            //             x2 = nodes_[no1] -> getCoordinates();
+            //             R2(0) = x2(0) - 0.5;
+            //             R2(1) = x2(1) - 0.5;
                         
-                        T2(0) =  R2(1);
-                        T2(1) = -R2(0);
+            //             T2(0) =  R2(1);
+            //             T2(1) = -R2(0);
                         
-                        nodes_[no1] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
-                        nodes_[no1] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+            //             nodes_[no1] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+            //             nodes_[no1] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
                         
-                        x2 = nodes_[no2] -> getCoordinates();
-                        R2(0) = x2(0) - 0.5;
-                        R2(1) = x2(1) - 0.5;
+            //             x2 = nodes_[no2] -> getCoordinates();
+            //             R2(0) = x2(0) - 0.5;
+            //             R2(1) = x2(1) - 0.5;
                         
-                        T2(0) =  R2(1);
-                        T2(1) = -R2(0);
+            //             T2(0) =  R2(1);
+            //             T2(1) = -R2(0);
                         
-                        nodes_[no2] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
-                        nodes_[no2] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+            //             nodes_[no2] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+            //             nodes_[no2] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
                         
-                        x2 = nodes_[no3] -> getCoordinates();
-                        R2(0) = x2(0) - 0.5;
-                        R2(1) = x2(1) - 0.5;
+            //             x2 = nodes_[no3] -> getCoordinates();
+            //             R2(0) = x2(0) - 0.5;
+            //             R2(1) = x2(1) - 0.5;
                         
-                        T2(0) =  R2(1);
-                        T2(1) = -R2(0);
+            //             T2(0) =  R2(1);
+            //             T2(1) = -R2(0);
                         
-                        nodes_[no3] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
-                        nodes_[no3] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
-                    };
-                };
-            }else{
-                alpha = 5. * dTime * 20. * dTime;
+            //             nodes_[no3] -> setConstrains(0,3,-T2(0)*(iTimeStep+1)/20);
+            //             nodes_[no3] -> setConstrains(1,3,-T2(1)*(iTimeStep+1)/20);
+            //         };
+            //     };
+            // }else{
+            //     alpha = 5. * dTime * 20. * dTime;
 
-                for (int ibound = 0; ibound < numBoundElems; ibound++){
+            //     for (int ibound = 0; ibound < numBoundElems; ibound++){
                     
-                    Boundaries::BoundConnect connectB;
-                    connectB = boundary_[ibound] -> getBoundaryConnectivity();
-                    int no1 = connectB(0);
-                    int no2 = connectB(1);
-                    int no3 = connectB(2);
+            //         Boundaries::BoundConnect connectB;
+            //         connectB = boundary_[ibound] -> getBoundaryConnectivity();
+            //         int no1 = connectB(0);
+            //         int no2 = connectB(1);
+            //         int no3 = connectB(2);
                     
-                    // Problema hélice - velocidade imposta na helice
-                    if (boundary_[ibound] -> getConstrain(0) == 3){
-                        typename Node::VecLocD x2, R2, T2;
-                        x2 = nodes_[no1] -> getCoordinates();
-                        R2(0) = x2(0) - 0.5;
-                        R2(1) = x2(1) - 0.5;
+            //         // Problema hélice - velocidade imposta na helice
+            //         if (boundary_[ibound] -> getConstrain(0) == 3){
+            //             typename Node::VecLocD x2, R2, T2;
+            //             x2 = nodes_[no1] -> getCoordinates();
+            //             R2(0) = x2(0) - 0.5;
+            //             R2(1) = x2(1) - 0.5;
                         
-                        T2(0) =  R2(1);
-                        T2(1) = -R2(0);
+            //             T2(0) =  R2(1);
+            //             T2(1) = -R2(0);
                         
-                        nodes_[no1] -> setConstrains(0,3,-T2(0));
-                        nodes_[no1] -> setConstrains(1,3,-T2(1));
+            //             nodes_[no1] -> setConstrains(0,3,-T2(0));
+            //             nodes_[no1] -> setConstrains(1,3,-T2(1));
                         
-                        x2 = nodes_[no2] -> getCoordinates();
-                        R2(0) = x2(0) - 0.5;
-                        R2(1) = x2(1) - 0.5;
+            //             x2 = nodes_[no2] -> getCoordinates();
+            //             R2(0) = x2(0) - 0.5;
+            //             R2(1) = x2(1) - 0.5;
                         
-                        T2(0) =  R2(1);
-                        T2(1) = -R2(0);
+            //             T2(0) =  R2(1);
+            //             T2(1) = -R2(0);
                         
-                        nodes_[no2] -> setConstrains(0,3,-T2(0));
-                        nodes_[no2] -> setConstrains(1,3,-T2(1));
+            //             nodes_[no2] -> setConstrains(0,3,-T2(0));
+            //             nodes_[no2] -> setConstrains(1,3,-T2(1));
                         
-                        x2 = nodes_[no3] -> getCoordinates();
-                        R2(0) = x2(0) - 0.5;
-                        R2(1) = x2(1) - 0.5;
+            //             x2 = nodes_[no3] -> getCoordinates();
+            //             R2(0) = x2(0) - 0.5;
+            //             R2(1) = x2(1) - 0.5;
                         
-                        T2(0) =  R2(1);
-                        T2(1) = -R2(0);
+            //             T2(0) =  R2(1);
+            //             T2(1) = -R2(0);
                         
-                        nodes_[no3] -> setConstrains(0,3,-T2(0));
-                        nodes_[no3] -> setConstrains(1,3,-T2(1));
-                    };
-                };
-            };
+            //             nodes_[no3] -> setConstrains(0,3,-T2(0));
+            //             nodes_[no3] -> setConstrains(1,3,-T2(1));
+            //         };
+            //     };
+            // };
             
-            nodes_[i] -> setPreviousCoordinates(0,x(0));
-            nodes_[i] -> setPreviousCoordinates(1,x(1));
-            x(0) = 0.5 + modR * (cosT * cos(alpha) - sinT * sin(alpha));
-            x(1) = 0.5 + modR * (sinT * cos(alpha) + cosT * sin(alpha));
-            nodes_[i] -> setCoordinates(x);
+            // nodes_[i] -> setPreviousCoordinates(0,x(0));
+            // nodes_[i] -> setPreviousCoordinates(1,x(1));
+            // x(0) = 0.5 + modR * (cosT * cos(alpha) - sinT * sin(alpha));
+            // x(1) = 0.5 + modR * (sinT * cos(alpha) + cosT * sin(alpha));
+            // nodes_[i] -> setCoordinates(x);
 
-            u[0] = (x(0) - x_ini(0)) / dTime;
-            u[1] = (x(1) - x_ini(1)) / dTime;
-            nodes_[i] -> setMeshVelocity(u);
+            // u[0] = (x(0) - x_ini(0)) / dTime;
+            // u[1] = (x(1) - x_ini(1)) / dTime;
+            // nodes_[i] -> setMeshVelocity(u);
 
 
         };
@@ -1289,7 +1282,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
                 if (part_elem[jel] == rank) {
                     //Compute Element matrix
                     if (problem_type == 1)
-                        elements_[jel] -> getTransientStokes();
+                        elements_[jel] -> getTransientNavierStokes();
                     
                     if (problem_type == 2){
                         if (iTimeStep < 2){
@@ -1418,20 +1411,20 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
 
 
 
-        //     ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-        //                             500);CHKERRQ(ierr);
+            // ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
+            //                         500);CHKERRQ(ierr);
             
-        //     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             
-        //     ierr = KSPGetPC(ksp,&pc);
+            // ierr = KSPGetPC(ksp,&pc);
             
-        //     ierr = PCSetType(pc,PCASM);
+            // ierr = PCSetType(pc,PCNONE);
             
-        //     ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
+            // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
 
-        //     ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
+            // ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
             
-        //        //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+               //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
 
         // //   //   ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
