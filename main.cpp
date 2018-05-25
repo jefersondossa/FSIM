@@ -75,10 +75,10 @@ int main(int argc, char **args) {
     // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
  
     // Helice
-    // fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
-    // coarseModel.dataReading("cavity1.txt","mirror_coarse.txt");
+    fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
+    coarseModel.dataReading("cavity1.txt","mirror_coarse.txt");
      
-    control.dataReading("64x64.txt","mirror_control.txt");
+    //control.dataReading("16x16.txt","mirror_control.txt");
 
     // char in_solid[32] = "cantilever.txt";
      
@@ -103,7 +103,7 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
-    control.solveTransientProblem(2, 1.e-6, 2); 
+    //control.solveTransientProblem(2, 1.e-6, 2); 
    
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
@@ -120,9 +120,9 @@ int main(int argc, char **args) {
     //   1 - Transient problem 
      
      
-    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
+    arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
        
-    // arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1);
           
    
     //Finalize main program  
