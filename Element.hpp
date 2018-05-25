@@ -17,8 +17,8 @@
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
-//#include "IntegrationQuadrature11.hpp"
-#include "PartitionedQuadrature.hpp"
+#include "IntegrationQuadrature11.hpp"
+//#include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
 
@@ -50,8 +50,8 @@ public:
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
     ///Defines the partitioned integration quadrature rule class locally
-    typedef PartQuadrature<DIM>                                 SpecialQuad;
-    //typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+    //typedef PartQuadrature<DIM>                                 SpecialQuad;
+    typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
 
     /// Defines the normal integration quadrature rule class locally
     typedef IntegQuadrature<DIM>                                NormalQuad;
@@ -1619,23 +1619,23 @@ void Element<2>::getResidualVector(int index){
 
         double dAx = 0.;
         double dAy = 0.;
-        // if (model){
-        //     // dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
-        //     // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
-        //     // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
-        // } else {
-        //     // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
-        //     //                     intPointWeightFunctionPrev(index)) / dTime_;
-        //     // my -= dens_ * v_ * (intPointWeightFunction(index) - 
-        //     //                     intPointWeightFunctionPrev(index)) / dTime_;
-        //       // std::cout << "AQUI " << (intPointWeightFunction(index) - 
-        //       //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
-        // };
+        if (model){
+            // dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
+            // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
+            // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
+        } else {
+            // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
+            //                     intPointWeightFunctionPrev(index)) / dTime_;
+            // my -= dens_ * v_ * (intPointWeightFunction(index) - 
+            //                     intPointWeightFunctionPrev(index)) / dTime_;
+              // std::cout << "AQUI " << (intPointWeightFunction(index) - 
+              //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
+        };
 
         rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ * timeScheme_ 
                              - KLSx * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
-        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAx) * dTime_ * timeScheme_
+        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy) * dTime_ * timeScheme_
                              - KLSy * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
         rhsVector(12+i) += -Q * dTime_ 
@@ -2095,7 +2095,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    // setIntegPointWeightFunction();
+    setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
