@@ -532,7 +532,8 @@ template<>
 void Element<2>::setIntegPointWeightFunction() {
     
     typename QuadShapeFunction<2>::Coords xsi;
-
+    
+    intPointWeightFunctionPrev = intPointWeightFunction;
     intPointWeightFunction.clear();
 
     int index=0;
@@ -1624,10 +1625,10 @@ void Element<2>::getResidualVector(int index){
             // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
             // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
         } else {
-            // mx -= dens_ * u_ * (intPointWeightFunction(index) - 
-            //                     intPointWeightFunctionPrev(index)) / dTime_;
-            // my -= dens_ * v_ * (intPointWeightFunction(index) - 
-            //                     intPointWeightFunctionPrev(index)) / dTime_;
+            mx += dens_ * u_ * (intPointWeightFunction(index) - 
+                                intPointWeightFunctionPrev(index)) / dTime_;
+            my += dens_ * v_ * (intPointWeightFunction(index) - 
+                                intPointWeightFunctionPrev(index)) / dTime_;
               // std::cout << "AQUI " << (intPointWeightFunction(index) - 
               //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
         };

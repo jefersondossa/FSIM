@@ -489,7 +489,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
                 //     if(i==0)std::cout <<" COOr " << corresp.first << " " << corresp.second(0) << " " << corresp.second(1) << std::endl;
                 // };
                 elementsFine_[elementsGlueZoneFine_[ielem]] -> 
-                    setIntegrationPointCorrespondence(corresp.first,
+                    setIntegrationPointCorrespondence(i,corresp.first,
                                                       corresp.second);
                 // };
         };
@@ -568,7 +568,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
                 
                 
                 elementsCoarse_[elementsGlueZoneFine_[ielem]] -> 
-                    setIntegrationPointCorrespondence(corresp.first,
+                    setIntegrationPointCorrespondence(i,corresp.first,
                                                       corresp.second);
             };
         };
@@ -583,238 +583,518 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
 template<>
 void Arlequin<2>::setSignaledDistance(){
 
-    typename Elements::Connectivity connec;
-    typename Nodes::VecLocD x;
+    // typename Elements::Connectivity connec;
+    // typename Nodes::VecLocD x;
 
-    // Set Dist Function
-    for (int ino = 0; ino < numNodesFine; ino++){
-        x = nodesFine_[ino] -> getCoordinates();
+    // // Set Dist Function
+    // for (int ino = 0; ino < numNodesFine; ino++){
+    //     x = nodesFine_[ino] -> getCoordinates();
         
-        double h = 0.0;
-        double T = 100.;        
-        double swd = 3.;
-        double cswd = 8.;//1.-swd;
-        double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
-        double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
-        double distx1 = -x(0)+swd;
-        double distx2 = -cswd + x(0);
-        double disty1 = -x(1)+(swdy);
-        double disty2 = -(cswdy) + x(1);
+    //     double h = 0.0;
+    //     double T = 100.;        
+    //     double swd = 3.;
+    //     double cswd = 8.;//1.-swd;
+    //     double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
+    //     double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
+    //     double distx1 = -x(0)+swd;
+    //     double distx2 = -cswd + x(0);
+    //     double disty1 = -x(1)+(swdy);
+    //     double disty2 = -(cswdy) + x(1);
         
-        double dist = 0.;
-           if((x(0)<=swd) && (x(1)<=swdy)){
-            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
-        };
-        if((x(0)<=swd) && (x(1)>=cswdy)){
-            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
-        };
-        if((x(0)>=cswd) && (x(1)>=cswdy)){
-            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
-        };
-        if((x(0)>=cswd) && (x(1)<=swdy)){
-            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
-        };
-        if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-            dist = distx1;
-        };
-        if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-            dist = distx2;
-        };        
-        if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
-            dist = disty1;
-        };
-        if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
-            dist = disty2;
-        };        
-        if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
-            dist = distx1;
-            if (fabs(dist)>=fabs(distx2)){
-                dist=distx2;
-            };
-            if (fabs(dist)>=fabs(disty1)){
-                dist=disty1;
-            };
-            if (fabs(dist)>=fabs(disty2)){
-                dist=disty2;
-            };
-        };
-        nodesFine_[ino] -> setDistFunction(dist);
-    };    
+    //     double dist = 0.;
+    //        if((x(0)<=swd) && (x(1)<=swdy)){
+    //         dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
+    //     };
+    //     if((x(0)<=swd) && (x(1)>=cswdy)){
+    //         dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //     };
+    //     if((x(0)>=cswd) && (x(1)>=cswdy)){
+    //         dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //     };
+    //     if((x(0)>=cswd) && (x(1)<=swdy)){
+    //         dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
+    //     };
+    //     if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //         dist = distx1;
+    //     };
+    //     if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //         dist = distx2;
+    //     };        
+    //     if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //         dist = disty1;
+    //     };
+    //     if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //         dist = disty2;
+    //     };        
+    //     if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
+    //         dist = distx1;
+    //         if (fabs(dist)>=fabs(distx2)){
+    //             dist=distx2;
+    //         };
+    //         if (fabs(dist)>=fabs(disty1)){
+    //             dist=disty1;
+    //         };
+    //         if (fabs(dist)>=fabs(disty2)){
+    //             dist=disty2;
+    //         };
+    //     };
+    //     nodesFine_[ino] -> setDistFunction(dist);
+    // };    
 
-    for (int i = 0; i < numElemFine; i++){
-        for (int j = 0; 
-             j < elementsFine_[i] -> getNumberOfIntegrationPoints(); j++){
+    // for (int i = 0; i < numElemFine; i++){
+    //     for (int j = 0; 
+    //          j < elementsFine_[i] -> getNumberOfIntegrationPoints(); j++){
         
-            x = elementsFine_[i] -> getIntegPointCoordinatesValue(j);
+    //         x = elementsFine_[i] -> getIntegPointCoordinatesValue(j);
         
-            double h = 0.0;
-            double T = 100.;        
-            double swd = 3.;
-            double cswd = 8.;//1.-swd;
-            double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
-            double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
-            double distx1 = -x(0)+swd;
-            double distx2 = -cswd + x(0);
-            double disty1 = -x(1)+(swdy);
-            double disty2 = -(cswdy) + x(1);
+    //         double h = 0.0;
+    //         double T = 100.;        
+    //         double swd = 3.;
+    //         double cswd = 8.;//1.-swd;
+    //         double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
+    //         double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
+    //         double distx1 = -x(0)+swd;
+    //         double distx2 = -cswd + x(0);
+    //         double disty1 = -x(1)+(swdy);
+    //         double disty2 = -(cswdy) + x(1);
             
-            double dist = 0.;
-            if((x(0)<=swd) && (x(1)<=swdy)){
-                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
-            };
-            if((x(0)<=swd) && (x(1)>=cswdy)){
-                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
-            };
-            if((x(0)>=cswd) && (x(1)>=cswdy)){
-                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
-            };
-            if((x(0)>=cswd) && (x(1)<=swdy)){
-                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
-            };
-            if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-                dist = distx1;
-            };
-            if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-                dist = distx2;
-            };        
-            if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
-                dist = disty1;
-            };
-            if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
-                dist = disty2;
-            };        
-            if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
-                dist = distx1;
-                if (fabs(dist)>=fabs(distx2)){
-                    dist=distx2;
-                };
-                if (fabs(dist)>=fabs(disty1)){
-                    dist=disty1;
-                };
-                if (fabs(dist)>=fabs(disty2)){
-                    dist=disty2;
-                };
-            };
-            elementsFine_[i] -> setIntegPointDistFunction(j,dist);
-        };    
+    //         double dist = 0.;
+    //         if((x(0)<=swd) && (x(1)<=swdy)){
+    //             dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
+    //         };
+    //         if((x(0)<=swd) && (x(1)>=cswdy)){
+    //             dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //         };
+    //         if((x(0)>=cswd) && (x(1)>=cswdy)){
+    //             dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //         };
+    //         if((x(0)>=cswd) && (x(1)<=swdy)){
+    //             dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
+    //         };
+    //         if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //             dist = distx1;
+    //         };
+    //         if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //             dist = distx2;
+    //         };        
+    //         if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //             dist = disty1;
+    //         };
+    //         if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //             dist = disty2;
+    //         };        
+    //         if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
+    //             dist = distx1;
+    //             if (fabs(dist)>=fabs(distx2)){
+    //                 dist=distx2;
+    //             };
+    //             if (fabs(dist)>=fabs(disty1)){
+    //                 dist=disty1;
+    //             };
+    //             if (fabs(dist)>=fabs(disty2)){
+    //                 dist=disty2;
+    //             };
+    //         };
+    //         elementsFine_[i] -> setIntegPointDistFunction(j,dist);
+    //     };    
+    // };
+
+
+
+
+    // // Coarse
+    // for (int ino = 0; ino < numNodesCoarse; ino++){
+    //     x = nodesCoarse_[ino] -> getCoordinates();
+
+    //     double h = 0.0;
+    //     double T = 100.;        
+    //     double swd = 3.;
+    //     double cswd = 8.;//1.-swd;
+    //     double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
+    //     double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
+    //     double distx1 = -x(0)+swd;
+    //     double distx2 = -cswd + x(0);
+    //     double disty1 = -x(1)+(swdy);
+    //     double disty2 = -(cswdy) + x(1);
+        
+    //     double dist = 0.;
+    //     if((x(0)<=swd) && (x(1)<=swdy)){
+    //         dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
+    //     };
+    //     if((x(0)<=swd) && (x(1)>=cswdy)){
+    //         dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //     };
+    //     if((x(0)>=cswd) && (x(1)>=cswdy)){
+    //         dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //     };
+    //     if((x(0)>=cswd) && (x(1)<=swdy)){
+    //         dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
+    //     };
+    //     if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //         dist = distx1;
+    //     };
+    //     if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //         dist = distx2;
+    //     };        
+    //     if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //         dist = disty1;
+    //     };
+    //     if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //         dist = disty2;
+    //     };        
+    //     if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
+    //         dist = distx1;
+    //         if (fabs(dist)>=fabs(distx2)){
+    //             dist=distx2;
+    //         };
+    //         if (fabs(dist)>=fabs(disty1)){
+    //             dist=disty1;
+    //         };
+    //         if (fabs(dist)>=fabs(disty2)){
+    //             dist=disty2;
+    //         };
+    //     };
+    //     nodesCoarse_[ino] -> setDistFunction(dist);
+    // };  
+
+    // for (int i = 0; i < numElemCoarse; i++){
+    //     for (int j = 0; 
+    //          j < elementsCoarse_[i] -> getNumberOfIntegrationPoints(); j++){
+        
+    //         x = elementsCoarse_[i] -> getIntegPointCoordinatesValue(j);
+        
+    //         double h = 0.0;
+    //         double T = 100.;    
+
+    //         double swd = 3.;
+    //         double cswd = 8.;//1.-swd;
+    //         double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
+    //         double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
+    //         double distx1 = -x(0)+swd;
+    //         double distx2 = -cswd + x(0);
+    //         double disty1 = -x(1)+(swd);
+    //         double disty2 = -(cswd) + x(1);
+            
+    //         double dist = 0.;
+    //         if((x(0)<=swd) && (x(1)<=swdy)){
+    //             dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
+    //         };
+    //         if((x(0)<=swd) && (x(1)>=cswdy)){
+    //             dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //         };
+    //         if((x(0)>=cswd) && (x(1)>=cswdy)){
+    //             dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
+    //         };
+    //         if((x(0)>=cswd) && (x(1)<=swdy)){
+    //             dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
+    //         };
+    //         if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //             dist = distx1;
+    //         };
+    //         if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
+    //             dist = distx2;
+    //         };        
+    //         if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //             dist = disty1;
+    //         };
+    //         if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
+    //             dist = disty2;
+    //         };        
+    //         if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
+    //             dist = distx1;
+    //             if (fabs(dist)>=fabs(distx2)){
+    //                 dist=distx2;
+    //             };
+    //             if (fabs(dist)>=fabs(disty1)){
+    //                 dist=disty1;
+    //             };
+    //             if (fabs(dist)>=fabs(disty2)){
+    //                 dist=disty2;
+    //             };
+    //         };
+    //         elementsCoarse_[i] -> setIntegPointDistFunction(j,dist);
+    //     };    
+    // }; 
+
+    typename Elements::Connectivity connec;
+    typename Nodes::VecLocD x, x1, x2, n, test;
+    typename Boundary::BoundConnect bconnec;
+    double dist;
+
+    for (int inode = 0 ; inode < numNodesFine; inode++){ 
+        nodesFine_[inode] -> clearInnerNormal();
     };
 
+    //approximate normal calculation
+    for (int i = 0; i < numBoundElemFine; i++){
+        if (boundaryFine_[i]->getConstrain(0)==2){
+            bconnec = boundaryFine_[i]->getBoundaryConnectivity();
+            //first segment
+            int no1 = bconnec(0);
+            int no2 = bconnec(2);
+            x1 = nodesFine_[no1] -> getCoordinates();
+            x2 = nodesFine_[no2] -> getCoordinates();
+
+            double sLength = sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x1(0)-x2(0))*(x1(0)-x2(0)));
+            n(0)=(x2(1)-x1(1))/sLength;
+            n(1)=(x1(0)-x2(0))/sLength;
+            nodesFine_[no1] -> setInnerNormal(n);
+            nodesFine_[no2] -> setInnerNormal(n);
+            //second segment
+            no1 = bconnec(2);
+            no2 = bconnec(1);
+            x1 = nodesFine_[no1] -> getCoordinates();
+            x2 = nodesFine_[no2] -> getCoordinates();
+
+            sLength = sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x1(0)-x2(0))*(x1(0)-x2(0)));
+
+            n(0)=(x2(1)-x1(1))/sLength;
+            n(1)=(x1(0)-x2(0))/sLength;
+            nodesFine_[no1] -> setInnerNormal(n);
+            nodesFine_[no2] -> setInnerNormal(n);
+            
+        };
+    };
+    
+     for (int ino = 0; ino < numNodesFine; ino++){
+        x = nodesFine_[ino] -> getCoordinates();
+        dist=10000000000000000000000000000.;
+        
+        for (int i = 0; i < numBoundElemFine; i++){
+            if (boundaryFine_[i]->getConstrain(0)==2){
+                bconnec = boundaryFine_[i]->getBoundaryConnectivity();
+                //first segment
+                int no1 = bconnec(0);
+                int no2 = bconnec(2);
+                // std::cout<<no1<<" nos "<<no2<<std::endl;
+              
+                x1 = nodesFine_[no1] -> getCoordinates();
+                x2 = nodesFine_[no2] -> getCoordinates();
+                
+                double aux0 =  std::sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x2(0)-x1(0))*(x2(0)-x1(0)));
+                double aux1 = ((x(0)-x1(0))*(x2(0)-x1(0))+(x(1)-x1(1))*(x2(1)-x1(1)))/aux0;
+                double dist2 =-((x2(1)-x1(1))*x(0)-(x2(0)-x1(0))*x(1)+x2(0)*x1(1)-x2(1)*x1(0))/aux0;
+                
+                if(aux1>aux0){
+                    dist2 =  std::sqrt((x2(1)-x(1))*(x2(1)-x(1))+(x2(0)-x(0))*(x2(0)-x(0)));
+                    //find signal
+                    //side normal vector
+                    n = nodesFine_[no2] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x2(0);
+                    test(1)=x(1)-x2(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                    
+                    
+                };
+                if(aux1<0.){
+                    dist2 =std::sqrt((x(1)-x1(1))*(x(1)-x1(1))+(x(0)-x1(0))*(x(0)-x1(0)));
+                    //find signal
+                    //side normal vector
+                    n = nodesFine_[no1] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x1(0);
+                    test(1)=x(1)-x1(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                };
+                
+                if (fabs(dist2) < fabs(dist)) dist = dist2;
+                
+                //second segment
+                no1 = bconnec(2);
+                no2 = bconnec(1);
+                x1 = nodesFine_[no1] -> getCoordinates();
+                x2 = nodesFine_[no2] -> getCoordinates();
+                
+                aux0 =  std::sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x2(0)-x1(0))*(x2(0)-x1(0)));
+                aux1 = ((x(0)-x1(0))*(x2(0)-x1(0))+(x(1)-x1(1))*(x2(1)-x1(1)))/aux0;
+                dist2 =-((x2(1)-x1(1))*x(0)-(x2(0)-x1(0))*x(1)+x2(0)*x1(1)-x2(1)*x1(0))/aux0;
+                if(aux1>aux0){
+                    dist2 =  std::sqrt((x2(1)-x(1))*(x2(1)-x(1))+(x2(0)-x(0))*(x2(0)-x(0)));
+                    n = nodesFine_[no2] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x2(0);
+                    test(1)=x(1)-x2(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                    
+                    
+                };
+                if(aux1<0.){
+                    dist2 =std::sqrt((x(1)-x1(1))*(x(1)-x1(1))+(x(0)-x1(0))*(x(0)-x1(0)));
+        //find signal
+                    //side normal vector
+                    n = nodesFine_[no1] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x1(0);
+                    test(1)=x(1)-x1(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                    
+                };
+                if (fabs(dist2) < fabs(dist)) dist = dist2;
+            }; //if bf is the glue boundary
+        }; //
+    
+        nodesFine_[ino] -> setDistFunction(dist);
+     };
 
 
 
-    // Coarse
+
+    for (int inode = 0 ; inode < numNodesFine; inode++){ 
+        nodesFine_[inode] -> clearInnerNormal();
+    };
+
+    
+    //approximate normal calculation
+    for (int i = 0; i < numBoundElemFine; i++){
+        if (boundaryFine_[i]->getConstrain(0)==2){
+            bconnec = boundaryFine_[i]->getBoundaryConnectivity();
+            //first segment
+            int no1 = bconnec(0);
+            int no2 = bconnec(2);
+            x1 = nodesFine_[no1] -> getCoordinates();
+            x2 = nodesFine_[no2] -> getCoordinates();
+
+            double sLength = sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x1(0)-x2(0))*(x1(0)-x2(0)));
+            n(0)=(x2(1)-x1(1))/sLength;
+            n(1)=(x1(0)-x2(0))/sLength;
+            nodesFine_[no1] -> setInnerNormal(n);
+            nodesFine_[no2] -> setInnerNormal(n);
+            //second segment
+            no1 = bconnec(2);
+            no2 = bconnec(1);
+            x1 = nodesFine_[no1] -> getCoordinates();
+            x2 = nodesFine_[no2] -> getCoordinates();
+
+            sLength = sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x1(0)-x2(0))*(x1(0)-x2(0)));
+
+            n(0)=(x2(1)-x1(1))/sLength;
+            n(1)=(x1(0)-x2(0))/sLength;
+            nodesFine_[no1] -> setInnerNormal(n);
+            nodesFine_[no2] -> setInnerNormal(n);
+            
+        };
+    };
+    // std::cout<<"zerar normais apos mesh update"<<std::endl;
+    
     for (int ino = 0; ino < numNodesCoarse; ino++){
         x = nodesCoarse_[ino] -> getCoordinates();
-
-        double h = 0.0;
-        double T = 100.;        
-        double swd = 3.;
-        double cswd = 8.;//1.-swd;
-        double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
-        double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
-        double distx1 = -x(0)+swd;
-        double distx2 = -cswd + x(0);
-        double disty1 = -x(1)+(swdy);
-        double disty2 = -(cswdy) + x(1);
+        dist=10000000000000000000000000000.;
         
-        double dist = 0.;
-        if((x(0)<=swd) && (x(1)<=swdy)){
-            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
-        };
-        if((x(0)<=swd) && (x(1)>=cswdy)){
-            dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
-        };
-        if((x(0)>=cswd) && (x(1)>=cswdy)){
-            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
-        };
-        if((x(0)>=cswd) && (x(1)<=swdy)){
-            dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
-        };
-        if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-            dist = distx1;
-        };
-        if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-            dist = distx2;
-        };        
-        if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
-            dist = disty1;
-        };
-        if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
-            dist = disty2;
-        };        
-        if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
-            dist = distx1;
-            if (fabs(dist)>=fabs(distx2)){
-                dist=distx2;
-            };
-            if (fabs(dist)>=fabs(disty1)){
-                dist=disty1;
-            };
-            if (fabs(dist)>=fabs(disty2)){
-                dist=disty2;
-            };
-        };
+        for (int i = 0; i < numBoundElemFine; i++){
+            if (boundaryFine_[i]->getConstrain(0)==2){
+                bconnec = boundaryFine_[i]->getBoundaryConnectivity();
+                //first segment
+                int no1 = bconnec(0);
+                int no2 = bconnec(2);
+                x1 = nodesFine_[no1] -> getCoordinates();
+                x2 = nodesFine_[no2] -> getCoordinates();
+                
+                double aux0 =  std::sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x2(0)-x1(0))*(x2(0)-x1(0)));
+                double aux1 = ((x(0)-x1(0))*(x2(0)-x1(0))+(x(1)-x1(1))*(x2(1)-x1(1)))/aux0;
+                double dist2 =-((x2(1)-x1(1))*x(0)-(x2(0)-x1(0))*x(1)+x2(0)*x1(1)-x2(1)*x1(0))/aux0;
+                
+                if(aux1>aux0){
+                    dist2 =  std::sqrt((x2(1)-x(1))*(x2(1)-x(1))+(x2(0)-x(0))*(x2(0)-x(0)));
+                    //find signal
+                    //side normal vector
+                    n = nodesFine_[no2] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x2(0);
+                    test(1)=x(1)-x2(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                    
+                    
+                };
+                if(aux1<0.){
+                    dist2 =std::sqrt((x(1)-x1(1))*(x(1)-x1(1))+(x(0)-x1(0))*(x(0)-x1(0)));
+                    //find signal
+                    //side normal vector
+                    n = nodesFine_[no1] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x1(0);
+                    test(1)=x(1)-x1(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                };
+                
+                if (fabs(dist2) < fabs(dist)) dist = dist2;
+                
+                //second segment
+                no1 = bconnec(2);
+                no2 = bconnec(1);
+                x1 = nodesFine_[no1] -> getCoordinates();
+                x2 = nodesFine_[no2] -> getCoordinates();
+                
+                aux0 =  std::sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x2(0)-x1(0))*(x2(0)-x1(0)));
+                aux1 = ((x(0)-x1(0))*(x2(0)-x1(0))+(x(1)-x1(1))*(x2(1)-x1(1)))/aux0;
+                dist2 =-((x2(1)-x1(1))*x(0)-(x2(0)-x1(0))*x(1)+x2(0)*x1(1)-x2(1)*x1(0))/aux0;
+                if(aux1>aux0){
+                    dist2 =  std::sqrt((x2(1)-x(1))*(x2(1)-x(1))+(x2(0)-x(0))*(x2(0)-x(0)));
+                    n = nodesFine_[no2] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x2(0);
+                    test(1)=x(1)-x2(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                    
+                    
+                };
+                if(aux1<0.){
+                    dist2 =std::sqrt((x(1)-x1(1))*(x(1)-x1(1))+(x(0)-x1(0))*(x(0)-x1(0)));
+        //find signal
+                    //side normal vector
+                    n = nodesFine_[no1] -> getInnerNormal();
+                    
+                    test(0)=x(0)-x1(0);
+                    test(1)=x(1)-x1(1);
+                    double signaltest = inner_prod(n,test);
+                    double signal=-1.;
+                    
+                    if (signaltest < 0.)signal = 1.;
+                    
+                    dist2 *= signal;
+                    
+                };
+                if (fabs(dist2) < fabs(dist)) dist = dist2;
+            }; //if bf is the glue boundary
+        }; //
+    
         nodesCoarse_[ino] -> setDistFunction(dist);
-    };  
-
-    for (int i = 0; i < numElemCoarse; i++){
-        for (int j = 0; 
-             j < elementsCoarse_[i] -> getNumberOfIntegrationPoints(); j++){
-        
-            x = elementsCoarse_[i] -> getIntegPointCoordinatesValue(j);
-        
-            double h = 0.0;
-            double T = 100.;    
-
-            double swd = 3.;
-            double cswd = 8.;//1.-swd;
-            double swdy = 3. + h * sin(pi * iTimeStep * dTime / T);
-            double cswdy = 8. + h * sin(pi * iTimeStep * dTime / T);//1.-swd;
-            double distx1 = -x(0)+swd;
-            double distx2 = -cswd + x(0);
-            double disty1 = -x(1)+(swd);
-            double disty2 = -(cswd) + x(1);
-            
-            double dist = 0.;
-            if((x(0)<=swd) && (x(1)<=swdy)){
-                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-swdy)*(x(1)-swdy));
-            };
-            if((x(0)<=swd) && (x(1)>=cswdy)){
-                dist = sqrt((x(0)-swd)*(x(0)-swd)+(x(1)-cswdy)*(x(1)-cswdy));
-            };
-            if((x(0)>=cswd) && (x(1)>=cswdy)){
-                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-cswdy)*(x(1)-cswdy));
-            };
-            if((x(0)>=cswd) && (x(1)<=swdy)){
-                dist = sqrt((x(0)-cswd)*(x(0)-cswd)+(x(1)-swdy)*(x(1)-swdy));
-            };
-            if((x(0)<=swd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-                dist = distx1;
-            };
-            if((x(0)>=cswd) && ((x(1)>swdy)&&(x(1)<cswdy))){
-                dist = distx2;
-            };        
-            if((x(1)<=swdy) && ((x(0)>swd)&&(x(0)<cswd))){
-                dist = disty1;
-            };
-            if((x(1)>=cswdy) && ((x(0)>swd)&&(x(0)<cswd))){
-                dist = disty2;
-            };        
-            if(((x(1)>swdy)&&(x(1)<cswdy)) && ((x(0)>swd)&&(x(0)<cswd))){
-                dist = distx1;
-                if (fabs(dist)>=fabs(distx2)){
-                    dist=distx2;
-                };
-                if (fabs(dist)>=fabs(disty1)){
-                    dist=disty1;
-                };
-                if (fabs(dist)>=fabs(disty2)){
-                    dist=disty2;
-                };
-            };
-            elementsCoarse_[i] -> setIntegPointDistFunction(j,dist);
-        };    
-    }; 
+    };
 
 };
 
@@ -855,7 +1135,7 @@ void Arlequin<2>::setCouplingZone(){
             double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
                                (x(1) - 4.) * (x(1) - 4.));
 
-            if (dist >= 2.49){
+            if (dist >= 2.51){
                 flag = 1;
                 break;
             };
@@ -876,7 +1156,7 @@ void Arlequin<2>::setCouplingZone(){
                 double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
                                    (x(1) - 4.) * (x(1) - 4.));
                 
-                if (dist >= 2.49){
+                if (dist >= 2.51){
                     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
                 };
             };
@@ -1339,153 +1619,62 @@ void Arlequin<2>::setWeightFunction(double val){
     int numIntPoints;
     double wFuncValue;
 
-    double epsilon = 1.e-5;
-    // double lambda = 1.0;
+    double epsilon = 1.e-2;
+    double lambda = 1.0;
  
-    for (int jelCoarse = 0; jelCoarse < numElemCoarse; jelCoarse++){
+    for (int i = 0; i < numNodesCoarse; i++){
         
-        numIntPoints = elementsCoarse_[jelCoarse] -> 
-            getNumberOfIntegrationPoints();        
-
-        for (int i = 0; i < numIntPoints; i++){
+        double r = nodesCoarse_[i] -> getDistFunction();
             
-            // double r = elementsCoarse_[jelCoarse]->getIntegPointDistFunction(i);
-
-            // if (r < 0){
-            //     wFuncValue = epsilon;
-            // } else {
-            //     if (r >= lambda){
-            //         wFuncValue = 1.;
-            //     } else {
-            //         wFuncValue = (1. - epsilon) / lambda * r;
-            //         //wFuncValue = epsilon;
-            //         // wFuncValue = 1. - 3.*(1.-epsilon)/(lambda*lambda) * r * r
-            //         //     - 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
-                    
-            //         if (wFuncValue < epsilon) wFuncValue = epsilon;
-            //     };
+        if (r < 0){
+            wFuncValue = 1.;
+        } else {
+            if (r >= lambda){
+                wFuncValue = epsilon;
+            } else {
+                wFuncValue = 1. - (1. - epsilon) / lambda * r;
+                //wFuncValue = epsilon;
+                // wFuncValue = 1. - 3.*(1.-epsilon)/(lambda*lambda) * r * r
+                //     - 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
                 
-            // };            
-
-            x = elementsCoarse_[jelCoarse] -> getIntegPointCoordinatesValue(i);
-
-            double r = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                            (x(1) - val) * (x(1) - val));
-
-            wFuncValue = weightFunctionCoarseValue(r,epsilon);
-
-            elementsCoarse_[jelCoarse] -> 
-                setIntegPointWeightFunction(i,wFuncValue);
-        };    
-        
-        typename Elements::Connectivity connec;
-
-        connec = elementsCoarse_[jelCoarse] -> getConnectivity();
-
-        for (int i = 0; i < 6; i++){        
-            // double r = nodesCoarse_[connec(i)] -> getDistFunction();
-
-            // if (r < 0){
-            //     wFuncValue = epsilon;
-            // } else {
-            //     if (r >= lambda){
-            //         wFuncValue = 1.;
-            //     } else {
-            //         wFuncValue = (1. - epsilon) / lambda * r;
-            //         //wFuncValue = epsilon;
-            //         // wFuncValue = 1. - 3.*(1.-epsilon)/(lambda*lambda) * r * r
-            //         //     - 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
-
-            //         if (wFuncValue < epsilon) wFuncValue = epsilon;
-            //     };
-            // };  
+                if (wFuncValue < epsilon) wFuncValue = epsilon;
+            };
+        };  
       
+        //wFuncValue = weightFunctionCoarseValue(r,epsilon);
+        
+        nodesCoarse_[i] -> setWeightFunction(wFuncValue);
+    };         
 
-            x = nodesCoarse_[connec(i)] -> getCoordinates();
-
-            double r = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                            (x(1) - val) * (x(1) - val));
-
-            wFuncValue = weightFunctionCoarseValue(r,epsilon);
-            
-            elementsCoarse_[jelCoarse] -> 
-                setIntegPointWeightFunction(i,wFuncValue);
-                      
-            //wFuncValue = weightFunctionCoarseValue(r,epsilon);
-
-            nodesCoarse_[connec(i)] -> 
-                setWeightFunction(wFuncValue);
-        };         
+    for (int jel = 0; jel < numElemCoarse; jel++){
+        elementsCoarse_[jel] -> setIntegPointWeightFunction();        
     };
 
-
-    for (int jelFine = 0; jelFine < numElemFine; jelFine++){      
-        numIntPoints = elementsFine_[jelFine] -> getNumberOfIntegrationPoints();
-
-        for (int i = 0; i < numIntPoints; i++){
-
-            // double r = elementsFine_[jelFine] -> getIntegPointDistFunction(i);
-
-            // if (r < 0){
-            //     wFuncValue = 1.;
-            // }else{
-            //     if (r >= lambda){
-            //         wFuncValue = epsilon;
-            //     } else {
-            //         wFuncValue = 1-(1. - epsilon) / lambda * r;
-            //         //wFuncValue = 1. - epsilon;
-            //         // wFuncValue = 3.*(1.-epsilon)/(lambda*lambda) * r * r
-            //         //     + 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
-
-            //         if (wFuncValue > (1. - epsilon)) wFuncValue = 1. - epsilon;
-            //     };  
-            // };
-
-            //wFuncValue = 1. - epsilon;
-            x = elementsFine_[jelFine] -> getIntegPointCoordinatesValue(i);
-
-            double r = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                            (x(1) - val) * (x(1) - val));
-
-            wFuncValue = weightFunctionFineValue(r,epsilon);
-
-            elementsFine_[jelFine] -> setIntegPointWeightFunction(i,wFuncValue);
-        };
-    };
 
     for (int i=0; i<numNodesFine; i++){
 
-        // double r = nodesFine_[i] -> getDistFunction();
+        double r = nodesFine_[i] -> getDistFunction();
         
-        // if (r < 0){
-        //     wFuncValue = 1.;
-        // }else{
-        //     if (r >= lambda){
-        //         wFuncValue = epsilon;
-        //     } else {
-        //         wFuncValue = 1- (1. - epsilon) / lambda * r;
-        //         //wFuncValue = 1. - epsilon;
-        //         // wFuncValue = 3.*(1.-epsilon)/(lambda*lambda) * r * r
-        //         //     + 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
-                
-        //         if (wFuncValue > (1. - epsilon)) wFuncValue = 1. - epsilon;
+        if (r >= lambda){
+            wFuncValue = 1. - epsilon;
+        } else {
+            wFuncValue = (1. - epsilon) / lambda * r;
+            //wFuncValue = 1. - epsilon;
+            // wFuncValue = 3.*(1.-epsilon)/(lambda*lambda) * r * r
+            //     + 2.*(1.-epsilon)/(lambda*lambda*lambda) * r * r * r;
 
-        //     };  
-        // };
+            if (wFuncValue > (1. - epsilon)) wFuncValue = 1. - epsilon;
+
+        };  
         
-        //wFuncValue = 1. - epsilon;
-
-        x = nodesFine_[i] -> getCoordinates();
-
-
-        double r = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                        (x(1) - val) * (x(1) - val));
-
-
-        wFuncValue = weightFunctionFineValue(r,epsilon);
+        // wFuncValue = weightFunctionFineValue(r,epsilon);
 
         nodesFine_[i] -> setWeightFunction(wFuncValue);
     };
+    for (int jel = 0; jel < numElemFine; jel++){
+        elementsFine_[jel] -> setIntegPointWeightFunction();        
+    };
+
     
 
      
@@ -1581,7 +1770,7 @@ void Arlequin<2>::printVelocity(int step) {
              << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodesCoarse; i++){        
-        output_v << nodesCoarse_[i] -> getVelocityArlequin(0) << " "
+        output_v << nodesCoarse_[i] -> getVelocityArlequin(0) << " " 
                  << nodesCoarse_[i] -> getVelocityArlequin(1) << " " 
                  << 0. << std::endl;
     };
@@ -1605,16 +1794,6 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Gradient\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodesCoarse; i++){        
-        output_v << nodesCoarse_[i] -> getGradientComponent(0) << " "
-                 << nodesCoarse_[i] -> getGradientComponent(1) << " " 
-                 << 0. << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
-
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
              << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
 
@@ -1631,13 +1810,24 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodesCoarse; i++){
-        output_v << nodesCoarse_[i] -> getPressure() << std::endl;
+        output_v << 0. << " " << 0. << " " 
+                 << nodesCoarse_[i] -> getPressure() << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
+
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesCoarse; i++){
+        output_v << 0. << " " << 0. << " " 
+                 << nodesCoarse_[i] -> getPressureArlequin() << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
+
     output_v << "    </PointData>" << std::endl; 
 
     //WRITE ELEMENT RESULTS
@@ -1656,11 +1846,11 @@ void Arlequin<2>::printVelocity(int step) {
         output_v << elementsCoarse_[i] -> getIntegPointWeightFunction(0) << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
-    
     int cont=0;
-
+    
     // output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
     //          << "Name=\"Free Zone\" format=\"ascii\">" << std::endl;
+
     // for (int i=0; i<numElemCoarse; i++){
     //     if (elementsFreeZone_[cont] == i){
     //         output_v << 1.0 << std::endl;
@@ -1700,14 +1890,6 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Compressibility\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numElemCoarse; i++){
-        output_v << elementsCoarse_[i] -> getCompressibility() << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
-
     output_v << "    </CellData>" << std::endl; 
 
     //FINALIZE OUTPUT FILE
@@ -1738,7 +1920,7 @@ void Arlequin<2>::printVelocity(int step) {
     for (int i = 0; i < numNodesFine; i++){
         typename Nodes::VecLocD x;
         x = nodesFine_[i] -> getCoordinates();
-        output_vf << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+        output_vf << x(0) << " " << x(1) << " " << 0.001 << std::endl;        
     };
     output_vf << "      </DataArray>" << std::endl
              << "    </Points>" << std::endl;
@@ -1790,13 +1972,23 @@ void Arlequin<2>::printVelocity(int step) {
                   << 0. << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
-
+    
     output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodesFine; i++){
-        output_vf << nodesFine_[i] -> getVelocityArlequin(0) << " " 
+        output_vf << nodesFine_[i] -> getVelocityArlequin(0) << " "
                   << nodesFine_[i] -> getVelocityArlequin(1) << " " 
+                  << 0. << std::endl;
+    };
+    output_vf << "      </DataArray> " << std::endl;
+
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesFine; i++){
+        output_vf << nodesFine_[i] -> getMeshVelocity(0) << " " 
+                  << nodesFine_[i] -> getMeshVelocity(1) << " " 
                   << 0. << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
@@ -1807,16 +1999,6 @@ void Arlequin<2>::printVelocity(int step) {
     for (int i=0; i<numNodesFine; i++){
         output_vf << nodesFine_[i] -> getLagrangeMultiplier(0) << " " 
                   << nodesFine_[i] -> getLagrangeMultiplier(1) << " " 
-                  << 0. << std::endl;
-    };
-    output_vf << "      </DataArray> " << std::endl;
-
-    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Gradient\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodesFine; i++){
-        output_vf << nodesFine_[i] -> getGradientComponent(0) << " " 
-                  << nodesFine_[i] -> getGradientComponent(1) << " " 
                   << 0. << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
@@ -1844,10 +2026,19 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_vf << "      </DataArray> " << std::endl;
 
-    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
     for (int i=0; i<numNodesFine; i++){
-        output_vf << nodesFine_[i] -> getPressure() << std::endl;
+        output_vf << 0. << " " << 0. << " " 
+                  << nodesFine_[i] -> getPressure() << std::endl;
+    };
+    output_vf << "      </DataArray> " << std::endl;
+
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<numNodesFine; i++){
+        output_vf << 0. << " " << 0. << " " 
+                  << nodesFine_[i] -> getPressureArlequin() << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
 
@@ -1888,14 +2079,6 @@ void Arlequin<2>::printVelocity(int step) {
 
     for (int i=0; i<numElemFine; i++){
         output_vf << elementsFine_[i] -> getJacobian() << std::endl;
-    };
-    output_vf << "      </DataArray> " << std::endl;
-
-    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Compressibility\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numElemFine; i++){
-        output_vf << elementsFine_[i] -> getCompressibility() << std::endl;
     };
     output_vf << "      </DataArray> " << std::endl;
 
@@ -2308,9 +2491,10 @@ int Arlequin<2>::solveSteadyArlequinMovingLaplaceProblem(int iterNumber,
                 for (int ielem = 0; ielem < numElemIntersect; ielem++){
                     
                     int iElemCoarse = diffElem[ielem];
+                    double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
                     
                     elementsFine_[jel] -> 
-                        getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                        getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                     
                     //Computes element matrix
                     Ajac = elementsFine_[jel] -> getJacNRMatrix();
@@ -3201,9 +3385,10 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
                         
                         int iElemCoarse = diffElem[ielem];
-                       
+                        double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
+                        
                         elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                         
                         //Computes element matrix
                         Ajac = elementsFine_[jel] -> getLagrMultMatrix();
@@ -3531,7 +3716,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         };
 
         //Compute real velocity
-        
         QuadShapeFunction<2>                       shapeQuad;
         typename QuadShapeFunction<2>::Values      phi_;
         
@@ -3540,15 +3724,17 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                  getVelocity(0));
             nodesFine_[i] -> setVelocityArlequin(1,nodesFine_[i] -> 
                                                  getVelocity(1));
+            nodesFine_[i] -> setPressureArlequin(nodesFine_[i] ->getPressure());
         };
         
         for (int i = 0; i<numNodesGlueZoneFine; i++){
             typename Nodes::VecLocD xsi;
-            typename Quadrature::NodalValuesQuad u_coarse, v_coarse;
+            typename Quadrature::NodalValuesQuad u_coarse, v_coarse, p_coarse;
             typename Elements::Connectivity connecCoarse;
             
             double u = 0.;
             double v = 0.;
+            double p = 0.;
             
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getNodalElemCorrespondence();
@@ -3560,6 +3746,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(0);
                 v_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(1);
+                p_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getPressure();
             };
             
             shapeQuad.evaluate(xsi,phi_);
@@ -3567,6 +3754,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u += u_coarse(j) * phi_(j);
                 v += v_coarse(j) * phi_(j);
+                p += p_coarse(j) * phi_(j);
             };
             
             double wFunc = nodesFine_[nodesGlueZoneFine_[i]] -> 
@@ -3576,9 +3764,12 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 getVelocity(0) * wFunc + u * (1. - wFunc);
             double v_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getVelocity(1) * wFunc + v * (1. - wFunc);
+            double p_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
+                getPressure() * wFunc + p * (1. - wFunc);
             
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+            nodesFine_[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
             
         };
         
@@ -3587,73 +3778,11 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 setVelocityArlequin(0,nodesCoarse_[i] -> getVelocity(0));
             nodesCoarse_[i] -> 
                 setVelocityArlequin(1,nodesCoarse_[i] -> getVelocity(1));
+            nodesCoarse_[i] -> 
+                setPressureArlequin(nodesCoarse_[i] -> getPressure());
         };
-        
-        //Compute real pressure
-        
-        // LinShapeFunction<2>                       shapeLin;
-        // typename LinShapeFunction<2>::Values      phip_;
-        
-        // for (int i=0; i<numNodesPFine; i++){
-        //     nodesPFine_[i] -> 
-        //         setPressureArlequin(nodesPFine_[i] -> getPressure());
-        // };
-        
-        // for (int jel = 0; jel<numElemGlueZoneFine; jel++){
-            
-        //     typename Nodes::VecLocD xsi;
-        //     typename Quadrature::NodalValuesLin p_coarse;
-        //     typename Elements::ConnectivityP connecPCoarse, connecPFine;
-        //     typename Elements::Connectivity connecCoarse, connec;
-            
-        //     connec = elementsFine_[elementsGlueZoneFine_[jel]] -> 
-        //         getConnectivity();
-        //     connecPFine = elementsFine_[elementsGlueZoneFine_[jel]] -> 
-        //         getConnectivityP();
-            
-        //     for (int i=0; i<3; i++){
-                
-        //         double p = 0.;
-                
-        //         int elCoarse = nodesFine_[connec(i)] ->
-        //             getNodalElemCorrespondence();
-        //         xsi = nodesFine_[connec(i)] -> getNodalXsiCorrespondence();
-                
-        //         connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
-        //         connecPCoarse = elementsCoarse_[elCoarse] -> getConnectivityP();
-                
-        //         for (int j=0; j<3; j++){
-        //             p_coarse(j) = nodesPCoarse_[connecPCoarse(j)] -> 
-        //                 getPressure();
-        //         };
-                
-        //         shapeLin.evaluate(xsi,phip_);
-                
-        //         for (int j=0; j<3; j++){
-        //             p += p_coarse(j) * phip_(j);
-        //         };
-                
-        //         //double wFunc = nodesFine_[connec(i)] -> getWeightFunction();
-                
-        //         typename Nodes::VecLocD x;
 
-        //         double p_int = 0.;
-       
-        //         if (fabs(nodesPFine_[connecPFine(i)] -> getPressure()) > 0){
-        //             p_int = nodesPFine_[connecPFine(i)] -> getPressure();
-        //         }else{
-        //             p_int = nodesPFine_[connecPFine(i)] -> getPressure() + p;
-        //         };
-
-        //         nodesPFine_[connecPFine(i)] -> setPressureArlequin(p_int);
-        //     };
-        // };
-        
-        // for (int i=0; i<numNodesPCoarse; i++){
-        //     nodesPCoarse_[i] -> 
-        //         setPressureArlequin(nodesPCoarse_[i] -> getPressure());
-        // };
-        
+  
         
         double dragCoefficient = 0.;
         double liftCoefficient = 0.;
@@ -4772,7 +4901,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 
         };
 
-        double T = 100.;
+        double T = 20.;
         double h = 0.40;
 
         for (int i = 0; i < numNodesFine; i++){
@@ -4806,6 +4935,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             nodesFine_[i] -> setCoordinates(x);
         };
         
+        setSignaledDistance();
         setWeightFunction(4. + h * sin(pi * iTimeStep * dTime / T));
         setNodalCorrespondenceFine();
 
@@ -5306,9 +5436,10 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
                         
                         int iElemCoarse = diffElem[ielem];
-                       
+                        double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
+
                         elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse);
+                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                         
                         //Computes element matrix
                         Ajac = elementsFine_[jel] -> getLagrMultMatrix();
@@ -5645,15 +5776,17 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                  getVelocity(0));
             nodesFine_[i] -> setVelocityArlequin(1,nodesFine_[i] -> 
                                                  getVelocity(1));
+            nodesFine_[i] -> setPressureArlequin(nodesFine_[i] ->getPressure());
         };
         
         for (int i = 0; i<numNodesGlueZoneFine; i++){
             typename Nodes::VecLocD xsi;
-            typename Quadrature::NodalValuesQuad u_coarse, v_coarse;
+            typename Quadrature::NodalValuesQuad u_coarse, v_coarse, p_coarse;
             typename Elements::Connectivity connecCoarse;
             
             double u = 0.;
             double v = 0.;
+            double p = 0.;
             
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getNodalElemCorrespondence();
@@ -5665,6 +5798,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(0);
                 v_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(1);
+                p_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getPressure();
             };
             
             shapeQuad.evaluate(xsi,phi_);
@@ -5672,6 +5806,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             for (int j=0; j<6; j++){
                 u += u_coarse(j) * phi_(j);
                 v += v_coarse(j) * phi_(j);
+                p += p_coarse(j) * phi_(j);
             };
             
             double wFunc = nodesFine_[nodesGlueZoneFine_[i]] -> 
@@ -5681,9 +5816,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 getVelocity(0) * wFunc + u * (1. - wFunc);
             double v_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
                 getVelocity(1) * wFunc + v * (1. - wFunc);
+            double p_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
+                getPressure() * wFunc + p * (1. - wFunc);
             
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
             nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+            nodesFine_[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
             
         };
         
@@ -5692,72 +5830,9 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 setVelocityArlequin(0,nodesCoarse_[i] -> getVelocity(0));
             nodesCoarse_[i] -> 
                 setVelocityArlequin(1,nodesCoarse_[i] -> getVelocity(1));
+            nodesCoarse_[i] -> 
+                setPressureArlequin(nodesCoarse_[i] -> getPressure());
         };
-        
-        //Compute real pressure
-        
-        // LinShapeFunction<2>                       shapeLin;
-        // typename LinShapeFunction<2>::Values      phip_;
-        
-        // for (int i=0; i<numNodesPFine; i++){
-        //     nodesPFine_[i] -> 
-        //         setPressureArlequin(nodesPFine_[i] -> getPressure());
-        // };
-        
-        // for (int jel = 0; jel<numElemGlueZoneFine; jel++){
-            
-        //     typename Nodes::VecLocD xsi;
-        //     typename Quadrature::NodalValuesLin p_coarse;
-        //     typename Elements::ConnectivityP connecPCoarse, connecPFine;
-        //     typename Elements::Connectivity connecCoarse, connec;
-            
-        //     connec = elementsFine_[elementsGlueZoneFine_[jel]] -> 
-        //         getConnectivity();
-        //     connecPFine = elementsFine_[elementsGlueZoneFine_[jel]] -> 
-        //         getConnectivityP();
-            
-        //     for (int i=0; i<3; i++){
-                
-        //         double p = 0.;
-                
-        //         int elCoarse = nodesFine_[connec(i)] ->
-        //             getNodalElemCorrespondence();
-        //         xsi = nodesFine_[connec(i)] -> getNodalXsiCorrespondence();
-                
-        //         connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
-        //         connecPCoarse = elementsCoarse_[elCoarse] -> getConnectivityP();
-                
-        //         for (int j=0; j<3; j++){
-        //             p_coarse(j) = nodesPCoarse_[connecPCoarse(j)] -> 
-        //                 getPressure();
-        //         };
-                
-        //         shapeLin.evaluate(xsi,phip_);
-                
-        //         for (int j=0; j<3; j++){
-        //             p += p_coarse(j) * phip_(j);
-        //         };
-                
-        //         //double wFunc = nodesFine_[connec(i)] -> getWeightFunction();
-                
-        //         typename Nodes::VecLocD x;
-
-        //         double p_int = 0.;
-       
-        //         if (fabs(nodesPFine_[connecPFine(i)] -> getPressure()) > 0){
-        //             p_int = nodesPFine_[connecPFine(i)] -> getPressure();
-        //         }else{
-        //             p_int = nodesPFine_[connecPFine(i)] -> getPressure() + p;
-        //         };
-
-        //         nodesPFine_[connecPFine(i)] -> setPressureArlequin(p_int);
-        //     };
-        // };
-        
-        // for (int i=0; i<numNodesPCoarse; i++){
-        //     nodesPCoarse_[i] -> 
-        //         setPressureArlequin(nodesPCoarse_[i] -> getPressure());
-        // };
         
         
         double dragCoefficient = 0.;
