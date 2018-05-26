@@ -17,7 +17,7 @@
 #include <boost/timer.hpp> 
 #include <boost/thread.hpp>
 
-#include "Arlequin_hel.hpp"
+#include "Arlequin_cyl.hpp"
 
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
