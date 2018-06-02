@@ -1532,7 +1532,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             ublas::bounded_vector<double,2> load;
             load.clear();
 
-            if (boundary_[jel] -> getBoundaryGroup() == 0){               
+            if (boundary_[jel] -> getBoundaryGroup() == 2){               
                 int iel = boundary_[jel] -> getElement();
                 load = elements_[iel] -> getDragAndLiftForces();               
             };
