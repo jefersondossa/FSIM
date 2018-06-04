@@ -60,8 +60,6 @@ private:
     std::vector<int>         nodesGlueZoneFine_;
     std::vector<int>         elementsGlueZoneCoarse_;
     std::vector<int>         nodesGlueZoneCoarse_;
-    std::vector<int>         elementsFreeZone_;
-    std::vector<int>         nodesFreeZone_;
 
     int numElemCoarse;
     int numElemFine;
@@ -73,8 +71,6 @@ private:
     int numNodesFine;
     int numNodesGlueZoneFine;
     int numNodesGlueZoneCoarse;
-    int numElemFreeZone;
-    int numNodesFreeZone;
     int numTimeSteps;
     double dTime;
     int rank;
@@ -141,9 +137,6 @@ public:
 
     /// Compute and store the signaled distance function
     void setSignaledDistance();
-
-    /// Compute and store the free zone (obsolete)
-    void setFreeZone();
 
     /// Sets the energy weight function 
     /// @param double reference value for computing the energy weight function
@@ -1132,10 +1125,10 @@ void Arlequin<2>::setCouplingZone(){
 
         for (int ino = 0; ino < 6; ino++){
             x = nodesFine_[connec(ino)] -> getCoordinates();
-            double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                               (x(1) - 4.) * (x(1) - 4.));
+            double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
+                               (x(1) - 16.) * (x(1) - 16.));
 
-            if (dist >= 2.51){
+            if (dist >= 5.01){
                 flag = 1;
                 break;
             };
@@ -1153,10 +1146,10 @@ void Arlequin<2>::setCouplingZone(){
                 
                 x = elementsFine_[jel] -> getIntegPointCoordinatesValue(i);  
 
-                double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                                   (x(1) - 4.) * (x(1) - 4.));
+                double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
+                                   (x(1) - 16.) * (x(1) - 16.));
                 
-                if (dist >= 2.51){
+                if (dist >= 5.01){
                     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
                 };
             };
@@ -1325,85 +1318,6 @@ void Arlequin<2>::setCouplingZone(){
 
 };
 
-
-//------------------------------------------------------------------------------
-//----------------------SETS THE FREE ZONE IN COARSE- MODEL---------------------
-//------------------------------------------------------------------------------
-template<>
-void Arlequin<2>::setFreeZone(){
-
-    typename Elements::Connectivity connec;
-    typename Nodes::VecLocD x;
-    // double dist;
-    int flag;
-
-    elementsFreeZone_.clear();
-    nodesFreeZone_.clear();
-
-    elementsFreeZone_.reserve(numElemCoarse / 5);
-    nodesFreeZone_.reserve(numNodesCoarse / 5);
-
-    double h = 0.0;
-    double T = 100.;
-    double d1 = 3.;
-    double d2 = 8.;
-    double d3 = 3. + h * sin(pi * iTimeStep * dTime / T);
-    double d4 = 8. + h * sin(pi * iTimeStep * dTime / T);
-
-    //Defines a criterion to select the elements that are in the glue zone
-    for (int jel = 0; jel < numElemCoarse; jel++){
-                
-        elementsCoarse_[jel] -> clearCompressibility();
-
-        connec = elementsCoarse_[jel] -> getConnectivity();
-        flag = 0;
-
-        for (int ino = 0; ino < 6; ino++){
-            x = nodesCoarse_[connec(ino)] -> getCoordinates();
-
-            if ((x(0) >= d1) && (x(0) <= d2) &&
-                (x(1) >= d3) && (x(1) <= d4))  {
-                flag += 1;
-            };
-        };
-
-        if (flag == 6) {
-            elementsFreeZone_.push_back(jel);
-            //elementsCoarse_[jel] -> setCompressibility();
-            //std::cout << "Element " << jel << std::endl;
-        }; 
-        if (flag == 6) {
-            nodesFreeZone_.push_back(connec(0));
-            nodesFreeZone_.push_back(connec(1));
-            nodesFreeZone_.push_back(connec(2));
-            nodesFreeZone_.push_back(connec(3));
-            nodesFreeZone_.push_back(connec(4));
-            nodesFreeZone_.push_back(connec(5));
-        };
-
-    };
-
-    // for (int jel = 0; jel < numElemCoarse; jel++){
-                
-    //     connec = elementsCoarse_[jel] -> getConnectivity();
-    //     flag = 0;
-        
-    //     for (int ino = 0; ino < 6; ino++){
-    //         x = nodesCoarse_[connec(ino)] -> getCoordinates();
-            
-    //         if ((x(0) < d1) || (x(0) > d2) ||
-    //             (x(1) < d1) || (x(1) > d2))  {
-    //             flag++;
-    //         };
-    //     };
-    //     if (flag == 6
-    //     nodesFreeZone_.push_back(ino);
-    // };
-
-    numElemFreeZone = elementsFreeZone_.size();
-    numNodesFreeZone = nodesFreeZone_.size();
-};
-
 //------------------------------------------------------------------------------
 //----------------------COMPUTES THE WEIGHT FUNCTION VALUE----------------------
 //------------------------------------------------------------------------------
@@ -1412,10 +1326,10 @@ double Arlequin<2>::weightFunctionFineValue(double r, double epsilon){
 
     double wFuncValue;
 
-    if (r <= 2.5){
+    if (r <= 4.5){
         wFuncValue = 1. - epsilon;
     } else {
-        if (r > 3.55){
+        if (r > 5.55){
             wFuncValue = 0.;
         } else {
             //wFuncValue = 1. - epsilon;
@@ -1513,10 +1427,10 @@ double Arlequin<2>::weightFunctionCoarseValue(double r, double epsilon){
 
     double wFuncValue;
 
-    if (r <= 2.5){
+    if (r <= 4.5){
         wFuncValue = epsilon;
     } else {
-        if (r >= 3.5){
+        if (r >= 5.5){
             wFuncValue = 1.;
         } else {
             //wFuncValue = epsilon;
@@ -1620,7 +1534,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = 1.0;
+    double lambda = 2.0;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -1848,19 +1762,6 @@ void Arlequin<2>::printVelocity(int step) {
     output_v << "      </DataArray> " << std::endl;
     int cont=0;
     
-    // output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //          << "Name=\"Free Zone\" format=\"ascii\">" << std::endl;
-
-    // for (int i=0; i<numElemCoarse; i++){
-    //     if (elementsFreeZone_[cont] == i){
-    //         output_v << 1.0 << std::endl;
-    //         cont++;
-    //     }else{
-    //         output_v << 0.0 << std::endl;
-    //     };
-    // };
-    // output_v << "      </DataArray> " << std::endl;
-
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
     cont = 0;
@@ -2154,15 +2055,25 @@ void Arlequin<2>::printVelocity(int step) {
     //WRITE NODAL RESULTS
     output_c << "    <PointData>" << std::endl;
     output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+             << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodesGlueZoneFine; i++){
-        output_c << nodesFine_[i] -> getVelocity(0) << " "              
-                  << nodesFine_[i] -> getVelocity(1) << " " 
+        output_c << nodesFine_[i] -> getWeightFunction() << " "              
+                  << 0. << " " 
                   << 0. << std::endl;
     };
     output_c << "      </DataArray> " << std::endl;
 
+
+    output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesGlueZoneFine; i++){
+        output_c << nodesFine_[i] -> getDistFunction() << " "              
+                  << 0. << " " 
+                  << 0. << std::endl;
+    };
+    output_c << "      </DataArray> " << std::endl;
 
     output_c << "    </PointData>" << std::endl; 
 
@@ -2247,7 +2158,7 @@ int Arlequin<2>::solveSteadyArlequinMovingLaplaceProblem(int iterNumber,
     setCouplingZone();
 
     //Computes the Weight function for all the finite elements
-    setWeightFunction(4.);
+    setWeightFunction(16.);
 
     //Computes the Nodal correspondence between fine nodes and coarse elements
     setNodalCorrespondenceFine();
@@ -2296,7 +2207,7 @@ int Arlequin<2>::solveSteadyArlequinMovingLaplaceProblem(int iterNumber,
         // setCouplingZoneFine();
 
         // //Computes the Weight function for all the finite elements
-        setWeightFunction(4. + 0.1 * (iSteps+1));
+        setWeightFunction(16. + 0.1 * (iSteps+1));
 
 
     for (int inewton = 0; inewton < iterNumber; inewton++){
@@ -2838,7 +2749,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
     setCouplingZone();
    
     //Computes the Weight function for all the finite elements
-    setWeightFunction(4.);
+    setWeightFunction(16.);
 
     //Computes the Nodal correspondence between fine nodes and coarse elements
     setNodalCorrespondenceFine();
@@ -3575,7 +3486,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
             
             // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            // ierr = KSPSetType(ksp,KSPLSQR); CHKERRQ(ierr);
+            // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
             
             // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
@@ -3856,8 +3767,6 @@ int Arlequin<2>::solveArlequinProblemCoarse(int iterNumber, double tolerance,
     // //Computes the Nodal correspondence between fine nodes and coarse elements
     // setNodalCorrespondenceFine();
 
-    // //Construct the free zone in coarse model
-    // setFreeZone();
 
     // // for (int jel = 0; jel < numElemGlueZoneFine; jel++){
     // //     int iel = elementsGlueZoneFine_[jel];
@@ -4864,8 +4773,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
     setCouplingZone();
 
     //Computes the Weight function for all the finite elements
-    setWeightFunction(4.);
-    setWeightFunction(4.);
+    setWeightFunction(16.);
+    setWeightFunction(16.);
    
     //Computes the Nodal correspondence between fine nodes and coarse elements
     setNodalCorrespondenceFine();
@@ -4902,7 +4811,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         };
 
         double T = 20.;
-        double h = 0.40;
+        double h = 0.0;
 
         for (int i = 0; i < numNodesFine; i++){
             double accel[2], u[2], uprev[2];
@@ -4936,7 +4845,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         };
         
         setSignaledDistance();
-        setWeightFunction(4. + h * sin(pi * iTimeStep * dTime / T));
+        setWeightFunction(16. + h * sin(pi * iTimeStep * dTime / T));
         setNodalCorrespondenceFine();
 
         //STARTS NEWTON-RAPHSON
