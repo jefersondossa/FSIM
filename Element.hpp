@@ -17,8 +17,8 @@
 #include "Node.hpp"
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
-#include "IntegrationQuadrature11.hpp"
-//#include "PartitionedQuadrature.hpp"
+//#include "IntegrationQuadrature11.hpp"
+#include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
 
@@ -50,8 +50,8 @@ public:
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
     ///Defines the partitioned integration quadrature rule class locally
-    //typedef PartQuadrature<DIM>                                 SpecialQuad;
-    typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
+    typedef PartQuadrature<DIM>                                 SpecialQuad;
+    //typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
 
     /// Defines the normal integration quadrature rule class locally
     typedef IntegQuadrature<DIM>                                NormalQuad;
@@ -2096,7 +2096,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    //setIntegPointWeightFunction();
+    setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
