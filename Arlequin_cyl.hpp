@@ -1104,8 +1104,8 @@ void Arlequin<2>::setCouplingZone(){
     int nodesCZ[numNodesFine];
     int nodesCZ2[numNodesCoarse];
 
-    double lim1 = 2.99;
-    double lim2 = 8.01;
+    double lim1 = 2.01;
+    double lim2 = 4.01;
     double tick = 0.99;
 
     for (int i = 0; i < numNodesFine; i++) nodesCZ[i] = 0;    
@@ -1125,13 +1125,20 @@ void Arlequin<2>::setCouplingZone(){
 
         for (int ino = 0; ino < 6; ino++){
             x = nodesFine_[connec(ino)] -> getCoordinates();
-            double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
-                               (x(1) - 16.) * (x(1) - 16.));
+            // double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
+            //                    (x(1) - 16.) * (x(1) - 16.));
 
-            if (dist >= 5.01){
+            // if (dist >= 7.01){
+            //     flag = 1;
+            //     break;
+            // };
+
+            if ((x(0) <= -lim1) || (x(0) >= lim2) ||
+                (x(1) <= -lim1) || (x(1) >= lim1)){
                 flag = 1;
                 break;
             };
+
         };
 
         if (flag > 0) {
@@ -1146,12 +1153,18 @@ void Arlequin<2>::setCouplingZone(){
                 
                 x = elementsFine_[jel] -> getIntegPointCoordinatesValue(i);  
 
-                double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
-                                   (x(1) - 16.) * (x(1) - 16.));
+                // double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
+                //                    (x(1) - 16.) * (x(1) - 16.));
                 
-                if (dist >= 5.01){
+                // if (dist >= 7.01){
+                //     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
+                // };
+
+                if ((x(0) <= -lim1) || (x(0) >= lim2) ||
+                    (x(1) <= -lim1) || (x(1) >= lim1)){
                     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
                 };
+
             };
         };        
     };
@@ -1534,7 +1547,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = 2.0;
+    double lambda = 1.0;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -4810,8 +4823,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 
         };
 
-        double T = 20.;
-        double h = 0.0;
+        double f = .35;
+        double w = 2 * pi * f;
 
         for (int i = 0; i < numNodesFine; i++){
             double accel[2], u[2], uprev[2];
@@ -4831,8 +4844,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             //Updates velocity
             nodesFine_[i] -> setPreviousVelocity(u);      
 
-            u[0] = 0.;
-            u[1] = h * pi / T * cos(pi * iTimeStep * dTime / T);
+            u[0] = -1;//w * sin(w * iTimeStep * dTime);
+            u[1] = 0.;//h * pi / T * cos(pi * iTimeStep * dTime / T);
             nodesFine_[i] -> setMeshVelocity(u);
       
             typename Nodes::VecLocD x, x_ini;
@@ -4840,12 +4853,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             x_ini = nodesFine_[i] -> getInitialCoordinates();
             nodesFine_[i] -> setPreviousCoordinates(0,x(0));
             nodesFine_[i] -> setPreviousCoordinates(1,x(1));
-            x(1) = x_ini(1) + h * sin(pi * iTimeStep * dTime / T);
+            x(0) = x(0) -1. * dTime;// +1. - cos(w * iTimeStep * dTime);
             nodesFine_[i] -> setCoordinates(x);
         };
         
         setSignaledDistance();
-        setWeightFunction(16. + h * sin(pi * iTimeStep * dTime / T));
+        setWeightFunction(1.);
         setNodalCorrespondenceFine();
 
         //STARTS NEWTON-RAPHSON
