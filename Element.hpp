@@ -1181,6 +1181,12 @@ void Element<2>::getParameterSUPG() {
     for (int i = 0; i < 6; i++){
         double ua = nodes_[connect_(i)] -> getVelocity(0);
         double va = nodes_[connect_(i)] -> getVelocity(1);
+
+        double uma = nodes_[connect_(i)] -> getMeshVelocity(0);
+        double vma = nodes_[connect_(i)] -> getMeshVelocity(1);
+        
+        ua -= uma;
+        va -= vma;
         
         u__ += ua * phi_(i);
         v__ += va * phi_(i);
@@ -1198,6 +1204,12 @@ void Element<2>::getParameterSUPG() {
     for (int i = 0; i < 6; i++){
         double ua = nodes_[connect_(i)] -> getVelocity(0);
         double va = nodes_[connect_(i)] -> getVelocity(1);
+
+        double uma = nodes_[connect_(i)] -> getMeshVelocity(0);
+        double vma = nodes_[connect_(i)] -> getMeshVelocity(1);
+
+        ua -= uma;
+        va -= vma;
         
         r(0) += sqrt(ua * ua + va * va) * dphi_dx(0,i);
         r(1) += sqrt(ua * ua + va * va) * dphi_dx(1,i);

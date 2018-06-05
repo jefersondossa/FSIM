@@ -7,7 +7,7 @@ ELEMENTS        NODES        TIME STEPS     PRINTING FREQ
 UNDISTURBED VELOCITY AND PRESSURE
 Ux      Uy      Uz      P
 --------------------------------------------------------------------------------
-0.000000001     0.0     0.0     0.0
+0.0     0.0     0.0     0.0
 
 --------------------------------------------------------------------------------
 DENSITY      TEMPERATURE      VISCOSITY      THERMAL CONDITIVITY
@@ -17,7 +17,7 @@ DENSITY      TEMPERATURE      VISCOSITY      THERMAL CONDITIVITY
 --------------------------------------------------------------------------------
 TIME STEP       TIME INTEGRATION SCHEME (1- Implicit Euler, 2- Adams-Bashforth)
 --------------------------------------------------------------------------------
-0.1            1
+0.01            1
 
 --------------------------------------------------------------------------------
 EXTERNAL FIELD FORCES CONSTANTS
@@ -14894,7 +14894,7 @@ BOUNDARY 2 - CONNECTIVITY
 BOUNDARY 2        CONSTRAINS (0-free 1-const 2-glue)  VALUES (default = 0.)
 NUMB. OF ELEM.    Ux     Uy     Uz                    Ux     Uy     Uz  
 --------------------------------------------------------------------------------
-16                3      3      0                     0.     0.     0.
+16                3      3      0                     -1.     0.     0.
 
 --------------------------------------------------------------------------------
 BOUNDARY 2 - CONNECTIVITY
