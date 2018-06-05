@@ -607,7 +607,7 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
         nodes_[no2] -> setConstrainsLaplace(1,1,0);
         nodes_[no3] -> setConstrainsLaplace(1,1,0);
         
-        if (boundary_[ibound] -> getConstrain(0) == 1){
+        if ((boundary_[ibound] -> getConstrain(0) == 1) || (boundary_[ibound] -> getConstrain(0) == 3)){
 
             //Desfazer primeira parte do if para voltar a cond. cont. constante
             // if (boundary_[ibound] -> getConstrainValue(0) <= 1.){
@@ -643,7 +643,7 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
                                      boundary_[ibound] -> getConstrainValue(0));
              // };
         };
-        if (boundary_[ibound] -> getConstrain(1) == 1){
+        if((boundary_[ibound] -> getConstrain(1) == 1) || (boundary_[ibound] -> getConstrain(1) == 3)){
             nodes_[no1] -> setConstrains(1,boundary_[ibound] -> getConstrain(1),
                                      boundary_[ibound] -> getConstrainValue(1));
             nodes_[no2] -> setConstrains(1,boundary_[ibound] -> getConstrain(1),
@@ -1818,7 +1818,7 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
 
         // Moving boundary
         for (int i=0; i < numBoundElems; i++){
-            if (boundary_[i] -> getBoundaryGroup() == 3){
+            if (boundary_[i] -> getConstrain(0) == 3){
                 
                 Boundaries::BoundConnect connectB;
                 connectB = boundary_[i] -> getBoundaryConnectivity();
@@ -1826,7 +1826,7 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
                 int no2 = connectB(1);
                 int no3 = connectB(2);
                 
-                typename Node::VecLocD x,xu;
+                typename Node::VecLocD x;
                 x = nodes_[no1]->getCoordinates();
                 x(0) -= 1. * dTime;
                 nodes_[no1] -> setUpdatedCoordinates(x);
