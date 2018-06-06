@@ -41,12 +41,12 @@ public:
     /// Defines the vector which contains the element nodal coordinates
     typedef ublas::bounded_matrix<double, 4*DIM-2, DIM>         LocalNodes;
 
-    /// Defines the local vector type with dimension 15 for DIM=2 
-    /// and 34 for DIM=3
+    /// Defines the local vector type with dimension 18 for DIM=2 
+    /// and 40 for DIM=3
     typedef ublas::bounded_vector<double, 22*DIM-26>            LocalVector;
 
-    /// Defines the local matrix type with dimension 15x15
-    /// for DIM=2 and 34x34 for DIM=3
+    /// Defines the local matrix type with dimension 18x18
+    /// for DIM=2 and 40x40 for DIM=3
     typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
     ///Defines the partitioned integration quadrature rule class locally
@@ -97,6 +97,7 @@ private:
     double        umesh_, vmesh_, wmesh_; //Interpolated mesh velocity
     double        du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, 
                   dw_dx, dw_dy, dw_dz;//Interpolated fluid spatial derivatives
+    double        ddu_dx, ddu_dy, ddv_dx, ddv_dy;
     double        dp_dx, dp_dy, dp_dz;//Interpolated pressure spatial derivative
     double        dumesh_dx, dumesh_dy, dumesh_dz,//Interpolated mesh 
                   dvmesh_dx, dvmesh_dy, dvmesh_dz,//velocity derivatives
@@ -497,7 +498,7 @@ public:
 template<>
 double const Element<2>::k1 = 1.e0;
 template<>
-double const Element<2>::k2 = 0.00;
+double const Element<2>::k2 = 0.0;
 
 
 //------------------------------------------------------------------------------
@@ -938,6 +939,11 @@ void Element<2>::getVelAndDerivatives() {
     dv_dx = 0.;
     dv_dy = 0.;
 
+    ddu_dx = 0.;
+    ddu_dy = 0.;
+    ddv_dx = 0.;
+    ddv_dy = 0.;
+
     dp_dx = 0.;
     dp_dy = 0.;
 
@@ -960,6 +966,11 @@ void Element<2>::getVelAndDerivatives() {
         dv_dx += nodes_[connect_(i)] -> getVelocity(1) * dphi_dx(0,i);
         dv_dy += nodes_[connect_(i)] -> getVelocity(1) * dphi_dx(1,i);
 
+        ddu_dx += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(0,0)(i);
+        ddu_dy += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(1,1)(i);
+        ddv_dx += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(0,0)(i);
+        ddv_dy += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(1,1)(i);
+
         p_ += nodes_[connect_(i)] -> getPressure() * phi_(i);
         
         pPrev_ += nodes_[connect_(i)] -> getPreviousPressure() * phi_(i);
@@ -980,6 +991,8 @@ void Element<2>::getVelAndDerivatives() {
         lagMy_ += nodes_[connect_(i)] -> getLagrangeMultiplier(1) * phi_(i);
 
     };  
+
+    //std::cout << "VEL " << umesh_ << " " << vmesh_ << std::endl;
 
     ax_ = (u_ - uPrev_) / dTime_;
     ay_ = (v_ - vPrev_) / dTime_;
@@ -1274,9 +1287,9 @@ template<>
 void Element<2>::getElemMatrix(int index){
     
 
-    //tSUPG_ = 0.;
-    //tPSPG_ = 0.;
-    //tLSIC_ = 0.;
+    // tSUPG_ = 0.;
+    // tPSPG_ = 0.;
+    // tLSIC_ = 0.;
  
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -1402,6 +1415,8 @@ void Element<2>::getElemMatrix(int index){
             double Q = (dphi_dx(0,i) * dphi_dx(0,j) + 
                         dphi_dx(1,i) * dphi_dx(1,j)) * tPSPG_ / (dens_);
             
+            //Hx = 0; Hy = 0; Gx = 0; Gy = 0; Guu = 0; Gvv = 0;
+
 
             jacobianNRMatrix(12+j,2*i  ) += (Hx + (Gx + Guu) * 
                                               timeScheme_ * dTime_)
@@ -1442,7 +1457,7 @@ void Element<2>::setBoundaryConditions(){
 
         if ((nodes_[connect_(i)] -> getConstrains(0) == 1) ||
             (nodes_[connect_(i)] -> getConstrains(0) == 3))  {
-            for (int j = 0; j < 15; j++){
+            for (int j = 0; j < 18; j++){
                 jacobianNRMatrix(2*i  ,j) = 0.;
                 jacobianNRMatrix(j,2*i  ) = 0.;
             };
@@ -1452,7 +1467,7 @@ void Element<2>::setBoundaryConditions(){
 
         if ((nodes_[connect_(i)] -> getConstrains(1) == 1) ||
             (nodes_[connect_(i)] -> getConstrains(1) == 3)) {
-            for (int j = 0; j < 15; j++){
+            for (int j = 0; j < 18; j++){
                 jacobianNRMatrix(2*i+1,j) = 0.;
                 jacobianNRMatrix(j,2*i+1) = 0.;
             };
@@ -1473,25 +1488,25 @@ void Element<2>::setBoundaryConditions(){
     // };
 
 
-    // typename Nodes::VecLocD x;
+    typename Nodes::VecLocD x;
 
-    // for (int i = 0; i < 6; i++){
-    //     //if(model){
-    //     x = nodes_[connect_(i)] -> getCoordinates();
-    //     // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
-    //     // if(dist < 0.001){
-    //     if((x(0) > 0.99) && (x(1) > 0.99)){
-    //         // std::cout << "AQUI  " << index_ << std::endl;
+    for (int i = 0; i < 6; i++){
+        //if(model){
+        x = nodes_[connect_(i)] -> getCoordinates();
+        // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+        // if(dist < 0.001){
+        if((x(0) > 13.499) && (x(1) > 14.99)){
+            // std::cout << "AQUI  " << index_ << std::endl;
             
-    //         for (int j = 0; j < 18; j++){
-    //             jacobianNRMatrix(12+i,j) = 0.;
-    //             jacobianNRMatrix(j,12+i) = 0.;
-    //         };
-    //         jacobianNRMatrix(12+i,12+i) = 1.;
-    //         rhsVector(12+i) =  0.;
-    //         //};
-    //     };
-    // };
+            for (int j = 0; j < 18; j++){
+                jacobianNRMatrix(12+i,j) = 0.;
+                jacobianNRMatrix(j,12+i) = 0.;
+            };
+            jacobianNRMatrix(12+i,12+i) = 1.;
+            rhsVector(12+i) =  0.;
+            //};
+        };
+    };
 
     return;
 };
@@ -1549,7 +1564,7 @@ void Element<2>::setBoundaryConditionsLagrangeMultipliers(){
     
     // for (int i = 0; i < 6; i++){
     //     if (nodes_[connect_(i)] -> getConstrains(0) == 1) {
-    //         for (int j = 0; j < 15; j++){
+    //         for (int j = 0; j < 18; j++){
     //             //jacobianNRMatrix(2*i  ,j) = 0.;
     //             jacobianNRMatrix(j,2*i  ) = 0.;
     //         };
@@ -1558,7 +1573,7 @@ void Element<2>::setBoundaryConditionsLagrangeMultipliers(){
 
     //     if (nodes_[connect_(i)] -> getConstrains(1) == 1) {
     //         // std::cout << "aqui" << std::endl;
-    //         for (int j = 0; j < 15; j++){
+    //         for (int j = 0; j < 18; j++){
     //             //jacobianNRMatrix(2*i+1,j) = 0.;
     //             jacobianNRMatrix(j,2*i+1) = 0.;
     //         };
@@ -1588,6 +1603,15 @@ void Element<2>::getResidualVector(int index){
 
     
     for (int i = 0; i < 6; i++){
+
+        // double rMx = dens_ * ((u_ - uPrev_) / dTime_ + 
+        //                       (u_ - umesh_) * du_dx)
+        //     - dp_dx + visc_ * (ddu_dx + ddu_dy);
+
+        // double rMy = dens_ * ((v_ - vPrev_) / dTime_ + 
+        //                       (v_ - vmesh_) * dv_dx)
+        //     - dp_dx + visc_ * (ddv_dx + ddv_dy);
+        
         double mx = phi_(i) * (u_ - uPrev_) * dens_ + 
             ((una_ - umesh_) * dphi_dx(0,i) + (vna_ - vmesh_) * dphi_dx(1,i)) * 
             (u_ - uPrev_) * tSUPG_ * dens_;

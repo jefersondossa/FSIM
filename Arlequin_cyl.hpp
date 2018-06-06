@@ -4869,7 +4869,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             
             // Preallocates the matrix
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 120, NULL, 600, NULL, &A); 
+                                sysSize, sysSize, 120, NULL, 500, NULL, &A); 
             CHKERRQ(ierr);
             
             // Divides the matrix between the processes
@@ -5774,8 +5774,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             double velocityInf[2];
             velocityInf[0] = 1.;
             velocityInf[1] = 0.;
-            dragCoefficient += load(0) / (0.5 * rhoInf * velocityInf[0]);
-            liftCoefficient += load(1) / (0.5 * rhoInf * velocityInf[0]);
+            dragCoefficient += load(0) / (0.5 * rhoInf * -1.);
+            liftCoefficient += load(1) / (0.5 * rhoInf * -1.);
 
         };
 

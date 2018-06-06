@@ -1602,10 +1602,10 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
 
 
 
-            // ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-            //                         500);CHKERRQ(ierr);
+            ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
+                                    500);CHKERRQ(ierr);
             
-            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             
             // ierr = KSPGetPC(ksp,&pc);
             
@@ -1613,9 +1613,9 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             
             // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
 
-            // ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
+            ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
             
-               //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            //    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
 
         // //   //   ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
@@ -1624,13 +1624,13 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
 
  
 
-#if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
-#endif          
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            ierr = KSPSetUp(ksp);
+// #if defined(PETSC_HAVE_MUMPS)
+//             ierr = KSPSetType(ksp,KSPPREONLY);
+//             ierr = KSPGetPC(ksp,&pc);
+//             ierr = PCSetType(pc, PCLU);
+// #endif          
+//             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//             ierr = KSPSetUp(ksp);
 
 
 
@@ -1762,7 +1762,7 @@ template<>
 int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
                                           int problem_type) {
 
-    Mat               A;
+    Mat               A,F;
     Vec               b, u, All;
     PetscErrorCode    ierr;
     PetscInt          Istart, Iend, Ii, Ione, iterations;
@@ -1770,8 +1770,11 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
     PC                pc;
     VecScatter        ctx;
     PetscScalar       val;
-    //    MatNullSpace      nullsp;
-   
+    MatNullSpace      nullsp;
+    PetscBool      flg=PETSC_FALSE;
+#if defined(PETSC_HAVE_MUMPS)
+    PetscBool      flg_mumps=PETSC_FALSE,flg_mumps_ch=PETSC_FALSE;
+#endif
     int rank;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -1816,7 +1819,16 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             nodes_[i] -> setPreviousVelocity(u);
         };
 
+
         // Moving boundary
+        for (int i = 0; i < numNodes; i++){
+            typename Node::VecLocD x;
+            
+            x = nodes_[i] -> getCoordinates();
+            nodes_[i] -> setPreviousCoordinates(0,x(0));
+            nodes_[i] -> setPreviousCoordinates(1,x(1));
+        };
+
         for (int i=0; i < numBoundElems; i++){
             if (boundary_[i] -> getConstrain(0) == 3){
                 
@@ -2015,22 +2027,22 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             // ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
             //                         500);CHKERRQ(ierr);
             
-            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            //ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             
             // ierr = KSPGetPC(ksp,&pc);
             
-            // ierr = PCSetType(pc,PCNONE);
+            // ierr = PCSetType(pc,PCJACOBI);
             
             // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
 
-            // ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
+            //ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
             
-               //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            // //    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
 
-        // //   //   ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
-        // // // ierr = MatSetNullSpace(A, nullsp);
-        // // // ierr = MatNullSpaceDestroy(&nullsp);
+            // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
+            // ierr = MatSetNullSpace(A, nullsp);
+            // ierr = MatNullSpaceDestroy(&nullsp);
 
  
 
@@ -2038,9 +2050,47 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             ierr = KSPSetType(ksp,KSPPREONLY);
             ierr = KSPGetPC(ksp,&pc);
             ierr = PCSetType(pc, PCLU);
+            //      MatMumpsSetIcntl(A,25,-1);
 #endif          
             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             ierr = KSPSetUp(ksp);
+
+
+// #if defined(PETSC_HAVE_MUMPS)
+//             flg_mumps    = PETSC_TRUE;
+//             flg_mumps_ch = PETSC_FALSE;
+//             PetscOptionsGetBool(NULL,NULL,"-use_mumps_lu",&flg_mumps,NULL);
+//             PetscOptionsGetBool(NULL,NULL,"-use_mumps_ch",&flg_mumps_ch,NULL);
+//             if (flg_mumps || flg_mumps_ch) {
+//             KSPSetType(ksp,KSPPREONLY);
+//             PetscInt  ival,icntl;
+//             PetscReal val;
+//             KSPGetPC(ksp,&pc);
+            
+//             if (flg_mumps) {
+//             PCSetType(pc,PCLU);
+//         } else if (flg_mumps_ch) {
+//             MatSetOption(A,MAT_SPD,PETSC_TRUE); /* set MUMPS id%SYM=1 */
+//             PCSetType(pc,PCCHOLESKY);
+//         }
+//             PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+//             PCFactorSetUpMatSolverType(pc); /* call MatGetFactor() to create F */
+//             PCFactorGetMatrix(pc,&F);
+            
+//             // /* sequential ordering */
+//             // icntl = 25; ival = -1;
+//             // MatMumpsSetIcntl(F,icntl,ival);
+            
+//             // /* threshhold for row pivot detection */
+//             // MatMumpsSetIcntl(F,24,1);
+//             // icntl = 3; val = 1.e-6;
+//             // MatMumpsSetCntl(F,icntl,val);
+            
+//             // /* compute determinant of A */
+//             // MatMumpsSetIcntl(F,33,1);
+//         }
+// #endif
+
 
 
 
@@ -2133,13 +2183,13 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             ublas::bounded_vector<double,2> load;
             load.clear();
 
-            if (boundary_[jel] -> getBoundaryGroup() == 2){               
+            if (boundary_[jel] -> getBoundaryGroup() == 1){               
                 int iel = boundary_[jel] -> getElement();
                 load = elements_[iel] -> getDragAndLiftForces();               
             };
             
-            dragCoefficient += load(0) / (0.5 * rhoInf * velocityInf[0]);
-            liftCoefficient += load(1) / (0.5 * rhoInf * velocityInf[0]);
+            dragCoefficient += load(0) / (0.5 * rhoInf * -1.);
+            liftCoefficient += load(1) / (0.5 * rhoInf * -1.);
 
         };
 
