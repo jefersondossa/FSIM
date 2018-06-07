@@ -302,13 +302,13 @@ void Fluid<2>::printVelocity(int step) {
     };
     output_v << "      </DataArray> " << std::endl;
 
-    // output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //          << "Name=\"Divergent\" format=\"ascii\">" << std::endl;
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+             << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
 
-    // for (int i=0; i<numNodes; i++){
-    //     output_v << nodes_[i] -> getVelocityDivergent() << std::endl;
-    // };
-    // output_v << "      </DataArray> " << std::endl;
+    for (int i=0; i<numNodes; i++){
+        output_v << nodes_[i] -> getVorticity() << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
 
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
@@ -1787,13 +1787,27 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
         return 0;
     };
+
+    // Set element mesh moving parameters
+    double vMax = 0., vMin = 1.e10;
+    for (int i = 0; i < numElem; i++){
+        double v = elements_[i] -> getJacobian();
+        if (v > vMax) vMax = v;
+        if (v < vMin) vMin = v;
+    };
+    for (int i = 0; i < numElem; i++){
+        double v = elements_[i] -> getJacobian();
+        double eta = 1 + (1. - vMin / vMax) / (v / vMax);
+        elements_[i] -> setMeshMovingParameter(eta);
+    };
+
         
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
-        // for (int i = 0; i < numElem; i++){
-        //     elements_[i] -> getParameterSUPG();
-        // };
+        for (int i = 0; i < numElem; i++){
+            elements_[i] -> getParameterSUPG();
+        };
 
         
         if (rank == 0) {std::cout << "------------------------- TIME STEP = "
@@ -2188,10 +2202,11 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
                 load = elements_[iel] -> getDragAndLiftForces();               
             };
             
-            dragCoefficient += load(0) / (0.5 * rhoInf * -1.);
-            liftCoefficient += load(1) / (0.5 * rhoInf * -1.);
-
+            dragCoefficient += load(0) / (0.5 * rhoInf * (-1.)*(-1.));
+            liftCoefficient += load(1) / (0.5 * rhoInf * (-1.)*(-1.));
         };
+
+        
 
         if (rank == 0) {
         //Computing velocity divergent
@@ -2206,6 +2221,10 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             // for (int jel = 0; jel < numElem; jel++){   
             //     elements_[jel] -> computeVelocityDivergent();
             // };
+
+            for (int jel = 0; jel < numElem; jel++){   
+                elements_[jel] -> computeVorticity();
+            };
 
             printVelocity(iTimeStep);
         };

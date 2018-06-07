@@ -244,6 +244,8 @@ public:
     void getParameterSUPG();
     double getPSPG(){return tPSPG_;};
 
+    /// Compute the vorticity field
+    void computeVorticity();
 
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
@@ -1154,12 +1156,14 @@ ublas::bounded_vector<double,2> Element<2>::getDragAndLiftForces() {
             dv_dy += nodes_[nodesb_(i)] -> getVelocity(1) * Ty;
         };
         
+        std::cout << "FRic " << du_dx << " " << du_dy << " " << dv_dx << " " << dv_dy << " " << p_ << std::endl; 
+
         shearStress(0,0) = 2. * visc_ * du_dx;
         shearStress(0,1) = visc_ * (du_dy + dv_dx);
         shearStress(1,0) = visc_ * (du_dy + dv_dx);
         shearStress(1,1) = 2. * visc_ * dv_dy;
         
-        load += (-p_ * prod(ident,n_vector) + prod(shearStress,n_vector)) 
+        load += (-0. * prod(ident,n_vector) + prod(shearStress,n_vector)) 
             * jacb_ * gaussQuad.second(index);
 
         //  std::cout << "Normal Vector " << n_vector(0) <<" " << n_vector(1) << std::endl;
@@ -1669,10 +1673,10 @@ void Element<2>::getResidualVector(int index){
               //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
         };
 
-        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ * timeScheme_ 
+        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ //* timeScheme_ 
                              - KLSx * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
-        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy) * dTime_ * timeScheme_
+        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy) * dTime_ //* timeScheme_
                              - KLSy * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
         rhsVector(12+i) += -Q * dTime_ 
@@ -1737,10 +1741,10 @@ void Element<2>::getElemLaplMatrix(){
         for (int j = 0; j < 6; j++){        
             laplMatrix(2*i  ,2*j  ) += (dphi_dx(0,i) * dphi_dx(0,j) +
                                         dphi_dx(1,i) * dphi_dx(1,j)) 
-                * weight_ * djac_;// * meshMovingParameter;
+                * weight_ * djac_ * meshMovingParameter;
             laplMatrix(2*i+1,2*j+1) += (dphi_dx(0,i) * dphi_dx(0,j) +
                                         dphi_dx(1,i) * dphi_dx(1,j)) 
-                * weight_ * djac_;// * meshMovingParameter;
+                * weight_ * djac_ * meshMovingParameter;
         };
     };
      
@@ -1962,6 +1966,49 @@ void Element<2>::computeVelocityDivergent(){
 };
 
 //------------------------------------------------------------------------------
+//------------------------COMPUTES THE VORTICITY FIELD--------------------------
+//------------------------------------------------------------------------------
+template<>
+void Element<2>::computeVorticity(){
+    
+    ublas::bounded_matrix <double, 2, 6>      int_points;
+    
+    int_points(0,0) = 0.; int_points(1,0) = 0.;
+    int_points(0,1) = 1.; int_points(1,1) = 0.;
+    int_points(0,2) = 0.; int_points(1,2) = 1.;
+    int_points(0,3) = .5; int_points(1,3) = 0.;
+    int_points(0,4) = .5; int_points(1,4) = .5;
+    int_points(0,5) = 0.; int_points(1,5) = .5;
+    
+
+    typename QuadShapeFunction<2>::Coords xsi;
+    
+    for (int i=0; i<6; i++){
+        
+        xsi(0) = int_points(0,i);
+        xsi(1) = int_points(1,i);
+        
+        //Computes the velocity shape functions
+        shapeQuad.evaluate(xsi,phi_);
+        
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi);
+        
+        //Computes spatial derivatives
+        getSpatialDerivatives(xsi);
+        
+        //Interpolates velocity and its derivatives values
+        getVelAndDerivatives();
+        
+        nodes_[connect_(i)] -> setVorticity(-du_dy + dv_dx);        
+    };
+    
+    return;
+};
+
+
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -2132,7 +2179,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    //    setIntegPointWeightFunction();
+    //setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 

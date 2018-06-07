@@ -64,6 +64,7 @@ private:
     double           previousPressure_;       //Previous time step pressure
 
     double           divergent_;              //Velocity divergent
+    double           vorticity_;              //Vorticity
 
     VecLocD          meshVelocity_;           //Nodal mesh velocity
     VecLocD          previousMeshVelocity_;   //Previous time step mesh velocity
@@ -95,6 +96,7 @@ public:
         constrainType[0] = 0;    constrainType[1] = 0;    constrainType[2] = 0;
         constrainValue[0] = 0;   constrainValue[1] = 0;   constrainValue[2] = 0;
         pressure_ = 0.;          previousPressure_ = 0.;  divergent_ = 0.;
+        vorticity_ = 0.;
         elemCorresp = 0;         
         velocity_.clear();   previousVelocity_.clear();   acceleration_.clear();
         previousAcceleration_.clear(); xsiCorresp.clear(); gradient_.clear();
@@ -201,6 +203,14 @@ public:
     /// Returns the node velocity divergent
     /// @return node velocity divergent
     double getVelocityDivergent() {return divergent_;}
+
+    /// Sets the vorticity at the node
+    /// @param double vorticity
+    void setVorticity(double div) {vorticity_ = div;}
+
+    /// Returns the node velocity divergent
+    /// @return node velocity divergent
+    double getVorticity() {return vorticity_;}
 
     //..........................Acceleration functions..........................
     /// Sets the acceleration vector
