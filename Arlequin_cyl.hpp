@@ -1104,8 +1104,8 @@ void Arlequin<2>::setCouplingZone(){
     int nodesCZ[numNodesFine];
     int nodesCZ2[numNodesCoarse];
 
-    double lim1 = 2.01;
-    double lim2 = 4.01;
+    double lim1 = 3.01;
+    double lim2 = 5.01;
     double tick = 0.99;
 
     for (int i = 0; i < numNodesFine; i++) nodesCZ[i] = 0;    
@@ -4848,9 +4848,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             u[1] = 0.;//h * pi / T * cos(pi * iTimeStep * dTime / T);
             nodesFine_[i] -> setMeshVelocity(u);
       
-            typename Nodes::VecLocD x, x_ini;
+            typename Nodes::VecLocD x;
             x = nodesFine_[i] -> getCoordinates();
-            x_ini = nodesFine_[i] -> getInitialCoordinates();
             nodesFine_[i] -> setPreviousCoordinates(0,x(0));
             nodesFine_[i] -> setPreviousCoordinates(1,x(1));
             x(0) = x(0) -1. * dTime;// +1. - cos(w * iTimeStep * dTime);
