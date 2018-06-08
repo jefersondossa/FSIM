@@ -120,6 +120,13 @@ private:
     LocalNodes    gradient_;
     int           sideBoundary_;
     double        meshMovingParameter;
+    double        pressureDragForce;
+    double        pressureLiftForce;
+    double        frictionDragForce;
+    double        frictionLiftForce;
+    double        dragForce;
+    double        liftForce;
+
     static const double k1;
     static const double k2;
 
@@ -255,7 +262,25 @@ public:
     void computeVelocityDivergent();
 
     /// Compute and store the drag and lift forces at the element boundary
-    ublas::bounded_vector<double,DIM> getDragAndLiftForces();
+    void computeDragAndLiftForces();
+
+    /// Gets the element pressure drag force
+    double getPressureDragForce(){return pressureDragForce;};
+
+    /// Gets the element pressure lift force
+    double getPressureLiftForce(){return pressureLiftForce;};
+
+    /// Gets the element friction drag force
+    double getFrictionDragForce(){return frictionDragForce;};
+
+    /// Gets the element friction lift force
+    double getFrictionLiftForce(){return frictionLiftForce;};
+
+    /// Gets the element drag force
+    double getDragForce(){return dragForce;};
+
+    /// Gets the element lift force
+    double getLiftForce(){return liftForce;};
 
     /// Compute and store the boundary forces
     ublas::bounded_vector<double,DIM> getBoundaryLoad(DimVector xsi);
@@ -498,9 +523,9 @@ public:
 };
 
 template<>
-double const Element<2>::k1 = 1.e0;
+double const Element<2>::k1 = 1.e1;
 template<>
-double const Element<2>::k2 = 0.0;
+double const Element<2>::k2 = 1.0;
 
 
 //------------------------------------------------------------------------------
@@ -1074,10 +1099,10 @@ Element<2>::getBoundaryLoad(DimVector xsi) {
 //-------------INTERPOLATES VELOCITY, PRESSURE AND ITS DERIVATIVES--------------
 //------------------------------------------------------------------------------
 template<>
-ublas::bounded_vector<double,2> Element<2>::getDragAndLiftForces() {
+void Element<2>::computeDragAndLiftForces() {
 
     setLocalNodes();
-
+    
     ublas::bounded_vector<double, 3> nodesb_; 
     if(sideBoundary_ == 0){
         nodesb_(0) = connect_(1); 
@@ -1110,19 +1135,23 @@ ublas::bounded_vector<double,2> Element<2>::getDragAndLiftForces() {
         };        
     };
 
-
     BoundaryQuad           bQuad;     //Boundary Integration Quadrature
     std::pair<BoundaryQuad::PointCoord,BoundaryQuad::PointWeight> gaussQuad;
     DimVector                                  n_vector;
     DimMatrix                                  shearStress;
     ublas::identity_matrix<double>             ident(2);
-    ublas::bounded_vector<double,2>            load;
+    ublas::bounded_vector<double,2>            load_friction;
+    ublas::bounded_vector<double,2>            load_pressure;
     
-    load.clear();    
+    typename QuadShapeFunction<2>::Coords xsi;
+
     n_vector.clear();
     gaussQuad.first.clear();
     gaussQuad.second.clear();
     shearStress.clear();
+
+    load_friction.clear();
+    load_pressure.clear();
 
     gaussQuad = bQuad.GaussQuadrature();
     
@@ -1130,6 +1159,34 @@ ublas::bounded_vector<double,2> Element<2>::getDragAndLiftForces() {
     for(typename BoundaryQuad::QuadratureListIt it = bQuad.begin(); 
         it != bQuad.end(); it++){
         
+        double xsiB = gaussQuad.first(index);
+        double weightB = gaussQuad.second(index);
+
+        if(sideBoundary_ == 2){
+            xsi(0) = (-xsiB + 1.) / 2.;
+            xsi(1) = 0.;
+        };
+        if(sideBoundary_ == 1){
+            xsi(1) = (xsiB + 1.) / 2.;
+            xsi(0) = 0.;
+        };
+        if(sideBoundary_ == 0){
+            xsi(0) = (xsiB + 1.) / 2.;
+            xsi(1) = 1. - xsi(0);
+        };
+
+        //Computes the velocity shape functions
+        shapeQuad.evaluate(xsi,phi_);
+        
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi);
+
+        //Computes spatial derivatives
+        getSpatialDerivatives(xsi);
+
+        //Interpolates velocity and its derivatives values
+        getVelAndDerivatives();        
+
         phib_ = shapeBound.getShapeFunction(gaussQuad.first(index));
         dphib_ = shapeBound.getShapeFunctionDerivative(gaussQuad.first(index));
 
@@ -1144,35 +1201,29 @@ ublas::bounded_vector<double,2> Element<2>::getDragAndLiftForces() {
         
         n_vector(0) =  Ty / jacb_;
         n_vector(1) = -Tx / jacb_;
-        
-        p_ = 0.;
-        du_dx = 0.; du_dy = 0.; dv_dx = 0.; dv_dy = 0.;
-        for (int i=0; i<3; i++){
-            p_ += nodes_[nodesb_(i)] -> getPressure() * phib_(i);
-
-            du_dx += nodes_[nodesb_(i)] -> getVelocity(0) * Tx;
-            du_dy += nodes_[nodesb_(i)] -> getVelocity(0) * Ty;
-            dv_dx += nodes_[nodesb_(i)] -> getVelocity(1) * Tx;
-            dv_dy += nodes_[nodesb_(i)] -> getVelocity(1) * Ty;
-        };
-        
-        std::cout << "FRic " << du_dx << " " << du_dy << " " << dv_dx << " " << dv_dy << " " << p_ << std::endl; 
 
         shearStress(0,0) = 2. * visc_ * du_dx;
         shearStress(0,1) = visc_ * (du_dy + dv_dx);
         shearStress(1,0) = visc_ * (du_dy + dv_dx);
         shearStress(1,1) = 2. * visc_ * dv_dy;
         
-        load += (-0. * prod(ident,n_vector) + prod(shearStress,n_vector)) 
-            * jacb_ * gaussQuad.second(index);
-
-        //  std::cout << "Normal Vector " << n_vector(0) <<" " << n_vector(1) << std::endl;
+        load_pressure += -p_ * prod(ident,n_vector) * jacb_ * weightB;
+        load_friction += prod(shearStress,n_vector) * jacb_ * weightB;
         
         index++;
-
     };
+
+    pressureDragForce = load_pressure(0);
+    pressureLiftForce = load_pressure(1);
     
-    return load;
+    frictionDragForce = load_friction(0);
+    frictionLiftForce = load_friction(1);
+
+    dragForce = pressureDragForce + frictionDragForce;
+    liftForce = pressureLiftForce + frictionLiftForce;
+
+  
+    return;
 };
 
 //------------------------------------------------------------------------------
@@ -2179,7 +2230,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    //setIntegPointWeightFunction();
+    setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 

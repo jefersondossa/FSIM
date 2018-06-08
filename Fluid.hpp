@@ -17,6 +17,8 @@
 #include "Element.hpp"
 #include "Boundary.hpp"
 
+//#include <iomanip>
+
 // PETSc libraries
 #include <metis.h>
 #include <petscksp.h> 
@@ -67,8 +69,6 @@ private:
     int rank;
     int numFSIInterfaces;
     int iAux;
-    double dragCoefficient;
-    double liftCoefficient;
 
 public:
     /// Reads the input file and perform the preprocessing operations
@@ -1289,7 +1289,12 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
 
     std::string dl = "dragLift.dat";
     std::ofstream dragLift(dl.c_str());
-    
+    if (rank == 0) {
+        dragLift << "Time   Pressure Drag   Pressure Lift " 
+                 << "Friction Drag  Friction Lift Drag    Lift " 
+                 << std::endl;
+    };    
+
     //Check if the problem type can be computed
     if ((problem_type > 2) || (problem_type < 1)){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
@@ -1715,38 +1720,58 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             
         };//Newton-Raphson
 
-        dragCoefficient = 0.;
-        liftCoefficient = 0.;
+
+        double dragCoefficient = 0.;
+        double liftCoefficient = 0.;
+        double pressureDragCoefficient = 0.;
+        double pressureLiftCoefficient = 0.;
+        double frictionDragCoefficient = 0.;
+        double frictionLiftCoefficient = 0.;
 
         for (int jel = 0; jel < numBoundElems; jel++){   
 
-            ublas::bounded_vector<double,2> load;
-            load.clear();
+            double dForce = 0.;
+            double lForce = 0.;
+            double pDForce = 0.;
+            double pLForce = 0.;
+            double fDForce = 0.;
+            double fLForce = 0.;
 
-            if (boundary_[jel] -> getBoundaryGroup() == 2){               
+            if (boundary_[jel] -> getBoundaryGroup() == 0){               
                 int iel = boundary_[jel] -> getElement();
-                load = elements_[iel] -> getDragAndLiftForces();               
+                elements_[iel] -> computeDragAndLiftForces();
+                
+                pDForce = elements_[iel] -> getPressureDragForce();
+                pLForce = elements_[iel] -> getPressureLiftForce();
+                fDForce = elements_[iel] -> getFrictionDragForce();
+                fLForce = elements_[iel] -> getFrictionLiftForce();
+                dForce = elements_[iel] -> getDragForce();
+                lForce = elements_[iel] -> getLiftForce();
             };
             
-            dragCoefficient += load(0) / (0.5 * rhoInf * velocityInf[0]);
-            liftCoefficient += load(1) / (0.5 * rhoInf * velocityInf[0]);
+            pressureDragCoefficient += pDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            pressureLiftCoefficient += pLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            frictionDragCoefficient += fDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            frictionLiftCoefficient += fLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            dragCoefficient += dForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            liftCoefficient += lForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
 
         };
 
         if (rank == 0) {
-        //Computing velocity divergent
-            
-            dragLift << iTimeStep * dTime << " " << dragCoefficient 
-                     << " " << liftCoefficient << std::endl;
-            
-            // for (int ino = 0; ino < numNodes; ino++){
-            //     nodes_[ino] -> setVelocityDivergent(0.);
-            // };                
-            
-            // for (int jel = 0; jel < numElem; jel++){   
-            //     elements_[jel] -> computeVelocityDivergent();
-            // };
 
+            dragLift << iTimeStep * dTime << std::fixed << " " 
+                     <<  std::scientific << dragCoefficient 
+                     << " " << liftCoefficient << std::endl;
+            //Printing results
             printVelocity(iTimeStep);
         };
         
@@ -1781,7 +1806,8 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
 
     std::string dl = "dragLift.dat";
     std::ofstream dragLift(dl.c_str());
-    
+
+     
     //Check if the problem type can be computed
     if ((problem_type > 2) || (problem_type < 1)){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
@@ -2189,47 +2215,79 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             
         };//Newton-Raphson
 
-        dragCoefficient = 0.;
-        liftCoefficient = 0.;
+        double dragCoefficient = 0.;
+        double liftCoefficient = 0.;
+        double pressureDragCoefficient = 0.;
+        double pressureLiftCoefficient = 0.;
+        double frictionDragCoefficient = 0.;
+        double frictionLiftCoefficient = 0.;
 
         for (int jel = 0; jel < numBoundElems; jel++){   
 
-            ublas::bounded_vector<double,2> load;
-            load.clear();
+            double dForce = 0.;
+            double lForce = 0.;
+            double pDForce = 0.;
+            double pLForce = 0.;
+            double fDForce = 0.;
+            double fLForce = 0.;
 
-            if (boundary_[jel] -> getBoundaryGroup() == 1){               
+            if (boundary_[jel] -> getBoundaryGroup() == 0){               
                 int iel = boundary_[jel] -> getElement();
-                load = elements_[iel] -> getDragAndLiftForces();               
+                elements_[iel] -> computeDragAndLiftForces();
+                
+                pDForce = elements_[iel] -> getPressureDragForce();
+                pLForce = elements_[iel] -> getPressureLiftForce();
+                fDForce = elements_[iel] -> getFrictionDragForce();
+                fLForce = elements_[iel] -> getFrictionLiftForce();
+                dForce = elements_[iel] -> getDragForce();
+                lForce = elements_[iel] -> getLiftForce();
             };
             
-            dragCoefficient += load(0) / (0.5 * rhoInf * (-1.)*(-1.));
-            liftCoefficient += load(1) / (0.5 * rhoInf * (-1.)*(-1.));
+            velocityInf[0] = -1.;
+
+            pressureDragCoefficient += pDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            pressureLiftCoefficient += pLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            frictionDragCoefficient += fDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            frictionLiftCoefficient += fLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            dragCoefficient += dForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            liftCoefficient += lForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
         };
 
-        
-
         if (rank == 0) {
-        //Computing velocity divergent
-            
-            dragLift << iTimeStep * dTime << " " << dragCoefficient 
-                     << " " << liftCoefficient << std::endl;
-            
-            // for (int ino = 0; ino < numNodes; ino++){
-            //     nodes_[ino] -> setVelocityDivergent(0.);
-            // };                
-            
-            // for (int jel = 0; jel < numElem; jel++){   
-            //     elements_[jel] -> computeVelocityDivergent();
-            // };
+            const int timeWidth = 11;
+            const int numWidth = 11;
+            dragLift << std::setprecision(3) << std::scientific;
+            dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
+            dragLift << std::setw(numWidth) << pressureDragCoefficient;
+            dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+            dragLift << std::setw(numWidth) << frictionDragCoefficient;
+            dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+            dragLift << std::setw(numWidth) << dragCoefficient;
+            dragLift << std::setw(numWidth) << liftCoefficient;
+            dragLift << std::endl;
 
-            for (int jel = 0; jel < numElem; jel++){   
-                elements_[jel] -> computeVorticity();
-            };
-
+            //Printing results
             printVelocity(iTimeStep);
         };
         
     };
+
+
+
+  if (rank == 0) {
+
+    };
+
+
     
     return 0;
 };

@@ -3710,29 +3710,64 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         
         double dragCoefficient = 0.;
         double liftCoefficient = 0.;
+        double pressureDragCoefficient = 0.;
+        double pressureLiftCoefficient = 0.;
+        double frictionDragCoefficient = 0.;
+        double frictionLiftCoefficient = 0.;
+
+        if (rank == 0) {
+            dragLift << "Time   Pressure Drag   Pressure Lift " 
+                     << "Friction Drag  Friction Lift Drag    Lift " 
+                     << std::endl;
+        };
 
         for (int jel = 0; jel < numBoundElemFine; jel++){   
 
-            ublas::bounded_vector<double,2> load;
-            load.clear();
-
-            if (boundaryFine_[jel] -> getBoundaryGroup() == 0){               
-                int iel = boundaryFine_[jel] -> getElement();
-                load = elementsFine_[iel] -> getDragAndLiftForces();
-            };
-            
             double rhoInf = 1.0;
             double velocityInf[2];
             velocityInf[0] = 1.;
             velocityInf[1] = 0.;
-            dragCoefficient += load(0) / (0.5 * rhoInf * velocityInf[0]);
-            liftCoefficient += load(1) / (0.5 * rhoInf * velocityInf[0]);
+
+            double dForce = 0.;
+            double lForce = 0.;
+            double pDForce = 0.;
+            double pLForce = 0.;
+            double fDForce = 0.;
+            double fLForce = 0.;
+
+            if (boundaryFine_[jel] -> getBoundaryGroup() == 0){               
+                int iel = boundaryFine_[jel] -> getElement();
+                elementsFine_[iel] -> computeDragAndLiftForces();
+                
+                pDForce = elementsFine_[iel] -> getPressureDragForce();
+                pLForce = elementsFine_[iel] -> getPressureLiftForce();
+                fDForce = elementsFine_[iel] -> getFrictionDragForce();
+                fLForce = elementsFine_[iel] -> getFrictionLiftForce();
+                dForce = elementsFine_[iel] -> getDragForce();
+                lForce = elementsFine_[iel] -> getLiftForce();
+            };
+            
+            pressureDragCoefficient += pDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            pressureLiftCoefficient += pLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            frictionDragCoefficient += fDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            frictionLiftCoefficient += fLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            dragCoefficient += dForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            liftCoefficient += lForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
 
         };
 
         if (rank == 0) {
 
-            dragLift << iTimeStep * dTime << " " << dragCoefficient 
+            dragLift << iTimeStep * dTime << std::fixed << " " 
+                     <<  std::scientific << dragCoefficient 
                      << " " << liftCoefficient << std::endl;
             //Printing results
             printVelocity(iTimeStep);
@@ -5758,29 +5793,63 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         
         double dragCoefficient = 0.;
         double liftCoefficient = 0.;
+        double pressureDragCoefficient = 0.;
+        double pressureLiftCoefficient = 0.;
+        double frictionDragCoefficient = 0.;
+        double frictionLiftCoefficient = 0.;
+        if (rank == 0) {
+            dragLift << "Time   Pressure Drag   Pressure Lift " 
+                     << "Friction Drag  Friction Lift Drag    Lift " 
+                     << std::endl;
+        };
 
         for (int jel = 0; jel < numBoundElemFine; jel++){   
 
-            ublas::bounded_vector<double,2> load;
-            load.clear();
+            double rhoInf = 1.0;
+            double velocityInf[2];
+            velocityInf[0] = -1.;
+            velocityInf[1] = 0.;
+
+            double dForce = 0.;
+            double lForce = 0.;
+            double pDForce = 0.;
+            double pLForce = 0.;
+            double fDForce = 0.;
+            double fLForce = 0.;
 
             if (boundaryFine_[jel] -> getBoundaryGroup() == 0){               
                 int iel = boundaryFine_[jel] -> getElement();
-                load = elementsFine_[iel] -> getDragAndLiftForces();
+                elementsFine_[iel] -> computeDragAndLiftForces();
+                
+                pDForce = elementsFine_[iel] -> getPressureDragForce();
+                pLForce = elementsFine_[iel] -> getPressureLiftForce();
+                fDForce = elementsFine_[iel] -> getFrictionDragForce();
+                fLForce = elementsFine_[iel] -> getFrictionLiftForce();
+                dForce = elementsFine_[iel] -> getDragForce();
+                lForce = elementsFine_[iel] -> getLiftForce();
             };
             
-            double rhoInf = 1.0;
-            double velocityInf[2];
-            velocityInf[0] = 1.;
-            velocityInf[1] = 0.;
-            dragCoefficient += load(0) / (0.5 * rhoInf * -1.);
-            liftCoefficient += load(1) / (0.5 * rhoInf * -1.);
+            pressureDragCoefficient += pDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            pressureLiftCoefficient += pLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            frictionDragCoefficient += fDForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            frictionLiftCoefficient += fLForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+
+            dragCoefficient += dForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+            liftCoefficient += lForce / 
+                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
 
         };
 
         if (rank == 0) {
 
-            dragLift << iTimeStep * dTime << " " << dragCoefficient 
+            dragLift << iTimeStep * dTime << std::fixed << " " 
+                     <<  std::scientific << dragCoefficient 
                      << " " << liftCoefficient << std::endl;
             //Printing results
             printVelocity(iTimeStep);
