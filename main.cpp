@@ -72,10 +72,10 @@ int main(int argc, char **args) {
     fineModel.dataReading("cyl_fine_novo2.txt","mirror_fine.txt");  
     coarseModel.dataReading("cyl_coarse_novo2.txt","mirror_coarse.txt");
   
-    // Cavity
+    // Cavity  
     // fineModel.dataReading("fine.txt","mirror_fine.txt"); 
     // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
- 
+  
     // Helice 
     // fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
     // coarseModel.dataReading("cavity1.txt","mirror_coarse.txt");
@@ -121,10 +121,10 @@ int main(int argc, char **args) {
     //4- 0 - Steady problem 
     //   1 - Transient problem 
      
-     
+      
     arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
        
-    arlequinProblem.solveArlequinProblemMoving(2, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblemMoving(4, 1.e-7, 2, 1);
           
      
     //Finalize main program   
