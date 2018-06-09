@@ -523,9 +523,9 @@ public:
 };
 
 template<>
-double const Element<2>::k1 = 1.e1;
+double const Element<2>::k1 = 1.e0;
 template<>
-double const Element<2>::k2 = 1.0;
+double const Element<2>::k2 = 0.0;
 
 
 //------------------------------------------------------------------------------
@@ -1433,12 +1433,12 @@ void Element<2>::getElemMatrix(int index){
             //COM SINAL TROCADO NA FORMULAÇAO DO TEZDUYAR
             //multipy pressure direction x
             double QSUPGx = - (dphi_dx(0,i) * phi_(j) + 
-                               (dphi_dx(0,i) * (u_ - umesh_) + 
+                               (dphi_dx(0,i) * (u_ - umesh_) - 
                                 dphi_dx(1,i) * (v_ - vmesh_)) * 
                                dphi_dx(0,j) * tSUPG_);
             //multiply pressure direction y
             double QSUPGy = - (dphi_dx(1,i) * phi_(j) +
-                               (dphi_dx(0,i) * (u_ - umesh_) + 
+                               (dphi_dx(0,i) * (u_ - umesh_) - 
                                 dphi_dx(1,i) * (v_ - vmesh_)) *   
                                dphi_dx(1,j) * tSUPG_);
             //multiply velocity direction x
@@ -1693,10 +1693,10 @@ void Element<2>::getResidualVector(int index){
             ((una_ - umesh_) * dphi_dx(0,i) + (vna_ - vmesh_) * dphi_dx(1,i)) *
             ((una_ - umesh_) * dv_dx + (vna_ - vmesh_) * dv_dy) * tSUPG_ *dens_;
  
-        double Px = - (dphi_dx(0,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
+        double Px = - (dphi_dx(0,i) * p_) + ((dphi_dx(0,i) * (una_ - umesh_) +
                                               dphi_dx(1,i) * (vna_ - vmesh_))
                                              * dp_dx * tSUPG_);
-        double Py = - (dphi_dx(1,i) * p_) - ((dphi_dx(0,i) * (una_ - umesh_) +
+        double Py = - (dphi_dx(1,i) * p_) + ((dphi_dx(0,i) * (una_ - umesh_) +
                                               dphi_dx(1,i) * (vna_ - vmesh_))
                                              * dp_dy * tSUPG_);
            
@@ -1716,9 +1716,9 @@ void Element<2>::getResidualVector(int index){
             // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
             // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
         } else {
-            mx += dens_ * u_ * (intPointWeightFunction(index) - 
+            mx -= dens_ * u_ * (intPointWeightFunction(index) - 
                                 intPointWeightFunctionPrev(index)) / dTime_;
-            my += dens_ * v_ * (intPointWeightFunction(index) - 
+            my -= dens_ * v_ * (intPointWeightFunction(index) - 
                                 intPointWeightFunctionPrev(index)) / dTime_;
               // std::cout << "AQUI " << (intPointWeightFunction(index) - 
               //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;

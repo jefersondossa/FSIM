@@ -1125,19 +1125,19 @@ void Arlequin<2>::setCouplingZone(){
 
         for (int ino = 0; ino < 6; ino++){
             x = nodesFine_[connec(ino)] -> getCoordinates();
-            // double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
-            //                    (x(1) - 16.) * (x(1) - 16.));
+            double dist = sqrt((x(0) - 0.) * (x(0) - 0.) + 
+                               (x(1) - 0.) * (x(1) - 0.));
 
-            // if (dist >= 7.01){
-            //     flag = 1;
-            //     break;
-            // };
-
-            if ((x(0) <= -lim1) || (x(0) >= lim2) ||
-                (x(1) <= -lim1) || (x(1) >= lim1)){
+            if (dist >= 3.51){
                 flag = 1;
                 break;
             };
+
+            // if ((x(0) <= -lim1) || (x(0) >= lim2) ||
+            //     (x(1) <= -lim1) || (x(1) >= lim1)){
+            //     flag = 1;
+            //     break;
+            // };
 
         };
 
@@ -1153,17 +1153,17 @@ void Arlequin<2>::setCouplingZone(){
                 
                 x = elementsFine_[jel] -> getIntegPointCoordinatesValue(i);  
 
-                // double dist = sqrt((x(0) - 16.) * (x(0) - 16.) + 
-                //                    (x(1) - 16.) * (x(1) - 16.));
+                double dist = sqrt((x(0) - 0.) * (x(0) - 0.) + 
+                                   (x(1) - 0.) * (x(1) - 0.));
                 
-                // if (dist >= 7.01){
-                //     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
-                // };
-
-                if ((x(0) <= -lim1) || (x(0) >= lim2) ||
-                    (x(1) <= -lim1) || (x(1) >= lim1)){
+                if (dist >= 3.51){
                     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
                 };
+
+                // if ((x(0) <= -lim1) || (x(0) >= lim2) ||
+                //     (x(1) <= -lim1) || (x(1) >= lim1)){
+                //     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
+                // };
 
             };
         };        
@@ -1547,7 +1547,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = 1.0;
+    double lambda = 1.5;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -5797,11 +5797,6 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         double pressureLiftCoefficient = 0.;
         double frictionDragCoefficient = 0.;
         double frictionLiftCoefficient = 0.;
-        if (rank == 0) {
-            dragLift << "Time   Pressure Drag   Pressure Lift " 
-                     << "Friction Drag  Friction Lift Drag    Lift " 
-                     << std::endl;
-        };
 
         for (int jel = 0; jel < numBoundElemFine; jel++){   
 
@@ -5847,10 +5842,19 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         };
 
         if (rank == 0) {
+            const int timeWidth = 11;
+            const int numWidth = 11;
+            dragLift << std::setprecision(3) << std::scientific;
+            dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
+            dragLift << std::setw(numWidth) << pressureDragCoefficient;
+            dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+            dragLift << std::setw(numWidth) << frictionDragCoefficient;
+            dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+            dragLift << std::setw(numWidth) << dragCoefficient;
+            dragLift << std::setw(numWidth) << liftCoefficient;
+            dragLift << std::endl;
 
-            dragLift << iTimeStep * dTime << std::fixed << " " 
-                     <<  std::scientific << dragCoefficient 
-                     << " " << liftCoefficient << std::endl;
+
             //Printing results
             printVelocity(iTimeStep);
         };
