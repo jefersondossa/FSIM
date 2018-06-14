@@ -31,7 +31,7 @@ static char help[] = "Solves the Incompressible flow problem";
 
 // C++ standard libraries
 #include <fstream> 
- 
+  
 // Developed Header Files
 #include "FSInteraction.hpp"  
 
@@ -69,18 +69,18 @@ int main(int argc, char **args) {
     // Cylinder
     // fineModel.dataReading("cyl_fine_coin.txt","mirror_fine.txt");  
     // coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
-    fineModel.dataReading("cyl_fine_novo2.txt","mirror_fine.txt");  
-    coarseModel.dataReading("cyl_coarse_novo2.txt","mirror_coarse.txt");
+    // fineModel.dataReading("cyl_fine_novo2.txt","mirror_fine.txt");  
+    // coarseModel.dataReading("cyl_coarse_novo2.txt","mirror_coarse.txt");
   
     // Cavity  
-    // fineModel.dataReading("fine.txt","mirror_fine.txt"); 
-    // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
+    fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
+    coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
   
     // Helice 
     // fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
     // coarseModel.dataReading("cavity1.txt","mirror_coarse.txt");
      
-    //control.dataReading("cyl_control_novo.txt","mirror_control.txt");
+    // control.dataReading("64x64.txt","mirror_control.txt");
 
     // char in_solid[32] = "cantilever.txt";
      
@@ -91,7 +91,7 @@ int main(int argc, char **args) {
     //control.dataReading(".txt","mirror_coarse.txt");
   
     //Problem solving  
-        
+         
     //Solve Problem function needs three parameters:  
     //1- The maximum number of iterations in the Newton-Raphson process
     //2- The maximum relative error in the Newton-Raphson process (DU)
@@ -105,7 +105,7 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
-    // control.solveTransientProblemMoving(4, 1.e-6, 2); 
+    //control.solveTransientProblem(2, 1.e-6, 2); 
    
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
@@ -120,11 +120,11 @@ int main(int argc, char **args) {
     //      in the first step to perform the initial guess);
     //4- 0 - Steady problem 
     //   1 - Transient problem 
-     
+      
       
     arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
        
-    arlequinProblem.solveArlequinProblemMoving(4, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1);
           
      
     //Finalize main program   
