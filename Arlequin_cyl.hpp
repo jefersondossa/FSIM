@@ -1104,9 +1104,9 @@ void Arlequin<2>::setCouplingZone(){
     int nodesCZ[numNodesFine];
     int nodesCZ2[numNodesCoarse];
 
-    double lim1 = 3.01;
-    double lim2 = 5.01;
-    double tick = 0.99;
+    double lim1 = 0.1251;
+    double lim2 = 0.8749;
+    double tick = 0.0649;
 
     for (int i = 0; i < numNodesFine; i++) nodesCZ[i] = 0;    
 
@@ -1128,16 +1128,19 @@ void Arlequin<2>::setCouplingZone(){
             double dist = sqrt((x(0) - 0.) * (x(0) - 0.) + 
                                (x(1) - 0.) * (x(1) - 0.));
 
-            if (dist >= 3.51){
-                flag = 1;
-                break;
-            };
-
-            // if ((x(0) <= -lim1) || (x(0) >= lim2) ||
-            //     (x(1) <= -lim1) || (x(1) >= lim1)){
+            // if (dist >= 4.01){
             //     flag = 1;
             //     break;
             // };
+
+    
+            if ((x(0) < lim1) || (x(0) > lim2) || 
+                (x(1) < lim1) || (x(1) > lim2)){
+
+            }else{
+                flag = 1;
+                break;
+            };
 
         };
 
@@ -1156,14 +1159,16 @@ void Arlequin<2>::setCouplingZone(){
                 double dist = sqrt((x(0) - 0.) * (x(0) - 0.) + 
                                    (x(1) - 0.) * (x(1) - 0.));
                 
-                if (dist >= 3.51){
-                    elementsFine_[jel] -> setIntegPointInGlueZone(i);    
-                };
-
-                // if ((x(0) <= -lim1) || (x(0) >= lim2) ||
-                //     (x(1) <= -lim1) || (x(1) >= lim1)){
+                // if (dist >= 4.01){
                 //     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
                 // };
+
+                if ((x(0) < lim1) || (x(0) > lim2) || 
+                    (x(1) < lim1) || (x(1) > lim2)){
+
+                }else{
+                    elementsFine_[jel] -> setIntegPointInGlueZone(i);
+                };
 
             };
         };        
@@ -1547,7 +1552,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = 1.5;
+    double lambda = .0625;
  
     for (int i = 0; i < numNodesCoarse; i++){
         

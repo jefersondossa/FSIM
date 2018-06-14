@@ -4142,7 +4142,7 @@ BOUNDARY 1 - CONNECTIVITY
 BOUNDARY 3        CONSTRAINS (0-free 1-const 2-glue)  VALUES (default = 0.)
 NUMB. OF ELEM.    Ux     Uy     Uz                    Ux     Uy     Uz  
 --------------------------------------------------------------------------------
-80                0      0      0                     0.     0.     0.
+80                2      2      0                     0.     0.     0.
 
 --------------------------------------------------------------------------------
 BOUNDARY 3 - CONNECTIVITY

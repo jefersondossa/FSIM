@@ -487,6 +487,9 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
         mirrorData << std::endl;
         nodes_[i] -> setVelocity(velocityInf);
         nodes_[i] -> setPreviousVelocity(velocityInf);
+        double u[2];
+        u[0] = 0.; u[1] = 0.;
+        nodes_[i] -> setMeshVelocity(u);
     };
 
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
@@ -1607,20 +1610,20 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
 
 
 
-            ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-                                    500);CHKERRQ(ierr);
+            // ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
+            //                         500);CHKERRQ(ierr);
             
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             
-            // ierr = KSPGetPC(ksp,&pc);
+            // // ierr = KSPGetPC(ksp,&pc);
             
-            // ierr = PCSetType(pc,PCNONE);
+            // // ierr = PCSetType(pc,PCNONE);
             
-            // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
+            // // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
 
-            ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
+            // ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
             
-            //    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            // //    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
 
         // //   //   ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
@@ -1629,13 +1632,13 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
 
  
 
-// #if defined(PETSC_HAVE_MUMPS)
-//             ierr = KSPSetType(ksp,KSPPREONLY);
-//             ierr = KSPGetPC(ksp,&pc);
-//             ierr = PCSetType(pc, PCLU);
-// #endif          
-//             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-//             ierr = KSPSetUp(ksp);
+#if defined(PETSC_HAVE_MUMPS)
+            ierr = KSPSetType(ksp,KSPPREONLY);
+            ierr = KSPGetPC(ksp,&pc);
+            ierr = PCSetType(pc, PCLU);
+#endif          
+            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            ierr = KSPSetUp(ksp);
 
 
 

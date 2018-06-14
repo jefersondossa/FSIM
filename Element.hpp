@@ -1432,15 +1432,15 @@ void Element<2>::getElemMatrix(int index){
             //SINAL DA PARCELA QUE MULTIPLICA O TSUPG ESTA
             //COM SINAL TROCADO NA FORMULAÇAO DO TEZDUYAR
             //multipy pressure direction x
-            double QSUPGx = - (dphi_dx(0,i) * phi_(j) + 
-                               (dphi_dx(0,i) * (u_ - umesh_) - 
-                                dphi_dx(1,i) * (v_ - vmesh_)) * 
-                               dphi_dx(0,j) * tSUPG_);
+            double QSUPGx = - (dphi_dx(0,i) * phi_(j)) + 
+                ((dphi_dx(0,i) * (u_ - umesh_) - 
+                  dphi_dx(1,i) * (v_ - vmesh_)) * 
+                 dphi_dx(0,j) * tSUPG_);
             //multiply pressure direction y
-            double QSUPGy = - (dphi_dx(1,i) * phi_(j) +
-                               (dphi_dx(0,i) * (u_ - umesh_) - 
-                                dphi_dx(1,i) * (v_ - vmesh_)) *   
-                               dphi_dx(1,j) * tSUPG_);
+            double QSUPGy = - (dphi_dx(1,i) * phi_(j)) +
+                ((dphi_dx(0,i) * (u_ - umesh_) - 
+                  dphi_dx(1,i) * (v_ - vmesh_)) *   
+                 dphi_dx(1,j) * tSUPG_);
             //multiply velocity direction x
             double Qx = dphi_dx(0,i) * phi_(j);
             //multiply velocity direction y
@@ -1550,7 +1550,7 @@ void Element<2>::setBoundaryConditions(){
         x = nodes_[connect_(i)] -> getCoordinates();
         // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
         // if(dist < 0.001){
-        if((x(0) > 13.499) && (x(1) > 14.99)){
+        if((x(0) > 0.99) && (x(1) > 0.99)){
             // std::cout << "AQUI  " << index_ << std::endl;
             
             for (int j = 0; j < 18; j++){
@@ -1655,7 +1655,6 @@ void Element<2>::getResidualVector(int index){
         da_dx += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(0,i);
         da_dy += nodes_[connect_(i)] -> getWeightFunction() * dphi_dx(1,i);
     };
-
     
     for (int i = 0; i < 6; i++){
 
@@ -1712,14 +1711,16 @@ void Element<2>::getResidualVector(int index){
         double dAx = 0.;
         double dAy = 0.;
         if (model){
-            // dAx = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dx;
-            // dAy = dens_ * (umesh_ * u_ + vmesh_ * v_) * da_dy;
-            // std::cout << "AQUI " << dAy << " " << vmesh_ << " " << da_dy << std::endl;
+            dAx = (umesh_ * da_dx + vmesh_ * da_dy) * u_ * phi_(i);
+            dAy = (umesh_ * da_dx + vmesh_ * da_dy) * v_ * phi_(i);
+            // dAx = (umesh_ * u_ + vmesh_ * v_) * da_dx * phi_(i);
+            // dAy = (umesh_ * u_ + vmesh_ * v_) * da_dy * phi_(i);
+            //std::cout << "AQUI " << da_dx << " " << dAx << " " << da_dy << std::endl;
         } else {
-            mx -= dens_ * u_ * (intPointWeightFunction(index) - 
-                                intPointWeightFunctionPrev(index)) / dTime_;
-            my -= dens_ * v_ * (intPointWeightFunction(index) - 
-                                intPointWeightFunctionPrev(index)) / dTime_;
+            mx -= u_ * (intPointWeightFunction(index) - 
+                        intPointWeightFunctionPrev(index)) / dTime_ * phi_(i);
+            my -= v_ * (intPointWeightFunction(index) - 
+                        intPointWeightFunctionPrev(index)) / dTime_ * phi_(i);
               // std::cout << "AQUI " << (intPointWeightFunction(index) - 
               //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
         };
@@ -2441,8 +2442,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
                 * (-lagMy_) * tSUPG_
                 - dphi_dx(0,i) * (-lagMy_) * tPSPG_ / dens_;
 
-            rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
-            rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
+            // rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
+            // rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
 
 
         };         
@@ -2621,10 +2622,10 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem, double tPSPG2_){
                     * (lagMy_) * tSUPG_
                     - dphi_dx(0,i) * (lagMy_) * tPSPG2_ / dens_;
                 
-                rhsVector(2*i  ) += (LMx * dTime_ * timeScheme_) * 
-                    weight_ * djac_;
-                rhsVector(2*i+1) += (LMy * dTime_ * timeScheme_) * 
-                    weight_ * djac_;
+                // rhsVector(2*i  ) += (LMx * dTime_ * timeScheme_) * 
+                //     weight_ * djac_;
+                // rhsVector(2*i+1) += (LMy * dTime_ * timeScheme_) * 
+                //     weight_ * djac_;
             };
 
 
