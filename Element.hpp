@@ -1711,8 +1711,12 @@ void Element<2>::getResidualVector(int index){
         double dAx = 0.;
         double dAy = 0.;
         if (model){
+            //Esse
             dAx = (umesh_ * da_dx + vmesh_ * da_dy) * u_ * phi_(i);
             dAy = (umesh_ * da_dx + vmesh_ * da_dy) * v_ * phi_(i);
+
+
+
             // dAx = (umesh_ * u_ + vmesh_ * v_) * da_dx * phi_(i);
             // dAy = (umesh_ * u_ + vmesh_ * v_) * da_dy * phi_(i);
             //std::cout << "AQUI " << da_dx << " " << dAx << " " << da_dy << std::endl;
@@ -2434,16 +2438,21 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
 
             double LMx = 0.;
             double LMy = 0.;
+            double LMp = 0.;
             
-            LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                * (-lagMx_) * tSUPG_
-                - dphi_dx(0,i) * (-lagMx_) * tPSPG_ / dens_;
-            LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                * (-lagMy_) * tSUPG_
-                - dphi_dx(0,i) * (-lagMy_) * tPSPG_ / dens_;
+            LMx = (((u_ - umesh_) * du_dx + (v_ - vmesh_) * du_dy) * lagMx_
+                   +((u_ - umesh_) * dv_dx + (v_ - vmesh_) * dv_dy) * lagMy_)
+                * tSUPG_ * phi_(i);
+                
+            LMy = LMx;// - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                // * (-lagMy_) * tSUPG_;
 
-            // rhsVector(2*i  ) += (-LMx * dTime_ * timeScheme_) * weight_ * djac_;
-            // rhsVector(2*i+1) += (-LMy * dTime_ * timeScheme_) * weight_ * djac_;
+            // LMp = (dphi_dx(0,i) * lagMx_ + dphi_dx(1,i) * lagMy_)
+            //     * tPSPG_ / dens_;
+
+            rhsVector(2*i  ) += (LMx * dTime_) * weight_ * djac_;
+            rhsVector(2*i+1) += (LMy * dTime_) * weight_ * djac_;
+            rhsVector(12+i) += (LMp * dTime_) * weight_ * djac_;
 
 
         };         
@@ -2614,18 +2623,29 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem, double tPSPG2_){
           
                 double LMx = 0.;
                 double LMy = 0.;
+                double LMp = 0.;
+             
+                LMx = (((u_ - umesh_) * du_dx + (v_ - vmesh_) * du_dy) * lagMx_
+                       +((u_ - umesh_) * dv_dx + (v_ - vmesh_) * dv_dy) * lagMy_)
+                    * tSUPG_ * phi_(i);
                 
-                LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                    * (lagMx_) * tSUPG_
-                    - dphi_dx(0,i) * (lagMx_) * tPSPG2_ / dens_;
-                LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
-                    * (lagMy_) * tSUPG_
-                    - dphi_dx(0,i) * (lagMy_) * tPSPG2_ / dens_;
+                LMy = LMx;// - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+            // * (-lagMy_) * tSUPG_;   
+                // LMx = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                //     * (lagMx_) * tSUPG_;
+                    
+                // LMy = - ((u_ - umesh_) * phi_(i) + (v_ - vmesh_) * phi_(i))
+                //     * (lagMy_) * tSUPG_;
                 
-                // rhsVector(2*i  ) += (LMx * dTime_ * timeScheme_) * 
-                //     weight_ * djac_;
-                // rhsVector(2*i+1) += (LMy * dTime_ * timeScheme_) * 
-                //     weight_ * djac_;
+                // LMp = (dphi_dx(0,i) * lagMx_ + dphi_dx(1,i) * lagMy_)
+                //     * tPSPG2_ / dens_;
+
+                rhsVector(2*i  ) += (-LMx * dTime_) * 
+                    weight_ * djac_;
+                rhsVector(2*i+1) += (-LMy * dTime_) * 
+                    weight_ * djac_;
+                rhsVector(12+i) += (-LMp * dTime_) * 
+                    weight_ * djac_;
             };
 
 

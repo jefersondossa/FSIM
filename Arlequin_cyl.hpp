@@ -1104,9 +1104,9 @@ void Arlequin<2>::setCouplingZone(){
     int nodesCZ[numNodesFine];
     int nodesCZ2[numNodesCoarse];
 
-    double lim1 = 0.1251;
-    double lim2 = 0.8749;
-    double tick = 0.0649;
+    double lim1 = 0.06251;
+    double lim2 = 0.93749;
+    double tick = 0.01249;
 
     for (int i = 0; i < numNodesFine; i++) nodesCZ[i] = 0;    
 
@@ -1552,7 +1552,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = .0625;
+    double lambda = .125;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -3268,6 +3268,12 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                             ,ADD_VALUES);
                         ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
                                             ,ADD_VALUES);
+
+                        dof_i = 3 * numNodesCoarse + 2 * numNodesFine + 
+                            connec(i);
+                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(12+i)
+                                            ,ADD_VALUES);
+
                     };      
 
                     //COAESE MESH
@@ -3457,6 +3463,11 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                 ADD_VALUES);
                             ierr = VecSetValues(b,1,&dof_i,
                                                 &RhsStab(2*i+1),
+                                                ADD_VALUES);
+
+                            dof_i = 2 * numNodesCoarse + connecC(i);
+                            ierr = VecSetValues(b,1,&dof_i,
+                                                &RhsStab(12+1),
                                                 ADD_VALUES);
                         };                                 
                     }; //Number of intersections
