@@ -18,7 +18,7 @@
 #include "BoundaryIntegrationQuadrature.hpp"
 #include "IntegrationQuadrature.hpp"
 #include "IntegrationQuadrature11.hpp"
-//#include "PartitionedQuadrature.hpp"
+//#include "PartitionedQuadrature2.hpp"
 
 /// Defines the fluid element object and all the element information
 
@@ -1341,10 +1341,9 @@ void Element<2>::getParameterSUPG() {
 template<>
 void Element<2>::getElemMatrix(int index){
     
-
-    // tSUPG_ = 0.;
+    tSUPG_ = 0.;
     // tPSPG_ = 0.;
-    // tLSIC_ = 0.;
+    tLSIC_ = 0.;
  
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -1543,25 +1542,25 @@ void Element<2>::setBoundaryConditions(){
     // };
 
 
-    typename Nodes::VecLocD x;
+    // typename Nodes::VecLocD x;
 
-    for (int i = 0; i < 6; i++){
-        //if(model){
-        x = nodes_[connect_(i)] -> getCoordinates();
-        // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
-        // if(dist < 0.001){
-        if((x(0) > 0.99) && (x(1) > 0.99)){
-            // std::cout << "AQUI  " << index_ << std::endl;
+    // for (int i = 0; i < 6; i++){
+    //     //if(model){
+    //     x = nodes_[connect_(i)] -> getCoordinates();
+    //     // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+    //     // if(dist < 0.001){
+    //     if((x(0) > 0.99) && (x(1) > 0.99)){
+    //         // std::cout << "AQUI  " << index_ << std::endl;
             
-            for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(12+i,j) = 0.;
-                jacobianNRMatrix(j,12+i) = 0.;
-            };
-            jacobianNRMatrix(12+i,12+i) = 1.;
-            rhsVector(12+i) =  0.;
-            //};
-        };
-    };
+    //         for (int j = 0; j < 18; j++){
+    //             jacobianNRMatrix(12+i,j) = 0.;
+    //             jacobianNRMatrix(j,12+i) = 0.;
+    //         };
+    //         jacobianNRMatrix(12+i,12+i) = 1.;
+    //         rhsVector(12+i) =  0.;
+    //         //};
+    //     };
+    // };
 
     return;
 };
@@ -2235,7 +2234,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    setIntegPointWeightFunction();
+    //setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 

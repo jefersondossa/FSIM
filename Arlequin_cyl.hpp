@@ -1134,10 +1134,11 @@ void Arlequin<2>::setCouplingZone(){
             // };
 
     
-            if ((x(0) < lim1) || (x(0) > lim2) || 
-                (x(1) < lim1) || (x(1) > lim2)){
-
-            }else{
+            // if ((x(0) < lim1) || (x(0) > lim2) || 
+            //     (x(1) < lim1) || (x(1) > lim2)){
+            
+            if ((x(0) < 4.) || (x(0) > 12.5) || 
+                (x(1) < 4.) || (x(1) > 8.)){
                 flag = 1;
                 break;
             };
@@ -1163,10 +1164,10 @@ void Arlequin<2>::setCouplingZone(){
                 //     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
                 // };
 
-                if ((x(0) < lim1) || (x(0) > lim2) || 
-                    (x(1) < lim1) || (x(1) > lim2)){
-
-                }else{
+                // if ((x(0) < lim1) || (x(0) > lim2) || 
+                //     (x(1) < lim1) || (x(1) > lim2)){
+                if ((x(0) < 4.) || (x(0) > 12.5) || 
+                    (x(1) < 4.) || (x(1) > 8.)){
                     elementsFine_[jel] -> setIntegPointInGlueZone(i);
                 };
 
@@ -1552,7 +1553,7 @@ void Arlequin<2>::setWeightFunction(double val){
     double wFuncValue;
 
     double epsilon = 1.e-2;
-    double lambda = .125;
+    double lambda = 1.;
  
     for (int i = 0; i < numNodesCoarse; i++){
         

@@ -2330,9 +2330,9 @@ int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
         double duNorm=100.;
         
         //Updates SUPG Parameter
-        for (int i = 0; i < numElem; i++){
-            elements_[i] -> getParameterSUPG();
-        };
+        // for (int i = 0; i < numElem; i++){
+        //     elements_[i] -> getParameterSUPG();
+        // };
              
         for (int inewton = 0; inewton < iterNumber; inewton++){
             boost::posix_time::ptime t1 =                             
