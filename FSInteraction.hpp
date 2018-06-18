@@ -245,7 +245,7 @@ void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
 
         nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
-        //  std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x(0) << " " << x(1) << std::endl;
+        //  std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x(0) << " " << x(1) << " " << xsiC(0) << " " << xsiC(1) << std::endl;
     };
 };
 
@@ -277,7 +277,7 @@ void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
 
                 nodesFluid_[connec(inode)] -> setNodalCorrespondence(elemC,xsi);
                 
-                //std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
+                // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
             };
         };        
     };
@@ -628,7 +628,7 @@ void FSInteraction<2>::transferSolidVelocity(){
                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
                     // Acc(1) = nodesFluid_[connec(k)] -> getAcceleration(1);
 
-                    // if(rank == 0) std::cout << "Accel " << Acc(0) << " " << Acc(1) << " " << std::endl; 
+                    //if(rank == 0) std::cout << "Accel " << u[0] << " " << u[1] << " " << std::endl; 
                 };
             };
         };

@@ -73,20 +73,24 @@ int main(int argc, char **args) {
     // coarseModel.dataReading("cyl_coarse_novo2.txt","mirror_coarse.txt");
   
     // Cavity  
-    fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
-    coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
+    // fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
+    // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
   
     // Helice 
     // fineModel.dataReading("cavpropfcir.txt","mirror_fine.txt"); 
     // coarseModel.dataReading("cavity1.txt","mirror_coarse.txt");
-     
-    // control.dataReading("64x64.txt","mirror_control.txt");
 
-    // char in_solid[32] = "cantilever.txt";
+    // Flutter
+    fineModel.dataReading("flutter_fine.txt","mirror_fine.txt"); 
+    coarseModel.dataReading("flutter_coarse.txt","mirror_coarse.txt");
      
-    // coupledProblem.setFluidAndSolidModels(control,in_solid);
+    control.dataReading("flutter_fluid.txt","mirror_control.txt");
+
+    char in_solid[32] = "cantilever.txt";
+     
+    coupledProblem.setFluidAndSolidModels(control,in_solid);
  
-    // coupledProblem.solveFSIProblemGaussSeidel(1000);
+    coupledProblem.solveFSIProblemGaussSeidel(1000);
 
     //control.dataReading(".txt","mirror_coarse.txt");
   
@@ -105,7 +109,7 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
-    //control.solveTransientProblem(2, 1.e-6, 2); 
+    // control.solveTransientProblem(1, 1.e-6, 2); 
    
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
@@ -119,12 +123,13 @@ int main(int argc, char **args) {
     //   2- Navier-Stokes problem (solves the steady Stokes
     //      in the first step to perform the initial guess);
     //4- 0 - Steady problem 
-    //   1 - Transient problem 
+    //   1 - Transient problem  
       
       
-    arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
+    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
        
-    arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1);
+    // arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1)
+        ;
           
      
     //Finalize main program   

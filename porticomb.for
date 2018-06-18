@@ -1515,7 +1515,7 @@ c    ****************************************************
       USE BIG_STUFF
       USE BLOCLAGATBIG
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
-C      include 'bloclagatbig.for'
+C     include 'bloclagatbig.for'
 
 c     a1=resp(j)/2. !altura de uma seção inteira (abolido)
       a1=hb(j,igf)/2.           !altura de uma fibra
@@ -1537,25 +1537,25 @@ c     eta é o xsi3
          pxsi(2)=pxsi(2)+dfi(il,1)*pl0(j,2,il) !(2) posição y (na linha referência)
       enddo
 
-              pxsi(1)=pxsi(1)-sin(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posição efetiva
-           pxsi(2)=pxsi(2)+cos(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posição efetiva
+      pxsi(1)=pxsi(1)-sin(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posição efetiva
+      pxsi(2)=pxsi(2)+cos(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posição efetiva
 
-           peta(1)=cos(alfa)*a1 !derivada em relação a xsi3
-           peta(2)=sin(alfa)*a1 !derivada em relação a xsi3
+      peta(1)=cos(alfa)*a1      !derivada em relação a xsi3
+      peta(2)=sin(alfa)*a1      !derivada em relação a xsi3
 
 c     matriz gradiente para configuração inicial
-           a0(1,1)=pxsi(1)
-           a0(1,2)=peta(1)
-           a0(2,1)=pxsi(2)
-           a0(2,2)=peta(2)
+      a0(1,1)=pxsi(1)
+      a0(1,2)=peta(1)
+      a0(2,1)=pxsi(2)
+      a0(2,2)=peta(2)
 
-           rjac0=a0(1,1)*a0(2,2)-a0(1,2)*a0(2,1) !jacobiano para integração
-           rjac1=dsqrt(pxsi(1)**2+pxsi(2)**2) !para usar no cáculo da forca distribuida
+      rjac0=a0(1,1)*a0(2,2)-a0(1,2)*a0(2,1) !jacobiano para integração
+      rjac1=dsqrt(pxsi(1)**2+pxsi(2)**2) !para usar no cáculo da forca distribuida
 
-           rjac0=rjac0*brd(j,igf) !no volume total
-           rjac2=a1*brd(j,igf)  !para usar no cálculo dos esforços solicitante (na área)
-           return
-           end
+      rjac0=rjac0*brd(j,igf)    !no volume total
+      rjac2=a1*brd(j,igf)       !para usar no cálculo dos esforços solicitante (na área)
+      return
+      end
 
 
 c    ************************************************
@@ -7543,6 +7543,9 @@ c                  Id(ii,ij) = dbMin(ii,ij)
 
             deltaXsi = 0.d0
 
+            !write(*,*)"xsi ",a0inv, a0
+
+
             deltaXsi = matmul(transpose(a0inv),deltaX)
 
             xsi_tent = xsi_tent + deltaXsi(1)
@@ -7566,8 +7569,8 @@ c                  Id(ii,ij) = dbMin(ii,ij)
             error = deltaXsi(1)
 
          end do
-         
-         if ((xsi_tent.ge.-1.0000001) .and. (xsi_tent.le.1.0000001))then
+                     
+         if ((xsi_tent.ge.-1.001) .and. (xsi_tent.le.1.001))then
             xsi = xsi_tent
             !write(*,*)"xsi ", xsi, deltaXsi(1), j, x_ 
             ielem = j
