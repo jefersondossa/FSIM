@@ -17,7 +17,7 @@
 #include <boost/timer.hpp> 
 #include <boost/thread.hpp>
 
-#include "Arlequin.hpp"
+#include "Arlequin_cyl.hpp"
 
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
@@ -122,6 +122,12 @@ public:
     /// with Aitken relaxation fluid-structure interaction problem 
     /// @param int number of time steps
     void solveFSIProblemGaussSeidel(int numTimeSteps);
+
+    /// Solves the partitioned strong coupled fixed-point block Gauss-Seidel
+    /// with Aitken relaxation fluid-structure interaction problem with the
+    /// Arlequin method 
+    /// @param int number of time steps
+    void solveFSIProblemGaussSeidelArlequin(int numTimeSteps);
 
 
 };
@@ -1056,5 +1062,243 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
     };//Time Steps
 };
 
+
+
+//------------------------------------------------------------------------------
+//----------------SOLVES THE FLUID-STRUCTURE INTERACTION PROBLEM----------------
+//------------------------------------------------------------------------------
+template<>
+void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
+
+    std::string om = "omega.txt";
+    std::ofstream saidaOmega(om.c_str());
+
+
+    double sizeSolid = 3 * numNodesSolid;
+
+    ublas::vector<double> X_k(sizeSolid), Y_k(sizeSolid), deltaXi(sizeSolid),
+        deltaXii(sizeSolid);
+    
+
+    double omega = 1.;
+    double mu = 0.;
+
+    X_k.clear();Y_k.clear();deltaXi.clear();deltaXii.clear();
+
+    for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
+
+        boost::posix_time::ptime t1 =                                 
+            boost::posix_time::microsec_clock::local_time();
+
+        if (rank == 0) {
+            std::cout << std::endl;
+            std::cout << "****************************************"
+                      << "****************************************"
+                      << std::endl;
+            std::cout << 
+                "                               TIME STEP = "
+                      << iTimeStep << std::endl;
+        };
+        
+        //SOMENTE PARA EXEMPLO DA CAVIDADE - INICIO
+        for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
+            
+            Boundary::BoundConnect connectB;
+            connectB = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+            int no1 = connectB(0);
+            int no2 = connectB(1);
+            int no3 = connectB(2);
+            
+            if (boundaryFluid_[ibound] -> getConstrain(0) == 1){
+                
+                double value = boundaryFluid_[ibound] -> getConstrainValue(0) * 
+                    (1. - cos(0.4 * pi * dTime * iTimeStep));
+                nodesFluid_[no1] -> setConstrains(0,boundaryFluid_[ibound] -> 
+                                                  getConstrain(0),value);
+                nodesFluid_[no2] -> setConstrains(0,boundaryFluid_[ibound] -> 
+                                                  getConstrain(0),value);
+                nodesFluid_[no3] -> setConstrains(0,boundaryFluid_[ibound] ->
+                                                  getConstrain(0),value);
+            };
+        };
+        //SOMENTE PARA EXEMPLO DA CAVIDADE - FIM
+
+        for (int i = 0; i < numNodesFluid; i++){
+            double accel[2], u[2], uprev[2];
+            //Compute acceleration
+            u[0] = nodesFluid_[i] -> getVelocity(0);
+            u[1] = nodesFluid_[i] -> getVelocity(1);
+            
+            uprev[0] = nodesFluid_[i] -> getPreviousVelocity(0);
+            uprev[1] = nodesFluid_[i] -> getPreviousVelocity(1);
+            
+            accel[0] = (u[0] - uprev[0]) / dTime;
+            accel[1] = (u[1] - uprev[1]) / dTime;
+            
+            nodesFluid_[i] -> setAcceleration(accel);
+            
+            //Updates velocity
+            nodesFluid_[i] -> setPreviousVelocity(u);
+        };
+
+        if (rank == 0) updateqsrs_();
+
+        for (int i = 0; i < numNodesFluid; i++){
+            typename Nodes::VecLocD x;
+            
+            x = nodesFluid_[i] -> getCoordinates();
+            nodesFluid_[i] -> setPreviousCoordinates(0,x(0));
+            nodesFluid_[i] -> setPreviousCoordinates(1,x(1));
+        };
+
+        for (int i = 0; i < numNodesSolid; i++){
+            int dof = 3*i+1;
+            if (rank == 0) getposition_(&dof,&Y_k(3*i  ));
+            dof++;
+            if (rank == 0) getposition_(&dof,&Y_k(3*i+1));
+            MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+        };
+      
+        saidaOmega << std::endl << "Passo de tempo " << iTimeStep << std::endl;
+
+        //COMPUTING PREDICTOR
+        for (int i = 0; i < numNodesSolid; i++){
+            if (rank == 0) {
+                double v_ = 0.;
+                double v_prev = 0.;
+                int dof = 3*i+1;
+                getposition_(&dof,&Y_k(3*i  ));
+                getvelocity_(&dof,&v_);
+                getpreviousvelocity_(&dof,&v_prev);
+
+                Y_k(3*i  ) += dTime * (1.5 * v_ - 0.5 * v_prev);
+
+                setposition_(&dof,&Y_k(3*i  ));
+                
+                dof++;
+
+                getposition_(&dof,&Y_k(3*i+1));
+                getvelocity_(&dof,&v_);
+                getpreviousvelocity_(&dof,&v_prev);
+
+                Y_k(3*i+1) += dTime * (1.5 * v_ - 0.5 * v_prev);
+
+                setposition_(&dof,&Y_k(3*i+1));
+            };
+            MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+        };
+           
+        //X_k = Y_k;
+
+        double residual = 1.e10;
+        int iterations = 0;
+
+
+        //Gauss-Seidel iterations
+        while ((residual > 1.e-4) && (iterations < 30)){
+            if(rank == 0) {std::cout << 
+                    "........................... GAUSS-SEIDEL ITERATION "
+                                     << iterations + 1 << 
+                    " ..........................." << std:: endl;};
+
+            X_k = Y_k;
+            
+            updateFluidMesh();
+             
+            transferSolidVelocity();
+            
+            fluidModel.solveFSIFluid(2, 1.e-5, 2);
+            
+            if (rank == 0) transferFluidLoad();
+            
+            if (rank == 0) solveframestructure_(&iTimeStep);
+            
+            
+            for (int i = 0; i < numNodesSolid; i++){
+                int dof = 3*i+1;
+                if (rank == 0) getposition_(&dof,&Y_k(3*i  ));
+                dof++;
+                if (rank == 0) getposition_(&dof,&Y_k(3*i+1));
+                MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            };
+            
+            deltaXii = X_k - Y_k;
+            
+            //Aitken Relaxation
+            if (iterations > 0){
+                mu = mu + (mu - 1.0) * inner_prod(deltaXi-deltaXii,deltaXii) / 
+                    norm_2(deltaXi-deltaXii);
+              
+            };        
+            
+            deltaXi = deltaXii;
+            residual = norm_2(deltaXii);
+
+            omega = 1. - mu;
+
+            Y_k = (1. - omega) * X_k + omega * Y_k;
+            
+
+            for (int i = 0; i < numNodesSolid; i++){
+                if (rank == 0) {
+                    int dof = 3*i+1;
+                    setposition_(&dof,&Y_k(3*i  ));
+                    dof++;
+                    setposition_(&dof,&Y_k(3*i+1));
+                };
+                MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            };
+       
+            saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << std::endl;
+
+            iterations++;
+
+            if(rank == 0) std::cout << "GAUSS-SEIDEL OMEGA = " 
+                                    << omega <<  std::endl;
+
+            if(rank == 0) std::cout << "GAUSS-SEIDEL RESIDUAL = " 
+                                    << std::scientific << residual << std::endl;
+
+        };
+        
+        if (rank == 0) updatesolid_(&iTimeStep);
+
+        //Updates SUPG Parameter
+        // for (int i = 0; i < numElemFluid; i++){
+        //     elementsFluid_[i] -> getParameterSUPG();
+        // };
+                
+        boost::posix_time::ptime t2 =                                   \
+            boost::posix_time::microsec_clock::local_time();
+
+        if (rank == 0) {
+            boost::posix_time::time_duration diff = t2 - t1;
+            std::cout << "****************************************"
+                      << "****************************************"
+                      << std::endl;
+            std::cout << "********************** PROCESSING TIME = " << 
+                std::fixed << diff.total_milliseconds()/1000.
+                      << " seconds **********************" 
+                       << std::endl;
+            std::cout << "****************************************"
+                      << "****************************************"
+                      << std::endl;
+        };
+
+        // Printing Results
+        if (rank == 0) {
+            if(iTimeStep % 1 == 0){
+                fluidModel.printVelocity(iTimeStep);
+                printstructure_();
+            };
+        };
+
+
+    };//Time Steps
+};
 
 #endif
