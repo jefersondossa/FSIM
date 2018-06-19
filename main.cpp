@@ -88,9 +88,11 @@ int main(int argc, char **args) {
 
     char in_solid[32] = "cantilever.txt";
      
-    coupledProblem.setFluidAndSolidModels(control,in_solid);
+
+    arlequinProblem.setFluidModels(coarseModel, fineModel);
+    coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
  
-    coupledProblem.solveFSIProblemGaussSeidel(1000);
+    coupledProblem.solveFSIProblemGaussSeidelArlequin(1000);
 
     //control.dataReading(".txt","mirror_coarse.txt");
   
@@ -128,8 +130,7 @@ int main(int argc, char **args) {
       
     // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
        
-    // arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1)
-        ;
+     arlequinProblem.solveArlequinProblem(2, 1.e-7, 2, 1);
           
      
     //Finalize main program   
