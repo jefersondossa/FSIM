@@ -245,7 +245,7 @@ c     **************************************************************
 c     **********************************************************
 c     Abertura dos arquivos de dados e saida
 c     **************************************************************
-      write(*,*) 'nome do arquivo de entrada'
+!      write(*,*) 'nome do arquivo de entrada'
 c      READ(*,*)Entrada
 c     Entrada='6pav.txt'
       open(unit=3,file=entrada2,status='unknown')
@@ -267,7 +267,7 @@ c$$$      open(unit=99,file='rupturas.txt',status='unknown')
 
 c     Capturando instante de inicio do processamento
 c     CALL GETTIM (IHRI, IMINI, ISECI, I100THI)
-      write(*,*) 'inicio',ihri,imini,iseci,i100thi,entrada2
+      !write(*,*) 'inicio',ihri,imini,iseci,i100thi,entrada2
 
       pi=2.*datan2(1.d00,0.d00) !definido a grandeza trigonométrica pi
 
