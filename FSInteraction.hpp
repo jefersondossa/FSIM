@@ -1746,14 +1746,14 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
              
             transferSolidVelocityArlequin();
 
-            arlequinModel.solveFSIArlequin(2, 1.e-5, 2);
+            arlequinModel.solveFSIArlequin(4, 1.e-3, 2);
             
             if (rank == 0) transferArlequinLoad();
             
 
-
+            //  if (iTimeStep > 3){
             if (rank == 0) solveframestructure_(&iTimeStep);
-            
+            // };
             
             for (int i = 0; i < numNodesSolid; i++){
                 int dof = 3*i+1;

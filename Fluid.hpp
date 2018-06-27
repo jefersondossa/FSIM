@@ -602,13 +602,16 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
         int no2 = connectB(1);
         int no3 = connectB(2);
 
-        nodes_[no1] -> setConstrainsLaplace(0,1,0);
-        nodes_[no2] -> setConstrainsLaplace(0,1,0);
-        nodes_[no3] -> setConstrainsLaplace(0,1,0);
-
-        nodes_[no1] -> setConstrainsLaplace(1,1,0);
-        nodes_[no2] -> setConstrainsLaplace(1,1,0);
-        nodes_[no3] -> setConstrainsLaplace(1,1,0);
+        if ((boundary_[ibound] -> getConstrain(0) != 2)){
+            nodes_[no1] -> setConstrainsLaplace(0,1,0);
+            nodes_[no2] -> setConstrainsLaplace(0,1,0);
+            nodes_[no3] -> setConstrainsLaplace(0,1,0);
+        };
+        if ((boundary_[ibound] -> getConstrain(1) != 2)){
+            nodes_[no1] -> setConstrainsLaplace(1,1,0);
+            nodes_[no2] -> setConstrainsLaplace(1,1,0);
+            nodes_[no3] -> setConstrainsLaplace(1,1,0);
+        };
         
         if ((boundary_[ibound] -> getConstrain(0) == 1) || (boundary_[ibound] -> getConstrain(0) == 3)){
 
@@ -1284,6 +1287,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
     PC                pc;
     VecScatter        ctx;
     PetscScalar       val;
+    IS             rowperm       = NULL,colperm = NULL;
     //    MatNullSpace      nullsp;
    
     int rank;
@@ -1599,7 +1603,16 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
             ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
             
-            // MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+
+            // Mat Aperm;
+            // MatGetOrdering(A,MATORDERINGNATURAL,&rowperm,&colperm);
+            // MatPermute(A,rowperm,colperm,&Aperm);
+            // VecPermute(b,colperm,PETSC_FALSE);
+            // MatDestroy(&A);
+            // A    = Aperm;    
+
+            //MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+            MatView(A,PETSC_VIEWER_DRAW_WORLD);CHKERRQ(ierr);
             // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
             //Create KSP context to solve the linear system
@@ -1630,7 +1643,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
         // // // ierr = MatSetNullSpace(A, nullsp);
         // // // ierr = MatNullSpaceDestroy(&nullsp);
 
- 
+   
 
 #if defined(PETSC_HAVE_MUMPS)
             ierr = KSPSetType(ksp,KSPPREONLY);
@@ -1723,6 +1736,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             
         };//Newton-Raphson
 
+        std::cin.get();
 
         double dragCoefficient = 0.;
         double liftCoefficient = 0.;
