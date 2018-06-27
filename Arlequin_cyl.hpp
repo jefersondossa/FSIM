@@ -1957,6 +1957,19 @@ void Arlequin<2>::printVelocity(int step) {
     };
     output_vf << "      </DataArray> " << std::endl;
 
+
+    output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodesFine; i++){
+        typename Nodes::VecLocD x, xi;
+        x = nodesFine_[i] -> getCoordinates();
+        xi = nodesFine_[i] -> getInitialCoordinates();
+        output_vf << x(0) - xi(0) << " " << x(1) - xi(1) << " " << 0. 
+                  << std::endl;
+    };
+    output_vf << "      </DataArray> " << std::endl;
+
     output_vf << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
              << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
     for (int i=0; i<numNodesFine; i++){
@@ -5905,7 +5918,7 @@ template<>
 int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
                                   int problem_type){
 
-    Mat               A;
+    Mat               A,F;
     Vec               b, u, All;
     PetscErrorCode    ierr;
     PetscInt          Istart, Iend, Ii, Ione, iterations;
@@ -6590,18 +6603,36 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         
         
         
-        
 #if defined(PETSC_HAVE_MUMPS)
         ierr = KSPSetType(ksp,KSPPREONLY);
         ierr = KSPGetPC(ksp,&pc);
         ierr = PCSetType(pc, PCLU);
+
+       
+        ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+        PCFactorSetUpMatSolverType(pc);
+        PCFactorGetMatrix(pc,&F);
+
+        PetscInt ival,icntl;
+        icntl = 14; ival = 60;
+        MatMumpsSetIcntl(F,icntl,ival);
+        
 #endif
+        
         
         ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
         ierr = KSPSetUp(ksp);
         
         
+#if defined(PETSC_HAVE_MUMPS)
+        PetscInt  info1,info2,icntl14;
 
+        MatMumpsGetInfo(F,1,&info1);
+        MatMumpsGetInfo(F,2,&info2);
+        MatMumpsGetIcntl(F,14,&icntl14);
+        if(rank == 0) std::cout << " INFO(1) = " << info1
+                                << " " << info2 << " " << icntl14 << std::endl;
+#endif
 
 
         // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
@@ -6762,6 +6793,7 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
             v += v_coarse(j) * phi_(j);
             p += p_coarse(j) * phi_(j);
         };
+
         
         double wFunc = nodesFine_[nodesGlueZoneFine_[i]] -> getWeightFunction();
         
@@ -6772,6 +6804,9 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         double p_int = nodesFine_[nodesGlueZoneFine_[i]] -> 
             getPressure() * wFunc + p * (1. - wFunc);
         
+        //std::cout << "asdasd " << elCoarse << " " << p_int << " " << nodesFine_[nodesGlueZoneFine_[i]] -> getPressure() << " " << wFunc <<  std::endl;
+
+
         nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
         nodesFine_[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
         nodesFine_[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);

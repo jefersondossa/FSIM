@@ -81,18 +81,18 @@ int main(int argc, char **args) {
     // coarseModel.dataReading("cavity1.txt","mirror_coarse.txt");
 
     // Flutter
-    fineModel.dataReading("flutter_fine.txt","mirror_fine.txt"); 
+    fineModel.dataReading("flutter_fine2.txt","mirror_fine.txt"); 
     coarseModel.dataReading("flutter_coarse.txt","mirror_coarse.txt");
      
-    control.dataReading("flutter_fluid.txt","mirror_control.txt");
+    control.dataReading("16x16.txt","mirror_control.txt");
 
     char in_solid[32] = "cantilever.txt";
      
 
-    arlequinProblem.setFluidModels(coarseModel, fineModel);
-    coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
+    // arlequinProblem.setFluidModels(coarseModel, fineModel);
+    // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
  
-    coupledProblem.solveFSIProblemGaussSeidelArlequin(1000);
+    // coupledProblem.solveFSIProblemGaussSeidelArlequin(1000);
 
     //control.dataReading(".txt","mirror_coarse.txt");
   
@@ -111,7 +111,7 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
-    // control.solveTransientProblem(1, 1.e-6, 2); 
+    control.solveTransientProblem(1, 1.e-6, 2); 
    
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  

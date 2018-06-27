@@ -82,7 +82,7 @@ nelcar(num. ele. carr. qx,qy),nelnco(num. ele. carr. qn,qt),num. ele. temp.
 6,1,1
 leitura dos parametros de Newmark e passo de tempo
 beta, gama, dt !0.25 0.5, dt normal ! 0.5 1.5 dt (impacto)
-.25,.5,.1
+.25,.5,.001
 restricao de graus de liberdade
 no,ko1,ko2,ko3
 1,1,1,1

@@ -46,7 +46,7 @@ run7:
 	@$ mpirun -np 7 ./f
 
 run8:
-	@$ mpirun -np 8 ./f
+	@$ mpirun -np 8 ./f -pc_factor_nonzeros_along_diagonal 1.e-8
 
 run16:
 	@$ mpirun -np 16 ./f -pc_type jacobi -ksp_type gmres -ksp_monitor_singular_value -ksp_gmres_restart 1000
