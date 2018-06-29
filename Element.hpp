@@ -2234,7 +2234,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    //setIntegPointWeightFunction();
+    setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
@@ -2292,6 +2292,22 @@ void Element<2>::getSteadyLaplace(){
     jacobianNRMatrix.clear();
 
     setLocalNodes();   
+
+
+    ublas::bounded_matrix<double, 3, 3 > hooke;
+
+    hooke.clear();
+    
+    // For EPT
+    double elastic_ = 10000.;
+    double poisson_ = 0.45;
+    double k = elastic_ / (1. - poisson_ * poisson_);
+    hooke(0,0) = k;
+    hooke(0,1) = k * poisson_;
+    hooke(1,0) = k * poisson_;
+    hooke(1,1) = k;
+    hooke(2,2) = k * (1. - poisson_) * 0.5;
+
     
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
         it != nQuad.end(); it++){
@@ -2312,7 +2328,29 @@ void Element<2>::getSteadyLaplace(){
         //Computes spatial derivatives
         getSpatialDerivatives(xsi);
 
-        getElemLaplMatrix();
+
+
+
+        ublas::bounded_matrix<double, 3,18> bMatrix,aux;
+        bMatrix.clear(); aux.clear();
+
+        for (int i = 0; i < 6; i++){                
+            bMatrix(0,2*i  ) = dphi_dx(0,i);
+            bMatrix(2,2*i  ) = dphi_dx(1,i);
+
+            bMatrix(1,2*i+1) = dphi_dx(1,i);
+            bMatrix(2,2*i+1) = dphi_dx(0,i);
+        };
+        
+
+        aux = prod(hooke,bMatrix);        
+
+        laplMatrix += prod(trans(bMatrix),aux) * djac_ * weight_;
+
+
+
+
+        // getElemLaplMatrix();
 
         index++;        
     };  

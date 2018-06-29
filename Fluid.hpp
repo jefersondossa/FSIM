@@ -826,7 +826,7 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                             2*numNodes, 2*numNodes,
-                            30,NULL,30,NULL,&A); CHKERRQ(ierr);
+                            50,NULL,50,NULL,&A); CHKERRQ(ierr);
         
         ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
         
@@ -1605,14 +1605,14 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             
 
             // Mat Aperm;
-            // MatGetOrdering(A,MATORDERINGNATURAL,&rowperm,&colperm);
+            // MatGetOrdering(A,MATORDERINGRCM,&rowperm,&colperm);
             // MatPermute(A,rowperm,colperm,&Aperm);
             // VecPermute(b,colperm,PETSC_FALSE);
             // MatDestroy(&A);
             // A    = Aperm;    
 
             //MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            MatView(A,PETSC_VIEWER_DRAW_WORLD);CHKERRQ(ierr);
+            //MatView(A,PETSC_VIEWER_DRAW_WORLD);CHKERRQ(ierr);
             // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
             //Create KSP context to solve the linear system
@@ -1658,6 +1658,8 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
 
             ierr = KSPGetTotalIterations(ksp, &iterations);            
+
+            // VecPermute(u,rowperm,PETSC_TRUE);
 
             //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
             
@@ -1736,7 +1738,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             
         };//Newton-Raphson
 
-        std::cin.get();
+        // std::cin.get();
 
         double dragCoefficient = 0.;
         double liftCoefficient = 0.;
