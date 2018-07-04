@@ -1542,25 +1542,25 @@ void Element<2>::setBoundaryConditions(){
     // };
 
 
-    typename Nodes::VecLocD x;
+    // typename Nodes::VecLocD x;
 
-    for (int i = 0; i < 6; i++){
-        //if(model){
-        x = nodes_[connect_(i)] -> getCoordinates();
-        // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
-        // if(dist < 0.001){
-        if((x(0) > 0.99) && (x(1) > 0.99)){
-            // std::cout << "AQUI  " << index_ << std::endl;
+    // for (int i = 0; i < 6; i++){
+    //     //if(model){
+    //     x = nodes_[connect_(i)] -> getCoordinates();
+    //     // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+    //     // if(dist < 0.001){
+    //     if((x(0) > 0.99) && (x(1) > 0.99)){
+    //         // std::cout << "AQUI  " << index_ << std::endl;
             
-            for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(12+i,j) = 0.;
-                jacobianNRMatrix(j,12+i) = 0.;
-            };
-            jacobianNRMatrix(12+i,12+i) = 1.;
-            rhsVector(12+i) =  0.;
-            //};
-        };
-    };
+    //         for (int j = 0; j < 18; j++){
+    //             jacobianNRMatrix(12+i,j) = 0.;
+    //             jacobianNRMatrix(j,12+i) = 0.;
+    //         };
+    //         jacobianNRMatrix(12+i,12+i) = 1.;
+    //         rhsVector(12+i) =  0.;
+    //         //};
+    //     };
+    // };
 
     return;
 };
@@ -2294,19 +2294,19 @@ void Element<2>::getSteadyLaplace(){
     setLocalNodes();   
 
 
-    ublas::bounded_matrix<double, 3, 3 > hooke;
+    // ublas::bounded_matrix<double, 3, 3 > hooke;
 
-    hooke.clear();
+    // hooke.clear();
     
-    // For EPT
-    double elastic_ = 10000.;
-    double poisson_ = 0.45;
-    double k = elastic_ / (1. - poisson_ * poisson_);
-    hooke(0,0) = k;
-    hooke(0,1) = k * poisson_;
-    hooke(1,0) = k * poisson_;
-    hooke(1,1) = k;
-    hooke(2,2) = k * (1. - poisson_) * 0.5;
+    // // For EPT
+    // double elastic_ = 10000.;
+    // double poisson_ = 0.45;
+    // double k = elastic_ / (1. - poisson_ * poisson_);
+    // hooke(0,0) = k;
+    // hooke(0,1) = k * poisson_;
+    // hooke(1,0) = k * poisson_;
+    // hooke(1,1) = k;
+    // hooke(2,2) = k * (1. - poisson_) * 0.5;
 
     
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
@@ -2331,26 +2331,26 @@ void Element<2>::getSteadyLaplace(){
 
 
 
-        ublas::bounded_matrix<double, 3,18> bMatrix,aux;
-        bMatrix.clear(); aux.clear();
+        // ublas::bounded_matrix<double, 3,18> bMatrix,aux;
+        // bMatrix.clear(); aux.clear();
 
-        for (int i = 0; i < 6; i++){                
-            bMatrix(0,2*i  ) = dphi_dx(0,i);
-            bMatrix(2,2*i  ) = dphi_dx(1,i);
+        // for (int i = 0; i < 6; i++){                
+        //     bMatrix(0,2*i  ) = dphi_dx(0,i);
+        //     bMatrix(2,2*i  ) = dphi_dx(1,i);
 
-            bMatrix(1,2*i+1) = dphi_dx(1,i);
-            bMatrix(2,2*i+1) = dphi_dx(0,i);
-        };
+        //     bMatrix(1,2*i+1) = dphi_dx(1,i);
+        //     bMatrix(2,2*i+1) = dphi_dx(0,i);
+        // };
         
 
-        aux = prod(hooke,bMatrix);        
+        // aux = prod(hooke,bMatrix);        
 
-        laplMatrix += prod(trans(bMatrix),aux) * djac_ * weight_;
-
-
+        // laplMatrix += prod(trans(bMatrix),aux) * djac_ * weight_;
 
 
-        // getElemLaplMatrix();
+
+
+        getElemLaplMatrix();
 
         index++;        
     };  

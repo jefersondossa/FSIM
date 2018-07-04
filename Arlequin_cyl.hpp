@@ -1136,23 +1136,23 @@ void Arlequin<2>::setCouplingZone(){
 
         for (int ino = 0; ino < 6; ino++){
             x = nodesFine_[connec(ino)] -> getCoordinates();
-            double dist = sqrt((x(0) - 0.) * (x(0) - 0.) + 
-                               (x(1) - 0.) * (x(1) - 0.));
+            double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
+                               (x(1) - 4.) * (x(1) - 4.));
 
-            // if (dist >= 4.01){
-            //     flag = 1;
-            //     break;
-            // };
+            if (dist >= 1.01){
+                flag = 1;
+                break;
+            };
 
     
             // if ((x(0) < lim1) || (x(0) > lim2) || 
             //     (x(1) < lim1) || (x(1) > lim2)){
             
-            if ((x(0) < 4.) || (x(0) > 12.5) || 
-                (x(1) < 4.) || (x(1) > 8.)){
-                flag = 1;
-                break;
-            };
+            // if ((x(0) < 4.) || (x(0) > 12.5) || 
+            //     (x(1) < 4.) || (x(1) > 8.)){
+            //     flag = 1;
+            //     break;
+            // };
 
         };
 
@@ -1168,19 +1168,19 @@ void Arlequin<2>::setCouplingZone(){
                 
                 x = elementsFine_[jel] -> getIntegPointCoordinatesValue(i);  
 
-                double dist = sqrt((x(0) - 0.) * (x(0) - 0.) + 
-                                   (x(1) - 0.) * (x(1) - 0.));
+                double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
+                                   (x(1) - 4.) * (x(1) - 4.));
                 
-                // if (dist >= 4.01){
-                //     elementsFine_[jel] -> setIntegPointInGlueZone(i);    
-                // };
+                if (dist >= 1.01){
+                    elementsFine_[jel] -> setIntegPointInGlueZone(i);    
+                };
 
                 // if ((x(0) < lim1) || (x(0) > lim2) || 
                 //     (x(1) < lim1) || (x(1) > lim2)){
-                if ((x(0) < 4.) || (x(0) > 12.5) || 
-                    (x(1) < 4.) || (x(1) > 8.)){
-                    elementsFine_[jel] -> setIntegPointInGlueZone(i);
-                };
+                // if ((x(0) < 4.) || (x(0) > 12.5) || 
+                //     (x(1) < 4.) || (x(1) > 8.)){
+                //     elementsFine_[jel] -> setIntegPointInGlueZone(i);
+                // };
 
             };
         };        
@@ -2770,7 +2770,7 @@ template<>
 int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                       int problem_type, int time_dependency){
 
-    Mat               A;
+    Mat               A, F;
     Vec               b, u, All;
     PetscErrorCode    ierr;
     PetscInt          Istart, Iend, Ii, Ione, iterations;
@@ -2859,7 +2859,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             
             // Preallocates the matrix
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 120, NULL, 600, NULL, &A); 
+                                sysSize, sysSize, 120, NULL, 700, NULL, &A); 
             CHKERRQ(ierr);
             
             // Divides the matrix between the processes
@@ -3545,23 +3545,45 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
             
             // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
+            // ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
             
             // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 
 
 
-            
+      
 #if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
+        ierr = KSPSetType(ksp,KSPPREONLY);
+        ierr = KSPGetPC(ksp,&pc);
+        ierr = PCSetType(pc, PCLU);
+
+       
+        ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+        PCFactorSetUpMatSolverType(pc);
+        PCFactorGetMatrix(pc,&F);
+
+        PetscInt ival,icntl;
+        icntl = 14; ival = 60;
+        MatMumpsSetIcntl(F,icntl,ival);
+        
 #endif
-            
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            ierr = KSPSetUp(ksp);
-            
+        
+        
+        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+        ierr = KSPSetUp(ksp);
+        
+        
+#if defined(PETSC_HAVE_MUMPS)
+        PetscInt  info1,info2,icntl14;
+
+        MatMumpsGetInfo(F,1,&info1);
+        MatMumpsGetInfo(F,2,&info2);
+        MatMumpsGetIcntl(F,14,&icntl14);
+        if(rank == 0) std::cout << " INFO(1) = " << info1
+                                << " " << info2 << " " << icntl14 << std::endl;
+#endif
+
 
 
 
@@ -3753,7 +3775,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         };
 
   
-        
         double dragCoefficient = 0.;
         double liftCoefficient = 0.;
         double pressureDragCoefficient = 0.;
@@ -3761,17 +3782,11 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         double frictionDragCoefficient = 0.;
         double frictionLiftCoefficient = 0.;
 
-        if (rank == 0) {
-            dragLift << "Time   Pressure Drag   Pressure Lift " 
-                     << "Friction Drag  Friction Lift Drag    Lift " 
-                     << std::endl;
-        };
-
         for (int jel = 0; jel < numBoundElemFine; jel++){   
 
             double rhoInf = 1.0;
             double velocityInf[2];
-            velocityInf[0] = 1.;
+            velocityInf[0] = -1.;
             velocityInf[1] = 0.;
 
             double dForce = 0.;
@@ -3811,13 +3826,23 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         };
 
         if (rank == 0) {
+            const int timeWidth = 11;
+            const int numWidth = 11;
+            dragLift << std::setprecision(3) << std::scientific;
+            dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
+            dragLift << std::setw(numWidth) << pressureDragCoefficient;
+            dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+            dragLift << std::setw(numWidth) << frictionDragCoefficient;
+            dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+            dragLift << std::setw(numWidth) << dragCoefficient;
+            dragLift << std::setw(numWidth) << liftCoefficient;
+            dragLift << std::endl;
 
-            dragLift << iTimeStep * dTime << std::fixed << " " 
-                     <<  std::scientific << dragCoefficient 
-                     << " " << liftCoefficient << std::endl;
+
             //Printing results
             printVelocity(iTimeStep);
-        };
+        };        
+ 
 
     };
         
