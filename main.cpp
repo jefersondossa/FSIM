@@ -18,7 +18,7 @@
 ///--positions, three components of unconstrained vector and strain rate. The---
 ///-fluid-shell coupling is performed by a partitioned loosely coupled scheme.--
 ///-----------------------------------------------------------------------------
- 
+  
 //------------------------------------------------------------------------------
 //---------------------------------Developed by---------------------------------
 //-------Jeferson Wilian Dossa Fernandes and Rodolfo Andre Kuche Sanches--------
@@ -69,8 +69,10 @@ int main(int argc, char **args) {
     // Cylinder
     // fineModel.dataReading("cyl_fine.txt","mirror_fine.txt");  
     // coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
-    fineModel.dataReading("cyl_fine_str3.txt","mirror_fine.txt");  
-    coarseModel.dataReading("cyl_coarse_str.txt","mirror_coarse.txt");
+    // fineModel.dataReading("cyl_fine_str4.txt","mirror_fine.txt");  
+    // coarseModel.dataReading("cyl_coarse_str.txt","mirror_coarse.txt");
+    fineModel.dataReading("various_fine.txt","mirror_fine.txt");  
+    coarseModel.dataReading("various_coarse.txt","mirror_coarse.txt");
   
     // Cavity  
     // fineModel.dataReading("fine2.txt","mirror_fine.txt"); 
@@ -127,10 +129,10 @@ int main(int argc, char **args) {
     //4- 0 - Steady problem 
     //   1 - Transient problem  
       
-      
+       
      arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
        
-     arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1);
+     arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
           
      
     //Finalize main program   
