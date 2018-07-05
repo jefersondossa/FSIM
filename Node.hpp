@@ -161,7 +161,7 @@ public:
     /// Sets nodal normal vector
     /// @param VecLocD nodal normal vector
     void setInnerNormal(VecLocD& n){
-        nNodal_ += n;};
+        nNodal_ = n;};
 
     /// Clears nodal normal vector
     /// @param VecLocD nodal normal vector

@@ -797,7 +797,7 @@ void Element<2>::getJacobianMatrix(ublas::bounded_vector<double,2>& xsi) {
 
     //Computing the jacobian determinant
     djac_ = dx_dxsi1 * dy_dxsi2 - dx_dxsi2 * dy_dxsi1;
-    djac_ = fabs(djac_);
+    //djac_ = fabs(djac_);
 
     //Computing Jacobian inverse
     ainv_(0,0) =  dy_dxsi2 / djac_;
@@ -2260,7 +2260,7 @@ void Element<2>::getTransientNavierStokes(){
         getVelAndDerivatives();
 
         //Compute Stabilization Parameters
-        getParameterSUPG();
+        //getParameterSUPG();
 
         //Computes the element diffusion/viscosity matrix
         getElemMatrix(index);
