@@ -597,6 +597,7 @@ void Arlequin<2>::setSignaledDistance(){
     };
 
     //approximate normal calculation
+
     for (int i = 0; i < numBoundElemFine; i++){
         if (boundaryFine_[i]->getConstrain(0) == 2){
 
@@ -655,8 +656,10 @@ void Arlequin<2>::setSignaledDistance(){
             
         };
     };
-    
-     for (int ino = 0; ino < numNodesFine; ino++){
+
+
+    //Fine mesh nodes
+    for (int ino = 0; ino < numNodesFine; ino++){
         x = nodesFine_[ino] -> getCoordinates();
         dist=10000000000000000000000000000.;
         
@@ -791,52 +794,13 @@ void Arlequin<2>::setSignaledDistance(){
         nodesFine_[ino] -> setDistFunction(dist);
      };
 
-
-
-
-    // for (int inode = 0 ; inode < numNodesFine; inode++){ 
-    //     nodesFine_[inode] -> clearInnerNormal();
-    // };
-
-    
-    //approximate normal calculation
-    // for (int i = 0; i < numBoundElemFine; i++){
-    //     if (boundaryFine_[i]->getConstrain(0)==2){
-    //         bconnec = boundaryFine_[i]->getBoundaryConnectivity();
-    //         //first segment
-    //         int no1 = bconnec(0);
-    //         int no2 = bconnec(2);
-    //         x1 = nodesFine_[no1] -> getCoordinates();
-    //         x2 = nodesFine_[no2] -> getCoordinates();
-
-    //         double sLength = sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x1(0)-x2(0))*(x1(0)-x2(0)));
-    //         n(0)=(x2(1)-x1(1))/sLength;
-    //         n(1)=(x1(0)-x2(0))/sLength;
-    //         nodesFine_[no1] -> setInnerNormal(n);
-    //         nodesFine_[no2] -> setInnerNormal(n);
-    //         //second segment
-    //         no1 = bconnec(2);
-    //         no2 = bconnec(1);
-    //         x1 = nodesFine_[no1] -> getCoordinates();
-    //         x2 = nodesFine_[no2] -> getCoordinates();
-
-    //         sLength = sqrt((x2(1)-x1(1))*(x2(1)-x1(1))+(x1(0)-x2(0))*(x1(0)-x2(0)));
-
-    //         n(0)=(x2(1)-x1(1))/sLength;
-    //         n(1)=(x1(0)-x2(0))/sLength;
-    //         nodesFine_[no1] -> setInnerNormal(n);
-    //         nodesFine_[no2] -> setInnerNormal(n);
-            
-    //     };
-    // };
-    // std::cout<<"zerar normais apos mesh update"<<std::endl;
-    
-    for (int ino = 0; ino < numNodesCoarse; ino++){
+    //Coarse mesh
+     for (int ino = 0; ino < numNodesCoarse; ino++){
         x = nodesCoarse_[ino] -> getCoordinates();
         dist=10000000000000000000000000000.;
         
         for (int i = 0; i < numBoundElemFine; i++){
-            if (boundaryFine_[i]->getConstrain(0)==2){
+            if (boundaryFine_[i] -> getConstrain(0) == 2){
 
                 connec = elementsFine_[boundaryFine_[i] -> getElement()] -> 
                     getConnectivity();
@@ -859,21 +823,23 @@ void Arlequin<2>::setSignaledDistance(){
                     bconnec(1) = connec(1);
                     bconnec(2) = connec(3);
                 };
+                //bconnec = boundaryFine_[i] -> getBoundaryConnectivity();
 
-                // bconnec = boundaryFine_[i]->getBoundaryConnectivity();
                 //first segment
                 int no1 = bconnec(0);
                 int no2 = bconnec(2);
+                // std::cout<<no1<<" nos "<<no2<<std::endl;
+              
                 x1 = nodesFine_[no1] -> getCoordinates();
                 x2 = nodesFine_[no2] -> getCoordinates();
                 
                 double aux0 =  sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
                                     (x2(0) - x1(0)) * (x2(0) - x1(0)));
-                double aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) + 
+                double aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0))+
                                (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
-                double dist2 = - ((x2(1) - x1(1)) * x(0) - 
-                                  (x2(0) - x1(0)) * x(1) + 
-                                  x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
+                double dist2 =-((x2(1) - x1(1)) * x(0) - 
+                                (x2(0) - x1(0)) * x(1) +
+                                x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
                 
                 if (aux1 > aux0){
                     dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
@@ -890,9 +856,8 @@ void Arlequin<2>::setSignaledDistance(){
                     if (signaltest < 0.)signal = 1.;
                     
                     dist2 *= signal;
-                    
-                    
                 };
+
                 if (aux1 < 0.){
                     dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
                                  (x(0) - x1(0)) * (x(0) - x1(0)));
@@ -905,7 +870,7 @@ void Arlequin<2>::setSignaledDistance(){
                     double signaltest = inner_prod(n,test);
                     double signal = -1.;
                     
-                    if (signaltest < 0.)signal = 1.;
+                    if (signaltest < 0.) signal = 1.;
                     
                     dist2 *= signal;
                 };
@@ -920,13 +885,14 @@ void Arlequin<2>::setSignaledDistance(){
                 
                 aux0 = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
                             (x2(0) - x1(0)) * (x2(0) - x1(0)));
-                aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) +
+                aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) + 
                         (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
-                dist2 = ((x2(1) - x1(1)) * x(0) - (x2(0) - x1(0)) * x(1) +
-                         x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
-                if(aux1>aux0){
-                    dist2 =  sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
-                                  (x2(0) - x(0)) * (x2(0) - x(0)));
+                dist2 = -((x2(1) - x1(1)) * x(0) - (x2(0) - x1(0)) * x(1) +
+                          x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
+
+                if (aux1 > aux0){
+                    dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
+                                 (x2(0) - x(0)) * (x2(0) - x(0)));
                     n = nodesFine_[no2] -> getInnerNormal();
                     
                     test(0) = x(0) - x2(0);
@@ -937,13 +903,13 @@ void Arlequin<2>::setSignaledDistance(){
                     if (signaltest < 0.)signal = 1.;
                     
                     dist2 *= signal;
-                    
-                    
+                                       
                 };
+
                 if (aux1 < 0.){
-                    dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) + 
+                    dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
                                  (x(0) - x1(0)) * (x(0) - x1(0)));
-        //find signal
+                    //find signal
                     //side normal vector
                     n = nodesFine_[no1] -> getInnerNormal();
                     
@@ -962,7 +928,10 @@ void Arlequin<2>::setSignaledDistance(){
         }; //
     
         nodesCoarse_[ino] -> setDistFunction(dist);
-    };
+     };
+
+
+
 
 };
 
@@ -1000,12 +969,11 @@ void Arlequin<2>::setCouplingZone(){
 
         for (int ino = 0; ino < 6; ino++){
             x = nodesFine_[connec(ino)] -> getCoordinates();
-            double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                               (x(1) - 4.) * (x(1) - 4.));
-
-            if (dist >= 1.51){
-                flag = 1;
-                break;
+            double dist = nodesFine_[connec(ino)] -> getDistFunction();
+            //  std::cout << "DIST " << dist << std::endl;
+            if (dist <= 1.0+0.01){
+                flag += 1;
+                //    break;
             };
 
     
@@ -1020,33 +988,32 @@ void Arlequin<2>::setCouplingZone(){
 
         };
 
-        if (flag > 0) {
+        if (flag == 6) {
             elementsGlueZoneFine_.push_back(jel);
             elementsFine_[jel] -> setGlueZone();
 
             GlueZone *el = new GlueZone(index++,jel);
             glueZoneFine_.push_back(el);
             
-            for (int i=0; 
-                 i < elementsFine_[jel] -> getNumberOfIntegrationPoints(); i++){
+            // for (int i=0; 
+            //      i < elementsFine_[jel] -> getNumberOfIntegrationPoints(); i++){
                 
-                x = elementsFine_[jel] -> getIntegPointCoordinatesValue(i);  
-
-                double dist = sqrt((x(0) - 4.) * (x(0) - 4.) + 
-                                   (x(1) - 4.) * (x(1) - 4.));
+            //     x = elementsFine_[jel] -> getIntegPointCoordinatesValue(i);  
                 
-                if (dist >= 1.51){
-                    elementsFine_[jel] -> setIntegPointInGlueZone(i);    
-                };
+            //     //double dist = nodesFine_[connec(ino)] -> getDistFunction();
+            //     double dist = 0;
+            //     if (dist <= 1.01){
+            //         elementsFine_[jel] -> setIntegPointInGlueZone(i);    
+            //     };
 
-                // if ((x(0) < lim1) || (x(0) > lim2) || 
-                //     (x(1) < lim1) || (x(1) > lim2)){
-                // if ((x(0) < 4.) || (x(0) > 12.5) || 
-                //     (x(1) < 4.) || (x(1) > 8.)){
-                //     elementsFine_[jel] -> setIntegPointInGlueZone(i);
-                // };
+            //     // if ((x(0) < lim1) || (x(0) > lim2) || 
+            //     //     (x(1) < lim1) || (x(1) > lim2)){
+            //     // if ((x(0) < 4.) || (x(0) > 12.5) || 
+            //     //     (x(1) < 4.) || (x(1) > 8.)){
+            //     //     elementsFine_[jel] -> setIntegPointInGlueZone(i);
+            //     // };
 
-            };
+            // };
         };        
     };
 
@@ -1208,8 +1175,6 @@ void Arlequin<2>::setCouplingZone(){
 
     };
      
-    setSignaledDistance();
-
 };
 
 //------------------------------------------------------------------------------
@@ -2061,6 +2026,8 @@ void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
     //Sets the element boxes for all elements in both coarse and fine models
     setElementBoxes();
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+
+    setSignaledDistance();
 
     //Construct the glue zone based on some defined criterion
     setCouplingZone();
