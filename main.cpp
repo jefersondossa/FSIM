@@ -86,7 +86,7 @@ int main(int argc, char **args) {
     // fineModel.dataReading("flutter_fine2.txt","mirror_fine.txt"); 
     // coarseModel.dataReading("flutter_coarse.txt","mirror_coarse.txt");
      
-    control.dataReading("16x16.txt","mirror_control.txt");
+    control.dataReading("32x32.txt","mirror_control.txt");
 
     char in_solid[32] = "cantilever.txt";
      
@@ -113,12 +113,12 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
    
-    //  control.solveTransientProblem(1, 1.e-6, 2); 
-   
+    control.solveTransientProblem(2, 1.e-6, 2); 
+     
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
     // fineModel.solveSteadyLaplaceProblem(8, 1.e-16, 2);
-       
+         
  
     //1- The maximum number of iterations in the Newton-Raphson process
     //2- The maximum relative error in the Newton-Raphson process (DU)

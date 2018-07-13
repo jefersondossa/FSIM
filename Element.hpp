@@ -97,7 +97,7 @@ private:
     double        umesh_, vmesh_, wmesh_; //Interpolated mesh velocity
     double        du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, 
                   dw_dx, dw_dy, dw_dz;//Interpolated fluid spatial derivatives
-    double        ddu_dx, ddu_dy, ddv_dx, ddv_dy;
+    double        du_dxx, du_dyy, du_dxy, dv_dxx, dv_dyy, dv_dxy;
     double        dp_dx, dp_dy, dp_dz;//Interpolated pressure spatial derivative
     double        dumesh_dx, dumesh_dy, dumesh_dz,//Interpolated mesh 
                   dvmesh_dx, dvmesh_dy, dvmesh_dz,//velocity derivatives
@@ -879,17 +879,79 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
     noalias(dphi_dx) = prod(ainv_,dphi);
 
     //Quadratic shape functions spatial second derivatives
+    // for (int i=0; i<6; i++){
+    //     for (int j=0; i<2; i++){
+    //         for (int k=0; i<2; i++){
+    //             for (int l=0; i<2; i++){
+    //                 for (int m=0; i<2; i++){                 
+    //                     ddphi_dx(j,l)(i) += ainv_(j,k) * ainv_(l,m) * 
+    //                                         ddphi(k,m)(i);
+    //                 };
+    //             };
+    //         };
+    //     };
+    // };
+
+
+    // Computing second derivatives
+    
+    double dx_dxsi1 = 0.;
+    double dx_dxsi2 = 0.;
+    double dy_dxsi1 = 0.;
+    double dy_dxsi2 = 0.;
+
     for (int i=0; i<6; i++){
-        for (int j=0; i<2; i++){
-            for (int k=0; i<2; i++){
-                for (int l=0; i<2; i++){
-                    for (int m=0; i<2; i++){                 
-                        ddphi_dx(j,l)(i) += ainv_(j,k) * ainv_(l,m) * 
-                                            ddphi(k,m)(i);
-                    };
-                };
-            };
-        };
+        dx_dxsi1 += localNodes_(i,0) * dphi(0,i);
+        dx_dxsi2 += localNodes_(i,0) * dphi(1,i);
+        dy_dxsi1 += localNodes_(i,1) * dphi(0,i);
+        dy_dxsi2 += localNodes_(i,1) * dphi(1,i);        
+    };
+
+    for (int j = 0; j < 6; j++){
+        
+        ublas::bounded_matrix<double, 3, 3> invM;
+        ublas::bounded_vector<double, 3> vecM, resM;
+        
+        double a = dx_dxsi1 * dx_dxsi1;
+        double b = dy_dxsi1 * dy_dxsi1;
+        double c = 2. * dx_dxsi1 * dy_dxsi1;
+        double d = dx_dxsi2 * dx_dxsi2;
+        double e = dy_dxsi2 * dy_dxsi2;
+        double f = 2. * dx_dxsi2 * dy_dxsi2;
+        double g = dx_dxsi1 * dx_dxsi2;
+        double h = dy_dxsi1 * dy_dxsi2;
+        double i = dx_dxsi1 * dy_dxsi2 + dx_dxsi2 * dy_dxsi1;
+        
+        // matrix:
+        // |a b c|
+        // |d e f|
+        // |g h i|
+
+        double det = 1. / (a * e * i - a * f * h - b * d * i + 
+                           b * f * g + c * d * h - c * e * g);
+        
+        invM(0,0) = (e * i - f * h) * det;
+        invM(0,1) = (c * h - b * i) * det;
+        invM(0,2) = (b * f - c * e) * det;
+        invM(1,0) = (f * g - d * i) * det;
+        invM(1,1) = (a * i - c * g) * det;
+        invM(1,2) = (c * d - a * f) * det;
+        invM(2,0) = (d * h - e * g) * det;
+        invM(2,1) = (b * g - a * h) * det;
+        invM(2,2) = (a * e - b * d) * det;
+
+        vecM(0) = ddphi(0,0)(j);
+        vecM(1) = ddphi(1,1)(j);
+        vecM(0) = ddphi(0,1)(j);
+
+        resM = prod(invM,vecM);
+        
+        ddphi_dx(0,0)(j) = resM(0);
+        ddphi_dx(1,1)(j) = resM(1);
+        ddphi_dx(0,1)(j) = resM(2);
+        ddphi_dx(1,0)(j) = resM(2);
+        
+        //if(index_ == 0) std::cout << "SADASD " << ddphi_dx(0,0)(j) << std::endl;
     };
 
     return;
@@ -966,10 +1028,12 @@ void Element<2>::getVelAndDerivatives() {
     dv_dx = 0.;
     dv_dy = 0.;
 
-    ddu_dx = 0.;
-    ddu_dy = 0.;
-    ddv_dx = 0.;
-    ddv_dy = 0.;
+    du_dxx = 0.;
+    du_dyy = 0.;
+    du_dxy = 0.;
+    dv_dxx = 0.;
+    dv_dyy = 0.;
+    dv_dxy = 0.;
 
     dp_dx = 0.;
     dp_dy = 0.;
@@ -993,10 +1057,12 @@ void Element<2>::getVelAndDerivatives() {
         dv_dx += nodes_[connect_(i)] -> getVelocity(1) * dphi_dx(0,i);
         dv_dy += nodes_[connect_(i)] -> getVelocity(1) * dphi_dx(1,i);
 
-        ddu_dx += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(0,0)(i);
-        ddu_dy += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(1,1)(i);
-        ddv_dx += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(0,0)(i);
-        ddv_dy += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(1,1)(i);
+        du_dxx += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(0,0)(i);
+        du_dyy += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(1,1)(i);
+        du_dxy += nodes_[connect_(i)] -> getVelocity(0) * ddphi_dx(0,1)(i);
+        dv_dxx += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(0,0)(i);
+        dv_dyy += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(1,1)(i);
+        dv_dxy += nodes_[connect_(i)] -> getVelocity(1) * ddphi_dx(0,1)(i);
 
         p_ += nodes_[connect_(i)] -> getPressure() * phi_(i);
         
@@ -1341,9 +1407,9 @@ void Element<2>::getParameterSUPG() {
 template<>
 void Element<2>::getElemMatrix(int index){
     
-    tSUPG_ = 0.;
+    //tSUPG_ = 0.;
     // tPSPG_ = 0.;
-    tLSIC_ = 0.;
+    //tLSIC_ = 0.;
  
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -1530,37 +1596,26 @@ void Element<2>::setBoundaryConditions(){
         };
     };
 
-    // if (compressibility){
-    //     jacobianNRMatrix(12,12) = 1.;
-    //     jacobianNRMatrix(13,13) = 1.;
-    //     jacobianNRMatrix(14,14) = 1.;
 
-    //     rhsVector(12) = 0.;
-    //     rhsVector(13) = 0.;
-    //     rhsVector(14) = 0.;
+    typename Nodes::VecLocD x;
 
-    // };
-
-
-    // typename Nodes::VecLocD x;
-
-    // for (int i = 0; i < 6; i++){
-    //     //if(model){
-    //     x = nodes_[connect_(i)] -> getCoordinates();
-    //     // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
-    //     // if(dist < 0.001){
-    //     if((x(0) > 0.99) && (x(1) > 0.99)){
-    //         // std::cout << "AQUI  " << index_ << std::endl;
+    for (int i = 0; i < 6; i++){
+        //if(model){
+        x = nodes_[connect_(i)] -> getCoordinates();
+        // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+        // if(dist < 0.001){
+        if((x(0) > 0.99) && (x(1) > 0.99)){
+            // std::cout << "AQUI  " << index_ << std::endl;
             
-    //         for (int j = 0; j < 18; j++){
-    //             jacobianNRMatrix(12+i,j) = 0.;
-    //             jacobianNRMatrix(j,12+i) = 0.;
-    //         };
-    //         jacobianNRMatrix(12+i,12+i) = 1.;
-    //         rhsVector(12+i) =  0.;
-    //         //};
-    //     };
-    // };
+            for (int j = 0; j < 18; j++){
+                jacobianNRMatrix(12+i,j) = 0.;
+                jacobianNRMatrix(j,12+i) = 0.;
+            };
+            jacobianNRMatrix(12+i,12+i) = 1.;
+            rhsVector(12+i) =  0.;
+            //};
+        };
+    };
 
     return;
 };
@@ -1728,10 +1783,22 @@ void Element<2>::getResidualVector(int index){
               //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
         };
 
-        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx) * dTime_ //* timeScheme_ 
+        double Nx = - ((2. * du_dxx + du_dyy + dv_dxy) * 
+                       ((una_ - umesh_) * dphi_dx(0,i) + 
+                        (vna_ - vmesh_) * dphi_dx(1,i)))
+            * tSUPG_ * visc_;
+        
+        double Ny = - ((2. * dv_dyy + dv_dxx + du_dxy) * 
+                     ((una_ - umesh_) * dphi_dx(0,i) + 
+                      (vna_ - vmesh_) * dphi_dx(1,i)))
+            * tSUPG_ * visc_;
+        
+        // if (index_ == 10) std::cout << "Nx " << std::scientific << du_dxx << std::endl;
+
+        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx - Nx) * dTime_ 
                              - KLSx * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
-        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy) * dTime_ //* timeScheme_
+        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy - Ny) * dTime_ 
                              - KLSy * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
         rhsVector(12+i) += -Q * dTime_ 
@@ -2234,7 +2301,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    setIntegPointWeightFunction();
+    // setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
