@@ -83,6 +83,8 @@ private:
     //Potential problem
     VecLocD          gradient_;               //Potential gradient
     double           potential_;              //Potential value
+
+    std::vector<int> invIncidence;
     
 public:
     ///Constructor - Defines a node with index and coordinates
@@ -106,6 +108,8 @@ public:
         constrainTypeLaplace[0] = 0;    constrainTypeLaplace[1] = 0;
         constrainTypeLaplace[2] = 0;    constrainValueLaplace[0] = 0;
         constrainValueLaplace[1] = 0;   constrainValueLaplace[2] = 0;
+        
+        invIncidence.clear();
 
     };
 
@@ -174,6 +178,19 @@ public:
     /// Gets nodal correspondence of overlapped mesh - adim. coordinate
     /// @return Adim. coordinate correspondence of overlapped mesh
     VecLocD getNodalXsiCorrespondence() {return xsiCorresp;}
+
+    /// Pushs back a term of the inverse incidence, i.e., an element which
+    /// contains the node
+    /// @param int element
+    void pushInverseIncidence(int el) {invIncidence.push_back(el);}
+
+    /// Gets the number of elements which contains the node
+    /// @return int number of elements which contains the node
+    int getNumberOfElements(){return invIncidence.size();}
+
+    /// Gets an specific member of the inverse incidence
+    /// @param int index @return int element of the inverse incidence
+    int getInverseIncidenceElement(int i){return invIncidence[i];}
     
     //............................Velocity functions............................
     /// Sets the velocity vector
@@ -208,9 +225,16 @@ public:
     /// @param double vorticity
     void setVorticity(double div) {vorticity_ = div;}
 
-    /// Returns the node velocity divergent
+    /// Returns the nodal vorticity
     /// @return node velocity divergent
     double getVorticity() {return vorticity_;}
+
+    /// Clears the nodal vorticity
+    void clearVorticity() {vorticity_ = 0.;}
+
+    /// Increment the value of the nodal vorticity
+    /// @param double increment 
+    void incrementVorticity(double val) {vorticity_ += val/invIncidence.size();}
 
     //..........................Acceleration functions..........................
     /// Sets the acceleration vector

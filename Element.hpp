@@ -900,11 +900,25 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
     double dy_dxsi1 = 0.;
     double dy_dxsi2 = 0.;
 
+    double dx_dxsi11 = 0.;
+    double dx_dxsi22 = 0.;
+    double dx_dxsi12 = 0.;
+    double dy_dxsi11 = 0.;
+    double dy_dxsi22 = 0.;
+    double dy_dxsi12 = 0.;
+
     for (int i=0; i<6; i++){
         dx_dxsi1 += localNodes_(i,0) * dphi(0,i);
         dx_dxsi2 += localNodes_(i,0) * dphi(1,i);
         dy_dxsi1 += localNodes_(i,1) * dphi(0,i);
-        dy_dxsi2 += localNodes_(i,1) * dphi(1,i);        
+        dy_dxsi2 += localNodes_(i,1) * dphi(1,i);
+
+        dx_dxsi11 += localNodes_(i,0) * ddphi(0,0)(i);
+        dx_dxsi22 += localNodes_(i,0) * ddphi(1,1)(i);
+        dx_dxsi12 += localNodes_(i,0) * ddphi(0,1)(i);
+        dy_dxsi11 += localNodes_(i,1) * ddphi(0,0)(i);
+        dy_dxsi22 += localNodes_(i,1) * ddphi(1,1)(i);
+        dy_dxsi12 += localNodes_(i,1) * ddphi(0,1)(i);        
     };
 
     for (int j = 0; j < 6; j++){
@@ -940,9 +954,12 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
         invM(2,1) = (b * g - a * h) * det;
         invM(2,2) = (a * e - b * d) * det;
 
-        vecM(0) = ddphi(0,0)(j);
-        vecM(1) = ddphi(1,1)(j);
-        vecM(0) = ddphi(0,1)(j);
+        vecM(0) = ddphi(0,0)(j); 
+            - dphi_dx(0,j) * dx_dxsi11 - dphi_dx(1,j) * dy_dxsi11;
+        vecM(1) = ddphi(1,1)(j)
+            - dphi_dx(0,j) * dx_dxsi22 - dphi_dx(1,j) * dy_dxsi22;
+        vecM(0) = ddphi(0,1)(j)
+            - dphi_dx(0,j) * dx_dxsi12 - dphi_dx(1,j) * dy_dxsi12;
 
         resM = prod(invM,vecM);
         
@@ -1474,23 +1491,32 @@ void Element<2>::getElemMatrix(int index){
             double KLSyx = dphi_dx(1,i) * dphi_dx(0,j) * tLSIC_ * dens_;
             double KLSyy = dphi_dx(1,i) * dphi_dx(1,j) * tLSIC_ * dens_;
 
+            double Sxx = + wSUPGi * (2. * ddphi_dx(0,0)(j) + 
+                                     ddphi_dx(1,1)(j)) * tSUPG_ * visc_*0;
+            double Sxy = + wSUPGi * ddphi_dx(0,1)(j)
+                * tSUPG_ * visc_*0;
+            double Syx = + wSUPGi * ddphi_dx(0,1)(j)
+                * tSUPG_ * visc_*0;
+            double Syy = + wSUPGi * (2. * ddphi_dx(1,1)(j) + 
+                                     ddphi_dx(0,0)(j)) * tSUPG_ * visc_*0;
+            
             
             jacobianNRMatrix(2*i  ,2*j  ) += (mM + timeScheme_ * dTime_ * 
-                                              (sMxx + Kxx + KLSxx / 
-                                               timeScheme_ + Cxx + Cuu + Quu))
+                                              (sMxx + Kxx + KLSxx / timeScheme_
+                                               + Cxx + Cuu + Quu + Sxx))
                 * weight_ * djac_ * intPointWeightFunction(index);
 
             jacobianNRMatrix(2*i+1,2*j+1) += (mM + timeScheme_ * dTime_ *
-                                              (sMyy + Kyy + KLSyy / 
-                                               timeScheme_ + Cyy + Cvv + Qvv))
+                                              (sMyy + Kyy + KLSyy / timeScheme_
+                                               + Cyy + Cvv + Qvv + Syy))
                 * weight_ * djac_ * intPointWeightFunction(index);
 
             jacobianNRMatrix(2*i  ,2*j+1) += (timeScheme_ * dTime_ * 
-                (Kxy + sMxy + Cuv + Quv) + KLSxy * dTime_)
+                (Kxy + sMxy + Cuv + Quv + Sxy) + KLSxy * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index);
 
             jacobianNRMatrix(2*i+1,2*j  ) += (timeScheme_ * dTime_ *
-                (Kyx + sMyx + Cvu + Qvu) + KLSyx * dTime_)
+                (Kyx + sMyx + Cvu + Qvu + Syx) + KLSyx * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index); 
 
             
@@ -1783,22 +1809,22 @@ void Element<2>::getResidualVector(int index){
               //                   intPointWeightFunctionPrev(index)) / dTime_ << " " << v_ << std::endl;
         };
 
-        double Nx = - ((2. * du_dxx + du_dyy + dv_dxy) * 
+        double Sx = - ((2. * du_dxx + du_dyy + dv_dxy) * 
                        ((una_ - umesh_) * dphi_dx(0,i) + 
                         (vna_ - vmesh_) * dphi_dx(1,i)))
-            * tSUPG_ * visc_;
+            * tSUPG_ * visc_*0;
         
-        double Ny = - ((2. * dv_dyy + dv_dxx + du_dxy) * 
+        double Sy = - ((2. * dv_dyy + dv_dxx + du_dxy) * 
                      ((una_ - umesh_) * dphi_dx(0,i) + 
                       (vna_ - vmesh_) * dphi_dx(1,i)))
-            * tSUPG_ * visc_;
+            * tSUPG_ * visc_*0;
         
         // if (index_ == 10) std::cout << "Nx " << std::scientific << du_dxx << std::endl;
 
-        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx - Nx) * dTime_ 
+        rhsVector(2*i  ) += (-mx + (-Kx - Px - Cx - dAx - Sx) * dTime_ 
                              - KLSx * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
-        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy - Ny) * dTime_ 
+        rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy - Sy) * dTime_ 
                              - KLSy * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
         rhsVector(12+i) += -Q * dTime_ 
@@ -2093,23 +2119,23 @@ void Element<2>::computeVelocityDivergent(){
 template<>
 void Element<2>::computeVorticity(){
     
-    ublas::bounded_matrix <double, 2, 6>      int_points;
+    ublas::bounded_matrix <double, 6, 6>      least_squares;
     
-    int_points(0,0) = 0.; int_points(1,0) = 0.;
-    int_points(0,1) = 1.; int_points(1,1) = 0.;
-    int_points(0,2) = 0.; int_points(1,2) = 1.;
-    int_points(0,3) = .5; int_points(1,3) = 0.;
-    int_points(0,4) = .5; int_points(1,4) = .5;
-    int_points(0,5) = 0.; int_points(1,5) = .5;
-    
-
     typename QuadShapeFunction<2>::Coords xsi;
+    ublas::bounded_vector <double, 6>         nodal_values,results;
     
-    for (int i=0; i<6; i++){
+    int index = 0;
+    nodal_values.clear();
+    least_squares.clear();
+    results.clear();
+
+    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
+        it != nQuad.end(); it++){
         
-        xsi(0) = int_points(0,i);
-        xsi(1) = int_points(1,i);
-        
+        //Defines the integration points adimentional coordinates
+        xsi(0) = nQuad.PointList(index,0);
+        xsi(1) = nQuad.PointList(index,1);
+                
         //Computes the velocity shape functions
         shapeQuad.evaluate(xsi,phi_);
         
@@ -2121,10 +2147,101 @@ void Element<2>::computeVorticity(){
         
         //Interpolates velocity and its derivatives values
         getVelAndDerivatives();
-        
-        nodes_[connect_(i)] -> setVorticity(-du_dy + dv_dx);        
+
+        for (int i=0; i<6; i++){
+            nodal_values(i) += (-du_dy + dv_dx) * phi_(i);
+        };
+                        
+        index++;
+    };    
+
+    least_squares.clear();
+    
+    least_squares(0,0) =  4.825;
+    least_squares(0,1) =  1.025;
+    least_squares(0,2) =  1.025;
+    least_squares(0,3) = -0.275480769230769;  
+    least_squares(0,4) =  0.712019230769232;
+    least_squares(0,5) = -0.275480769230769;
+
+    least_squares(1,0) =  least_squares(0,1);
+    least_squares(1,1) =  4.825;
+    least_squares(1,2) =  1.025;
+    least_squares(1,3) = -0.275480769230769;  
+    least_squares(1,4) = -0.275480769230769;
+    least_squares(1,5) =  0.712019230769232;    
+
+    least_squares(2,0) =  least_squares(0,2);
+    least_squares(2,1) =  least_squares(1,2);
+    least_squares(2,2) =  4.825;
+    least_squares(2,3) =  0.712019230769232;  
+    least_squares(2,4) = -0.275480769230769;
+    least_squares(2,5) = -0.275480769230769;
+
+    least_squares(3,0) =  least_squares(0,3);
+    least_squares(3,1) =  least_squares(1,3);
+    least_squares(3,2) =  least_squares(2,3);
+    least_squares(3,3) =  1.304890902366860;  
+    least_squares(3,4) = -0.432609097633136;
+    least_squares(3,5) = -0.432609097633136;
+
+    least_squares(4,0) =  least_squares(0,4);
+    least_squares(4,1) =  least_squares(1,4);
+    least_squares(4,2) =  least_squares(2,4);
+    least_squares(4,3) =  least_squares(3,4);  
+    least_squares(4,4) =  1.304890902366860;
+    least_squares(4,5) = -0.432609097633136;
+
+    least_squares(5,0) =  least_squares(0,5);
+    least_squares(5,1) =  least_squares(1,5);
+    least_squares(5,2) =  least_squares(2,5);
+    least_squares(5,3) =  least_squares(3,5);  
+    least_squares(5,4) =  least_squares(4,5);
+    least_squares(5,5) =  1.304890902366860;
+
+    results = prod(least_squares,nodal_values);
+
+    for (int i=0; i<6; i++){
+        nodes_[connect_(i)] -> incrementVorticity(results(i));
     };
     
+    // ublas::bounded_matrix <double, 2, 6>      int_points;
+    
+    // int_points(0,0) = 0.; int_points(1,0) = 0.;
+    // int_points(0,1) = 1.; int_points(1,1) = 0.;
+    // int_points(0,2) = 0.; int_points(1,2) = 1.;
+    // int_points(0,3) = .5; int_points(1,3) = 0.;
+    // int_points(0,4) = .5; int_points(1,4) = .5;
+    // int_points(0,5) = 0.; int_points(1,5) = .5;
+    
+
+    // typename QuadShapeFunction<2>::Coords xsi;
+    
+    // for (int i=0; i<6; i++){
+        
+    //     xsi(0) = int_points(0,i);
+    //     xsi(1) = int_points(1,i);
+        
+    //     //Computes the velocity shape functions
+    //     shapeQuad.evaluate(xsi,phi_);
+        
+    //     //Computes the jacobian matrix
+    //     getJacobianMatrix(xsi);
+        
+    //     //Computes spatial derivatives
+    //     getSpatialDerivatives(xsi);
+        
+    //     //Interpolates velocity and its derivatives values
+    //     getVelAndDerivatives();
+        
+    //     nodes_[connect_(i)] -> incrementVorticity(-du_dy + dv_dx);        
+    // };
+    
+    return;
+
+
+
+
     return;
 };
 
