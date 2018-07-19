@@ -335,11 +335,10 @@ void Fluid<2>::printVelocity(int step) {
 
 
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Gradient\" format=\"ascii\">" << std::endl;
+             << "Name=\"Incidence\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodes; i++){        
-        output_v << nodes_[i] -> getGradientComponent(0) << " "
-                 << nodes_[i] -> getGradientComponent(1) << " " 
+        output_v << nodes_[i] -> getNumberOfElements() << " " << 0. << " "
                  << 0. << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
@@ -504,11 +503,12 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
         for (int i=0; i<4*dimension-2; i++){
             inputData >> connect(i);
             connect(i)=connect(i)-1;
+            nodes_[connect(i)] -> pushInverseIncidence(jel);
         };
         Elements *el = new Elements(index++,connect,nodes_);
         elements_.push_back(el);
     };    
-        
+
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
     for (int jel=0; jel<numElem; jel++){
         typename Elements::Connectivity connec;
@@ -1314,7 +1314,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
         for (int i = 0; i < numElem; i++){
             elements_[i] -> getParameterSUPG();
         };
-
+  
         
         if (rank == 0) {std::cout << "------------------------- TIME STEP = "
                                   << iTimeStep << " -------------------------"
@@ -1790,6 +1790,14 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             dragLift << iTimeStep * dTime << std::fixed << " " 
                      <<  std::scientific << dragCoefficient 
                      << " " << liftCoefficient << std::endl;
+
+            for (int i = 0; i < numNodes; i++){
+                nodes_[i] -> clearVorticity();
+            };
+            for (int jel = 0; jel < numElem; jel++){
+                elements_[jel] -> computeVorticity();
+            };
+
             //Printing results
             printVelocity(iTimeStep);
         };

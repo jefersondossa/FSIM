@@ -119,7 +119,7 @@ int main(int argc, char **args) {
  
     // fineModel.solveSteadyLaplaceProblem(8, 1.e-16, 2);
          
- 
+  
     //1- The maximum number of iterations in the Newton-Raphson process
     //2- The maximum relative error in the Newton-Raphson process (DU)
     //3- The type of problem to be solved:
