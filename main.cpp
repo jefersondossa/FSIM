@@ -60,7 +60,7 @@ int main(int argc, char **args) {
     typedef Arlequin<dimension>      Arlequin;
     typedef FSInteraction<dimension> FSI;
  
-    //Create problem variables 
+//  Create problem variables 
     FluidModel coarseModel, fineModel, control;  
     Arlequin   arlequinProblem; 
     FSI        coupledProblem;  
@@ -112,8 +112,8 @@ int main(int argc, char **args) {
  
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
-   
-    control.solveTransientProblem(2, 1.e-6, 2); 
+    
+    //control.solveTransientProblem(2, 1.e-6, 2); 
      
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  

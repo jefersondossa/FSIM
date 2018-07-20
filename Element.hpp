@@ -500,15 +500,6 @@ public:
     void getStabCoarse(int ielem);
 
     //...............................Problem type...............................
-    /// Compute the Steady Stokes problem matrices and vectors
-    void getSteadyStokes();
-
-    /// Compute the Steady Navier-Stokes problem matrices and vectors
-    void getSteadyNavierStokes();
-
-    /// Compute the Transient Stokes problem matrices and vectors
-    void getTransientStokes();
-
     /// Compute the Transient Navier-Stokes problem matrices and vectors
     void getTransientNavierStokes();
 
@@ -1623,25 +1614,25 @@ void Element<2>::setBoundaryConditions(){
     };
 
 
-    typename Nodes::VecLocD x;
+    // typename Nodes::VecLocD x;
 
-    for (int i = 0; i < 6; i++){
-        //if(model){
-        x = nodes_[connect_(i)] -> getCoordinates();
-        // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
-        // if(dist < 0.001){
-        if((x(0) > 0.99) && (x(1) > 0.99)){
-            // std::cout << "AQUI  " << index_ << std::endl;
+    // for (int i = 0; i < 6; i++){
+    //     //if(model){
+    //     x = nodes_[connect_(i)] -> getCoordinates();
+    //     // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+    //     // if(dist < 0.001){
+    //     if((x(0) > 0.99) && (x(1) > 0.99)){
+    //         // std::cout << "AQUI  " << index_ << std::endl;
             
-            for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(12+i,j) = 0.;
-                jacobianNRMatrix(j,12+i) = 0.;
-            };
-            jacobianNRMatrix(12+i,12+i) = 1.;
-            rhsVector(12+i) =  0.;
-            //};
-        };
-    };
+    //         for (int j = 0; j < 18; j++){
+    //             jacobianNRMatrix(12+i,j) = 0.;
+    //             jacobianNRMatrix(j,12+i) = 0.;
+    //         };
+    //         jacobianNRMatrix(12+i,12+i) = 1.;
+    //         rhsVector(12+i) =  0.;
+    //         //};
+    //     };
+    // };
 
     return;
 };
@@ -2258,155 +2249,6 @@ void Element<2>::computeVorticity(){
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-//-----------------------------STEADY STOKES PROBEM-----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Element<2>::getSteadyStokes(){
-
-    typename QuadShapeFunction<2>::Coords xsi;
-    int index = 0;
-
-    rhsVector.clear();
-    jacobianNRMatrix.clear();
-
-    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
-        it != nQuad.end(); it++){
-        
-        //Defines the integration points adimentional coordinates
-        xsi(0) = nQuad.PointList(index,0);
-        xsi(1) = nQuad.PointList(index,1);
-
-        //Computes the velocity shape functions
-        shapeQuad.evaluate(xsi,phi_);
-
-        //Returns the quadrature integration weight
-        weight_ = nQuad.WeightList(index);
-
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi);
-
-        //Computes spatial derivatives
-        getSpatialDerivatives(xsi);
-
-        //Interpolates velocity and its derivatives values
-        getVelAndDerivatives();
-        
-        //Computes the element diffusion/viscosity matrix
-        getElemMatrix(index);
-       
-        //Computes the RHS vector
-        getResidualVector(index);
-
-        index++;        
-    };  
-    
-    //Apply boundary conditions
-    setBoundaryConditions();
-
-    return;
-};
-
-
-//------------------------------------------------------------------------------
-//-------------------------STEADY NAVIER-STOKES PROBEM--------------------------
-//------------------------------------------------------------------------------
-template<>
-void Element<2>::getSteadyNavierStokes(){
-
-    typename QuadShapeFunction<2>::Coords xsi;
-    int index = 0;
-    
-    rhsVector.clear();
-    jacobianNRMatrix.clear();
-
-    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
-        it != nQuad.end(); it++){
-        
-        //Defines the integration points adimentional coordinates
-        xsi(0) = nQuad.PointList(index,0);
-        xsi(1) = nQuad.PointList(index,1);
-
-        //Computes the velocity shape functions
-        shapeQuad.evaluate(xsi,phi_);
-
-        //Returns the quadrature integration weight
-        weight_ = nQuad.WeightList(index);
-
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi);
-
-        //Computes spatial derivatives
-        getSpatialDerivatives(xsi);
-
-        //Interpolates velocity and its derivatives values
-        getVelAndDerivatives();
-
-        //Computes the element diffusion/viscosity matrix
-        getElemMatrix(index);
-
-        //Computes the RHS vector
-        getResidualVector(index);
-        
-        index++;        
-    };  
-
-    //Apply boundary conditions
-    setBoundaryConditions();
-
-    return;
-};
-
-//------------------------------------------------------------------------------
-//---------------------------TRANSIENT STOKES PROBEM----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Element<2>::getTransientStokes(){
-
-    typename QuadShapeFunction<2>::Coords xsi;
-    int index = 0;
-
-    rhsVector.clear();
-    jacobianNRMatrix.clear();
-    setIntegPointWeightFunction();
-
-    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
-        it != nQuad.end(); it++){
-        
-        //Defines the integration points adimentional coordinates
-        xsi(0) = nQuad.PointList(index,0);
-        xsi(1) = nQuad.PointList(index,1);
-
-        //Computes the velocity shape functions
-        shapeQuad.evaluate(xsi,phi_);
-
-        //Returns the quadrature integration weight
-        weight_ = nQuad.WeightList(index);
-
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi);
-
-        //Computes spatial derivatives
-        getSpatialDerivatives(xsi);
-
-        //Interpolates velocity and its derivatives values
-        getVelAndDerivatives();
-
-        //Computes the element diffusion/viscosity matrix
-        getElemMatrix(index);
-
-        //Computes the RHS vector
-        getResidualVector(index);
-        
-        index++;        
-    };  
-    
-    //Apply boundary conditions
-    setBoundaryConditions();
-
-    return;
-};
-
-//------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
 template<>
@@ -2418,7 +2260,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    // setIntegPointWeightFunction();
+    setIntegPointWeightFunction();
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
