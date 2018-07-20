@@ -69,6 +69,28 @@ private:
     int rank;
     int numFSIInterfaces;
     int iAux;
+    double glueZoneThickness;
+    double arlequinEpsilon;
+    int weightFunctionBehavior;
+    bool computeDragAndLift;
+    int dragAndLiftBoundary;
+    
+public:
+    bool printVelocity;
+    bool printRealVelocity;
+    bool printLagrangeMultipliers;
+    bool printElementCorrespondence;
+    bool printDistFunction;
+    bool printEnergyWeightFunction;
+    bool printPressure;
+    bool printRealPressure;
+    bool printVorticity;
+    bool printInnerNormal;
+    bool printMeshVelocity;
+    bool printMeshDisplacement;
+    bool printGlueZone;
+    bool printJacobian;
+    bool printProcess;
 
 public:
     /// Reads the input file and perform the preprocessing operations
@@ -131,7 +153,7 @@ public:
 
     /// Print the results for Paraview post-processing
     /// @param int time step
-    void printVelocity(int step);
+    void printResults(int step);
 
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
@@ -212,11 +234,9 @@ void Fluid<2>::domainDecompositionMETIS() {
 //----------------------------PRINT VELOCITY RESULTS----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::printVelocity(int step) {
+void Fluid<2>::printResults(int step) {
 
     //    std::cout << "Printing Velocity Results" << std::endl;
-   
-
     std::string result;
     std::ostringstream convert;
 
@@ -284,83 +304,84 @@ void Fluid<2>::printVelocity(int step) {
 
     //WRITE NODAL RESULTS
     output_v << "    <PointData>" << std::endl;
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<numNodes; i++){
-        output_v << nodes_[i] -> getVelocity(0) << " "                \
-                 << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
+    if (printVelocity){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getVelocity(0) << " "             
+                     << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodes; i++){
-        output_v << nodes_[i] -> getMeshVelocity(0) << " "                \
-                 << nodes_[i] -> getMeshVelocity(1) << " " << 0. << std::endl;
+    if (printMeshVelocity){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
+        
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getMeshVelocity(0) << " "    
+                     << nodes_[i] -> getMeshVelocity(1) << " " 
+                     << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodes; i++){
-        output_v << nodes_[i] -> getVorticity() << std::endl;
+    if (printVorticity){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getVorticity() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodes; i++){
-        output_v << 0. << " " << 0. << " " 
-                 << nodes_[i] -> getPressure() << std::endl;
+    if (printPressure){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << 0. << " " << 0. << " " 
+                     << nodes_[i] -> getPressure() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Mesh mov\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodes; i++){       
-
-        typename Node::VecLocD x, xp;
- 
-        x=nodes_[i]->getCoordinates();
-        xp=nodes_[i]->getInitialCoordinates();
-
-        output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " << 0. << std::endl;
+    if (printMeshDisplacement){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                 << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){       
+            typename Node::VecLocD x, xp;
+            x=nodes_[i]->getCoordinates();
+            xp=nodes_[i]->getInitialCoordinates();
+            
+            output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " 
+                     << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
-
-
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Incidence\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodes; i++){        
-        output_v << nodes_[i] -> getNumberOfElements() << " " << 0. << " "
-                 << 0. << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
 
     output_v << "    </PointData>" << std::endl; 
 
     //WRITE ELEMENT RESULTS
     output_v << "    <CellData>" << std::endl;
     
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Process\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElem; i++){
-        output_v << part_elem[i] << std::endl;
+    if (printProcess){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numElem; i++){
+            output_v << part_elem[i] << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
 
-    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElem; i++){
-        output_v << elements_[i] -> getJacobian() << std::endl;
+    if (printJacobian){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numElem; i++){
+            output_v << elements_[i] -> getJacobian() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
     };
-    output_v << "      </DataArray> " << std::endl;
     
     output_v << "    </CellData>" << std::endl; 
 
@@ -458,8 +479,79 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
                << std::endl;
 
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
+    getline(inputData,line);getline(inputData,line);getline(inputData,line);
+    //    getline(inputData,line);getline(inputData,line);
+
+    //Read Arlequin variables
+    inputData >> glueZoneThickness >> arlequinEpsilon >> weightFunctionBehavior;
+
+    mirrorData << "Glue Zone Thickness    = " << glueZoneThickness << std::endl;
+    mirrorData << "Epsilon                = " << arlequinEpsilon << std::endl;
+    mirrorData << "Energy Weight Function = " << weightFunctionBehavior
+               << std::endl << std::endl;
+
+    getline(inputData,line);getline(inputData,line);getline(inputData,line);
     getline(inputData,line);getline(inputData,line);
 
+    //Drag and lift
+    inputData >> computeDragAndLift >> dragAndLiftBoundary;
+
+    mirrorData << "Compute Drag and Lift  = " << computeDragAndLift<< std::endl;
+    mirrorData << "Drag and Lift Boundary = " << dragAndLiftBoundary
+               << std::endl << std::endl;
+
+
+    getline(inputData,line);getline(inputData,line);getline(inputData,line);
+    getline(inputData,line);getline(inputData,line);
+
+    //Printing results
+    inputData >> printVelocity;              getline(inputData,line);
+    inputData >> printRealVelocity;          getline(inputData,line);
+    inputData >> printLagrangeMultipliers;   getline(inputData,line);
+    inputData >> printElementCorrespondence; getline(inputData,line);
+    inputData >> printDistFunction;          getline(inputData,line);
+    inputData >> printEnergyWeightFunction;  getline(inputData,line);
+    inputData >> printPressure;              getline(inputData,line);
+    inputData >> printRealPressure;          getline(inputData,line);
+    inputData >> printVorticity;             getline(inputData,line);
+    inputData >> printInnerNormal;           getline(inputData,line);
+    inputData >> printMeshVelocity;          getline(inputData,line);
+    inputData >> printMeshDisplacement;      getline(inputData,line);
+    inputData >> printGlueZone;              getline(inputData,line);
+    inputData >> printJacobian;              getline(inputData,line);
+    inputData >> printProcess;              
+
+    mirrorData << "PrintVelocity              = " << printVelocity << std::endl;
+    mirrorData << "PrintRealVelocity          = " << printRealVelocity
+               << std::endl;
+    mirrorData << "PrintLagrangeMultipliers   = " << printLagrangeMultipliers 
+               << std::endl;
+    mirrorData << "PrintElementCorrespondence = " << printElementCorrespondence
+               << std::endl;
+    mirrorData << "PrintDistFunction          = " << printDistFunction 
+               << std::endl;
+    mirrorData << "PrintEnergyWeightFunction  = " << printEnergyWeightFunction
+               << std::endl;
+    mirrorData << "PrintPressure              = " << printPressure << std::endl;
+    mirrorData << "PrintRealPressure          = " << printRealPressure 
+               << std::endl;
+    mirrorData << "PrintVorticity             = " << printVorticity 
+               << std::endl;
+    mirrorData << "PrintInnerNormal           = " << printInnerNormal
+               << std::endl;
+    mirrorData << "PrintMeshVelocity          = " << printMeshVelocity
+               << std::endl;
+    mirrorData << "PrintMeshDisplacement      = " << printMeshDisplacement
+               << std::endl;
+    mirrorData << "PrintGlueZone              = " << printGlueZone << std::endl;
+    mirrorData << "PrintJacobian              = " << printJacobian << std::endl;
+    mirrorData << "PrintProcess               = " << printProcess << std::endl 
+               << std::endl;
+
+
+    getline(inputData,line);getline(inputData,line);getline(inputData,line);
+    getline(inputData,line);getline(inputData,line);
+ 
     int dimension=2;
 
     int index = 0;
@@ -982,291 +1074,7 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
     if (rank == 0) {
         //Computing velocity divergent
-        //      printVelocity(1);
-    };
-
-    return 0;
-};
-
-//------------------------------------------------------------------------------
-//--------------------------SOLVE STEADY FLUID PROBLEM--------------------------
-//------------------------------------------------------------------------------
-template<>
-int Fluid<2>::solveSteadyProblem(int iterNumber, double tolerance,\
-                                 int problem_type) {
-
-    Mat               A;
-    Vec               b, u, All;
-    PetscErrorCode    ierr;
-    PetscInt          Istart, Iend, Ii, Ione, iterations;
-    KSP               ksp;
-    PC                pc;
-    VecScatter        ctx;
-    PetscScalar       val;
-    //    MatNullSpace      nullsp;
-
-    int rank;
-
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-
-    //Check if the problem type can be computed
-    if ((problem_type > 2) || (problem_type < 1)){
-        std::cout << "WRONG PROBLEM TYPE." << std::endl;
-        return 0;
-    };
-        
-    //Updates SUPG Parameter
-    for (int i = 0; i < numElem; i++){
-        elements_[i] -> getParameterSUPG();
-    };
-        
-
-    for (int inewton = 0; inewton < iterNumber; inewton++){
-
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, \
-                            2*numNodes+numNodes, 2*numNodes+numNodes, \
-                            50,NULL,150,NULL,&A); CHKERRQ(ierr);
-        
-        ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
-        
-        //Create PETSc vectors
-        ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
-        ierr = VecSetSizes(b,PETSC_DECIDE,2*numNodes+numNodes);CHKERRQ(ierr);
-        ierr = VecSetFromOptions(b);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
-
-        //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
-        
-        for (int jel = 0; jel < numElem; jel++){   
-            
-            if (part_elem[jel] == rank) {
-                
-                //Compute Element matrix
-                if (problem_type == 1) elements_[jel] -> getSteadyStokes();
-                
-                if (problem_type == 2) {
-                    if (inewton == 0) {
-                        elements_[jel] -> getSteadyStokes();
-                    } else {
-                        elements_[jel] -> getSteadyNavierStokes();
-                    };
-                };
-                
-                typename Elements::LocalMatrix Ajac;
-                typename Elements::LocalVector Rhs;
-                typename Elements::Connectivity connec;
-                
-                //Gets element connectivity, jacobian and rhs 
-                connec = elements_[jel] -> getConnectivity();
-                Ajac = elements_[jel] -> getJacNRMatrix();
-                Rhs = elements_[jel] -> getRhsVector();
-                
-                //Disperse local contributions into the global matrix
-                //Matrix K and C
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-8){
-                            int dof_i = 2*connec(i);
-                            int dof_j = 2*connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &Ajac(2*i  ,2*j  ),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-8){
-                            int dof_i = 2*connec(i)+1;
-                            int dof_j = 2*connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
-                                                &Ajac(2*i+1,2*j  ),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-8){
-                            int dof_i = 2*connec(i);
-                            int dof_j = 2*connec(j)+1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
-                                                &Ajac(2*i  ,2*j+1),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-8){
-                            int dof_i = 2*connec(i)+1;
-                            int dof_j = 2*connec(j)+1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
-                                                &Ajac(2*i+1,2*j+1),
-                                                ADD_VALUES);
-                        };
-                        
-                        //Matrix Q and Qt
-                        if (fabs(Ajac(2*i  ,12+j)) >= 1.e-8){
-                                int dof_i = 2*connec(i);
-                                int dof_j = 2*numNodes + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j, \
-                                                    &Ajac(2*i  ,12+j),
-                                                    ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i, \
-                                                    &Ajac(12+j,2*i  ),
-                                                    ADD_VALUES);
-                            };
-                        if (fabs(Ajac(2*i+1,12+j)) >= 1.e-8){
-                            int dof_i = 2*connec(i)+1;
-                            int dof_j = 2*numNodes + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
-                                                &Ajac(2*i+1,12+j),
-                                                ADD_VALUES);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,    \
-                                                &Ajac(12+j,2*i+1),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(Ajac(12+i,12+j)) >= 1.e-8){
-                            int dof_i = 2*numNodes + connec(i);
-                            int dof_j = 2*numNodes + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
-                                                &Ajac(12+i,12+j),
-                                                ADD_VALUES);
-                        };
-                    };
-                    
-                    //Rhs vector
-                    if (fabs(Rhs(2*i  )) >= 1.e-8){
-                        int dof_i = 2*connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
-                                            ADD_VALUES);
-                    };
-                    
-                    if (fabs(Rhs(2*i+1)) >= 1.e-8){
-                        int dof_i = 2*connec(i)+1;
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
-                                            ADD_VALUES);
-                    };
-                };
-                for (int i=0; i<6; i++){
-                    if (fabs(Rhs(12+i)) >= 1.e-8){
-                        int dof_i = 2*numNodes + connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),
-                                                ADD_VALUES);
-                    };
-                };
-            };
-        };
-        
-        //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-        
-        // ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        
-        //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-        
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-        
-        ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-                                100);CHKERRQ(ierr);
-        
-        ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-      
-        ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-        
-        ierr = PCSetType(pc, PCASM);CHKERRQ(ierr);
-        
-        // ierr = KSPSetPCSide(ksp, PC_RIGHT);
-        //ierr = KSPSetType(ksp,KSPBCGS); CHKERRQ(ierr);
-
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-        
-
-        // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
-        // ierr = MatSetNullSpace(A, nullsp);
-        // ierr = MatNullSpaceDestroy(&nullsp);
-
-// #if defined(PETSC_HAVE_MUMPS)
-//             ierr = KSPSetType(ksp,KSPPREONLY);
-//             ierr = KSPGetPC(ksp,&pc);
-//             ierr = PCSetType(pc, PCLU);
-// #endif
-            
-//             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-//             ierr = KSPSetUp(ksp);
-            
-
-
-
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
-        
-        ierr = KSPGetTotalIterations(ksp, &iterations);
-
-        std::cout << "GMRES Iterations = " << iterations << std::endl;
-        
-        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
-        
-        //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-        
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-                
-        //Updates nodal values
-        double u_ [2];
-        double p_;
-        Ione = 1;
-
-        for (int i = 0; i < numNodes; ++i){
-            Ii = 2*i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            Ii = 2*i+1;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[1] = val;
-            nodes_[i] -> incrementVelocity(0,u_[0]);
-            nodes_[i] -> incrementVelocity(1,u_[1]);
-        };
-        for (int i = 0; i<numNodes; i++){
-            Ii = 2*numNodes+i;
-            ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-            p_ = val;
-            nodes_[i] -> incrementPressure(p_);
-        };
-        
-        //Computes the solution vector norm
-        ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-        
-        if(rank == 0){
-            std::cout << "Du Norm = " << val << std::endl;
-            std::cout<<"Iteration = " << inewton << std::endl;
-        };
-
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
-
-        if(val <= tolerance){
-            break;            
-        };
-        
-        
-    };
-
-    if (rank == 0) {
-        //Computing velocity divergent
-
-        for (int ino = 0; ino < numNodes; ino++){
-            nodes_[ino] -> setVelocityDivergent(0.);
-        };                
-       
-        for (int jel = 0; jel < numElem; jel++){   
-            elements_[jel] -> computeVelocityDivergent();
-        };
-
-        printVelocity(1);
+        //      printResults(1);
     };
 
     return 0;
@@ -1799,7 +1607,7 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             };
 
             //Printing results
-            printVelocity(iTimeStep);
+            printResults(iTimeStep);
         };
         
     };
@@ -2303,7 +2111,7 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             dragLift << std::endl;
 
             //Printing results
-            printVelocity(iTimeStep);
+            printResults(iTimeStep);
         };
         
     };
@@ -2384,7 +2192,7 @@ int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
                 if (part_elem[jel] == rank) {
                     //Compute Element matrix
                     if (problem_type == 1)
-                        elements_[jel] -> getTransientStokes();
+                        elements_[jel] -> getTransientNavierStokes();
                     
                     if (problem_type == 2){
                         if (iTimeStep < 2){
