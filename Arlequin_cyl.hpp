@@ -90,15 +90,6 @@ public:
     /// @param Fluid coarse model @param Fluid fine model
     void setFluidModels(FluidMesh coarse, FluidMesh fine);
 
-    /// Mounts and solve the moving mesh Steady Laplace problem. At each step
-    /// the fine model is moved and a new steady problem is computed,
-    /// independently from the previous.
-    /// @param int maximum number of iterations of the Newton-Raphson's process
-    /// @param double tolerance of the Newton-Raphson's process
-    /// @param int number of steps
-    int solveSteadyArlequinMovingLaplaceProblem(int iterNumber, 
-                                                double tolerance, int steps);
-
     /// Mounts and solve the incompressible flow problem with overlapping meshes
     /// using the Arlequin method whit the gluing zone defined in the fine model
     /// @param int maximum number of iterations of the Newton-Raphson's process
@@ -168,6 +159,9 @@ public:
 
     /// Sets the nodal correspondence of the fine to the coarse models
     void setNodalCorrespondenceCoarse();
+
+    /// Compute and print drag and lift coefficients
+    void dragAndLiftCoefficients(std::ofstream& dragLift);
 
     /// Searchs the point correspondence in a fluid model
     /// @param VecLocD point
@@ -791,6 +785,7 @@ void Arlequin<2>::setSignaledDistance(){
             }; //if bf is the glue boundary
         }; //
     
+        if(dist < 0) dist = 0;
         nodesFine_[ino] -> setDistFunction(dist);
      };
 
@@ -957,9 +952,7 @@ void Arlequin<2>::setCouplingZone(){
     elementsGlueZoneFine_.reserve(numElemFine / 3);
     nodesGlueZoneFine_.reserve(numNodesFine / 3);
     glueZoneFine_.reserve(numNodesFine / 3);
-    int index = 0;
-  
-
+    int index = 0; 
 
     //Defines a criterion to select the elements that are in the glue zone
     for (int jel = 0; jel < numElemFine; jel++){
@@ -971,21 +964,10 @@ void Arlequin<2>::setCouplingZone(){
             x = nodesFine_[connec(ino)] -> getCoordinates();
             double dist = nodesFine_[connec(ino)] -> getDistFunction();
             //  std::cout << "DIST " << dist << std::endl;
-            if (dist <= 1.0+0.01){
+            if (dist <= fineModel.glueZoneThickness + 0.001){
                 flag += 1;
                 //    break;
             };
-
-    
-            // if ((x(0) < lim1) || (x(0) > lim2) || 
-            //     (x(1) < lim1) || (x(1) > lim2)){
-            
-            // if ((x(0) < 4.) || (x(0) > 12.5) || 
-            //     (x(1) < 4.) || (x(1) > 8.)){
-            //     flag = 1;
-            //     break;
-            // };
-
         };
 
         if (flag == 6) {
@@ -1037,8 +1019,9 @@ void Arlequin<2>::setCouplingZone(){
         };
     };
 
-    if (rank == 0) std::cout << "GLUE ZONE - Nodes = " << numNodesGlueZoneFine 
-                             << " Elements = " 
+    if (rank == 0) std::cout << "GLUE ZONE - Number of Nodes = " 
+                             << numNodesGlueZoneFine 
+                             << " - Number of Elements = " 
                              << elementsGlueZoneFine_.size() << std::endl;
     
     for (int i = 0; i < numNodesGlueZoneFine; i++){
@@ -1106,7 +1089,7 @@ void Arlequin<2>::setCouplingZone(){
             for (int i=0; i < elementsCoarse_[jel] -> 
                      getNumberOfIntegrationPoints(); i++){
                 
-                x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);  
+                x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);
 
                 if ((x(0) < lim1) || (x(0) > lim2) || 
                     (x(1) < lim1) || (x(1) > lim2)){
@@ -1142,10 +1125,6 @@ void Arlequin<2>::setCouplingZone(){
             nodesGlueZoneCoarse_.push_back(i);
         };
     };
-
-    if (rank == 0) std::cout << "GLUE ZONE - Nodes = " << numNodesGlueZoneCoarse
-                             << " Elements = " 
-                             << elementsGlueZoneCoarse_.size() << std::endl;
 
     for (int i = 0; i < numNodesGlueZoneCoarse; i++){
         typename Nodes::VecLocD x;
@@ -1389,11 +1368,10 @@ template<>
 void Arlequin<2>::setWeightFunction(double val){
     
     typename Nodes::VecLocD x;
-    int numIntPoints;
     double wFuncValue;
 
-    double epsilon = 1.e-2;
-    double lambda = 1.;
+    double epsilon = coarseModel.arlequinEpsilon;
+    double lambda = fineModel.glueZoneThickness;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -1908,102 +1886,103 @@ void Arlequin<2>::printResults(int step) {
            << "</VTKFile>" << std::endl;
 
 
-
-    // std::string c = "saidaCoupling"+result+".vtu";
+    /*
+    std::string c = "saidaCoupling"+result+".vtu";
     
-    // std::fstream output_c(c.c_str(), std::ios_base::out);
+    std::fstream output_c(c.c_str(), std::ios_base::out);
 
-    // output_c << "<?xml version=\"1.0\"?>" << std::endl
-    //          << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-    //          << "  <UnstructuredGrid>" << std::endl
-    //          << "  <Piece NumberOfPoints=\"" << numNodesGlueZoneFine
-    //          << "\"  NumberOfCells=\"" << numElemGlueZoneFine
-    //          << "\">" << std::endl;
+    output_c << "<?xml version=\"1.0\"?>" << std::endl
+             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+             << "  <UnstructuredGrid>" << std::endl
+             << "  <Piece NumberOfPoints=\"" << numNodesGlueZoneFine
+             << "\"  NumberOfCells=\"" << numElemGlueZoneFine
+             << "\">" << std::endl;
 
-    // //WRITE NODAL COORDINATES
-    // output_c << "    <Points>" << std::endl
-    //          << "      <DataArray type=\"Float64\" "
-    //          << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+    //WRITE NODAL COORDINATES
+    output_c << "    <Points>" << std::endl
+             << "      <DataArray type=\"Float64\" "
+             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    // for (int i = 0; i < numNodesGlueZoneFine; i++){
-    //     typename Nodes::VecLocD x;
-    //     x = nodesLagrangeFine_[i] -> getCoordinates();
-    //     output_c << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
-    // };
-    // output_c << "      </DataArray>" << std::endl
-    //          << "    </Points>" << std::endl;
+    for (int i = 0; i < numNodesGlueZoneFine; i++){
+        typename Nodes::VecLocD x;
+        x = nodesLagrangeFine_[i] -> getCoordinates();
+        output_c << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+    };
+    output_c << "      </DataArray>" << std::endl
+             << "    </Points>" << std::endl;
     
-    // //WRITE ELEMENT CONNECTIVITY
-    // output_c << "    <Cells>" << std::endl
-    //          << "      <DataArray type=\"Int32\" "
-    //          << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+    //WRITE ELEMENT CONNECTIVITY
+    output_c << "    <Cells>" << std::endl
+             << "      <DataArray type=\"Int32\" "
+             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
     
-    // for (int i = 0; i < numElemGlueZoneFine; i++){
-    //     typename Elements::Connectivity connec;
-    //     connec = glueZoneFine_[i] -> getConnectivity();
-    //     output_c << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-    //              << connec(3) << " " << connec(4) << " " << connec(5) << \
-    //         std::endl;
-    // };
-    // output_c << "      </DataArray>" << std::endl;
+    for (int i = 0; i < numElemGlueZoneFine; i++){
+        typename Elements::Connectivity connec;
+        connec = glueZoneFine_[i] -> getConnectivity();
+        output_c << connec(0) << " " << connec(1) << " " << connec(2) << " " \
+                 << connec(3) << " " << connec(4) << " " << connec(5) << \
+            std::endl;
+    };
+    output_c << "      </DataArray>" << std::endl;
   
-    // //WRITE OFFSETS IN DATA ARRAY
-    // output_c << "      <DataArray type=\"Int32\""
-    //          << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+    //WRITE OFFSETS IN DATA ARRAY
+    output_c << "      <DataArray type=\"Int32\""
+             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
     
-    // aux = 0;
-    // for (int i = 0; i < numElemGlueZoneFine; i++){
-    //     output_c << aux + 6 << std::endl;
-    //     aux += 6;
-    // };
-    // output_c << "      </DataArray>" << std::endl;
+    aux = 0;
+    for (int i = 0; i < numElemGlueZoneFine; i++){
+        output_c << aux + 6 << std::endl;
+        aux += 6;
+    };
+    output_c << "      </DataArray>" << std::endl;
   
-    // //WRITE ELEMENT TYPES
-    // output_c << "      <DataArray type=\"UInt8\" Name=\"types\" "
-    //          << "format=\"ascii\">" << std::endl;
+    //WRITE ELEMENT TYPES
+    output_c << "      <DataArray type=\"UInt8\" Name=\"types\" "
+             << "format=\"ascii\">" << std::endl;
     
-    // for (int i = 0; i < numElemGlueZoneFine; i++){
-    //     output_c << 22 << std::endl;
-    // };
+    for (int i = 0; i < numElemGlueZoneFine; i++){
+        output_c << 22 << std::endl;
+    };
 
-    // output_c << "      </DataArray>" << std::endl
-    //          << "    </Cells>" << std::endl;
+    output_c << "      </DataArray>" << std::endl
+             << "    </Cells>" << std::endl;
 
-    // //WRITE NODAL RESULTS
-    // output_c << "    <PointData>" << std::endl;
-    // output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //          << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+    //WRITE NODAL RESULTS
+    output_c << "    <PointData>" << std::endl;
+    output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
 
-    // for (int i=0; i<numNodesGlueZoneFine; i++){
-    //     output_c << nodesFine_[i] -> getWeightFunction() << " "              
-    //               << 0. << " " 
-    //               << 0. << std::endl;
-    // };
-    // output_c << "      </DataArray> " << std::endl;
+    for (int i=0; i<numNodesGlueZoneFine; i++){
+        output_c << nodesFine_[i] -> getWeightFunction() << " "              
+                  << 0. << " " 
+                  << 0. << std::endl;
+    };
+    output_c << "      </DataArray> " << std::endl;
 
 
-    // output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //          << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
+    output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+             << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
 
-    // for (int i=0; i<numNodesGlueZoneFine; i++){
-    //     output_c << nodesFine_[i] -> getDistFunction() << " "              
-    //               << 0. << " " 
-    //               << 0. << std::endl;
-    // };
-    // output_c << "      </DataArray> " << std::endl;
+    for (int i=0; i<numNodesGlueZoneFine; i++){
+        output_c << nodesFine_[i] -> getDistFunction() << " "              
+                  << 0. << " " 
+                  << 0. << std::endl;
+    };
+    output_c << "      </DataArray> " << std::endl;
 
-    // output_c << "    </PointData>" << std::endl; 
+    output_c << "    </PointData>" << std::endl; 
 
-    // //WRITE ELEMENT RESULTS
-    // output_c << "    <CellData>" << std::endl;
+    //WRITE ELEMENT RESULTS
+    output_c << "    <CellData>" << std::endl;
     
 
-    // output_c << "    </CellData>" << std::endl; 
+    output_c << "    </CellData>" << std::endl; 
 
-    // //FINALIZE OUTPUT FILE
-    // output_c << "  </Piece>" << std::endl
-    //        << "  </UnstructuredGrid>" << std::endl
-    //        << "</VTKFile>" << std::endl;
+    //FINALIZE OUTPUT FILE
+    output_c << "  </Piece>" << std::endl
+           << "  </UnstructuredGrid>" << std::endl
+           << "</VTKFile>" << std::endl;
+    */
 };
 
 
@@ -2042,9 +2021,11 @@ void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
 
     for (int i=0; i < numElemFine; i++){
         elementsFine_[i] -> setModel(true);
+        elementsFine_[i] -> setArlequinProblem();
     };
     for (int i=0; i < numElemCoarse; i++){
         elementsCoarse_[i] -> setModel(false);
+        elementsCoarse_[i] -> setArlequinProblem();
     };
 
     //Sets the element boxes for all elements in both coarse and fine models
@@ -2062,581 +2043,76 @@ void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
 };
 
 //------------------------------------------------------------------------------
-//----------------COMPUTE ARLEQUIN COUPLED MOVING LAPLACE PROBLEM---------------
+//----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
 //------------------------------------------------------------------------------
 template<>
-int Arlequin<2>::solveSteadyArlequinMovingLaplaceProblem(int iterNumber, 
-                                                         double tolerance,
-                                                         int steps){
+void Arlequin<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
 
-    Mat               A;
-    Vec               b, u, All;
-    PetscErrorCode    ierr;
-    PetscInt          Istart, Iend, Ii, Ione, iterations;
-    KSP               ksp;
-    PC                pc;
-    VecScatter        ctx;
-    PetscScalar       val;
+    double dragCoefficient = 0.;
+    double liftCoefficient = 0.;
+    double pressureDragCoefficient = 0.;
+    double pressureLiftCoefficient = 0.;
+    double frictionDragCoefficient = 0.;
+    double frictionLiftCoefficient = 0.;
     
-    // //Construct the glue zone based on some defined criterion
-    // setCouplingZone();
-
-    // //Computes the Weight function for all the finite elements
-    // setWeightFunction(16.);
-
-    //Computes the Nodal correspondence between fine nodes and coarse elements
-    setNodalCorrespondenceFine();
-
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);      
-
-    // Computes the system size
-    int sysSize = numNodesCoarse + numNodesFine + numNodesFine;
-
-    for (int iSteps = 0; iSteps < steps; iSteps++){
-
-
-        for (int i=0; i<numNodesFine; i++){
+    for (int jel = 0; jel < numBoundElemFine; jel++){   
+        
+        double rhoInf = 1.0;
+        double velocityInf[2];
+        velocityInf[0] = -1.;
+        velocityInf[1] = 0.;
+        
+        double dForce = 0.;
+        double lForce = 0.;
+        double pDForce = 0.;
+        double pLForce = 0.;
+        double fDForce = 0.;
+        double fLForce = 0.;
+        
+        if (boundaryFine_[jel] -> getBoundaryGroup() == 
+            fineModel.getDragAndLiftBoundary()){
+            int iel = boundaryFine_[jel] -> getElement();
+            elementsFine_[iel] -> computeDragAndLiftForces();
             
-            typename Nodes::VecLocD x;
-
-            x = nodesFine_[i] -> getCoordinates();
-
-            x(0) += 0.1;
-            //            std::cout << "x0 " << x(0) << std::endl;
-            nodesFine_[i] -> setCoordinates(x);
-        };
-
-
-        
-        for (int i=0; i<numNodesFine; i++){
-            nodesFine_[i] -> clearVariables();
-        };
-        for (int i=0; i<numNodesCoarse; i++){
-            nodesCoarse_[i] -> clearVariables();
-        };
-        for (int i=0; i<numElemFine; i++){
-            elementsFine_[i] -> clearVariables();
-        };
-        for (int i=0; i<numElemCoarse; i++){
-            elementsCoarse_[i] -> clearVariables();
-        }; 
-                
-        //Sets the element boxes for all elements in both coarse and fine models
-        setElementBoxes();
-        
-        //Computes the Nodal correspondence between fine nodes and coarse elements
-        setNodalCorrespondenceFine();
-
-        // //Construct the glue zone based on some defined criterion
-        // setCouplingZoneFine();
-
-        // //Computes the Weight function for all the finite elements
-        setWeightFunction(16. + 0.1 * (iSteps+1));
-
-
-    for (int inewton = 0; inewton < iterNumber; inewton++){
-        
-        // Preallocates the matrix
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            sysSize, sysSize, 500, NULL, 500, NULL, &A); 
-        CHKERRQ(ierr);
-        
-        // Divides the matrix between the processes
-        ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
-        
-        //Create PETSc vectors
-        ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
-        ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
-        ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
-        ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-        ierr = VecDuplicate(b, &All); CHKERRQ(ierr);
-        
-        //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
-        
-        //----------------------------------------------------------------------
-        //--------------------BEGIN OF LINEAR SYSTEM ASSEMBLY-------------------
-        //----------------------------------------------------------------------
-
-        //Coarse mesh
-        for (int jel = 0; jel < numElemCoarse; jel++){   
-            
-            if (domDecompCoarse.first[jel] == rank) {
-                
-                //Compute Element matrix
-                elementsCoarse_[jel] -> getSteadyLaplace();
-                                
-                typename Elements::LocalMatrix Ajac;
-                typename Elements::LocalVector Rhs;
-                typename Elements::Connectivity connec;
-                
-                //Gets element connectivity, jacobian and rhs 
-                connec = elementsCoarse_[jel] -> getConnectivity();
-                Ajac = elementsCoarse_[jel] -> getJacNRMatrix();
-                Rhs = elementsCoarse_[jel] -> getRhsVector();
-                
-                //Disperse local contributions into the global matrix
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-8){
-                            int dof_i = connec(i);
-                            int dof_j = connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i  ,2*j  ),ADD_VALUES);
-                        };
-                    };                                       
-                    //Rhs vector
-                    if (fabs(Rhs(2*i  )) >= 1.e-8){
-                        int dof_i = connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
-                    };
-                };
-            };
+            pDForce = elementsFine_[iel] -> getPressureDragForce();
+            pLForce = elementsFine_[iel] -> getPressureLiftForce();
+            fDForce = elementsFine_[iel] -> getFrictionDragForce();
+            fLForce = elementsFine_[iel] -> getFrictionLiftForce();
+            dForce = elementsFine_[iel] -> getDragForce();
+            lForce = elementsFine_[iel] -> getLiftForce();
         };
         
-        //Fine mesh
-        for (int jel = 0; jel < numElemFine; jel++){   
-            
-            if (domDecompFine.first[jel] == rank) {
-                
-                //Compute Element matrix
-                elementsFine_[jel] -> getSteadyLaplace();
-                
-                typename Elements::LocalMatrix Ajac;
-                typename Elements::LocalVector Rhs;
-                typename Elements::Connectivity connec;
-                
-                //Gets element connectivity, jacobian and rhs 
-                connec = elementsFine_[jel] -> getConnectivity();
-                Ajac = elementsFine_[jel] -> getJacNRMatrix();
-                Rhs = elementsFine_[jel] -> getRhsVector();
-                
-                //Disperse local contributions into the global matrix
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-8){
-                            int dof_i = numNodesCoarse + connec(i);
-                            int dof_j = numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
-                                                &Ajac(2*i  ,2*j  ),ADD_VALUES);
-                        };
-                    };
-                                        
-                    //Rhs vector
-                    if (fabs(Rhs(2*i  )) >= 1.e-8){
-                        int dof_i = numNodesCoarse + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
-                    };
-                };
-            };
-        };
-                
-        //Lagrange Multipliers
-        for (int l=0; l< numElemGlueZoneFine; l++){
-          
-            int jel = elementsGlueZoneFine_[l];
-            
-            if (domDecompFine.first[jel] == rank) {
-                
-                typename Elements::LocalMatrix Ajac;
-                typename Elements::LocalVector Rhs;
-                typename Elements::Connectivity connec, connecC;
-                
-                connec = elementsFine_[jel] -> getConnectivity();
-                
-                // FINE MESH
-
-                //Computes element matrix
-                elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
-                
-                //Gets element matrice and rhs vectors
-                Ajac = - elementsFine_[jel] -> getJacNRMatrix();
-                Rhs = - elementsFine_[jel] -> getRhsVector();
-                
-                typename Elements::LocalVector rhsLagMult,U_;
-                
-                U_.clear();
-                for (int i = 0; i < 6; i++){
-                    U_(2*i) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-                };
-                
-                noalias(rhsLagMult) = - prod(trans(Ajac),U_);
-                
-                //Disperse local contributions into the global matrix
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-8){
-                            int d_i = numNodesCoarse + numNodesFine + connec(i);
-                            int d_j = numNodesCoarse + connec(j);
-                                    
-                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                &Ajac(2*i  ,2*j  ),ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &Ajac(2*j  ,2*i  ),ADD_VALUES);
-                        };
-                    };
-                    //Rhs vector
-                    if (fabs(Rhs(2*i  )) >= 1.e-8){
-                        int dof_i = numNodesCoarse + numNodesFine + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ), ADD_VALUES);
-                    };
-                    if (fabs(rhsLagMult(2*i  )) >= 1.e-8){
-                        int dof_i = numNodesCoarse + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
-                                            ,ADD_VALUES);
-                    };
-                };      
-                
-                //COAESE MESH
-                
-                //Counts number of coarse mesh intersecting the 
-                //fine element
-                int numberIntPoints = elementsFine_[jel] -> 
-                    getNumberOfIntegrationPoints();
-                int aux;
-                
-                std::vector<int> ele, diffElem;
-                ele.clear();
-                diffElem.clear();
-                for (int i=0; i<numberIntPoints; i++){
-                    aux = elementsFine_[jel] -> 
-                        getIntegPointCorrespondenceElement(i);
-                    ele.push_back(aux);
-                };
-                
-                int numElemIntersect = 1;
-                int flag = 0;
-                diffElem.push_back(ele[0]);
-                
-                for (int i = 1; i<numberIntPoints; i++){
-                    flag = 0;
-                    for (int j = 0; j<numElemIntersect; j++){
-                        if (ele[i] == diffElem[j]) {
-                            break;
-                        }else{
-                            flag++;
-                        };
-                        if(flag == numElemIntersect){
-                            numElemIntersect++;
-                            diffElem.push_back(ele[i]);
-                        };
-                    };
-                };
-                
-                //Compute the Lagrange Multiplier element matrix
-                for (int ielem = 0; ielem < numElemIntersect; ielem++){
-                    
-                    int iElemCoarse = diffElem[ielem];
-                    double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
-                    
-                    elementsFine_[jel] -> 
-                        getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
-                    
-                    //Computes element matrix
-                    Ajac = elementsFine_[jel] -> getJacNRMatrix();
-                    
-                    typename Elements::LocalVector rhsLagMult,U_;
-                    
-                    U_.clear();
-                    for (int i = 0; i < 6; i++){
-                        U_(2*i  ) = 
-                            nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-                    };
-                    
-                    noalias(rhsLagMult) = -prod(trans(Ajac),U_);
-                    
-                    std::pair<Elements::LocalVector, 
-                              Elements::LocalMatrix>  lagMult;
-                    
-                    connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
-                            
-                    lagMult = elementsCoarse_[iElemCoarse] -> 
-                        getRhsVectorAndBoundaryConditions(Ajac);
-                            
-                    //Disperse local contribution into the global matrix
-                    for (int i=0; i<6; i++){
-                        for (int j=0; j<6; j++){
-                            if (fabs(lagMult.second(2*i,2*j)) >= 1.e-8){
-                                int dof_i = numNodesCoarse + numNodesFine 
-                                    + connec(i);
-                                int dof_j = connecC (j);
-                                
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &lagMult.second(2*i  ,2*j  )
-                                                    ,ADD_VALUES);
-                                
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &lagMult.second(2*i  ,2*j  )
-                                                    ,ADD_VALUES);
-                            };
-                        };
-                        //Rhs vector
-                        if (fabs(lagMult.first(2*i  )) >= 1.e-8){
-                            int d_i = numNodesCoarse +numNodesFine + connec(i);
-                            ierr = VecSetValues(b,1,&d_i,&lagMult.first(2*i  ),
-                                                ADD_VALUES);
-                        };
-                        
-                        if (fabs(rhsLagMult(2*i  )) >= 1.e-8){
-                            int dof_i = connecC(i);
-                            ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  ),
-                                                ADD_VALUES);
-                        };
-                    };                                 
-                }; //Number of intersections
-            }; // if element belongs to the glue zone
-        }; // Glue zone
-        //----------------------------------------------------------------------
-        //---------------------END OF LINEAR SYSTEM ASSEMBLY--------------------
-        //----------------------------------------------------------------------
+        pressureDragCoefficient += pDForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        pressureLiftCoefficient += pLForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
         
-        //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+        frictionDragCoefficient += fDForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        frictionLiftCoefficient += fLForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
         
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+        dragCoefficient += dForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        liftCoefficient += lForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
         
-        //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        
-        //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-        
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-        
-        ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-                                10000);CHKERRQ(ierr);
-        
-        ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-      
-        ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-        
-        ierr = PCSetType(pc, PCJACOBI);CHKERRQ(ierr);
-        
-        //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-        //ierr = KSPSetType(ksp,KSPTFQMR); CHKERRQ(ierr);
-
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-        
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
-        
-        ierr = KSPGetTotalIterations(ksp, &iterations);
-
-        std::cout << "GMRES Iterations = " << iterations << std::endl;
-        
-        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        
-        //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-        
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-        CHKERRQ(ierr);
-        
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-        CHKERRQ(ierr);
-        
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-                
-        //Updates nodal values
-        double u_[2];
-        double norm = 0.;
-        Ione = 1;
-
-        for (int i = 0; i < numNodesCoarse; ++i){
-            Ii = i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            norm += val*val;
-            nodesCoarse_[i] -> incrementVelocity(0,u_[0]);
-        };
-
-        for (int i = 0; i < numNodesFine; ++i){
-            Ii = numNodesCoarse + i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            norm += val*val;
-            nodesFine_[i] -> incrementVelocity(0,u_[0]);
-        };
-
-        for (int i = 0; i < numNodesFine; ++i){
-            Ii = numNodesCoarse + numNodesFine + i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            nodesFine_[i] -> incrementLagrangeMultiplier(0,u_[0]);
-        };
-        
-        //Computes the solution vector norm
-        ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-
-
-
-        
-        QuadShapeFunction<2>                       shapeQuad;
-        typename QuadShapeFunction<2>::Values      phi_;
-
-        for (int i = 0; i<numNodesFine; i++){
-            
-            typename Nodes::VecLocD xsi;
-            typename Quadrature::NodalValuesQuad p_coarse;
-            typename Elements::Connectivity connecCoarse;
-
-            double val = 0.;
-            
-            int elCoarse = nodesFine_[i] -> getNodalElemCorrespondence();
-            xsi = nodesFine_[i] -> getNodalXsiCorrespondence();
-            
-            connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
-            
-            for (int j=0; j<6; j++){
-                p_coarse(j) = nodesCoarse_[connecCoarse(j)] -> getVelocity(0);
-            };
-
-            shapeQuad.evaluate(xsi,phi_);
-
-            for (int j=0; j<6; j++){
-                val += p_coarse(j) * phi_(j);
-            };
-            
-            double wFunc = nodesFine_[i] -> getWeightFunction();
-
-            double pot = nodesFine_[i] -> getVelocity(0) * wFunc 
-                + val * (1 - wFunc);
-
-            nodesFine_[i] -> setPotential(pot);
-            
-        };
-
-        for (int i = 0; i<numNodesCoarse; i++){
-            nodesCoarse_[i] -> setPotential(nodesCoarse_[i] -> getVelocity(0));
-        };
-        
-        if(rank == 0){
-            std::cout << "STEP  = " << iSteps << std::endl;
-            
-            std::cout << "Iteration = " << inewton 
-                      << "      Du Norm = " << val 
-                      << " " << sqrt(norm) << std::endl;
-        };
-
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
-
-
-        if(val <= tolerance){
-            break;            
-        };             
-    };
-
-
-
-
-    //Postprocessing results
-
-    for (int i=0; i<numElemFine; i++){
-        elementsFine_[i] -> computeNodalGradient();
     };
     
-    for (int i=0; i<numElemCoarse; i++){
-        elementsCoarse_[i] -> computeNodalGradient();
-    };        
-    
-
-
-    // if (rank == 0){
-    //     int numPoints = 100;
-    //     resultsX_.reserve(numPoints); resultsY_.reserve(numPoints);
-        
-    //     typename Nodes::VecLocD x;
-        
-    //     for (int i=0; i<numPoints; i++){
-    //         x(0) = 4.0;
-    //         x(1) = i / 33. + 4.5;
-    //         Nodes *node = new Nodes(x, i);
-    //         resultsY_.push_back(node);
-    //         x(0) = i / 33. + 0.5;
-    //         x(1) = 4.;
-    //         Nodes *node2 = new Nodes(x, i);
-    //         resultsX_.push_back(node2);
-    //     };
-
-    //     std::pair<int, ublas::bounded_vector<double,2> > corresp;
-
-    //     for (int i=0; i<numPoints; i++){
-    //         x = resultsX_[i] -> getCoordinates();
-            
-    //         corresp = searchNodeCorrespondence(x, nodesFine_, elementsFine_, 
-    //                                            elementsFine_.size());
-    //         resultsX_[i] -> setNodalCorrespondence(corresp.first, 
-    //                                                corresp.second);
-
-    //         x = resultsY_[i] -> getCoordinates();
-            
-    //         corresp = searchNodeCorrespondence(x, nodesFine_, elementsFine_, 
-    //                                            elementsFine_.size());
-    //         resultsY_[i] -> setNodalCorrespondence(corresp.first, 
-    //                                                corresp.second);
-    //     };
-        
-    //     std::pair<double, ublas::bounded_vector<double,2> > resul;
-    //     int el;
-    //     double u[2];
-
-    //     for (int i=0; i<numPoints; i++){
-
-    //         x = resultsX_[i] -> getNodalXsiCorrespondence();
-    //         el = resultsX_[i] -> getNodalElemCorrespondence();
-            
-    //         resul = elementsFine_[el] -> getPotentialResultsInPoint(x);
-            
-    //         resultsX_[i] -> setPotential(resul.first);
-    //         u[0] = resul.second(0);
-    //         u[1] = resul.second(1);
-    //         resultsX_[i] -> setVelocity(u);
-
-    //         x = resultsY_[i] -> getNodalXsiCorrespondence();
-    //         el = resultsY_[i] -> getNodalElemCorrespondence();
-            
-    //         resul = elementsFine_[el] -> getPotentialResultsInPoint(x);
-            
-    //         resultsY_[i] -> setPotential(resul.first);
-    //         u[0] = resul.second(0);
-    //         u[1] = resul.second(1);
-    //         resultsY_[i] -> setVelocity(u);
-    //     };
-
-    //     std::string ss = "resultsCubic0.5.dat";
-        
-    //     std::fstream out(ss.c_str(), std::ios_base::out);
-
-    //     for (int i=0; i<numPoints; i++){
-    //         out << std::scientific << resultsX_[i] -> getPotential() << " "  
-    //             << resultsX_[i] -> getVelocity(0) << " "  
-    //             << resultsX_[i] -> getVelocity(1) << " "  
-    //             << resultsY_[i] -> getPotential() << " "  
-    //             << resultsY_[i] -> getVelocity(0) << " "  
-    //             << resultsY_[i] -> getVelocity(1) << std::endl;        
-            
-    //     };
-    // };
-
     if (rank == 0) {
-        //Computing velocity divergent
-        printResults(iSteps);
-    };
-
-    };
-    
-    std::cout << "Degrees of freedom = "
-              << numNodesCoarse + numNodesFine + numNodesGlueZoneFine 
-              << std::endl;
-
-    return 0;
-
-};
+        const int timeWidth = 11;
+        const int numWidth = 11;
+        dragLift << std::setprecision(3) << std::scientific;
+        dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
+        dragLift << std::setw(numWidth) << pressureDragCoefficient;
+        dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+        dragLift << std::setw(numWidth) << frictionDragCoefficient;
+        dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+        dragLift << std::setw(numWidth) << dragCoefficient;
+        dragLift << std::setw(numWidth) << liftCoefficient;
+        dragLift << std::endl;
+    }
+}
 
 
 //------------------------------------------------------------------------------
@@ -2656,8 +2132,14 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
     PetscScalar       val;
     //MatNullSpace      nullsp;
 
-    std::string dl = "dragLift.dat";
-    std::ofstream dragLift(dl.c_str());
+    std::ofstream dragLift;
+    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
+    if (rank == 0) {
+        dragLift << "Time   Pressure Drag   Pressure Lift " 
+                 << "Friction Drag  Friction Lift Drag    Lift " 
+                 << std::endl;
+    };   
+
 
     if ((problem_type < 1) || (problem_type > 2)){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
@@ -2684,8 +2166,10 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
     
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
-        if (rank == 0) {std::cout << "------------------------- TIME STEP = "
-                                  << iTimeStep << " -------------------------"
+        if (rank == 0) {std::cout << "----------------------------" 
+                                  << " TIME STEP = "
+                                  << iTimeStep 
+                                  << " ---------------------------"
                                   << std::endl;}
         
         //Updates velocity and acceleration
@@ -3421,51 +2905,44 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
 
 
-      
+            
 #if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
-
-       
-        ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-        PCFactorSetUpMatSolverType(pc);
-        PCFactorGetMatrix(pc,&F);
-
-        PetscInt ival,icntl;
-        icntl = 14; ival = 60;
-        MatMumpsSetIcntl(F,icntl,ival);
-        
+            ierr = KSPSetType(ksp,KSPPREONLY);
+            ierr = KSPGetPC(ksp,&pc);
+            ierr = PCSetType(pc, PCLU);
+            
+            
+            ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+            PCFactorSetUpMatSolverType(pc);
+            PCFactorGetMatrix(pc,&F);
+            
+            PetscInt ival,icntl;
+            icntl = 14; ival = 60;
+            MatMumpsSetIcntl(F,icntl,ival);
+            
 #endif
-        
-        
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
-        
-        
+            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            ierr = KSPSetUp(ksp);
+            
 #if defined(PETSC_HAVE_MUMPS)
-        PetscInt  info1,info2,icntl14;
-
-        MatMumpsGetInfo(F,1,&info1);
-        MatMumpsGetInfo(F,2,&info2);
-        MatMumpsGetIcntl(F,14,&icntl14);
-        if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-                                                  << " " << info2 << " " 
-                                                  << icntl14 << std::endl;
+            PetscInt  info1,info2,icntl14;
+            
+            MatMumpsGetInfo(F,1,&info1);
+            MatMumpsGetInfo(F,2,&info2);
+            MatMumpsGetIcntl(F,14,&icntl14);
+            if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
+                                                      << " " << info2 << " " 
+                                                      << icntl14 << std::endl;
 #endif
-
-
-
-
-
-           // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-
+            
+            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            
             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
             
             ierr = KSPGetTotalIterations(ksp, &iterations);
             
             //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
-            
+        
             //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
             //Gathers the solution vector to the master process
@@ -3531,13 +3008,14 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[0] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
+                nodesFine_[nodesGlueZoneFine_[i]] -> 
+                    incrementLagrangeMultiplier(0,u_[0]);
                 
                 Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[1] = val;
-                nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(1,u_[1]);
-                
+                nodesFine_[nodesGlueZoneFine_[i]] -> 
+                    incrementLagrangeMultiplier(1,u_[1]);
                 // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
             };
             
@@ -3566,7 +3044,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             if(val <= tolerance){
                 break;            
             };          
-
+            
             //Updates SUPG Parameter
             // for (int i = 0; i < numElemFine; i++){
             //     elementsFine_[i] -> getParameterSUPG();
@@ -3574,9 +3052,9 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             // for (int i = 0; i < numElemCoarse; i++){
             //     elementsCoarse_[i] -> getParameterSUPG();
             // };
-
+            
         };
-
+        
         //Compute real velocity
         QuadShapeFunction<2>                       shapeQuad;
         typename QuadShapeFunction<2>::Values      phi_;
@@ -3643,72 +3121,13 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             nodesCoarse_[i] -> 
                 setPressureArlequin(nodesCoarse_[i] -> getPressure());
         };
-
-  
-        double dragCoefficient = 0.;
-        double liftCoefficient = 0.;
-        double pressureDragCoefficient = 0.;
-        double pressureLiftCoefficient = 0.;
-        double frictionDragCoefficient = 0.;
-        double frictionLiftCoefficient = 0.;
-
-        for (int jel = 0; jel < numBoundElemFine; jel++){   
-
-            double rhoInf = 1.0;
-            double velocityInf[2];
-            velocityInf[0] = -1.;
-            velocityInf[1] = 0.;
-
-            double dForce = 0.;
-            double lForce = 0.;
-            double pDForce = 0.;
-            double pLForce = 0.;
-            double fDForce = 0.;
-            double fLForce = 0.;
-
-            if (boundaryFine_[jel] -> getBoundaryGroup() == 0){               
-                int iel = boundaryFine_[jel] -> getElement();
-                elementsFine_[iel] -> computeDragAndLiftForces();
-                
-                pDForce = elementsFine_[iel] -> getPressureDragForce();
-                pLForce = elementsFine_[iel] -> getPressureLiftForce();
-                fDForce = elementsFine_[iel] -> getFrictionDragForce();
-                fLForce = elementsFine_[iel] -> getFrictionLiftForce();
-                dForce = elementsFine_[iel] -> getDragForce();
-                lForce = elementsFine_[iel] -> getLiftForce();
-            };
-            
-            pressureDragCoefficient += pDForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            pressureLiftCoefficient += pLForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
-            frictionDragCoefficient += fDForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            frictionLiftCoefficient += fLForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
-            dragCoefficient += dForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            liftCoefficient += lForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
+        
+        // Compute and print drag and lift coefficients
+        if (fineModel.getComputeDragAndLift()){
+            dragAndLiftCoefficients(dragLift);
         };
 
         if (rank == 0) {
-            const int timeWidth = 11;
-            const int numWidth = 11;
-            dragLift << std::setprecision(3) << std::scientific;
-            dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
-            dragLift << std::setw(numWidth) << pressureDragCoefficient;
-            dragLift << std::setw(numWidth) << pressureLiftCoefficient;
-            dragLift << std::setw(numWidth) << frictionDragCoefficient;
-            dragLift << std::setw(numWidth) << frictionLiftCoefficient;
-            dragLift << std::setw(numWidth) << dragCoefficient;
-            dragLift << std::setw(numWidth) << liftCoefficient;
-            dragLift << std::endl;
-
-
             //Printing results
             printResults(iTimeStep);
         };        
@@ -4745,8 +4164,13 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
     PetscScalar       val;
     //MatNullSpace      nullsp;
 
-    std::string dl = "dragLift.dat";
-    std::ofstream dragLift(dl.c_str());
+    std::ofstream dragLift;
+    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
+    if (rank == 0) {
+        dragLift << "Time   Pressure Drag   Pressure Lift " 
+                 << "Friction Drag  Friction Lift Drag    Lift " 
+                 << std::endl;
+    };   
 
     if ((problem_type < 1) || (problem_type > 2)){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
@@ -4797,8 +4221,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 
         };
 
-        double f = .35;
-        double w = 2 * pi * f;
+        // double f = .35;
+        // double w = 2 * pi * f;
 
         for (int i = 0; i < numNodesFine; i++){
             double accel[2], u[2], uprev[2];
@@ -5713,71 +5137,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 setPressureArlequin(nodesCoarse_[i] -> getPressure());
         };
         
-        
-        double dragCoefficient = 0.;
-        double liftCoefficient = 0.;
-        double pressureDragCoefficient = 0.;
-        double pressureLiftCoefficient = 0.;
-        double frictionDragCoefficient = 0.;
-        double frictionLiftCoefficient = 0.;
-
-        for (int jel = 0; jel < numBoundElemFine; jel++){   
-
-            double rhoInf = 1.0;
-            double velocityInf[2];
-            velocityInf[0] = -1.;
-            velocityInf[1] = 0.;
-
-            double dForce = 0.;
-            double lForce = 0.;
-            double pDForce = 0.;
-            double pLForce = 0.;
-            double fDForce = 0.;
-            double fLForce = 0.;
-
-            if (boundaryFine_[jel] -> getBoundaryGroup() == 0){               
-                int iel = boundaryFine_[jel] -> getElement();
-                elementsFine_[iel] -> computeDragAndLiftForces();
-                
-                pDForce = elementsFine_[iel] -> getPressureDragForce();
-                pLForce = elementsFine_[iel] -> getPressureLiftForce();
-                fDForce = elementsFine_[iel] -> getFrictionDragForce();
-                fLForce = elementsFine_[iel] -> getFrictionLiftForce();
-                dForce = elementsFine_[iel] -> getDragForce();
-                lForce = elementsFine_[iel] -> getLiftForce();
-            };
-            
-            pressureDragCoefficient += pDForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            pressureLiftCoefficient += pLForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
-            frictionDragCoefficient += fDForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            frictionLiftCoefficient += fLForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
-            dragCoefficient += dForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            liftCoefficient += lForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
+        // Compute and print drag and lift coefficients
+        if (fineModel.getComputeDragAndLift()){
+            dragAndLiftCoefficients(dragLift);
         };
 
         if (rank == 0) {
-            const int timeWidth = 11;
-            const int numWidth = 11;
-            dragLift << std::setprecision(3) << std::scientific;
-            dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
-            dragLift << std::setw(numWidth) << pressureDragCoefficient;
-            dragLift << std::setw(numWidth) << pressureLiftCoefficient;
-            dragLift << std::setw(numWidth) << frictionDragCoefficient;
-            dragLift << std::setw(numWidth) << frictionLiftCoefficient;
-            dragLift << std::setw(numWidth) << dragCoefficient;
-            dragLift << std::setw(numWidth) << liftCoefficient;
-            dragLift << std::endl;
-
-
             //Printing results
             printResults(iTimeStep);
         };
@@ -5805,6 +5170,9 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
     VecScatter        ctx;
     PetscScalar       val;
     //MatNullSpace      nullsp;
+
+    std::ofstream dragLift;
+    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
 
     if ((problem_type < 1) || (problem_type > 2)){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;

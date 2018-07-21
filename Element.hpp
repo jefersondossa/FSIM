@@ -126,9 +126,9 @@ private:
     double        frictionLiftForce;
     double        dragForce;
     double        liftForce;
-
-    static const double k1;
-    static const double k2;
+    bool          arlequin_; //True if is an Arlequin problem
+    double        k1;
+    double        k2;
 
     typename NormalQuad::PointWeight   intPointWeightFunction;
     typename NormalQuad::PointWeight   intPointWeightFunctionPrev;
@@ -184,6 +184,7 @@ public:
         glueZone = false;        FSIInterface = false;
         intPointGlueZone.clear();
         sideBoundary_ = 0;
+        arlequin_ = false;
 
         for (int i=0; i < (nQuad.end() - nQuad.begin()); i++){
             intPointWeightFunction(i) = 1.;
@@ -232,8 +233,17 @@ public:
     /// @param double* body forces
     void setFieldForce(double* ff);
 
+    /// Sets true if is an Arlequin problem
+    void setArlequinProblem(){arlequin_ = true;};
+
     /// Sets the element vector of local nodes
     void setLocalNodes();
+
+    /// Sets Arlequin coupling operator constants
+    void setArlequinOperatorConstants(double& k11, double& k22){
+        k1 = k11;
+        k2 = k22;
+    };
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
@@ -513,11 +523,6 @@ public:
 
 };
 
-template<>
-double const Element<2>::k1 = 1.e0;
-template<>
-double const Element<2>::k2 = 0.0;
-
 
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
@@ -720,6 +725,7 @@ void Element<2>::clearVariables(){
 
     glueZone = false;        compressibility = false;
     intPointGlueZone.clear();
+    arlequin_ = false;
 
     for (int i=0; i < (sQuad.end() - sQuad.begin()); i++){
         intPointWeightFunction(i) = 1.;
@@ -945,7 +951,7 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
         invM(2,1) = (b * g - a * h) * det;
         invM(2,2) = (a * e - b * d) * det;
 
-        vecM(0) = ddphi(0,0)(j); 
+        vecM(0) = ddphi(0,0)(j) 
             - dphi_dx(0,j) * dx_dxsi11 - dphi_dx(1,j) * dy_dxsi11;
         vecM(1) = ddphi(1,1)(j)
             - dphi_dx(0,j) * dx_dxsi22 - dphi_dx(1,j) * dy_dxsi22;
@@ -2260,7 +2266,7 @@ void Element<2>::getTransientNavierStokes(){
     jacobianNRMatrix.clear();
     rhsVector.clear();
     setLocalNodes();
-    setIntegPointWeightFunction();
+    if (arlequin_){setIntegPointWeightFunction();}
 
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 

@@ -88,7 +88,7 @@ int main(int argc, char **args) {
      
     control.dataReading("32x32.txt","mirror_control.txt");
 
-    char in_solid[32] = "cantilever.txt";
+    //char in_solid[32] = "cantilever.txt";
      
  
     // arlequinProblem.setFluidModels(coarseModel, fineModel);
