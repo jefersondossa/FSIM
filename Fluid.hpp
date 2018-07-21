@@ -17,8 +17,6 @@
 #include "Element.hpp"
 #include "Boundary.hpp"
 
-//#include <iomanip>
-
 // PETSc libraries
 #include <metis.h>
 #include <petscksp.h> 
@@ -69,13 +67,14 @@ private:
     int rank;
     int numFSIInterfaces;
     int iAux;
+    bool computeDragAndLift;
+    int dragAndLiftBoundary;
+    int iTimeStep;
+    
+public:
     double glueZoneThickness;
     double arlequinEpsilon;
     int weightFunctionBehavior;
-    bool computeDragAndLift;
-    int dragAndLiftBoundary;
-    
-public:
     bool printVelocity;
     bool printRealVelocity;
     bool printLagrangeMultipliers;
@@ -117,13 +116,17 @@ public:
     /// @return number of fluid boundaries which composes the 
     /// fluid structure interface
     int getNumberofFSIInterfaces(){return numFSIInterfaces;};
+    
+    /// Gets the flag for computing the Drag and Lift coefficients in a 
+    /// specific boundary
+    /// @return bool flag for computing Drag and Lift coefficients
+    bool getComputeDragAndLift() {return computeDragAndLift;};
 
-    /// Mounts and solve the steady incompressible flow steady problem    
-    /// @param int maximum number of Newton-Raphson's iterations
-    /// @param double tolerance of the Newton-Raphson's process
-    /// @param int problem type: 1 - Stokes problem; 2 - Navier-Stokes problem.
-    int solveSteadyProblem(int iterNumber, double tolerance, int problem_type);
-
+    /// Gets the number of the boundary for computing the Drag and Lift 
+    /// coefficients
+    /// @return int boundary number
+    int getDragAndLiftBoundary() {return dragAndLiftBoundary;};
+ 
     /// Mounts and solve the transient incompressible flow problem    
     /// @param int maximum number of Newton-Raphson's iterations
     /// @param double tolerance of the Newton-Raphson's process
@@ -154,6 +157,9 @@ public:
     /// Print the results for Paraview post-processing
     /// @param int time step
     void printResults(int step);
+
+    /// Compute and print drag and lift coefficients
+    void dragAndLiftCoefficients(std::ofstream& dragLift);
 
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
@@ -411,6 +417,78 @@ void Fluid<2>::printResults(int step) {
 
 };
 
+
+//------------------------------------------------------------------------------
+//----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
+//------------------------------------------------------------------------------
+template<>
+void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
+
+    double dragCoefficient = 0.;
+    double liftCoefficient = 0.;
+    double pressureDragCoefficient = 0.;
+    double pressureLiftCoefficient = 0.;
+    double frictionDragCoefficient = 0.;
+    double frictionLiftCoefficient = 0.;
+    
+    for (int jel = 0; jel < numBoundElems; jel++){   
+        
+        double rhoInf = 1.0;
+        double velocityInf[2];
+        velocityInf[0] = -1.;
+        velocityInf[1] = 0.;
+        
+        double dForce = 0.;
+        double lForce = 0.;
+        double pDForce = 0.;
+        double pLForce = 0.;
+        double fDForce = 0.;
+        double fLForce = 0.;
+        
+        if (boundary_[jel] -> getBoundaryGroup() == dragAndLiftBoundary){
+            int iel = boundary_[jel] -> getElement();
+            elements_[iel] -> computeDragAndLiftForces();
+            
+            pDForce = elements_[iel] -> getPressureDragForce();
+            pLForce = elements_[iel] -> getPressureLiftForce();
+            fDForce = elements_[iel] -> getFrictionDragForce();
+            fLForce = elements_[iel] -> getFrictionLiftForce();
+            dForce = elements_[iel] -> getDragForce();
+            lForce = elements_[iel] -> getLiftForce();
+        };
+        
+        pressureDragCoefficient += pDForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        pressureLiftCoefficient += pLForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        
+        frictionDragCoefficient += fDForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        frictionLiftCoefficient += fLForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        
+        dragCoefficient += dForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        liftCoefficient += lForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        
+    };
+    
+    if (rank == 0) {
+        const int timeWidth = 11;
+        const int numWidth = 11;
+        dragLift << std::setprecision(3) << std::scientific;
+        dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
+        dragLift << std::setw(numWidth) << pressureDragCoefficient;
+        dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+        dragLift << std::setw(numWidth) << frictionDragCoefficient;
+        dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+        dragLift << std::setw(numWidth) << dragCoefficient;
+        dragLift << std::setw(numWidth) << liftCoefficient;
+        dragLift << std::endl;
+    }
+}
+
 //------------------------------------------------------------------------------
 //----------------------------READS FLUID INPUT FILE----------------------------
 //------------------------------------------------------------------------------
@@ -419,7 +497,8 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);      
 
-    if (rank == 0)std::cout << "Reading fluid data.." << std::endl;
+    if (rank == 0)std::cout << "Reading fluid data from \"" 
+                            << inputFile << "\"" << std::endl;
 
     std::string line;
     
@@ -483,12 +562,16 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
     //    getline(inputData,line);getline(inputData,line);
 
     //Read Arlequin variables
-    inputData >> glueZoneThickness >> arlequinEpsilon >> weightFunctionBehavior;
+    double k1,k2;
+    inputData >> glueZoneThickness >> arlequinEpsilon >> weightFunctionBehavior
+              >> k1 >> k2;
 
     mirrorData << "Glue Zone Thickness    = " << glueZoneThickness << std::endl;
     mirrorData << "Epsilon                = " << arlequinEpsilon << std::endl;
     mirrorData << "Energy Weight Function = " << weightFunctionBehavior
-               << std::endl << std::endl;
+               << std::endl;
+    mirrorData << "K1                     = " << k1 << std::endl;
+    mirrorData << "K2                     = " << k2 << std::endl << std::endl;
 
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
     getline(inputData,line);getline(inputData,line);
@@ -619,6 +702,7 @@ void Fluid<2>::dataReading(std::string inputFile, std::string mirror) {
         elements_[i] -> setTimeStep(dTime);
         elements_[i] -> setTimeIntegrationScheme(integScheme);
         elements_[i] -> setFieldForce(fieldForces);
+        elements_[i] -> setArlequinOperatorConstants(k1,k2);
     };
         
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
@@ -1095,15 +1179,15 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
     PC                pc;
     VecScatter        ctx;
     PetscScalar       val;
-    IS             rowperm       = NULL,colperm = NULL;
+    //IS             rowperm       = NULL,colperm = NULL;
     //    MatNullSpace      nullsp;
    
     int rank;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    std::string dl = "dragLift.dat";
-    std::ofstream dragLift(dl.c_str());
+    std::ofstream dragLift;
+    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
     if (rank == 0) {
         dragLift << "Time   Pressure Drag   Pressure Lift " 
                  << "Friction Drag  Friction Lift Drag    Lift " 
@@ -1116,8 +1200,9 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
         return 0;
     };
         
+    iTimeStep = 0;
 
-    for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
+    for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
         for (int i = 0; i < numElem; i++){
             elements_[i] -> getParameterSUPG();
@@ -1546,64 +1631,21 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             
         };//Newton-Raphson
 
-        // std::cin.get();
 
-        double dragCoefficient = 0.;
-        double liftCoefficient = 0.;
-        double pressureDragCoefficient = 0.;
-        double pressureLiftCoefficient = 0.;
-        double frictionDragCoefficient = 0.;
-        double frictionLiftCoefficient = 0.;
-
-        for (int jel = 0; jel < numBoundElems; jel++){   
-
-            double dForce = 0.;
-            double lForce = 0.;
-            double pDForce = 0.;
-            double pLForce = 0.;
-            double fDForce = 0.;
-            double fLForce = 0.;
-
-            if (boundary_[jel] -> getBoundaryGroup() == 0){               
-                int iel = boundary_[jel] -> getElement();
-                elements_[iel] -> computeDragAndLiftForces();
-                
-                pDForce = elements_[iel] -> getPressureDragForce();
-                pLForce = elements_[iel] -> getPressureLiftForce();
-                fDForce = elements_[iel] -> getFrictionDragForce();
-                fLForce = elements_[iel] -> getFrictionLiftForce();
-                dForce = elements_[iel] -> getDragForce();
-                lForce = elements_[iel] -> getLiftForce();
-            };
-            
-            pressureDragCoefficient += pDForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            pressureLiftCoefficient += pLForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
-            frictionDragCoefficient += fDForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            frictionLiftCoefficient += fLForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
-            dragCoefficient += dForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-            liftCoefficient += lForce / 
-                (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-
+        // Compute and print drag and lift coefficients
+        if (computeDragAndLift){
+            dragAndLiftCoefficients(dragLift);
         };
 
         if (rank == 0) {
 
-            dragLift << iTimeStep * dTime << std::fixed << " " 
-                     <<  std::scientific << dragCoefficient 
-                     << " " << liftCoefficient << std::endl;
-
-            for (int i = 0; i < numNodes; i++){
-                nodes_[i] -> clearVorticity();
-            };
-            for (int jel = 0; jel < numElem; jel++){
-                elements_[jel] -> computeVorticity();
+            if (printVorticity){
+                for (int i = 0; i < numNodes; i++){
+                    nodes_[i] -> clearVorticity();
+                };
+                for (int jel = 0; jel < numElem; jel++){
+                    elements_[jel] -> computeVorticity();
+                };
             };
 
             //Printing results
@@ -1622,7 +1664,7 @@ template<>
 int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
                                           int problem_type) {
 
-    Mat               A,F;
+    Mat               A;
     Vec               b, u, All;
     PetscErrorCode    ierr;
     PetscInt          Istart, Iend, Ii, Ione, iterations;
@@ -1630,11 +1672,7 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
     PC                pc;
     VecScatter        ctx;
     PetscScalar       val;
-    MatNullSpace      nullsp;
-    PetscBool      flg=PETSC_FALSE;
-#if defined(PETSC_HAVE_MUMPS)
-    PetscBool      flg_mumps=PETSC_FALSE,flg_mumps_ch=PETSC_FALSE;
-#endif
+    //    MatNullSpace      nullsp;
     int rank;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -1662,9 +1700,9 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
         elements_[i] -> setMeshMovingParameter(eta);
     };
 
-        
+    iTimeStep = 0.;
 
-    for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
+    for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
         for (int i = 0; i < numElem; i++){
             elements_[i] -> getParameterSUPG();
@@ -1931,44 +1969,6 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             ierr = KSPSetUp(ksp);
 
 
-// #if defined(PETSC_HAVE_MUMPS)
-//             flg_mumps    = PETSC_TRUE;
-//             flg_mumps_ch = PETSC_FALSE;
-//             PetscOptionsGetBool(NULL,NULL,"-use_mumps_lu",&flg_mumps,NULL);
-//             PetscOptionsGetBool(NULL,NULL,"-use_mumps_ch",&flg_mumps_ch,NULL);
-//             if (flg_mumps || flg_mumps_ch) {
-//             KSPSetType(ksp,KSPPREONLY);
-//             PetscInt  ival,icntl;
-//             PetscReal val;
-//             KSPGetPC(ksp,&pc);
-            
-//             if (flg_mumps) {
-//             PCSetType(pc,PCLU);
-//         } else if (flg_mumps_ch) {
-//             MatSetOption(A,MAT_SPD,PETSC_TRUE); /* set MUMPS id%SYM=1 */
-//             PCSetType(pc,PCCHOLESKY);
-//         }
-//             PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-//             PCFactorSetUpMatSolverType(pc); /* call MatGetFactor() to create F */
-//             PCFactorGetMatrix(pc,&F);
-            
-//             // /* sequential ordering */
-//             // icntl = 25; ival = -1;
-//             // MatMumpsSetIcntl(F,icntl,ival);
-            
-//             // /* threshhold for row pivot detection */
-//             // MatMumpsSetIcntl(F,24,1);
-//             // icntl = 3; val = 1.e-6;
-//             // MatMumpsSetCntl(F,icntl,val);
-            
-//             // /* compute determinant of A */
-//             // MatMumpsSetIcntl(F,33,1);
-//         }
-// #endif
-
-
-
-
             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
 
             ierr = KSPGetTotalIterations(ksp, &iterations);            
@@ -2156,8 +2156,10 @@ int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
         return 0;
     };
-        
-    for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
+    
+    iTimeStep = 0.;
+    
+    for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
         double duNorm=100.;
         
