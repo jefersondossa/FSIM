@@ -47,6 +47,8 @@ public:
     std::vector<Nodes *>     nodesLagrangeFine_;
     std::vector<Nodes *>     nodesLagrangeCoarse_;
 
+
+    std::vector<Elements *>*  elementsCoarseTest_;
     std::vector<Elements *>  elementsCoarse_;
     std::vector<Elements *>  elementsFine_;
     std::vector<GlueZone *>  glueZoneFine_;
@@ -88,7 +90,7 @@ public:
     /// Sets the coarse and mesh models. It is considered that the fine model
     /// is completely immersed on the coarse model.
     /// @param Fluid coarse model @param Fluid fine model
-    void setFluidModels(FluidMesh coarse, FluidMesh fine);
+    void setFluidModels(FluidMesh& coarse, FluidMesh& fine);
 
     /// Mounts and solve the incompressible flow problem with overlapping meshes
     /// using the Arlequin method whit the gluing zone defined in the fine model
@@ -243,6 +245,8 @@ void Arlequin<2>::setElementBoxes() {
                           std::min(inner_prod(d3,x2),inner_prod(d3,x3)));
         
         elementsCoarse_[jel] -> setIntersectionParameters(xk, Xk, dCk, dck,di1);
+
+        di1.clear();
     };
 
     di2.reserve(3);
@@ -291,6 +295,8 @@ void Arlequin<2>::setElementBoxes() {
                           std::min(inner_prod(d3,x2),inner_prod(d3,x3)));
         
         elementsFine_[jel] -> setIntersectionParameters(xk, Xk, dCk, dck, di2);
+
+        di2.clear();
     };
 
     return;
@@ -1990,7 +1996,7 @@ void Arlequin<2>::printResults(int step) {
 //------------SETS COARSE/FINE MESHES AND GETS ITS BASIC INFORMATIONS-----------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
+void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
 
     coarseModel = coarse;
     fineModel = fine;
@@ -2000,13 +2006,13 @@ void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
     numElemFine   = fineModel.elements_.size();
     numNodesCoarse = coarseModel.nodes_.size();
     numNodesFine   = fineModel.nodes_.size();
-
+ 
     nodesCoarse_  = coarseModel.nodes_;
     nodesFine_    = fineModel.nodes_;
 
     elementsCoarse_ = coarseModel.elements_;
     elementsFine_   = fineModel.elements_;
-
+ 
     boundaryCoarse_ = coarseModel.boundary_;
     boundaryFine_   = fineModel.boundary_;
 
@@ -2015,7 +2021,7 @@ void Arlequin<2>::setFluidModels(FluidMesh coarse, FluidMesh fine){
 
     domDecompCoarse = coarseModel.getDomainDecomposition();
     domDecompFine = fineModel.getDomainDecomposition();
-
+    
     numTimeSteps = fineModel.getNumberOfTimeSteps();
     dTime = fineModel.getTimeStep();
 
