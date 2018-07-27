@@ -1559,6 +1559,15 @@ void Element<2>::getElemMatrix(int index){
             double Gx = dphi_dx(0,i) * wSUPGj * tPSPG_;
             double Gy = dphi_dx(1,i) * wSUPGj * tPSPG_;
             
+            // double Tx = (dphi_dx(0,i) * (2. * ddphi_dx(0,0)(j) + 
+            //                              ddphi_dx(1,1)(j)) + 
+            //              dphi_dx(1,i) * ddphi_dx(0,1)(j))
+            //     * tPSPG_ * visc_ / dens_;
+            // double Ty = (dphi_dx(1,i) * (2. * ddphi_dx(1,1)(j) + 
+            //                              ddphi_dx(0,0)(j)) +
+            //              dphi_dx(0,i) * ddphi_dx(0,1)(j))
+            //     * tPSPG_ * visc_ / dens_;
+
             double Guu = (dphi_dx(0,i) * du_dx * phi_(j) + 
                           dphi_dx(1,i) * dv_dx * phi_(j)) * tPSPG_;
             double Gvv = (dphi_dx(0,i) * du_dy * phi_(j) + 
@@ -1794,6 +1803,10 @@ void Element<2>::getResidualVector(int index){
             dphi_dx(1,i) * ((una_ - umesh_) * dv_dx +
                             (vna_ - vmesh_) * dv_dy) * tPSPG_;
 
+        double T = -(dphi_dx(0,i) * (2. * du_dxx + du_dyy + dv_dxy) +
+                    dphi_dx(1,i) * (2. * dv_dyy + dv_dxx + du_dxy))
+            * tPSPG_ * visc_ / dens_;
+
         double dAx = 0.;
         double dAy = 0.;
         if (model){
@@ -1833,7 +1846,7 @@ void Element<2>::getResidualVector(int index){
         rhsVector(2*i+1) += (-my + (-Ky - Py - Cy - dAy - Sy) * dTime_ 
                              - KLSy * dTime_)
             * weight_ * djac_ * intPointWeightFunction(index);
-        rhsVector(12+i) += -Q * dTime_ 
+        rhsVector(12+i) += (-Q - T) * dTime_ 
             * weight_ * djac_ * intPointWeightFunction(index);
                              
     };
