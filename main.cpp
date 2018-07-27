@@ -113,7 +113,7 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
     
-    control.solveTransientProblem(3, 1.e-6, 2); 
+    control.solveTransientProblem(2, 1.e-6, 2); 
      
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
