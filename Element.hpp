@@ -91,6 +91,7 @@ private:
     LocalMatrix   laplMatrix;         //Laplacian problem matrix
     LocalMatrix   lagrMultMatrix;     //Lagrange Multiplier matrix
     LocalMatrix   jacobianNRMatrix;   //Newton's method jacobian
+    double        x_, y_;
     double        u_, v_, w_, p_;     //Interpolated velocity and pressure
     double        uPrev_, vPrev_, wPrev_, pPrev_;
     double        ax_, ay_, az_;      //Interpolated acceleration
@@ -916,46 +917,46 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
         dy_dxsi11 += localNodes_(i,1) * ddphi(0,0)(i);
         dy_dxsi22 += localNodes_(i,1) * ddphi(1,1)(i);
         dy_dxsi12 += localNodes_(i,1) * ddphi(0,1)(i);        
-    };
+    };        
 
+    ublas::bounded_matrix<double, 3, 3> invM;
+    ublas::bounded_vector<double, 3> vecM, resM;
+    
+    double a = dx_dxsi1 * dx_dxsi1;
+    double b = dy_dxsi1 * dy_dxsi1;
+    double c = 2. * dx_dxsi1 * dy_dxsi1;
+    double d = dx_dxsi2 * dx_dxsi2;
+    double e = dy_dxsi2 * dy_dxsi2;
+    double f = 2. * dx_dxsi2 * dy_dxsi2;
+    double g = dx_dxsi1 * dx_dxsi2;
+    double h = dy_dxsi1 * dy_dxsi2;
+    double i = dx_dxsi1 * dy_dxsi2 + dx_dxsi2 * dy_dxsi1;
+    
+    // matrix:
+    // |a b c|
+    // |d e f|
+    // |g h i|
+    
+    double det = 1. / (a * e * i - a * f * h - b * d * i + 
+                       b * f * g + c * d * h - c * e * g);
+    
+    invM(0,0) = (e * i - f * h) * det;
+    invM(0,1) = (c * h - b * i) * det;
+    invM(0,2) = (b * f - c * e) * det;
+    invM(1,0) = (f * g - d * i) * det;
+    invM(1,1) = (a * i - c * g) * det;
+    invM(1,2) = (c * d - a * f) * det;
+    invM(2,0) = (d * h - e * g) * det;
+    invM(2,1) = (b * g - a * h) * det;
+    invM(2,2) = (a * e - b * d) * det;
+    
     for (int j = 0; j < 6; j++){
         
-        ublas::bounded_matrix<double, 3, 3> invM;
-        ublas::bounded_vector<double, 3> vecM, resM;
-        
-        double a = dx_dxsi1 * dx_dxsi1;
-        double b = dy_dxsi1 * dy_dxsi1;
-        double c = 2. * dx_dxsi1 * dy_dxsi1;
-        double d = dx_dxsi2 * dx_dxsi2;
-        double e = dy_dxsi2 * dy_dxsi2;
-        double f = 2. * dx_dxsi2 * dy_dxsi2;
-        double g = dx_dxsi1 * dx_dxsi2;
-        double h = dy_dxsi1 * dy_dxsi2;
-        double i = dx_dxsi1 * dy_dxsi2 + dx_dxsi2 * dy_dxsi1;
-        
-        // matrix:
-        // |a b c|
-        // |d e f|
-        // |g h i|
-
-        double det = 1. / (a * e * i - a * f * h - b * d * i + 
-                           b * f * g + c * d * h - c * e * g);
-        
-        invM(0,0) = (e * i - f * h) * det;
-        invM(0,1) = (c * h - b * i) * det;
-        invM(0,2) = (b * f - c * e) * det;
-        invM(1,0) = (f * g - d * i) * det;
-        invM(1,1) = (a * i - c * g) * det;
-        invM(1,2) = (c * d - a * f) * det;
-        invM(2,0) = (d * h - e * g) * det;
-        invM(2,1) = (b * g - a * h) * det;
-        invM(2,2) = (a * e - b * d) * det;
-
-        vecM(0) = ddphi(0,0)(j) 
+        vecM(0) = ddphi(0,0)(j)
             - dphi_dx(0,j) * dx_dxsi11 - dphi_dx(1,j) * dy_dxsi11;
         vecM(1) = ddphi(1,1)(j)
             - dphi_dx(0,j) * dx_dxsi22 - dphi_dx(1,j) * dy_dxsi22;
-        vecM(0) = ddphi(0,1)(j)
+        vecM(2) = ddphi(0,1)(j)
             - dphi_dx(0,j) * dx_dxsi12 - dphi_dx(1,j) * dy_dxsi12;
 
         resM = prod(invM,vecM);
@@ -964,10 +965,12 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi) {
         ddphi_dx(1,1)(j) = resM(1);
         ddphi_dx(0,1)(j) = resM(2);
         ddphi_dx(1,0)(j) = resM(2);
-        
-        //if(index_ == 0) std::cout << "SADASD " << ddphi_dx(0,0)(j) << std::endl;
+  
+        // if(index_ == 0) std::cout << "SADASD " << vecM(0) << " " << vecM(1) << " " << vecM(2) << " " << det << " " << e << " " << f << " " << g << " " << h << " " << i << std::endl;
+      
     };
 
+  
     return;
 };
 
@@ -1024,6 +1027,9 @@ void Element<2>::getVelAndDerivatives() {
     u_ = 0.;
     v_ = 0.;
 
+    x_ = 0.;
+    y_ = 0.;
+
     ax_ = 0.;
     ay_ = 0.;
 
@@ -1059,6 +1065,9 @@ void Element<2>::getVelAndDerivatives() {
     for (int i = 0; i < 6; i++){
         u_ += nodes_[connect_(i)] -> getVelocity(0) * phi_(i);
         v_ += nodes_[connect_(i)] -> getVelocity(1) * phi_(i);
+
+        x_ += localNodes_(i,0) * phi_(i);
+        y_ += localNodes_(i,1) * phi_(i);
 
         uPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(0) * phi_(i);
         vPrev_ += nodes_[connect_(i)] -> getPreviousVelocity(1) * phi_(i);
@@ -1489,13 +1498,13 @@ void Element<2>::getElemMatrix(int index){
             double KLSyy = dphi_dx(1,i) * dphi_dx(1,j) * tLSIC_ * dens_;
 
             double Sxx = + wSUPGi * (2. * ddphi_dx(0,0)(j) + 
-                                     ddphi_dx(1,1)(j)) * tSUPG_ * visc_*0;
+                                     ddphi_dx(1,1)(j)) * tSUPG_ * visc_;
             double Sxy = + wSUPGi * ddphi_dx(0,1)(j)
-                * tSUPG_ * visc_*0;
+                * tSUPG_ * visc_;
             double Syx = + wSUPGi * ddphi_dx(0,1)(j)
-                * tSUPG_ * visc_*0;
+                * tSUPG_ * visc_;
             double Syy = + wSUPGi * (2. * ddphi_dx(1,1)(j) + 
-                                     ddphi_dx(0,0)(j)) * tSUPG_ * visc_*0;
+                                     ddphi_dx(0,0)(j)) * tSUPG_ * visc_;
             
             
             jacobianNRMatrix(2*i  ,2*j  ) += (mM + timeScheme_ * dTime_ * 
@@ -1620,25 +1629,25 @@ void Element<2>::setBoundaryConditions(){
     };
 
 
-    // typename Nodes::VecLocD x;
+    typename Nodes::VecLocD x;
 
-    // for (int i = 0; i < 6; i++){
-    //     //if(model){
-    //     x = nodes_[connect_(i)] -> getCoordinates();
-    //     // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
-    //     // if(dist < 0.001){
-    //     if((x(0) > 0.99) && (x(1) > 0.99)){
-    //         // std::cout << "AQUI  " << index_ << std::endl;
+    for (int i = 0; i < 6; i++){
+        //if(model){
+        x = nodes_[connect_(i)] -> getCoordinates();
+        // double dist = sqrt((x(0)-0.5)*(x(0)-0.5) + (x(1)-0.5)*(x(1)-0.5));
+        // if(dist < 0.001){
+        if((x(0) > 0.99) && (x(1) > 0.99)){
+            // std::cout << "AQUI  " << index_ << std::endl;
             
-    //         for (int j = 0; j < 18; j++){
-    //             jacobianNRMatrix(12+i,j) = 0.;
-    //             jacobianNRMatrix(j,12+i) = 0.;
-    //         };
-    //         jacobianNRMatrix(12+i,12+i) = 1.;
-    //         rhsVector(12+i) =  0.;
-    //         //};
-    //     };
-    // };
+            for (int j = 0; j < 18; j++){
+                jacobianNRMatrix(12+i,j) = 0.;
+                jacobianNRMatrix(j,12+i) = 0.;
+            };
+            jacobianNRMatrix(12+i,12+i) = 1.;
+            rhsVector(12+i) =  0.;
+            //};
+        };
+    };
 
     return;
 };
@@ -1809,12 +1818,12 @@ void Element<2>::getResidualVector(int index){
         double Sx = - ((2. * du_dxx + du_dyy + dv_dxy) * 
                        ((una_ - umesh_) * dphi_dx(0,i) + 
                         (vna_ - vmesh_) * dphi_dx(1,i)))
-            * tSUPG_ * visc_*0;
+            * tSUPG_ * visc_;
         
         double Sy = - ((2. * dv_dyy + dv_dxx + du_dxy) * 
                      ((una_ - umesh_) * dphi_dx(0,i) + 
                       (vna_ - vmesh_) * dphi_dx(1,i)))
-            * tSUPG_ * visc_*0;
+            * tSUPG_ * visc_;
         
         // if (index_ == 10) std::cout << "Nx " << std::scientific << du_dxx << std::endl;
 
@@ -1826,7 +1835,7 @@ void Element<2>::getResidualVector(int index){
             * weight_ * djac_ * intPointWeightFunction(index);
         rhsVector(12+i) += -Q * dTime_ 
             * weight_ * djac_ * intPointWeightFunction(index);
-                              
+                             
     };
 
     // if(model) {
@@ -2121,7 +2130,7 @@ void Element<2>::computeVorticity(){
     typename QuadShapeFunction<2>::Coords xsi;
     ublas::bounded_vector <double, 6>         nodal_values,results;
     
-    int index = 0;
+    int in = 0;
     nodal_values.clear();
     least_squares.clear();
     results.clear();
@@ -2130,8 +2139,8 @@ void Element<2>::computeVorticity(){
         it != nQuad.end(); it++){
         
         //Defines the integration points adimentional coordinates
-        xsi(0) = nQuad.PointList(index,0);
-        xsi(1) = nQuad.PointList(index,1);
+        xsi(0) = nQuad.PointList(in,0);
+        xsi(1) = nQuad.PointList(in,1);
                 
         //Computes the velocity shape functions
         shapeQuad.evaluate(xsi,phi_);
@@ -2146,10 +2155,11 @@ void Element<2>::computeVorticity(){
         getVelAndDerivatives();
 
         for (int i=0; i<6; i++){
-            nodal_values(i) += (-du_dy + dv_dx) * phi_(i);
+            //nodal_values(i) += (-du_dy + dv_dx) * phi_(i);
+            nodal_values(i) += du_dxx * phi_(i);
         };
                         
-        index++;
+        in++;
     };    
 
     least_squares.clear();

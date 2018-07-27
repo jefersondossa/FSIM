@@ -16,6 +16,7 @@
 
 #include "Fluid.hpp"
 #include "Glue.hpp"
+#include "base64.hpp"
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -1456,7 +1457,7 @@ void Arlequin<2>::printResults(int step) {
     std::fstream output_v(s.c_str(), std::ios_base::out);
 
     output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+             << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
              << "  <UnstructuredGrid>" << std::endl
              << "  <Piece NumberOfPoints=\"" << numNodesCoarse
              << "\"  NumberOfCells=\"" << numElemCoarse
@@ -1470,7 +1471,13 @@ void Arlequin<2>::printResults(int step) {
     for (int i = 0; i < numNodesCoarse; i++){
         typename Nodes::VecLocD x;
         x = nodesCoarse_[i] -> getCoordinates();
-        output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+        output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;
+        std::string b;
+        std::ostringstream a;
+        a << x(0) << " " << x(1) << " " << 0.0 << " ";
+        b = a.str();
+        std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
+        //output_v << res;
     };
     output_v << "      </DataArray>" << std::endl
              << "    </Points>" << std::endl;
@@ -1638,13 +1645,26 @@ void Arlequin<2>::printResults(int step) {
     }
 
     if (coarseModel.printJacobian){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        output_v <<"      <DataArray type=\"Float32\" NumberOfComponents=\"1\" "
                  << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
         for (int i=0; i<numElemCoarse; i++){
             output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
+
+            // std::string b;
+            // std::ostringstream a;
+            // double jac = elementsCoarse_[i] -> getJacobian();
+            // int int32 = 8;
+            // a << int32 << jac<< " ";
+            // b = a.str();
+            // std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length()) + base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
+            // output_v << res;
         };
         output_v << "      </DataArray> " << std::endl;
     }
+    // std::string lala = base64_decode("IAAAAA==CAAAABAAAAAYAAAAIAAAACgAAAAwAAAAOAAAAEAAAAA=");
+
+
+    // std::cout << lala << std::endl;
 
     output_v << "    </CellData>" << std::endl; 
 
@@ -1652,6 +1672,8 @@ void Arlequin<2>::printResults(int step) {
     output_v << "  </Piece>" << std::endl
            << "  </UnstructuredGrid>" << std::endl
            << "</VTKFile>" << std::endl;
+
+
 
 
 
