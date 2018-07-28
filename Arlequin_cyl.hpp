@@ -1603,6 +1603,16 @@ void Arlequin<2>::printResults(int step) {
         output_v << "      </DataArray> " << std::endl;
     };
 
+    if (coarseModel.printVorticity){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodesCoarse; i++){
+            output_v << nodesCoarse_[i] -> getVorticity() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+
     output_v << "    </PointData>" << std::endl; 
 
     //WRITE ELEMENT RESULTS
@@ -1854,6 +1864,15 @@ void Arlequin<2>::printResults(int step) {
         for (int i=0; i<numNodesFine; i++){
             output_vf << 0. << " " << 0. << " " 
                       << nodesFine_[i] -> getPressureArlequin() << std::endl;
+        };
+        output_vf << "      </DataArray> " << std::endl;
+    }
+
+    if (fineModel.printVorticity){
+        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodesFine; i++){
+            output_vf << nodesFine_[i] -> getVorticity() << std::endl;
         };
         output_vf << "      </DataArray> " << std::endl;
     }
@@ -3156,6 +3175,21 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         };
 
         if (rank == 0) {
+            if (coarseModel.printVorticity){
+                for (int i = 0; i < numNodesCoarse; i++){
+                    nodesCoarse_[i] -> clearVorticity();
+                };
+                for (int i = 0; i < numNodesFine; i++){
+                    nodesFine_[i] -> clearVorticity();
+                };
+                for (int jel = 0; jel < numElemCoarse; jel++){
+                    elementsCoarse_[jel] -> computeVorticity();
+                };
+                for (int jel = 0; jel < numElemFine; jel++){
+                    elementsFine_[jel] -> computeVorticity();
+                };
+            };
+
             //Printing results
             printResults(iTimeStep);
         };        

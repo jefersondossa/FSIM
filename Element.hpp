@@ -1559,14 +1559,14 @@ void Element<2>::getElemMatrix(int index){
             double Gx = dphi_dx(0,i) * wSUPGj * tPSPG_;
             double Gy = dphi_dx(1,i) * wSUPGj * tPSPG_;
             
-            // double Tx = (dphi_dx(0,i) * (2. * ddphi_dx(0,0)(j) + 
-            //                              ddphi_dx(1,1)(j)) + 
-            //              dphi_dx(1,i) * ddphi_dx(0,1)(j))
-            //     * tPSPG_ * visc_ / dens_;
-            // double Ty = (dphi_dx(1,i) * (2. * ddphi_dx(1,1)(j) + 
-            //                              ddphi_dx(0,0)(j)) +
-            //              dphi_dx(0,i) * ddphi_dx(0,1)(j))
-            //     * tPSPG_ * visc_ / dens_;
+            double Tx = -(dphi_dx(0,j) * (2. * ddphi_dx(0,0)(i) + 
+                                         ddphi_dx(1,1)(i)) + 
+                         dphi_dx(1,j) * ddphi_dx(0,1)(i))
+                * tPSPG_ * visc_ / dens_;
+            double Ty = -(dphi_dx(1,j) * (2. * ddphi_dx(1,1)(i) + 
+                                         ddphi_dx(0,0)(i)) +
+                         dphi_dx(0,j) * ddphi_dx(0,1)(i))
+                * tPSPG_ * visc_ / dens_;
 
             double Guu = (dphi_dx(0,i) * du_dx * phi_(j) + 
                           dphi_dx(1,i) * dv_dx * phi_(j)) * tPSPG_;
@@ -1579,10 +1579,10 @@ void Element<2>::getElemMatrix(int index){
             //Hx = 0; Hy = 0; Gx = 0; Gy = 0; Guu = 0; Gvv = 0;
 
 
-            jacobianNRMatrix(12+j,2*i  ) += (Hx + (Gx + Guu) * 
+            jacobianNRMatrix(12+j,2*i  ) += (Hx + (Gx + Guu + Tx) * 
                                               timeScheme_ * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index);
-            jacobianNRMatrix(12+j,2*i+1) += (Hy + (Gy + Gvv) * 
+            jacobianNRMatrix(12+j,2*i+1) += (Hy + (Gy + Gvv + Ty) * 
                                               timeScheme_ * dTime_)
                 * weight_ * djac_ * intPointWeightFunction(index);
             jacobianNRMatrix(12+j,12+i) += Q * dTime_ * weight_ * djac_
@@ -2168,8 +2168,8 @@ void Element<2>::computeVorticity(){
         getVelAndDerivatives();
 
         for (int i=0; i<6; i++){
-            //nodal_values(i) += (-du_dy + dv_dx) * phi_(i);
-            nodal_values(i) += du_dxx * phi_(i);
+            nodal_values(i) += (-du_dy + dv_dx) * phi_(i);
+            //nodal_values(i) += du_dxx * phi_(i);
         };
                         
         in++;

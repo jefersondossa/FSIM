@@ -74,7 +74,7 @@ int main(int argc, char **args) {
     // fineModel.dataReading("various_fine.txt","mirror_fine.txt");  
     // coarseModel.dataReading("various_coarse.txt","mirror_coarse.txt");
   
-    // Cavity  
+    // Cavity   
     // fineModel.dataReading("fine4.txt","mirror_fine.txt"); 
     // coarseModel.dataReading("coarse.txt","mirror_coarse.txt");
   
@@ -87,7 +87,7 @@ int main(int argc, char **args) {
     // coarseModel.dataReading("flutter_coarse.txt","mirror_coarse.txt");
      
     control.dataReading("32x32.txt","mirror_control.txt");
-
+ 
     //char in_solid[32] = "cantilever.txt";
      
  
@@ -132,7 +132,7 @@ int main(int argc, char **args) {
        
      arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
 
-     arlequinProblem.solveArlequinProblem(5, 1.e-7, 2, 1);
+     arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 
           
      
     //Finalize main program   
