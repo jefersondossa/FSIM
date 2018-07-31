@@ -67,12 +67,12 @@ int main(int argc, char **args) {
     
     //Data reading     
     // Cylinder
-    fineModel.dataReading("cyl_fine_str3.txt","mirror_fine.txt");  
-    coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
+    // fineModel.dataReading("cyl_fine_str3.txt","mirror_fine.txt");  
+    // coarseModel.dataReading("cyl_coarse2.txt","mirror_coarse.txt");
     // fineModel.dataReading("cyl_fine_str4.txt","mirror_fine.txt");  
     // coarseModel.dataReading("cyl_coarse_str.txt","mirror_coarse.txt");
-    // fineModel.dataReading("various_fine.txt","mirror_fine.txt");  
-    // coarseModel.dataReading("various_coarse.txt","mirror_coarse.txt");
+    fineModel.dataReading("various_fine.txt","mirror_fine.txt");  
+    coarseModel.dataReading("various_coarse.txt","mirror_coarse.txt");
   
     // Cavity   
     // fineModel.dataReading("fine4.txt","mirror_fine.txt"); 
@@ -89,8 +89,8 @@ int main(int argc, char **args) {
     control.dataReading("32x32.txt","mirror_control.txt");
  
     //char in_solid[32] = "cantilever.txt";
-     
- 
+        
+  
     // arlequinProblem.setFluidModels(coarseModel, fineModel);
     // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
  
@@ -113,7 +113,7 @@ int main(int argc, char **args) {
     //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
   
     
-    control.solveTransientProblem(2, 1.e-6, 2); 
+    //control.solveTransientProblem(2, 1.e-6, 2); 
      
     //fineModel.solveTransientProblem(2, 1.e-16, 2);  
  
