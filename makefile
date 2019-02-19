@@ -3,13 +3,14 @@ CLEANFILES       = rhs.vtk solution.vtk
 NP               = 1
 CSOURCES 				 = $(wildcard *.cpp)
 FCOMPILER        = gfortran -O2
+CXXFLAGS        += -w
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${PETSC_DIR}/lib/petsc/conf/test
 
 f: modules.o porticomb.o $(CSOURCES:.cpp=.o) 
-	@-${CLINKER} -o $@ $^ ${PETSC_KSP_LIB} -Wtabs -Wcomment -lboost_system -lgfortran
+	@-${CLINKER} -o $@ $^ ${PETSC_KSP_LIB} -lboost_system -lgfortran -std=c++0x
 
 debug: $(CSOURCES:.cpp=.o)
 	@-${CLINKER} -o $@ $^ ${PETSC_KSP_LIB} -g
@@ -22,7 +23,7 @@ porticomb.o: porticomb.for
 	@ ${FCOMPILER} -c porticomb.for
 
 clear:
-	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt
+	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt *.geo *.msh
 
 run1:
 	@$ mpirun -np 1 ./f
