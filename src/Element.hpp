@@ -235,6 +235,8 @@ public:
     /// Gets the element connectivity
     /// @return element connectivity
     Connectivity getConnectivity(){return connect_;};
+ 
+    int getIndex(){return index_;}
 
     /// Sets the element density
     /// @param double element density

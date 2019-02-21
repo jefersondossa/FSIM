@@ -67,6 +67,8 @@ public:
 private:
     int numElemCoarse;
     int numElemFine;
+    int numTotalElemCoarse;
+    int numTotalElemFine;
     int numBoundElemCoarse;
     int numBoundElemFine;
     int numElemGlueZoneFine;
@@ -599,66 +601,66 @@ void Arlequin<2>::setSignaledDistance(){
     };
 
     //approximate normal calculation
-
     for (int i = 0; i < numBoundElemFine; i++){
         if (boundaryFine_[i]->getConstrain(0) == 2){
+            for (int iElem = 0; iElem < numElemFine; iElem++){
+                if(elementsFine_[iElem] -> getIndex() == boundaryFine_[i] -> getElement()){
 
-            connec = elementsFine_[boundaryFine_[i] -> getElement()] -> 
-                getConnectivity();
-                            
-            if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                getElemSideInBoundary() == 0){
-                bconnec(0) = connec(1);
-                bconnec(1) = connec(2);
-                bconnec(2) = connec(4);
-            };
-            if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                getElemSideInBoundary() == 1){
-                bconnec(0) = connec(2);
-                bconnec(1) = connec(0);
-                bconnec(2) = connec(5);
-            };
-            if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                getElemSideInBoundary() == 2){
-                bconnec(0) = connec(0);
-                bconnec(1) = connec(1);
-                bconnec(2) = connec(3);
-            };
+                    connec = elementsFine_[iElem] -> getConnectivity();
+                                    
+                    if (elementsFine_[iElem] -> getElemSideInBoundary() == 0){
+                        bconnec(0) = connec(1);
+                        bconnec(1) = connec(2);
+                        bconnec(2) = connec(4);
+                    };
+                    if (elementsFine_[iElem] -> getElemSideInBoundary() == 1){
+                        bconnec(0) = connec(2);
+                        bconnec(1) = connec(0);
+                        bconnec(2) = connec(5);
+                    };
+                    if (elementsFine_[iElem] -> getElemSideInBoundary() == 2){
+                        bconnec(0) = connec(0);
+                        bconnec(1) = connec(1);
+                        bconnec(2) = connec(3);
+                    };
             
-            //bconnec = boundaryFine_[i]->getBoundaryConnectivity();
-            
-            //first segment
-            int no1 = bconnec(0);
-            int no2 = bconnec(2);
-            x1 = nodesFine_[no1] -> getCoordinates();
-            x2 = nodesFine_[no2] -> getCoordinates();
+                    //bconnec = boundaryFine_[i]->getBoundaryConnectivity();
+                    //first segment
+                    int no1 = bconnec(0);
+                    int no2 = bconnec(2);
+                    x1 = nodesFine_[no1] -> getCoordinates();
+                    x2 = nodesFine_[no2] -> getCoordinates();
 
-            double sLength = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
-                                  (x1(0) - x2(0)) * (x1(0) - x2(0)));
-            n(0) = (x2(1) - x1(1)) / sLength;
-            n(1) = (x1(0) - x2(0)) / sLength;
+                    double sLength = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
+                                          (x1(0) - x2(0)) * (x1(0) - x2(0)));
+                    n(0) = (x2(1) - x1(1)) / sLength;
+                    n(1) = (x1(0) - x2(0)) / sLength;
 
-            nodesFine_[no1] -> setInnerNormal(n);
-            nodesFine_[no2] -> setInnerNormal(n);
+                    nodesFine_[no1] -> setInnerNormal(n);
+                    nodesFine_[no2] -> setInnerNormal(n);
 
-            //second segment
-            no1 = bconnec(2);
-            no2 = bconnec(1);
-            x1 = nodesFine_[no1] -> getCoordinates();
-            x2 = nodesFine_[no2] -> getCoordinates();
+                    //second segment
+                    no1 = bconnec(2);
+                    no2 = bconnec(1);
+                    x1 = nodesFine_[no1] -> getCoordinates();
+                    x2 = nodesFine_[no2] -> getCoordinates();
 
-            sLength = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
-                           (x1(0) - x2(0)) * (x1(0) - x2(0)));
+                    sLength = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
+                                   (x1(0) - x2(0)) * (x1(0) - x2(0)));
 
-            n(0) = (x2(1) - x1(1)) / sLength;
-            n(1) = (x1(0) - x2(0)) / sLength;
+                    n(0) = (x2(1) - x1(1)) / sLength;
+                    n(1) = (x1(0) - x2(0)) / sLength;
 
-            nodesFine_[no1] -> setInnerNormal(n);
-            nodesFine_[no2] -> setInnerNormal(n);
-            
+                    nodesFine_[no1] -> setInnerNormal(n);
+                    nodesFine_[no2] -> setInnerNormal(n);
+                }
+            }
         };
     };
 
+    std::cout << "aasdasd " << rank << " " << numBoundElemFine << std::endl;
+
+    MPI_Barrier(PETSC_COMM_WORLD);
 
     //Fine mesh nodes
     for (int ino = 0; ino < numNodesFine; ino++){
@@ -667,133 +669,137 @@ void Arlequin<2>::setSignaledDistance(){
         
         for (int i = 0; i < numBoundElemFine; i++){
             if (boundaryFine_[i] -> getConstrain(0) == 2){
-                connec = elementsFine_[boundaryFine_[i] -> getElement()] -> 
-                    getConnectivity();
+                for (int iElem = 0; iElem < numElemFine; iElem++){
+                    if(elementsFine_[iElem] -> getIndex() == boundaryFine_[i] -> getElement()){
+                        
+                        connec = elementsFine_[iElem] -> getConnectivity();
                 
-                if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                    getElemSideInBoundary() == 0){
-                    bconnec(0) = connec(1);
-                    bconnec(1) = connec(2);
-                    bconnec(2) = connec(4);
-                };
-                if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                    getElemSideInBoundary() == 1){
-                    bconnec(0) = connec(2);
-                    bconnec(1) = connec(0);
-                    bconnec(2) = connec(5);
-                };
-                if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                    getElemSideInBoundary() == 2){
-                    bconnec(0) = connec(0);
-                    bconnec(1) = connec(1);
-                    bconnec(2) = connec(3);
-                };
-                //bconnec = boundaryFine_[i] -> getBoundaryConnectivity();
+                        if (elementsFine_[iElem] -> getElemSideInBoundary() == 0){
+                            bconnec(0) = connec(1);
+                            bconnec(1) = connec(2);
+                            bconnec(2) = connec(4);
+                        };
+                        if (elementsFine_[iElem] -> getElemSideInBoundary() == 1){
+                            bconnec(0) = connec(2);
+                            bconnec(1) = connec(0);
+                            bconnec(2) = connec(5);
+                        };
+                        if (elementsFine_[iElem] -> getElemSideInBoundary() == 2){
+                            bconnec(0) = connec(0);
+                            bconnec(1) = connec(1);
+                            bconnec(2) = connec(3);
+                        };
+                        //bconnec = boundaryFine_[i] -> getBoundaryConnectivity();
 
-                //first segment
-                int no1 = bconnec(0);
-                int no2 = bconnec(2);
-                // std::cout<<no1<<" nos "<<no2<<std::endl;
-              
-                x1 = nodesFine_[no1] -> getCoordinates();
-                x2 = nodesFine_[no2] -> getCoordinates();
-                
-                double aux0 =  sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
+                        //first segment
+                        int no1 = bconnec(0);
+                        int no2 = bconnec(2);
+                        // std::cout<<no1<<" nos "<<no2<<std::endl;
+                      
+                        x1 = nodesFine_[no1] -> getCoordinates();
+                        x2 = nodesFine_[no2] -> getCoordinates();
+                        
+                        double aux0 =  sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
+                                            (x2(0) - x1(0)) * (x2(0) - x1(0)));
+                        double aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0))+
+                                       (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
+                        double dist2 =-((x2(1) - x1(1)) * x(0) - 
+                                        (x2(0) - x1(0)) * x(1) +
+                                        x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
+                        
+                        if (aux1 > aux0){
+                            dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
+                                         (x2(0) - x(0)) * (x2(0) - x(0)));
+                            //find signal
+                            //side normal vector
+                            n = nodesFine_[no2] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x2(0);
+                            test(1) = x(1) - x2(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest < 0.)signal = 1.;
+                            
+                            dist2 *= signal;
+                        };
+
+                        if (aux1 < 0.){
+                            dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
+                                         (x(0) - x1(0)) * (x(0) - x1(0)));
+                            //find signal
+                            //side normal vector
+                            n = nodesFine_[no1] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x1(0);
+                            test(1) = x(1) - x1(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest < 0.) signal = 1.;
+                            
+                            dist2 *= signal;
+                        };
+                        
+                        if (fabs(dist2) < fabs(dist)) dist = dist2;
+                        
+                        //second segment
+                        no1 = bconnec(2);
+                        no2 = bconnec(1);
+                        x1 = nodesFine_[no1] -> getCoordinates();
+                        x2 = nodesFine_[no2] -> getCoordinates();
+                        
+                        aux0 = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
                                     (x2(0) - x1(0)) * (x2(0) - x1(0)));
-                double aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0))+
-                               (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
-                double dist2 =-((x2(1) - x1(1)) * x(0) - 
-                                (x2(0) - x1(0)) * x(1) +
-                                x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
-                
-                if (aux1 > aux0){
-                    dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
-                                 (x2(0) - x(0)) * (x2(0) - x(0)));
-                    //find signal
-                    //side normal vector
-                    n = nodesFine_[no2] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x2(0);
-                    test(1) = x(1) - x2(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest < 0.)signal = 1.;
-                    
-                    dist2 *= signal;
-                };
+                        aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) + 
+                                (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
+                        dist2 = -((x2(1) - x1(1)) * x(0) - (x2(0) - x1(0)) * x(1) +
+                                  x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
 
-                if (aux1 < 0.){
-                    dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
-                                 (x(0) - x1(0)) * (x(0) - x1(0)));
-                    //find signal
-                    //side normal vector
-                    n = nodesFine_[no1] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x1(0);
-                    test(1) = x(1) - x1(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest < 0.) signal = 1.;
-                    
-                    dist2 *= signal;
-                };
-                
-                if (fabs(dist2) < fabs(dist)) dist = dist2;
-                
-                //second segment
-                no1 = bconnec(2);
-                no2 = bconnec(1);
-                x1 = nodesFine_[no1] -> getCoordinates();
-                x2 = nodesFine_[no2] -> getCoordinates();
-                
-                aux0 = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
-                            (x2(0) - x1(0)) * (x2(0) - x1(0)));
-                aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) + 
-                        (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
-                dist2 = -((x2(1) - x1(1)) * x(0) - (x2(0) - x1(0)) * x(1) +
-                          x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
+                        if (aux1 > aux0){
+                            dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
+                                         (x2(0) - x(0)) * (x2(0) - x(0)));
+                            n = nodesFine_[no2] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x2(0);
+                            test(1) = x(1) - x2(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest < 0.)signal = 1.;
+                            
+                            dist2 *= signal;
+                                               
+                        };
 
-                if (aux1 > aux0){
-                    dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
-                                 (x2(0) - x(0)) * (x2(0) - x(0)));
-                    n = nodesFine_[no2] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x2(0);
-                    test(1) = x(1) - x2(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest < 0.)signal = 1.;
-                    
-                    dist2 *= signal;
-                                       
-                };
-
-                if (aux1 < 0.){
-                    dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
-                                 (x(0) - x1(0)) * (x(0) - x1(0)));
-                    //find signal
-                    //side normal vector
-                    n = nodesFine_[no1] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x1(0);
-                    test(1) = x(1) - x1(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest < 0.)signal = 1.;
-                    
-                    dist2 *= signal;
-                    
-                };
-                if (fabs(dist2) < fabs(dist)) dist = dist2;
+                        if (aux1 < 0.){
+                            dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
+                                         (x(0) - x1(0)) * (x(0) - x1(0)));
+                            //find signal
+                            //side normal vector
+                            n = nodesFine_[no1] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x1(0);
+                            test(1) = x(1) - x1(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest < 0.)signal = 1.;
+                            
+                            dist2 *= signal;
+                            
+                        };
+                        if (fabs(dist2) < fabs(dist)) dist = dist2;
+                    }
+                }
             }; //if bf is the glue boundary
         }; //
+
+        double dist2;
+        MPI_Allreduce(&dist,&dist2,1,MPI_DOUBLE,MPI_MIN,PETSC_COMM_WORLD);
     
-        if(dist < 0) dist = 0;
-        nodesFine_[ino] -> setDistFunction(dist);
+        if(dist2 < 0) dist2 = 0;
+        nodesFine_[ino] -> setDistFunction(dist2);
      };
 
     //Coarse mesh
@@ -803,132 +809,149 @@ void Arlequin<2>::setSignaledDistance(){
         
         for (int i = 0; i < numBoundElemFine; i++){
             if (boundaryFine_[i] -> getConstrain(0) == 2){
+                 for (int iElem = 0; iElem < numElemFine; iElem++){
+                    if(elementsFine_[iElem] -> getIndex() == boundaryFine_[i] -> getElement()){
 
-                connec = elementsFine_[boundaryFine_[i] -> getElement()] -> 
-                    getConnectivity();
-                
-                if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                    getElemSideInBoundary() == 0){
-                    bconnec(0) = connec(1);
-                    bconnec(1) = connec(2);
-                    bconnec(2) = connec(4);
-                };
-                if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                    getElemSideInBoundary() == 1){
-                    bconnec(0) = connec(2);
-                    bconnec(1) = connec(0);
-                    bconnec(2) = connec(5);
-                };
-                if (elementsFine_[boundaryFine_[i] -> getElement()] ->
-                    getElemSideInBoundary() == 2){
-                    bconnec(0) = connec(0);
-                    bconnec(1) = connec(1);
-                    bconnec(2) = connec(3);
-                };
-                //bconnec = boundaryFine_[i] -> getBoundaryConnectivity();
+                        connec = elementsFine_[iElem] -> getConnectivity();
+                        
+                        if (elementsFine_[iElem] -> getElemSideInBoundary() == 0){
+                            bconnec(0) = connec(1);
+                            bconnec(1) = connec(2);
+                            bconnec(2) = connec(4);
+                        };
+                        if (elementsFine_[iElem] -> getElemSideInBoundary() == 1){
+                            bconnec(0) = connec(2);
+                            bconnec(1) = connec(0);
+                            bconnec(2) = connec(5);
+                        };
+                        if (elementsFine_[iElem] -> getElemSideInBoundary() == 2){
+                            bconnec(0) = connec(0);
+                            bconnec(1) = connec(1);
+                            bconnec(2) = connec(3);
+                        };
+                        //bconnec = boundaryFine_[i] -> getBoundaryConnectivity();
 
-                //first segment
-                int no1 = bconnec(0);
-                int no2 = bconnec(2);
-                // std::cout<<no1<<" nos "<<no2<<std::endl;
-              
-                x1 = nodesFine_[no1] -> getCoordinates();
-                x2 = nodesFine_[no2] -> getCoordinates();
-                
-                double aux0 =  sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
+                        //first segment
+                        int no1 = bconnec(0);
+                        int no2 = bconnec(2);
+                        // std::cout<<no1<<" nos "<<no2<<std::endl;
+                      
+                        x1 = nodesFine_[no1] -> getCoordinates();
+                        x2 = nodesFine_[no2] -> getCoordinates();
+                        
+                        double aux0 =  sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
+                                            (x2(0) - x1(0)) * (x2(0) - x1(0)));
+                        double aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0))+
+                                       (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
+                        double dist2 =-((x2(1) - x1(1)) * x(0) - 
+                                        (x2(0) - x1(0)) * x(1) +
+                                        x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
+                        
+                        if (aux1 > aux0){
+                            dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
+                                         (x2(0) - x(0)) * (x2(0) - x(0)));
+                            //find signal
+                            //side normal vector
+                            n = nodesFine_[no2] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x2(0);
+                            test(1) = x(1) - x2(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest <= -0.001)signal = 1.;
+                            
+                            dist2 *= signal;
+                        };
+
+                        if (aux1 < 0.){
+                            dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
+                                         (x(0) - x1(0)) * (x(0) - x1(0)));
+                            //find signal
+                            //side normal vector
+                            n = nodesFine_[no1] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x1(0);
+                            test(1) = x(1) - x1(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest <= -0.001) signal = 1.;
+                            
+                            dist2 *= signal;
+                        };
+                        
+                        if (fabs(dist2) < fabs(dist)) dist = dist2;
+                        
+                        //second segment
+                        no1 = bconnec(2);
+                        no2 = bconnec(1);
+                        x1 = nodesFine_[no1] -> getCoordinates();
+                        x2 = nodesFine_[no2] -> getCoordinates();
+                        
+                        aux0 = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
                                     (x2(0) - x1(0)) * (x2(0) - x1(0)));
-                double aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0))+
-                               (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
-                double dist2 =-((x2(1) - x1(1)) * x(0) - 
-                                (x2(0) - x1(0)) * x(1) +
-                                x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
-                
-                if (aux1 > aux0){
-                    dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
-                                 (x2(0) - x(0)) * (x2(0) - x(0)));
-                    //find signal
-                    //side normal vector
-                    n = nodesFine_[no2] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x2(0);
-                    test(1) = x(1) - x2(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001)signal = 1.;
-                    
-                    dist2 *= signal;
-                };
+                        aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) + 
+                                (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
+                        dist2 = -((x2(1) - x1(1)) * x(0) - (x2(0) - x1(0)) * x(1) +
+                                  x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
 
-                if (aux1 < 0.){
-                    dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +
-                                 (x(0) - x1(0)) * (x(0) - x1(0)));
-                    //find signal
-                    //side normal vector
-                    n = nodesFine_[no1] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x1(0);
-                    test(1) = x(1) - x1(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001) signal = 1.;
-                    
-                    dist2 *= signal;
-                };
-                
-                if (fabs(dist2) < fabs(dist)) dist = dist2;
-                
-                //second segment
-                no1 = bconnec(2);
-                no2 = bconnec(1);
-                x1 = nodesFine_[no1] -> getCoordinates();
-                x2 = nodesFine_[no2] -> getCoordinates();
-                
-                aux0 = sqrt((x2(1) - x1(1)) * (x2(1) - x1(1)) +
-                            (x2(0) - x1(0)) * (x2(0) - x1(0)));
-                aux1 = ((x(0) - x1(0)) * (x2(0) - x1(0)) + 
-                        (x(1) - x1(1)) * (x2(1) - x1(1))) / aux0;
-                dist2 = -((x2(1) - x1(1)) * x(0) - (x2(0) - x1(0)) * x(1) +
-                          x2(0) * x1(1) - x2(1) * x1(0)) / aux0;
+                        if (aux1 > aux0){
+                            dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
+                                         (x2(0) - x(0)) * (x2(0) - x(0)));
+                            n = nodesFine_[no2] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x2(0);
+                            test(1) = x(1) - x2(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest <= -0.001)signal = 1.;
+                            
+                            dist2 *= signal;
+                                               
+                        };
 
-                if (aux1 > aux0){
-                    dist2 = sqrt((x2(1) - x(1)) * (x2(1) - x(1)) +
-                                 (x2(0) - x(0)) * (x2(0) - x(0)));
-                    n = nodesFine_[no2] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x2(0);
-                    test(1) = x(1) - x2(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001)signal = 1.;
-                    
-                    dist2 *= signal;
-                                       
-                };
-
-                if (aux1 < 0.){
-                    dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +  
-                                 (x(0) - x1(0)) * (x(0) - x1(0)));
-                    //find signal
-                    //side normal vector
-                    n = nodesFine_[no1] -> getInnerNormal();
-                    
-                    test(0) = x(0) - x1(0);
-                    test(1) = x(1) - x1(1);
-                    double signaltest = inner_prod(n,test);
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001)signal = 1.;
-                    
-                    dist2 *= signal;
-                    
-                };
-                if (fabs(dist2) < fabs(dist)) dist = dist2;
+                        if (aux1 < 0.){
+                            dist2 = sqrt((x(1) - x1(1)) * (x(1) - x1(1)) +  
+                                         (x(0) - x1(0)) * (x(0) - x1(0)));
+                            //find signal
+                            //side normal vector
+                            n = nodesFine_[no1] -> getInnerNormal();
+                            
+                            test(0) = x(0) - x1(0);
+                            test(1) = x(1) - x1(1);
+                            double signaltest = inner_prod(n,test);
+                            double signal = -1.;
+                            
+                            if (signaltest <= -0.001)signal = 1.;
+                            
+                            dist2 *= signal;
+                            
+                        };
+                        if (fabs(dist2) < fabs(dist)) dist = dist2;
+                    }
+                }
             }; //if bf is the glue boundary
         }; //
     
+        double signal = dist / fabs(dist);
+        int root;
+        struct { 
+            double val; 
+            int   rank; 
+        } in, out; 
+
+        in.val = fabs(dist);
+        in.rank = rank;
+
+        MPI_Reduce(&in,&out,1,MPI_DOUBLE_INT,MPI_MINLOC,root,PETSC_COMM_WORLD);
+        MPI_Bcast(&out.val,1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+        MPI_Bcast(&out.rank,1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+        MPI_Bcast(&signal,1,MPI_DOUBLE,out.rank,PETSC_COMM_WORLD);
+
+        dist = out.val * signal;
+
         if (fabs(nodesCoarse_[ino] -> getDistFunction()) < 1.e-2){
             nodesCoarse_[ino] -> setDistFunction(dist); 
         };
@@ -1623,71 +1646,71 @@ void Arlequin<2>::printResults(int step) {
     //WRITE ELEMENT RESULTS
     output_v << "    <CellData>" << std::endl;
     
-    if (coarseModel.printProcess){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemCoarse; i++){
-            output_v << domDecompCoarse.first[i] << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
+    // if (coarseModel.printProcess){
+    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Process\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numElemCoarse; i++){
+    //         output_v << domDecompCoarse.first[i] << std::endl;
+    //     };
+    //     output_v << "      </DataArray> " << std::endl;
+    // }
 
-    if (coarseModel.printEnergyWeightFunction){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemCoarse; i++){
-            output_v << elementsCoarse_[i] -> getIntegPointWeightFunction(0)
-                     << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
+    // if (coarseModel.printEnergyWeightFunction){
+    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numElemCoarse; i++){
+    //         output_v << elementsCoarse_[i] -> getIntegPointWeightFunction(0)
+    //                  << std::endl;
+    //     };
+    //     output_v << "      </DataArray> " << std::endl;
+    // }
 
-    output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElemCoarse; i++){
-        int res = 0;
-        for (int j=0; j<numBoundElemCoarse; j++){
-           if (boundaryCoarse_[j] -> getElement() == i) res = boundaryCoarse_[j] -> getBoundaryGroup();
-        }
-        output_v << res << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
+    // output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //          << "Name=\"Lines\" format=\"ascii\">" << std::endl;
+    // for (int i=0; i<numElemCoarse; i++){
+    //     int res = 0;
+    //     for (int j=0; j<numBoundElemCoarse; j++){
+    //        if (boundaryCoarse_[j] -> getElement() == i) res = boundaryCoarse_[j] -> getBoundaryGroup();
+    //     }
+    //     output_v << res << std::endl;
+    // };
+    // output_v << "      </DataArray> " << std::endl;
 
 
-    int cont=0;
+    // int cont=0;
     
-    if (coarseModel.printGlueZone){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-        cont = 0;
-        for (int i=0; i<numElemCoarse; i++){
-            if (elementsGlueZoneCoarse_[cont] == i){
-                output_v << 1.0 << std::endl;
-                cont++;
-            }else{
-                output_v << 0.0 << std::endl;
-            };
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
+    // if (coarseModel.printGlueZone){
+    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
+    //     cont = 0;
+    //     for (int i=0; i<numElemCoarse; i++){
+    //         if (elementsGlueZoneCoarse_[cont] == i){
+    //             output_v << 1.0 << std::endl;
+    //             cont++;
+    //         }else{
+    //             output_v << 0.0 << std::endl;
+    //         };
+    //     };
+    //     output_v << "      </DataArray> " << std::endl;
+    // }
 
-    if (coarseModel.printJacobian){
-        output_v <<"      <DataArray type=\"Float32\" NumberOfComponents=\"1\" "
-                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemCoarse; i++){
-            output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
+    // if (coarseModel.printJacobian){
+    //     output_v <<"      <DataArray type=\"Float32\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numElemCoarse; i++){
+    //         output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
 
-            // std::string b;
-            // std::ostringstream a;
-            // double jac = elementsCoarse_[i] -> getJacobian();
-            // int int32 = 8;
-            // a << int32 << jac<< " ";
-            // b = a.str();
-            // std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length()) + base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
-            // output_v << res;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
+    //         // std::string b;
+    //         // std::ostringstream a;
+    //         // double jac = elementsCoarse_[i] -> getJacobian();
+    //         // int int32 = 8;
+    //         // a << int32 << jac<< " ";
+    //         // b = a.str();
+    //         // std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length()) + base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
+    //         // output_v << res;
+    //     };
+    //     output_v << "      </DataArray> " << std::endl;
+    // }
     // std::string lala = base64_decode("IAAAAA==CAAAABAAAAAYAAAAIAAAACgAAAAwAAAAOAAAAEAAAAA=");
 
 
@@ -1885,74 +1908,74 @@ void Arlequin<2>::printResults(int step) {
         output_vf << "      </DataArray> " << std::endl;
     }
 
-    if (fineModel.printVorticity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getVorticity() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
+    // if (fineModel.printVorticity){
+    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numNodesFine; i++){
+    //         output_vf << nodesFine_[i] -> getVorticity() << std::endl;
+    //     };
+    //     output_vf << "      </DataArray> " << std::endl;
+    // }
 
     output_vf << "    </PointData>" << std::endl; 
 
     //WRITE ELEMENT RESULTS
     output_vf << "    <CellData>" << std::endl;
     
-    if (fineModel.printProcess){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemFine; i++){
-            output_vf << domDecompFine.first[i] << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
+    // if (fineModel.printProcess){
+    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Process\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numElemFine; i++){
+    //         output_vf << domDecompFine.first[i] << std::endl;
+    //     };
+    //     output_vf << "      </DataArray> " << std::endl;
+    // }
 
-    output_vf <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElemFine; i++){
-        int res = 0;
-        for (int j=0; j<numBoundElemFine; j++){
-           if (boundaryFine_[j] -> getElement() == i) res = boundaryFine_[j] -> getBoundaryGroup();
-        }
-        output_vf << res << std::endl;
-    };
-    output_vf << "      </DataArray> " << std::endl;
+    // output_vf <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //          << "Name=\"Lines\" format=\"ascii\">" << std::endl;
+    // for (int i=0; i<numElemFine; i++){
+    //     int res = 0;
+    //     for (int j=0; j<numBoundElemFine; j++){
+    //        if (boundaryFine_[j] -> getElement() == i) res = boundaryFine_[j] -> getBoundaryGroup();
+    //     }
+    //     output_vf << res << std::endl;
+    // };
+    // output_vf << "      </DataArray> " << std::endl;
 
 
-    if (fineModel.printGlueZone){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-        cont=0;
-        for (int i=0; i<numElemFine; i++){
-            if (elementsGlueZoneFine_[cont] == i){
-                output_vf << 1.0 << std::endl;
-                cont += 1; 
-            }else{
-                output_vf << 0.0 << std::endl;
-            };
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
+    // if (fineModel.printGlueZone){
+    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
+    //     cont=0;
+    //     for (int i=0; i<numElemFine; i++){
+    //         if (elementsGlueZoneFine_[cont] == i){
+    //             output_vf << 1.0 << std::endl;
+    //             cont += 1; 
+    //         }else{
+    //             output_vf << 0.0 << std::endl;
+    //         };
+    //     };
+    //     output_vf << "      </DataArray> " << std::endl;
+    // }
 
-    if (fineModel.printEnergyWeightFunction){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemFine; i++){
-            output_vf << elementsFine_[i] -> getIntegPointWeightFunction(0)
-                      << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
+    // if (fineModel.printEnergyWeightFunction){
+    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numElemFine; i++){
+    //         output_vf << elementsFine_[i] -> getIntegPointWeightFunction(0)
+    //                   << std::endl;
+    //     };
+    //     output_vf << "      </DataArray> " << std::endl;
+    // };
 
-    if (fineModel.printJacobian){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemFine; i++){
-            output_vf << elementsFine_[i] -> getJacobian() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
+    // if (fineModel.printJacobian){
+    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<numElemFine; i++){
+    //         output_vf << elementsFine_[i] -> getJacobian() << std::endl;
+    //     };
+    //     output_vf << "      </DataArray> " << std::endl;
+    // };
 
     output_vf << "    </CellData>" << std::endl; 
 
@@ -1963,101 +1986,101 @@ void Arlequin<2>::printResults(int step) {
 
 
     
-    std::string c = "saidaCoupling"+result+".vtu";
+    // std::string c = "saidaCoupling"+result+".vtu";
     
-    std::fstream output_c(c.c_str(), std::ios_base::out);
+    // std::fstream output_c(c.c_str(), std::ios_base::out);
 
-    output_c << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodesGlueZoneFine
-             << "\"  NumberOfCells=\"" << numElemGlueZoneFine
-             << "\">" << std::endl;
+    // output_c << "<?xml version=\"1.0\"?>" << std::endl
+    //          << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+    //          << "  <UnstructuredGrid>" << std::endl
+    //          << "  <Piece NumberOfPoints=\"" << numNodesGlueZoneFine
+    //          << "\"  NumberOfCells=\"" << numElemGlueZoneFine
+    //          << "\">" << std::endl;
 
-    //WRITE NODAL COORDINATES
-    output_c << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+    // //WRITE NODAL COORDINATES
+    // output_c << "    <Points>" << std::endl
+    //          << "      <DataArray type=\"Float64\" "
+    //          << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    for (int i = 0; i < numNodesGlueZoneFine; i++){
-        typename Nodes::VecLocD x;
-        x = nodesLagrangeFine_[i] -> getCoordinates();
-        output_c << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
-    };
-    output_c << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
+    // for (int i = 0; i < numNodesGlueZoneFine; i++){
+    //     typename Nodes::VecLocD x;
+    //     x = nodesLagrangeFine_[i] -> getCoordinates();
+    //     output_c << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+    // };
+    // output_c << "      </DataArray>" << std::endl
+    //          << "    </Points>" << std::endl;
     
-    //WRITE ELEMENT CONNECTIVITY
-    output_c << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+    // //WRITE ELEMENT CONNECTIVITY
+    // output_c << "    <Cells>" << std::endl
+    //          << "      <DataArray type=\"Int32\" "
+    //          << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
     
-    for (int i = 0; i < numElemGlueZoneFine; i++){
-        typename Elements::Connectivity connec;
-        connec = glueZoneFine_[i] -> getConnectivity();
-        output_c << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-                 << connec(3) << " " << connec(4) << " " << connec(5) << \
-            std::endl;
-    };
-    output_c << "      </DataArray>" << std::endl;
+    // for (int i = 0; i < numElemGlueZoneFine; i++){
+    //     typename Elements::Connectivity connec;
+    //     connec = glueZoneFine_[i] -> getConnectivity();
+    //     output_c << connec(0) << " " << connec(1) << " " << connec(2) << " " \
+    //              << connec(3) << " " << connec(4) << " " << connec(5) << \
+    //         std::endl;
+    // };
+    // output_c << "      </DataArray>" << std::endl;
   
-    //WRITE OFFSETS IN DATA ARRAY
-    output_c << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+    // //WRITE OFFSETS IN DATA ARRAY
+    // output_c << "      <DataArray type=\"Int32\""
+    //          << " Name=\"offsets\" format=\"ascii\">" << std::endl;
     
-    aux = 0;
-    for (int i = 0; i < numElemGlueZoneFine; i++){
-        output_c << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_c << "      </DataArray>" << std::endl;
+    // aux = 0;
+    // for (int i = 0; i < numElemGlueZoneFine; i++){
+    //     output_c << aux + 6 << std::endl;
+    //     aux += 6;
+    // };
+    // output_c << "      </DataArray>" << std::endl;
   
-    //WRITE ELEMENT TYPES
-    output_c << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
+    // //WRITE ELEMENT TYPES
+    // output_c << "      <DataArray type=\"UInt8\" Name=\"types\" "
+    //          << "format=\"ascii\">" << std::endl;
     
-    for (int i = 0; i < numElemGlueZoneFine; i++){
-        output_c << 22 << std::endl;
-    };
+    // for (int i = 0; i < numElemGlueZoneFine; i++){
+    //     output_c << 22 << std::endl;
+    // };
 
-    output_c << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
+    // output_c << "      </DataArray>" << std::endl
+    //          << "    </Cells>" << std::endl;
 
-    //WRITE NODAL RESULTS
-    output_c << "    <PointData>" << std::endl;
-    output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+    // //WRITE NODAL RESULTS
+    // output_c << "    <PointData>" << std::endl;
+    // output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+    //          << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<numNodesGlueZoneFine; i++){
-        output_c << nodesFine_[i] -> getWeightFunction() << " "              
-                  << 0. << " " 
-                  << 0. << std::endl;
-    };
-    output_c << "      </DataArray> " << std::endl;
+    // for (int i=0; i<numNodesGlueZoneFine; i++){
+    //     output_c << nodesFine_[i] -> getWeightFunction() << " "              
+    //               << 0. << " " 
+    //               << 0. << std::endl;
+    // };
+    // output_c << "      </DataArray> " << std::endl;
 
 
-    output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-             << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
+    // output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+    //          << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<numNodesGlueZoneFine; i++){
-        output_c << nodesFine_[i] -> getDistFunction() << " "              
-                  << 0. << " " 
-                  << 0. << std::endl;
-    };
-    output_c << "      </DataArray> " << std::endl;
+    // for (int i=0; i<numNodesGlueZoneFine; i++){
+    //     output_c << nodesFine_[i] -> getDistFunction() << " "              
+    //               << 0. << " " 
+    //               << 0. << std::endl;
+    // };
+    // output_c << "      </DataArray> " << std::endl;
 
-    output_c << "    </PointData>" << std::endl; 
+    // output_c << "    </PointData>" << std::endl; 
 
-    //WRITE ELEMENT RESULTS
-    output_c << "    <CellData>" << std::endl;
+    // //WRITE ELEMENT RESULTS
+    // output_c << "    <CellData>" << std::endl;
     
 
-    output_c << "    </CellData>" << std::endl; 
+    // output_c << "    </CellData>" << std::endl; 
 
-    //FINALIZE OUTPUT FILE
-    output_c << "  </Piece>" << std::endl
-           << "  </UnstructuredGrid>" << std::endl
-           << "</VTKFile>" << std::endl;
+    // //FINALIZE OUTPUT FILE
+    // output_c << "  </Piece>" << std::endl
+    //        << "  </UnstructuredGrid>" << std::endl
+    //        << "</VTKFile>" << std::endl;
     
 };
 
@@ -2076,6 +2099,9 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     numElemFine   = fineModel.elements_.size();
     numNodesCoarse = coarseModel.nodes_.size();
     numNodesFine   = fineModel.nodes_.size();
+
+    numTotalElemFine = fineModel.getNumberOfElements();
+    numTotalElemCoarse = coarseModel.getNumberOfElements();
  
     nodesCoarse_  = coarseModel.nodes_;
     nodesFine_    = fineModel.nodes_;
@@ -2106,6 +2132,7 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
 
     //Sets the element boxes for all elements in both coarse and fine models
     setElementBoxes();
+    
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
     setSignaledDistance();
@@ -2116,15 +2143,22 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     //Computes the Weight function for all the finite elements
     setWeightFunction(16.); 
 
+    if (rank == 0) printResults(0);
+    if (rank == 1) printResults(1);
+    if (rank == 2) printResults(2);
+    if (rank == 3) printResults(3);
+    if (rank == 4) printResults(4);
 
-    if(rank == 0){
-        std::cout << "---------------------ARLEQUIN DATA---------------------" 
+    MPI_Barrier(PETSC_COMM_WORLD);
+
+    //if(rank == 0){
+        std::cout << "---------------------ARLEQUIN DATA " << rank << "---------------------" 
                   << std::endl;
         std::cout << "Coarse Model: " << numNodesCoarse << " nodes, " << numElemCoarse << " elements." << std::endl;
         std::cout << "Fine Model: " << numNodesFine << " nodes, " << numElemFine << " elements." << std::endl;
         std::cout << "Lagrange Multipliers: " << numNodesGlueZoneFine << " nodes, " << numElemGlueZoneFine << " elements." << std::endl;
         std::cout << "Number of Degrees of Freedom: " << 3*numNodesCoarse + 3*numNodesFine + 2*numNodesGlueZoneFine << std::endl; 
-    }
+    //}
 
 
     // nodesFine_[269] -> setWeightFunction(0.);
@@ -2384,7 +2418,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             
             for (int jel = 0; jel < numElemCoarse; jel++){   
                 
-                if (domDecompCoarse.first[jel] == rank) {
+                //if (domDecompCoarse.first[jel] == rank) {
                     
                     //Compute Element matrix
                     if (time_dependency == 0){ 
@@ -2502,12 +2536,12 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                         };
                     };
                 };
-            };
+            //};
 
             //Fine mesh
             for (int jel = 0; jel < numElemFine; jel++){   
                 
-                if (domDecompFine.first[jel] == rank) {
+              //  if (domDecompFine.first[jel] == rank) {
                     
                     //Compute Element matrix
                     if (time_dependency == 0) {
@@ -2632,7 +2666,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                                 ADD_VALUES);
                         };
                     }; 
-                };                
+                //};                
             };
               
 
@@ -2641,254 +2675,254 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 
                 int jel = elementsGlueZoneFine_[l];
                 
-                if (domDecompFine.first[jel] == rank) {
+                //if (domDecompFine.first[jel] == rank) {
                     
-                    typename Elements::LocalMatrix Ajac, AjacAnt, AStab, ArlequinM, ArlequinM2;
-                    typename Elements::LocalVector Rhs, RhsStab, RhsArlequin,rhsLagMult;
-                    typename Elements::Connectivity connec, connecC, connecL;
-                    
-                    connec = elementsFine_[jel] -> getConnectivity();
-                    connecL = glueZoneFine_[l] -> getConnectivity();
+                typename Elements::LocalMatrix Ajac, AjacAnt, AStab, ArlequinM, ArlequinM2;
+                typename Elements::LocalVector Rhs, RhsStab, RhsArlequin,rhsLagMult;
+                typename Elements::Connectivity connec, connecC, connecL;
+                
+                connec = elementsFine_[jel] -> getConnectivity();
+                connecL = glueZoneFine_[l] -> getConnectivity();
 
-                    // FINE MESH
-                    
-                    //Computes element matrix
-                    elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
-                    
-                    //Gets element matrice and rhs vectors
-                    // -L1
-                    Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
-                    // +L1 * Lambda
-                    rhsLagMult = -elementsFine_[jel] -> getRhsLagrangeMultipliers(-Ajac);
-                    AStab = elementsFine_[jel] -> getJacNRMatrix();
-                    RhsStab = elementsFine_[jel] -> getRhsVector();
-                    ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
-                    RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
+                // FINE MESH
+                
+                //Computes element matrix
+                elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
+                
+                //Gets element matrice and rhs vectors
+                // -L1
+                Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
+                // +L1 * Lambda
+                rhsLagMult = -elementsFine_[jel] -> getRhsLagrangeMultipliers(-Ajac);
+                AStab = elementsFine_[jel] -> getJacNRMatrix();
+                RhsStab = elementsFine_[jel] -> getRhsVector();
+                ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
+                RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
 
-                    ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
-
-
-                    // -L1t
-                    Ajac = trans(Ajac);
-
-                    // AStab.clear();
-                    // RhsStab.clear();
-                    // ArlequinM.clear();
-                    // RhsArlequin.clear();
-
-                    // elementsFine_[jel] -> getLMStabilizationSameMesh();
-
-                    // AStab = - elementsFine_[jel] -> getJacNRMatrix();
-                    // RhsStab = - elementsFine_[jel] -> getRhsVector();
-
-                    //AjacAnt = trans(AjacAnt);
-                    
-                    
-                    // U_.clear();
-                    // rhsLagMult.clear();
-                    // lagStab.clear();
-                    // for (int i = 0; i < 6; i++){
-                    //     U_(2*i  ) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-                    //     U_(2*i+1) = nodesFine_[connec(i)] -> getLagrangeMultiplier(1);
-                    // };
-                    
-                    // noalias(rhsLagMult) = -prod((Ajac),U_);
-                    // noalias(lagStab) = -prod(trans(AjacAnt),U_);
-                    // L1t * u1
-                    Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
-
-                    std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
-   
-                    lagMult.first.clear();
-                    lagMult.second.clear();
-                         
-                    lagMult = elementsFine_[jel] -> getBoundaryConditionsVelocity(Rhs,Ajac);
-
-                    Ajac = lagMult.second;
-                    Rhs = lagMult.first;
+                ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
 
 
-                    lagMult.first.clear();
-                    lagMult.second.clear();
-                         
-                    lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(rhsLagMult,Ajac);
+                // -L1t
+                Ajac = trans(Ajac);
 
-                    Ajac = lagMult.second;
-                    rhsLagMult = lagMult.first;
+                // AStab.clear();
+                // RhsStab.clear();
+                // ArlequinM.clear();
+                // RhsArlequin.clear();
+
+                // elementsFine_[jel] -> getLMStabilizationSameMesh();
+
+                // AStab = - elementsFine_[jel] -> getJacNRMatrix();
+                // RhsStab = - elementsFine_[jel] -> getRhsVector();
+
+                //AjacAnt = trans(AjacAnt);
+                
+                
+                // U_.clear();
+                // rhsLagMult.clear();
+                // lagStab.clear();
+                // for (int i = 0; i < 6; i++){
+                //     U_(2*i  ) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
+                //     U_(2*i+1) = nodesFine_[connec(i)] -> getLagrangeMultiplier(1);
+                // };
+                
+                // noalias(rhsLagMult) = -prod((Ajac),U_);
+                // noalias(lagStab) = -prod(trans(AjacAnt),U_);
+                // L1t * u1
+                Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
+
+                std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
+
+                lagMult.first.clear();
+                lagMult.second.clear();
+                     
+                lagMult = elementsFine_[jel] -> getBoundaryConditionsVelocity(Rhs,Ajac);
+
+                Ajac = lagMult.second;
+                Rhs = lagMult.first;
+
+
+                lagMult.first.clear();
+                lagMult.second.clear();
+                     
+                lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(rhsLagMult,Ajac);
+
+                Ajac = lagMult.second;
+                rhsLagMult = lagMult.first;
 
 
                    
 
-                    // for (int i=0; i<6; i++){
-                    //     if(lagMult.second(12+i,12+i) > 0){
-                    //         rhsLagMult(2*i  ) = 0.;
-                    //         rhsLagMult(2*i+1) = 0.;
-                    //         double one = 1.;
-                    //         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                    //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                    //         d_i++;
-                    //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                    //     }
-                    // }
+                // for (int i=0; i<6; i++){
+                //     if(lagMult.second(12+i,12+i) > 0){
+                //         rhsLagMult(2*i  ) = 0.;
+                //         rhsLagMult(2*i+1) = 0.;
+                //         double one = 1.;
+                //         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
+                //         d_i++;
+                //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
+                //     }
+                // }
+                        
+                //Disperse local contributions into the global matrix
+                for (int i=0; i<6; i++){
+                    for (int j=0; j<6; j++){
+                        
+                        //COUPLING OPERATOR
+                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int d_j = 3*numNodesCoarse + 2*connec(j);
+                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                                                &Ajac(2*i  ,2*j  ),ADD_VALUES);
+                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                &Ajac(2*i  ,2*j  ),ADD_VALUES);
+                        };
+                        if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                            int d_j = 3*numNodesCoarse + 2*connec(j);
+                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                                                &Ajac(2*i+1,2*j  ),ADD_VALUES);
+                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                &Ajac(2*i+1,2*j  ),ADD_VALUES);
+                        };
+                        if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                            int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
+                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                                                &Ajac(2*i+1,2*j+1),ADD_VALUES);
+                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                &Ajac(2*i+1,2*j+1),ADD_VALUES);
+                        };
+                        if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int d_j = 3 * numNodesCoarse + 2*connec(j) + 1;
+                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                                                &Ajac(2*i  ,2*j+1),ADD_VALUES);
+                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                &Ajac(2*i  ,2*j+1),ADD_VALUES);
+                        };
+                        if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int d_j = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(j);
+
                             
-                    //Disperse local contributions into the global matrix
-                    for (int i=0; i<6; i++){
-                        for (int j=0; j<6; j++){
-                            
-                            //COUPLING OPERATOR
-                            if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int d_j = 3*numNodesCoarse + 2*connec(j);
-                                ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                    &Ajac(2*i  ,2*j  ),ADD_VALUES);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                    &Ajac(2*i  ,2*j  ),ADD_VALUES);
-                            };
-                            if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                                int d_j = 3*numNodesCoarse + 2*connec(j);
-                                ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                    &Ajac(2*i+1,2*j  ),ADD_VALUES);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                    &Ajac(2*i+1,2*j  ),ADD_VALUES);
-                            };
-                            if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                                int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                                ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                    &Ajac(2*i+1,2*j+1),ADD_VALUES);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                    &Ajac(2*i+1,2*j+1),ADD_VALUES);
-                            };
-                            if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int d_j = 3 * numNodesCoarse + 2*connec(j) + 1;
-                                ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                    &Ajac(2*i  ,2*j+1),ADD_VALUES);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                    &Ajac(2*i  ,2*j+1),ADD_VALUES);
-                            };
-                            if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int d_j = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(j);
-
-                                
-                                //std::cout << "AQUI " << Ajac(12+i,12+j)<< " " << i << " " << j << " " << d_i << " " << d_j << std::endl;
-                                // ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                //                     &Ajac(12+i,12+j),ADD_VALUES);
-                                // d_i++; d_j++;
-                                // ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                //                     &Ajac(12+i,12+j),ADD_VALUES);
-                            };
-
-                            //SUPG STABILIZATION
-                            if (fabs(AStab(2*i  ,2*j  )) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int d_j = 3*numNodesCoarse + 2*connec(j);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                    &AStab(2*i  ,2*j  ),ADD_VALUES);
-                            };
-                            if (fabs(AStab(2*i+1,2*j+1)) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                                int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                    &AStab(2*i+1,2*j+1),ADD_VALUES);
-                            };
-
-                            //PSPG STABILIZATION
-                            if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
-                                int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
-                                int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &AStab(2*i  ,12+j),ADD_VALUES);
-                            };
-                            if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
-                                int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
-                                int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j)+1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &AStab(2*i+1,12+j),ADD_VALUES);
-                            };
-
-                            //ARLEQUIN STABILIZATION
-                            // if (fabs(ArlequinM(2*i  ,2*j+1)) >= 1.e-15){
-                            //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                            //     int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &ArlequinM(2*i  ,2*j+1),ADD_VALUES);
-                            // };
-                            if (fabs(ArlequinM2(2*i  ,2*j  )) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int d_j = 3*numNodesCoarse + 2*connec(j);
-                                ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                    &ArlequinM2(2*i  ,2*j  ),ADD_VALUES);
-                            };
-                            // if (fabs(ArlequinM(2*i+1,2*j  )) >= 1.e-15){
-                            //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                            //     int d_j = 3*numNodesCoarse + 2*connec(j);
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &ArlequinM(2*i+1,2*j  ),ADD_VALUES);
-                            // };
-                            if (fabs(ArlequinM2(2*i+1,2*j+1)) >= 1.e-15){
-                                int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                                int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                                ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                    &ArlequinM2(2*i+1,2*j+1),ADD_VALUES);
-                            };
-
-                            if (fabs(ArlequinM2(12+i,2*j  )) >= 1.e-15){
-                                int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &ArlequinM2(12+i,2*j  ),ADD_VALUES);
-                            };
-                            if (fabs(ArlequinM2(12+i,2*j+1)) >= 1.e-15){
-                                int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                                int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &ArlequinM2(12+i,2*j+1),ADD_VALUES);
-                            };
-                            if (fabs(ArlequinM(2*i  ,2*j  )) >= 1.e-15){
-                                int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                                int dof_j = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &ArlequinM(2*i  ,2*j  ),ADD_VALUES);
-                                dof_i++; dof_j++;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &ArlequinM(2*i+1,2*j+1),ADD_VALUES);
-                            };                            
+                            //std::cout << "AQUI " << Ajac(12+i,12+j)<< " " << i << " " << j << " " << d_i << " " << d_j << std::endl;
+                            // ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                            //                     &Ajac(12+i,12+j),ADD_VALUES);
+                            // d_i++; d_j++;
+                            // ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                            //                     &Ajac(12+i,12+j),ADD_VALUES);
                         };
 
-                        //RHS VECTOR
-                        //COUPLING OPERATOR
-                        int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
-
-                        dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
-
-                        dof_i = 3*numNodesCoarse + 2*connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  ),ADD_VALUES);
-
-                        dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1),ADD_VALUES);
-
                         //SUPG STABILIZATION
-                        dof_i = 3*numNodesCoarse + 2*connec(i);                       
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  ),ADD_VALUES);
-
-                        dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1),ADD_VALUES);
+                        if (fabs(AStab(2*i  ,2*j  )) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int d_j = 3*numNodesCoarse + 2*connec(j);
+                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                &AStab(2*i  ,2*j  ),ADD_VALUES);
+                        };
+                        if (fabs(AStab(2*i+1,2*j+1)) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                            int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
+                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
+                                                &AStab(2*i+1,2*j+1),ADD_VALUES);
+                        };
 
                         //PSPG STABILIZATION
-                        dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(12+i),ADD_VALUES);
+                        if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
+                            int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                &AStab(2*i  ,12+j),ADD_VALUES);
+                        };
+                        if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
+                            int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j)+1;
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                &AStab(2*i+1,12+j),ADD_VALUES);
+                        };
 
-                        // ///ARLEQUIN STABILIZATION
-                        dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                        ierr = VecSetValues(b,1,&dof_i,&RhsArlequin(2*i  ),ADD_VALUES);
-                        dof_i++;
-                        ierr = VecSetValues(b,1,&dof_i,&RhsArlequin(2*i+1),ADD_VALUES);
-                    };      
+                        //ARLEQUIN STABILIZATION
+                        // if (fabs(ArlequinM(2*i  ,2*j+1)) >= 1.e-15){
+                        //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                        //     int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
+                        //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                        //                         &ArlequinM(2*i  ,2*j+1),ADD_VALUES);
+                        // };
+                        if (fabs(ArlequinM2(2*i  ,2*j  )) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int d_j = 3*numNodesCoarse + 2*connec(j);
+                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                                                &ArlequinM2(2*i  ,2*j  ),ADD_VALUES);
+                        };
+                        // if (fabs(ArlequinM(2*i+1,2*j  )) >= 1.e-15){
+                        //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                        //     int d_j = 3*numNodesCoarse + 2*connec(j);
+                        //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                        //                         &ArlequinM(2*i+1,2*j  ),ADD_VALUES);
+                        // };
+                        if (fabs(ArlequinM2(2*i+1,2*j+1)) >= 1.e-15){
+                            int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                            int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
+                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
+                                                &ArlequinM2(2*i+1,2*j+1),ADD_VALUES);
+                        };
+
+                        if (fabs(ArlequinM2(12+i,2*j  )) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                &ArlequinM2(12+i,2*j  ),ADD_VALUES);
+                        };
+                        if (fabs(ArlequinM2(12+i,2*j+1)) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                            int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                &ArlequinM2(12+i,2*j+1),ADD_VALUES);
+                        };
+                        if (fabs(ArlequinM(2*i  ,2*j  )) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                            int dof_j = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                &ArlequinM(2*i  ,2*j  ),ADD_VALUES);
+                            dof_i++; dof_j++;
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+                                                &ArlequinM(2*i+1,2*j+1),ADD_VALUES);
+                        };                            
+                    };
+
+                    //RHS VECTOR
+                    //COUPLING OPERATOR
+                    int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+
+                    dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
+                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+
+                    dof_i = 3*numNodesCoarse + 2*connec(i);
+                    ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  ),ADD_VALUES);
+
+                    dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
+                    ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1),ADD_VALUES);
+
+                    //SUPG STABILIZATION
+                    dof_i = 3*numNodesCoarse + 2*connec(i);                       
+                    ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  ),ADD_VALUES);
+
+                    dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
+                    ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1),ADD_VALUES);
+
+                    //PSPG STABILIZATION
+                    dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
+                    ierr = VecSetValues(b,1,&dof_i,&RhsStab(12+i),ADD_VALUES);
+
+                    // ///ARLEQUIN STABILIZATION
+                    dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
+                    ierr = VecSetValues(b,1,&dof_i,&RhsArlequin(2*i  ),ADD_VALUES);
+                    dof_i++;
+                    ierr = VecSetValues(b,1,&dof_i,&RhsArlequin(2*i+1),ADD_VALUES);
+                };      
 
                     //COAESE MESH
                     
@@ -3203,7 +3237,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                             dof_i++;
                             ierr = VecSetValues(b,1,&dof_i,&RhsArlequin(2*i+1),ADD_VALUES);
                         };                                 
-                    }; //Number of intersections
+                    //}; //Number of intersections
                 }; // if element belongs to the glue zone
             }; // Glue zone
 

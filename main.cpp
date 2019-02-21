@@ -92,8 +92,8 @@ int main(int argc, char **args) {
         double y8 = 0.5;
         double y9 = 2;
 
-        double h1 = 15; double h2 = 11; double h3 = 30;
-        double v1 = 15; double v2 = 11;
+        double h1 = 5; double h2 = 3; double h3 = 10;
+        double v1 = 5; double v2 = 3;
 
         Point* p001 = fluid1 -> addPoint({x1,y1},0.5,false);
         Point* p002 = fluid1 -> addPoint({x2,y1},0.5,false);
@@ -311,7 +311,7 @@ int main(int argc, char **args) {
         fluid2 -> addBoundaryCondition("DIRICHLET", l104, {0}, {0}, "GLOBAL");
 
         //Transfinite lines 
-        int circ = 33; int r1 = 27; int r2 = 6;
+        int circ = 20; int r1 = 20; int r2 = 3;
         //corners
         fluid2 -> transfiniteLine({ l101 }, circ);
         fluid2 -> transfiniteLine({ l102 }, circ);
