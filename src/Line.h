@@ -123,11 +123,11 @@ std::string Line::getGmshCode()
 		return text.str();
 	}
 	else {
-		if(points_.size() == 2){
-			text << name_ << " = newl; Line(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName()
+		if(points_.size() == 3){
+			text << name_ << " = newl; Circle(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName() << ", " << points_[2]->getName()
 				<< "};\n//\n";
 		}else{
-			text << name_ << " = newl; Circle(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName() << ", " << points_[2]->getName()
+			text << name_ << " = newl; Line(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName()
 				<< "};\n//\n";
 		}
 		return text.str();

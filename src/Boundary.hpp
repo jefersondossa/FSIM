@@ -42,8 +42,8 @@ public:
         constrainValue[1] = values[1];
         constrainValue[2] = values[2];
 
-        element_ = 0;
-        elementSide_ = 0;
+        element_ = 1.e50;
+        elementSide_ = 100;
     };     
 
     /// Returns the boundary element constrain component type

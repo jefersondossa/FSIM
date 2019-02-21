@@ -49,7 +49,8 @@ public:
 private:
     //FLUID VARIABLES
     std::string inputFile; //Fluid input file
-    int numElem;           //Number of elements in fluid mesh 
+    int numElem;           //Number of elements in fluid mesh per thread
+    int numTotalElem;      //Total number of element
     int numNodes;          //Number of nodes in velocity/quadratic mesh
     int numBoundaries;     //Number of fluid boundaries
     int numBoundElems;     //Number of elements in fluid boundaries
@@ -67,6 +68,7 @@ private:
     double dTime;          //Time Step
     double integScheme;    //Time Integration Scheme
     int rank;
+    int size;
     int numFSIInterfaces;
     int iAux;
     bool computeDragAndLift;
@@ -106,7 +108,7 @@ public:
 
 
     /// Performs the domain decomposition for parallel processing
-    void domainDecompositionMETIS(); 
+    void domainDecompositionMETIS(std::vector<Elements *> &elem_); 
 
     /// Export the domain decomposition 
     /// @return pair with the elements and nodes domain decompositions
@@ -116,6 +118,10 @@ public:
     /// Gets the number of time steps
     /// @return number of time steps
     int getNumberOfTimeSteps(){return numTimeSteps;};
+
+    /// Gets the total number of finite elements
+    /// @return number of elements
+    int getNumberOfElements(){return numTotalElem;};
 
     /// Gets the time step size
     /// @return time step size
@@ -189,7 +195,7 @@ public:
 //---------------------SUBDIVIDES THE FINITE ELEMENT DOMAIN---------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::domainDecompositionMETIS() {
+void Fluid<2>::domainDecompositionMETIS(std::vector<Elements *> &elem_) {
     
     std::string mirror2;
     mirror2 = "domain_decomposition.txt";
@@ -204,42 +210,79 @@ void Fluid<2>::domainDecompositionMETIS() {
     idx_t numNd = numNodes;
     idx_t dd = 2;
     idx_t ssize = size;
+    idx_t three = 3;
     idx_t one = 1;
     idx_t elem_start[numEl+1], elem_connec[(4*dd-2)*numEl];
+
+    MPI_Bcast(&numEl,1,MPI_INT,0,PETSC_COMM_WORLD);
+    MPI_Bcast(&numNd,1,MPI_INT,0,PETSC_COMM_WORLD);
+
+
     part_elem = new idx_t[numEl];
     part_nodes = new idx_t[numNd];
 
 
-    for (idx_t i = 0; i < numEl+1; i++){
-        elem_start[i]=(4*dd-2)*i;
-    };
-    for (idx_t jel = 0; jel < numEl; jel++){
-        typename Elements::Connectivity connec;
-        connec=elements_[jel]->getConnectivity();        
-        
-        for (idx_t i=0; i<(4*dd-2); i++){
-        elem_connec[(4*dd-2)*jel+i] = connec(i);
+    if (rank == 0){
+        for (idx_t i = 0; i < numEl+1; i++){
+            elem_start[i]=(4*dd-2)*i;
         };
-    };
+        for (idx_t jel = 0; jel < numEl; jel++){
+            typename Elements::Connectivity connec;
+            connec=elem_[jel]->getConnectivity();        
+            
+            for (idx_t i=0; i<(4*dd-2); i++){
+            elem_connec[(4*dd-2)*jel+i] = connec(i);
+            };
+        };
 
-    //Performs the domain decomposition
-    METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
-                              NULL, NULL, &one, &ssize, NULL, NULL,    \
-                              &objval, part_elem, part_nodes);
+        //Performs the domain decomposition
+        METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec,
+                                  NULL, NULL, &one, &ssize, NULL, NULL,
+                                  &objval, part_elem, part_nodes);
 
-    mirrorData << std::endl \
-               << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
-    for(int i = 0; i < numElem; i++){
-        mirrorData << "process = " << part_elem[i] \
-                   << ", element = " << i << std::endl;
-    };
+        mirrorData << std::endl 
+                   << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
+        for(int i = 0; i < numElem; i++){
+            mirrorData << "process = " << part_elem[i]
+                       << ", element = " << i << std::endl;
+        };
 
-    mirrorData << std::endl \
-               << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
-    for(int i = 0; i < numNodes; i++){
-        mirrorData << "process = " << part_nodes[i] \
-                   << ", node = " << i << std::endl;
-    };
+        mirrorData << std::endl 
+                   << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
+        for(int i = 0; i < numNodes; i++){
+            mirrorData << "process = " << part_nodes[i]
+                       << ", node = " << i << std::endl;
+        };
+        
+
+        for (int i = 0; i < size; ++i){
+            std::string result;
+            std::ostringstream convert;
+
+            convert << i+000;
+            result = convert.str();
+            std::string s = "mesh"+result+".dat";
+
+            std::fstream mesh(s.c_str(), std::ios_base::out);
+
+            int locElem = std::count(part_elem, part_elem+numElem, i);
+
+            mesh << locElem << std::endl;
+
+            for (int jel = 0; jel < numElem; ++jel){
+                if (part_elem[jel] == i){
+                    typename Elements::Connectivity connec;
+                    connec = elem_[jel]->getConnectivity();
+                    mesh << jel << " " << connec(0) << " " << connec(1) << " " << connec(2) << " "
+                         << connec(3) << " " << connec(4) << " " << connec(5) << std::endl;
+                }
+            }
+
+        }
+    }
+
+    MPI_Bcast(part_elem,numEl,MPI_INT,0,PETSC_COMM_WORLD);
+    MPI_Bcast(part_nodes,numNd,MPI_INT,0,PETSC_COMM_WORLD);
     
     return;
 
@@ -515,9 +558,20 @@ void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
     }
 }
 
-
+//------------------------------------------------------------------------------
+//--------------------------------READS FLUID MESH------------------------------
+//------------------------------------------------------------------------------
 template<>
-void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles) {
+void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, 
+                           const std::string& inputMesh,
+                           const std::string& mirror,
+                           const bool& deleteFiles) {
+
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    MPI_Comm_size(PETSC_COMM_WORLD, &size);
+
+    if (rank == 0)std::cout << "Reading fluid data from \"" 
+                            << inputFile << "\"" << std::endl;
 
     geometry_ = geometry;
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -536,7 +590,6 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
     std::string line;
     std::getline(file, line); std::getline(file, line); std::getline(file, line); std::getline(file, line);
   
-
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++READING PROBLEM VARIABLES+++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -727,7 +780,10 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     int number_elements;
     file >> number_elements;
-    elements_.reserve(number_elements);
+   //elements_.reserve(number_elements);
+    std::vector<Elements *>   elementsAux_;
+    elementsAux_.reserve(number_elements);
+
     boundary_.reserve(number_elements/10);
     index = 0;
     std::getline(file, line);
@@ -764,26 +820,28 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
 
         //Adding 2D elements to surfaces
         if (name[0] == 's'){
-            if (supportedElements.find(elementType) == supportedElements.end()){
-                std::cout << elementType << " is not supported.\n";
-                exit(EXIT_FAILURE);
-            }
+            if(rank == 0){
+                if (supportedElements.find(elementType) == supportedElements.end()){
+                    std::cout << elementType << " is not supported.\n";
+                    exit(EXIT_FAILURE);
+                }
 
-            PlaneSurface* object = geometry_ -> getPlaneSurface(name);
-            int materialIndex = object -> getMaterial() -> getIndex();
-            double thickness = object -> getThickness();
-            numElem++;
+                PlaneSurface* object = geometry_ -> getPlaneSurface(name);
+                int materialIndex = object -> getMaterial() -> getIndex();
+                double thickness = object -> getThickness();
+                numElem++;
 
-            typename Elements::Connectivity connect;
-            connect.clear();
-            for (int j = 0 ; j < 6; j++) connect(j) = elementNodes[j];
-           
+                typename Elements::Connectivity connect;
+                connect.clear();
+                for (int j = 0 ; j < 6; j++) connect(j) = elementNodes[j];
+               
 
 
-            Elements *el = new Elements(index++,connect,nodes_);
-            elements_.push_back(el);
-            for (int k = 0; k<6; k++){
-                nodes_[connect(k)] -> pushInverseIncidence(index);
+                Elements *el = new Elements(index++,connect,nodes_);
+                elementsAux_.push_back(el);
+                for (int k = 0; k<6; k++){
+                    nodes_[connect(k)] -> pushInverseIncidence(index);
+                };
             };
         }
         else if (name[0] == 'l')
@@ -882,6 +940,56 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
         }   
     }
 
+    domainDecompositionMETIS(elementsAux_);
+
+
+    if (rank == 0){
+        for (int i = 0; i < numElem; ++i) delete elementsAux_[i];
+        elementsAux_.clear();
+    }
+
+    MPI_Barrier(PETSC_COMM_WORLD);
+
+    std::string result;
+    std::ostringstream convert;
+
+    convert << rank+000;
+    result = convert.str();
+    std::string s = "mesh"+result+".dat";
+
+    std::ifstream mesh(s.c_str(), std::ios_base::out);
+
+    mesh >> numElem;
+
+    elements_.reserve(numElem);
+
+    //reading element connectivity
+    for (int i = 0; i < numElem; i++){
+        typename Elements::Connectivity connect;
+        connect.clear();
+        int ind_ = 0;
+
+        mesh >> ind_ >> connect(0) >> connect(1) >> connect(2) >> connect(3) >> connect(4) >> connect(5);
+
+        Elements *el = new Elements(ind_,connect,nodes_);
+        elements_.push_back(el);
+    };
+
+    MPI_Barrier(PETSC_COMM_WORLD);
+
+    MPI_Allreduce(&numElem,&numTotalElem,1,MPI_INT,MPI_SUM,PETSC_COMM_WORLD);
+
+
+
+
+
+
+
+
+
+
+
+
     if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
                              << numElem << " " << numBoundElems << std::endl;
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
@@ -895,7 +1003,7 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
     };
 
 
-
+    //std::cin.get();
 
 
 
@@ -977,28 +1085,14 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         //Print nodal constrains
     for (int i=0; i<numNodes; i++){
 
-        mirrorData<< "Constrains " << i
-                  << " " << nodes_[i] -> getConstrains(0)
-                  << " " << nodes_[i] -> getConstrainValue(0)
-                  << " " << nodes_[i] -> getConstrains(1)
-                  << " " << nodes_[i] -> getConstrainValue(1) << std::endl;
+        mirrorData << "Constrains " << i
+                   << " " << nodes_[i] -> getConstrains(0)
+                   << " " << nodes_[i] -> getConstrainValue(0)
+                   << " " << nodes_[i] -> getConstrains(1)
+                   << " " << nodes_[i] -> getConstrainValue(1) << std::endl;
     }; 
 
     for (int i=0; i<numBoundElems; i++){
@@ -1006,7 +1100,6 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
         mirrorData<< "Bound Elements " << i
                   << " " << boundary_[i] -> getBoundaryGroup() << std::endl;
     }; 
-
 
     //Sets fluid elements and sides on interface boundaries
     for (int i=0; i<numBoundElems; i++){
@@ -1030,24 +1123,23 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
                         flag++;
                     };
                 };
-                
                 if (flag == 3){
-                    boundary_[i] -> setElement(j);
+                    boundary_[i] -> setElement(elements_[j] -> getIndex());
                     //Sets element index and side
                     if ((side[0]==4) || (side[1]==4) || (side[2]==4)){
                         boundary_[i] -> setElementSide(0);
-                        elements_[boundary_[i]->getElement()] -> 
-                            setElemSideInBoundary(0);
+                        elements_[j] -> setElemSideInBoundary(0);
                     };
+                    
+
                     if ((side[0]==5) || (side[1]==5) || (side[2]==5)){
                         boundary_[i] -> setElementSide(1);
-                        elements_[boundary_[i]->getElement()] -> 
-                            setElemSideInBoundary(1);
+                        elements_[j] -> setElemSideInBoundary(1);
                     };
+                    
                     if ((side[0]==3) || (side[1]==3) || (side[2]==3)){
                         boundary_[i] -> setElementSide(2);
-                        elements_[boundary_[i]->getElement()] -> 
-                            setElemSideInBoundary(2);
+                        elements_[j] -> setElemSideInBoundary(2);
                     };
                 };
             };
@@ -1066,7 +1158,7 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, con
     };
 
 
-    domainDecompositionMETIS();
+    //domainDecompositionMETIS();
 
     iAux = 0;
 
