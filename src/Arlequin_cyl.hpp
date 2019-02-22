@@ -72,11 +72,15 @@ private:
     int numBoundElemCoarse;
     int numBoundElemFine;
     int numElemGlueZoneFine;
+    int numElemGlueZoneFineTotal;
     int numElemGlueZoneCoarse;
+    int numElemGlueZoneCoarseTotal;
     int numNodesCoarse;
     int numNodesFine;
     int numNodesGlueZoneFine;
+    int numNodesGlueZoneFineTotal;
     int numNodesGlueZoneCoarse;
+    int numNodesGlueZoneCoarseTotal;
     int numTimeSteps;
     double dTime;
     int rank;
@@ -1034,6 +1038,9 @@ void Arlequin<2>::setCouplingZone(){
 
     //Defines which nodes are in the glue zone
     numElemGlueZoneFine = elementsGlueZoneFine_.size();
+    MPI_Allreduce(&numElemGlueZoneFine,&numElemGlueZoneFineTotal,1,MPI_INT,MPI_SUM,PETSC_COMM_WORLD);
+
+
     for (int i = 0; i < numElemGlueZoneFine; i++){
         connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
 
@@ -1050,6 +1057,8 @@ void Arlequin<2>::setCouplingZone(){
             nodesGlueZoneFine_.push_back(i);
         };
     };
+
+    MPI_Allreduce(&numNodesGlueZoneFine,&numNodesGlueZoneFineTotal,1,MPI_INT,MPI_SUM,PETSC_COMM_WORLD);
 
     if (rank == 0) std::cout << "GLUE ZONE - Number of Nodes = " 
                              << numNodesGlueZoneFine 
@@ -1084,107 +1093,107 @@ void Arlequin<2>::setCouplingZone(){
     };
 
     // Glue Zone in coarse mesh
-    for (int i = 0; i < numNodesCoarse; i++) nodesCZ2[i] = 0;    
+    // for (int i = 0; i < numNodesCoarse; i++) nodesCZ2[i] = 0;    
 
-    elementsGlueZoneCoarse_.reserve(numElemCoarse / 3);
-    nodesGlueZoneCoarse_.reserve(numNodesCoarse / 3);
+    // elementsGlueZoneCoarse_.reserve(numElemCoarse / 3);
+    // nodesGlueZoneCoarse_.reserve(numNodesCoarse / 3);
 
-    //Defines a criterion to select the elements that are in the glue zone
-    for (int jel = 0; jel < numElemCoarse; jel++){
+    // //Defines a criterion to select the elements that are in the glue zone
+    // for (int jel = 0; jel < numElemCoarse; jel++){
         
-        connec = elementsCoarse_[jel] -> getConnectivity();
-        flag = 0;
+    //     connec = elementsCoarse_[jel] -> getConnectivity();
+    //     flag = 0;
 
-        for (int ino = 0; ino < 6; ino++){
-            x = nodesCoarse_[connec(ino)] -> getCoordinates();
+    //     for (int ino = 0; ino < 6; ino++){
+    //         x = nodesCoarse_[connec(ino)] -> getCoordinates();
 
-            if ((x(0) < lim1) || (x(0) > lim2) || 
-                (x(1) < lim1) || (x(1) > lim2)){
+    //         if ((x(0) < lim1) || (x(0) > lim2) || 
+    //             (x(1) < lim1) || (x(1) > lim2)){
 
-            }else{
-                if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
-                    (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
+    //         }else{
+    //             if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
+    //                 (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
 
-                }else{
-                    flag = 1;
-                    break;
-                };
-            };
-        };
-        if (flag > 0) {
-            elementsGlueZoneCoarse_.push_back(jel);
-            elementsCoarse_[jel] -> setGlueZone();
+    //             }else{
+    //                 flag = 1;
+    //                 break;
+    //             };
+    //         };
+    //     };
+    //     if (flag > 0) {
+    //         elementsGlueZoneCoarse_.push_back(jel);
+    //         elementsCoarse_[jel] -> setGlueZone();
 
-            GlueZone *el = new GlueZone(index++,jel);
-            glueZoneCoarse_.push_back(el);
+    //         GlueZone *el = new GlueZone(index++,jel);
+    //         glueZoneCoarse_.push_back(el);
             
-            for (int i=0; i < elementsCoarse_[jel] -> 
-                     getNumberOfIntegrationPoints(); i++){
+    //         for (int i=0; i < elementsCoarse_[jel] -> 
+    //                  getNumberOfIntegrationPoints(); i++){
                 
-                x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);
+    //             x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);
 
-                if ((x(0) < lim1) || (x(0) > lim2) || 
-                    (x(1) < lim1) || (x(1) > lim2)){
+    //             if ((x(0) < lim1) || (x(0) > lim2) || 
+    //                 (x(1) < lim1) || (x(1) > lim2)){
 
-                }else{
-                    if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
-                        (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
+    //             }else{
+    //                 if ((x(0) > lim1 + tick) && (x(0) < lim2 - tick) &&
+    //                     (x(1) > lim1 + tick) && (x(1) < lim2 - tick)){
 
-                    }else{
-                    elementsCoarse_[jel] -> setIntegPointInGlueZone(i);
-                    };
-                };
-            };
-        };        
-    };
+    //                 }else{
+    //                 elementsCoarse_[jel] -> setIntegPointInGlueZone(i);
+    //                 };
+    //             };
+    //         };
+    //     };        
+    // };
 
-    //Defines which nodes are in the glue zone
-    numElemGlueZoneCoarse = elementsGlueZoneCoarse_.size();
-    for (int i = 0; i < numElemGlueZoneCoarse; i++){
-        connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
-            getConnectivity();
+    // //Defines which nodes are in the glue zone
+    // numElemGlueZoneCoarse = elementsGlueZoneCoarse_.size();
+    // for (int i = 0; i < numElemGlueZoneCoarse; i++){
+    //     connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
+    //         getConnectivity();
 
-        for (int ino = 0; ino < 6; ino++){
-            nodesCZ2[connec(ino)] += 1;
-        };
-    };
+    //     for (int ino = 0; ino < 6; ino++){
+    //         nodesCZ2[connec(ino)] += 1;
+    //     };
+    // };
 
-    //Compute number of nodes in the glue zone
-    numNodesGlueZoneCoarse = 0;
-    for (int i = 0; i < numNodesCoarse; i++){
-        if(nodesCZ2[i] > 0) {
-            numNodesGlueZoneCoarse += 1;
-            nodesGlueZoneCoarse_.push_back(i);
-        };
-    };
+    // //Compute number of nodes in the glue zone
+    // numNodesGlueZoneCoarse = 0;
+    // for (int i = 0; i < numNodesCoarse; i++){
+    //     if(nodesCZ2[i] > 0) {
+    //         numNodesGlueZoneCoarse += 1;
+    //         nodesGlueZoneCoarse_.push_back(i);
+    //     };
+    // };
 
-    for (int i = 0; i < numNodesGlueZoneCoarse; i++){
-        typename Nodes::VecLocD x;
-        x = nodesCoarse_[nodesGlueZoneCoarse_[i]] -> getCoordinates();
+    // for (int i = 0; i < numNodesGlueZoneCoarse; i++){
+    //     typename Nodes::VecLocD x;
+    //     x = nodesCoarse_[nodesGlueZoneCoarse_[i]] -> getCoordinates();
         
-        Nodes *no = new Nodes(x,i);
-        nodesLagrangeCoarse_.push_back(no);
-    };
+    //     Nodes *no = new Nodes(x,i);
+    //     nodesLagrangeCoarse_.push_back(no);
+    // };
 
-    for (int i = 0; i < numElemGlueZoneCoarse; i++){
-        typename Elements::Connectivity connecAux;
+    // for (int i = 0; i < numElemGlueZoneCoarse; i++){
+    //     typename Elements::Connectivity connecAux;
 
-        connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
-            getConnectivity();
+    //     connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
+    //         getConnectivity();
         
-        for (int ino = 0; ino < numNodesGlueZoneCoarse; ino++){
-            if (nodesGlueZoneCoarse_[ino] == connec(0)) connecAux(0) = ino;
-            if (nodesGlueZoneCoarse_[ino] == connec(1)) connecAux(1) = ino;
-            if (nodesGlueZoneCoarse_[ino] == connec(2)) connecAux(2) = ino;
-            if (nodesGlueZoneCoarse_[ino] == connec(3)) connecAux(3) = ino;
-            if (nodesGlueZoneCoarse_[ino] == connec(4)) connecAux(4) = ino;
-            if (nodesGlueZoneCoarse_[ino] == connec(5)) connecAux(5) = ino;
-        };
+    //     for (int ino = 0; ino < numNodesGlueZoneCoarse; ino++){
+    //         if (nodesGlueZoneCoarse_[ino] == connec(0)) connecAux(0) = ino;
+    //         if (nodesGlueZoneCoarse_[ino] == connec(1)) connecAux(1) = ino;
+    //         if (nodesGlueZoneCoarse_[ino] == connec(2)) connecAux(2) = ino;
+    //         if (nodesGlueZoneCoarse_[ino] == connec(3)) connecAux(3) = ino;
+    //         if (nodesGlueZoneCoarse_[ino] == connec(4)) connecAux(4) = ino;
+    //         if (nodesGlueZoneCoarse_[ino] == connec(5)) connecAux(5) = ino;
+    //     };
         
-        glueZoneCoarse_[i] -> setConnectivity(connecAux);
-        glueZoneCoarse_[i] -> setNodes(nodesLagrangeCoarse_);
+    //     glueZoneCoarse_[i] -> setConnectivity(connecAux);
+    //     glueZoneCoarse_[i] -> setNodes(nodesLagrangeCoarse_);
 
-    };
+    // };
      
 };
 
@@ -1474,614 +1483,530 @@ template<>
 void Arlequin<2>::printResults(int step) {
 
     //PRINT COARSE MODEL RESULTS
+    if (step % coarseModel.getPrintingFrequency() == 0){
+
+        std::string result;
+        std::ostringstream convert;
+
+        convert << step+100000;
+        result = convert.str();
+        std::string s = "saidaVelCoarse"+result+".vtu";
+        
+        std::fstream output_v(s.c_str(), std::ios_base::out);
+
+        if(rank == 0){
+            output_v << "<?xml version=\"1.0\"?>" << std::endl
+                     << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
+                     << "  <UnstructuredGrid>" << std::endl
+                     << "  <Piece NumberOfPoints=\"" << numNodesCoarse
+                     << "\"  NumberOfCells=\"" << numTotalElemCoarse
+                     << "\">" << std::endl;
+
+            //WRITE NODAL COORDINATES
+            output_v << "    <Points>" << std::endl
+                     << "      <DataArray type=\"Float64\" "
+                     << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+
+            for (int i = 0; i < numNodesCoarse; i++){
+                typename Nodes::VecLocD x;
+                x = nodesCoarse_[i] -> getCoordinates();
+                output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;
+            };
+            output_v << "      </DataArray>" << std::endl
+                     << "    </Points>" << std::endl;
+        };
+         std::cin.get();
+            MPI_Barrier(PETSC_COMM_WORLD);
+
+        //WRITE ELEMENT CONNECTIVITY
+        int k = 0;
+        // for (int iElem = 0; iElem < numTotalElemCoarse; ++iElem){
+        //     typename Elements::Connectivity connec;
+
+        //     if (domDecompCoarse.first[iElem] == rank){
+        //         connec = elementsCoarse_[k]->getConnectivity();
+        //         k++;
+        //     }
+        //     MPI_Bcast(&connec(0),1,MPI_INT,domDecompCoarse.first[iElem],PETSC_COMM_WORLD);
+        //     MPI_Bcast(&connec(1),1,MPI_INT,domDecompCoarse.first[iElem],PETSC_COMM_WORLD);
+        //     MPI_Bcast(&connec(2),1,MPI_INT,domDecompCoarse.first[iElem],PETSC_COMM_WORLD);
+        //     MPI_Bcast(&connec(3),1,MPI_INT,domDecompCoarse.first[iElem],PETSC_COMM_WORLD);
+        //     MPI_Bcast(&connec(4),1,MPI_INT,domDecompCoarse.first[iElem],PETSC_COMM_WORLD);
+        //     MPI_Bcast(&connec(5),1,MPI_INT,domDecompCoarse.first[iElem],PETSC_COMM_WORLD);
+
+        //     if (rank == 0) output_v << connec(0) << " " << connec(1) << " " << connec(2) << " "
+        //                             << connec(3) << " " << connec(4) << " " << connec(5) << std::endl;
+
+        //     MPI_Barrier(PETSC_COMM_WORLD);
+        // }
+
+
+        if (rank == 0){
+            output_v << "      </DataArray>" << std::endl;
+          
+            //WRITE OFFSETS IN DATA ARRAY
+            output_v << "      <DataArray type=\"Int32\""
+                     << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+            
+            int aux = 0;
+            for (int i = 0; i < numElemCoarse; i++){
+                output_v << aux + 6 << std::endl;
+                aux += 6;
+            };
+            output_v << "      </DataArray>" << std::endl;
+          
+            //WRITE ELEMENT TYPES
+            output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
+                     << "format=\"ascii\">" << std::endl;
+            
+            for (int i = 0; i < numElemCoarse; i++){
+                output_v << 22 << std::endl;
+            };
+
+            output_v << "      </DataArray>" << std::endl
+                     << "    </Cells>" << std::endl;
+
+            //WRITE NODAL RESULTS
+            output_v << "    <PointData>" << std::endl;
+
+            if (coarseModel.printVelocity){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){        
+                    output_v << nodesCoarse_[i] -> getVelocity(0) << " "              
+                             << nodesCoarse_[i] -> getVelocity(1) << " " 
+                             << 0. << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            if (coarseModel.printRealVelocity){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){        
+                    output_v << nodesCoarse_[i] -> getVelocityArlequin(0) << " " 
+                             << nodesCoarse_[i] -> getVelocityArlequin(1) << " " 
+                             << 0. << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            }
+
+            if (coarseModel.printLagrangeMultipliers){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Lagrange Multipliers\" format=\"ascii\">"
+                         << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){        
+                    output_v << nodesCoarse_[i] -> getLagrangeMultiplier(0) << " "
+                             << nodesCoarse_[i] -> getLagrangeMultiplier(1) << " " 
+                             << 0. << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            }
+
+            if (coarseModel.printElementCorrespondence){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                         << "Name=\"Element\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){
+                    output_v << nodesCoarse_[i] -> getNodalElemCorrespondence()
+                             << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            }
+            
+            if (coarseModel.printDistFunction){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                         << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){        
+                    output_v << nodesCoarse_[i] -> getDistFunction() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            }
+
+            if (coarseModel.printEnergyWeightFunction){
+                output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                        << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){
+                    output_v << nodesCoarse_[i] -> getWeightFunction() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            }
+
+            if (coarseModel.printPressure){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){
+                    output_v << 0. << " " << 0. << " " 
+                             << nodesCoarse_[i] -> getPressure() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            }
+
+            if (coarseModel.printRealPressure){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){
+                    output_v << 0. << " " << 0. << " " 
+                             << nodesCoarse_[i] -> getPressureArlequin() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            if (coarseModel.printVorticity){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                         << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodesCoarse; i++){
+                    output_v << nodesCoarse_[i] -> getVorticity() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+
+            output_v << "    </PointData>" << std::endl; 
+
+            //WRITE ELEMENT RESULTS
+            output_v << "    <CellData>" << std::endl;
+        };
+
+        // if (coarseModel.printProcess){
+        //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Process\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numElemCoarse; i++){
+        //         output_v << domDecompCoarse.first[i] << std::endl;
+        //     };
+        //     output_v << "      </DataArray> " << std::endl;
+        // }
+
+        // if (coarseModel.printEnergyWeightFunction){
+        //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numElemCoarse; i++){
+        //         output_v << elementsCoarse_[i] -> getIntegPointWeightFunction(0)
+        //                  << std::endl;
+        //     };
+        //     output_v << "      </DataArray> " << std::endl;
+        // }
+
+        // output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //          << "Name=\"Lines\" format=\"ascii\">" << std::endl;
+        // for (int i=0; i<numElemCoarse; i++){
+        //     int res = 0;
+        //     for (int j=0; j<numBoundElemCoarse; j++){
+        //        if (boundaryCoarse_[j] -> getElement() == i) res = boundaryCoarse_[j] -> getBoundaryGroup();
+        //     }
+        //     output_v << res << std::endl;
+        // };
+        // output_v << "      </DataArray> " << std::endl;
+
+
+        // int cont=0;
+        
+        // if (coarseModel.printGlueZone){
+        //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
+        //     cont = 0;
+        //     for (int i=0; i<numElemCoarse; i++){
+        //         if (elementsGlueZoneCoarse_[cont] == i){
+        //             output_v << 1.0 << std::endl;
+        //             cont++;
+        //         }else{
+        //             output_v << 0.0 << std::endl;
+        //         };
+        //     };
+        //     output_v << "      </DataArray> " << std::endl;
+        // }
+
+        // if (coarseModel.printJacobian){
+        //     output_v <<"      <DataArray type=\"Float32\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numElemCoarse; i++){
+        //         output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
+
+        //         // std::string b;
+        //         // std::ostringstream a;
+        //         // double jac = elementsCoarse_[i] -> getJacobian();
+        //         // int int32 = 8;
+        //         // a << int32 << jac<< " ";
+        //         // b = a.str();
+        //         // std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length()) + base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
+        //         // output_v << res;
+        //     };
+        //     output_v << "      </DataArray> " << std::endl;
+        // }
     
-    std::string result;
-    std::ostringstream convert;
 
-    convert << step+100000;
-    result = convert.str();
-    std::string s = "saidaVelCoarse"+result+".vtu";
-    
-    std::fstream output_v(s.c_str(), std::ios_base::out);
+        // std::cout << lala << std::endl;
 
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodesCoarse
-             << "\"  NumberOfCells=\"" << numElemCoarse
-             << "\">" << std::endl;
+        if (rank == 0){
+            output_v << "    </CellData>" << std::endl; 
 
-    //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-    for (int i = 0; i < numNodesCoarse; i++){
-        typename Nodes::VecLocD x;
-        x = nodesCoarse_[i] -> getCoordinates();
-        output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;
-        std::string b;
-        std::ostringstream a;
-        a << x(0) << " " << x(1) << " " << 0.0 << " ";
-        b = a.str();
-        std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
-        //output_v << res;
-    };
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
-    
-    //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemCoarse; i++){
-        typename Elements::Connectivity connec;
-        connec = elementsCoarse_[i] -> getConnectivity();
-        output_v << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-                 << connec(3) << " " << connec(4) << " " << connec(5) << \
-            std::endl;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE OFFSETS IN DATA ARRAY
-    output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    int aux = 0;
-    for (int i = 0; i < numElemCoarse; i++){
-        output_v << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE ELEMENT TYPES
-    output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemCoarse; i++){
-        output_v << 22 << std::endl;
-    };
-
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
-
-    //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
-
-    if (coarseModel.printVelocity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getVelocity(0) << " "              
-                     << nodesCoarse_[i] -> getVelocity(1) << " " 
-                     << 0. << std::endl;
+            //FINALIZE OUTPUT FILE
+            output_v << "  </Piece>" << std::endl
+                   << "  </UnstructuredGrid>" << std::endl
+                   << "</VTKFile>" << std::endl;
         };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (coarseModel.printRealVelocity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getVelocityArlequin(0) << " " 
-                     << nodesCoarse_[i] -> getVelocityArlequin(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printLagrangeMultipliers){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Lagrange Multipliers\" format=\"ascii\">"
-                 << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getLagrangeMultiplier(0) << " "
-                     << nodesCoarse_[i] -> getLagrangeMultiplier(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printElementCorrespondence){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Element\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << nodesCoarse_[i] -> getNodalElemCorrespondence()
-                     << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-    
-    if (coarseModel.printDistFunction){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getDistFunction() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printEnergyWeightFunction){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << nodesCoarse_[i] -> getWeightFunction() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printPressure){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << 0. << " " << 0. << " " 
-                     << nodesCoarse_[i] -> getPressure() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printRealPressure){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << 0. << " " << 0. << " " 
-                     << nodesCoarse_[i] -> getPressureArlequin() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (coarseModel.printVorticity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << nodesCoarse_[i] -> getVorticity() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-
-    output_v << "    </PointData>" << std::endl; 
-
-    //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
-    
-    // if (coarseModel.printProcess){
-    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Process\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numElemCoarse; i++){
-    //         output_v << domDecompCoarse.first[i] << std::endl;
-    //     };
-    //     output_v << "      </DataArray> " << std::endl;
-    // }
-
-    // if (coarseModel.printEnergyWeightFunction){
-    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numElemCoarse; i++){
-    //         output_v << elementsCoarse_[i] -> getIntegPointWeightFunction(0)
-    //                  << std::endl;
-    //     };
-    //     output_v << "      </DataArray> " << std::endl;
-    // }
-
-    // output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //          << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    // for (int i=0; i<numElemCoarse; i++){
-    //     int res = 0;
-    //     for (int j=0; j<numBoundElemCoarse; j++){
-    //        if (boundaryCoarse_[j] -> getElement() == i) res = boundaryCoarse_[j] -> getBoundaryGroup();
-    //     }
-    //     output_v << res << std::endl;
-    // };
-    // output_v << "      </DataArray> " << std::endl;
-
-
-    // int cont=0;
-    
-    // if (coarseModel.printGlueZone){
-    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-    //     cont = 0;
-    //     for (int i=0; i<numElemCoarse; i++){
-    //         if (elementsGlueZoneCoarse_[cont] == i){
-    //             output_v << 1.0 << std::endl;
-    //             cont++;
-    //         }else{
-    //             output_v << 0.0 << std::endl;
-    //         };
-    //     };
-    //     output_v << "      </DataArray> " << std::endl;
-    // }
-
-    // if (coarseModel.printJacobian){
-    //     output_v <<"      <DataArray type=\"Float32\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numElemCoarse; i++){
-    //         output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
-
-    //         // std::string b;
-    //         // std::ostringstream a;
-    //         // double jac = elementsCoarse_[i] -> getJacobian();
-    //         // int int32 = 8;
-    //         // a << int32 << jac<< " ";
-    //         // b = a.str();
-    //         // std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length()) + base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
-    //         // output_v << res;
-    //     };
-    //     output_v << "      </DataArray> " << std::endl;
-    // }
-    // std::string lala = base64_decode("IAAAAA==CAAAABAAAAAYAAAAIAAAACgAAAAwAAAAOAAAAEAAAAA=");
-
-
-    // std::cout << lala << std::endl;
-
-    output_v << "    </CellData>" << std::endl; 
-
-    //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl
-           << "  </UnstructuredGrid>" << std::endl
-           << "</VTKFile>" << std::endl;
 
 
 
 
+        //PRINT FINE MODEL RESULTS
+        
+        std::string f = "saidaVelFine"+result+".vtu";
+        
+        std::fstream output_vf(f.c_str(), std::ios_base::out);
 
-    //PRINT FINE MODEL RESULTS
-    
-    std::string f = "saidaVelFine"+result+".vtu";
-    
-    std::fstream output_vf(f.c_str(), std::ios_base::out);
+        output_vf << "<?xml version=\"1.0\"?>" << std::endl
+                 << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+                 << "  <UnstructuredGrid>" << std::endl
+                 << "  <Piece NumberOfPoints=\"" << numNodesFine
+                 << "\"  NumberOfCells=\"" << numElemFine
+                 << "\">" << std::endl;
 
-    output_vf << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodesFine
-             << "\"  NumberOfCells=\"" << numElemFine
-             << "\">" << std::endl;
+        //WRITE NODAL COORDINATES
+        output_vf << "    <Points>" << std::endl
+                 << "      <DataArray type=\"Float64\" "
+                 << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    //WRITE NODAL COORDINATES
-    output_vf << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-    for (int i = 0; i < numNodesFine; i++){
-        typename Nodes::VecLocD x;
-        x = nodesFine_[i] -> getCoordinates();
-        output_vf << x(0) << " " << x(1) << " " << 0.001 << std::endl;        
-    };
-    output_vf << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
-    
-    //WRITE ELEMENT CONNECTIVITY
-    output_vf << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemFine; i++){
-        typename Elements::Connectivity connec;
-        connec = elementsFine_[i] -> getConnectivity();
-        output_vf << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-                 << connec(3) << " " << connec(4) << " " << connec(5) << \
-            std::endl;
-    };
-    output_vf << "      </DataArray>" << std::endl;
-  
-    //WRITE OFFSETS IN DATA ARRAY
-    output_vf << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    aux = 0;
-    for (int i = 0; i < numElemFine; i++){
-        output_vf << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_vf << "      </DataArray>" << std::endl;
-  
-    //WRITE ELEMENT TYPES
-    output_vf << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemFine; i++){
-        output_vf << 22 << std::endl;
-    };
-
-    output_vf << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
-
-    //WRITE NODAL RESULTS
-    output_vf << "    <PointData>" << std::endl;
-
-    if (fineModel.printVelocity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                  << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getVelocity(0) << " "              
-                      << nodesFine_[i] -> getVelocity(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printInnerNormal){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Inner Normal\" format=\"ascii\">" << std::endl;
-        typename Nodes::VecLocD n;
-        for (int i=0; i<numNodesFine; i++){
-            n = nodesFine_[i] -> getInnerNormal();
-            output_vf << n(0) << " " << n(1) << " " << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printRealVelocity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getVelocityArlequin(0) << " "
-                      << nodesFine_[i] -> getVelocityArlequin(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printMeshVelocity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getMeshVelocity(0) << " " 
-                      << nodesFine_[i] -> getMeshVelocity(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printLagrangeMultipliers){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Lag Multipliers\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getLagrangeMultiplier(0) << " " 
-                      << nodesFine_[i] -> getLagrangeMultiplier(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printDistFunction){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getDistFunction() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printElementCorrespondence){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Element\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getNodalElemCorrespondence() 
-                      << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printEnergyWeightFunction){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getWeightFunction() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-    
-    if (fineModel.printMeshDisplacement){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            typename Nodes::VecLocD x, xi;
+        for (int i = 0; i < numNodesFine; i++){
+            typename Nodes::VecLocD x;
             x = nodesFine_[i] -> getCoordinates();
-            xi = nodesFine_[i] -> getInitialCoordinates();
-            output_vf << x(0) - xi(0) << " " << x(1) - xi(1) << " " << 0. 
-                      << std::endl;
+            output_vf << x(0) << " " << x(1) << " " << 0.001 << std::endl;        
         };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printPressure){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << 0. << " " << 0. << " " 
-                      << nodesFine_[i] -> getPressure() << std::endl;
+        output_vf << "      </DataArray>" << std::endl
+                 << "    </Points>" << std::endl;
+        
+        //WRITE ELEMENT CONNECTIVITY
+        output_vf << "    <Cells>" << std::endl
+                 << "      <DataArray type=\"Int32\" "
+                 << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+        
+        for (int i = 0; i < numElemFine; i++){
+            typename Elements::Connectivity connec;
+            connec = elementsFine_[i] -> getConnectivity();
+            output_vf << connec(0) << " " << connec(1) << " " << connec(2) << " " \
+                     << connec(3) << " " << connec(4) << " " << connec(5) << \
+                std::endl;
         };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printRealPressure){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << 0. << " " << 0. << " " 
-                      << nodesFine_[i] -> getPressureArlequin() << std::endl;
+        output_vf << "      </DataArray>" << std::endl;
+      
+        //WRITE OFFSETS IN DATA ARRAY
+        output_vf << "      <DataArray type=\"Int32\""
+                 << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+        
+        int aux = 0;
+        for (int i = 0; i < numElemFine; i++){
+            output_vf << aux + 6 << std::endl;
+            aux += 6;
         };
-        output_vf << "      </DataArray> " << std::endl;
-    }
+        output_vf << "      </DataArray>" << std::endl;
+      
+        //WRITE ELEMENT TYPES
+        output_vf << "      <DataArray type=\"UInt8\" Name=\"types\" "
+                 << "format=\"ascii\">" << std::endl;
+        
+        for (int i = 0; i < numElemFine; i++){
+            output_vf << 22 << std::endl;
+        };
 
-    // if (fineModel.printVorticity){
-    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numNodesFine; i++){
-    //         output_vf << nodesFine_[i] -> getVorticity() << std::endl;
-    //     };
-    //     output_vf << "      </DataArray> " << std::endl;
-    // }
+        output_vf << "      </DataArray>" << std::endl
+                 << "    </Cells>" << std::endl;
 
-    output_vf << "    </PointData>" << std::endl; 
+        //WRITE NODAL RESULTS
+        output_vf << "    <PointData>" << std::endl;
 
-    //WRITE ELEMENT RESULTS
-    output_vf << "    <CellData>" << std::endl;
-    
-    // if (fineModel.printProcess){
-    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Process\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numElemFine; i++){
-    //         output_vf << domDecompFine.first[i] << std::endl;
-    //     };
-    //     output_vf << "      </DataArray> " << std::endl;
-    // }
+        if (fineModel.printVelocity){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                      << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getVelocity(0) << " "              
+                          << nodesFine_[i] -> getVelocity(1) << " " 
+                          << 0. << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
 
-    // output_vf <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //          << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    // for (int i=0; i<numElemFine; i++){
-    //     int res = 0;
-    //     for (int j=0; j<numBoundElemFine; j++){
-    //        if (boundaryFine_[j] -> getElement() == i) res = boundaryFine_[j] -> getBoundaryGroup();
-    //     }
-    //     output_vf << res << std::endl;
-    // };
-    // output_vf << "      </DataArray> " << std::endl;
+        if (fineModel.printInnerNormal){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Inner Normal\" format=\"ascii\">" << std::endl;
+            typename Nodes::VecLocD n;
+            for (int i=0; i<numNodesFine; i++){
+                n = nodesFine_[i] -> getInnerNormal();
+                output_vf << n(0) << " " << n(1) << " " << 0. << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+
+        if (fineModel.printRealVelocity){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getVelocityArlequin(0) << " "
+                          << nodesFine_[i] -> getVelocityArlequin(1) << " " 
+                          << 0. << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+
+        if (fineModel.printMeshVelocity){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getMeshVelocity(0) << " " 
+                          << nodesFine_[i] -> getMeshVelocity(1) << " " 
+                          << 0. << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        };
+
+        if (fineModel.printLagrangeMultipliers){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Lag Multipliers\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getLagrangeMultiplier(0) << " " 
+                          << nodesFine_[i] -> getLagrangeMultiplier(1) << " " 
+                          << 0. << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+
+        if (fineModel.printDistFunction){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                     << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getDistFunction() << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+
+        if (fineModel.printElementCorrespondence){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                     << "Name=\"Element\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getNodalElemCorrespondence() 
+                          << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+
+        if (fineModel.printEnergyWeightFunction){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                     << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << nodesFine_[i] -> getWeightFunction() << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+        
+        if (fineModel.printMeshDisplacement){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                typename Nodes::VecLocD x, xi;
+                x = nodesFine_[i] -> getCoordinates();
+                xi = nodesFine_[i] -> getInitialCoordinates();
+                output_vf << x(0) - xi(0) << " " << x(1) - xi(1) << " " << 0. 
+                          << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        };
+
+        if (fineModel.printPressure){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << 0. << " " << 0. << " " 
+                          << nodesFine_[i] -> getPressure() << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        };
+
+        if (fineModel.printRealPressure){
+            output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                     << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
+            for (int i=0; i<numNodesFine; i++){
+                output_vf << 0. << " " << 0. << " " 
+                          << nodesFine_[i] -> getPressureArlequin() << std::endl;
+            };
+            output_vf << "      </DataArray> " << std::endl;
+        }
+
+        // if (fineModel.printVorticity){
+        //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numNodesFine; i++){
+        //         output_vf << nodesFine_[i] -> getVorticity() << std::endl;
+        //     };
+        //     output_vf << "      </DataArray> " << std::endl;
+        // }
+
+        output_vf << "    </PointData>" << std::endl; 
+
+        //WRITE ELEMENT RESULTS
+        output_vf << "    <CellData>" << std::endl;
+        
+        // if (fineModel.printProcess){
+        //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Process\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numElemFine; i++){
+        //         output_vf << domDecompFine.first[i] << std::endl;
+        //     };
+        //     output_vf << "      </DataArray> " << std::endl;
+        // }
+
+        // output_vf <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //          << "Name=\"Lines\" format=\"ascii\">" << std::endl;
+        // for (int i=0; i<numElemFine; i++){
+        //     int res = 0;
+        //     for (int j=0; j<numBoundElemFine; j++){
+        //        if (boundaryFine_[j] -> getElement() == i) res = boundaryFine_[j] -> getBoundaryGroup();
+        //     }
+        //     output_vf << res << std::endl;
+        // };
+        // output_vf << "      </DataArray> " << std::endl;
 
 
-    // if (fineModel.printGlueZone){
-    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-    //     cont=0;
-    //     for (int i=0; i<numElemFine; i++){
-    //         if (elementsGlueZoneFine_[cont] == i){
-    //             output_vf << 1.0 << std::endl;
-    //             cont += 1; 
-    //         }else{
-    //             output_vf << 0.0 << std::endl;
-    //         };
-    //     };
-    //     output_vf << "      </DataArray> " << std::endl;
-    // }
+        // if (fineModel.printGlueZone){
+        //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
+        //     cont=0;
+        //     for (int i=0; i<numElemFine; i++){
+        //         if (elementsGlueZoneFine_[cont] == i){
+        //             output_vf << 1.0 << std::endl;
+        //             cont += 1; 
+        //         }else{
+        //             output_vf << 0.0 << std::endl;
+        //         };
+        //     };
+        //     output_vf << "      </DataArray> " << std::endl;
+        // }
 
-    // if (fineModel.printEnergyWeightFunction){
-    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numElemFine; i++){
-    //         output_vf << elementsFine_[i] -> getIntegPointWeightFunction(0)
-    //                   << std::endl;
-    //     };
-    //     output_vf << "      </DataArray> " << std::endl;
-    // };
+        // if (fineModel.printEnergyWeightFunction){
+        //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numElemFine; i++){
+        //         output_vf << elementsFine_[i] -> getIntegPointWeightFunction(0)
+        //                   << std::endl;
+        //     };
+        //     output_vf << "      </DataArray> " << std::endl;
+        // };
 
-    // if (fineModel.printJacobian){
-    //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<numElemFine; i++){
-    //         output_vf << elementsFine_[i] -> getJacobian() << std::endl;
-    //     };
-    //     output_vf << "      </DataArray> " << std::endl;
-    // };
+        // if (fineModel.printJacobian){
+        //     output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        //              << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+        //     for (int i=0; i<numElemFine; i++){
+        //         output_vf << elementsFine_[i] -> getJacobian() << std::endl;
+        //     };
+        //     output_vf << "      </DataArray> " << std::endl;
+        // };
 
-    output_vf << "    </CellData>" << std::endl; 
+        output_vf << "    </CellData>" << std::endl; 
 
-    //FINALIZE OUTPUT FILE
-    output_vf << "  </Piece>" << std::endl
-           << "  </UnstructuredGrid>" << std::endl
-           << "</VTKFile>" << std::endl;
+        //FINALIZE OUTPUT FILE
+        output_vf << "  </Piece>" << std::endl
+               << "  </UnstructuredGrid>" << std::endl
+               << "</VTKFile>" << std::endl;
 
+    };// if printing frequency
 
-    
-    // std::string c = "saidaCoupling"+result+".vtu";
-    
-    // std::fstream output_c(c.c_str(), std::ios_base::out);
-
-    // output_c << "<?xml version=\"1.0\"?>" << std::endl
-    //          << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-    //          << "  <UnstructuredGrid>" << std::endl
-    //          << "  <Piece NumberOfPoints=\"" << numNodesGlueZoneFine
-    //          << "\"  NumberOfCells=\"" << numElemGlueZoneFine
-    //          << "\">" << std::endl;
-
-    // //WRITE NODAL COORDINATES
-    // output_c << "    <Points>" << std::endl
-    //          << "      <DataArray type=\"Float64\" "
-    //          << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-    // for (int i = 0; i < numNodesGlueZoneFine; i++){
-    //     typename Nodes::VecLocD x;
-    //     x = nodesLagrangeFine_[i] -> getCoordinates();
-    //     output_c << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
-    // };
-    // output_c << "      </DataArray>" << std::endl
-    //          << "    </Points>" << std::endl;
-    
-    // //WRITE ELEMENT CONNECTIVITY
-    // output_c << "    <Cells>" << std::endl
-    //          << "      <DataArray type=\"Int32\" "
-    //          << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    // for (int i = 0; i < numElemGlueZoneFine; i++){
-    //     typename Elements::Connectivity connec;
-    //     connec = glueZoneFine_[i] -> getConnectivity();
-    //     output_c << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-    //              << connec(3) << " " << connec(4) << " " << connec(5) << \
-    //         std::endl;
-    // };
-    // output_c << "      </DataArray>" << std::endl;
-  
-    // //WRITE OFFSETS IN DATA ARRAY
-    // output_c << "      <DataArray type=\"Int32\""
-    //          << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    // aux = 0;
-    // for (int i = 0; i < numElemGlueZoneFine; i++){
-    //     output_c << aux + 6 << std::endl;
-    //     aux += 6;
-    // };
-    // output_c << "      </DataArray>" << std::endl;
-  
-    // //WRITE ELEMENT TYPES
-    // output_c << "      <DataArray type=\"UInt8\" Name=\"types\" "
-    //          << "format=\"ascii\">" << std::endl;
-    
-    // for (int i = 0; i < numElemGlueZoneFine; i++){
-    //     output_c << 22 << std::endl;
-    // };
-
-    // output_c << "      </DataArray>" << std::endl
-    //          << "    </Cells>" << std::endl;
-
-    // //WRITE NODAL RESULTS
-    // output_c << "    <PointData>" << std::endl;
-    // output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //          << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-
-    // for (int i=0; i<numNodesGlueZoneFine; i++){
-    //     output_c << nodesFine_[i] -> getWeightFunction() << " "              
-    //               << 0. << " " 
-    //               << 0. << std::endl;
-    // };
-    // output_c << "      </DataArray> " << std::endl;
-
-
-    // output_c << "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //          << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
-
-    // for (int i=0; i<numNodesGlueZoneFine; i++){
-    //     output_c << nodesFine_[i] -> getDistFunction() << " "              
-    //               << 0. << " " 
-    //               << 0. << std::endl;
-    // };
-    // output_c << "      </DataArray> " << std::endl;
-
-    // output_c << "    </PointData>" << std::endl; 
-
-    // //WRITE ELEMENT RESULTS
-    // output_c << "    <CellData>" << std::endl;
-    
-
-    // output_c << "    </CellData>" << std::endl; 
-
-    // //FINALIZE OUTPUT FILE
-    // output_c << "  </Piece>" << std::endl
-    //        << "  </UnstructuredGrid>" << std::endl
-    //        << "</VTKFile>" << std::endl;
-    
 };
 
 
@@ -2143,11 +2068,8 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     //Computes the Weight function for all the finite elements
     setWeightFunction(16.); 
 
-    if (rank == 0) printResults(0);
-    if (rank == 1) printResults(1);
-    if (rank == 2) printResults(2);
-    if (rank == 3) printResults(3);
-    if (rank == 4) printResults(4);
+    printResults(0);
+   
 
     MPI_Barrier(PETSC_COMM_WORLD);
 
@@ -2301,7 +2223,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
     // Computes the system size
     int sysSize = 3 * numNodesCoarse +  
-        + 3 * numNodesFine + 2 * numNodesGlueZoneFine;
+        + 3 * numNodesFine + 2 * numNodesGlueZoneFineTotal;
 
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){

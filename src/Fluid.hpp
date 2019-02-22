@@ -127,6 +127,8 @@ public:
     /// @return time step size
     double getTimeStep(){return dTime;};
 
+    int getPrintingFrequency(){return printFreq;};
+
     /// Gets the number of fluid-structure interfaces
     /// @return number of fluid boundaries which composes the 
     /// fluid structure interface
@@ -294,190 +296,198 @@ void Fluid<2>::domainDecompositionMETIS(std::vector<Elements *> &elem_) {
 template<>
 void Fluid<2>::printResults(int step) {
 
-    //    std::cout << "Printing Velocity Results" << std::endl;
-    std::string result;
-    std::ostringstream convert;
+    if (step % printFreq == 0){
 
-    convert << step+100000;
-    result = convert.str();
-    std::string s = "saidaVel"+result+".vtu";
-    
-    std::fstream output_v(s.c_str(), std::ios_base::out);
+        std::string result;
+        std::ostringstream convert;
 
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodes
-             << "\"  NumberOfCells=\"" << numElem
-             << "\">" << std::endl;
+        convert << step+100000;
+        result = convert.str();
+        std::string s = "saidaVel"+result+".vtu";
 
-    //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+        std::fstream output_v(s.c_str(), std::ios_base::out);
 
-    for (int i=0; i<numNodes; i++){
-        typename Node::VecLocD x;
-        x=nodes_[i]->getCoordinates();
-        output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
-    };
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
-    
-    //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    for (int i=0; i<numElem; i++){
-        typename Elements::Connectivity connec;
-        connec=elements_[i]->getConnectivity();
-        output_v << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-                 << connec(3) << " " << connec(4) << " " << connec(5) << \
-            std::endl;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE OFFSETS IN DATA ARRAY
-    output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    int aux = 0;
-    for (int i=0; i<numElem; i++){
-        output_v << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE ELEMENT TYPES
-    output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
-    
-    for (int i=0; i<numElem; i++){
-        output_v << 22 << std::endl;
-    };
+        if (rank == 0){
+            output_v << "<?xml version=\"1.0\"?>" << std::endl
+                     << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+                     << "  <UnstructuredGrid>" << std::endl
+                     << "  <Piece NumberOfPoints=\"" << numNodes
+                     << "\"  NumberOfCells=\"" << numTotalElem
+                     << "\">" << std::endl;
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
+            //WRITE NODAL COORDINATES
+            output_v << "    <Points>" << std::endl
+                     << "      <DataArray type=\"Float64\" "
+                     << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
-
-    if (printVelocity){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getVelocity(0) << " "             
-                     << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (printMeshVelocity){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
-        
-        for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getMeshVelocity(0) << " "    
-                     << nodes_[i] -> getMeshVelocity(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (printVorticity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getVorticity() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (printPressure){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){
-            output_v << 0. << " " << 0. << " " 
-                     << nodes_[i] -> getPressure() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-
-    if (printMeshDisplacement){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){       
-            typename Node::VecLocD x, xp;
-            x=nodes_[i]->getCoordinates();
-            xp=nodes_[i]->getInitialCoordinates();
+            for (int i=0; i<numNodes; i++){
+                typename Node::VecLocD x;
+                x=nodes_[i]->getCoordinates();
+                output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+            };
+            output_v << "      </DataArray>" << std::endl
+                     << "    </Points>" << std::endl;
             
-            output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    output_v << "    </PointData>" << std::endl; 
-
-    //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
-    
-    if (printProcess){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElem; i++){
-            output_v << part_elem[i] << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElem; i++){
-        int res = 0;
-        for (int j=0; j<numBoundElems; j++){
-           if (boundary_[j] -> getElement() == i) res = boundary_[j] -> getBoundaryGroup();
+            //WRITE ELEMENT CONNECTIVITY
+            output_v << "    <Cells>" << std::endl
+                     << "      <DataArray type=\"Int32\" "
+                     << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
         }
-        output_v << res << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
 
-    if (printJacobian){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElem; i++){
-            output_v << elements_[i] -> getJacobian() << std::endl;
+        int k = 0;
+        for (int iElem = 0; iElem < numTotalElem; ++iElem){
+            typename Elements::Connectivity connec;
+
+            if (part_elem[iElem] == rank){
+                connec = elements_[k]->getConnectivity();
+                k++;
+            }
+            MPI_Bcast(&connec,8,MPI_INT,part_elem[iElem],PETSC_COMM_WORLD);
+            if (rank == 0) output_v << connec(0) << " " << connec(1) << " " << connec(2) << " "
+                                    << connec(3) << " " << connec(4) << " " << connec(5) << std::endl;
+
+            MPI_Barrier(PETSC_COMM_WORLD);
+        }
+
+        if (rank == 0) {
+            output_v << "      </DataArray>" << std::endl;
+      
+            //WRITE OFFSETS IN DATA ARRAY
+            output_v << "      <DataArray type=\"Int32\""
+                    << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+        
+            int aux = 0;
+            for (int i=0; i<numTotalElem; i++){
+                output_v << aux + 6 << std::endl;
+                aux += 6;
+            };
+            output_v << "      </DataArray>" << std::endl;
+      
+            //WRITE ELEMENT TYPES
+            output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
+                     << "format=\"ascii\">" << std::endl;
+        
+            for (int i=0; i<numTotalElem; i++){
+                output_v << 22 << std::endl;
+            };
+
+            output_v << "      </DataArray>" << std::endl
+                     << "    </Cells>" << std::endl;
+
+            //WRITE NODAL RESULTS
+            output_v << "    <PointData>" << std::endl;
+
+            if (printVelocity){
+                output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                        << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodes; i++){
+                    output_v << nodes_[i] -> getVelocity(0) << " "             
+                             << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
+                }; 
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            if (printMeshVelocity){
+                output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                        << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
+            
+                for (int i=0; i<numNodes; i++){
+                    output_v << nodes_[i] -> getMeshVelocity(0) << " "    
+                             << nodes_[i] -> getMeshVelocity(1) << " " 
+                             << 0. << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            if (printVorticity){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                         << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodes; i++){
+                    output_v << nodes_[i] -> getVorticity() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            if (printPressure){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodes; i++){
+                    output_v << 0. << " " << 0. << " " 
+                             << nodes_[i] -> getPressure() << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            if (printMeshDisplacement){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                         << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
+                for (int i=0; i<numNodes; i++){       
+                    typename Node::VecLocD x, xp;
+                    x=nodes_[i]->getCoordinates();
+                    xp=nodes_[i]->getInitialCoordinates();
+                
+                    output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " 
+                            << 0. << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+
+            output_v << "    </PointData>" << std::endl; 
+
+            //WRITE ELEMENT RESULTS
+            output_v << "    <CellData>" << std::endl;
         };
-        output_v << "      </DataArray> " << std::endl;
+
+
+        if (printProcess){
+            if(rank == 0){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                         << "Name=\"Process\" format=\"ascii\">" << std::endl;
+            
+                for (int i=0; i<numTotalElem; i++){
+                    output_v << part_elem[i] << std::endl;
+                };
+                output_v << "      </DataArray> " << std::endl;
+            };
+        };
+
+        if (printJacobian){
+            if (rank == 0){
+                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                         << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+            };
+            
+
+            int k = 0;
+            for (int iElem = 0; iElem < numTotalElem; ++iElem){
+                double jac = 0.;
+
+                if (part_elem[iElem] == rank){
+                    jac = elements_[k]->getJacobian();
+                    k++;
+                }
+
+                MPI_Bcast(&jac,2,MPI_FLOAT,part_elem[iElem],PETSC_COMM_WORLD);
+                if (rank == 0) output_v << jac << std::endl;
+
+                MPI_Barrier(PETSC_COMM_WORLD);
+            }                
+
+            if(rank == 0) output_v << "      </DataArray> " << std::endl;
+        };
+    
+
+        if(rank == 0){
+            output_v << "    </CellData>" << std::endl; 
+
+            //FINALIZE OUTPUT FILE
+            output_v << "  </Piece>" << std::endl;
+            output_v << "  </UnstructuredGrid>" << std::endl
+                     << "</VTKFile>" << std::endl;
+         };
+
     };
-    
-    output_v << "    </CellData>" << std::endl; 
 
-    //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl;
-    
-    // output_v << "  <FieldData>" << std::endl;
-
-    // output_v << "      <DataArray type=\"Float64\" Name=\"Time\" NumberOfTuples=\"1\" "
-    //          << " format=\"ascii\">" << std::endl;
-    // output_v << step << std::endl;
-    // output_v << "      </DataArray> " << std::endl;
-
-    // output_v << "      <DataArray type=\"Float64\" Name=\"LiftCoefficient\" NumberOfTuples=\"1\" "
-    //          << " format=\"ascii\">" << std::endl;
-    // output_v << liftCoefficient << std::endl;
-    // output_v << "      </DataArray> " << std::endl;
-
-    // // output_v << "      <DataSet type=\"Float64\" Name=\"Drag Coefficient\" NumberOfTuples=\"1\" "
-    // //          << " format=\"ascii\">" << std::endl;
-    // // output_v << dragCoefficient << std::endl;
-    // // output_v << "      </DataSet> " << std::endl;
-
-    // output_v << "  </FieldData>" << std::endl
-    output_v << "  </UnstructuredGrid>" << std::endl
-             << "</VTKFile>" << std::endl;
 
 };
 
@@ -978,16 +988,6 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
     MPI_Barrier(PETSC_COMM_WORLD);
 
     MPI_Allreduce(&numElem,&numTotalElem,1,MPI_INT,MPI_SUM,PETSC_COMM_WORLD);
-
-
-
-
-
-
-
-
-
-
 
 
     if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
