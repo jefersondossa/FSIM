@@ -55,9 +55,11 @@ private:
     double           constrainValueLaplace[3];//Nodal prescribed value
 
     VecLocD          velocity_;               //Nodal velocity
+    VecLocD          velocityGlobal_;               //Nodal velocity
     VecLocD          previousVelocity_;       //Previous time step velocity
 
     VecLocD          acceleration_;           //Nodal acceleration
+    VecLocD          accelerationGlobal_;           //Nodal acceleration
     VecLocD          previousAcceleration_;   //Previous time step acceleration
 
     double           pressure_;               //Nodal pressure 
@@ -77,6 +79,7 @@ private:
     VecLocD          velArlequin_;            //Glue zone velocity
 
     VecLocD          lagMultiplier_;          //Nodal Lagrange Multiplier value
+    VecLocD          previousLagMultiplier_;          //Nodal Lagrange Multiplier value
     double           weightFunction_;         //Nodal Energy Weight Function
     double           distGlueZone;            //Signaled distance to glue zone
 
@@ -103,7 +106,8 @@ public:
         velocity_.clear();   previousVelocity_.clear();   acceleration_.clear();
         previousAcceleration_.clear(); xsiCorresp.clear(); gradient_.clear();
         potential_ = 0.;     lagMultiplier_.clear();      weightFunction_ = 0.;
-        distGlueZone = 0.;
+        distGlueZone = 0.;  velocityGlobal_.clear(); accelerationGlobal_.clear();
+        previousLagMultiplier_.clear();
 
         constrainTypeLaplace[0] = 0;    constrainTypeLaplace[1] = 0;
         constrainTypeLaplace[2] = 0;    constrainValueLaplace[0] = 0;
@@ -119,6 +123,11 @@ public:
     /// Returns the node coordinate vector
     /// @return node coordinate vector
     VecLocD getCoordinates() {return coord_;};
+
+    /// Returns the node coordinate component value
+    /// @return node coordinate component value
+    double getCoordinateValue(int dir) {return coord_(dir);};
+    double getPreviousCoordinateValue(int dir) {return previousCoord_(dir);};
 
     /// Returns the node initial coordinate vector
     /// @return node initial coordinate vector
@@ -196,6 +205,14 @@ public:
     /// Sets the velocity vector
     /// @param double* velocity vector
     void setVelocity(double *u);
+    void setVelocityComponent(int dir, double val){velocity_(dir) = val;};
+
+    void setPreviousVelocityComponent(int dir, double val){previousVelocity_(dir) = val;};
+
+
+    /// Sets the velocity vector
+    /// @param double* velocity vector
+    void setVelocityGlobal(double *u);
 
     /// Sets the previous velocity vector
     /// @param double* previous time step velocity vector
@@ -208,6 +225,10 @@ public:
     /// Returns the node velocity vector
     /// @return node velocity vector
     double getVelocity(int dir) {return velocity_(dir);}
+
+    /// Returns the node velocity vector
+    /// @return node velocity vector
+    double getVelocityGlobal(int dir) {return velocityGlobal_(dir);}
 
     /// Returns the node previous time step velocity vector
     /// @return node previous time step velocity vector
@@ -240,6 +261,16 @@ public:
     /// Sets the acceleration vector
     /// @param double* acceleration vector
     void setAcceleration(double *u);
+    void setAccelerationComponent(int dir, double val){acceleration_(dir) = val;};
+
+
+    /// Sets the acceleration vector
+    /// @param double* acceleration vector
+    void setAccelerationGlobal(double *u);
+
+    /// Increment the velocity vector
+    /// @param int direction @param double increment value
+    void incrementAcceleration(int dir, double u);
 
     /// Sets the previous time step acceleration vector
     /// @param double* previous time step acceleration vector
@@ -248,6 +279,10 @@ public:
     /// Gets the acceleration vector
     /// @return acceleration vector
     double getAcceleration(int dir) {return acceleration_(dir);}
+
+    /// Gets the acceleration vector
+    /// @return acceleration vector
+    double getAccelerationGlobal(int dir) {return accelerationGlobal_(dir);}
 
     /// Gets the previous time step acceleration vector
     /// @return previous time step acceleration vector
@@ -290,6 +325,8 @@ public:
     /// Gets the previous time step mesh velocity
     /// @param int direction @return previous time step mesh velocity component
     double getPreviousMeshVelocity(int dir) {return previousMeshVelocity_(dir);}
+    void setPreviousMeshVelocityComponent(int dir, double val){previousMeshVelocity_(dir) = val;}
+
 
     //...........................Constrains functions...........................
 
@@ -303,6 +340,10 @@ public:
         velocity_(dir) = value;
         // previousVelocity_(dir) = value;
     };
+
+    void setConstrainValue(int dir, double value){
+        constrainValue[dir] = value;
+    }
 
     /// Gets node constrain type
     /// @return constrain type
@@ -335,6 +376,9 @@ public:
     void setLagrangeMultiplier(int dir, double lMult){
         lagMultiplier_(dir) = lMult;};
 
+    void setPreviousLagrangeMultiplier(int dir, double lMult){
+        previousLagMultiplier_(dir) = lMult;};
+
     /// Increment the Lagrange Multiplier vector
     /// @param int direction @param double increment value
     void incrementLagrangeMultiplier(int dir, double lMult){
@@ -343,6 +387,9 @@ public:
     /// Gets Lagrange Multiplier component value
     /// @param int direction @return component value
     double getLagrangeMultiplier(int dir) {return lagMultiplier_(dir);};
+    /// Gets Lagrange Multiplier component value
+    /// @param int direction @return component value
+    double getPreviousLagrangeMultiplier(int dir) {return previousLagMultiplier_(dir);};
 
     /// Sets the nodal energy weight function value
     /// @param double weight function value
@@ -428,7 +475,19 @@ void Node<2>::clearVariables(){
     
     xsiCorresp.clear();    gradient_.clear();
     potential_ = 0.;       lagMultiplier_.clear();      weightFunction_ = 0.;
+    previousLagMultiplier_.clear();
     
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------------------NODAL VELOCITY VALUES-----------------------------
+//------------------------------------------------------------------------------
+template<>
+void Node<2>::setVelocityGlobal(double *u){
+    //Sets Velocity value
+    velocityGlobal_(0) = u[0];
+    velocityGlobal_(1) = u[1]; 
     return;
 };
 
@@ -499,6 +558,24 @@ template<>
 void Node<3>::incrementVelocity(int dir, double u){
     //All element nodes
     velocity_(dir) += u;
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//-----------------------INCREMENT NODAL VELOCITY VALUES------------------------
+//------------------------------------------------------------------------------
+template<>
+void Node<2>::incrementAcceleration(int dir, double u){
+    //All element nodes
+    acceleration_(dir) += u;
+    return;
+};
+
+template<>
+void Node<3>::incrementAcceleration(int dir, double u){
+    //All element nodes
+    acceleration_(dir) += u;
 
     return;
 };
@@ -619,6 +696,17 @@ void Node<3>::setAcceleration(double *u){
     acceleration_(0) = u[0];
     acceleration_(1) = u[1]; 
     acceleration_(2) = u[2]; 
+    return;
+};
+
+//------------------------------------------------------------------------------
+//--------------------------NODAL ACCELERATION VALUES---------------------------
+//------------------------------------------------------------------------------
+template<>
+void Node<2>::setAccelerationGlobal(double *u){
+    //All element nodes
+    accelerationGlobal_(0) = u[0];
+    accelerationGlobal_(1) = u[1]; 
     return;
 };
 

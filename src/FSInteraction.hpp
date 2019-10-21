@@ -505,43 +505,13 @@ void FSInteraction<2>::setElementBoxes() {
         x2 = nodesFluid_[connec(1)] -> getCoordinates();
         x3 = nodesFluid_[connec(2)] -> getCoordinates();      
 
-        d1(0) = x2(1) - x1(1);
-        d1(1) = x1(0) - x2(0);
-        
-        di1.push_back(d1);
-
-        d2(0) = x3(1) - x2(1);
-        d2(1) = x2(0) - x3(0);
-
-        di1.push_back(d2);
-
-        d3(0) = x1(1) - x3(1);
-        d3(1) = x3(0) - x1(0);
-
-        di1.push_back(d3);
-
         xk(0) = std::min(x1(0),std::min(x2(0), x3(0)));
         xk(1) = std::min(x1(1),std::min(x2(1), x3(1)));
 
         Xk(0) = std::max(x1(0),std::max(x2(0), x3(0)));
         Xk(1) = std::max(x1(1),std::max(x2(1), x3(1)));        
-
-        dCk[0] = std::max(inner_prod(d1,x1),
-                          std::max(inner_prod(d1,x2),inner_prod(d1,x3)));
-        dck[0] = std::min(inner_prod(d1,x1),
-                          std::min(inner_prod(d1,x2),inner_prod(d1,x3)));
-
-        dCk[1] = std::max(inner_prod(d2,x1),
-                          std::max(inner_prod(d2,x2),inner_prod(d2,x3)));
-        dck[1] = std::min(inner_prod(d2,x1),
-                          std::min(inner_prod(d2,x2),inner_prod(d2,x3)));
-
-        dCk[2] = std::max(inner_prod(d3,x1),
-                          std::max(inner_prod(d3,x2),inner_prod(d3,x3)));
-        dck[2] = std::min(inner_prod(d3,x1),
-                          std::min(inner_prod(d3,x2),inner_prod(d3,x3)));
         
-        elementsFluid_[jel] -> setIntersectionParameters(xk, Xk, dCk, dck,di1);
+        elementsFluid_[jel] -> setIntersectionParameters(xk, Xk);
     };
 
 };

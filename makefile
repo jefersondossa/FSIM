@@ -23,7 +23,7 @@ porticomb.o: porticomb.for
 	@ ${FCOMPILER} -c porticomb.for
 
 clear:
-	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt *.geo *.msh
+	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt
 
 run1:
 	@$ mpirun -np 1 ./f
@@ -35,13 +35,13 @@ run3:
 	@$ mpirun -np 3 ./f
 
 run4:
-	@$ mpirun -np 4 ./f
+	@$ export OMP_NUM_THREADS=1 && mpirun -n 4 ./f
 
 run5:
 	@$ mpirun -np 5 ./f
 
 run6:
-	@$ mpirun -np 6 ./f
+	@$ export OMP_NUM_THREADS=1 && mpirun -n 6 ./f
 
 run7:
 	@$ mpirun -np 7 ./f

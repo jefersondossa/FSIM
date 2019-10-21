@@ -18,6 +18,10 @@
 #include "Boundary.hpp"
 #include "fluidDomain.h"
 
+#include<cstdlib>
+#include<fstream>
+#include<iostream>
+
 
 // PETSc libraries
 #include <metis.h>
@@ -37,6 +41,8 @@ public:
     /// Defines the class Boundary locally
     typedef Boundary<DIM> Boundaries;
 
+    typedef FluidParameters<DIM> Parameters;
+
     /// Defines the vector of fluid nodes
     std::vector<Node *>       nodes_;
 
@@ -49,8 +55,7 @@ public:
 private:
     //FLUID VARIABLES
     std::string inputFile; //Fluid input file
-    int numElem;           //Number of elements in fluid mesh per thread
-    int numTotalElem;      //Total number of element
+    int numElem;           //Number of elements in fluid mesh 
     int numNodes;          //Number of nodes in velocity/quadratic mesh
     int numBoundaries;     //Number of fluid boundaries
     int numBoundElems;     //Number of elements in fluid boundaries
@@ -66,14 +71,14 @@ private:
     int numTimeSteps;      //Number of Time Steps
     int printFreq;         //Printing frequence of output files
     double dTime;          //Time Step
-    double integScheme;    //Time Integration Scheme
     int rank;
-    int size;
     int numFSIInterfaces;
     int iAux;
     bool computeDragAndLift;
     int iTimeStep;
-    Geometry* geometry_;
+    
+    Parameters fluidParameters;
+
 
     
 public:
@@ -98,17 +103,18 @@ public:
     bool printGlueZone;
     bool printJacobian;
     bool printProcess;
+    double integScheme;    //Time Integration Scheme
 
 public:
 
 
-    void meshReading(Geometry* geometry, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles);
+    void meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles);
 
-    void readInitialValues(const std::string& inputVel,const std::string& inputPres);
+    void readInitialValues(const std::string& inputPrev, const std::string& inputCurr);
 
 
     /// Performs the domain decomposition for parallel processing
-    void domainDecompositionMETIS(std::vector<Elements *> &elem_); 
+    void domainDecompositionMETIS(); 
 
     /// Export the domain decomposition 
     /// @return pair with the elements and nodes domain decompositions
@@ -119,15 +125,9 @@ public:
     /// @return number of time steps
     int getNumberOfTimeSteps(){return numTimeSteps;};
 
-    /// Gets the total number of finite elements
-    /// @return number of elements
-    int getNumberOfElements(){return numTotalElem;};
-
     /// Gets the time step size
     /// @return time step size
     double getTimeStep(){return dTime;};
-
-    int getPrintingFrequency(){return printFreq;};
 
     /// Gets the number of fluid-structure interfaces
     /// @return number of fluid boundaries which composes the 
@@ -197,7 +197,7 @@ public:
 //---------------------SUBDIVIDES THE FINITE ELEMENT DOMAIN---------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::domainDecompositionMETIS(std::vector<Elements *> &elem_) {
+void Fluid<2>::domainDecompositionMETIS() {
     
     std::string mirror2;
     mirror2 = "domain_decomposition.txt";
@@ -212,79 +212,42 @@ void Fluid<2>::domainDecompositionMETIS(std::vector<Elements *> &elem_) {
     idx_t numNd = numNodes;
     idx_t dd = 2;
     idx_t ssize = size;
-    idx_t three = 3;
     idx_t one = 1;
     idx_t elem_start[numEl+1], elem_connec[(4*dd-2)*numEl];
-
-    MPI_Bcast(&numEl,1,MPI_INT,0,PETSC_COMM_WORLD);
-    MPI_Bcast(&numNd,1,MPI_INT,0,PETSC_COMM_WORLD);
-
-
     part_elem = new idx_t[numEl];
     part_nodes = new idx_t[numNd];
 
 
-    if (rank == 0){
-        for (idx_t i = 0; i < numEl+1; i++){
-            elem_start[i]=(4*dd-2)*i;
-        };
-        for (idx_t jel = 0; jel < numEl; jel++){
-            typename Elements::Connectivity connec;
-            connec=elem_[jel]->getConnectivity();        
-            
-            for (idx_t i=0; i<(4*dd-2); i++){
-            elem_connec[(4*dd-2)*jel+i] = connec(i);
-            };
-        };
-
-        //Performs the domain decomposition
-        METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec,
-                                  NULL, NULL, &one, &ssize, NULL, NULL,
-                                  &objval, part_elem, part_nodes);
-
-        mirrorData << std::endl 
-                   << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
-        for(int i = 0; i < numElem; i++){
-            mirrorData << "process = " << part_elem[i]
-                       << ", element = " << i << std::endl;
-        };
-
-        mirrorData << std::endl 
-                   << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
-        for(int i = 0; i < numNodes; i++){
-            mirrorData << "process = " << part_nodes[i]
-                       << ", node = " << i << std::endl;
-        };
+    for (idx_t i = 0; i < numEl+1; i++){
+        elem_start[i]=(4*dd-2)*i;
+    };
+    for (idx_t jel = 0; jel < numEl; jel++){
+        typename Elements::Connectivity connec;
+        connec=elements_[jel]->getConnectivity();        
         
+        for (idx_t i=0; i<(4*dd-2); i++){
+        elem_connec[(4*dd-2)*jel+i] = connec(i);
+        };
+    };
 
-        for (int i = 0; i < size; ++i){
-            std::string result;
-            std::ostringstream convert;
+    //Performs the domain decomposition
+    METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
+                              NULL, NULL, &one, &ssize, NULL, NULL,    \
+                              &objval, part_elem, part_nodes);
 
-            convert << i+000;
-            result = convert.str();
-            std::string s = "mesh"+result+".dat";
+    mirrorData << std::endl \
+               << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
+    for(int i = 0; i < numElem; i++){
+        mirrorData << "process = " << part_elem[i] \
+                   << ", element = " << i << std::endl;
+    };
 
-            std::fstream mesh(s.c_str(), std::ios_base::out);
-
-            int locElem = std::count(part_elem, part_elem+numElem, i);
-
-            mesh << locElem << std::endl;
-
-            for (int jel = 0; jel < numElem; ++jel){
-                if (part_elem[jel] == i){
-                    typename Elements::Connectivity connec;
-                    connec = elem_[jel]->getConnectivity();
-                    mesh << jel << " " << connec(0) << " " << connec(1) << " " << connec(2) << " "
-                         << connec(3) << " " << connec(4) << " " << connec(5) << std::endl;
-                }
-            }
-
-        }
-    }
-
-    MPI_Bcast(part_elem,numEl,MPI_INT,0,PETSC_COMM_WORLD);
-    MPI_Bcast(part_nodes,numNd,MPI_INT,0,PETSC_COMM_WORLD);
+    mirrorData << std::endl \
+               << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
+    for(int i = 0; i < numNodes; i++){
+        mirrorData << "process = " << part_nodes[i] \
+                   << ", node = " << i << std::endl;
+    };
     
     return;
 
@@ -296,198 +259,190 @@ void Fluid<2>::domainDecompositionMETIS(std::vector<Elements *> &elem_) {
 template<>
 void Fluid<2>::printResults(int step) {
 
-    if (step % printFreq == 0){
+    //    std::cout << "Printing Velocity Results" << std::endl;
+    std::string result;
+    std::ostringstream convert;
 
-        std::string result;
-        std::ostringstream convert;
-
-        convert << step+100000;
-        result = convert.str();
-        std::string s = "saidaVel"+result+".vtu";
-
-        std::fstream output_v(s.c_str(), std::ios_base::out);
-
-        if (rank == 0){
-            output_v << "<?xml version=\"1.0\"?>" << std::endl
-                     << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-                     << "  <UnstructuredGrid>" << std::endl
-                     << "  <Piece NumberOfPoints=\"" << numNodes
-                     << "\"  NumberOfCells=\"" << numTotalElem
-                     << "\">" << std::endl;
-
-            //WRITE NODAL COORDINATES
-            output_v << "    <Points>" << std::endl
-                     << "      <DataArray type=\"Float64\" "
-                     << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-            for (int i=0; i<numNodes; i++){
-                typename Node::VecLocD x;
-                x=nodes_[i]->getCoordinates();
-                output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
-            };
-            output_v << "      </DataArray>" << std::endl
-                     << "    </Points>" << std::endl;
-            
-            //WRITE ELEMENT CONNECTIVITY
-            output_v << "    <Cells>" << std::endl
-                     << "      <DataArray type=\"Int32\" "
-                     << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-        }
-
-        int k = 0;
-        for (int iElem = 0; iElem < numTotalElem; ++iElem){
-            typename Elements::Connectivity connec;
-
-            if (part_elem[iElem] == rank){
-                connec = elements_[k]->getConnectivity();
-                k++;
-            }
-            MPI_Bcast(&connec,8,MPI_INT,part_elem[iElem],PETSC_COMM_WORLD);
-            if (rank == 0) output_v << connec(0) << " " << connec(1) << " " << connec(2) << " "
-                                    << connec(3) << " " << connec(4) << " " << connec(5) << std::endl;
-
-            MPI_Barrier(PETSC_COMM_WORLD);
-        }
-
-        if (rank == 0) {
-            output_v << "      </DataArray>" << std::endl;
-      
-            //WRITE OFFSETS IN DATA ARRAY
-            output_v << "      <DataArray type=\"Int32\""
-                    << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-        
-            int aux = 0;
-            for (int i=0; i<numTotalElem; i++){
-                output_v << aux + 6 << std::endl;
-                aux += 6;
-            };
-            output_v << "      </DataArray>" << std::endl;
-      
-            //WRITE ELEMENT TYPES
-            output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-                     << "format=\"ascii\">" << std::endl;
-        
-            for (int i=0; i<numTotalElem; i++){
-                output_v << 22 << std::endl;
-            };
-
-            output_v << "      </DataArray>" << std::endl
-                     << "    </Cells>" << std::endl;
-
-            //WRITE NODAL RESULTS
-            output_v << "    <PointData>" << std::endl;
-
-            if (printVelocity){
-                output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                        << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-                for (int i=0; i<numNodes; i++){
-                    output_v << nodes_[i] -> getVelocity(0) << " "             
-                             << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
-                }; 
-                output_v << "      </DataArray> " << std::endl;
-            };
-
-            if (printMeshVelocity){
-                output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                        << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
-            
-                for (int i=0; i<numNodes; i++){
-                    output_v << nodes_[i] -> getMeshVelocity(0) << " "    
-                             << nodes_[i] -> getMeshVelocity(1) << " " 
-                             << 0. << std::endl;
-                };
-                output_v << "      </DataArray> " << std::endl;
-            };
-
-            if (printVorticity){
-                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                         << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-                for (int i=0; i<numNodes; i++){
-                    output_v << nodes_[i] -> getVorticity() << std::endl;
-                };
-                output_v << "      </DataArray> " << std::endl;
-            };
-
-            if (printPressure){
-                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                         << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-                for (int i=0; i<numNodes; i++){
-                    output_v << 0. << " " << 0. << " " 
-                             << nodes_[i] -> getPressure() << std::endl;
-                };
-                output_v << "      </DataArray> " << std::endl;
-            };
-
-            if (printMeshDisplacement){
-                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                         << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
-                for (int i=0; i<numNodes; i++){       
-                    typename Node::VecLocD x, xp;
-                    x=nodes_[i]->getCoordinates();
-                    xp=nodes_[i]->getInitialCoordinates();
-                
-                    output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " 
-                            << 0. << std::endl;
-                };
-                output_v << "      </DataArray> " << std::endl;
-            };
-
-            output_v << "    </PointData>" << std::endl; 
-
-            //WRITE ELEMENT RESULTS
-            output_v << "    <CellData>" << std::endl;
-        };
-
-
-        if (printProcess){
-            if(rank == 0){
-                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                         << "Name=\"Process\" format=\"ascii\">" << std::endl;
-            
-                for (int i=0; i<numTotalElem; i++){
-                    output_v << part_elem[i] << std::endl;
-                };
-                output_v << "      </DataArray> " << std::endl;
-            };
-        };
-
-        if (printJacobian){
-            if (rank == 0){
-                output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                         << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-            };
-            
-
-            int k = 0;
-            for (int iElem = 0; iElem < numTotalElem; ++iElem){
-                double jac = 0.;
-
-                if (part_elem[iElem] == rank){
-                    jac = elements_[k]->getJacobian();
-                    k++;
-                }
-
-                MPI_Bcast(&jac,2,MPI_FLOAT,part_elem[iElem],PETSC_COMM_WORLD);
-                if (rank == 0) output_v << jac << std::endl;
-
-                MPI_Barrier(PETSC_COMM_WORLD);
-            }                
-
-            if(rank == 0) output_v << "      </DataArray> " << std::endl;
-        };
+    convert << step+100000;
+    result = convert.str();
+    std::string s = "saidaVel"+result+".vtu";
     
+    std::fstream output_v(s.c_str(), std::ios_base::out);
 
-        if(rank == 0){
-            output_v << "    </CellData>" << std::endl; 
+    output_v << "<?xml version=\"1.0\"?>" << std::endl
+             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+             << "  <UnstructuredGrid>" << std::endl
+             << "  <Piece NumberOfPoints=\"" << numNodes
+             << "\"  NumberOfCells=\"" << numElem
+             << "\">" << std::endl;
 
-            //FINALIZE OUTPUT FILE
-            output_v << "  </Piece>" << std::endl;
-            output_v << "  </UnstructuredGrid>" << std::endl
-                     << "</VTKFile>" << std::endl;
-         };
+    //WRITE NODAL COORDINATES
+    output_v << "    <Points>" << std::endl
+             << "      <DataArray type=\"Float64\" "
+             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
+    for (int i=0; i<numNodes; i++){
+        typename Node::VecLocD x;
+        x=nodes_[i]->getCoordinates();
+        output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+    };
+    output_v << "      </DataArray>" << std::endl
+             << "    </Points>" << std::endl;
+    
+    //WRITE ELEMENT CONNECTIVITY
+    output_v << "    <Cells>" << std::endl
+             << "      <DataArray type=\"Int32\" "
+             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+    
+    for (int i=0; i<numElem; i++){
+        typename Elements::Connectivity connec;
+        connec=elements_[i]->getConnectivity();
+        output_v << connec(0) << " " << connec(1) << " " << connec(2) << " " \
+                 << connec(3) << " " << connec(4) << " " << connec(5) << \
+            std::endl;
+    };
+    output_v << "      </DataArray>" << std::endl;
+  
+    //WRITE OFFSETS IN DATA ARRAY
+    output_v << "      <DataArray type=\"Int32\""
+             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+    
+    int aux = 0;
+    for (int i=0; i<numElem; i++){
+        output_v << aux + 6 << std::endl;
+        aux += 6;
+    };
+    output_v << "      </DataArray>" << std::endl;
+  
+    //WRITE ELEMENT TYPES
+    output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
+             << "format=\"ascii\">" << std::endl;
+    
+    for (int i=0; i<numElem; i++){
+        output_v << 22 << std::endl;
     };
 
+    output_v << "      </DataArray>" << std::endl
+             << "    </Cells>" << std::endl;
+
+    //WRITE NODAL RESULTS
+    output_v << "    <PointData>" << std::endl;
+
+    if (printVelocity){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getVelocity(0) << " "             
+                     << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+    if (printMeshVelocity){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
+        
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getMeshVelocity(0) << " "    
+                     << nodes_[i] -> getMeshVelocity(1) << " " 
+                     << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+    if (printVorticity){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getVorticity() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+    if (printPressure){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << 0. << " " << 0. << " " 
+                     << nodes_[i] -> getPressure() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+
+    if (printMeshDisplacement){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                 << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){       
+            typename Node::VecLocD x, xp;
+            x=nodes_[i]->getCoordinates();
+            xp=nodes_[i]->getInitialCoordinates();
+            
+            output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " 
+                     << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+    output_v << "    </PointData>" << std::endl; 
+
+    //WRITE ELEMENT RESULTS
+    output_v << "    <CellData>" << std::endl;
+    
+    if (printProcess){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numElem; i++){
+            output_v << part_elem[i] << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+    output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<numElem; i++){
+        int res = 0;
+        for (int j=0; j<numBoundElems; j++){
+           if (boundary_[j] -> getElement() == i) res = boundary_[j] -> getBoundaryGroup();
+        }
+        output_v << res << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
+
+    if (printJacobian){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numElem; i++){
+            output_v << elements_[i] -> getJacobian() << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+    
+    output_v << "    </CellData>" << std::endl; 
+
+    //FINALIZE OUTPUT FILE
+    output_v << "  </Piece>" << std::endl;
+    
+    // output_v << "  <FieldData>" << std::endl;
+
+    // output_v << "      <DataArray type=\"Float64\" Name=\"Time\" NumberOfTuples=\"1\" "
+    //          << " format=\"ascii\">" << std::endl;
+    // output_v << step << std::endl;
+    // output_v << "      </DataArray> " << std::endl;
+
+    // output_v << "      <DataArray type=\"Float64\" Name=\"LiftCoefficient\" NumberOfTuples=\"1\" "
+    //          << " format=\"ascii\">" << std::endl;
+    // output_v << liftCoefficient << std::endl;
+    // output_v << "      </DataArray> " << std::endl;
+
+    // // output_v << "      <DataSet type=\"Float64\" Name=\"Drag Coefficient\" NumberOfTuples=\"1\" "
+    // //          << " format=\"ascii\">" << std::endl;
+    // // output_v << dragCoefficient << std::endl;
+    // // output_v << "      </DataSet> " << std::endl;
+
+    // output_v << "  </FieldData>" << std::endl
+    output_v << "  </UnstructuredGrid>" << std::endl
+             << "</VTKFile>" << std::endl;
 
 };
 
@@ -568,22 +523,10 @@ void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
     }
 }
 
-//------------------------------------------------------------------------------
-//--------------------------------READS FLUID MESH------------------------------
-//------------------------------------------------------------------------------
+
 template<>
-void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile, 
-                           const std::string& inputMesh,
-                           const std::string& mirror,
-                           const bool& deleteFiles) {
+void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles) {
 
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-    MPI_Comm_size(PETSC_COMM_WORLD, &size);
-
-    if (rank == 0)std::cout << "Reading fluid data from \"" 
-                            << inputFile << "\"" << std::endl;
-
-    geometry_ = geometry;
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //+++++++++++++++++++++++++++++OPPENING FILES+++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -600,6 +543,7 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
     std::string line;
     std::getline(file, line); std::getline(file, line); std::getline(file, line); std::getline(file, line);
   
+
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++READING PROBLEM VARIABLES+++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -652,7 +596,9 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
 
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
-    //    getline(inputData,line);getline(inputData,line);
+
+
+
 
     //Read Arlequin variables
     double k1,k2;
@@ -668,6 +614,13 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
 
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
     getline(inputData,line);getline(inputData,line);
+
+    fluidParameters.setViscosity(viscInf);
+    fluidParameters.setDensity(rhoInf);
+    fluidParameters.setTimeStep(dTime);
+    fluidParameters.setSpectralRadius(integScheme);
+    fluidParameters.setFieldForce(fieldForces);
+    fluidParameters.setArlequinOperatorConstants(k1,k2);
 
     //Drag and lift
     inputData >> computeDragAndLift >> numberOfLines; 
@@ -782,6 +735,13 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
         double u[2];
         u[0] = 0.; u[1] = 0.;
         nodes_[i] -> setMeshVelocity(u);
+
+        nodes_[i] -> setPreviousMeshVelocityComponent(0,0.);
+        nodes_[i] -> setPreviousMeshVelocityComponent(1,0.);
+
+        nodes_[i] -> setPreviousCoordinates(0,x(0));
+        nodes_[i] -> setPreviousCoordinates(1,x(1));
+
     };
 
 
@@ -790,10 +750,7 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     int number_elements;
     file >> number_elements;
-   //elements_.reserve(number_elements);
-    std::vector<Elements *>   elementsAux_;
-    elementsAux_.reserve(number_elements);
-
+    elements_.reserve(number_elements);
     boundary_.reserve(number_elements/10);
     index = 0;
     std::getline(file, line);
@@ -830,28 +787,26 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
 
         //Adding 2D elements to surfaces
         if (name[0] == 's'){
-            if(rank == 0){
-                if (supportedElements.find(elementType) == supportedElements.end()){
-                    std::cout << elementType << " is not supported.\n";
-                    exit(EXIT_FAILURE);
-                }
+            if (supportedElements.find(elementType) == supportedElements.end()){
+                std::cout << elementType << " is not supported.\n";
+                exit(EXIT_FAILURE);
+            }
 
-                PlaneSurface* object = geometry_ -> getPlaneSurface(name);
-                int materialIndex = object -> getMaterial() -> getIndex();
-                double thickness = object -> getThickness();
-                numElem++;
+            PlaneSurface* object = geometry_ -> getPlaneSurface(name);
+            int materialIndex = object -> getMaterial() -> getIndex();
+            double thickness = object -> getThickness();
+            numElem++;
 
-                typename Elements::Connectivity connect;
-                connect.clear();
-                for (int j = 0 ; j < 6; j++) connect(j) = elementNodes[j];
-               
+            typename Elements::Connectivity connect;
+            connect.clear();
+            for (int j = 0 ; j < 6; j++) connect(j) = elementNodes[j];
+           
 
 
-                Elements *el = new Elements(index++,connect,nodes_);
-                elementsAux_.push_back(el);
-                for (int k = 0; k<6; k++){
-                    nodes_[connect(k)] -> pushInverseIncidence(index);
-                };
+            Elements *el = new Elements(index++,connect,nodes_,fluidParameters);
+            elements_.push_back(el);
+            for (int k = 0; k<6; k++){
+                nodes_[connect(k)] -> pushInverseIncidence(index);
             };
         }
         else if (name[0] == 'l')
@@ -950,46 +905,6 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
         }   
     }
 
-    domainDecompositionMETIS(elementsAux_);
-
-
-    if (rank == 0){
-        for (int i = 0; i < numElem; ++i) delete elementsAux_[i];
-        elementsAux_.clear();
-    }
-
-    MPI_Barrier(PETSC_COMM_WORLD);
-
-    std::string result;
-    std::ostringstream convert;
-
-    convert << rank+000;
-    result = convert.str();
-    std::string s = "mesh"+result+".dat";
-
-    std::ifstream mesh(s.c_str(), std::ios_base::out);
-
-    mesh >> numElem;
-
-    elements_.reserve(numElem);
-
-    //reading element connectivity
-    for (int i = 0; i < numElem; i++){
-        typename Elements::Connectivity connect;
-        connect.clear();
-        int ind_ = 0;
-
-        mesh >> ind_ >> connect(0) >> connect(1) >> connect(2) >> connect(3) >> connect(4) >> connect(5);
-
-        Elements *el = new Elements(ind_,connect,nodes_);
-        elements_.push_back(el);
-    };
-
-    MPI_Barrier(PETSC_COMM_WORLD);
-
-    MPI_Allreduce(&numElem,&numTotalElem,1,MPI_INT,MPI_SUM,PETSC_COMM_WORLD);
-
-
     if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
                              << numElem << " " << numBoundElems << std::endl;
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
@@ -1003,7 +918,7 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
     };
 
 
-    //std::cin.get();
+
 
 
 
@@ -1085,14 +1000,28 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         //Print nodal constrains
     for (int i=0; i<numNodes; i++){
 
-        mirrorData << "Constrains " << i
-                   << " " << nodes_[i] -> getConstrains(0)
-                   << " " << nodes_[i] -> getConstrainValue(0)
-                   << " " << nodes_[i] -> getConstrains(1)
-                   << " " << nodes_[i] -> getConstrainValue(1) << std::endl;
+        mirrorData<< "Constrains " << i
+                  << " " << nodes_[i] -> getConstrains(0)
+                  << " " << nodes_[i] -> getConstrainValue(0)
+                  << " " << nodes_[i] -> getConstrains(1)
+                  << " " << nodes_[i] -> getConstrainValue(1) << std::endl;
     }; 
 
     for (int i=0; i<numBoundElems; i++){
@@ -1100,6 +1029,7 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
         mirrorData<< "Bound Elements " << i
                   << " " << boundary_[i] -> getBoundaryGroup() << std::endl;
     }; 
+
 
     //Sets fluid elements and sides on interface boundaries
     for (int i=0; i<numBoundElems; i++){
@@ -1123,48 +1053,33 @@ void Fluid<2>::meshReading(Geometry* geometry, const std::string& inputFile,
                         flag++;
                     };
                 };
+                
                 if (flag == 3){
-                    boundary_[i] -> setElement(elements_[j] -> getIndex());
+                    boundary_[i] -> setElement(j);
                     //Sets element index and side
                     if ((side[0]==4) || (side[1]==4) || (side[2]==4)){
                         boundary_[i] -> setElementSide(0);
-                        elements_[j] -> setElemSideInBoundary(0);
+                        elements_[boundary_[i]->getElement()] -> 
+                            setElemSideInBoundary(0);
                     };
-                    
-
                     if ((side[0]==5) || (side[1]==5) || (side[2]==5)){
                         boundary_[i] -> setElementSide(1);
-                        elements_[j] -> setElemSideInBoundary(1);
+                        elements_[boundary_[i]->getElement()] -> 
+                            setElemSideInBoundary(1);
                     };
-                    
                     if ((side[0]==3) || (side[1]==3) || (side[2]==3)){
                         boundary_[i] -> setElementSide(2);
-                        elements_[j] -> setElemSideInBoundary(2);
+                        elements_[boundary_[i]->getElement()] -> 
+                            setElemSideInBoundary(2);
                     };
                 };
             };
         };
     };
 
-    //Sets Viscosity, density, time step, time integration 
-    //scheme and field forces values
-    for (int i=0; i<numElem; i++){
-        elements_[i] -> setViscosity(viscInf);
-        elements_[i] -> setDensity(rhoInf);
-        elements_[i] -> setTimeStep(dTime);
-        elements_[i] -> setTimeIntegrationScheme(integScheme);
-        elements_[i] -> setFieldForce(fieldForces);
-        elements_[i] -> setArlequinOperatorConstants(k1,k2);
-    };
-
-
-    //domainDecompositionMETIS();
+    domainDecompositionMETIS();
 
     iAux = 0;
-
-
-
-
 
 
     //Closing the file
@@ -1400,11 +1315,6 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
     iTimeStep = 0;
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
-
-        for (int i = 0; i < numElem; i++){
-            elements_[i] -> getParameterSUPG();
-        };
-  
         
         if (rank == 0) {std::cout << "------------------------- TIME STEP = "
                                   << iTimeStep << " -------------------------"
@@ -1820,11 +1730,6 @@ int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance,\
             if (sqrt(duNorm) <= tolerance) {
                 break;
             };
-
-            //Updates SUPG Parameter
-            // for (int i = 0; i < numElem; i++){
-            //     elements_[i] -> getParameterSUPG();
-            // };
             
         };//Newton-Raphson
 
@@ -1901,11 +1806,6 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
     iTimeStep = 0.;
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
-
-        for (int i = 0; i < numElem; i++){
-            elements_[i] -> getParameterSUPG();
-        };
-
         
         if (rank == 0) {std::cout << "------------------------- TIME STEP = "
                                   << iTimeStep << " -------------------------"
@@ -2240,12 +2140,6 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
             if (sqrt(duNorm) <= tolerance) {
                 break;
             };
-
-            //Updates SUPG Parameter
-            // for (int i = 0; i < numElem; i++){
-            //     elements_[i] -> getParameterSUPG();
-            // };
-            
         };//Newton-Raphson
 
         double dragCoefficient = 0.;
@@ -2331,49 +2225,282 @@ int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance,\
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::readInitialValues(const std::string& inputVel,const std::string& inputPres) {
+void Fluid<2>::readInitialValues(const std::string& inputPrev, const std::string& inputCurr) {
 
     int rank;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-
-    std::ifstream inputPressure(inputPres.c_str());
-
-    std::ifstream inputVelocity(inputVel.c_str());
+    std::ifstream inputPrevious(inputPrev.c_str());
+    std::ifstream inputCurrent(inputCurr.c_str());
 
     std::string line;
 
-    for (int i = 0; i < numNodes; ++i)
-    {
-        double u_[2];
-        double uz;
-        inputVelocity >> u_[0] >> u_[1] >> uz;
-        //getline(inputVelocity,line);
-        nodes_[i] -> setVelocity(u_);
-        //if (rank==0)std::cout << "asdasd " << i << " " << u_[0] << " " << u_[1] << " " << uz << std::endl;
+    
+    std::string searchVel = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Velocity\" format=\"ascii\">"; 
+    std::string searchAcc = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Acceleration\" format=\"ascii\">"; 
+    std::string searchPre = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Pressure\" format=\"ascii\">"; 
+    std::string searchLag = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Lagrange Multipliers\" format=\"ascii\">"; 
+
+    // Reading previous time step file
+    bool isFoundVel= 0;
+    bool isFoundAcc= 0;
+    bool isFoundPre= 0;
+    bool isFoundLag= 0;
+
+    // Velocity
+    while (!inputPrevious.eof()) {
+        std::string tempVel = "";
+        getline(inputPrevious,tempVel);
+        for (int i = 0; i < searchVel.size(); ++i){
+            if (tempVel[i] == searchVel[i]){
+                isFoundVel = 1;
+            } else {
+                isFoundVel = 0;
+                break;
+            }
+        }
+        if(isFoundVel){
+            for(int i = searchVel.size()+1;i<tempVel.size();i++)
+                std::cout << tempVel[i];
+
+            // std::cout << tempVel << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputPrevious >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setPreviousVelocity(u_);
+            }
+            break;
+        }
     }
 
-    for (int i = 0; i < numNodes; ++i)
-    {
-        double a_[2];
-        double p_;
-        inputPressure >> a_[0] >> a_[1] >> p_;
-        //getline(inputPressure,line);
-        nodes_[i] -> setPressure(p_);
-        //if (rank==0)std::cout << "pressure " << i << " " << a_[0] << " " << a_[1] << " " << p_ << std::endl;
+    //Acceleration
+    inputPrevious.clear();
+    while (!inputPrevious.eof()) {
+        std::string tempAcc = "";
+        getline(inputPrevious,tempAcc);
+        for (int i = 0; i < searchAcc.size(); ++i){
+            if (tempAcc[i] == searchAcc[i]){
+                isFoundAcc = 1;
+            } else {
+                isFoundAcc = 0;
+                break;
+            }
+        }
+        if(isFoundAcc){
+            for(int i = searchAcc.size()+1;i<tempAcc.size();i++)
+                std::cout << tempAcc[i];
+
+            // std::cout << tempAcc << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputPrevious >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setPreviousAcceleration(u_);
+            }   
+            break;
+        }
     }
-    
 
-    //  std::ifstream inputData(inputFile.c_str());
-    // std::ofstream mirrorData(mirror.c_str());
-    // std::ifstream file(inputMesh);
-    // std::string line;
-    // std::getline(file, line); std::getline(file, line); std::getline(file, line); std::getline(file, line);
-  
+    //Lagrange Multipliers
+    inputPrevious.clear();
+    while (!inputPrevious.eof()) {
+        std::string tempLag = "";
+        getline(inputPrevious,tempLag);
+        for (int i = 0; i < searchLag.size(); ++i){
+            if (tempLag[i] == searchLag[i]){
+                isFoundLag = 1;
+            } else {
+                isFoundLag = 0;
+                break;
+            }
+        }
+        if(isFoundLag){
+            for(int i = searchLag.size()+1;i<tempLag.size();i++)
+                std::cout << tempLag[i];
+
+            // std::cout << tempLag << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputPrevious >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setPreviousLagrangeMultiplier(0,u_[0]);
+                nodes_[j] -> setPreviousLagrangeMultiplier(1,u_[1]);
+            }   
+            break;
+        }
+    }
+
+    //Pressure
+    inputPrevious.clear();
+    while (!inputPrevious.eof()) {
+        std::string tempPre = "";
+        getline(inputPrevious,tempPre);
+        for (int i = 0; i < searchPre.size(); ++i){
+            if (tempPre[i] == searchPre[i]){
+                isFoundPre = 1;
+            } else {
+                isFoundPre = 0;
+                break;
+            }
+        }
+        if(isFoundPre){
+            for(int i = searchPre.size()+1;i<tempPre.size();i++)
+                std::cout << tempPre[i];
+
+            // std::cout << tempPre << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputPrevious >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setPreviousPressure(uz);
+            }   
+            break;
+        }
+    }
+
+    if(inputPrevious.eof()&&(!isFoundVel)) std::cout << "Name not found Velocity 0! " << rank << std::endl;
+    if(inputPrevious.eof()&&(!isFoundAcc)) std::cout << "Name not found Acceleration 0! " << rank << std::endl;
+    if(inputPrevious.eof()&&(!isFoundLag)) std::cout << "Name not found Lagrange Multipliers 0! " << rank << std::endl;
+    if(inputPrevious.eof()&&(!isFoundPre)) std::cout << "Name not found Pressure 0! " << rank << std::endl;
 
 
-    
-    
+
+
+
+
+    // Reading current time step file
+    isFoundVel= 0;
+    isFoundAcc= 0;
+    isFoundPre= 0;
+    isFoundLag= 0;
+
+    // Velocity
+    while (!inputCurrent.eof()) {
+        std::string tempVel = "";
+        getline(inputCurrent,tempVel);
+        for (int i = 0; i < searchVel.size(); ++i){
+            if (tempVel[i] == searchVel[i]){
+                isFoundVel = 1;
+            } else {
+                isFoundVel = 0;
+                break;
+            }
+        }
+        if(isFoundVel){
+            for(int i = searchVel.size()+1;i<tempVel.size();i++)
+                std::cout << tempVel[i];
+
+            // std::cout << tempVel << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputCurrent >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setVelocity(u_);
+            }
+            break;
+        }
+    }
+
+    //Acceleration
+    inputCurrent.clear();
+    while (!inputCurrent.eof()) {
+        std::string tempAcc = "";
+        getline(inputCurrent,tempAcc);
+        for (int i = 0; i < searchAcc.size(); ++i){
+            if (tempAcc[i] == searchAcc[i]){
+                isFoundAcc = 1;
+            } else {
+                isFoundAcc = 0;
+                break;
+            }
+        }
+        if(isFoundAcc){
+            for(int i = searchAcc.size()+1;i<tempAcc.size();i++)
+                std::cout << tempAcc[i];
+
+            // std::cout << tempAcc << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputCurrent >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setAcceleration(u_);
+            }   
+            break;
+        }
+    }
+
+    //Lagrange Multipliers
+    inputCurrent.clear();
+    while (!inputCurrent.eof()) {
+        std::string tempLag = "";
+        getline(inputCurrent,tempLag);
+        for (int i = 0; i < searchLag.size(); ++i){
+            if (tempLag[i] == searchLag[i]){
+                isFoundLag = 1;
+            } else {
+                isFoundLag = 0;
+                break;
+            }
+        }
+        if(isFoundLag){
+            for(int i = searchLag.size()+1;i<tempLag.size();i++)
+                std::cout << tempLag[i];
+
+            // std::cout << tempLag << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputCurrent >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setLagrangeMultiplier(0,u_[0]);
+                nodes_[j] -> setLagrangeMultiplier(1,u_[1]);
+            }   
+            break;
+        }
+    }
+
+    //Pressure
+    inputCurrent.clear();
+    while (!inputCurrent.eof()) {
+        std::string tempPre = "";
+        getline(inputCurrent,tempPre);
+        for (int i = 0; i < searchPre.size(); ++i){
+            if (tempPre[i] == searchPre[i]){
+                isFoundPre = 1;
+            } else {
+                isFoundPre = 0;
+                break;
+            }
+        }
+        if(isFoundPre){
+            for(int i = searchPre.size()+1;i<tempPre.size();i++)
+                std::cout << tempPre[i];
+
+            // std::cout << tempPre << std::endl;
+
+            for (int j = 0; j < numNodes ; ++j){
+                double u_[2];
+                double uz;
+                inputCurrent >> u_[0] >> u_[1] >> uz;
+                nodes_[j] -> setPressure(uz);
+            }   
+            break;
+        }
+    }
+
+    if(inputCurrent.eof()&&(!isFoundVel)) std::cout << "Name not found Velocity 1!" << rank << std::endl;
+    if(inputCurrent.eof()&&(!isFoundAcc)) std::cout << "Name not found Acceleration 1!" << rank << std::endl;
+    if(inputCurrent.eof()&&(!isFoundLag)) std::cout << "Name not found Lagrange Multipliers 1!" << rank << std::endl;
+    if(inputCurrent.eof()&&(!isFoundPre)) std::cout << "Name not found Pressure 1!" << rank << std::endl;
+ 
+    // if (rank == 0) printResults(100);
 
     return;
 }
@@ -2412,11 +2539,6 @@ int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
         double duNorm=100.;
-        
-        //Updates SUPG Parameter
-        // for (int i = 0; i < numElem; i++){
-        //     elements_[i] -> getParameterSUPG();
-        // };
              
         for (int inewton = 0; inewton < iterNumber; inewton++){
             boost::posix_time::ptime t1 =                             
