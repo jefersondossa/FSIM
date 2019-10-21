@@ -38,9 +38,6 @@ public:
     /// Defines the numerical integration iterator
     typedef typename PointWeight::iterator              QuadratureListIt;
 
-    /// Defines vector of nodal values
-    typedef ublas::bounded_vector<double, 4*DIM-2>      NodalValuesQuad;
-
 public:
     /// Returns the index of the first integration point
     /// @return first integration point index
@@ -62,12 +59,37 @@ public:
     /// Retuns the integration point weight
     /// @param int integration point index @return integration point weight
     double WeightList(int i);
-  
-    /// Interpolate quadratic variables
-    /// @param NodalValuesQuad element variable nodal values
-    /// @param Integration point index
-    /// @return Interpolated variable value
-    double interpolateQuadraticVariable(NodalValuesQuad nValues, int point);
+
+    IntegQuadrature(){
+        pointCoord(0,0) = 1. / 3.;
+        pointCoord(0,1) = 1. / 3.;
+            
+        pointCoord(1,0) = (9. + 2. * sqrt(15.)) / 21.;
+        pointCoord(1,1) = (6. - sqrt(15.)) / 21.;
+          
+        pointCoord(2,0) = (6. - sqrt(15.)) / 21.;
+        pointCoord(2,1) = (9. + 2. * sqrt(15.)) / 21.;
+          
+        pointCoord(3,0) = (6. - sqrt(15.)) / 21.;
+        pointCoord(3,1) = (6. - sqrt(15.)) / 21.;
+          
+        pointCoord(4,0) = (6. + sqrt(15.)) / 21.;
+        pointCoord(4,1) = (6. + sqrt(15.)) / 21.;
+          
+        pointCoord(5,0) = (9. - 2. * sqrt(15.)) / 21.;
+        pointCoord(5,1) = (6. + sqrt(15.)) / 21.;
+          
+        pointCoord(6,0) = (6. + sqrt(15.)) / 21.;
+        pointCoord(6,1) = (9. - 2. * sqrt(15.)) / 21.;
+
+        pointWeight(0) = 0.11250;
+        pointWeight(1) = (155. - sqrt(15.)) / 2400.;
+        pointWeight(2) = (155. - sqrt(15.)) / 2400.;
+        pointWeight(3) = (155. - sqrt(15.)) / 2400.;
+        pointWeight(4) = (155. + sqrt(15.)) / 2400.;
+        pointWeight(5) = (155. + sqrt(15.)) / 2400.;
+        pointWeight(6) = (155. + sqrt(15.)) / 2400.;
+    }
 
 
 private:
@@ -76,12 +98,6 @@ private:
 
     //List of integration points weights
     PointWeight pointWeight;
-
-    //Defines shape functions
-    QuadShapeFunction<DIM> shapeQuad;
-
-    //Values of velocity shape functins
-    typename QuadShapeFunction<DIM>::Values      phi_;     
 
 };
 
@@ -95,26 +111,26 @@ private:
 template<>
 double IntegQuadrature<2>::PointList(int i, int j){
 
-    pointCoord(0,0) = 1. / 3.;
-    pointCoord(0,1) = 1. / 3.;
+    // pointCoord(0,0) = 1. / 3.;
+    // pointCoord(0,1) = 1. / 3.;
         
-    pointCoord(1,0) = (9. + 2. * sqrt(15.)) / 21.;
-    pointCoord(1,1) = (6. - sqrt(15.)) / 21.;
+    // pointCoord(1,0) = (9. + 2. * sqrt(15.)) / 21.;
+    // pointCoord(1,1) = (6. - sqrt(15.)) / 21.;
       
-    pointCoord(2,0) = (6. - sqrt(15.)) / 21.;
-    pointCoord(2,1) = (9. + 2. * sqrt(15.)) / 21.;
+    // pointCoord(2,0) = (6. - sqrt(15.)) / 21.;
+    // pointCoord(2,1) = (9. + 2. * sqrt(15.)) / 21.;
       
-    pointCoord(3,0) = (6. - sqrt(15.)) / 21.;
-    pointCoord(3,1) = (6. - sqrt(15.)) / 21.;
+    // pointCoord(3,0) = (6. - sqrt(15.)) / 21.;
+    // pointCoord(3,1) = (6. - sqrt(15.)) / 21.;
       
-    pointCoord(4,0) = (6. + sqrt(15.)) / 21.;
-    pointCoord(4,1) = (6. + sqrt(15.)) / 21.;
+    // pointCoord(4,0) = (6. + sqrt(15.)) / 21.;
+    // pointCoord(4,1) = (6. + sqrt(15.)) / 21.;
       
-    pointCoord(5,0) = (9. - 2. * sqrt(15.)) / 21.;
-    pointCoord(5,1) = (6. + sqrt(15.)) / 21.;
+    // pointCoord(5,0) = (9. - 2. * sqrt(15.)) / 21.;
+    // pointCoord(5,1) = (6. + sqrt(15.)) / 21.;
       
-    pointCoord(6,0) = (6. + sqrt(15.)) / 21.;
-    pointCoord(6,1) = (9. - 2. * sqrt(15.)) / 21.;
+    // pointCoord(6,0) = (6. + sqrt(15.)) / 21.;
+    // pointCoord(6,1) = (9. - 2. * sqrt(15.)) / 21.;
 
  
     // pointCoord(0,0) = 1. / 3.;
@@ -200,13 +216,13 @@ double IntegQuadrature<3>::PointList(int i, int j){
 template<>
 double IntegQuadrature<2>::WeightList(int i){
     
-    pointWeight(0) = 0.11250;
-    pointWeight(1) = (155. - sqrt(15.)) / 2400.;
-    pointWeight(2) = (155. - sqrt(15.)) / 2400.;
-    pointWeight(3) = (155. - sqrt(15.)) / 2400.;
-    pointWeight(4) = (155. + sqrt(15.)) / 2400.;
-    pointWeight(5) = (155. + sqrt(15.)) / 2400.;
-    pointWeight(6) = (155. + sqrt(15.)) / 2400.; 
+    // pointWeight(0) = 0.11250;
+    // pointWeight(1) = (155. - sqrt(15.)) / 2400.;
+    // pointWeight(2) = (155. - sqrt(15.)) / 2400.;
+    // pointWeight(3) = (155. - sqrt(15.)) / 2400.;
+    // pointWeight(4) = (155. + sqrt(15.)) / 2400.;
+    // pointWeight(5) = (155. + sqrt(15.)) / 2400.;
+    // pointWeight(6) = (155. + sqrt(15.)) / 2400.; 
 
     // pointWeight(0) = 0.11250;
     // pointWeight(1) = 0.125939180544827 / 2.;
@@ -235,50 +251,6 @@ double IntegQuadrature<3>::WeightList(int i){
     pointWeight(10) = 56. / 2250.; 
 
     return pointWeight(i);
-};
-
-//------------------------------------------------------------------------------
-//-----------COMPUTES THE VALUE INTERPOLATED IN THE INTEGRATION POINT-----------
-//------------------------------------------------------------------------------
-template<>
-double IntegQuadrature<2>::interpolateQuadraticVariable(NodalValuesQuad nValues,
-                                                        int point){
-    
-    ublas::bounded_vector<double, 2> xsi;
-
-    double int_value = 0.;
-
-    xsi(0) = PointList(point,0);
-    xsi(1) = PointList(point,1);
-    
-    shapeQuad.evaluate(xsi,phi_);
-    
-    for (int i = 0; i < 6; i++){
-        int_value += nValues(i) * phi_(i);
-    };
-
-    return int_value;
-};
-
-template<>
-double IntegQuadrature<3>::interpolateQuadraticVariable(NodalValuesQuad nValues,
-                                                        int point){
-    
-    ublas::bounded_vector<double, 3> xsi;
-
-    double int_value = 0.;
-
-    xsi(0) = PointList(point,0);
-    xsi(1) = PointList(point,1);
-    xsi(2) = PointList(point,2);
-    
-    shapeQuad.evaluate(xsi,phi_);
-    
-    for (int i = 0; i < 10; i++){
-        int_value += nValues(i) * phi_(i);
-    };
-
-    return int_value;
 };
 
 

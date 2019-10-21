@@ -113,12 +113,16 @@ std::string Line::getGmshCode()
 	std::stringstream text;
 
 	if (discretization_) {
-		if(points_.size() == 2){
-			text << name_ << " = newl; Line(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName()
-				<< "}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
-		}else{
+		if(points_.size() == 3){
 			text << name_ << " = newl; Circle(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName() << ", " << points_[2]->getName()
 				<< "}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
+		}else{
+			text << name_ << " = newl; Line(" << name_ << ") = {" << points_[0]->getName() ;
+			for (int i = 1; i < points_.size(); ++i)
+			{
+				text <<  ", " << points_[i]->getName();	
+			}
+			text << "}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
 		}
 		return text.str();
 	}
@@ -127,8 +131,12 @@ std::string Line::getGmshCode()
 			text << name_ << " = newl; Circle(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName() << ", " << points_[2]->getName()
 				<< "};\n//\n";
 		}else{
-			text << name_ << " = newl; Line(" << name_ << ") = {" << points_[0]->getName() << ", " << points_[1]->getName()
-				<< "};\n//\n";
+		text << name_ << " = newl; Line(" << name_ << ") = {" << points_[0]->getName() ;
+			for (int i = 1; i < points_.size(); ++i)
+			{
+				text <<  ", " << points_[i]->getName();	
+			}
+			text << "}; ";
 		}
 		return text.str();
 	}

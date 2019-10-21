@@ -14,11 +14,10 @@
 #define PART_QUADRATURE_H
 
 #include "QuadraticShapeFunction.hpp"
-#include "LinearShapeFunction.hpp"
 
 
 template<int DIM>
-class PartQuadrature{
+class IntegQuadratureSpecial{
 
 public:
 public:
@@ -41,7 +40,7 @@ public:
 
     //Defines vector of nodal values
     typedef ublas::bounded_vector<double, 4*DIM-2>      NodalValuesQuad;
-    typedef ublas::bounded_vector<double, DIM+1>        NodalValuesLin;
+
 
 public:
     //Returns the index of the first integration point
@@ -62,7 +61,6 @@ public:
   
     //Interpolate variables
     double interpolateQuadraticVariable(NodalValuesQuad nValues, int point);
-    double interpolateLinearVariable(NodalValuesLin nValues, int point);
 
 private:
     //List of integration points coordinates
@@ -73,12 +71,9 @@ private:
 
     //Defines shape functions
     QuadShapeFunction<DIM> shapeQuad;
-    LinShapeFunction<DIM>  shapeLin;
 
     //Values of velocity shape functins
-    typename QuadShapeFunction<DIM>::Values      phi_;     
-    //Values of pressure shape functins
-    typename LinShapeFunction<DIM>::Values       phip_;        
+    typename QuadShapeFunction<DIM>::Values      phi_;         
 };
 
 //------------------------------------------------------------------------------
@@ -89,7 +84,7 @@ private:
 //-----------------------QUADRATURE POINTS - COORDINATES------------------------
 //------------------------------------------------------------------------------
 template<>
-double PartQuadrature<2>::PointList(int i, int j){
+double IntegQuadratureSpecial<2>::PointList(int i, int j){
 
 pointCoord(	0	,0) = 	0.125000000000000 	;
 pointCoord(	1	,0) = 	0.037982440246296 	;
@@ -546,7 +541,7 @@ pointCoord(	223	,1) = 	0.875000000000000 	;
 };
 
 template<>
-double PartQuadrature<3>::PointList(int i, int j){
+double IntegQuadratureSpecial<3>::PointList(int i, int j){
     
     const double a = (1. + sqrt(5. / 14.)) / 4.;
     const double b = (1. - sqrt(5. / 14.)) / 4.;
@@ -602,7 +597,7 @@ double PartQuadrature<3>::PointList(int i, int j){
 //-------------------------QUADRATURE POINTS - WEIGHTS--------------------------
 //------------------------------------------------------------------------------
 template<>
-double PartQuadrature<2>::WeightList(int i){
+double IntegQuadratureSpecial<2>::WeightList(int i){
     
 pointWeight(0) = 	0.00351562500000000 	;
 pointWeight(1) = 	0.00196779969601292 	;
@@ -833,7 +828,7 @@ pointWeight(223) = 	0.00206865863732041 	;
 };
 
 template<>
-double PartQuadrature<3>::WeightList(int i){
+double IntegQuadratureSpecial<3>::WeightList(int i){
     
     pointWeight(0) = -74. / 5625.;
     pointWeight(1) = 343. / 45000.;
@@ -854,7 +849,7 @@ double PartQuadrature<3>::WeightList(int i){
 //-----------COMPUTES THE VALUE INTERPOLATED IN THE INTEGRATION POINT-----------
 //------------------------------------------------------------------------------
 template<>
-double PartQuadrature<2>::interpolateQuadraticVariable(
+double IntegQuadratureSpecial<2>::interpolateQuadraticVariable(
                                                       NodalValuesQuad nValues,
                                                       int point){
     
@@ -875,7 +870,7 @@ double PartQuadrature<2>::interpolateQuadraticVariable(
 };
 
 template<>
-double PartQuadrature<3>::interpolateQuadraticVariable(
+double IntegQuadratureSpecial<3>::interpolateQuadraticVariable(
                                                        NodalValuesQuad nValues,
                                                        int point){
     
@@ -895,30 +890,5 @@ double PartQuadrature<3>::interpolateQuadraticVariable(
 
     return int_value;
 };
-
-//------------------------------------------------------------------------------
-//-----------COMPUTES THE VALUE INTERPOLATED IN THE INTEGRATION POINT-----------
-//------------------------------------------------------------------------------
-template<>
-double PartQuadrature<2>::interpolateLinearVariable(
-                                                     NodalValuesLin nValues, 
-                                                     int point){
-    
-    ublas::bounded_vector<double, 2> xsi;
-
-    double int_value = 0.;
-
-    xsi(0) = PointList(point,0);
-    xsi(1) = PointList(point,1);
-    
-    shapeLin.evaluate(xsi,phip_);
-    
-    for (int i = 0; i < 3; i++){
-        int_value += nValues(i) * phip_(i);
-    };
-
-    return int_value;
-};
-
 
 #endif

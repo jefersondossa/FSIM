@@ -1,7 +1,7 @@
 RenderView1 = GetRenderView() 
 
 # Turn off "Head Light" 
-#RenderView1.LightSwitch = 0 
+RenderView1.LightSwitch = 0 
 
 # Turn off "Light Kit" 
 RenderView1.UseLight = 0 

@@ -503,11 +503,11 @@ int main(int argc, char **args) {
   
         FluidDomain* problem = new FluidDomain(fluid1);
         problem -> addSurfaceMaterial({ s001,s002,s003,s004,s005,s006,s007,s008,s009 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh("T6", "DELAUNAY", "coarse", "", false, false);
+        problem -> generateMesh("T6", "DELAUNAY", "coarse", "", false, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         problem2 -> addSurfaceMaterial({ s1005, s1006 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh("T6", "DELAUNAY", "fine", "", false, false);
+        problem2 -> generateMesh("T6", "DELAUNAY", "fine", "", false, true);
 
         //problem -> readInput("exemplo.msh",0);
 	};
