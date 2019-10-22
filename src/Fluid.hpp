@@ -476,21 +476,16 @@ void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
         double pLForce = 0.;
         double fDForce = 0.;
         double fLForce = 0.;
+        double aux_Mom = 0.;
+        double aux_Per = 0.;
         
        for (int i=0; i<numberOfLines; i++){
             //std::cout << "Bound group " << boundary_[jel] -> getBoundaryGroup() << std::endl;
             if (boundary_[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
                 //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
                 int iel = boundary_[jel] -> getElement();
-                elements_[iel] -> computeDragAndLiftForces();
+                elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
                 elements_[iel] -> computeSeparationAngle();
-            
-                pDForce = elements_[iel] -> getPressureDragForce();
-                pLForce = elements_[iel] -> getPressureLiftForce();
-                fDForce = elements_[iel] -> getFrictionDragForce();
-                fLForce = elements_[iel] -> getFrictionLiftForce();
-                dForce = elements_[iel] -> getDragForce();
-                lForce = elements_[iel] -> getLiftForce();
             };
         };
         
