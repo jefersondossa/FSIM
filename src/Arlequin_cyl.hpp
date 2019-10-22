@@ -2055,29 +2055,19 @@ void Arlequin<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
         double pLForce = 0.;
         double fDForce = 0.;
         double fLForce = 0.;
+        double aux_Mom = 0.;
+        double aux_Per = 0.;
 
 
 
         for (int i=0; i<fineModel.numberOfLines; i++){
-            //std::cout << "Bound group " << boundary_[jel] -> getBoundaryGroup() << std::endl;
             if (boundaryFine_[jel] -> getBoundaryGroup() == fineModel.dragAndLiftBoundary[i]){
-                //std::cout << "line " << i << " " << jel << std::endl;
+                
                 int iel = boundaryFine_[jel] -> getElement();
-                elementsFine_[iel] -> computeDragAndLiftForces();
+                elementsFine_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
 
-                // double theta2 = elementsFine_[iel] -> computeSeparationAngle();
-                // if (theta2>100) theta = theta2;
-
-                //if ((theta > 0) && (rank == 0)) std::cout << "AQUI SEPARATION ANGLE " << iel << " " << theta << std::endl;
-
-                pDForce = elementsFine_[iel] -> getPressureDragForce();
-                pLForce = elementsFine_[iel] -> getPressureLiftForce();
-                fDForce = elementsFine_[iel] -> getFrictionDragForce();
-                fLForce = elementsFine_[iel] -> getFrictionLiftForce();
-                dForce = elementsFine_[iel] -> getDragForce();
-                lForce = elementsFine_[iel] -> getLiftForce();
-                pMom += elementsFine_[iel] -> getPitchingMoment();
-                per += elementsFine_[iel] -> getPerimeter();
+                pMom += aux_Mom;
+                per += aux_Per;
             };
         };
         
@@ -2183,79 +2173,74 @@ void Arlequin<2>::initialAcceleration(){
         if (domDecompCoarse.first[jel] == rank) {
               
             //Compute Element matrix
-            elementsCoarse_[jel] -> getTransientNavierStokesInitial();
-            
-            typename Elements::LocalMatrix Ajac;
-            typename Elements::LocalVector Rhs;
+            std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+            localMV = elementsCoarse_[jel] -> getTransientNavierStokesInitial();
+        
             typename Elements::Connectivity connec;
-                              
-            //Gets element connectivity, jacobian and rhs 
             connec = elementsCoarse_[jel] -> getConnectivity();
-            Ajac = elementsCoarse_[jel] -> getJacNRMatrix();
-            Rhs = elementsCoarse_[jel] -> getRhsVector();
-                              
+                  
             //Disperse local contributions into the global matrix
             for (int i=0; i<6; i++){
                 for (int j=0; j<6; j++){                   
-                    if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                    if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                         int dof_i = 2 * connec(i);
                         int dof_j = 2 * connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j  ),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                    if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                         int dof_i = 2 * connec(i) + 1;
                         int dof_j = 2 * connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j  ),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                         int dof_i = 2 * connec(i);
                         int dof_j = 2 * connec(j) + 1;
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j+1),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                         int dof_i = 2 * connec(i) + 1;
                         int dof_j = 2 * connec(j) + 1;
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j+1),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                     };
                     //Matrix Q and Qt
-                    if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                         int dof_i = 2 * connec(i);
                         int dof_j = 2 * numNodesCoarse + connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                     };                  
-                    if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                    if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                         int dof_i = 2 * connec(i);
                         int dof_j = 2 * numNodesCoarse + connec(j);
-                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i  ),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                         int dof_i = 2 * connec(i) + 1;
                         int dof_j = 2 * numNodesCoarse + connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                     };
-                    if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+                    if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                         int dof_i = 2 * connec(i) + 1;
                         int dof_j = 2 * numNodesCoarse + connec(j);
-                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i+1),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                     };
-                    if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                    if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                         int dof_i = 2 * numNodesCoarse + connec(i);
                         int dof_j = 2 * numNodesCoarse + connec(j);
-                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+i,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                     };
                 };                  
                 //Rhs vector
-                if (fabs(Rhs(2*i  )) >= 1.e-15){
+                if (fabs(localMV.second(2*i  )) >= 1.e-15){
                     int dof_i = 2 * connec(i);
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+                    ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                 };
-                if (fabs(Rhs(2*i+1)) >= 1.e-15){
+                if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                     int dof_i = 2 * connec(i) + 1;
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+                    ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                 };
-                if (fabs(Rhs(12+i)) >= 1.e-15){
+                if (fabs(localMV.second(12+i)) >= 1.e-15){
                     int dof_i = 2 * numNodesCoarse + connec(i);
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),ADD_VALUES);
+                    ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                 };
             };
         };//Domain decomposition Coarse
@@ -2267,79 +2252,74 @@ void Arlequin<2>::initialAcceleration(){
         if (domDecompFine.first[jel] == rank) {
                               
             //Compute Element matrix
-            elementsFine_[jel] -> getTransientNavierStokesInitial();
-          
-            typename Elements::LocalMatrix Ajac;
-            typename Elements::LocalVector Rhs;
+            std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+            localMV = elementsFine_[jel] -> getTransientNavierStokesInitial();
+        
             typename Elements::Connectivity connec;
-              
-            //Gets element connectivity, jacobian and rhs 
-            connec = elementsFine_[jel] -> getConnectivity();
-            Ajac = elementsFine_[jel] -> getJacNRMatrix();
-            Rhs = elementsFine_[jel] -> getRhsVector();              
+            connec = elementsFine_[jel] -> getConnectivity();      
           
             //Disperse local contributions into the global matrix
             for (int i=0; i<6; i++){
                 for (int j=0; j<6; j++){
-                    if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                    if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                         int dof_i = 3*numNodesCoarse + 2 * connec(i);
                         int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j  ),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                    if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                         int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
                         int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j  ),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                         int dof_i = 3*numNodesCoarse + 2 * connec(i);
                         int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j+1),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                         int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
                         int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j+1),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                     };
                     //Matrix Q and Qt
-                    if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * connec(i);
                         int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                     };
-                    if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                    if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * connec(i);
                         int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i  ),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                     };
-                    if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+                    if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                         int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                     };           
-                    if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+                    if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                         int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i+1),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                     };
-                    if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                    if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
                         int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+i,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                     };
                 };     
                 ///Rhs vector
-                if (fabs(Rhs(2*i  )) >= 1.e-15){
+                if (fabs(localMV.second(2*i  )) >= 1.e-15){
                     int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+                    ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                 };
-                if (fabs(Rhs(2*i+1)) >= 1.e-15){
+                if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                     int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+                    ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                 };
-                if (fabs(Rhs(12+i)) >= 1.e-15){
+                if (fabs(localMV.second(12+i)) >= 1.e-15){
                     int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),ADD_VALUES);
+                    ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                 };
             }; 
         };//Domain decomposition Fine             
@@ -2362,19 +2342,17 @@ void Arlequin<2>::initialAcceleration(){
             // FINE MESH
             
             //Computes element matrix
-            elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
-              
-            //Gets element matrice and rhs vectors
-            // -L1
-            Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
-            // +L1 * Lambda
-            rhsLagMult = -elementsFine_[jel] -> getRhsLagrangeMultipliers(-Ajac);
-            AStab = elementsFine_[jel] -> getJacNRMatrix();
-            RhsStab = elementsFine_[jel] -> getRhsVector();
-            ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
-            RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
-              
-            ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
+            elementsFine_[jel] -> getLagrangeMultipliersSameMesh(Ajac, rhsLagMult, Rhs);
+            Ajac = -Ajac;
+            rhsLagMult = -rhsLagMult;              
+
+            //Compute SUPG and PSPG contributions
+            std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV_SUPG;
+            localMV_SUPG = elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh();
+
+            // Arlequin stabilization
+            ArlequinM.clear(); RhsArlequin.clear(); ArlequinM2.clear();
+            elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinM, ArlequinM2, RhsArlequin);
                 
             // -L1t
             Ajac = trans(Ajac);
@@ -2403,7 +2381,7 @@ void Arlequin<2>::initialAcceleration(){
             // noalias(rhsLagMult) = -prod((Ajac),U_);
             // noalias(lagStab) = -prod(trans(AjacAnt),U_);
             // L1t * u1
-            Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
+            // Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
 
             std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
 
@@ -2476,28 +2454,28 @@ void Arlequin<2>::initialAcceleration(){
                         // ierr = MatSetValues(A,1,&d_i,1,&d_j,&Ajac(12+i,12+j),ADD_VALUES);
                     };
                     //SUPG STABILIZATION
-                    if (fabs(AStab(2*i  ,2*j  )) >= 1.e-15){
+                    if (fabs(localMV_SUPG.first(2*i  ,2*j  )) >= 1.e-15){
                         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                         int d_j = 3*numNodesCoarse + 2*connec(j);
-                        double value = AStab(2*i  ,2*j  )*integ;
+                        double value = localMV_SUPG.first(2*i  ,2*j  )*integ;
                         ierr = MatSetValues(A,1,&d_j,1,&d_i,&value,ADD_VALUES);
                     };
-                    if (fabs(AStab(2*i+1,2*j+1)) >= 1.e-15){
+                    if (fabs(localMV_SUPG.first(2*i+1,2*j+1)) >= 1.e-15){
                         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
                         int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                        double value = AStab(2*i+1,2*j+1)*integ;
+                        double value = localMV_SUPG.first(2*i+1,2*j+1)*integ;
                         ierr = MatSetValues(A,1,&d_j,1,&d_i,&value,ADD_VALUES);
                     };
                     //PSPG STABILIZATION
-                    if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
+                    if (fabs(localMV_SUPG.first(2*i  ,12+j)) >= 1.e-15){
                         int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
                         int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j);
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&AStab(2*i  ,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_SUPG.first(2*i  ,12+j),ADD_VALUES);
                     };
-                    if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
+                    if (fabs(localMV_SUPG.first(2*i+1,12+j)) >= 1.e-15){
                         int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
                         int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j)+1;
-                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&AStab(2*i+1,12+j),ADD_VALUES);
+                        ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_SUPG.first(2*i+1,12+j),ADD_VALUES);
                     };
 
                     //ARLEQUIN STABILIZATION
@@ -2557,14 +2535,14 @@ void Arlequin<2>::initialAcceleration(){
 
                 //SUPG STABILIZATION
                 dof_i = 3*numNodesCoarse + 2*connec(i);                       
-                ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  ),ADD_VALUES);
+                ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(2*i  ),ADD_VALUES);
 
                 dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
-                ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1),ADD_VALUES);
+                ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(2*i+1),ADD_VALUES);
 
                 //PSPG STABILIZATION
                 dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
-                ierr = VecSetValues(b,1,&dof_i,&RhsStab(12+i),ADD_VALUES);
+                ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(12+i),ADD_VALUES);
 
                 // ///ARLEQUIN STABILIZATION
                 dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
@@ -2615,7 +2593,7 @@ void Arlequin<2>::initialAcceleration(){
                   
                 int iElemCoarse = diffElem[ielem];
                 double pspg = 0.;//elementsCoarse_[iElemCoarse] -> getPSPG();
-                ublas::bounded_vector<double, 6> press_, velX_, velY_;
+                ublas::bounded_vector<double, 6> press_, velX_, velY_, velXPrev_, velYPrev_;
 
                 connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
 
@@ -2623,27 +2601,32 @@ void Arlequin<2>::initialAcceleration(){
                     press_(k) = nodesCoarse_[connecC(k)] -> getPressure();
                     velX_(k) = nodesCoarse_[connecC(k)] -> getVelocity(0);
                     velY_(k) = nodesCoarse_[connecC(k)] -> getVelocity(1);
+                    velXPrev_(k) = nodesCoarse_[connecC(k)] -> getPreviousVelocity(0);
+                    velYPrev_(k) = nodesCoarse_[connecC(k)] -> getPreviousVelocity(1);
                 }
-                  
-                elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_);
-                  
-                //Computes element matrix
+                
                 // L0
-                Ajac = elementsFine_[jel] -> getLagrMultMatrix();
-                // L0t
+                elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac,rhsLagMult,Rhs);
                 Ajac = trans(Ajac);
-                AStab = elementsFine_[jel] -> getJacNRMatrix();
+
+                elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,AStab,RhsStab);
+                // AStab = elementsFine_[jel] -> getJacNRMatrix();
                 AStab = trans(AStab);
-                RhsStab = elementsFine_[jel] -> getRhsVector();
-                ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
+                // RhsStab = elementsFine_[jel] -> getRhsVector();
+                // AStab = elementsFine_[jel] -> getJacNRMatrix();
+                // AStab = trans(AStab);
+                // RhsStab = elementsFine_[jel] -> getRhsVector();
+
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinM,ArlequinM2,RhsArlequin);
+                // ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
                 ArlequinM = trans(ArlequinM);
-                RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
+                // RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
                   
-                ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
+                // ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
                 ArlequinM2 = trans(ArlequinM2);
 
                 // -L0 * lambda
-                rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
+                // rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
 
 
                 // AStab.clear();
@@ -2660,7 +2643,7 @@ void Arlequin<2>::initialAcceleration(){
                 // noalias(rhsLagMult) = -prod(trans(Ajac),U_);
                 // noalias(lagStab) = -prod(trans(AjacAnt),U_);
                   
-                Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
+                // Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
 
                 std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
               
@@ -3398,30 +3381,25 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                     // FINE MESH
                     
                     //Computes element matrix
-                    elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
-                    
-                    //Gets element matrice and rhs vectors
+                    elementsFine_[jel] -> getLagrangeMultipliersSameMesh(Ajac, rhsLagMult, Rhs);
                     // -L1
-                    Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
+                    Ajac = -Ajac;
                     // +L1 * Lambda
-                    // rhsLagMult = - elementsFine_[jel] -> getRhsLagrangeMultipliers(-Ajac);
-                    rhsLagMult = - elementsFine_[jel] -> getLagrMultVector();
+                    rhsLagMult = -rhsLagMult;
 
                     //PSPG and SUPG stabilizations
-                    AStab = elementsFine_[jel] -> getJacNRMatrix();
-                    RhsStab = elementsFine_[jel] -> getRhsVector();
+                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV_SUPG;
+                    localMV_SUPG = elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh();
 
                     //Arlequin Stabilization
-                    ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
-                    RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
-
-                    ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
-
+                    ArlequinM.clear(); RhsArlequin.clear(); ArlequinM2.clear();
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinM, ArlequinM2, RhsArlequin);
+                    
                     // -L1t
                     Ajac = trans(Ajac);
 
                     // L1t * u1
-                    Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
+                    // Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
 
                     std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
    
@@ -3432,7 +3410,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
                     Ajac = lagMult.second;
                     Rhs = lagMult.first;
-
 
                     lagMult.first.clear();
                     lagMult.second.clear();
@@ -3479,53 +3456,40 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                             };
 
                             //SUPG STABILIZATION
-                            if (fabs(AStab(2*i  ,2*j  )) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i  ,2*j  )) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                                 int d_j = 3*numNodesCoarse + 2*connec(j);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&AStab(2*i  ,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&localMV_SUPG.first(2*i  ,2*j  ),ADD_VALUES);
                             };
-                            if (fabs(AStab(2*i+1,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i+1,2*j+1)) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
                                 int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&AStab(2*i+1,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&localMV_SUPG.first(2*i+1,2*j+1),ADD_VALUES);
                             };
 
                             //PSPG STABILIZATION
-                            if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i  ,12+j)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
                                 int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&AStab(2*i  ,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_SUPG.first(2*i  ,12+j),ADD_VALUES);
                             };
-                            if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i+1,12+j)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
                                 int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j)+1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&AStab(2*i+1,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_SUPG.first(2*i+1,12+j),ADD_VALUES);
                             };
 
                             //ARLEQUIN STABILIZATION
-                            // if (fabs(ArlequinM(2*i  ,2*j+1)) >= 1.e-15){
-                            //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                            //     int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &ArlequinM(2*i  ,2*j+1),ADD_VALUES);
-                            // };
                             if (fabs(ArlequinM2(2*i  ,2*j  )) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                                 int d_j = 3*numNodesCoarse + 2*connec(j);
                                 ierr = MatSetValues(A,1,&d_i,1,&d_j,&ArlequinM2(2*i  ,2*j  ),ADD_VALUES);
                             };
-                            // if (fabs(ArlequinM(2*i+1,2*j  )) >= 1.e-15){
-                            //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                            //     int d_j = 3*numNodesCoarse + 2*connec(j);
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &ArlequinM(2*i+1,2*j  ),ADD_VALUES);
-                            // };
                             if (fabs(ArlequinM2(2*i+1,2*j+1)) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
                                 int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
                                 ierr = MatSetValues(A,1,&d_i,1,&d_j,&ArlequinM2(2*i+1,2*j+1),ADD_VALUES);
                             };
-
                             if (fabs(ArlequinM2(12+i,2*j  )) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                                 int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec(j);
@@ -3561,14 +3525,14 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
                         //SUPG STABILIZATION
                         dof_i = 3*numNodesCoarse + 2*connec(i);                       
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  ),ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(2*i  ),ADD_VALUES);
 
                         dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1),ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(2*i+1),ADD_VALUES);
 
                         //PSPG STABILIZATION
                         dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(12+i),ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(12+i),ADD_VALUES);
 
                         // ///ARLEQUIN STABILIZATION
                         dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
@@ -3622,60 +3586,38 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                         
                         int iElemCoarse = diffElem[ielem];
                         double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
-                        ublas::bounded_vector<double, 6> press_, velX_, velY_;
+                        ublas::bounded_vector<double, 6> press_, velX_, velY_, velXPrev_, velYPrev_;
 
-                        connecC = elementsCoarse_[iElemCoarse] -> 
-                            getConnectivity();
+                        connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
 
                         for (int k = 0; k < 6; k++){
                             press_(k) = nodesCoarse_[connecC(k)] -> getPressure();
                             velX_(k) = nodesCoarse_[connecC(k)] -> getVelocity(0);
                             velY_(k) = nodesCoarse_[connecC(k)] -> getVelocity(1);
+                            velXPrev_(k) = nodesCoarse_[connecC(k)] -> getPreviousVelocity(0);
+                            velYPrev_(k) = nodesCoarse_[connecC(k)] -> getPreviousVelocity(1);
                         }
                         
-                        elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_);
-                        
-                        //Computes element matrix
                         // L0
-                        Ajac = elementsFine_[jel] -> getLagrMultMatrix();
-                        // L0t
+                        elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac,rhsLagMult,Rhs);
                         Ajac = trans(Ajac);
-                        AStab = elementsFine_[jel] -> getJacNRMatrix();
+
+
+                        elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,AStab,RhsStab);
                         AStab = trans(AStab);
-                        RhsStab = elementsFine_[jel] -> getRhsVector();
-                        ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
+                
+                        elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinM,ArlequinM2,RhsArlequin);
                         ArlequinM = trans(ArlequinM);
-                        RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
-                        
-                        ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
                         ArlequinM2 = trans(ArlequinM2);
 
                         // -L0 * lambda
-                        rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
+                        // rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
 
-                        
-
-                        // AStab.clear();
-                        // // RhsStab.clear();
-                        // ArlequinM.clear();
-                        // RhsArlequin.clear();
-
-
-                        
-                        // U_.clear();
-                        // for (int i = 0; i < 6; i++){
-                        //     U_(2*i  ) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-                        //     U_(2*i+1) = nodesFine_[connec(i)] -> getLagrangeMultiplier(1);
-                        // };
-                        
-                        // noalias(rhsLagMult) = -prod(trans(Ajac),U_);
-                        // noalias(lagStab) = -prod(trans(AjacAnt),U_);
                         
 
 
  
-                    Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
+                    // Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
 
                     std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
                     
@@ -4676,30 +4618,25 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     // FINE MESH
                     
                     //Computes element matrix
-                    elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
-                    
-                    //Gets element matrice and rhs vectors
+                    elementsFine_[jel] -> getLagrangeMultipliersSameMesh(Ajac, rhsLagMult, Rhs);
                     // -L1
-                    Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
+                    Ajac = -Ajac;
                     // +L1 * Lambda
-                    // rhsLagMult = - elementsFine_[jel] -> getRhsLagrangeMultipliers(-Ajac);
-                    rhsLagMult = - elementsFine_[jel] -> getLagrMultVector();
-
+                    rhsLagMult = -rhsLagMult;
+                    
                     //PSPG and SUPG stabilizations
-                    AStab = elementsFine_[jel] -> getJacNRMatrix();
-                    RhsStab = elementsFine_[jel] -> getRhsVector();
+                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV_SUPG;
+                    localMV_SUPG = elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh();
 
                     //Arlequin Stabilization
-                    ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
-                    RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
-
-                    ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
+                    ArlequinM.clear(); RhsArlequin.clear(); ArlequinM2.clear();
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinM, ArlequinM2, RhsArlequin);
 
                     // -L1t
                     Ajac = trans(Ajac);
 
                     // L1t * u1
-                    Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
+                    // Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
 
                     std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
    
@@ -4757,27 +4694,27 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                             };
 
                             //SUPG STABILIZATION
-                            if (fabs(AStab(2*i  ,2*j  )) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i  ,2*j  )) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                                 int d_j = 3*numNodesCoarse + 2*connec(j);
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&AStab(2*i  ,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&localMV_SUPG.first(2*i  ,2*j  ),ADD_VALUES);
                             };
-                            if (fabs(AStab(2*i+1,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i+1,2*j+1)) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
                                 int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&AStab(2*i+1,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&d_j,1,&d_i,&localMV_SUPG.first(2*i+1,2*j+1),ADD_VALUES);
                             };
 
                             //PSPG STABILIZATION
-                            if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i  ,12+j)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
                                 int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&AStab(2*i  ,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_SUPG.first(2*i  ,12+j),ADD_VALUES);
                             };
-                            if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
+                            if (fabs(localMV_SUPG.first(2*i+1,12+j)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
                                 int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL(j)+1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&AStab(2*i+1,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_SUPG.first(2*i+1,12+j),ADD_VALUES);
                             };
 
                             //ARLEQUIN STABILIZATION
@@ -4839,14 +4776,14 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
                         //SUPG STABILIZATION
                         dof_i = 3*numNodesCoarse + 2*connec(i);                       
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  ),ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(2*i  ),ADD_VALUES);
 
                         dof_i = 3*numNodesCoarse + 2*connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1),ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(2*i+1),ADD_VALUES);
 
                         //PSPG STABILIZATION
                         dof_i = 3*numNodesCoarse + 2*numNodesFine + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&RhsStab(12+i),ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV_SUPG.second(12+i),ADD_VALUES);
 
                         // ///ARLEQUIN STABILIZATION
                         dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
@@ -4900,38 +4837,41 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                         
                         int iElemCoarse = diffElem[ielem];
                         double pspg = 0.;//elementsCoarse_[iElemCoarse] -> getPSPG();
-                        ublas::bounded_vector<double, 6> press_, velX_, velY_;
-
+                        ublas::bounded_vector<double, 6> press_, velX_, velY_, velXPrev_, velYPrev_;
+                        connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
 
                         for (int k = 0; k < 6; k++){
                             press_(k) = nodesCoarse_[connecC(k)] -> getPressure();
                             velX_(k) = nodesCoarse_[connecC(k)] -> getVelocity(0);
                             velY_(k) = nodesCoarse_[connecC(k)] -> getVelocity(1);
+                            velXPrev_(k) = nodesCoarse_[connecC(k)] -> getPreviousVelocity(0);
+                            velYPrev_(k) = nodesCoarse_[connecC(k)] -> getPreviousVelocity(1);
                         }
                         
-                        elementsFine_[jel] -> 
-                            getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_);
-                        
-                        //Computes element matrix
                         // L0
-                        Ajac = elementsFine_[jel] -> getLagrMultMatrix();
-                        // L0t
+                        elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac,rhsLagMult,Rhs);
                         Ajac = trans(Ajac);
-                        AStab = elementsFine_[jel] -> getJacNRMatrix();
-                        AStab = trans(AStab);
-                        RhsStab = elementsFine_[jel] -> getRhsVector();
-                        ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
-                        ArlequinM = trans(ArlequinM);
-                        RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
                         
-                        ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
+                        elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,AStab,RhsStab);
+                        // AStab = elementsFine_[jel] -> getJacNRMatrix();
+                        AStab = trans(AStab);
+                        // RhsStab = elementsFine_[jel] -> getRhsVector();
+                        // AStab = elementsFine_[jel] -> getJacNRMatrix();
+                        // AStab = trans(AStab);
+                        // RhsStab = elementsFine_[jel] -> getRhsVector();
+                        
+                        elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinM,ArlequinM2,RhsArlequin);
+                        // ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
+                        ArlequinM = trans(ArlequinM);
+                        // RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
+                        
+                        // ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
                         ArlequinM2 = trans(ArlequinM2);
 
                         // -L0 * lambda
-                        rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
+                        // rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
 
-                        connecC = elementsCoarse_[iElemCoarse] -> 
-                            getConnectivity();
+                        
 
                         // AStab.clear();
                         // // RhsStab.clear();
@@ -4952,7 +4892,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
 
  
-                    Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
+                    // Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
 
                     std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
                     
@@ -5556,714 +5496,710 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         
         //Coarse mesh
             
-        for (int jel = 0; jel < numElemCoarse; jel++){   
+//         for (int jel = 0; jel < numElemCoarse; jel++){   
             
-            if (domDecompCoarse.first[jel] == rank) {
+//             if (domDecompCoarse.first[jel] == rank) {
                 
-                //Compute Element matrix
-                std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
-                localMV = elementsCoarse_[jel] -> getTransientNavierStokes();
+//                 //Compute Element matrix
+//                 std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+//                 localMV = elementsCoarse_[jel] -> getTransientNavierStokes();
     
-                typename Elements::Connectivity connec;
-                connec = elementsCoarse_[jel] -> getConnectivity();
+//                 typename Elements::Connectivity connec;
+//                 connec = elementsCoarse_[jel] -> getConnectivity();
                 
-                //Disperse local contributions into the global matrix
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
+//                 //Disperse local contributions into the global matrix
+//                 for (int i=0; i<6; i++){
+//                     for (int j=0; j<6; j++){
                         
-                        if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
-                        };
-                        if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
+//                             int dof_i = 2 * connec(i);
+//                             int dof_j = 2 * connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
+//                         };
+//                         if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
+//                             int dof_i = 2 * connec(i) + 1;
+//                             int dof_j = 2 * connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * connec(j) + 1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
+//                             int dof_i = 2 * connec(i);
+//                             int dof_j = 2 * connec(j) + 1;
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * connec(j) + 1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
+//                             int dof_i = 2 * connec(i) + 1;
+//                             int dof_j = 2 * connec(j) + 1;
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
+//                         };
 
-                        //Matrix Q and Qt
-                        if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
-                        };
+//                         //Matrix Q and Qt
+//                         if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
+//                             int dof_i = 2 * connec(i);
+//                             int dof_j = 2 * numNodesCoarse + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
+//                         };
                         
-                        if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
+//                             int dof_i = 2 * connec(i);
+//                             int dof_j = 2 * numNodesCoarse + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
+//                             int dof_i = 2 * connec(i) + 1;
+//                             int dof_j = 2 * numNodesCoarse + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
+//                             int dof_i = 2 * connec(i) + 1;
+//                             int dof_j = 2 * numNodesCoarse + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
-                            int dof_i = 2 * numNodesCoarse + connec(i);
-                            int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
-                        };
-                    };                  
-                    //Rhs vector
-                    if (fabs(localMV.second(2*i  )) >= 1.e-15){
-                        int dof_i = 2 * connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
-                    };
+//                         if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
+//                             int dof_i = 2 * numNodesCoarse + connec(i);
+//                             int dof_j = 2 * numNodesCoarse + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
+//                         };
+//                     };                  
+//                     //Rhs vector
+//                     if (fabs(localMV.second(2*i  )) >= 1.e-15){
+//                         int dof_i = 2 * connec(i);
+//                         ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
+//                     };
 
-                    if (fabs(localMV.second(2*i+1)) >= 1.e-15){
-                        int dof_i = 2 * connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
-                    };
+//                     if (fabs(localMV.second(2*i+1)) >= 1.e-15){
+//                         int dof_i = 2 * connec(i) + 1;
+//                         ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
+//                     };
 
-                    if (fabs(localMV.second(12+i)) >= 1.e-15){
-                        int dof_i = 2 * numNodesCoarse + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
-                    };
-                };
-            };
-        };
+//                     if (fabs(localMV.second(12+i)) >= 1.e-15){
+//                         int dof_i = 2 * numNodesCoarse + connec(i);
+//                         ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
+//                     };
+//                 };
+//             };
+//         };
 
-        //Fine mesh
-        for (int jel = 0; jel < numElemFine; jel++){   
+//         //Fine mesh
+//         for (int jel = 0; jel < numElemFine; jel++){   
             
-            if (domDecompFine.first[jel] == rank) {
+//             if (domDecompFine.first[jel] == rank) {
                 
-                //Compute Element matrix
-                std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
-                localMV = elementsFine_[jel] -> getTransientNavierStokes();
+//                 //Compute Element matrix
+//                 std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+//                 localMV = elementsFine_[jel] -> getTransientNavierStokes();
     
-                typename Elements::Connectivity connec;
-                connec = elementsFine_[jel] -> getConnectivity();          
+//                 typename Elements::Connectivity connec;
+//                 connec = elementsFine_[jel] -> getConnectivity();          
 
-                //Disperse local contributions into the global matrix
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
-                        if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
-                            int dof_i = 3*numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
-                        };
+//                 //Disperse local contributions into the global matrix
+//                 for (int i=0; i<6; i++){
+//                     for (int j=0; j<6; j++){
+//                         if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
+//                             int dof_i = 3*numNodesCoarse + 2 * connec(i);
+//                             int dof_j = 3*numNodesCoarse + 2 * connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
+//                         };
                         
-                        if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
-                            int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
-                            int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
+//                             int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
+//                             int dof_j = 3*numNodesCoarse + 2 * connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
-                            int dof_i = 3*numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
+//                             int dof_i = 3*numNodesCoarse + 2 * connec(i);
+//                             int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
-                            int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
-                            int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
+//                             int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
+//                             int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
+//                         };
 
-                        //Matrix Q and Qt
-                        if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
-                        };
+//                         //Matrix Q and Qt
+//                         if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
+//                             int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
+//                             int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
+//                         };
 
-                        if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+//                             int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
+//                         };
                         
-                        if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
-                        };
+//                         if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+//                             int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
+//                         };
                         
-                        if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
-                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
-                        };
-                    };     
-                    ///Rhs vector
-                    if (fabs(localMV.second(2*i  )) >= 1.e-15){
-                        int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
-                    };
+//                         if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
+//                             int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
+//                         };
+//                     };     
+//                     ///Rhs vector
+//                     if (fabs(localMV.second(2*i  )) >= 1.e-15){
+//                         int dof_i = 3 * numNodesCoarse + 2 * connec(i);
+//                         ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
+//                     };
 
-                    if (fabs(localMV.second(2*i+1)) >= 1.e-15){
-                        int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
-                    };
+//                     if (fabs(localMV.second(2*i+1)) >= 1.e-15){
+//                         int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+//                         ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
+//                     };
 
-                    if (fabs(localMV.second(12+i)) >= 1.e-15){
-                        int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
-                    };
-                }; 
-            };                
-        };
+//                     if (fabs(localMV.second(12+i)) >= 1.e-15){
+//                         int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
+//                         ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
+//                     };
+//                 }; 
+//             };                
+//         };
                 
-        //Lagrange Multipliers
-        for (int l=0; l< numElemGlueZoneFine; l++){
+//         //Lagrange Multipliers
+//         for (int l=0; l< numElemGlueZoneFine; l++){
             
-            int jel = elementsGlueZoneFine_[l];
+//             int jel = elementsGlueZoneFine_[l];
                 
-            if (domDecompFine.first[jel] == rank) {
+//             if (domDecompFine.first[jel] == rank) {
                 
-                typename Elements::LocalMatrix Ajac, AjacAnt, AStab;
-                typename Elements::LocalVector Rhs, RhsStab;
-                typename Elements::Connectivity connec, connecC, connecL;
+//                 typename Elements::LocalMatrix Ajac, AjacAnt, AStab;
+//                 typename Elements::LocalVector Rhs, RhsStab;
+//                 typename Elements::Connectivity connec, connecC, connecL;
                 
-                connec = elementsFine_[jel] -> getConnectivity();
-                connecL = glueZoneFine_[l] -> getConnectivity();
+//                 connec = elementsFine_[jel] -> getConnectivity();
+//                 connecL = glueZoneFine_[l] -> getConnectivity();
                 
-                // FINE MESH
+//                 // FINE MESH
                 
-                //Computes element matrix
-                elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
+//                 //Computes element matrix
+//                 elementsFine_[jel] -> getLagrangeMultipliersSameMesh();
                     
-                //Gets element matrice and rhs vectors
-                Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
-                Rhs = - elementsFine_[jel] -> getRhsVectorLagMult();
-                AStab = elementsFine_[jel] -> getJacNRMatrix();
-                RhsStab = elementsFine_[jel] -> getRhsVector();
-                Ajac = trans(Ajac);
+//                 //Gets element matrice and rhs vectors
+//                 Ajac = - elementsFine_[jel] -> getLagrMultMatrix();
+//                 Rhs = - elementsFine_[jel] -> getRhsVectorLagMult();
+//                 // AStab = elementsFine_[jel] -> getJacNRMatrix();
+//                 // RhsStab = elementsFine_[jel] -> getRhsVector();
+//                 std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV_SUPG;
+//                 localMV_SUPG = elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh();
+
+//                 Ajac = trans(Ajac);
                 
-                // elementsFine_[jel] -> getLMStabilizationSameMesh();
+//                 // elementsFine_[jel] -> getLMStabilizationSameMesh();
                 
-                // AStab = - elementsFine_[jel] -> getJacNRMatrix();
-                // RhsStab = - elementsFine_[jel] -> getRhsVector();
+//                 // AStab = - elementsFine_[jel] -> getJacNRMatrix();
+//                 // RhsStab = - elementsFine_[jel] -> getRhsVector();
                 
-                //AjacAnt = trans(AjacAnt);
+//                 //AjacAnt = trans(AjacAnt);
                     
-                typename Elements::LocalVector rhsLagMult,U_,lagStab;
+//                 typename Elements::LocalVector rhsLagMult,U_,lagStab;
                 
-                U_.clear();
-                rhsLagMult.clear();
-                lagStab.clear();
-                for (int i = 0; i < 6; i++){
-                    U_(2*i  ) = nodesFine_[connec(i)] -> 
-                        getLagrangeMultiplier(0);
-                    U_(2*i+1) = nodesFine_[connec(i)] -> 
-                        getLagrangeMultiplier(1);
-                };
+//                 U_.clear();
+//                 rhsLagMult.clear();
+//                 lagStab.clear();
+//                 for (int i = 0; i < 6; i++){
+//                     U_(2*i  ) = nodesFine_[connec(i)] -> 
+//                         getLagrangeMultiplier(0);
+//                     U_(2*i+1) = nodesFine_[connec(i)] -> 
+//                         getLagrangeMultiplier(1);
+//                 };
                 
-                noalias(rhsLagMult) = -prod(trans(Ajac),U_);
-                // noalias(lagStab) = -prod(trans(AjacAnt),U_);
+//                 noalias(rhsLagMult) = -prod(trans(Ajac),U_);
+//                 // noalias(lagStab) = -prod(trans(AjacAnt),U_);
                    
                 
-                //Disperse local contributions into the global matrix
-                for (int i=0; i<6; i++){
-                    for (int j=0; j<6; j++){
+//                 //Disperse local contributions into the global matrix
+//                 for (int i=0; i<6; i++){
+//                     for (int j=0; j<6; j++){
                         
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
-                            int d_i = 3 * numNodesCoarse + 3 * numNodesFine
-                                + 2 * connecL(i);
-                            int d_j = 3 * numNodesCoarse + 2 * connec(j);
-                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                &Ajac(2*i  ,2*j  ),
-                                                ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &Ajac(2*i  ,2*j  ),
-                                                ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &AStab(2*i  ,2*j  ),
-                                                ADD_VALUES);
-                        };
+//                         if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+//                             int d_i = 3 * numNodesCoarse + 3 * numNodesFine + 2 * connecL(i);
+//                             int d_j = 3 * numNodesCoarse + 2 * connec(j);
+//                             ierr = MatSetValues(A,1,&d_i,1,&d_j, &Ajac(2*i  ,2*j  ), ADD_VALUES);
+//                             ierr = MatSetValues(A,1,&d_j,1,&d_i, &Ajac(2*i  ,2*j  ), ADD_VALUES);
+//                             ierr = MatSetValues(A,1,&d_j,1,&d_i, &AStab(2*i  ,2*j  ), ADD_VALUES);
+//                         };
                         
-                        if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
-                            int d_i = 3 * numNodesCoarse + 3 * numNodesFine
-                                + 2 * connecL(i) + 1;
-                            int d_j = 3 * numNodesCoarse + 2 * connec(j);
-                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                &Ajac(2*i+1,2*j  ),
-                                                ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &Ajac(2*i+1,2*j  ),
-                                                ADD_VALUES);
-                        };
+//                         if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+//                             int d_i = 3 * numNodesCoarse + 3 * numNodesFine
+//                                 + 2 * connecL(i) + 1;
+//                             int d_j = 3 * numNodesCoarse + 2 * connec(j);
+//                             ierr = MatSetValues(A,1,&d_i,1,&d_j,
+//                                                 &Ajac(2*i+1,2*j  ),
+//                                                 ADD_VALUES);
+//                             ierr = MatSetValues(A,1,&d_j,1,&d_i,
+//                                                 &Ajac(2*i+1,2*j  ),
+//                                                 ADD_VALUES);
+//                         };
                         
-                        if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
-                            int d_i = 3 * numNodesCoarse + 3 * numNodesFine
-                                + 2 * connecL(i) + 1;
-                            int d_j = 3 * numNodesCoarse + 2*connec(j) + 1;
-                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                &Ajac(2*i+1,2*j+1),
-                                                    ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &Ajac(2*i+1,2*j+1),
-                                                ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &AStab(2*i+1,2*j+1),
-                                                ADD_VALUES);
-                        };
+//                         if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+//                             int d_i = 3 * numNodesCoarse + 3 * numNodesFine
+//                                 + 2 * connecL(i) + 1;
+//                             int d_j = 3 * numNodesCoarse + 2*connec(j) + 1;
+//                             ierr = MatSetValues(A,1,&d_i,1,&d_j,
+//                                                 &Ajac(2*i+1,2*j+1),
+//                                                     ADD_VALUES);
+//                             ierr = MatSetValues(A,1,&d_j,1,&d_i,
+//                                                 &Ajac(2*i+1,2*j+1),
+//                                                 ADD_VALUES);
+//                             ierr = MatSetValues(A,1,&d_j,1,&d_i,
+//                                                 &AStab(2*i+1,2*j+1),
+//                                                 ADD_VALUES);
+//                         };
                         
-                        if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
-                            int d_i = 3 * numNodesCoarse + 3 * numNodesFine
-                                + 2 * connecL(i);
-                            int d_j = 3 * numNodesCoarse + 2*connec(j) + 1;
-                            ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                                                &Ajac(2*i  ,2*j+1),
-                                                ADD_VALUES);
-                            ierr = MatSetValues(A,1,&d_j,1,&d_i,
-                                                &Ajac(2*i  ,2*j+1),
-                                                ADD_VALUES);
-                        };
+//                         if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+//                             int d_i = 3 * numNodesCoarse + 3 * numNodesFine
+//                                 + 2 * connecL(i);
+//                             int d_j = 3 * numNodesCoarse + 2*connec(j) + 1;
+//                             ierr = MatSetValues(A,1,&d_i,1,&d_j,
+//                                                 &Ajac(2*i  ,2*j+1),
+//                                                 ADD_VALUES);
+//                             ierr = MatSetValues(A,1,&d_j,1,&d_i,
+//                                                 &Ajac(2*i  ,2*j+1),
+//                                                 ADD_VALUES);
+//                         };
                         
-                        if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &AStab(2*i  ,12+j),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 
-                                2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &AStab(2*i+1,12+j),
-                                                ADD_VALUES);
-                        };
-                    };
+//                         if (fabs(AStab(2*i  ,12+j)) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
+//                             int dof_j = 3 * numNodesCoarse + 
+//                                 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+//                                                 &AStab(2*i  ,12+j),
+//                                                 ADD_VALUES);
+//                         };
+//                         if (fabs(AStab(2*i+1,12+j)) >= 1.e-15){
+//                             int dof_i = 3 * numNodesCoarse + 
+//                                 2 * connec(i) + 1;
+//                             int dof_j = 3 * numNodesCoarse + 
+//                                 2 * numNodesFine + connec(j);
+//                             ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+//                                                 &AStab(2*i+1,12+j),
+//                                                 ADD_VALUES);
+//                         };
+//                     };
                     
-                    //Rhs vector
+//                     //Rhs vector
 
-                    int dof_i = 3 * numNodesCoarse + 3 * numNodesFine +
-                        2 * connecL(i);
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
-                                        ADD_VALUES);
+//                     int dof_i = 3 * numNodesCoarse + 3 * numNodesFine +
+//                         2 * connecL(i);
+//                     ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
+//                                         ADD_VALUES);
                     
-                    dof_i = 3 * numNodesCoarse + 3 * numNodesFine + 
-                        2 * connecL(i) + 1;
-                    ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
-                                        ADD_VALUES);
+//                     dof_i = 3 * numNodesCoarse + 3 * numNodesFine + 
+//                         2 * connecL(i) + 1;
+//                     ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
+//                                         ADD_VALUES);
                     
-                    dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                    ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
-                                        ,ADD_VALUES);
-                    ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
-                                        ,ADD_VALUES);
+//                     dof_i = 3 * numNodesCoarse + 2 * connec(i);
+//                     ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i  )
+//                                         ,ADD_VALUES);
+//                     ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i  )
+//                                         ,ADD_VALUES);
 
-                    dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                    ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
-                                        ,ADD_VALUES);
-                    ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
-                                        ,ADD_VALUES);
-                };      
+//                     dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+//                     ierr = VecSetValues(b,1,&dof_i,&rhsLagMult(2*i+1)
+//                                         ,ADD_VALUES);
+//                     ierr = VecSetValues(b,1,&dof_i,&RhsStab(2*i+1)
+//                                         ,ADD_VALUES);
+//                 };      
                 
-                //COAESE MESH
+//                 //COAESE MESH
                 
-                //Counts number of coarse mesh intersecting the 
-                //fine element
-                int numberIntPoints = elementsFine_[jel] -> 
-                    getNumberOfIntegrationPoints();
-                int aux;
+//                 //Counts number of coarse mesh intersecting the 
+//                 //fine element
+//                 int numberIntPoints = elementsFine_[jel] -> 
+//                     getNumberOfIntegrationPoints();
+//                 int aux;
                 
-                std::vector<int> ele, diffElem;
-                ele.clear();
-                diffElem.clear();
+//                 std::vector<int> ele, diffElem;
+//                 ele.clear();
+//                 diffElem.clear();
                 
-                ele.reserve(3);
-                for (int i=0; i<numberIntPoints; i++){
-                    aux = elementsFine_[jel] -> 
-                        getIntegPointCorrespondenceElement(i);
-                    ele.push_back(aux);
-                    //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
-                };
+//                 ele.reserve(3);
+//                 for (int i=0; i<numberIntPoints; i++){
+//                     aux = elementsFine_[jel] -> 
+//                         getIntegPointCorrespondenceElement(i);
+//                     ele.push_back(aux);
+//                     //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
+//                 };
                 
-                int numElemIntersect = 1;
-                int flag = 0;
-                diffElem.push_back(ele[0]);
+//                 int numElemIntersect = 1;
+//                 int flag = 0;
+//                 diffElem.push_back(ele[0]);
                 
-                for (int i = 1; i<numberIntPoints; i++){
-                    flag = 0;
-                    for (int j = 0; j<numElemIntersect; j++){
-                        if (ele[i] == diffElem[j]) {
-                            break;
-                        }else{
-                            flag++;
-                        };
-                        if(flag == numElemIntersect){
-                            numElemIntersect++;
-                            diffElem.push_back(ele[i]);
-                        };
-                    };
-                };
-                //std::cout << "JEL " << jel << " " << numElemIntersect << std::endl;
-                //Compute the Lagrange Multiplier element matrix
-                for (int ielem = 0; ielem < numElemIntersect; ielem++){
+//                 for (int i = 1; i<numberIntPoints; i++){
+//                     flag = 0;
+//                     for (int j = 0; j<numElemIntersect; j++){
+//                         if (ele[i] == diffElem[j]) {
+//                             break;
+//                         }else{
+//                             flag++;
+//                         };
+//                         if(flag == numElemIntersect){
+//                             numElemIntersect++;
+//                             diffElem.push_back(ele[i]);
+//                         };
+//                     };
+//                 };
+//                 //std::cout << "JEL " << jel << " " << numElemIntersect << std::endl;
+//                 //Compute the Lagrange Multiplier element matrix
+//                 for (int ielem = 0; ielem < numElemIntersect; ielem++){
                     
-                    int iElemCoarse = diffElem[ielem];
-                    // double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
+//                     int iElemCoarse = diffElem[ielem];
+//                     // double pspg = elementsCoarse_[iElemCoarse] -> getPSPG();
                     
-                    // elementsFine_[jel] -> 
-                    //     getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
+//                     // elementsFine_[jel] -> 
+//                     //     getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg);
                     
-                    //Computes element matrix
-                    Ajac = elementsFine_[jel] -> getLagrMultMatrix();
-                    Ajac = trans(Ajac);
-                    AStab = elementsFine_[jel] -> getJacNRMatrix();
-                    AStab = trans(AStab);
-                    RhsStab = elementsFine_[jel] -> getRhsVector();
+//                     //Computes element matrix
+//                     Ajac = elementsFine_[jel] -> getLagrMultMatrix();
+//                     Ajac = trans(Ajac);
+//                     AStab = elementsFine_[jel] -> getJacNRMatrix();
+//                     AStab = trans(AStab);
+//                     RhsStab = elementsFine_[jel] -> getRhsVector();
                     
-                    connecC = elementsCoarse_[iElemCoarse] -> 
-                        getConnectivity();
+//                     connecC = elementsCoarse_[iElemCoarse] -> 
+//                         getConnectivity();
                     
                     
-                    typename Elements::LocalVector rhsLagMult,U_,lagStab;
+//                     typename Elements::LocalVector rhsLagMult,U_,lagStab;
                     
-                    U_.clear();
-                    for (int i = 0; i < 6; i++){
-                        U_(2*i  ) = nodesFine_[connec(i)] -> 
-                            getLagrangeMultiplier(0);
-                        U_(2*i+1) = nodesFine_[connec(i)] -> 
-                            getLagrangeMultiplier(1);
-                    };
+//                     U_.clear();
+//                     for (int i = 0; i < 6; i++){
+//                         U_(2*i  ) = nodesFine_[connec(i)] -> 
+//                             getLagrangeMultiplier(0);
+//                         U_(2*i+1) = nodesFine_[connec(i)] -> 
+//                             getLagrangeMultiplier(1);
+//                     };
                     
-                    noalias(rhsLagMult) = -prod(trans(Ajac),U_);
-                    // noalias(lagStab) = -prod(trans(AjacAnt),U_);
+//                     noalias(rhsLagMult) = -prod(trans(Ajac),U_);
+//                     // noalias(lagStab) = -prod(trans(AjacAnt),U_);
                     
-                    std::pair<Elements::LocalVector, 
-                              Elements::LocalMatrix>  lagMult;
+//                     std::pair<Elements::LocalVector, 
+//                               Elements::LocalMatrix>  lagMult;
                     
-                    lagMult.first.clear();
-                    lagMult.second.clear();
+//                     lagMult.first.clear();
+//                     lagMult.second.clear();
                     
-                    lagMult = elementsCoarse_[iElemCoarse] -> 
-                            getRhsVectorAndBoundaryConditions(Ajac);
+//                     lagMult = elementsCoarse_[iElemCoarse] -> 
+//                             getRhsVectorAndBoundaryConditions(Ajac);
                     
-                    //Disperse local contribution into the global matrix
-                    for (int i=0; i<6; i++){
-                        for (int j=0; j<6; j++){
+//                     //Disperse local contribution into the global matrix
+//                     for (int i=0; i<6; i++){
+//                         for (int j=0; j<6; j++){
                             
-                            if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
-                                int dof_i = 3 * numNodesCoarse 
-                                    + 3 * numNodesFine + 2 * connecL(i);
-                                int dof_j = 2 * connecC(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &lagMult.second(2*i  ,2*j  )
-                                                    ,ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &lagMult.second(2*i  ,2*j  )
-                                                    ,ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &AStab(2*i  ,2*j  )
-                                                    ,ADD_VALUES);
-                            };
+//                             if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+//                                 int dof_i = 3 * numNodesCoarse 
+//                                     + 3 * numNodesFine + 2 * connecL(i);
+//                                 int dof_j = 2 * connecC(j);
+//                                 ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+//                                                     &lagMult.second(2*i  ,2*j  )
+//                                                     ,ADD_VALUES);
+//                                 ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+//                                                     &lagMult.second(2*i  ,2*j  )
+//                                                     ,ADD_VALUES);
+//                                 ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+//                                                     &AStab(2*i  ,2*j  )
+//                                                     ,ADD_VALUES);
+//                             };
                             
-                            if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
-                                int dof_i = 3 * numNodesCoarse 
-                                    + 3 * numNodesFine + 2 * connecL(i) + 1;
-                                int dof_j = 2 * connecC(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &lagMult.second(2*i+1,2*j  )
-                                                    ,ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &lagMult.second(2*i+1,2*j  )
-                                                    ,ADD_VALUES);
-                            };
+//                             if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+//                                 int dof_i = 3 * numNodesCoarse 
+//                                     + 3 * numNodesFine + 2 * connecL(i) + 1;
+//                                 int dof_j = 2 * connecC(j);
+//                                 ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+//                                                     &lagMult.second(2*i+1,2*j  )
+//                                                     ,ADD_VALUES);
+//                                 ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+//                                                     &lagMult.second(2*i+1,2*j  )
+//                                                     ,ADD_VALUES);
+//                             };
                             
-                            if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
-                                int dof_i = 3 * numNodesCoarse 
-                                    + 3 * numNodesFine + 2 * connecL(i) + 1;
-                                int dof_j = 2 * connecC(j) + 1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &lagMult.second(2*i+1,2*j+1)
-                                                    ,ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &lagMult.second(2*i+1,2*j+1)
-                                                    ,ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &AStab(2*i+1,2*j+1)
-                                                    ,ADD_VALUES);
-                            };
+//                             if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+//                                 int dof_i = 3 * numNodesCoarse 
+//                                     + 3 * numNodesFine + 2 * connecL(i) + 1;
+//                                 int dof_j = 2 * connecC(j) + 1;
+//                                 ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+//                                                     &lagMult.second(2*i+1,2*j+1)
+//                                                     ,ADD_VALUES);
+//                                 ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+//                                                     &lagMult.second(2*i+1,2*j+1)
+//                                                     ,ADD_VALUES);
+//                                 ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+//                                                     &AStab(2*i+1,2*j+1)
+//                                                     ,ADD_VALUES);
+//                             };
                             
-                            if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
-                                int dof_i = 3 * numNodesCoarse 
-                                    + 3 * numNodesFine + 2 * connecL(i);
-                                int dof_j = 2 * connecC(j) + 1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                    &lagMult.second(2*i  ,2*j+1)
-                                                    ,ADD_VALUES);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
-                                                    &lagMult.second(2*i  ,2*j+1)
-                                                    ,ADD_VALUES);
-                            };
+//                             if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+//                                 int dof_i = 3 * numNodesCoarse 
+//                                     + 3 * numNodesFine + 2 * connecL(i);
+//                                 int dof_j = 2 * connecC(j) + 1;
+//                                 ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
+//                                                     &lagMult.second(2*i  ,2*j+1)
+//                                                     ,ADD_VALUES);
+//                                 ierr = MatSetValues(A,1,&dof_j,1,&dof_i,
+//                                                     &lagMult.second(2*i  ,2*j+1)
+//                                                     ,ADD_VALUES);
+//                             };
                             
-                            // if (fabs(AjacAnt(2*i  ,2*j  )) >= 1.e-15){
-                            //     int d_i = 3 * numNodesCoarse + 
-                            //         3 * numNodesFine + 2 * connecL(i);
-                            //     int d_j = 3 * numNodesCoarse + 
-                            //         3 * numNodesFine + 2 * connecL(j);
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &AjacAnt(2*i  ,2*j  ),
-                            //                         ADD_VALUES);
-                            // };
-                            // if (fabs(AjacAnt(2*i+1,2*j+1)) >= 1.e-15){
-                            //     int d_i = 3 * numNodesCoarse + 
-                            //         3 * numNodesFine + 2 * connecL(i) + 1;
-                            //     int d_j = 3 * numNodesCoarse + 
-                            //         3 * numNodesFine + 2 * connecL(j) + 1;
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &AjacAnt(2*i+1,2*j+1),
-                            //                         ADD_VALUES);
-                            // };
-                        };
-                        //Rhs vector
+//                             // if (fabs(AjacAnt(2*i  ,2*j  )) >= 1.e-15){
+//                             //     int d_i = 3 * numNodesCoarse + 
+//                             //         3 * numNodesFine + 2 * connecL(i);
+//                             //     int d_j = 3 * numNodesCoarse + 
+//                             //         3 * numNodesFine + 2 * connecL(j);
+//                             //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
+//                             //                         &AjacAnt(2*i  ,2*j  ),
+//                             //                         ADD_VALUES);
+//                             // };
+//                             // if (fabs(AjacAnt(2*i+1,2*j+1)) >= 1.e-15){
+//                             //     int d_i = 3 * numNodesCoarse + 
+//                             //         3 * numNodesFine + 2 * connecL(i) + 1;
+//                             //     int d_j = 3 * numNodesCoarse + 
+//                             //         3 * numNodesFine + 2 * connecL(j) + 1;
+//                             //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
+//                             //                         &AjacAnt(2*i+1,2*j+1),
+//                             //                         ADD_VALUES);
+//                             // };
+//                         };
+//                         //Rhs vector
                         
-                        int d_i = 3 * numNodesCoarse 
-                            + 3 * numNodesFine + 2 * connecL(i);
-                        ierr = VecSetValues(b,1,&d_i,
-                                            &lagMult.first(2*i  ),
-                                            ADD_VALUES);
+//                         int d_i = 3 * numNodesCoarse 
+//                             + 3 * numNodesFine + 2 * connecL(i);
+//                         ierr = VecSetValues(b,1,&d_i,
+//                                             &lagMult.first(2*i  ),
+//                                             ADD_VALUES);
                         
-                        d_i = 3 * numNodesCoarse 
-                            + 3 * numNodesFine + 2 * connecL(i) + 1;
-                        ierr = VecSetValues(b,1,&d_i,
-                                            &lagMult.first(2*i+1),
-                                            ADD_VALUES);
+//                         d_i = 3 * numNodesCoarse 
+//                             + 3 * numNodesFine + 2 * connecL(i) + 1;
+//                         ierr = VecSetValues(b,1,&d_i,
+//                                             &lagMult.first(2*i+1),
+//                                             ADD_VALUES);
                         
-                        int dof_i = 2 * connecC(i);
-                        ierr = VecSetValues(b,1,&dof_i,
-                                            &rhsLagMult(2*i  ),
-                                            ADD_VALUES);
-                        ierr = VecSetValues(b,1,&dof_i,
-                                            &RhsStab(2*i  ),
-                                            ADD_VALUES);
+//                         int dof_i = 2 * connecC(i);
+//                         ierr = VecSetValues(b,1,&dof_i,
+//                                             &rhsLagMult(2*i  ),
+//                                             ADD_VALUES);
+//                         ierr = VecSetValues(b,1,&dof_i,
+//                                             &RhsStab(2*i  ),
+//                                             ADD_VALUES);
                         
-                        dof_i = 2 * connecC(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,
-                                            &rhsLagMult(2*i+1),
-                                            ADD_VALUES);
-                        ierr = VecSetValues(b,1,&dof_i,
-                                            &RhsStab(2*i+1),
-                                            ADD_VALUES);
-                    };                                 
-                }; //Number of intersections
-            }; // if element belongs to the glue zone
-        }; // Glue zone
+//                         dof_i = 2 * connecC(i) + 1;
+//                         ierr = VecSetValues(b,1,&dof_i,
+//                                             &rhsLagMult(2*i+1),
+//                                             ADD_VALUES);
+//                         ierr = VecSetValues(b,1,&dof_i,
+//                                             &RhsStab(2*i+1),
+//                                             ADD_VALUES);
+//                     };                                 
+//                 }; //Number of intersections
+//             }; // if element belongs to the glue zone
+//         }; // Glue zone
         
         
-        //------------------------------------------------------------------
-        //-------------------END OF LINEAR SYSTEM ASSEMBLY------------------
-        //------------------------------------------------------------------
-        //std::cout << "Enter PETSc " << rank << std::endl;
+//         //------------------------------------------------------------------
+//         //-------------------END OF LINEAR SYSTEM ASSEMBLY------------------
+//         //------------------------------------------------------------------
+//         //std::cout << "Enter PETSc " << rank << std::endl;
         
-        //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//         //Assemble matrices and vectors
+//         ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//         ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
         
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+//         ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
+//         ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
         
-        //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//         //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//         // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
-        //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+//         //Create KSP context to solve the linear system
+//         ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
         
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+//         ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
         
 
 
 
-        // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
-        // ierr = MatSetNullSpace(A, nullsp);
-        // ierr = MatNullSpaceDestroy(&nullsp);
+//         // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
+//         // ierr = MatSetNullSpace(A, nullsp);
+//         // ierr = MatNullSpaceDestroy(&nullsp);
         
         
         
         
-        // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-        //                         1000);CHKERRQ(ierr);
+//         // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
+//         //                         1000);CHKERRQ(ierr);
         
-        // //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+//         // //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
         
-        // ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+//         // ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
         
-        // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
+//         // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
         
-        // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-        // ierr = KSPSetType(ksp,KSPLSQR); CHKERRQ(ierr);
+//         // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
+//         // ierr = KSPSetType(ksp,KSPLSQR); CHKERRQ(ierr);
         
-        // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+//         // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//         // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
         
         
         
-#if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
+// #if defined(PETSC_HAVE_MUMPS)
+//         ierr = KSPSetType(ksp,KSPPREONLY);
+//         ierr = KSPGetPC(ksp,&pc);
+//         ierr = PCSetType(pc, PCLU);
 
        
-        ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-        PCFactorSetUpMatSolverType(pc);
-        PCFactorGetMatrix(pc,&F);
+//         ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+//         PCFactorSetUpMatSolverType(pc);
+//         PCFactorGetMatrix(pc,&F);
 
-        PetscInt ival,icntl;
-        icntl = 14; ival = 60;
-        MatMumpsSetIcntl(F,icntl,ival);
+//         PetscInt ival,icntl;
+//         icntl = 14; ival = 60;
+//         MatMumpsSetIcntl(F,icntl,ival);
         
-#endif
-        
-        
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
+// #endif
         
         
-#if defined(PETSC_HAVE_MUMPS)
-        PetscInt  info1,info2,icntl14;
+//         ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//         ierr = KSPSetUp(ksp);
+        
+        
+// #if defined(PETSC_HAVE_MUMPS)
+//         PetscInt  info1,info2,icntl14;
 
-        MatMumpsGetInfo(F,1,&info1);
-        MatMumpsGetInfo(F,2,&info2);
-        MatMumpsGetIcntl(F,14,&icntl14);
-        if(rank == 0) std::cout << " INFO(1) = " << info1
-                                << " " << info2 << " " << icntl14 << std::endl;
-#endif
+//         MatMumpsGetInfo(F,1,&info1);
+//         MatMumpsGetInfo(F,2,&info2);
+//         MatMumpsGetIcntl(F,14,&icntl14);
+//         if(rank == 0) std::cout << " INFO(1) = " << info1
+//                                 << " " << info2 << " " << icntl14 << std::endl;
+// #endif
 
 
-        // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+//         // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
         
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+//         ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
         
-        ierr = KSPGetTotalIterations(ksp, &iterations);
+//         ierr = KSPGetTotalIterations(ksp, &iterations);
         
-        //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
+//         //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
             
-        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//         //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
         
-        //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
+//         //Gathers the solution vector to the master process
+//         ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
         
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-        CHKERRQ(ierr);
+//         ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//         CHKERRQ(ierr);
         
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-        CHKERRQ(ierr);
+//         ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//         CHKERRQ(ierr);
         
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+//         ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
         
-        //Updates nodal values
-        double u_[2];
-        double norm = 0.;
-        double p_;
-        Ione = 1;
+//         //Updates nodal values
+//         double u_[2];
+//         double norm = 0.;
+//         double p_;
+//         Ione = 1;
         
-        for (int i = 0; i < numNodesCoarse; ++i){
-            Ii = 2 * i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            norm += val*val;
-            nodesCoarse_[i] -> incrementVelocity(0,u_[0]);
+//         for (int i = 0; i < numNodesCoarse; ++i){
+//             Ii = 2 * i;
+//             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//             u_[0] = val;
+//             norm += val*val;
+//             nodesCoarse_[i] -> incrementVelocity(0,u_[0]);
             
-            Ii = 2 * i + 1;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[1] = val;
-            norm += val*val;
-            nodesCoarse_[i] -> incrementVelocity(1,u_[1]);
-        };
+//             Ii = 2 * i + 1;
+//             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//             u_[1] = val;
+//             norm += val*val;
+//             nodesCoarse_[i] -> incrementVelocity(1,u_[1]);
+//         };
             
-        for (int i = 0; i<numNodesCoarse; i++){
-            Ii = 2 * numNodesCoarse + i;
-            ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-            p_ = val;
-            nodesCoarse_[i] -> incrementPressure(p_);
-        };
+//         for (int i = 0; i<numNodesCoarse; i++){
+//             Ii = 2 * numNodesCoarse + i;
+//             ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//             p_ = val;
+//             nodesCoarse_[i] -> incrementPressure(p_);
+//         };
         
-        for (int i = 0; i < numNodesFine; ++i){
-            Ii = 3 * numNodesCoarse + 2 * i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            norm += val*val;
-            nodesFine_[i] -> incrementVelocity(0,u_[0]);
+//         for (int i = 0; i < numNodesFine; ++i){
+//             Ii = 3 * numNodesCoarse + 2 * i;
+//             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//             u_[0] = val;
+//             norm += val*val;
+//             nodesFine_[i] -> incrementVelocity(0,u_[0]);
             
-            Ii = 3 * numNodesCoarse + 2 * i + 1;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[1] = val;
-            norm += val*val;
-            nodesFine_[i] -> incrementVelocity(1,u_[1]);
-        };
+//             Ii = 3 * numNodesCoarse + 2 * i + 1;
+//             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//             u_[1] = val;
+//             norm += val*val;
+//             nodesFine_[i] -> incrementVelocity(1,u_[1]);
+//         };
         
-        for (int i = 0; i<numNodesFine; i++){
-            Ii = 3 * numNodesCoarse + 2 * numNodesFine + i;
-            ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-            p_ = val;
-            nodesFine_[i] -> incrementPressure(p_);
-        };
+//         for (int i = 0; i<numNodesFine; i++){
+//             Ii = 3 * numNodesCoarse + 2 * numNodesFine + i;
+//             ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//             p_ = val;
+//             nodesFine_[i] -> incrementPressure(p_);
+//         };
         
-        for (int i = 0; i < numNodesGlueZoneFine; ++i){
-            Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[0] = val;
-            nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
+//         for (int i = 0; i < numNodesGlueZoneFine; ++i){
+//             Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i;
+//             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//             u_[0] = val;
+//             nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
             
-            Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i + 1;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-            u_[1] = val;
-            nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(1,u_[1]);
+//             Ii = 3 * numNodesCoarse + 3 * numNodesFine + 2 * i + 1;
+//             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//             u_[1] = val;
+//             nodesFine_[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(1,u_[1]);
             
-                // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
-        };
+//                 // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
+//         };
         
-        //Computes the solution vector norm
-        ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+//         //Computes the solution vector norm
+//         ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
             
-        boost::posix_time::ptime t2 =
-            boost::posix_time::microsec_clock::local_time();
+//         boost::posix_time::ptime t2 =
+//             boost::posix_time::microsec_clock::local_time();
         
-        if(rank == 0){
-            boost::posix_time::time_duration diff = t2 - t1;
+//         if(rank == 0){
+//             boost::posix_time::time_duration diff = t2 - t1;
             
-            std::cout<<"Iteration = " << inewton << " (" << iterations <<  
-                ")  Du Norm = " << std::scientific << sqrt(norm) 
-                     << " " << val << 
-                "  Time (s) = " << std::fixed << 
-                diff.total_milliseconds()/1000. << std::endl;
-        };
+//             std::cout<<"Iteration = " << inewton << " (" << iterations <<  
+//                 ")  Du Norm = " << std::scientific << sqrt(norm) 
+//                      << " " << val << 
+//                 "  Time (s) = " << std::fixed << 
+//                 diff.total_milliseconds()/1000. << std::endl;
+//         };
         
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
+//         ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
+//         ierr = VecDestroy(&b); CHKERRQ(ierr);
+//         ierr = VecDestroy(&u); CHKERRQ(ierr);
+//         ierr = VecDestroy(&All); CHKERRQ(ierr);
+//         ierr = MatDestroy(&A); CHKERRQ(ierr);
         
-        if(val <= tolerance){
-            break;            
-        };          
+//         if(val <= tolerance){
+//             break;            
+//         };          
         
         //Updates SUPG Parameter
         // for (int i = 0; i < numElemFine; i++){

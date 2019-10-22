@@ -18,7 +18,7 @@
 ///--positions, three components of unconstrained vector and strain rate. The---
 ///-fluid-shell coupling is performed by a partitioned loosely coupled scheme.--
 ///-----------------------------------------------------------------------------
-   
+    
 //------------------------------------------------------------------------------
 //---------------------------------Developed by---------------------------------
 //-------Jeferson Wilian Dossa Fernandes and Rodolfo Andre Kuche Sanches--------
@@ -597,7 +597,7 @@ int main(int argc, char **args) {
 
        
      arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
-     arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 
+     // arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 
      arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1); 
           
      // 
