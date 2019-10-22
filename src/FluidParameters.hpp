@@ -48,7 +48,7 @@ public:
     void setFieldForce(double* ff){fieldForce = ff;}
 
     void setArlequinOperatorConstants(double& k_1, double& k_2){k1 = k_1; k2 = k_2;}
-
+    void setTimeInstant(int& it){timeInstant = it;}
 
 
     double& getTimeStep() {return timeStepSize;}
@@ -60,6 +60,8 @@ public:
     double* &getFieldForce() {return fieldForce;}
     double& getArlequinK1() {return k1;}
     double& getArlequinK2() {return k2;}
+    double& getPi() {return pi;}
+    int& getTimeInstant() {return timeInstant;}
 
 private:
     double viscosity;
@@ -71,7 +73,9 @@ private:
     double gamma;
     double* fieldForce;
     double k1, k2;
-    
+    double pi = M_PI;
+
+    int timeInstant;
 };
 
 
