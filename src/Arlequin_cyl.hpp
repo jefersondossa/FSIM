@@ -16,7 +16,6 @@
 
 #include "Fluid.hpp"
 #include "Glue.hpp"
-#include "base64.hpp"
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -41,6 +40,8 @@ public:
     /// Defines the class Glue locally
     typedef Glue<DIM>                      GlueZone;
 
+    typedef FluidParameters<DIM> Parameters;
+
     FluidMesh coarseModel, fineModel;
 
     std::vector<Nodes *>     nodesCoarse_;
@@ -48,8 +49,6 @@ public:
     std::vector<Nodes *>     nodesLagrangeFine_;
     std::vector<Nodes *>     nodesLagrangeCoarse_;
 
-
-    std::vector<Elements *>*  elementsCoarseTest_;
     std::vector<Elements *>  elementsCoarse_;
     std::vector<Elements *>  elementsFine_;
     std::vector<GlueZone *>  glueZoneFine_;
@@ -79,6 +78,8 @@ private:
     double dTime;
     int rank;
     int iTimeStep;
+
+    Parameters *parametersCoarse, *parametersFine;
 
     std::pair<idx_t*,idx_t*> domDecompCoarse;//Coarse Model Domain Decomposition
     std::pair<idx_t*,idx_t*> domDecompFine;  //Fine Model Domain Decomposition
@@ -1420,9 +1421,6 @@ void Arlequin<2>::printResults(int step) {
         std::string b;
         std::ostringstream a;
         a << x(0) << " " << x(1) << " " << 0.0 << " ";
-        b = a.str();
-        std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
-        //output_v << res;
     };
     output_v << "      </DataArray>" << std::endl
              << "    </Points>" << std::endl;
@@ -1624,19 +1622,9 @@ void Arlequin<2>::printResults(int step) {
                  << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
         for (int i=0; i<numElemCoarse; i++){
             output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
-
-            // std::string b;
-            // std::ostringstream a;
-            // double jac = elementsCoarse_[i] -> getJacobian();
-            // int int32 = 8;
-            // a << int32 << jac<< " ";
-            // b = a.str();
-            // std::string res = base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length()) + base64_encode(reinterpret_cast<const unsigned char*>(b.c_str()), b.length());
-            // output_v << res;
         };
         output_v << "      </DataArray> " << std::endl;
     }
-    // std::string lala = base64_decode("IAAAAA==CAAAABAAAAAYAAAAIAAAACgAAAAwAAAAOAAAAEAAAAA=");
 
 
     // std::cout << lala << std::endl;
@@ -1994,8 +1982,8 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
         nodesFine_[i] -> setPreviousCoordinates(1,xn(1));
     }
 
-
-
+    parametersFine = &fineModel.fluidParameters;
+    parametersCoarse = &coarseModel.fluidParameters;
 
 
 
@@ -3127,14 +3115,8 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         //     }
         // }
            
-        
-        for (int i=0; i<numElemFine; i++){
-            elementsFine_[i] -> setTimeStepCounter(iTimeStep);
-        };
-        for (int i=0; i<numElemCoarse; i++){
-            elementsCoarse_[i] -> setTimeStepCounter(iTimeStep);
-        };
-
+        parametersCoarse -> setTimeInstant(iTimeStep);
+        parametersFine -> setTimeInstant(iTimeStep);
 
         if (rank == 0) {std::cout << "----------------------------" 
                                   << " TIME STEP = "
@@ -3184,12 +3166,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             accel[1] *= (gamma - 1.) / gamma;
             
             nodesFine_[i] -> setAcceleration(accel);
-
-            lag[0] = nodesFine_[i] -> getLagrangeMultiplier(0);
-            lag[1] = nodesFine_[i] -> getLagrangeMultiplier(1);
-
-            nodesFine_[i] -> setPreviousLagrangeMultiplier(0,lag[0]);
-            nodesFine_[i] -> setPreviousLagrangeMultiplier(1,lag[1]);
         };
 
         //STARTS NEWTON-RAPHSON
@@ -3232,89 +3208,84 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 if (domDecompCoarse.first[jel] == rank) {
                     
                     //Compute Element matrix
-                    elementsCoarse_[jel] -> getTransientNavierStokes();
+                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+                    localMV = elementsCoarse_[jel] -> getTransientNavierStokes();
         
-                    typename Elements::LocalMatrix Ajac;
-                    typename Elements::LocalVector Rhs;
                     typename Elements::Connectivity connec;
-                    
-                    //Gets element connectivity, jacobian and rhs 
                     connec = elementsCoarse_[jel] -> getConnectivity();
-                    Ajac = elementsCoarse_[jel] -> getJacNRMatrix();
-                    Rhs = elementsCoarse_[jel] -> getRhsVector();
                     
                     //Disperse local contributions into the global matrix
                     for (int i=0; i<6; i++){
                         for (int j=0; j<6; j++){
                             
-                            if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                             };
-                            if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                             };
 
                             //Matrix Q and Qt
-                            if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                                 int dof_i = 2 * numNodesCoarse + connec(i);
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+i,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                             };
                         };                  
                         //Rhs vector
-                        if (fabs(Rhs(2*i  )) >= 1.e-15){
+                        if (fabs(localMV.second(2*i  )) >= 1.e-15){
                             int dof_i = 2 * connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(2*i+1)) >= 1.e-15){
+                        if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                             int dof_i = 2 * connec(i) + 1;
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(12+i)) >= 1.e-15){
+                        if (fabs(localMV.second(12+i)) >= 1.e-15){
                             int dof_i = 2 * numNodesCoarse + connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                         };
                     };
                 };
@@ -3326,89 +3297,84 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 if (domDecompFine.first[jel] == rank) {
                     
                     //Compute Element matrix
-                    elementsFine_[jel] -> getTransientNavierStokes();
+                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+                    localMV = elementsFine_[jel] -> getTransientNavierStokes();                    
                     
-                    typename Elements::LocalMatrix Ajac;
-                    typename Elements::LocalVector Rhs;
                     typename Elements::Connectivity connec;
-                    
-                    //Gets element connectivity, jacobian and rhs 
                     connec = elementsFine_[jel] -> getConnectivity();
-                    Ajac = elementsFine_[jel] -> getJacNRMatrix();
-                    Rhs = elementsFine_[jel] -> getRhsVector();              
-
+                    
                     //Disperse local contributions into the global matrix
                     for (int i=0; i<6; i++){
                         for (int j=0; j<6; j++){
-                            if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                             };
 
                             //Matrix Q and Qt
-                            if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+i,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                             };
                         };     
                         ///Rhs vector
-                        if (fabs(Rhs(2*i  )) >= 1.e-15){
+                        if (fabs(localMV.second(2*i  )) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(2*i+1)) >= 1.e-15){
+                        if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(12+i)) >= 1.e-15){
+                        if (fabs(localMV.second(12+i)) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                         };
                     }; 
                 };                
@@ -4513,96 +4479,91 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             //------------------BEGIN OF LINEAR SYSTEM ASSEMBLY-----------------
             //------------------------------------------------------------------
 
-                        //Coarse mesh
+            //Coarse mesh
             
             for (int jel = 0; jel < numElemCoarse; jel++){   
                 
                 if (domDecompCoarse.first[jel] == rank) {
                     
                     //Compute Element matrix
-                    elementsCoarse_[jel] -> getTransientNavierStokes();
+                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+                    localMV = elementsCoarse_[jel] -> getTransientNavierStokes();
         
-                    typename Elements::LocalMatrix Ajac;
-                    typename Elements::LocalVector Rhs;
                     typename Elements::Connectivity connec;
-                    
-                    //Gets element connectivity, jacobian and rhs 
                     connec = elementsCoarse_[jel] -> getConnectivity();
-                    Ajac = elementsCoarse_[jel] -> getJacNRMatrix();
-                    Rhs = elementsCoarse_[jel] -> getRhsVector();
                     
                     //Disperse local contributions into the global matrix
                     for (int i=0; i<6; i++){
                         for (int j=0; j<6; j++){
                             
-                            if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                             };
-                            if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                             };
 
                             //Matrix Q and Qt
-                            if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                                 int dof_i = 2 * connec(i);
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                                 int dof_i = 2 * connec(i) + 1;
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                                 int dof_i = 2 * numNodesCoarse + connec(i);
                                 int dof_j = 2 * numNodesCoarse + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+i,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                             };
                         };                  
                         //Rhs vector
-                        if (fabs(Rhs(2*i  )) >= 1.e-15){
+                        if (fabs(localMV.second(2*i  )) >= 1.e-15){
                             int dof_i = 2 * connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(2*i+1)) >= 1.e-15){
+                        if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                             int dof_i = 2 * connec(i) + 1;
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(12+i)) >= 1.e-15){
+                        if (fabs(localMV.second(12+i)) >= 1.e-15){
                             int dof_i = 2 * numNodesCoarse + connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                         };
                     };
                 };
@@ -4614,89 +4575,84 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 if (domDecompFine.first[jel] == rank) {
                     
                     //Compute Element matrix
-                    elementsFine_[jel] -> getTransientNavierStokes();
-                    
-                    typename Elements::LocalMatrix Ajac;
-                    typename Elements::LocalVector Rhs;
+                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+                    localMV = elementsFine_[jel] -> getTransientNavierStokes();
+        
                     typename Elements::Connectivity connec;
-                    
-                    //Gets element connectivity, jacobian and rhs 
-                    connec = elementsFine_[jel] -> getConnectivity();
-                    Ajac = elementsFine_[jel] -> getJacNRMatrix();
-                    Rhs = elementsFine_[jel] -> getRhsVector();              
+                    connec = elementsFine_[jel] -> getConnectivity();          
 
                     //Disperse local contributions into the global matrix
                     for (int i=0; i<6; i++){
                         for (int j=0; j<6; j++){
-                            if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                                 int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
                                 int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,2*j+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                             };
 
                             //Matrix Q and Qt
-                            if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i  ,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i);
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i  ),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                             };
 
-                            if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(2*i+1,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+                            if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+j,2*i+1),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                             };
                             
-                            if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                            if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                                 int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
                                 int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
-                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac(12+i,12+j),ADD_VALUES);
+                                ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                             };
                         };     
                         ///Rhs vector
-                        if (fabs(Rhs(2*i  )) >= 1.e-15){
+                        if (fabs(localMV.second(2*i  )) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(2*i+1)) >= 1.e-15){
+                        if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                         };
 
-                        if (fabs(Rhs(12+i)) >= 1.e-15){
+                        if (fabs(localMV.second(12+i)) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
-                            ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),ADD_VALUES);
+                            ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                         };
                     }; 
                 };                
@@ -5599,250 +5555,184 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         //------------------------------------------------------------------
         
         //Coarse mesh
-        
+            
         for (int jel = 0; jel < numElemCoarse; jel++){   
             
             if (domDecompCoarse.first[jel] == rank) {
                 
                 //Compute Element matrix
-                elementsCoarse_[jel] -> getTransientNavierStokes();
-                
-                typename Elements::LocalMatrix Ajac;
-                typename Elements::LocalVector Rhs;
+                std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+                localMV = elementsCoarse_[jel] -> getTransientNavierStokes();
+    
                 typename Elements::Connectivity connec;
-                
-                //Gets element connectivity, jacobian and rhs 
                 connec = elementsCoarse_[jel] -> getConnectivity();
-                Ajac = elementsCoarse_[jel] -> getJacNRMatrix();
-                Rhs = elementsCoarse_[jel] -> getRhsVector();
                 
                 //Disperse local contributions into the global matrix
                 for (int i=0; i<6; i++){
                     for (int j=0; j<6; j++){
                         
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
+                        if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
                             int dof_i = 2 * connec(i);
                             int dof_j = 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i  ,2*j  ),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                         };
-                        if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
+                        if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
                             int dof_i = 2 * connec(i) + 1;
                             int dof_j = 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i+1,2*j  ),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
+
+                        if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
                             int dof_i = 2 * connec(i);
                             int dof_j = 2 * connec(j) + 1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i  ,2*j+1),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
+
+                        if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
                             int dof_i = 2 * connec(i) + 1;
                             int dof_j = 2 * connec(j) + 1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i+1,2*j+1),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                         };
-                        
+
                         //Matrix Q and Qt
-                        if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                        if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                             int dof_i = 2 * connec(i);
                             int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &Ajac(2*i  ,12+j),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                         };
                         
-                        if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+                        if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                             int dof_i = 2 * connec(i);
                             int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,    
-                                                &Ajac(12+j,2*i  ),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
+
+                        if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
                             int dof_i = 2 * connec(i) + 1;
                             int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &Ajac(2*i+1,12+j),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
+
+                        if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
                             int dof_i = 2 * connec(i) + 1;
                             int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,    
-                                                &Ajac(12+j,2*i+1),
-                                                ADD_VALUES);
-                            };
-                        
-                        if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
+                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
+                        };
+
+                        if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
                             int dof_i = 2 * numNodesCoarse + connec(i);
                             int dof_j = 2 * numNodesCoarse + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,    
-                                                &Ajac(12+i,12+j),
-                                                ADD_VALUES);
+                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                         };
                     };                  
                     //Rhs vector
-                    if (fabs(Rhs(2*i  )) >= 1.e-15){
+                    if (fabs(localMV.second(2*i  )) >= 1.e-15){
                         int dof_i = 2 * connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
-                                            ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                     };
-                    
-                    if (fabs(Rhs(2*i+1)) >= 1.e-15){
+
+                    if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                         int dof_i = 2 * connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
-                                            ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                     };
-                    
-                    if (fabs(Rhs(12+i)) >= 1.e-15){
+
+                    if (fabs(localMV.second(12+i)) >= 1.e-15){
                         int dof_i = 2 * numNodesCoarse + connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),
-                                            ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                     };
                 };
             };
         };
-        
+
         //Fine mesh
         for (int jel = 0; jel < numElemFine; jel++){   
             
             if (domDecompFine.first[jel] == rank) {
                 
                 //Compute Element matrix
-                elementsFine_[jel] -> getTransientNavierStokes();
-                
-                typename Elements::LocalMatrix Ajac;
-                typename Elements::LocalVector Rhs;
+                std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
+                localMV = elementsFine_[jel] -> getTransientNavierStokes();
+    
                 typename Elements::Connectivity connec;
-                
-                //Gets element connectivity, jacobian and rhs 
-                connec = elementsFine_[jel] -> getConnectivity();
-                Ajac = elementsFine_[jel] -> getJacNRMatrix();
-                Rhs = elementsFine_[jel] -> getRhsVector();              
-                
+                connec = elementsFine_[jel] -> getConnectivity();          
+
                 //Disperse local contributions into the global matrix
                 for (int i=0; i<6; i++){
                     for (int j=0; j<6; j++){
-                        if (fabs(Ajac(2*i  ,2*j  )) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i  ,2*j  ),
-                                                ADD_VALUES);
+                        if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 2 * connec(i);
+                            int dof_j = 3*numNodesCoarse + 2 * connec(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j  ),ADD_VALUES);
                         };
                         
-                        if (fabs(Ajac(2*i+1,2*j  )) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse +
-                                2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 2 * connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i+1,2*j  ),
-                                                ADD_VALUES);
+                        if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
+                            int dof_j = 3*numNodesCoarse + 2 * connec(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j  ),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(2*i  ,2*j+1)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * connec(j) + 1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i  ,2*j+1),
-                                                ADD_VALUES);
+
+                        if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 2 * connec(i);
+                            int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,2*j+1),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(2*i+1,2*j+1)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 
-                                2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * connec(j) + 1;
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    
-                                                &Ajac(2*i+1,2*j+1),
-                                                ADD_VALUES);
+
+                        if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
+                            int dof_i = 3*numNodesCoarse + 2 * connec(i) +1;
+                            int dof_j = 3*numNodesCoarse + 2 * connec(j) +1;
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,2*j+1),ADD_VALUES);
                         };
-                        
+
                         //Matrix Q and Qt
-                        if (fabs(Ajac(2*i  ,12+j)) >= 1.e-15){
+                        if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &Ajac(2*i  ,12+j),
-                                                ADD_VALUES);
+                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i  ,12+j),ADD_VALUES);
                         };
-                        
-                        if (fabs(Ajac(12+j,2*i  )) >= 1.e-15){
+
+                        if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
                             int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,  
-                                                &Ajac(12+j,2*i  ),
-                                                ADD_VALUES);
+                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i  ),ADD_VALUES);
+                        };
+
+                        if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
+                            int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&localMV.first(2*i+1,12+j),ADD_VALUES);
                         };
                         
-                        if (fabs(Ajac(2*i+1,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 
-                                2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                                &Ajac(2*i+1,12+j),
-                                                ADD_VALUES);
+                        if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
+                            int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
+                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+j,2*i+1),ADD_VALUES);
                         };
                         
-                        if (fabs(Ajac(12+j,2*i+1)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 
-                                2 * connec(i) + 1;
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,  
-                                                &Ajac(12+j,2*i+1),
-                                                ADD_VALUES);
-                        };
-                        
-                        if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
-                            int dof_i = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(i);
-                            int dof_j = 3 * numNodesCoarse + 
-                                2 * numNodesFine + connec(j);
-                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,  
-                                                &Ajac(12+i,12+j),
-                                                ADD_VALUES);
+                        if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
+                            int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
+                            int dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec(j);
+                            ierr = MatSetValues(A,1,&dof_j,1,&dof_i,&localMV.first(12+i,12+j),ADD_VALUES);
                         };
                     };     
                     ///Rhs vector
-                    if (fabs(Rhs(2*i  )) >= 1.e-15){
+                    if (fabs(localMV.second(2*i  )) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i  ),
-                                            ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                     };
-                    
-                    if (fabs(Rhs(2*i+1)) >= 1.e-15){
+
+                    if (fabs(localMV.second(2*i+1)) >= 1.e-15){
                         int dof_i = 3 * numNodesCoarse + 2 * connec(i) + 1;
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(2*i+1),
-                                            ADD_VALUES);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                     };
-                    
-                    if (fabs(Rhs(12+i)) >= 1.e-15){
-                        int dof_i = 3 * numNodesCoarse + 2 * numNodesFine +
-                            connec(i);
-                        ierr = VecSetValues(b,1,&dof_i,&Rhs(12+i),
-                                            ADD_VALUES);
+
+                    if (fabs(localMV.second(12+i)) >= 1.e-15){
+                        int dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec(i);
+                        ierr = VecSetValues(b,1,&dof_i,&localMV.second(12+i),ADD_VALUES);
                     };
                 }; 
             };                
         };
-        
-        
+                
         //Lagrange Multipliers
         for (int l=0; l< numElemGlueZoneFine; l++){
             

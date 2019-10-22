@@ -55,17 +55,13 @@ private:
     double           constrainValueLaplace[3];//Nodal prescribed value
 
     VecLocD          velocity_;               //Nodal velocity
-    VecLocD          velocityGlobal_;               //Nodal velocity
     VecLocD          previousVelocity_;       //Previous time step velocity
 
     VecLocD          acceleration_;           //Nodal acceleration
-    VecLocD          accelerationGlobal_;           //Nodal acceleration
     VecLocD          previousAcceleration_;   //Previous time step acceleration
 
     double           pressure_;               //Nodal pressure 
-    double           previousPressure_;       //Previous time step pressure
 
-    double           divergent_;              //Velocity divergent
     double           vorticity_;              //Vorticity
 
     VecLocD          meshVelocity_;           //Nodal mesh velocity
@@ -79,13 +75,8 @@ private:
     VecLocD          velArlequin_;            //Glue zone velocity
 
     VecLocD          lagMultiplier_;          //Nodal Lagrange Multiplier value
-    VecLocD          previousLagMultiplier_;          //Nodal Lagrange Multiplier value
     double           weightFunction_;         //Nodal Energy Weight Function
     double           distGlueZone;            //Signaled distance to glue zone
-
-    //Potential problem
-    VecLocD          gradient_;               //Potential gradient
-    double           potential_;              //Potential value
 
     std::vector<int> invIncidence;
     
@@ -100,14 +91,13 @@ public:
 
         constrainType[0] = 0;    constrainType[1] = 0;    constrainType[2] = 0;
         constrainValue[0] = 0;   constrainValue[1] = 0;   constrainValue[2] = 0;
-        pressure_ = 0.;          previousPressure_ = 0.;  divergent_ = 0.;
+        pressure_ = 0.;          
         vorticity_ = 0.;
         elemCorresp = 0;         
         velocity_.clear();   previousVelocity_.clear();   acceleration_.clear();
-        previousAcceleration_.clear(); xsiCorresp.clear(); gradient_.clear();
-        potential_ = 0.;     lagMultiplier_.clear();      weightFunction_ = 0.;
-        distGlueZone = 0.;  velocityGlobal_.clear(); accelerationGlobal_.clear();
-        previousLagMultiplier_.clear();
+        previousAcceleration_.clear(); xsiCorresp.clear();
+        lagMultiplier_.clear();      weightFunction_ = 0.;
+        distGlueZone = 0.;
 
         constrainTypeLaplace[0] = 0;    constrainTypeLaplace[1] = 0;
         constrainTypeLaplace[2] = 0;    constrainValueLaplace[0] = 0;
@@ -226,28 +216,16 @@ public:
     /// @return node velocity vector
     double getVelocity(int dir) {return velocity_(dir);}
 
-    /// Returns the node velocity vector
-    /// @return node velocity vector
-    double getVelocityGlobal(int dir) {return velocityGlobal_(dir);}
-
     /// Returns the node previous time step velocity vector
     /// @return node previous time step velocity vector
     double getPreviousVelocity(int dir) {return previousVelocity_(dir);}
-
-    /// Sets the velocity divergent at the node
-    /// @param double velocity divergent
-    void setVelocityDivergent(double div) {divergent_ = div;}
-
-    /// Returns the node velocity divergent
-    /// @return node velocity divergent
-    double getVelocityDivergent() {return divergent_;}
 
     /// Sets the vorticity at the node
     /// @param double vorticity
     void setVorticity(double div) {vorticity_ = div;}
 
     /// Returns the nodal vorticity
-    /// @return node velocity divergent
+    /// @return node vorticity
     double getVorticity() {return vorticity_;}
 
     /// Clears the nodal vorticity
@@ -280,10 +258,6 @@ public:
     /// @return acceleration vector
     double getAcceleration(int dir) {return acceleration_(dir);}
 
-    /// Gets the acceleration vector
-    /// @return acceleration vector
-    double getAccelerationGlobal(int dir) {return accelerationGlobal_(dir);}
-
     /// Gets the previous time step acceleration vector
     /// @return previous time step acceleration vector
     double getPreviousAcceleration(int dir) {return previousAcceleration_(dir);}
@@ -300,14 +274,6 @@ public:
     /// Gets the nodal pressure value
     /// @return nodal pressure value
     double getPressure() {return pressure_;};
-
-    /// Sets the previous time step nodal pressure
-    /// @param double previous time step nodal pressure
-    void setPreviousPressure(double p);
-
-    /// Gets the previous time step nodal pressure
-    /// @return previous time step nodal pressure
-    double getPreviousPressure() {return previousPressure_;}
 
     //.........................Mesh Velocity functions..........................
     /// Sets the node mesh velocity
@@ -376,9 +342,6 @@ public:
     void setLagrangeMultiplier(int dir, double lMult){
         lagMultiplier_(dir) = lMult;};
 
-    void setPreviousLagrangeMultiplier(int dir, double lMult){
-        previousLagMultiplier_(dir) = lMult;};
-
     /// Increment the Lagrange Multiplier vector
     /// @param int direction @param double increment value
     void incrementLagrangeMultiplier(int dir, double lMult){
@@ -387,9 +350,6 @@ public:
     /// Gets Lagrange Multiplier component value
     /// @param int direction @return component value
     double getLagrangeMultiplier(int dir) {return lagMultiplier_(dir);};
-    /// Gets Lagrange Multiplier component value
-    /// @param int direction @return component value
-    double getPreviousLagrangeMultiplier(int dir) {return previousLagMultiplier_(dir);};
 
     /// Sets the nodal energy weight function value
     /// @param double weight function value
@@ -424,27 +384,6 @@ public:
     /// @return signaled distance value
     double getDistFunction(){return distGlueZone;};
 
-    //.......................Potential problem functions........................
-    /// Sets the potential gradient component value
-    /// @param int direction @param double potential gradient component value
-    void setGradientComponent(double val, int dir) {gradient_(dir) = val;};
-
-    /// Gets the potential gradient component value
-    /// @param int direction @return potential gradient component value
-    double getGradientComponent(int dir) {return gradient_(dir);};
-
-    /// Sets the nodal potential value
-    /// @param double potential 
-    void setPotential(double p) {potential_ = p;};
-
-    /// Increments the nodal potential value
-    /// @param double potential increment value
-    void incrementPotential(double p) {potential_ += p;};
-
-    /// Gets the nodal potential value
-    /// @return potential value
-    double getPotential() {return potential_;};
-
 };
 
 //------------------------------------------------------------------------------
@@ -456,7 +395,7 @@ public:
 //------------------------------------------------------------------------------
 template<>
 void Node<2>::clearVariables(){
-    pressure_ = 0.;          previousPressure_ = 0.;  divergent_ = 0.;
+    pressure_ = 0.;   
     elemCorresp = 0;
 
     if (constrainType[0] != 1){
@@ -473,53 +412,8 @@ void Node<2>::clearVariables(){
         previousAcceleration_(1) = 0.;
     };
     
-    xsiCorresp.clear();    gradient_.clear();
-    potential_ = 0.;       lagMultiplier_.clear();      weightFunction_ = 0.;
-    previousLagMultiplier_.clear();
-    
-    return;
-};
-
-//------------------------------------------------------------------------------
-//----------------------------NODAL VELOCITY VALUES-----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setVelocityGlobal(double *u){
-    //Sets Velocity value
-    velocityGlobal_(0) = u[0];
-    velocityGlobal_(1) = u[1]; 
-    return;
-};
-
-template<>
-void Node<3>::clearVariables(){
-
-    pressure_ = 0.;          previousPressure_ = 0.;  divergent_ = 0.;
-    elemCorresp = 0;
-
-    if (constrainType[0] != 1){
-        velocity_(0) = 0.;   
-        previousVelocity_(0) = 0.;   
-        acceleration_(0) = 0.;
-        previousAcceleration_(0) = 0.;
-    };
-
-    if (constrainType[1] != 1){
-        velocity_(1) = 0.;   
-        previousVelocity_(1) = 0.;   
-        acceleration_(1) = 0.;
-        previousAcceleration_(1) = 0.;
-    };
-
-    if (constrainType[2] != 1){
-        velocity_(2) = 0.;   
-        previousVelocity_(2) = 0.;   
-        acceleration_(2) = 0.;
-        previousAcceleration_(2) = 0.;
-    };
-    
-    xsiCorresp.clear();    gradient_.clear();
-    potential_ = 0.;       lagMultiplier_.clear();     weightFunction_ = 0.;
+    xsiCorresp.clear();
+    lagMultiplier_.clear();      weightFunction_ = 0.;
     
     return;
 };
@@ -535,15 +429,6 @@ void Node<2>::setVelocity(double *u){
     return;
 };
 
-template<>
-void Node<3>::setVelocity(double *u){
-    //Sets Velocity value
-    velocity_(0) = u[0];
-    velocity_(1) = u[1]; 
-    velocity_(2) = u[2]; 
-    return;
-};
-
 //------------------------------------------------------------------------------
 //-----------------------INCREMENT NODAL VELOCITY VALUES------------------------
 //------------------------------------------------------------------------------
@@ -554,13 +439,6 @@ void Node<2>::incrementVelocity(int dir, double u){
     return;
 };
 
-template<>
-void Node<3>::incrementVelocity(int dir, double u){
-    //All element nodes
-    velocity_(dir) += u;
-
-    return;
-};
 
 //------------------------------------------------------------------------------
 //-----------------------INCREMENT NODAL VELOCITY VALUES------------------------
@@ -569,14 +447,6 @@ template<>
 void Node<2>::incrementAcceleration(int dir, double u){
     //All element nodes
     acceleration_(dir) += u;
-    return;
-};
-
-template<>
-void Node<3>::incrementAcceleration(int dir, double u){
-    //All element nodes
-    acceleration_(dir) += u;
-
     return;
 };
 
@@ -590,13 +460,6 @@ void Node<2>::incrementCoordinate(int dir, double u){
     return;
 };
 
-template<>
-void Node<3>::incrementCoordinate(int dir, double u){
-    //All element nodes
-    coord_(dir) += u;
-
-    return;
-};
 
 //------------------------------------------------------------------------------
 //---------------------SETS PREVIOUS NODAL VELOCITY VALUES----------------------
@@ -618,43 +481,12 @@ void Node<2>::setPressure(double p){
     return;
 };
 
-template<>
-void Node<3>::setPressure(double p){
-    //Only element nodes 0, 1, 2 and 3
-    pressure_ = p; 
-    return;
-};
-
-//------------------------------------------------------------------------------
-//----------------------------NODAL PRESSURE VALUES-----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setPreviousPressure(double p){
-    //Only element nodes 0, 1 and 2  
-    previousPressure_ = p; 
-    return;
-};
-
-template<>
-void Node<3>::setPreviousPressure(double p){
-    //Only element nodes 0, 1, 2 and 3
-    previousPressure_ = p; 
-    return;
-};
-
 //------------------------------------------------------------------------------
 //-----------------------INCREMENT NODAL PRESSURE VALUES------------------------
 //------------------------------------------------------------------------------
 template<>
 void Node<2>::incrementPressure(double p){
     //Only element nodes 0, 1 and 2  
-    pressure_ += p; 
-    return;
-};
-
-template<>
-void Node<3>::incrementPressure(double p){
-    //Only element nodes 0, 1, 2 and 3
     pressure_ += p; 
     return;
 };
@@ -670,15 +502,6 @@ void Node<2>::setPreviousVelocity(double *u){
     return;
 };
 
-template<>
-void Node<3>::setPreviousVelocity(double *u){
-    //All element nodes
-    previousVelocity_(0) = u[0];
-    previousVelocity_(1) = u[1]; 
-    previousVelocity_(2) = u[2]; 
-    return;
-};
-
 //------------------------------------------------------------------------------
 //--------------------------NODAL ACCELERATION VALUES---------------------------
 //------------------------------------------------------------------------------
@@ -687,26 +510,6 @@ void Node<2>::setAcceleration(double *u){
     //All element nodes
     acceleration_(0) = u[0];
     acceleration_(1) = u[1]; 
-    return;
-};
-
-template<>
-void Node<3>::setAcceleration(double *u){
-    //All element nodes
-    acceleration_(0) = u[0];
-    acceleration_(1) = u[1]; 
-    acceleration_(2) = u[2]; 
-    return;
-};
-
-//------------------------------------------------------------------------------
-//--------------------------NODAL ACCELERATION VALUES---------------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setAccelerationGlobal(double *u){
-    //All element nodes
-    accelerationGlobal_(0) = u[0];
-    accelerationGlobal_(1) = u[1]; 
     return;
 };
 
@@ -721,16 +524,6 @@ void Node<2>::setPreviousAcceleration(double *u){
     return;
 };
 
-template<>
-void Node<3>::setPreviousAcceleration(double *u){
-    //All element nodes
-    previousAcceleration_(0) = u[0];
-    previousAcceleration_(1) = u[1]; 
-    previousAcceleration_(2) = u[2]; 
-    return;
-};
-
-
 //------------------------------------------------------------------------------
 //----------------------------NODAL VELOCITY VALUES-----------------------------
 //------------------------------------------------------------------------------
@@ -742,15 +535,6 @@ void Node<2>::setMeshVelocity(double *u){
 
     meshVelocity_(0) = u[0];
     meshVelocity_(1) = u[1]; 
-    return;
-};
-
-template<>
-void Node<3>::setMeshVelocity(double *u){
-    //All element nodes
-    meshVelocity_(0) = u[0];
-    meshVelocity_(1) = u[1]; 
-    meshVelocity_(2) = u[2]; 
     return;
 };
 

@@ -93,7 +93,7 @@ private:
     LocalVector   lagrMultVector;
     double        x_, y_;
     double        u_, v_, p_;     //Interpolated velocity and pressure
-    double        uPrev_, vPrev_, pPrev_;
+    double        uPrev_, vPrev_;
     double        ax_, ay_, axprev_, ayprev_;      //Interpolated acceleration
     double        dax_dx, dax_dy, day_dx, day_dy;      //Interpolated acceleration
     double        umesh_, vmesh_; //Interpolated mesh velocity
@@ -105,7 +105,6 @@ private:
     double        dp_dxx, dp_dxy, dp_dyx, dp_dyy;
     double        dumesh_dx, dumesh_dy, dvmesh_dx, dvmesh_dy;//Interpolated mesh velocity derivatives
     double        lagMx_,lagMy_;
-    double        lagMxPrev_,lagMyPrev_;
     double        dLx_dx, dLx_dy, dLy_dx, dLy_dy;
     double        dLx_dxx, dLx_dxy, dLx_dyy, dLy_dxx, dLy_dxy, dLy_dyy;
     LocalVector   rhsVector;          //RHS vector of Newton's method
@@ -123,11 +122,6 @@ private:
     double        perimeter;
     double        dragForce;
     double        liftForce;
-    LocalVector   auxMass;
-
-    double pi = M_PI;
-
-    int iTimeStep;
 
     typename NormalQuad::PointWeight    intPointWeightFunction;
     typename SpecialQuad::PointWeight   intPointWeightFunctionSpecial;
@@ -212,9 +206,6 @@ public:
     /// Gets the element connectivity
     /// @return element connectivity
     Connectivity getConnectivity(){return connect_;};
-
-    void setTimeStepCounter(int i){iTimeStep = i;};
-
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
@@ -415,25 +406,25 @@ public:
     //.......................Element vectors and matrices.......................
     /// Compute and store the element matrix for the incompressible flow problem
     /// @param int integration point index
-    void getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_);
-    void getElemMatrixInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_);
+    void getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalMatrix &jacobianNRMatrix);
+    void getElemMatrixInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalMatrix &jacobianNRMatrix);
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
-    void getElemLaplMatrix(double &weight_, ShapeFunctionDerivative &dphi_dx);
+    void getElemLaplMatrix(double &weight_, ShapeFunctionDerivative &dphi_dx, LocalMatrix &jacobianNRMatrix);
 
     /// Sets the boundary conditions for the incompressible flow problem
-    void setBoundaryConditions();
+    void setBoundaryConditions(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
-    void setBoundaryConditionsLaplace();
+    void setBoundaryConditionsLaplace(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector);
 
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
-    void getResidualVector(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_);
-    void getResidualVectorInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_);
+    void getResidualVector(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalVector &rhsVector);
+    void getResidualVectorInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalVector &rhsVector);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
-    void getResidualVectorLaplace();
+    void getResidualVectorLaplace(LocalVector &rhsVector);
 
     /// Gets the Newton-Raphson's jacobian matrix
     /// @return Newton-Raphson's jacobian matrix
@@ -686,16 +677,12 @@ public:
 
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
-    void getTransientNavierStokes();
-    void getTransientNavierStokesInitial();
+    std::pair <LocalMatrix, LocalVector> getTransientNavierStokes();
+    std::pair <LocalMatrix, LocalVector> getTransientNavierStokesInitial();
 
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)
-    void getSteadyLaplace();
-
-    /// Compute the Transient Laplace problem matrices and vectors
-    /// (usually for the mesh moving step)
-    void getTransientLaplace();
+    std::pair <LocalMatrix, LocalVector> getSteadyLaplace();
 
 };
 
@@ -1031,14 +1018,13 @@ void Element<2>::getVelAndDerivatives(ShapeFunctionValue &phi_, ShapeFunctionDer
     u_ = 0.; v_ = 0.;
     x_ = 0.; y_ = 0.;
     ax_ = 0.; ay_ = 0.; axprev_ = 0.; ayprev_ = 0.;
-    uPrev_ = 0.; vPrev_ = 0.; pPrev_ = 0.; 
+    uPrev_ = 0.; vPrev_ = 0.;
     umesh_ = 0.; vmesh_ = 0.;
     p_ = 0.;
     du_dx = 0.; du_dy = 0.; dv_dx = 0.; dv_dy = 0.;
     du_dxx = 0.; du_dyy = 0.; du_dxy = 0.; dv_dxx = 0.; dv_dyy = 0.; dv_dxy = 0.;
     dp_dx = 0.; dp_dy = 0.;
     lagMx_ = 0.; lagMy_ = 0.;
-    lagMxPrev_ = 0.; lagMyPrev_ = 0.;
     dLx_dx = 0.; dLx_dy = 0.; dLy_dx = 0.; dLy_dy = 0.;
     dLx_dxx = 0.; dLx_dxy = 0.; dLx_dyy = 0.; dLy_dxx = 0.; dLy_dxy = 0.; dLy_dyy = 0.;
     dp_dxx = 0.; dp_dxy = 0.; dp_dyx = 0.; dp_dyy = 0.;
@@ -1112,9 +1098,6 @@ void Element<2>::getVelAndDerivatives(ShapeFunctionValue &phi_, ShapeFunctionDer
 
         lagMx_ += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0) * phi_(i);
         lagMy_ += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(1) * phi_(i);
-
-        lagMxPrev_ += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0) * phi_(i);
-        lagMyPrev_ += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(1) * phi_(i);
 
         // dLx_dxx += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0) * ddphi_dx(0,0)(i);
         // dLx_dyy += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0) * ddphi_dx(1,1)(i);
@@ -1627,6 +1610,7 @@ double Element<2>::computeSeparationAngle() {
     //std::cout << "Shear_nodal " << shear_nodal(0) << " " << shear_nodal(1) << " " << shear_nodal(2) << std::endl; 
 
     double theta = 0.;
+    double &pi = parameters.getPi();
 
     if ((shear_nodal(0)/shear_nodal(1) < 0) || (shear_nodal(1)/shear_nodal(2) < 0)){
         double a = 0.5 * (shear_nodal(0) + shear_nodal(2) - 2*shear_nodal(1));
@@ -2088,7 +2072,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
 //----------------------ELEMENT DIFFUSION/VISCOSITY MATRIX----------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_){
+void Element<2>::getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalMatrix &jacobianNRMatrix){
     
     //tSUPG_ = 0.;
     // tPSPG_ = 0.;
@@ -2122,9 +2106,7 @@ void Element<2>::getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFuncti
     double wna_ = alpha_f * intPointWeightFunction(index) + (1. - alpha_f) * intPointWeightFunctionPrev(index);
 
     // if ((wna_ < 0.99) && (model == false) && (index_ == 2144)) std::cout << "IP weight " << " " << index_ << " " << wna_ << " " << intPointWeightFunction(index) << " " << intPointWeightFunctionPrev(index) << std::endl;
- 
-    auxMass.clear();
-    
+     
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
 
@@ -2241,7 +2223,7 @@ void Element<2>::getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFuncti
 //----------------------ELEMENT DIFFUSION/VISCOSITY MATRIX----------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getElemMatrixInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_){
+void Element<2>::getElemMatrixInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalMatrix &jacobianNRMatrix){
     
     tSUPG_ = 0.;
     // tPSPG_ = 0.;
@@ -2264,9 +2246,6 @@ void Element<2>::getElemMatrixInitial(int &index, ShapeFunctionValue &phi_, Shap
 
     double umeshna_ = alpha_f * umesh_ + (1. - alpha_f) * umeshPrev_;
     double vmeshna_ = alpha_f * vmesh_ + (1. - alpha_f) * vmeshPrev_;
-
-
-    auxMass.clear();
     
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
@@ -2336,7 +2315,7 @@ void Element<2>::getElemMatrixInitial(int &index, ShapeFunctionValue &phi_, Shap
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::setBoundaryConditions(){
+void Element<2>::setBoundaryConditions(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector){
 
     for (int i = 0; i < 6; i++){
 
@@ -2375,15 +2354,7 @@ void Element<2>::setBoundaryConditions(){
             rhsVector(2*i+1) *= 1000.e0;
         };
 
-        // if ((model == false) && (fabs(auxMass(2*i  )) <= 1.e-7)){
-        //     for (int j = 0; j < 18; j++){
-        //         jacobianNRMatrix(12+i,j) = 0.;
-        //         jacobianNRMatrix(j,12+i) = 0.;
-        //     };
-        //     jacobianNRMatrix(12+i,12+i) = 1.;
-        //     rhsVector(12+i) =  0.;
-        //     std::cout<< "AUX mass " << index_ << " " << djac_ << std::endl;
-        // }
+        
 
         if ((model == false) && ((*nodes_)[connect_(i)] -> getDistFunction() > 0.3)){
             for (int j = 0; j < 18; j++){
@@ -2460,7 +2431,7 @@ void Element<2>::setBoundaryConditions(){
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::setBoundaryConditionsLaplace(){
+void Element<2>::setBoundaryConditionsLaplace(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector){
 
     for (int i = 0; i < 6; i++){
 
@@ -2539,7 +2510,7 @@ void Element<2>::setBoundaryConditionsLagrangeMultipliers(){
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getResidualVector(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_){
+void Element<2>::getResidualVector(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalVector &rhsVector){
 
     double &dTime_ = parameters.getTimeStep();
     double &visc_ = parameters.getViscosity();
@@ -2647,7 +2618,7 @@ void Element<2>::getResidualVector(int &index, ShapeFunctionValue &phi_, ShapeFu
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getResidualVectorInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_){
+void Element<2>::getResidualVectorInitial(int &index, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, LocalVector &rhsVector){
 
     double &dTime_ = parameters.getTimeStep();
     double &visc_ = parameters.getViscosity();
@@ -2728,7 +2699,7 @@ void Element<2>::getResidualVectorInitial(int &index, ShapeFunctionValue &phi_, 
 //------------------------------------------------------------------------------
 
 template<>
-void Element<2>::getResidualVectorLaplace(){
+void Element<2>::getResidualVectorLaplace(LocalVector &rhsVector){
 
     rhsVector.clear();
     
@@ -2760,68 +2731,19 @@ void Element<2>::getResidualVectorLaplace(){
 //---------------------------ELEMENT LAPLACIAN MATRIX---------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getElemLaplMatrix(double &weight_, ShapeFunctionDerivative &dphi_dx){
+void Element<2>::getElemLaplMatrix(double &weight_, ShapeFunctionDerivative &dphi_dx, LocalMatrix &jacobianNRMatrix){
 
      for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){        
-            laplMatrix(2*i  ,2*j  ) += (dphi_dx(0,i) * dphi_dx(0,j) +
-                                        dphi_dx(1,i) * dphi_dx(1,j)) 
-                * weight_ * djac_ * meshMovingParameter;
-            laplMatrix(2*i+1,2*j+1) += (dphi_dx(0,i) * dphi_dx(0,j) +
-                                        dphi_dx(1,i) * dphi_dx(1,j)) 
-                * weight_ * djac_ * meshMovingParameter;
+            jacobianNRMatrix(2*i  ,2*j  ) += (dphi_dx(0,i) * dphi_dx(0,j) +
+                                              dphi_dx(1,i) * dphi_dx(1,j)) 
+                                        * weight_ * djac_ * meshMovingParameter;
+            jacobianNRMatrix(2*i+1,2*j+1) += (dphi_dx(0,i) * dphi_dx(0,j) +
+                                              dphi_dx(1,i) * dphi_dx(1,j)) 
+                                        * weight_ * djac_ * meshMovingParameter;
         };
     };
      
-    return;
-};
-
-//------------------------------------------------------------------------------
-//-----------------------COMPUTES THE VELOCITY DIVERGENT------------------------
-//------------------------------------------------------------------------------
-template<>
-void Element<2>::computeVelocityDivergent(){
-    
-    ublas::bounded_matrix <double, 2, 6>      int_points;
-    
-    int_points(0,0) = 0.; int_points(1,0) = 0.;
-    int_points(0,1) = 1.; int_points(1,1) = 0.;
-    int_points(0,2) = 0.; int_points(1,2) = 1.;
-    int_points(0,3) = .5; int_points(1,3) = 0.;
-    int_points(0,4) = .5; int_points(1,4) = .5;
-    int_points(0,5) = 0.; int_points(1,5) = .5;
-    
-
-    typename QuadShapeFunction<2>::Coords xsi;
-    ShapeFunction      shapeQuad;
-    ShapeFunctionDerivative dphi_dx;
-    ShapeFunctionValue phi_;
-    DimMatrix ainv_;
-
-    
-    for (int i=0; i<6; i++){
-        
-        xsi(0) = int_points(0,i);
-        xsi(1) = int_points(1,i);
-        
-        //Computes the velocity shape functions
-        shapeQuad.evaluate(xsi,phi_);
-        
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_);
-        
-        //Computes spatial derivatives
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
-        
-        //Interpolates velocity and its derivatives values
-        getVelAndDerivatives(phi_, dphi_dx);
-        
-        if(fabs((*nodes_)[connect_(i)] -> getVelocityDivergent()) <= 
-           fabs(du_dx+dv_dy)){
-            (*nodes_)[connect_(i)] -> setVelocityDivergent(du_dx + dv_dy);        
-        };
-    };
-    
     return;
 };
 
@@ -2979,7 +2901,7 @@ void Element<2>::computeVorticity(){
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getTransientNavierStokes(){
+std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 18> > Element<2>::getTransientNavierStokes(){
 
     typename QuadShapeFunction<2>::Coords xsi;
     ShapeFunctionValue      phi_;
@@ -2988,7 +2910,9 @@ void Element<2>::getTransientNavierStokes(){
     int index = 0;
     NormalQuad nQuad = IntNormal();
 
+    LocalMatrix jacobianNRMatrix;
     jacobianNRMatrix.clear();
+    LocalVector rhsVector;
     rhsVector.clear();
 
     double tSUPG_;
@@ -3023,10 +2947,10 @@ void Element<2>::getTransientNavierStokes(){
         getParameterSUPG(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
         //Computes the element diffusion/viscosity matrix
-        getElemMatrix(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_);
+        getElemMatrix(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_, jacobianNRMatrix);
 
         //Computes the RHS vector
-        getResidualVector(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_); 
+        getResidualVector(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_, rhsVector); 
 
         index++;        
     };  
@@ -3034,18 +2958,18 @@ void Element<2>::getTransientNavierStokes(){
     //getBoundaryIntegration();
 
     //Apply boundary conditions
-    setBoundaryConditions();
+    setBoundaryConditions(jacobianNRMatrix, rhsVector);
 
   
 
-    return;
+    return std::make_pair(jacobianNRMatrix, rhsVector);
 };
 
 //------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getTransientNavierStokesInitial(){
+std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 18> > Element<2>::getTransientNavierStokesInitial(){
 
     typename QuadShapeFunction<2>::Coords xsi;
     ShapeFunctionValue      phi_;  
@@ -3054,7 +2978,9 @@ void Element<2>::getTransientNavierStokesInitial(){
     int index = 0;
     NormalQuad nQuad = IntNormal();
 
+    LocalMatrix jacobianNRMatrix;
     jacobianNRMatrix.clear();
+    LocalVector rhsVector;
     rhsVector.clear();
 
     double tSUPG_;
@@ -3089,10 +3015,10 @@ void Element<2>::getTransientNavierStokesInitial(){
         getParameterSUPG(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
         //Computes the element diffusion/viscosity matrix
-        getElemMatrixInitial(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_);
+        getElemMatrixInitial(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_, jacobianNRMatrix);
 
         //Computes the RHS vector
-        getResidualVectorInitial(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_); 
+        getResidualVectorInitial(index, phi_, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_, rhsVector); 
 
         index++;        
     };  
@@ -3100,18 +3026,18 @@ void Element<2>::getTransientNavierStokesInitial(){
     //getBoundaryIntegration();
 
     //Apply boundary conditions
-    setBoundaryConditions();
+    setBoundaryConditions(jacobianNRMatrix, rhsVector);
 
   
 
-    return;
+    return std::make_pair(jacobianNRMatrix, rhsVector);
 };
 
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getSteadyLaplace(){
+std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 18> > Element<2>::getSteadyLaplace(){
 
     typename QuadShapeFunction<2>::Coords xsi;
     ShapeFunctionValue      phi_;  
@@ -3120,8 +3046,10 @@ void Element<2>::getSteadyLaplace(){
     int index = 0;
     NormalQuad nQuad = IntNormal();
 
-    laplMatrix.clear();
+    LocalMatrix jacobianNRMatrix;
     jacobianNRMatrix.clear();
+    LocalVector rhsVector;
+    rhsVector.clear();
 
     DimMatrix ainv_;
 
@@ -3181,21 +3109,18 @@ void Element<2>::getSteadyLaplace(){
 
 
 
-        getElemLaplMatrix(weight_, dphi_dx);
+        getElemLaplMatrix(weight_, dphi_dx, jacobianNRMatrix);
 
         index++;        
     };  
     
-    //Computes the Newton's method jacobian
-    jacobianNRMatrix = laplMatrix;
-    
     //Computes the RHS vector
-    getResidualVectorLaplace();
+    getResidualVectorLaplace(rhsVector);
 
     //Apply boundary conditions
-    setBoundaryConditionsLaplace();
+    setBoundaryConditionsLaplace(jacobianNRMatrix, rhsVector);
 
-    return;
+    return std::make_pair(jacobianNRMatrix, rhsVector);
 };
 
 //------------------------------------------------------------------------------
@@ -3271,8 +3196,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(){
         double axm_ = alpha_m * ax_ + (1. - alpha_m) * axprev_;
         double aym_ = alpha_m * ay_ + (1. - alpha_m) * ayprev_;
 
-        double lxna_ = alpha_f * lagMx_ + (1. - alpha_f) * lagMxPrev_;
-        double lyna_ = alpha_f * lagMy_ + (1. - alpha_f) * lagMyPrev_;
+        double lxna_ = lagMx_;
+        double lyna_ = lagMy_;
 
         double umeshna_ = alpha_f * umesh_ + (1. - alpha_f) * umeshPrev_;
         double vmeshna_ = alpha_f * vmesh_ + (1. - alpha_f) * vmeshPrev_;
@@ -3519,7 +3444,8 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem,double tPSPG2_,ub
     double &gamma = parameters.getGamma();
     double &k1 = parameters.getArlequinK1();
     double &k2 = parameters.getArlequinK2();
-       
+    int &iTimeStep = parameters.getTimeInstant();
+
     diffMatrix.clear();
     jacobianNRMatrix.clear();
     rhsVector.clear();
@@ -3581,8 +3507,8 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int ielem,double tPSPG2_,ub
             double axm_ = alpha_m * ax_ + (1. - alpha_m) * axprev_;
             double aym_ = alpha_m * ay_ + (1. - alpha_m) * ayprev_;
 
-            double lxna_ = alpha_f * lagMx_ + (1. - alpha_f) * lagMxPrev_;
-            double lyna_ = alpha_f * lagMy_ + (1. - alpha_f) * lagMyPrev_;
+            double lxna_ = lagMx_;
+            double lyna_ = lagMy_;
 
             double umeshna_ = alpha_f * umesh_ + (1. - alpha_f) * umeshPrev_;
             double vmeshna_ = alpha_f * vmesh_ + (1. - alpha_f) * vmeshPrev_;
