@@ -2356,62 +2356,7 @@ void Arlequin<2>::initialAcceleration(){
                 
             // -L1t
             Ajac = trans(Ajac);
-              
-            // AStab.clear();
-            // RhsStab.clear();
-            // ArlequinM.clear();
-            // RhsArlequin.clear();
 
-            // elementsFine_[jel] -> getLMStabilizationSameMesh();
-
-            // AStab = - elementsFine_[jel] -> getJacNRMatrix();
-            // RhsStab = - elementsFine_[jel] -> getRhsVector();
-
-            //AjacAnt = trans(AjacAnt);
-              
-              
-            // U_.clear();
-            // rhsLagMult.clear();
-            // lagStab.clear();
-            // for (int i = 0; i < 6; i++){
-            //     U_(2*i  ) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-            //     U_(2*i+1) = nodesFine_[connec(i)] -> getLagrangeMultiplier(1);
-            // };
-              
-            // noalias(rhsLagMult) = -prod((Ajac),U_);
-            // noalias(lagStab) = -prod(trans(AjacAnt),U_);
-            // L1t * u1
-            // Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
-
-            std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
-
-            lagMult.first.clear();
-            lagMult.second.clear();
-                   
-            lagMult = elementsFine_[jel] -> getBoundaryConditionsVelocity(Rhs,Ajac);
-
-            Ajac = lagMult.second;
-            Rhs = lagMult.first;
-
-            lagMult.first.clear();
-            lagMult.second.clear();
-                   
-            lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(rhsLagMult,Ajac);
-
-            Ajac = lagMult.second;
-            rhsLagMult = lagMult.first;
-
-            // for (int i=0; i<6; i++){
-            //     if(lagMult.second(12+i,12+i) > 0){
-            //         rhsLagMult(2*i  ) = 0.;
-            //         rhsLagMult(2*i+1) = 0.;
-            //         double one = 1.;
-            //         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-            //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-            //         d_i++;
-            //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-            //     }
-            // }
             double integ = alpha_f * gamma * dTime;
             //Disperse local contributions into the global matrix
             for (int i=0; i<6; i++){
@@ -2610,72 +2555,11 @@ void Arlequin<2>::initialAcceleration(){
                 Ajac = trans(Ajac);
 
                 elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,AStab,RhsStab);
-                // AStab = elementsFine_[jel] -> getJacNRMatrix();
                 AStab = trans(AStab);
-                // RhsStab = elementsFine_[jel] -> getRhsVector();
-                // AStab = elementsFine_[jel] -> getJacNRMatrix();
-                // AStab = trans(AStab);
-                // RhsStab = elementsFine_[jel] -> getRhsVector();
 
                 elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinM,ArlequinM2,RhsArlequin);
-                // ArlequinM = elementsFine_[jel] -> getArlequinStabilizationMatrix();
                 ArlequinM = trans(ArlequinM);
-                // RhsArlequin = elementsFine_[jel] -> getArlequinStabilizationVector();
-                  
-                // ArlequinM2 = elementsFine_[jel] -> getArlequinStabilizationMatrix2();
                 ArlequinM2 = trans(ArlequinM2);
-
-                // -L0 * lambda
-                // rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
-
-
-                // AStab.clear();
-                // // RhsStab.clear();
-                // ArlequinM.clear();
-                // RhsArlequin.clear();
-
-                // U_.clear();
-                // for (int i = 0; i < 6; i++){
-                //     U_(2*i  ) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-                //     U_(2*i+1) = nodesFine_[connec(i)] -> getLagrangeMultiplier(1);
-                // };
-                  
-                // noalias(rhsLagMult) = -prod(trans(Ajac),U_);
-                // noalias(lagStab) = -prod(trans(AjacAnt),U_);
-                  
-                // Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
-
-                std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
-              
-                // lagMult.first.clear();
-                // lagMult.second.clear();
-            
-                // lagMult = elementsCoarse_[iElemCoarse] -> getBoundaryConditionsVelocity(rhsLagMult,(Ajac));
-
-                // Ajac = lagMult.second;
-                // rhsLagMult = lagMult.first;
-
-                // lagMult.first.clear();
-                // lagMult.second.clear();
-                   
-                // lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(Rhs,(Ajac));
-
-                // Ajac = (lagMult.second);
-                // Rhs = lagMult.first;
-
-                // if (jel == 94){
-                //     std::cout << "MATRIZ " << std::endl;
-                //     for (int i=0; i<18; i++){
-                //         for (int j=0; j<18; j++){
-                //             std::cout << Ajac(i,j) << " ";
-                //         }
-                //         std::cout << std::endl;
-                //     }
-                //     std::cout << "VETOR " << std::endl;
-                //     for (int i=0; i<18; i++){
-                //         std::cout << Rhs(i) << " " << rhsLagMult(i) << std::endl;
-                //     }
-                // }
 
                 rhsLagMult *= 1000.e0;
                 //Ajac *= 1000.;
@@ -2688,27 +2572,6 @@ void Arlequin<2>::initialAcceleration(){
                         ArlequinM2(i,j)*=1000.e0;
                     }
                 }
-                // std::pair<Elements::LocalVector, 
-                //           Elements::LocalMatrix>  lagMult;
-                  
-                // lagMult.first.clear();
-                // lagMult.second.clear();
-                   
-                // lagMult = elementsCoarse_[iElemCoarse] -> 
-                //     getRhsVectorAndBoundaryConditions(Ajac);
-
-                // noalias(rhsLagMult) = -prod((lagMult.second),U_);
-                // for (int i=0; i<6; i++){
-                //     if(lagMult.second(12+i,12+i) > 0){
-                //         rhsLagMult(2*i  ) = 0.;
-                //         rhsLagMult(2*i+1) = 0.;
-                //         double one = 1.;
-                //         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                //         d_i++;
-                //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                //     }
-                // }
 
                 double integ = alpha_f * gamma * dTime;
 
@@ -3399,26 +3262,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                     Ajac = trans(Ajac);
 
                     // L1t * u1
-                    // Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
-
-                    std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
-   
-                    lagMult.first.clear();
-                    lagMult.second.clear();
-                         
-                    lagMult = elementsFine_[jel] -> getBoundaryConditionsVelocity(Rhs,Ajac);
-
-                    Ajac = lagMult.second;
-                    Rhs = lagMult.first;
-
-                    lagMult.first.clear();
-                    lagMult.second.clear();
-                         
-                    lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(rhsLagMult,Ajac);
-
-                    Ajac = lagMult.second;
-                    rhsLagMult = lagMult.first;
-
 
                     double integ = alpha_f * gamma * dTime;
                     //Disperse local contributions into the global matrix
@@ -3580,7 +3423,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                             };
                         };
                     };
-                    //std::cout << "JEL " << jel << " " << numElemIntersect << std::endl;
                     //Compute the Lagrange Multiplier element matrix
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
                         
@@ -3609,84 +3451,20 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                         elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinM,ArlequinM2,RhsArlequin);
                         ArlequinM = trans(ArlequinM);
                         ArlequinM2 = trans(ArlequinM2);
-
-                        // -L0 * lambda
-                        // rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
-
-                        
-
-
- 
-                    // Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
-
-                    std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
                     
 
+                        rhsLagMult *= 1000.e0;
+                        //Ajac *= 1000.;
 
-                    // lagMult.first.clear();
-                    // lagMult.second.clear();
-                         
-                    // lagMult = elementsCoarse_[iElemCoarse] -> getBoundaryConditionsVelocity(rhsLagMult,(Ajac));
-
-                    // Ajac = lagMult.second;
-                    // rhsLagMult = lagMult.first;
-
-
-                    // lagMult.first.clear();
-                    // lagMult.second.clear();
-                         
-                    // lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(Rhs,(Ajac));
-
-                    // Ajac = (lagMult.second);
-                    // Rhs = lagMult.first;
-
-
-                    // if (jel == 94){
-                    //     std::cout << "MATRIZ " << std::endl;
-                    //     for (int i=0; i<18; i++){
-                    //         for (int j=0; j<18; j++){
-                    //             std::cout << Ajac(i,j) << " ";
-                    //         }
-                    //         std::cout << std::endl;
-                    //     }
-                    //     std::cout << "VETOR " << std::endl;
-                    //     for (int i=0; i<18; i++){
-                    //         std::cout << Rhs(i) << " " << rhsLagMult(i) << std::endl;
-                    //     }
-                    // }
-
-                    rhsLagMult *= 1000.e0;
-                    //Ajac *= 1000.;
-
-                    for (int i = 0; i < 12; i++){
-                        RhsStab(i) *= 1000.e0;
-                        for (int j = 0; j < 12; j++){
-                            AStab(i,j)*=1000.e0;
-                            Ajac(i,j)*=1000.e0;
-                            ArlequinM2(i,j)*=1000.e0;
+                        for (int i = 0; i < 12; i++){
+                            RhsStab(i) *= 1000.e0;
+                            for (int j = 0; j < 12; j++){
+                                AStab(i,j)*=1000.e0;
+                                Ajac(i,j)*=1000.e0;
+                                ArlequinM2(i,j)*=1000.e0;
+                            }
                         }
-                    }
-                        // std::pair<Elements::LocalVector, 
-                        //           Elements::LocalMatrix>  lagMult;
                         
-                        // lagMult.first.clear();
-                        // lagMult.second.clear();
-                         
-                        // lagMult = elementsCoarse_[iElemCoarse] -> 
-                        //     getRhsVectorAndBoundaryConditions(Ajac);
-
-                        // noalias(rhsLagMult) = -prod((lagMult.second),U_);
-                    // for (int i=0; i<6; i++){
-                    //     if(lagMult.second(12+i,12+i) > 0){
-                    //         rhsLagMult(2*i  ) = 0.;
-                    //         rhsLagMult(2*i+1) = 0.;
-                    //         double one = 1.;
-                    //         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                    //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                    //         d_i++;
-                    //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                    //     }
-                    // }
                         double integ = alpha_f * gamma * dTime;
                         //Disperse local contribution into the global matrix
                         for (int i=0; i<6; i++){
@@ -3723,8 +3501,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                                 if (fabs(Ajac(12+i,12+j)) >= 1.e-15){
                                     int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                                     int dof_j = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(j);
-                                    // ierr = MatSetValues(A,1,&dof_i,1,&dof_j,
-                                    //                 &lagMult.second(12+i,12+j),ADD_VALUES);
                                     dof_i++; dof_j++;
                                     ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac(12+i,12+j),ADD_VALUES);
                                 };
@@ -4636,27 +4412,6 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     Ajac = trans(Ajac);
 
                     // L1t * u1
-                    // Rhs = -elementsFine_[jel] -> getRhsVelocities(-Ajac);
-
-                    std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
-   
-                    lagMult.first.clear();
-                    lagMult.second.clear();
-                         
-                    lagMult = elementsFine_[jel] -> getBoundaryConditionsVelocity(Rhs,Ajac);
-
-                    Ajac = lagMult.second;
-                    Rhs = lagMult.first;
-
-
-                    lagMult.first.clear();
-                    lagMult.second.clear();
-                         
-                    lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(rhsLagMult,Ajac);
-
-                    Ajac = lagMult.second;
-                    rhsLagMult = lagMult.first;
-
 
                     double integ = alpha_f * gamma * dTime;
                     //Disperse local contributions into the global matrix
@@ -4718,23 +4473,11 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                             };
 
                             //ARLEQUIN STABILIZATION
-                            // if (fabs(ArlequinM(2*i  ,2*j+1)) >= 1.e-15){
-                            //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                            //     int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &ArlequinM(2*i  ,2*j+1),ADD_VALUES);
-                            // };
                             if (fabs(ArlequinM2(2*i  ,2*j  )) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
                                 int d_j = 3*numNodesCoarse + 2*connec(j);
                                 ierr = MatSetValues(A,1,&d_i,1,&d_j,&ArlequinM2(2*i  ,2*j  ),ADD_VALUES);
                             };
-                            // if (fabs(ArlequinM(2*i+1,2*j  )) >= 1.e-15){
-                            //     int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
-                            //     int d_j = 3*numNodesCoarse + 2*connec(j);
-                            //     ierr = MatSetValues(A,1,&d_i,1,&d_j,
-                            //                         &ArlequinM(2*i+1,2*j  ),ADD_VALUES);
-                            // };
                             if (fabs(ArlequinM2(2*i+1,2*j+1)) >= 1.e-15){
                                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i) + 1;
                                 int d_j = 3*numNodesCoarse + 2*connec(j) + 1;
@@ -4834,7 +4577,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                     //std::cout << "JEL " << jel << " " << numElemIntersect << std::endl;
                     //Compute the Lagrange Multiplier element matrix
                     for (int ielem = 0; ielem < numElemIntersect; ielem++){
-                        
+
+
                         int iElemCoarse = diffElem[ielem];
                         double pspg = 0.;//elementsCoarse_[iElemCoarse] -> getPSPG();
                         ublas::bounded_vector<double, 6> press_, velX_, velY_, velXPrev_, velYPrev_;
@@ -4871,97 +4615,18 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                         // -L0 * lambda
                         // rhsLagMult =  elementsFine_[jel] -> getRhsLagrangeMultipliers(trans(Ajac));
 
-                        
+                        rhsLagMult *= 1000.e0;
+                        //Ajac *= 1000.;
 
-                        // AStab.clear();
-                        // // RhsStab.clear();
-                        // ArlequinM.clear();
-                        // RhsArlequin.clear();
-
-
-                        
-                        // U_.clear();
-                        // for (int i = 0; i < 6; i++){
-                        //     U_(2*i  ) = nodesFine_[connec(i)] -> getLagrangeMultiplier(0);
-                        //     U_(2*i+1) = nodesFine_[connec(i)] -> getLagrangeMultiplier(1);
-                        // };
-                        
-                        // noalias(rhsLagMult) = -prod(trans(Ajac),U_);
-                        // noalias(lagStab) = -prod(trans(AjacAnt),U_);
-                        
-
-
- 
-                    // Rhs = elementsCoarse_[iElemCoarse] -> getRhsVelocities(Ajac);
-
-                    std::pair<Elements::LocalVector, Elements::LocalMatrix>  lagMult;
-                    
-
-
-                    // lagMult.first.clear();
-                    // lagMult.second.clear();
-                         
-                    // lagMult = elementsCoarse_[iElemCoarse] -> getBoundaryConditionsVelocity(rhsLagMult,(Ajac));
-
-                    // Ajac = lagMult.second;
-                    // rhsLagMult = lagMult.first;
-
-
-                    // lagMult.first.clear();
-                    // lagMult.second.clear();
-                         
-                    // lagMult = elementsFine_[jel] -> getBoundaryConditionsLagMult(Rhs,(Ajac));
-
-                    // Ajac = (lagMult.second);
-                    // Rhs = lagMult.first;
-
-
-                    // if (jel == 94){
-                    //     std::cout << "MATRIZ " << std::endl;
-                    //     for (int i=0; i<18; i++){
-                    //         for (int j=0; j<18; j++){
-                    //             std::cout << Ajac(i,j) << " ";
-                    //         }
-                    //         std::cout << std::endl;
-                    //     }
-                    //     std::cout << "VETOR " << std::endl;
-                    //     for (int i=0; i<18; i++){
-                    //         std::cout << Rhs(i) << " " << rhsLagMult(i) << std::endl;
-                    //     }
-                    // }
-
-                    rhsLagMult *= 1000.e0;
-                    //Ajac *= 1000.;
-
-                    for (int i = 0; i < 12; i++){
-                        RhsStab(i) *= 1000.e0;
-                        for (int j = 0; j < 12; j++){
-                            AStab(i,j)*=1000.e0;
-                            Ajac(i,j)*=1000.e0;
-                            ArlequinM2(i,j)*=1000.e0;
+                        for (int i = 0; i < 12; i++){
+                            RhsStab(i) *= 1000.e0;
+                            for (int j = 0; j < 12; j++){
+                                AStab(i,j)*=1000.e0;
+                                Ajac(i,j)*=1000.e0;
+                                ArlequinM2(i,j)*=1000.e0;
+                            }
                         }
-                    }
-                        // std::pair<Elements::LocalVector, 
-                        //           Elements::LocalMatrix>  lagMult;
-                        
-                        // lagMult.first.clear();
-                        // lagMult.second.clear();
-                         
-                        // lagMult = elementsCoarse_[iElemCoarse] -> 
-                        //     getRhsVectorAndBoundaryConditions(Ajac);
-
-                        // noalias(rhsLagMult) = -prod((lagMult.second),U_);
-                    // for (int i=0; i<6; i++){
-                    //     if(lagMult.second(12+i,12+i) > 0){
-                    //         rhsLagMult(2*i  ) = 0.;
-                    //         rhsLagMult(2*i+1) = 0.;
-                    //         double one = 1.;
-                    //         int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL(i);
-                    //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                    //         d_i++;
-                    //         ierr = MatSetValues(A,1,&d_i,1,&d_i,&one,INSERT_VALUES);
-                    //     }
-                    // }
+                    
                         double integ = alpha_f * gamma * dTime;
                         //Disperse local contribution into the global matrix
                         for (int i=0; i<6; i++){

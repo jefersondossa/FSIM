@@ -77,6 +77,7 @@ private:
 
     VecLocD          lagMultiplier_;          //Nodal Lagrange Multiplier value
     double           weightFunction_;         //Nodal Energy Weight Function
+    double           previousWeightFunction_;
     double           distGlueZone;            //Signaled distance to glue zone
 
     std::vector<int> invIncidence;
@@ -97,7 +98,7 @@ public:
         elemCorresp = 0;         
         velocity_.clear();   previousVelocity_.clear();   acceleration_.clear();
         previousAcceleration_.clear(); xsiCorresp.clear();
-        lagMultiplier_.clear();      weightFunction_ = 0.;
+        lagMultiplier_.clear();      weightFunction_ = 0.;   previousWeightFunction_ = 0.;
         distGlueZone = 0.;
 
         constrainTypeLaplace[0] = 0;    constrainTypeLaplace[1] = 0;
@@ -354,11 +355,12 @@ public:
 
     /// Sets the nodal energy weight function value
     /// @param double weight function value
-    void setWeightFunction(double val) {weightFunction_ = val;};
+    void setWeightFunction(double val) {previousWeightFunction_ = weightFunction_; weightFunction_ = val;};
 
     /// Gets the nodal energy weight function value
     /// @return weight function value
     double getWeightFunction() {return weightFunction_;};
+    double getPreviousWeightFunction() {return previousWeightFunction_;};
 
     /// Sets the interpolated Arlequin pressure 
     /// @param double interpolated pressure value
