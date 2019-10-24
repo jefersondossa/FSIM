@@ -96,6 +96,7 @@ private:
     double        duprev_dx, duprev_dy, dvprev_dx, dvprev_dy;
     double        dp_dx, dp_dy;//Interpolated pressure spatial derivative
     double        dumesh_dx, dumesh_dy, dvmesh_dx, dvmesh_dy;//Interpolated mesh velocity derivatives
+    double        dumeshPrev_dx, dumeshPrev_dy, dvmeshPrev_dx, dvmeshPrev_dy;
     double        lagMx_,lagMy_;
     double        dLx_dx, dLx_dy, dLy_dx, dLy_dy;
 
@@ -246,7 +247,7 @@ public:
 
     /// Sets the mesh moving weighting parameter for solving the Laplace problem
     /// @param double parameter value
-    void setMeshMovingParameter(double value) {meshMovingParameter = value;};
+    void setMeshMovingParameter(double &value) {meshMovingParameter = value;};
 
     /// Gets the mesh moving weighting parameter
     /// @return mesh moving weighting parameter
@@ -257,12 +258,11 @@ public:
     /// @param minimum coordinates @param maximum coordinates 
     /// @param minimum inner product @param maximum inner product
     /// @param side lenght
-    void setIntersectionParameters(DimVector x, DimVector X);
+    void setIntersectionParameters(DimVector &x, DimVector &X);
 
     /// Gets the coordinates intersection parameters
     /// @return minimum and maximum coordinates
-    std::pair<DimVector,DimVector> getXIntersectionParameter()
-    {return std::make_pair(xK,XK);};
+    std::pair<DimVector,DimVector> getXIntersectionParameter() {return std::make_pair(xK,XK);};
 
     //.............................Model functions..............................
     /// Sets if the element is in the gluing zone
@@ -368,67 +368,6 @@ public:
         setBoundaryConditionsLagrangeMultipliers(Ajac, rhsVector);       
         return std::make_pair(rhsVector,Ajac);};
 
-
-    std::pair<LocalVector,LocalMatrix> getBoundaryConditionsLagMult(LocalVector vel, LocalMatrix Ajac){
-        for (int i = 0; i < 6; i++){
-            if ((*nodes_)[connect_(i)] -> getConstrains(0) == 1) {
-                //std::cout << "Aqui1" << std::endl;
-                for (int j = 0; j < 18; j++){
-                    //lagrMultMatrix(2*i  ,j) = 0.;
-                    Ajac(2*i  ,j) = 0.;
-                    //Ajac(j,2*i  ) = 0.;
-                };
-                //lagrMultMatrix(12+i,12+i) = 1.;
-                vel(2*i  ) = 0.;
-            };
-
-            if ((*nodes_)[connect_(i)] -> getConstrains(1) == 1) {
-                //std::cout << "Aqui2" << std::endl;
-                for (int j = 0; j < 18; j++){
-                    //lagrMultMatrix(2*i+1,j) = 0.;
-                    Ajac(2*i+1,j) = 0.;
-                    //Ajac(j,2*i+1) = 0.;
-                };
-                Ajac(12+i,12+i) = 1.;
-                vel(2*i+1) = 0.;
-            };
-            //std::cout << "asda " << connect_(i) << " " << (*nodes_)[connect_(i)] -> getConstrains(1) << " " << vel(2*i+1) << std::endl;
-
-        };
-        return std::make_pair(vel,Ajac);
-    }
-
-    std::pair<LocalVector,LocalMatrix> getBoundaryConditionsVelocity(LocalVector vel, LocalMatrix Ajac){
-
-        for (int i = 0; i < 6; i++){
-            if ((*nodes_)[connect_(i)] -> getConstrains(0) == 1) {
-                //std::cout << "Aqui3" << std::endl;
-                for (int j = 0; j < 18; j++){
-                    //jacobianNRMatrix(2*i  ,j) = 0.;
-                    Ajac(j,2*i  ) = 0.;
-                    //Ajac(2*i  ,j) = 0.;
-                };
-                //jacobianNRMatrix(12+i,12+i) = 1.;
-                vel(2*i  ) = 0.;
-            };
-
-            if ((*nodes_)[connect_(i)] -> getConstrains(1) == 1) {
-                //std::cout << "Aqui4" << std::endl;
-                for (int j = 0; j < 18; j++){
-                    //jacobianNRMatrix(2*i+1,j) = 0.;
-                    Ajac(j,2*i+1) = 0.;
-                    //Ajac(2*i+1,j) = 0.;                   
-                };
-                //Ajac(12+i,12+i) = 1.;
-                vel(2*i+1) = 0.;
-            };
-        };
-
-
-        return std::make_pair(vel,Ajac);
-    };
-
-
     /// Sets the boundary conditions to the Lagrange multiplier operator
     void setBoundaryConditionsLagrangeMultipliers(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector);
 
@@ -473,7 +412,7 @@ public:
 //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::setIntersectionParameters(DimVector x, DimVector X) {
+void Element<2>::setIntersectionParameters(DimVector &x, DimVector &X) {
     xK = x; XK = X;
     return;
 };
@@ -800,6 +739,7 @@ void Element<2>::getVelAndDerivatives(ShapeFunctionValue &phi_, ShapeFunctionDer
     dax_dx = 0.; dax_dy = 0.; day_dx = 0.; day_dy = 0.;
     dumesh_dx = 0.; dumesh_dy = 0.; dvmesh_dx = 0.; dvmesh_dy = 0.;
     umeshPrev_ = 0.;    vmeshPrev_ = 0.;
+    dumeshPrev_dx = 0.; dumeshPrev_dy = 0.; dvmeshPrev_dx = 0.; dvmeshPrev_dy = 0.;
 
     double &alpha_f = parameters.getAlphaF();
     double &alpha_m = parameters.getAlphaM();
@@ -862,6 +802,11 @@ void Element<2>::getVelAndDerivatives(ShapeFunctionValue &phi_, ShapeFunctionDer
         dumesh_dy += (*nodes_)[connect_(i)] -> getMeshVelocity(0) * dphi_dx(1,i);
         dvmesh_dx += (*nodes_)[connect_(i)] -> getMeshVelocity(1) * dphi_dx(0,i);
         dvmesh_dy += (*nodes_)[connect_(i)] -> getMeshVelocity(1) * dphi_dx(1,i);
+
+        dumeshPrev_dx += (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(0) * dphi_dx(0,i);
+        dumeshPrev_dy += (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(0) * dphi_dx(1,i);
+        dvmeshPrev_dx += (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(1) * dphi_dx(0,i);
+        dvmeshPrev_dy += (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(1) * dphi_dx(1,i);
         // std::cout << "velocity " << phi_(i) << " " << (*nodes)[connect_(i)] -> getVelocity(0) << std::endl;
 
         lagMx_ += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0) * phi_(i);
@@ -1629,7 +1574,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * sqrt(u_ * u_ + v_ * v_) / sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_*0;
+    tARLQ_ = -1. * k1 * tSUPG_;
     //}
     //tARLQ_ = 0.;
 
@@ -3181,7 +3126,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
 
     DimMatrix ainv_;
 
-       //std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
+    // if (index_ == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
     for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
         it != sQuad.end(); it++){
         
@@ -3216,23 +3161,38 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
             getVelAndDerivatives(phi_, dphi_dx);
             getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
 
-            u_ = 0.;
-            v_ = 0.;
+            double umeshna_ = alpha_f * umesh_ + (1. - alpha_f) * umeshPrev_;
+            double vmeshna_ = alpha_f * vmesh_ + (1. - alpha_f) * vmeshPrev_;
 
-            uPrev_ = 0.;
-            vPrev_ = 0.;
-
-            //Interpolates the velocity components and its spatial derivatives
-            for (int i = 0; i < 6; i++){
-                u_ += velx(i) * phiLM_(i);
-                v_ += vely(i) * phiLM_(i);
-
-                uPrev_ += velxPrev(i) * phiLM_(i);
-                vPrev_ += velyPrev(i) * phiLM_(i);
-            };  
+            double dumeshna_dx = alpha_f * dumesh_dx + (1. - alpha_f) * dumeshPrev_dx;
+            double dumeshna_dy = alpha_f * dumesh_dy + (1. - alpha_f) * dumeshPrev_dy;
+            double dvmeshna_dx = alpha_f * dvmesh_dx + (1. - alpha_f) * dvmeshPrev_dx;
+            double dvmeshna_dy = alpha_f * dvmesh_dy + (1. - alpha_f) * dvmeshPrev_dy;
 
             double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
             double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
+
+            double duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
+            double duna_dy = alpha_f * du_dy + (1. - alpha_f) * duprev_dy;
+            double dvna_dx = alpha_f * dv_dx + (1. - alpha_f) * dvprev_dx;
+            double dvna_dy = alpha_f * dv_dy + (1. - alpha_f) * dvprev_dy;
+
+            double wna_ = alpha_f * intPointWeightFunctionSpecial(index) + (1. - alpha_f) * intPointWeightFunctionSpecialPrev(index);
+
+            double unaL_ = 0.;
+            double vnaL_ = 0.;
+            double dalpha_dx = 0.;
+            double dalpha_dy = 0.;
+            for (int i = 0; i < 6; ++i){
+                // dalpha_dx += (alpha_f * (*nodes_)[connect_(i)] -> getWeightFunction() + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousWeightFunction()) * dphi_dx(0,i);
+                // dalpha_dy += (alpha_f * (*nodes_)[connect_(i)] -> getWeightFunction() + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousWeightFunction()) * dphi_dx(1,i);
+                dalpha_dx += ((*nodes_)[connect_(i)] -> getWeightFunction()) * dphi_dx(0,i);
+                dalpha_dy += ((*nodes_)[connect_(i)] -> getWeightFunction()) * dphi_dx(1,i);
+                unaL_ += alpha_f * velx(i) * phiLM_(i) + (1. - alpha_f) * velxPrev(i) * phiLM_(i);
+                vnaL_ += alpha_f * vely(i) * phiLM_(i) + (1. - alpha_f) * velyPrev(i) * phiLM_(i);
+            }
+
+            // if (index_ == 3056 ) std::cout << "DADX " << dalpha_dx << " " << dalpha_dy << " " << index << " " << ielem << std::endl;
 
             ublas::bounded_matrix<double, 3,18> Bmatrix, Baux;
             ublas::bounded_matrix<double, 18,3> BmatrixT; 
@@ -3270,25 +3230,33 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
                     lagrMultMatrix(2*i+1,2*j+1) += (phiLM_(i) * phi_(j)) * weight_ * djac_ * k1;
                 };
                 
-                rhsVectorLM(2*i  ) += -(lagMx_ * phiLM_(i) * k1 +
-                                    (2. * dphiL_dx(0,i) * dLx_dx + 
-                                    dphiL_dx(1,i) * dLx_dy + 
-                                    dphiL_dx(1,i) * dLy_dx) * k2) * weight_ * djac_;
-                rhsVectorLM(2*i+1) += -(lagMy_ * phiLM_(i) * k1 +
-                                    (dphiL_dx(0,i) * dLx_dy + 
-                                    2. * dphiL_dx(1,i) * dLy_dy + 
-                                    dphiL_dx(0,i) * dLy_dx) * k2) * weight_ * djac_;
+                rhsVectorLM(2*i  ) += -lagMx_ * phiLM_(i) * k1 * weight_ * djac_ - 
+                                    ((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * una_ + 
+                                      (una_ * umeshna_ * dalpha_dx + una_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_;
+                rhsVectorLM(2*i+1) += -lagMy_ * phiLM_(i) * k1 * weight_ * djac_ -
+                                    ((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * vna_ +
+                                      (vna_ * umeshna_ * dalpha_dx + vna_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_;
 
-                rhsVector(2*i  ) += -una_ * phi_(i) * k1 * weight_ * djac_;
-                rhsVector(2*i+1) += -vna_ * phi_(i) * k1 * weight_ * djac_;
+                rhsVector(2*i  ) += -unaL_ * phi_(i) * k1 * weight_ * djac_;
+                rhsVector(2*i+1) += -vnaL_ * phi_(i) * k1 * weight_ * djac_;
             };
         };
         index++;        
     };  
     
+    // if (index_ == 3056 ) std::cout << "RHS " << rhsVectorLM << std::endl;
+
     lagrMultMatrix += diffMatrix;
 
-           
+    // LocalVector U_;
+    // U_.clear();
+    // for (int i = 0; i < 6; ++i)
+    // {
+    //     U_(2*i  ) = velx(i);
+    //     U_(2*i+1) = vely(i);
+    // }
+
+    // noalias(rhsVectorLM) = -prod(lagrMultMatrix,U_);
 
     return;
 };

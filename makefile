@@ -38,7 +38,7 @@ run4:
 	@$ export OMP_NUM_THREADS=1 && mpirun -n 4 ./f
 
 run5:
-	@$ mpirun -np 5 ./f
+	@$ mpirun -np 5 ./f -info -logsummary
 
 run6:
 	@$ export OMP_NUM_THREADS=1 && mpirun -n 6 ./f
