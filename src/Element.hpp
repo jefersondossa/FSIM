@@ -2790,6 +2790,11 @@ void Element<2>::getLagrangeMultipliersSameMesh(LocalMatrix &lagrMultMatrix, Loc
 
         double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
         double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
+
+        double duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
+        double duna_dy = alpha_f * du_dy + (1. - alpha_f) * duprev_dy;
+        double dvna_dx = alpha_f * dv_dx + (1. - alpha_f) * dvprev_dx;
+        double dvna_dy = alpha_f * dv_dy + (1. - alpha_f) * dvprev_dy;
         
         for (int i = 0; i < 6; i++){
             for (int j = 0; j < 6; j++){
@@ -2807,8 +2812,14 @@ void Element<2>::getLagrangeMultipliersSameMesh(LocalMatrix &lagrMultMatrix, Loc
                                        2. * dphi_dx(1,i) * dLy_dy + 
                                        dphi_dx(0,i) * dLy_dx) * k2) * weight_ * djac_;
 
-            rhsVector(2*i  ) += una_ * phi_(i) * k1 * weight_ * djac_;
-            rhsVector(2*i+1) += vna_ * phi_(i) * k1 * weight_ * djac_;
+            rhsVector(2*i  ) += (una_ * phi_(i) * k1 +
+                                (2. * dphi_dx(0,i) * duna_dx + 
+                                 dphi_dx(1,i) * duna_dy + 
+                                 dphi_dx(1,i) * dvna_dx) * k2) * weight_ * djac_;
+            rhsVector(2*i+1) += (vna_ * phi_(i) * k1 +
+                                (dphi_dx(0,i) * duna_dy + 
+                                 2. * dphi_dx(1,i) * dvna_dy + 
+                                 dphi_dx(0,i) * dvna_dx) * k2) * weight_ * djac_;
         };         
         
         index++; 
@@ -3230,15 +3241,27 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
                     lagrMultMatrix(2*i+1,2*j+1) += (phiLM_(i) * phi_(j)) * weight_ * djac_ * k1;
                 };
                 
-                rhsVectorLM(2*i  ) += -lagMx_ * phiLM_(i) * k1 * weight_ * djac_ - 
-                                    ((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * una_ + 
+                rhsVectorLM(2*i  ) += -(lagMx_ * phiLM_(i) * k1 + 
+                                        (2. * dphiL_dx(0,i) * dLx_dx + 
+                                         dphiL_dx(1,i) * dLx_dy + 
+                                         dphiL_dx(1,i) * dLy_dx) * k2) * weight_ * djac_
+                                      -((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * una_ + 
                                       (una_ * umeshna_ * dalpha_dx + una_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_;
-                rhsVectorLM(2*i+1) += -lagMy_ * phiLM_(i) * k1 * weight_ * djac_ -
-                                    ((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * vna_ +
+                rhsVectorLM(2*i+1) += -(lagMy_ * phiLM_(i) * k1 + 
+                                        (dphiL_dx(0,i) * dLx_dy + 
+                                         2. * dphiL_dx(1,i) * dLy_dy + 
+                                         dphiL_dx(0,i) * dLy_dx) * k2) * weight_ * djac_
+                                      -((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * vna_ +
                                       (vna_ * umeshna_ * dalpha_dx + vna_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_;
 
-                rhsVector(2*i  ) += -unaL_ * phi_(i) * k1 * weight_ * djac_;
-                rhsVector(2*i+1) += -vnaL_ * phi_(i) * k1 * weight_ * djac_;
+                rhsVector(2*i  ) += -(unaL_ * phi_(i) * k1 +
+                                      (2. * dphi_dx(0,i) * duna_dx + 
+                                       dphi_dx(1,i) * duna_dy + 
+                                       dphi_dx(1,i) * dvna_dx) * k2) * weight_ * djac_;
+                rhsVector(2*i+1) += -(vnaL_ * phi_(i) * k1 +
+                                      (dphi_dx(0,i) * duna_dy + 
+                                       2. * dphi_dx(1,i) * dvna_dy + 
+                                       dphi_dx(0,i) * dvna_dx) * k2) * weight_ * djac_;
             };
         };
         index++;        
