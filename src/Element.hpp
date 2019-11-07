@@ -725,6 +725,7 @@ void Element<2>::getSpatialDerivatives(ublas::bounded_vector<double,2>& xsi, Dim
 template<>
 void Element<2>::getVelAndDerivatives(ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx) {
 
+
     u_ = 0.; v_ = 0.;
     x_ = 0.; y_ = 0.;
     ax_ = 0.; ay_ = 0.; axprev_ = 0.; ayprev_ = 0.;
@@ -824,6 +825,10 @@ void Element<2>::getVelAndDerivatives(ShapeFunctionValue &phi_, ShapeFunctionDer
         dLy_dx += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(1) * dphi_dx(0,i);
         dLy_dy += (*nodes_)[connect_(i)] -> getLagrangeMultiplier(1) * dphi_dx(1,i);
     };  
+
+
+
+
 
     //std::cout << "VEL " << umesh_ << " " << vmesh_ << std::endl;
 
@@ -1564,7 +1569,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
 
     tARLQ_ = -1. / sqrt(1. / (tSUGN1L_ * tSUGN1L_) + 
                        1. / (tSUGN2_ * tSUGN2_) + 
-                       1. / (tSUGN3L_ * tSUGN3L_));
+                       1. / (tSUGN3L_ * tSUGN3L_))*0;
 
 
     //if (tSUPG_ > 10) tSUPG_ = 0.;
@@ -1574,7 +1579,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * sqrt(u_ * u_ + v_ * v_) / sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_;
+    tARLQ_ = -1. * k1 * tSUPG_*0;
     //}
     //tARLQ_ = 0.;
 
@@ -1680,6 +1685,38 @@ void Element<2>::getElemMatrix(int &index, ShapeFunctionValue &phi_, ShapeFuncti
     double &alpha_f = parameters.getAlphaF();
     double &alpha_m = parameters.getAlphaM();
     double &gamma = parameters.getGamma();
+    int &iTimeStep = parameters.getTimeInstant();
+    double &pi = parameters.getPi();
+    
+    // if ((model == false) && (iTimeStep > 0)){
+    //     if(intPointWeightFunction(index) < 1.){
+        
+    //         double x0, x1, y0, y1;
+    //         for (int i = 0; i < 6; ++i){
+    //             x0 += (*nodes_)[connect_(i)] -> getPreviousCoordinateValue(0) * phi_(i);
+    //             y0 += (*nodes_)[connect_(i)] -> getPreviousCoordinateValue(1) * phi_(i);
+    //             x1 += (*nodes_)[connect_(i)] -> getCoordinateValue(0) * phi_(i);
+    //             y1 += (*nodes_)[connect_(i)] -> getCoordinateValue(1) * phi_(i);
+    //         }
+            
+    //         double dist0 = sqrt(x0*x0+y0*y0);
+    //         double dist1 = sqrt(x1*x1+y1*y1);
+    //         double vel_0 = -20. * pi * pi / 180. * sin(2. * pi * (iTimeStep-1) * dTime_) * dist0;
+    //         double vel_1 = -20. * pi * pi / 180. * sin(2. * pi * iTimeStep * dTime_) * dist1;
+
+    //         double sen_a0 = (y0 - 0.0) / dist0;
+    //         double cos_a0 = (x0 - 0.5) / dist0;
+
+    //         double sen_a1 = (y1 - 0.0) / dist1;
+    //         double cos_a1 = (x1 - 0.5) / dist1;
+
+    //         umesh_ = vel_1 * cos_a1;
+    //         vmesh_ = vel_1 * sen_a1;
+
+    //         umeshPrev_ = vel_0 * cos_a0;
+    //         vmeshPrev_ = vel_0 * sen_a0;
+    //     }
+    // }
 
     double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
     double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
@@ -3246,13 +3283,13 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
                                          dphiL_dx(1,i) * dLx_dy + 
                                          dphiL_dx(1,i) * dLy_dx) * k2) * weight_ * djac_
                                       -((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * una_ + 
-                                      (una_ * umeshna_ * dalpha_dx + una_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_;
+                                      (una_ * umeshna_ * dalpha_dx + una_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_*0;
                 rhsVectorLM(2*i+1) += -(lagMy_ * phiLM_(i) * k1 + 
                                         (dphiL_dx(0,i) * dLx_dy + 
                                          2. * dphiL_dx(1,i) * dLy_dy + 
                                          dphiL_dx(0,i) * dLy_dx) * k2) * weight_ * djac_
                                       -((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * vna_ +
-                                      (vna_ * umeshna_ * dalpha_dx + vna_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_;
+                                      (vna_ * umeshna_ * dalpha_dx + vna_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_*0;
 
                 rhsVector(2*i  ) += -(unaL_ * phi_(i) * k1 +
                                       (2. * dphi_dx(0,i) * duna_dx + 

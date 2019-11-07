@@ -4140,7 +4140,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             xi = nodesFine_[i] -> getInitialCoordinates();       
             x = nodesFine_[i] -> getCoordinates();       
     
-            double a = -20 * pi / 180 + 10 * pi / 180 * cos(2.*pi*1.0*iTimeStep*dTime);// + 10 * pi / 180;
+            double a = -20 * pi / 180 + 10 * pi / 180 * cos(2.*pi*iTimeStep*dTime);// + 10 * pi / 180;
 
             // std::cout << " AAA " << a << std::endl;
 
