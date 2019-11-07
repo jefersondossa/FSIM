@@ -281,6 +281,7 @@ public:
     /// Sets the node mesh velocity
     /// @param double* mesh velocity
     void setMeshVelocity(double *u);
+    void setMeshVelocityComponent(int dir,double u){meshVelocity_(dir) = u;} ;
 
     /// Sets the previous time step mesh velocity
     /// @param int direction @param double previous time step mesh velocity valu
