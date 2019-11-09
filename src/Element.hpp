@@ -1293,8 +1293,8 @@ void Element<2>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_
         // double ua = (*nodes_)[connect_(i)] -> getVelocity(0);
         // double va = (*nodes_)[connect_(i)] -> getVelocity(1);
 
-        double uma = (*nodes_)[connect_(i)] -> getMeshVelocity(0);
-        double vma = (*nodes_)[connect_(i)] -> getMeshVelocity(1);
+        double uma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(0);
+        double vma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(1);
             
         ua -= uma;
         va -= vma;
@@ -1320,9 +1320,8 @@ void Element<2>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_
         // double ua = (*nodes_)[connect_(i)] -> getVelocity(0);
         // double va = (*nodes_[connect_(i)] -> getVelocity(1);
 
-        double uma = (*nodes_)[connect_(i)] -> getMeshVelocity(0);
-        double vma = (*nodes_)[connect_(i)] -> getMeshVelocity(1);
-
+        double uma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(0);
+        double vma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(1);
         ua -= uma;
         va -= vma;
         
@@ -1425,9 +1424,9 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
         // double ua = (*nodes_)[connect_(i)] -> getVelocity(0);
         // double va = (*nodes_)[connect_(i)] -> getVelocity(1);
 
-        double uma = (*nodes_)[connect_(i)] -> getMeshVelocity(0);
-        double vma = (*nodes_)[connect_(i)] -> getMeshVelocity(1);
-
+        double uma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(0);
+        double vma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(1);
+            
         double lxa = (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0);
         double lya = (*nodes_)[connect_(i)] -> getLagrangeMultiplier(1);
             
@@ -1466,8 +1465,8 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
         // double ua = (*nodes_)[connect_(i)] -> getVelocity(0);
         // double va = (*nodes_)[connect_(i)] -> getVelocity(1);
 
-        double uma = (*nodes_)[connect_(i)] -> getMeshVelocity(0);
-        double vma = (*nodes_)[connect_(i)] -> getMeshVelocity(1);
+        double uma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(0);
+        double vma = alpha_f * (*nodes_)[connect_(i)] -> getMeshVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_(i)] -> getPreviousMeshVelocity(1);
 
         double lxa = (*nodes_)[connect_(i)] -> getLagrangeMultiplier(0);
         double lya = (*nodes_)[connect_(i)] -> getLagrangeMultiplier(1);
@@ -1579,7 +1578,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * sqrt(u_ * u_ + v_ * v_) / sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_*0;
+    tARLQ_ = -1. * k1 * tSUPG_ * 1.e1;
     //}
     //tARLQ_ = 0.;
 
@@ -2773,6 +2772,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(LocalMatrix &lagrMultMatrix, Loc
     double &k1 = parameters.getArlequinK1();
     double &k2 = parameters.getArlequinK2();
     double &alpha_f = parameters.getAlphaF();
+    double &gamma = parameters.getGamma();
+    double &dTime_ = parameters.getTimeStep();
     
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
         it != nQuad.end(); it++){
@@ -2827,6 +2828,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(LocalMatrix &lagrMultMatrix, Loc
 
         double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
         double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
+        // double una_ = uPrev_ + alpha_f * dTime_ * ((1. - gamma) * axprev_ + gamma * ax_);
+        // double vna_ = vPrev_ + alpha_f * dTime_ * ((1. - gamma) * ayprev_ + gamma * ay_);
 
         double duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
         double duna_dy = alpha_f * du_dy + (1. - alpha_f) * duprev_dy;
@@ -3651,8 +3654,8 @@ void Element<2>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double 
 
 
 
-                arlequinStabVector(2*i  ) += (Amx + LLx) * weight_ * djac_ * (1-wna_) ;
-                arlequinStabVector(2*i+1) += (Amy + LLy) * weight_ * djac_ * (1-wna_) ;
+                arlequinStabVector(2*i  ) += (Amx + LLx) * weight_ * djac_ * (1-wna_) *0;
+                arlequinStabVector(2*i+1) += (Amy + LLy) * weight_ * djac_ * (1-wna_) *0;
             };
         };
         index++;        
