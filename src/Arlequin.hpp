@@ -369,6 +369,8 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
         nodesFine_[inode] -> setNodalCorrespondence(1.e10,xsi);
     };
 
+    double &alpha_f = parametersFine -> getAlphaF();
+
     for (int inode = 0; inode < numNodesGlueZoneFine; inode++) {
         
         x = nodesFine_[nodesGlueZoneFine_[inode]] -> getCoordinates();
@@ -400,7 +402,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
     for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
         
         typename Quadrature::NodalValuesQuad x1, x2;
-        typename Nodes::VecLocD x;
+        typename Nodes::VecLocD x,xp;
         typename Elements::Connectivity connec;
         std::pair<int, ublas::bounded_vector<double,2> > corresp;
 
@@ -409,10 +411,13 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
         
         for (int i = 0; i < 6; i++){
             x = nodesFine_[connec(i)] -> getCoordinates();
+            xp = nodesFine_[connec(i)] -> getPreviousCoordinates();
             
-            x1(i) = x(0);
-            x2(i) = x(1);
+            x1(i) = alpha_f * x(0) + (1. - alpha_f) * xp(0);
+            x2(i) = alpha_f * x(1) + (1. - alpha_f) * xp(1);
         };
+
+        // std::cout << "XX1 " << x2 << " " << x22 << " " << x222 << std::endl;
 
         int numberIntPoints = elementsFine_[elementsGlueZoneFine_[ielem]] -> 
             getNumberOfIntegrationPoints();
@@ -4080,7 +4085,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
     // Computes the system size
     int sysSize = 3 * numNodesCoarse + 3 * numNodesFine + 2 * numNodesGlueZoneFine;
     
-    numTimeSteps = 10000;
+    numTimeSteps = 2000;
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
@@ -4159,9 +4164,10 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             nodesFine_[i] -> setCoordinates(xn);
         };
         
+        setNodalCorrespondenceFine();
         setSignaledDistance();
         setWeightFunction(1.);
-        setNodalCorrespondenceFine();
+        
 
 
         //STARTS NEWTON-RAPHSON
@@ -5129,10 +5135,9 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
     int sysSize = 3 * numNodesCoarse +  
         + 3 * numNodesFine + 2 * numNodesGlueZoneFine;
     
-    
+    setNodalCorrespondenceFine();
     setSignaledDistance();
     setWeightFunction(1.);
-    setNodalCorrespondenceFine();
     
     //STARTS NEWTON-RAPHSON
     for (int inewton = 0; inewton < iterNumber; inewton++){
