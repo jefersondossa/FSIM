@@ -82,7 +82,7 @@ int main(int argc, char **args) {
     double y3 = 0.85;
     double y4 = 10;
  
-    double h1 = 13; double h2 = 25; double h3 = 20;
+    double h1 = 13; double h2 = 25; double h3 = 25;
     double v1 = 13; double v2 = 15;
 
     Point* p001 = fluid1 -> addPoint({x1,y1},0.5,false);
@@ -444,31 +444,48 @@ int main(int argc, char **args) {
     double elSize3 = 0.03;
     double elSize4 = 0.075;
 
-    Point* p1386 = fluid2 -> addPoint({0.5,0.0},elSize2,false);
-    Point* p1387 = fluid2 -> addPoint({1.4,0.0},elSize2,false);
-    Point* p1388 = fluid2 -> addPoint({1.6,0.0},elSize2,false);
-    Point* p1389 = fluid2 -> addPoint({0.5,0.9},elSize2,false);
-    Point* p1390 = fluid2 -> addPoint({0.5,1.1},elSize2,false);
-    Point* p1391 = fluid2 -> addPoint({-.4,0.0},elSize2,false);
-    Point* p1392 = fluid2 -> addPoint({-.6,0.0},elSize2,false);
-    Point* p1393 = fluid2 -> addPoint({0.5,-.9},elSize2,false);
-    Point* p1394 = fluid2 -> addPoint({0.5,-1.1},elSize2,false);
+    Point* p1386 = fluid2 -> addPoint({1.25,0.0},elSize2,false);
+    Point* p1387 = fluid2 -> addPoint({.4,0.},elSize2,false);
+    Point* p1388 = fluid2 -> addPoint({-.4,0.},elSize2,false);
+    Point* p1389 = fluid2 -> addPoint({0,.4},elSize2,false);
+    Point* p1390 = fluid2 -> addPoint({1,.4},elSize4,false);
+    Point* p1391 = fluid2 -> addPoint({1.4,0.},elSize3,false);
+    Point* p1392 = fluid2 -> addPoint({1.,-.4},elSize4,false);
+    Point* p1393 = fluid2 -> addPoint({0.,-.4},elSize2,false);
     
-    Line* l1014 = fluid2 -> addLine({p1387,p1386,p1389});
-    Line* l1015 = fluid2 -> addLine({p1389,p1386,p1391});
-    Line* l1016 = fluid2 -> addLine({p1391,p1386,p1393});
-    Line* l1017 = fluid2 -> addLine({p1393,p1386,p1387});
+    Point* p1394 = fluid2 -> addPoint({0,-0.6},elSize2,false);
+    Point* p1395 = fluid2 -> addPoint({-0.6,0.},elSize2,false);
+    Point* p1396 = fluid2 -> addPoint({0.,0.6},elSize2,false);
+    Point* p1397 = fluid2 -> addPoint({1.,.6},elSize4,false);
+    Point* p1398 = fluid2 -> addPoint({1.6,.0},elSize4,false);
+    Point* p1399 = fluid2 -> addPoint({1.,-0.6},elSize4,false);
+    
+    Line* l1014 = fluid2 -> addLine({p1393,p1097,p1388});
+    Line* l1015 = fluid2 -> addLine({p1388,p1097,p1389});
+    Line* l1016 = fluid2 -> addLine({p1390,p1001,p1391});
+    Line* l1017 = fluid2 -> addLine({p1391,p1001,p1392});
+    Line* l1018 = fluid2 -> addLine({p1389,p1390});
+    Line* l1019 = fluid2 -> addLine({p1392,p1393});
+    Line* l1020 = fluid2 -> addLine({p1001,p1386});
+    Line* l1021 = fluid2 -> addLine({p1386,p1391});
 
-    Line* l1018 = fluid2 -> addLine({p1388,p1386,p1390});
-    Line* l1019 = fluid2 -> addLine({p1390,p1386,p1392});
-    Line* l1020 = fluid2 -> addLine({p1392,p1386,p1394});
-    Line* l1021 = fluid2 -> addLine({p1394,p1386,p1388});
+    Line* l1022 = fluid2 -> addLine({p1394,p1097,p1395});
+    Line* l1023 = fluid2 -> addLine({p1395,p1097,p1396});
+    Line* l1024 = fluid2 -> addLine({p1396,p1397});
+    Line* l1025 = fluid2 -> addLine({p1397,p1001,p1398});
+    Line* l1026 = fluid2 -> addLine({p1398,p1001,p1399});
+    Line* l1027 = fluid2 -> addLine({p1399,p1394});
+
     
-    
-    LineLoop* ll1005 = fluid2->addLineLoop({ l1014, l1015, l1016, l1017, 
-                                             l001 -> operator-(), l002 -> operator-(), l003 -> operator-(), l004 -> operator-() });
+    LineLoop* ll1005 = fluid2->addLineLoop({ l1017 -> operator-(), l1019 -> operator-(), 
+                                             l1014 -> operator-(), l1015 -> operator-(), 
+                                             l1018 -> operator-(), l1016 -> operator-(), 
+                                             l001, l002, l003, l004 });
    
-    LineLoop* ll1006 = fluid2->addLineLoop({ l1018, l1019, l1020, l1021, l1014 -> operator-(), l1015 -> operator-(), l1016 -> operator-(), l1017 -> operator-() }); 
+    LineLoop* ll1006 = fluid2->addLineLoop({ l1027 -> operator-(), l1026 -> operator-(), 
+                                             l1025 -> operator-(), l1024 -> operator-(),
+                                             l1023 -> operator-(), l1022 -> operator-(),
+                                             l1019, l1017, l1016, l1018, l1015, l1014}); 
     
 
     //Transfinite lines 
@@ -481,17 +498,24 @@ int main(int argc, char **args) {
     
     PlaneSurface* s1005 = fluid2 -> addPlaneSurface({ll1005});
     PlaneSurface* s1006 = fluid2 -> addPlaneSurface({ll1006});
+   
+    fluid2 -> addBoundaryCondition("NEUMANN", l1020, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l1021, {}, {}, "GLOBAL");
 
 
     fluid2 -> addBoundaryCondition("NEUMANN", l1014, {}, {}, "GLOBAL");
     fluid2 -> addBoundaryCondition("NEUMANN", l1015, {}, {}, "GLOBAL");
     fluid2 -> addBoundaryCondition("NEUMANN", l1016, {}, {}, "GLOBAL");
     fluid2 -> addBoundaryCondition("NEUMANN", l1017, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l1018, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l1019, {}, {}, "GLOBAL");
 
-    fluid2 -> addBoundaryCondition("GLUE", l1018, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l1019, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l1020, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l1021, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l1022, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l1023, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l1024, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l1025, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l1026, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l1027, {0}, {0}, "GLOBAL");
     
     fluid2 -> addBoundaryCondition("DIRICHLET", l1001, {0.0}, {0.0}, "GLOBAL");
     fluid2 -> addBoundaryCondition("DIRICHLET", l1002, {0}, {0.0}, "GLOBAL");
@@ -503,11 +527,11 @@ int main(int argc, char **args) {
   
         FluidDomain* problem = new FluidDomain(fluid1);
         problem -> addSurfaceMaterial({ s001,s002,s003,s004,s005,s006,s007,s008,s009 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh("T6", "DELAUNAY", "coarse", "", false, true);
+        problem -> generateMesh("T6", "DELAUNAY", "coarse", "", false, false);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         problem2 -> addSurfaceMaterial({ s1005, s1006 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh("T6", "DELAUNAY", "fine", "", false, true);
+        problem2 -> generateMesh("T6", "DELAUNAY", "fine", "", false, false);
 
         //problem -> readInput("exemplo.msh",0);
 	};
@@ -591,14 +615,14 @@ int main(int argc, char **args) {
     //4- 0 - Steady problem  
     //   1 - Transient problem  
       
-    coarseModel.readInitialValues("saidaVelCoarse102100.txt","saidaVelCoarse102101.txt");
-    fineModel.readInitialValues("saidaVelFine102100.txt","saidaVelFine102101.txt");
+    coarseModel.readInitialValues("saidaVelCoarse106155.txt","saidaVelCoarse106156.txt");
+    fineModel.readInitialValues("saidaVelFine106155.txt","saidaVelFine106156.txt");
 
 
        
      arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
-     arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 
-     arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1); 
+     arlequinProblem.solveArlequinProblem(5, 1.e-7, 2, 1); 
+     arlequinProblem.solveArlequinProblemMoving(5, 1.e-7, 2, 1); 
           
      // 
     //Finalize main program   
