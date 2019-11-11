@@ -20,7 +20,7 @@
 
 #include "IntegrationQuadrature.hpp"
 #include "IntegrationQuadrature11.hpp"
-//#include "PartitionedQuadrature.hpp"
+// #include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
 
@@ -99,6 +99,7 @@ private:
     double        dumeshPrev_dx, dumeshPrev_dy, dvmeshPrev_dx, dvmeshPrev_dy;
     double        lagMx_,lagMy_;
     double        dLx_dx, dLx_dy, dLy_dx, dLy_dy;
+    double        tARLQ_;
 
     DimVector     xK, XK;
     int           sideBoundary_;
@@ -191,7 +192,8 @@ public:
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx);
-    void getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tLSIC_, double &tARLQ_, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx);
+    void getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tLSIC_, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx);
+    void getParameterArlequin2();
     // double getPSPG(){return tPSPG_;};
 
     /// Compute the vorticity field
@@ -1390,7 +1392,7 @@ void Element<2>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_
 //------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tLSIC_, double &tARLQ_, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx) {
+void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tLSIC_, ShapeFunctionValue &phi_, ShapeFunctionDerivative &dphi_dx) {
 
     double        tSUGN1_;
     double        tSUGN2_;
@@ -1578,7 +1580,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * sqrt(u_ * u_ + v_ * v_) / sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_ * 1.e1;
+    tARLQ_ = -0. * k1 * tSUPG_ * 1.e1;
     //}
     //tARLQ_ = 0.;
 
@@ -1656,6 +1658,118 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     // tARLQ_ = -0.0 * k1 / sqrt(1. / (tp1*tp1) +
     //                         1. / (tp2*tp2) +
     //                         1. / (tp3*tp3));
+
+    // std::cout << "depois " << index_ << " " << le << " " << lv << " " << tARLQ_ << std::endl;
+
+
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
+//------------------------------------------------------------------------------
+template<>
+void Element<2>::getParameterArlequin2() {
+
+    typename QuadShapeFunction<2>::Coords xsi;
+    ShapeFunctionValue      phi_;
+    ShapeFunctionDerivative dphi_dx;  
+    ShapeFunction           shapeQuad;
+    DimMatrix ainv_;
+    NormalQuad nQuad = IntNormal();
+
+    double &visc_ = parameters.getViscosity();
+    double &dens_ = parameters.getDensity();
+    double &dTime_ = parameters.getTimeStep();
+    double &k1 = parameters.getArlequinK1();
+
+    LocalMatrix lambda, inercia, conveccao, visccc;
+    lambda.clear(); inercia.clear(); conveccao.clear(); visccc.clear();
+    double le = 0.;
+    double li = 0.;
+    double lc = 0.;
+    double lv = 0.;
+
+    tARLQ_ = 0.;
+    
+    int index = 0;
+
+    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
+        it != nQuad.end(); it++){
+
+        //Defines the integration points adimentional coordinates
+        xsi(0) = nQuad.PointList(index,0);
+        xsi(1) = nQuad.PointList(index,1);
+
+        //Computes the velocity shape functions
+        shapeQuad.evaluate(xsi,phi_);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        
+        getVelAndDerivatives(phi_, dphi_dx);
+
+        for (int i = 0; i < 6; i++){
+            for (int j = 0; j < 6; j++){
+                
+                lambda(2*i  ,2*j  ) += phi_(i) * phi_(j) * weight_ * djac_;
+                lambda(2*i+1,2*j+1) += phi_(i) * phi_(j) * weight_ * djac_;
+
+                conveccao(2*i  ,2*j  ) += dphi_dx(0,i) * (du_dx*dphi_dx(0,j) + dv_dx*dphi_dx(1,j)) * weight_ * djac_;
+                conveccao(2*i  ,2*j+1) += dphi_dx(1,i) * (du_dx*dphi_dx(0,j) + dv_dx*dphi_dx(1,j)) * weight_ * djac_;
+                conveccao(2*i+1,2*j  ) += dphi_dx(0,i) * (du_dy*dphi_dx(0,j) + dv_dy*dphi_dx(1,j)) * weight_ * djac_;
+                conveccao(2*i+1,2*j+1) += dphi_dx(1,i) * (du_dy*dphi_dx(0,j) + dv_dy*dphi_dx(1,j)) * weight_ * djac_;
+
+                inercia(2*i  ,2*j  ) += dphi_dx(0,i) * dphi_dx(0,j) * weight_ * djac_;
+                inercia(2*i  ,2*j+1) += dphi_dx(1,i) * dphi_dx(1,j) * weight_ * djac_;
+                inercia(2*i+1,2*j  ) += dphi_dx(0,i) * dphi_dx(0,j) * weight_ * djac_;
+                inercia(2*i+1,2*j+1) += dphi_dx(1,i) * dphi_dx(1,j) * weight_ * djac_;
+
+                // visccc(2*i  ,2*j  ) += ((ddphi_dx(0,0)(i)+ddphi_dx(0,1)(i)) * (2. * ddphi_dx(0,0)(j) + ddphi_dx(1,1)(j))) * weight_ * djac_;
+                // visccc(2*i  ,2*j+1) += ((ddphi_dx(0,0)(i)+ddphi_dx(0,1)(i)) * (ddphi_dx(0,1)(j))) * weight_ * djac_;
+                // visccc(2*i+1,2*j  ) += ((ddphi_dx(1,1)(i)+ddphi_dx(0,1)(i)) * (ddphi_dx(0,1)(j))) * weight_ * djac_;
+                // visccc(2*i+1,2*j+1) += ((ddphi_dx(1,1)(i)+ddphi_dx(0,1)(i)) * (2. * ddphi_dx(1,1)(j) + ddphi_dx(0,0)(j))) * weight_ * djac_;
+            }
+        }
+        index++;
+    }
+
+    LocalVector U_, DU_;
+    U_.clear(); DU_.clear(); 
+
+    for (int i=0; i<6; i++){
+        U_(2*i  ) = (*nodes_)[connect_(i)] -> getVelocity(0);
+        U_(2*i+1) = (*nodes_)[connect_(i)] -> getVelocity(1);
+        DU_(2*i  ) = (*nodes_)[connect_(i)] -> getAcceleration(0);
+        DU_(2*i+1) = (*nodes_)[connect_(i)] -> getAcceleration(1);
+    };
+
+    le = norm_2(prod(lambda,U_));
+    lc = norm_2(prod(conveccao,U_));
+    li = norm_2(prod(inercia,DU_));
+    lv = norm_2(prod(visccc,U_));
+
+    // //std::cout << "asd " << index_ << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
+    //  // std::cout << "antes " << index_ << " " << tARLQ_ << std::endl;
+
+    double tp1 = fabs(le) / fabs(lc);
+    double tp2 = fabs(le) / fabs(li);
+    double tp3 = tp1 / visc_;
+    tp3 = le / (visc_*lv);
+
+    if (fabs(tp1) <= 1.e-10) tp1 = 1.e-10;
+    if (fabs(tp2) <= 1.e-10) tp2 = 1.e-10;
+    if (fabs(tp3) <= 1.e-10) tp3 = 1.e-10;
+
+    tARLQ_ = -1000.0 * k1 / sqrt(1. / (tp1*tp1) +
+                            1. / (tp2*tp2) +
+                            1. / (tp3*tp3));
 
     // std::cout << "depois " << index_ << " " << le << " " << lv << " " << tARLQ_ << std::endl;
 
@@ -2767,7 +2881,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(LocalMatrix &lagrMultMatrix, Loc
     lagrMultVector.clear();
     rhsVector.clear();
 
-    double tSUPG_; double tPSPG_; double tLSIC_; double tARLQ_;
+    double tSUPG_; double tPSPG_; double tLSIC_;
 
     double &k1 = parameters.getArlequinK1();
     double &k2 = parameters.getArlequinK2();
@@ -2794,8 +2908,6 @@ void Element<2>::getLagrangeMultipliersSameMesh(LocalMatrix &lagrMultMatrix, Loc
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
         
         getVelAndDerivatives(phi_, dphi_dx);
-
-        getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
 
         // H1 COUPLING OPERATOR        
         ublas::bounded_matrix<double, 3,18> Bmatrix, Baux;
@@ -2891,7 +3003,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     LocalVector rhsVector;
     rhsVector.clear();
 
-    double tSUPG_; double tPSPG_; double tLSIC_; double tARLQ_;
+    double tSUPG_; double tPSPG_; double tLSIC_;
 
     double &dens_ = parameters.getDensity();
     double &alpha_f = parameters.getAlphaF();
@@ -2917,7 +3029,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
         
         getVelAndDerivatives(phi_, dphi_dx);
 
-        getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
+        getParameterSUPG(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
         double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
         double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
@@ -2993,11 +3105,16 @@ void Element<2>::getLagrangeMultipliersArlequinSameMesh(LocalMatrix &arlequinSta
     arlequinStab.clear();
     arlequinStabVector.clear();
 
-    double tSUPG_; double tPSPG_; double tLSIC_; double tARLQ_;
+    double tSUPG_; double tPSPG_; double tLSIC_;
 
     double &dens_ = parameters.getDensity();
     double &alpha_f = parameters.getAlphaF();
     double &k1 = parameters.getArlequinK1();
+
+
+  
+    getParameterArlequin2();
+  
 
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
         it != nQuad.end(); it++){
@@ -3019,7 +3136,7 @@ void Element<2>::getLagrangeMultipliersArlequinSameMesh(LocalMatrix &arlequinSta
         
         getVelAndDerivatives(phi_, dphi_dx);
 
-        getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
+        getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
         double wna_ = alpha_f * intPointWeightFunction(index) + (1. - alpha_f) * intPointWeightFunctionPrev(index);
         
@@ -3173,8 +3290,6 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
     rhsVectorLM.clear();
     rhsVector.clear();
 
-    double tSUPG_; double tPSPG_; double tLSIC_; double tARLQ_;
-
     DimMatrix ainv_;
 
     // if (index_ == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
@@ -3210,7 +3325,6 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
             getJacobianMatrix(xsi, ainv_);
             getSpatialDerivatives(xsi, ainv_, dphi_dx);
             getVelAndDerivatives(phi_, dphi_dx);
-            getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
 
             double umeshna_ = alpha_f * umesh_ + (1. - alpha_f) * umeshPrev_;
             double vmeshna_ = alpha_f * vmesh_ + (1. - alpha_f) * vmeshPrev_;
@@ -3284,15 +3398,11 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
                 rhsVectorLM(2*i  ) += -(lagMx_ * phiLM_(i) * k1 + 
                                         (2. * dphiL_dx(0,i) * dLx_dx + 
                                          dphiL_dx(1,i) * dLx_dy + 
-                                         dphiL_dx(1,i) * dLy_dx) * k2) * weight_ * djac_
-                                      -((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * una_ + 
-                                      (una_ * umeshna_ * dalpha_dx + una_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_*0;
+                                         dphiL_dx(1,i) * dLy_dx) * k2) * weight_ * djac_;
                 rhsVectorLM(2*i+1) += -(lagMy_ * phiLM_(i) * k1 + 
                                         (dphiL_dx(0,i) * dLx_dy + 
                                          2. * dphiL_dx(1,i) * dLy_dy + 
-                                         dphiL_dx(0,i) * dLy_dx) * k2) * weight_ * djac_
-                                      -((dumeshna_dx + dvmeshna_dy) * (1.-wna_) * vna_ +
-                                      (vna_ * umeshna_ * dalpha_dx + vna_ * vmeshna_ * dalpha_dy)) * dens_ * phiLM_(i) * weight_ * djac_*0;
+                                         dphiL_dx(0,i) * dLy_dx) * k2) * weight_ * djac_;
 
                 rhsVector(2*i  ) += -(unaL_ * phi_(i) * k1 +
                                       (2. * dphi_dx(0,i) * duna_dx + 
@@ -3353,7 +3463,7 @@ void Element<2>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, doubl
     jacobianNRMatrix.clear();
     rhsVector.clear();
 
-    double tSUPG_; double tPSPG_; double tLSIC_; double tARLQ_;
+    double tSUPG_; double tPSPG_; double tLSIC_;
 
     DimMatrix ainv_;
 
@@ -3390,7 +3500,7 @@ void Element<2>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, doubl
             getJacobianMatrix(xsi, ainv_);
             getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-            getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
+            getParameterSUPG(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
             double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
             double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
@@ -3502,9 +3612,13 @@ void Element<2>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double 
     arlequinStabVector.clear();
     laplMatrix.clear();
 
-    double tSUPG_; double tPSPG_; double tLSIC_; double tARLQ_;
-
     DimMatrix ainv_;
+
+    double tSUPG_;
+    double tPSPG_;
+    double tLSIC_;
+
+    getParameterArlequin2();
 
     for(typename SpecialQuad::QuadratureListIt it = sQuad.begin(); 
         it != sQuad.end(); it++){
@@ -3538,7 +3652,7 @@ void Element<2>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double 
             getJacobianMatrix(xsi, ainv_);
             getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-            getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, tARLQ_, phi_, dphi_dx);
+            getParameterArlequin(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
             double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
             double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
