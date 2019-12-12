@@ -904,6 +904,7 @@ void FSInteraction<2>::updateFluidMesh(){
                     MPI_Bcast(&x(1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
                     nodesFluid_[connec(k)] -> setUpdatedCoordinates(x);
+                    nodesFluid_[connec(k)] -> setCoordinates(x);
                     // xant = nodesFluid_[connec(k)] -> getCoordinates();
 
                     //if(connec(k) == 29)std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
@@ -915,7 +916,7 @@ void FSInteraction<2>::updateFluidMesh(){
 
 
     //Solves Laplace Smoothing mesh moving scheme
-    fluidModel.solveSteadyLaplaceProblem(1,1.e-6);
+    fluidModel.solveSteadyLaplaceProblem(5,1.e-6);
    
     for (int i = 0; i < numNodesFluid; i++){
         typename Nodes::VecLocD x, xp, up;
@@ -941,6 +942,8 @@ void FSInteraction<2>::updateFluidMesh(){
 template<>
 void FSInteraction<2>::updateArlequinMesh(){
 
+    // std::cout << "AQUI6.1 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
 
     for (int i = 0; i < numInterfaces; i++){
 
@@ -950,8 +953,7 @@ void FSInteraction<2>::updateArlequinMesh(){
             if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interf){
 
                 typename Boundary::BoundConnect connec;
-                connec = boundaryArlequinFine_[ibound] -> 
-                    getBoundaryConnectivity();
+                connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
                 typename Nodes::VecLocD x, xsi, xant;
 
@@ -959,18 +961,23 @@ void FSInteraction<2>::updateArlequinMesh(){
 
                     x.clear();
                     
-                    int elem = nodesArlequinFine_[connec(k)] ->
-                        getNodalElemCorrespondence();
-                    xsi = nodesArlequinFine_[connec(k)] -> 
-                        getNodalXsiCorrespondence();
+                    int elem = nodesArlequinFine_[connec(k)] -> getNodalElemCorrespondence();
+                    xsi = nodesArlequinFine_[connec(k)] -> getNodalXsiCorrespondence();
+
+                    // std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     
-                    if (rank == 0) 
-                        getupdatedcoordinates_(&x(0),&x(1),&elem,&xsi(0));
+                    if (rank == 0) getupdatedcoordinates_(&x(0),&x(1),&elem,&xsi(0));
+
+
+                    // std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
+                    // MPI_Barrier(PETSC_COMM_WORLD);
+
 
                     MPI_Bcast(&x(0),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&x(1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
                     nodesArlequinFine_[connec(k)] -> setUpdatedCoordinates(x);
+                    nodesArlequinFine_[connec(k)] -> setCoordinates(x);
                     // xant = nodesFluid_[connec(k)] -> getCoordinates();
 
                     //std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
@@ -980,10 +987,15 @@ void FSInteraction<2>::updateArlequinMesh(){
         };//ibound
     };//i
 
+    // std::cout << "AQUI6.2 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
 
     //Solves Laplace Smoothing mesh moving scheme
-    arlequinModel.fineModel.solveSteadyLaplaceProblem(1,1.e-6);
+    arlequinModel.fineModel.solveSteadyLaplaceProblem(5,1.e-4);
    
+    // std::cout << "AQUI6.3 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
+
     for (int i = 0; i < numNodesArlequinFine; i++){
         typename Nodes::VecLocD x, xp, up;
         double u[2];
@@ -1333,6 +1345,10 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
     double omega = 1.;
     double mu = 0.;
 
+    double &alpha_f = fluidModel.fluidParameters.getAlphaF();
+    double &alpha_m = fluidModel.fluidParameters.getAlphaM();
+    double &gamma = fluidModel.fluidParameters.getGamma();
+
     X_k.clear();Y_k.clear();deltaXi.clear();deltaXii.clear();
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
@@ -1349,6 +1365,11 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
                 "                               TIME STEP = "
                       << iTimeStep << std::endl;
         };
+
+        // if (iTimeStep == 20){
+        //     double integ = 1.0;
+        //     fluidModel.fluidParameters.setSpectralRadius(integ);  
+        // } 
         
         // //SOMENTE PARA EXEMPLO DA CAVIDADE - INICIO
         // for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
@@ -1379,16 +1400,16 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
             u[0] = nodesFluid_[i] -> getVelocity(0);
             u[1] = nodesFluid_[i] -> getVelocity(1);
             
-            uprev[0] = nodesFluid_[i] -> getPreviousVelocity(0);
-            uprev[1] = nodesFluid_[i] -> getPreviousVelocity(1);
-            
-            accel[0] = (u[0] - uprev[0]) / dTime;
-            accel[1] = (u[1] - uprev[1]) / dTime;
-            
-            nodesFluid_[i] -> setAcceleration(accel);
-            
-            //Updates velocity
             nodesFluid_[i] -> setPreviousVelocity(u);
+
+            accel[0] = nodesFluid_[i] -> getAcceleration(0);
+            accel[1] = nodesFluid_[i] -> getAcceleration(1);
+            
+            nodesFluid_[i] -> setPreviousAcceleration(accel);
+            accel[0] *= (gamma - 1.) / gamma;
+            accel[1] *= (gamma - 1.) / gamma;
+
+            nodesFluid_[i] -> setAcceleration(accel);
         };
 
         if (rank == 0) updateqsrs_();
@@ -1459,7 +1480,7 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
              
             transferSolidVelocity();
             
-            fluidModel.solveFSIFluid(2, 1.e-5, 2);
+            fluidModel.solveFSIFluid(3, 1.e-5, 2);
             
             if (rank == 0) transferFluidLoad();
             
@@ -1575,6 +1596,10 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
 
     X_k.clear();Y_k.clear();deltaXi.clear();deltaXii.clear();
 
+    double &alpha_f = arlequinModel.fineModel.fluidParameters.getAlphaF();
+    double &alpha_m = arlequinModel.fineModel.fluidParameters.getAlphaM();
+    double &gamma = arlequinModel.fineModel.fluidParameters.getGamma();
+
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
         boost::posix_time::ptime t1 =                                 
@@ -1613,43 +1638,63 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         // };
         // //SOMENTE PARA EXEMPLO DA CAVIDADE - FIM
 
-        for (int i = 0; i < numNodesArlequinFine; i++){
-            double accel[2], u[2], uprev[2];
-            //Compute acceleration
-            u[0] = nodesArlequinFine_[i] -> getVelocity(0);
-            u[1] = nodesArlequinFine_[i] -> getVelocity(1);
-            
-            uprev[0] = nodesArlequinFine_[i] -> getPreviousVelocity(0);
-            uprev[1] = nodesArlequinFine_[i] -> getPreviousVelocity(1);
-            
-            accel[0] = (u[0] - uprev[0]) / dTime;
-            accel[1] = (u[1] - uprev[1]) / dTime;
-            
-            nodesArlequinFine_[i] -> setAcceleration(accel);
-            
-            //Updates velocity
-            nodesArlequinFine_[i] -> setPreviousVelocity(u);
-        };
+        // std::cout << "AQUI1 " << rank << " " << gamma << std::endl;
+        // MPI_Barrier(PETSC_COMM_WORLD);
+
+        // if (iTimeStep == 10){
+        //     double spec = 0.0;
+        //     arlequinModel.fineModel.fluidParameters.setSpectralRadius(spec);
+        //     arlequinModel.coarseModel.fluidParameters.setSpectralRadius(spec);
+        //     std::cout << "AQUI " << rank << std::endl;
+        // }
+
         for (int i = 0; i < numNodesArlequinCoarse; i++){
             double accel[2], u[2], uprev[2];
+            
             //Compute acceleration
             u[0] = nodesArlequinCoarse_[i] -> getVelocity(0);
             u[1] = nodesArlequinCoarse_[i] -> getVelocity(1);
+
+            nodesArlequinCoarse_[i] -> setPreviousVelocity(u);
             
-            uprev[0] = nodesArlequinCoarse_[i] -> getPreviousVelocity(0);
-            uprev[1] = nodesArlequinCoarse_[i] -> getPreviousVelocity(1);
+            accel[0] = nodesArlequinCoarse_[i] -> getAcceleration(0);
+            accel[1] = nodesArlequinCoarse_[i] -> getAcceleration(1);
             
-            accel[0] = (u[0] - uprev[0]) / dTime;
-            accel[1] = (u[1] - uprev[1]) / dTime;
+            nodesArlequinCoarse_[i] -> setPreviousAcceleration(accel);
+
+            accel[0] *= (gamma - 1.) / gamma;
+            accel[1] *= (gamma - 1.) / gamma;
             
             nodesArlequinCoarse_[i] -> setAcceleration(accel);
-            
-            //Updates velocity
-            nodesArlequinCoarse_[i] -> setPreviousVelocity(u);
         };
 
+        for (int i = 0; i < numNodesArlequinFine; i++){
+            double accel[2], u[2], uprev[2], lag[2];
+            
+            //Compute acceleration
+            u[0] = nodesArlequinFine_[i] -> getVelocity(0);
+            u[1] = nodesArlequinFine_[i] -> getVelocity(1);
+
+            nodesArlequinFine_[i] -> setPreviousVelocity(u);
+            
+            accel[0] = nodesArlequinFine_[i] -> getAcceleration(0);
+            accel[1] = nodesArlequinFine_[i] -> getAcceleration(1);
+            
+            nodesArlequinFine_[i] -> setPreviousAcceleration(accel);
+
+            accel[0] *= (gamma - 1.) / gamma;
+            accel[1] *= (gamma - 1.) / gamma;
+            
+            nodesArlequinFine_[i] -> setAcceleration(accel);
+        };
+
+        // std::cout << "AQUI2 " << rank << std::endl;
+        // MPI_Barrier(PETSC_COMM_WORLD);
 
         if (rank == 0) updateqsrs_();
+
+        // std::cout << "AQUI3 " << rank << std::endl;
+        // MPI_Barrier(PETSC_COMM_WORLD);
 
         for (int i = 0; i < numNodesArlequinFine; i++){
             typename Nodes::VecLocD x;
@@ -1658,6 +1703,9 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             nodesArlequinFine_[i] -> setPreviousCoordinates(0,x(0));
             nodesArlequinFine_[i] -> setPreviousCoordinates(1,x(1));
         };
+
+        // std::cout << "AQUI4 " << rank << std::endl;
+        // MPI_Barrier(PETSC_COMM_WORLD);
 
         for (int i = 0; i < numNodesSolid; i++){
             int dof = 3*i+1;
@@ -1670,6 +1718,8 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
       
         saidaOmega << std::endl << "Passo de tempo " << iTimeStep << std::endl;
 
+        // std::cout << "AQUI5 " << rank << std::endl;
+        // MPI_Barrier(PETSC_COMM_WORLD);
         //COMPUTING PREDICTOR
         for (int i = 0; i < numNodesSolid; i++){
             if (rank == 0) {
@@ -1698,13 +1748,15 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
         };
            
+        // std::cout << "AQUI6 " << rank << std::endl;
+        // MPI_Barrier(PETSC_COMM_WORLD);
         //X_k = Y_k;
 
         double residual = 1.e10;
         int iterations = 0;
 
         //Gauss-Seidel iterations
-        while ((residual > 1.e-4) && (iterations < 1)){
+        while ((residual > 1.e-5) && (iterations < 10)) {
             if(rank == 0) {std::cout << 
                     "........................... GAUSS-SEIDEL ITERATION "
                                      << iterations + 1 << 
@@ -1713,17 +1765,35 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             X_k = Y_k;
             
             updateArlequinMesh();
-             
+            
+            // std::cout << "AQUI7 " << rank << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD); 
+
             transferSolidVelocityArlequin();
 
-            arlequinModel.solveFSIArlequin(4, 1.e-3, 2);
+            // std::cout << "AQUI8 " << rank << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
             
+            // if (iTimeStep < 50){
+                arlequinModel.solveFSIArlequin(3, 1.e-3, 2, iTimeStep);
+            // }else{
+            //     arlequinModel.solveFSIArlequin(5, 1.e-3, 2, iTimeStep);
+            // }
+            
+            // std::cout << "AQUI9 " << rank << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
+
             if (rank == 0) transferArlequinLoad();
             
+            // std::cout << "AQUI10 " << rank << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
 
             //  if (iTimeStep > 3){
             if (rank == 0) solveframestructure_(&iTimeStep);
             // };
+
+            // std::cout << "AQUI11 " << rank << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
             
             for (int i = 0; i < numNodesSolid; i++){
                 int dof = 3*i+1;
@@ -1733,6 +1803,9 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
                 MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                 MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
             };
+
+            // std::cout << "AQUI12 " << rank << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
             
             deltaXii = X_k - Y_k;
             
