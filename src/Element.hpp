@@ -402,6 +402,7 @@ public:
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)
     std::pair <LocalMatrix, LocalVector> getSteadyLaplace();
+    std::pair <LocalMatrix, LocalVector> getSteadyLaplace2();
 
 };
 
@@ -1580,7 +1581,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * sqrt(u_ * u_ + v_ * v_) / sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -0. * k1 * tSUPG_ * 1.e1;
+    tARLQ_ = -1. * k1 * tSUPG_ * 1.e-1;
     //}
     //tARLQ_ = 0.;
 
@@ -2083,43 +2084,43 @@ void Element<2>::setBoundaryConditions(LocalMatrix &jacobianNRMatrix, LocalVecto
         };
 
     
-        if ((model == false) && ((*nodes_)[connect_(i)] -> getDistFunction() > -1.2))  {
+        // if ((model == false) && ((*nodes_)[connect_(i)] -> getDistFunction() > -1.2))  {
 
-           // std::cout << "ELEMN " << index_ << " " << connect_(i) << std::endl;
-            for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(2*i  ,j) *= 1000.e0;
-                jacobianNRMatrix(j,2*i  ) *= 1000.e0;
-                jacobianNRMatrix(2*i+1,j) *= 1000.e0;
-                jacobianNRMatrix(j,2*i+1) *= 1000.e0;
-            };
-            rhsVector(2*i  ) *= 1000.e0;
-            rhsVector(2*i+1) *= 1000.e0;
-        };
+        //    // std::cout << "ELEMN " << index_ << " " << connect_(i) << std::endl;
+        //     for (int j = 0; j < 18; j++){
+        //         jacobianNRMatrix(2*i  ,j) *= 1000.e0;
+        //         jacobianNRMatrix(j,2*i  ) *= 1000.e0;
+        //         jacobianNRMatrix(2*i+1,j) *= 1000.e0;
+        //         jacobianNRMatrix(j,2*i+1) *= 1000.e0;
+        //     };
+        //     rhsVector(2*i  ) *= 1000.e0;
+        //     rhsVector(2*i+1) *= 1000.e0;
+        // };
 
         
 
-        if ((model == false) && ((*nodes_)[connect_(i)] -> getDistFunction() > 0.3)){
-            for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(12+i,j) = 0.;
-                jacobianNRMatrix(j,12+i) = 0.;
-            };
-            jacobianNRMatrix(12+i,12+i) = 1.;
-            rhsVector(12+i) =  0.;
+        // if ((model == false) && ((*nodes_)[connect_(i)] -> getDistFunction() > 0.3)){
+        //     for (int j = 0; j < 18; j++){
+        //         jacobianNRMatrix(12+i,j) = 0.;
+        //         jacobianNRMatrix(j,12+i) = 0.;
+        //     };
+        //     jacobianNRMatrix(12+i,12+i) = 1.;
+        //     rhsVector(12+i) =  0.;
 
-            // for (int j = 0; j < 18; j++){
-            //     jacobianNRMatrix(2*i  ,j) = 0.;
-            //     jacobianNRMatrix(j,2*i  ) = 0.;
-            //     jacobianNRMatrix(2*i+1,j) = 0.;
-            //     jacobianNRMatrix(j,2*i+1) = 0.;                
-            // };
-            // jacobianNRMatrix(2*i  ,2*i  ) = 1.;
-            // rhsVector(2*i  ) =  0.;
-            // jacobianNRMatrix(2*i+1,2*i+1) = 1.;
-            // rhsVector(2*i+1) =  0.;
+        //     // for (int j = 0; j < 18; j++){
+        //     //     jacobianNRMatrix(2*i  ,j) = 0.;
+        //     //     jacobianNRMatrix(j,2*i  ) = 0.;
+        //     //     jacobianNRMatrix(2*i+1,j) = 0.;
+        //     //     jacobianNRMatrix(j,2*i+1) = 0.;                
+        //     // };
+        //     // jacobianNRMatrix(2*i  ,2*i  ) = 1.;
+        //     // rhsVector(2*i  ) =  0.;
+        //     // jacobianNRMatrix(2*i+1,2*i+1) = 1.;
+        //     // rhsVector(2*i+1) =  0.;
 
 
-            // std::cout<< "AUX mass " << index_ << " " << djac_ << std::endl;
-        }
+        //     // std::cout<< "AUX mass " << index_ << " " << djac_ << std::endl;
+        // }
 
 
         // double w = (*nodes_)[connect_(i)] -> getWeightFunction();
@@ -2180,19 +2181,19 @@ void Element<2>::setBoundaryConditionsLaplace(LocalMatrix &jacobianNRMatrix, Loc
         if ((*nodes_)[connect_(i)] -> getConstrainsLaplace(0) == 1) {
             for (int j = 0; j < 18; j++){
                 jacobianNRMatrix(2*i  ,j) = 0.;
-                //jacobianNRMatrix(j,2*i  ) = 0.;
+                jacobianNRMatrix(j,2*i  ) = 0.;
             };
             jacobianNRMatrix(2*i  , 2*i  ) = 1.;
-            //rhsVector(2*i  ) = 0.;
+            rhsVector(2*i  ) = 0.;
         };
 
         if ((*nodes_)[connect_(i)] -> getConstrainsLaplace(1) == 1) {
             for (int j = 0; j < 18; j++){
                 jacobianNRMatrix(2*i+1,j) = 0.;
-                //jacobianNRMatrix(j,2*i+1) = 0.;
+                jacobianNRMatrix(j,2*i+1) = 0.;
             };
             jacobianNRMatrix(2*i+1, 2*i+1) = 1.;
-            //rhsVector(2*i+1) =  0.;
+            rhsVector(2*i+1) =  0.;
         };
     };
     
@@ -2442,7 +2443,7 @@ void Element<2>::getResidualVectorInitial(int &index, ShapeFunctionValue &phi_, 
 template<>
 void Element<2>::getResidualVectorLaplace(LocalVector &rhsVector){
 
-    rhsVector.clear();
+    // rhsVector.clear();
     
     LocalVector U_;
     typename Nodes::VecLocD x_up;
@@ -2463,7 +2464,7 @@ void Element<2>::getResidualVectorLaplace(LocalVector &rhsVector){
         //if(connect_(i) == 29) std::cout << "Element 29 " << x_up(0) << " " << x_up(1) <<std::endl;
     };
     
-    noalias(rhsVector) += U_;//- prod(laplMatrix,U_); 
+    // noalias(rhsVector) += U_;//- prod(laplMatrix,U_); 
 
     return;
 };
@@ -2474,7 +2475,18 @@ void Element<2>::getResidualVectorLaplace(LocalVector &rhsVector){
 template<>
 void Element<2>::getElemLaplMatrix(double &weight_, ShapeFunctionDerivative &dphi_dx, LocalMatrix &jacobianNRMatrix){
 
-     for (int i = 0; i < 6; i++){
+    // for (int i = 0; i < 6; i++){
+    //     for (int j = 0; j < 6; j++){        
+    //         jacobianNRMatrix(2*i  ,2*j  ) += (dphi_dx(0,i) * dphi_dx(0,j) +
+    //                                           dphi_dx(1,i) * dphi_dx(1,j)) 
+    //                                     * weight_ * djac_ * meshMovingParameter;
+    //         jacobianNRMatrix(2*i+1,2*j+1) += (dphi_dx(0,i) * dphi_dx(0,j) +
+    //                                           dphi_dx(1,i) * dphi_dx(1,j)) 
+    //                                     * weight_ * djac_ * meshMovingParameter;
+    //     };
+    // };
+     
+    for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){        
             jacobianNRMatrix(2*i  ,2*j  ) += (dphi_dx(0,i) * dphi_dx(0,j) +
                                               dphi_dx(1,i) * dphi_dx(1,j)) 
@@ -2484,7 +2496,7 @@ void Element<2>::getElemLaplMatrix(double &weight_, ShapeFunctionDerivative &dph
                                         * weight_ * djac_ * meshMovingParameter;
         };
     };
-     
+
     return;
 };
 
@@ -2853,6 +2865,214 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     
     //Computes the RHS vector
     getResidualVectorLaplace(rhsVector);
+
+    //Apply boundary conditions
+    setBoundaryConditionsLaplace(jacobianNRMatrix, rhsVector);
+
+    return std::make_pair(jacobianNRMatrix, rhsVector);
+};
+
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<>
+std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 18> > Element<2>::getSteadyLaplace2(){
+
+    typename QuadShapeFunction<2>::Coords xsi;
+    ShapeFunctionValue      phi_;  
+    typename QuadShapeFunction<2>::ValueDeriv dphi;
+    
+    ShapeFunction           shapeQuad;
+    // ShapeFunctionDerivative dphi_dx;
+    int index = 0;
+    NormalQuad nQuad = IntNormal();
+
+    LocalMatrix jacobianNRMatrix;
+    jacobianNRMatrix.clear();
+    LocalVector rhsVector;
+    rhsVector.clear();
+        
+    for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
+        it != nQuad.end(); it++){
+        
+        //Defines the integration points adimentional coordinates
+        xsi(0) = nQuad.PointList(index,0);
+        xsi(1) = nQuad.PointList(index,1);
+
+        //Computes the velocity shape functions
+        shapeQuad.evaluate(xsi,phi_);
+        shapeQuad.evaluateGradient(xsi,dphi);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        //COMPUTE A0
+        double dx_dxsi[2][2];
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                dx_dxsi[i][j] = 0.0;
+
+        for (int i = 0; i < 6; ++i){
+            VecLoc initialCoord = (*nodes_)[connect_(i)] -> getPreviousCoordinates();
+            dx_dxsi[0][0] += initialCoord(0) * dphi(0,i);
+            dx_dxsi[0][1] += initialCoord(0) * dphi(1,i);
+
+            dx_dxsi[1][0] += initialCoord(1) * dphi(0,i);
+            dx_dxsi[1][1] += initialCoord(1) * dphi(1,i);
+        }
+        double j0 = dx_dxsi[0][0] * dx_dxsi[1][1] - dx_dxsi[0][1] * dx_dxsi[1][0];
+        
+        //dxsi_dx
+        double dxsi_dx[2][2];
+
+        dxsi_dx[0][0] = dx_dxsi[1][1] / j0;
+        dxsi_dx[0][1] = -dx_dxsi[0][1] / j0;
+        dxsi_dx[1][0] = -dx_dxsi[1][0] / j0;
+        dxsi_dx[1][1] = dx_dxsi[0][0] / j0;
+
+        //dphi_dx
+        double dphi_dx[6][2]; 
+        for (int i = 0; i < 6; i++)
+        {
+            dphi_dx[i][0] = dxsi_dx[0][0] * dphi(0,i) + dxsi_dx[1][0] * dphi(1,i);
+            dphi_dx[i][1] = dxsi_dx[0][1] * dphi(0,i) + dxsi_dx[1][1] * dphi(1,i);
+        }
+
+
+        //COMPUTE A1
+        double dy_dxsi[2][2]; //row = cartesian, column = parametric
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                dy_dxsi[i][j] = 0.0;
+        
+        for (int i = 0; i < 6; i++){
+            VecLoc currentCoord = (*nodes_)[connect_(i)] -> getCoordinates();
+            dy_dxsi[0][0] += currentCoord(0) * dphi(0,i);
+            dy_dxsi[0][1] += currentCoord(0) * dphi(1,i);
+
+            dy_dxsi[1][0] += currentCoord(1) * dphi(0,i);
+            dy_dxsi[1][1] += currentCoord(1) * dphi(1,i);
+        }
+
+        //dy_dx
+        double dy_dx[2][2];
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                dy_dx[i][j] = dy_dxsi[i][0] * dxsi_dx[0][j] + dy_dxsi[i][1] * dxsi_dx[1][j];
+
+        //jacobian
+        double jac = dy_dx[0][0] * dy_dx[1][1] - dy_dx[0][1] * dy_dx[1][0];
+
+        //Green-Lagrange strain tensor
+        double E[2][2];
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                E[i][j] = 0.5 * (dy_dx[0][i] * dy_dx[0][j] + dy_dx[1][i] * dy_dx[1][j]);
+        E[0][0] -= 0.5; E[1][1] -= 0.5;
+
+        //Second Piola-Kirchhoff stress tensor
+        double S[2][2];
+        double young = 1. / j0;
+        double poisson = 0.3;
+        S[0][0] = young / (1.0-(poisson*poisson)) * (E[0][0] + poisson * E[1][1]);
+        S[0][1] = 2.0 * (young / (2.0 * (1.0+poisson))) * E[0][1];
+        S[1][0] = S[0][1];
+        S[1][1] = young / (1.0-(poisson*poisson)) * (E[1][1] + poisson * E[0][0]);
+        //     S[0][0] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * E[0][0] + poisson * E[1][1]);
+        //     S[1][1] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * E[1][1] + poisson * E[0][0]);
+
+
+        //element rhs vector
+        for (int a = 0; a < 6; a++){
+            for (int k = 0; k < 2; k++){
+                double dE_dyak[2][2];
+                for (int i = 0; i < 2; i++)
+                    for (int j = 0; j < 2; j++)
+                        dE_dyak[i][j] = 0.5 * (dphi_dx[a][i] * dy_dx[k][j] + dy_dx[k][i] * dphi_dx[a][j]);
+                
+                //internal force
+                double f = 0.0;
+                for (int i = 0; i < 2; i++)
+                    for (int j = 0; j < 2; j++)
+                        f += S[i][j] * dE_dyak[i][j];
+
+                // double accel = 0.0;
+                // for (int i = 0; i < 6; i++)
+                //     accel += phi(i) * nodes_[i]->getCurrentAcceleration()(k);
+                
+                // //inertial force
+                // double m = density * phi(a) * accel;
+
+                //domain force
+                // double b;
+                // (k==1) ? b = phi(a) * density * gravity : 0.0;
+
+                rhsVector(2 * a + k) -= f * weight_ * j0;
+
+                //element tangent matrix
+                for (int b = 0; b < 6; b++){
+                    for (int l = 0; l < 2; l++){
+                        double dE_dybl[2][2];
+                        for (int i = 0; i < 2; i++)
+                            for (int j = 0; j < 2; j++)
+                                dE_dybl[i][j] = 0.5 * (dphi_dx[b][i] * dy_dx[l][j] + dy_dx[l][i] * dphi_dx[b][j]);
+
+                        double d2E_dyakbl[2][2];
+                        if (k==l)
+                            for (int i = 0; i < 2; i++)
+                                for (int j = 0; j < 2; j++)
+                                    d2E_dyakbl[i][j] = 0.5 * (dphi_dx[a][i] * dphi_dx[b][j] + dphi_dx[b][i] * dphi_dx[a][j]);
+                        else
+                            for (int i = 0; i < 2; i++)
+                                for (int j = 0; j < 2; j++)
+                                    d2E_dyakbl[i][j] = 0.0; 
+
+                        double dS_dybl[2][2];
+                        dS_dybl[0][0] = young / (1.0-(poisson*poisson)) * (dE_dybl[0][0] + poisson * dE_dybl[1][1]);
+                        dS_dybl[0][1] = 2.0 * (young / (2.0 * (1.0+poisson))) * dE_dybl[0][1];
+                        dS_dybl[1][0] = 2.0 * (young / (2.0 * (1.0+poisson))) * dE_dybl[1][0];
+                        dS_dybl[1][1] = young / (1.0-(poisson*poisson)) * (dE_dybl[1][1] + poisson * dE_dybl[0][0]);
+                        // if (analysisType == "PLANE_STRAIN")
+                        // {
+                        //     dS_dybl[0][0] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * dE_dybl[0][0] + poisson * dE_dybl[1][1]);
+                        //     dS_dybl[1][1] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * dE_dybl[1][1] + poisson * dE_dybl[0][0]);
+                        // }
+
+                        //elastic and geometric componentes of tangent matrix
+                        double e = 0.0;
+                        for (int i = 0; i < 2; i++)
+                            for (int j = 0; j < 2; j++)
+                                e += dS_dybl[i][j] * dE_dyak[i][j] + S[i][j] * d2E_dyakbl[i][j];
+
+                        //mass matrix
+                        // double m;
+                        // (k==l)? m = (1.0 / (beta * deltat * deltat)) * density * phi(a) * phi(b) : m = 0.0;
+
+                        jacobianNRMatrix(2 * a + k, 2 * b + l) += e * j0 * weight_;
+                    }
+                }
+            }
+        }
+
+        // for (int i = 0; i < 6; i++){
+        //     for (int j = 0; j < 6; j++){        
+        //         jacobianNRMatrix(2*i  ,2*j  ) += (dphi_dx(0,i) * dphi_dx(0,j) +
+        //                                           dphi_dx(1,i) * dphi_dx(1,j)) 
+        //                                     * weight_ * djac_ * meshMovingParameter;
+        //         jacobianNRMatrix(2*i+1,2*j+1) += (dphi_dx(0,i) * dphi_dx(0,j) +
+        //                                           dphi_dx(1,i) * dphi_dx(1,j)) 
+        //                                     * weight_ * djac_ * meshMovingParameter;
+        //     };
+        // };
+
+        index++;        
+    };  
+    
+
+    // if (index_ == 0) std::cout << "asdas  " << jacobianNRMatrix << " " << rhsVector << std::endl;
+
+    //Computes the RHS vector
+    // getResidualVectorLaplace(rhsVector);
 
     //Apply boundary conditions
     setBoundaryConditionsLaplace(jacobianNRMatrix, rhsVector);

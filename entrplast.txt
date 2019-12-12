@@ -1,0 +1,19 @@
+matriz p
+.667 -.333 -.333 0 0 0
+-.333 .667 -.333 0 0 0
+-.333 -.333 .667 0 0 0
+0 0 0 2 0 0
+0 0 0 0 2 0
+0 0 0 0 0 2
+vetor L (abertura do cone (mi*(1,1,1,0,0,0) para drucker, mi calculado no programa)
+1. 1. 1. 0 0 0
+numero de trechos nl adicionais
+1
+plasticas st, sc, hv, hd (tracao) hv hd (compressao)
+5.0d40 5.0d40 .02 .02 .02 .02
+plasticas subsequentes tracao (hv1 hd1 def1) compressao (hv1 hd1 def1)
+.000  .000  1000.65d10 .000  .000  1000.65d10
+plasticas subsequentes hv1 hd1 def1 hv1 hd1 def1 
+.15 .15  .50 .15 .15  .50
+plasticas subsequentes hv1 hd1 def1 hv1 hd1 def1 
+-.25 -.25  15 -.25 -.25  15
