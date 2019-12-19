@@ -7546,7 +7546,7 @@ c                  Id(ii,ij) = dbMin(ii,ij)
             !write(*,*)"xsi ",a0inv, a0
 
 
-            deltaXsi = matmul(transpose(a0inv),deltaX)
+            deltaXsi = matmul((a0inv),deltaX)
 
             xsi_tent = xsi_tent + deltaXsi(1)
 

@@ -1518,6 +1518,31 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
             u_[1] = val;
             if (nodes_[i] -> getConstrainsLaplace(0) != 1) nodes_[i] -> incrementCoordinate(0,u_[0]);
             if (nodes_[i] -> getConstrainsLaplace(1) != 1) nodes_[i] -> incrementCoordinate(1,u_[1]);
+
+
+
+
+            double x = nodes_[i] -> getCoordinateValue(0);
+            double y = nodes_[i] -> getCoordinateValue(1);
+            double xp = nodes_[i] -> getPreviousCoordinateValue(0);
+            double yp = nodes_[i] -> getPreviousCoordinateValue(1);
+            double vx = nodes_[i] -> getMeshVelocity(0);
+            double vy = nodes_[i] -> getMeshVelocity(1);
+            double ax = nodes_[i] -> getMeshAcceleration(0);
+            double ay = nodes_[i] -> getMeshAcceleration(1);
+
+            double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
+            double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
+
+            nodes_[i] -> setMeshAccelerationComponent(0,accelx);
+            nodes_[i] -> setMeshAccelerationComponent(1,accely);
+
+            double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
+            double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
+            // std::cout << "asd as " << vx << " " << velx << " " << accelx << " " << ax << std::endl;
+            nodes_[i] -> setMeshVelocityComponent(0,velx);
+            nodes_[i] -> setMeshVelocityComponent(1,vely);
+
         };
         
         //Computes the solution vector norm

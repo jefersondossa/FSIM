@@ -990,26 +990,27 @@ void FSInteraction<2>::updateArlequinMesh(){
     // std::cout << "AQUI6.2 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
 
+
     //Solves Laplace Smoothing mesh moving scheme
     arlequinModel.fineModel.solveSteadyLaplaceProblem(5,1.e-4);
    
     // std::cout << "AQUI6.3 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
 
-    for (int i = 0; i < numNodesArlequinFine; i++){
-        typename Nodes::VecLocD x, xp, up;
-        double u[2];
+    // for (int i = 0; i < numNodesArlequinFine; i++){
+    //     typename Nodes::VecLocD x, xp, up;
+    //     double u[2];
             
-        x = nodesArlequinFine_[i] -> getCoordinates();
-        xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
-        up(0) = nodesArlequinFine_[i] -> getPreviousMeshVelocity(0);
-        up(1) = nodesArlequinFine_[i] -> getPreviousMeshVelocity(1);
+    //     x = nodesArlequinFine_[i] -> getCoordinates();
+    //     xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
+    //     up(0) = nodesArlequinFine_[i] -> getPreviousMeshVelocity(0);
+    //     up(1) = nodesArlequinFine_[i] -> getPreviousMeshVelocity(1);
         
-        u[0] = (x(0) - xp(0)) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
-        u[1] = (x(1) - xp(1)) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
+    //     u[0] = (x(0) - xp(0)) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
+    //     u[1] = (x(1) - xp(1)) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
         
-        nodesArlequinFine_[i] -> setMeshVelocity(u);
-    };
+    //     nodesArlequinFine_[i] -> setMeshVelocity(u);
+    // };
 
 
 };
@@ -1696,6 +1697,31 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         // std::cout << "AQUI3 " << rank << std::endl;
         // MPI_Barrier(PETSC_COMM_WORLD);
 
+        //Compute Qs and Rs for mesh moving problem
+        for (int i = 0; i < numNodesArlequinFine; i++){
+            double x = nodesArlequinFine_[i] -> getCoordinateValue(0);
+            double y = nodesArlequinFine_[i] -> getCoordinateValue(1);
+            double xp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(0);
+            double yp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(1);
+            double vx = nodesArlequinFine_[i] -> getMeshVelocity(0);
+            double vy = nodesArlequinFine_[i] -> getMeshVelocity(1);
+            double ax = nodesArlequinFine_[i] -> getMeshAcceleration(0);
+            double ay = nodesArlequinFine_[i] -> getMeshAcceleration(1);
+
+            double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
+            double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
+
+            nodesArlequinFine_[i] -> setMeshAccelerationComponent(0,accelx);
+            nodesArlequinFine_[i] -> setMeshAccelerationComponent(1,accely);
+
+            double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
+            double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
+
+            nodesArlequinFine_[i] -> setMeshVelocityComponent(0,velx);
+            nodesArlequinFine_[i] -> setMeshVelocityComponent(1,vely);
+        }
+
+
         for (int i = 0; i < numNodesArlequinFine; i++){
             typename Nodes::VecLocD x;
             
@@ -1703,6 +1729,7 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             nodesArlequinFine_[i] -> setPreviousCoordinates(0,x(0));
             nodesArlequinFine_[i] -> setPreviousCoordinates(1,x(1));
         };
+
 
         // std::cout << "AQUI4 " << rank << std::endl;
         // MPI_Barrier(PETSC_COMM_WORLD);
