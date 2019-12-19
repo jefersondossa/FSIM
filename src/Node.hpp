@@ -67,6 +67,8 @@ private:
 
     VecLocD          meshVelocity_;           //Nodal mesh velocity
     VecLocD          previousMeshVelocity_;   //Previous time step mesh velocity
+    VecLocD          meshAcceleration_;
+    VecLocD          previousMeshAcceleration_;
 
     //Arlequin
     int              elemCorresp;             //Element correspondence
@@ -90,6 +92,8 @@ public:
         coordUpdated_ = coor;
         previousCoord_ = coor;
         index_ = index; 
+        meshVelocity_.clear();
+        meshAcceleration_.clear();
 
         constrainType[0] = 0;    constrainType[1] = 0;    constrainType[2] = 0;
         constrainValue[0] = 0;   constrainValue[1] = 0;   constrainValue[2] = 0;
@@ -282,6 +286,7 @@ public:
     /// @param double* mesh velocity
     void setMeshVelocity(double *u);
     void setMeshVelocityComponent(int dir,double u){meshVelocity_(dir) = u;} ;
+    void setMeshAccelerationComponent(int dir,double u){meshAcceleration_(dir) = u;} ;
 
     /// Sets the previous time step mesh velocity
     /// @param int direction @param double previous time step mesh velocity valu
@@ -290,6 +295,7 @@ public:
     /// Gets the node mesh velocity
     /// @param int direction @return mesh velocity component
     double getMeshVelocity(int dir) {return meshVelocity_(dir);}
+    double getMeshAcceleration(int dir) {return meshAcceleration_(dir);}
 
     /// Gets the previous time step mesh velocity
     /// @param int direction @return previous time step mesh velocity component

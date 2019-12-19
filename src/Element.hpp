@@ -101,6 +101,8 @@ private:
     double        dLx_dx, dLx_dy, dLy_dx, dLy_dy;
     double        tARLQ_;
 
+    LocalVector   rhsAnt;
+
     DimVector     xK, XK;
     int           sideBoundary_;
     double        meshMovingParameter;
@@ -143,6 +145,7 @@ public:
         glueZone = false;        FSIInterface = false;
         intPointGlueZone.clear();
         sideBoundary_ = 0;
+        rhsAnt.clear();
 
         NormalQuad nQuad = IntNormal();
 
@@ -2891,6 +2894,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     jacobianNRMatrix.clear();
     LocalVector rhsVector;
     rhsVector.clear();
+    double &dTime_ = parameters.getTimeStep();
         
     for(typename NormalQuad::QuadratureListIt it = nQuad.begin(); 
         it != nQuad.end(); it++){
@@ -2913,7 +2917,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
                 dx_dxsi[i][j] = 0.0;
 
         for (int i = 0; i < 6; ++i){
-            VecLoc initialCoord = (*nodes_)[connect_(i)] -> getPreviousCoordinates();
+            VecLoc initialCoord = (*nodes_)[connect_(i)] -> getInitialCoordinates();
             dx_dxsi[0][0] += initialCoord(0) * dphi(0,i);
             dx_dxsi[0][1] += initialCoord(0) * dphi(1,i);
 
@@ -3003,11 +3007,17 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
                 // //inertial force
                 // double m = density * phi(a) * accel;
 
+                double vel = 0.0;
+                for (int i = 0; i < 6; i++)
+                    vel += phi_(i) * (*nodes_)[connect_(i)]->getMeshVelocity(k);
+
+                double c =  phi_(a) * vel*0;
+
                 //domain force
                 // double b;
                 // (k==1) ? b = phi(a) * density * gravity : 0.0;
 
-                rhsVector(2 * a + k) -= f * weight_ * j0;
+                rhsVector(2 * a + k) -= (f+c) * weight_ * j0;
 
                 //element tangent matrix
                 for (int b = 0; b < 6; b++){
@@ -3045,10 +3055,11 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
                                 e += dS_dybl[i][j] * dE_dyak[i][j] + S[i][j] * d2E_dyakbl[i][j];
 
                         //mass matrix
-                        // double m;
+                        double m;
                         // (k==l)? m = (1.0 / (beta * deltat * deltat)) * density * phi(a) * phi(b) : m = 0.0;
+                        (k==l)? m = (1.0 / (0.25 * dTime_)) *0* phi_(a) * phi_(b) : m = 0.0;
 
-                        jacobianNRMatrix(2 * a + k, 2 * b + l) += e * j0 * weight_;
+                        jacobianNRMatrix(2 * a + k, 2 * b + l) += (e+m) * j0 * weight_;
                     }
                 }
             }
