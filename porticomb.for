@@ -89,6 +89,11 @@ c$$$  #+cd*dsin(ce*ipc*dt)+cf*dcos(cg*ipc*dt)
 c$$$  #+crh*dexp(cri*ipc*dt)+cj*dexp(ck*ipc*dt))
       enddo
 
+      ! if (ipt2 .le. 50) then
+      !    f(2) = f(2) + 10.;
+      !    f(128) = f(128) - 10.;
+      ! endif
+
 
  10   continue                  !Laço de iterações
       if (ia.le.6) call destroca1 !Atualização das variáveis após solução do sistema
@@ -780,8 +785,8 @@ c     atuais dos usuários do SET-EESC-USP
 c     ************************************************
 c     subrotina que define a lei constitutiva
 c     ****************************************************
-c      call definelei
-      call defineleiEPT
+      call definelei
+c      call defineleiEPT
 
       read(3,*)                 !numero de nos com velocidade inicial
       write(5,*) 'numero de nos com velocidade inicial'
@@ -2607,6 +2612,14 @@ c     write deslocamentos
      $=" 3" Name="Velocity"  format="ascii">'
       do i=1,nnos
          write(10,*) vs(glgl(i,1)),' ',vs(glgl(i,2)),' ',0
+         
+      enddo
+      write(10,*)'      </DataArray> '
+
+      write(10,*)'      <DataArray type="Float64" NumberOfComponents 
+     $=" 3" Name="Acceleration"  format="ascii">'
+      do i=1,nnos
+         write(10,*) as(glgl(i,1)),' ',as(glgl(i,2)),' ',0
          
       enddo
       write(10,*)'      </DataArray> '
@@ -7503,7 +7516,7 @@ c                  Id(ii,ij) = dbMin(ii,ij)
       implicit none
       integer*4 node, ielem, inode, k, iterations, il
       real*8 x_, y_, xsi, xsi_tent, x_c, y_c, error, deltaX(2),
-     $     deltaXsi(2), eta
+     $     deltaXsi(2), eta, dist
 !      implicit real*8(a-h),integer*4(i-n),real*8(o-z)
  
       xsi = 1.d8
@@ -7533,49 +7546,52 @@ c                  Id(ii,ij) = dbMin(ii,ij)
 
          iterations = 0
          error = 1.d6
-
-         do while ((dabs(error).gt.1.d-10) .and. (iterations.lt.6))
-            
-            iterations = iterations + 1
-            
-            deltaX(1) = x_ - x_c
-            deltaX(2) = y_ - y_c
-
-            deltaXsi = 0.d0
-
-            !write(*,*)"xsi ",a0inv, a0
-
-
-            deltaXsi = matmul((a0inv),deltaX)
-
-            xsi_tent = xsi_tent + deltaXsi(1)
-
-            x_c = 0.d0; y_c = 0.d0
-
-            xsi1 = xsi_tent
-            call suportefuncoesdeforma
-            call formaederi0   
-
-            call calc_A0
-            call inverse(2,a0,a0inv)
-
-            do k=1,notl(j)
-               inode = ic(j,k)
+         dist = dsqrt((x_c-x_)*(x_c-x_) + (y_c-y_)*(y_c-y_))
+         ! write(*,*)"AJSJAS ", x_ , x_c , y_, y_c, dist
+         if (dist .le. 0.8d0) then
+            do while ((dabs(error).gt.1.d-10) .and. (iterations.lt.6))
                
-               x_c = x_c + p(glgl(inode,1)) * fi(k)
-               y_c = y_c + p(glgl(inode,2)) * fi(k)
-            enddo
-            
-            error = deltaXsi(1)
+               iterations = iterations + 1
+               
+               deltaX(1) = x_ - x_c
+               deltaX(2) = y_ - y_c
 
-         end do
-                     
-         if ((xsi_tent.ge.-1.001) .and. (xsi_tent.le.1.001))then
-            xsi = xsi_tent
-            !write(*,*)"xsi ", xsi, deltaXsi(1), j, x_ 
-            ielem = j
-            exit
-         endif         
+               deltaXsi = 0.d0
+
+               !write(*,*)"xsi ",a0inv, a0
+
+
+               deltaXsi = matmul((a0inv),deltaX)
+
+               xsi_tent = xsi_tent + deltaXsi(1)
+
+               x_c = 0.d0; y_c = 0.d0
+
+               xsi1 = xsi_tent
+               call suportefuncoesdeforma
+               call formaederi0   
+
+               call calc_A0
+               call inverse(2,a0,a0inv)
+
+               do k=1,notl(j)
+                  inode = ic(j,k)
+                  
+                  x_c = x_c + p(glgl(inode,1)) * fi(k)
+                  y_c = y_c + p(glgl(inode,2)) * fi(k)
+               enddo
+               
+               error = deltaXsi(1)
+
+            end do      
+
+            if ((xsi_tent.ge.-1.00001) .and. (xsi_tent.le.1.00001))then
+               xsi = xsi_tent
+               !write(*,*)"xsi ", xsi, deltaXsi(1), j, x_ 
+               ielem = j
+               exit
+            endif         
+         endif                
                          
       end do
       
