@@ -192,21 +192,24 @@ void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
-        typename Nodes::VecLocD xint, x_, deltaX, deltaXsi, x;
-        typename Elements::Connectivity connec;
-        ublas::bounded_vector<double,2>            xsi, xsiC;
+        int *connec;
         QuadShapeFunction<2>                       shapeQuad;
-        typename QuadShapeFunction<2>::Values      phi_;
-        typename Elements::DimMatrix               ainv;
+        double phi_[6] = {};
+        double ainv[2][2] = {};
         double xsiCC[3];
-        std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
+        // std::pair<double*,double*> XK;
         int elemC;
 
-        x = nodesSolid_[iSol][isolid] -> getCoordinates();
+        double* x = nodesSolid_[iSol][isolid] -> getCoordinates();
         
         elemC = 150000;
-        xsiC(0) = 1.e50;
-        xsiC(1) = 1.e50; 
+        double xsiC[2];
+        xsiC[0] = 1.e50;
+        xsiC[1] = 1.e50; 
+        double xsi[2];
+        double x_[2];
+        double deltaX[2];
+        double deltaXsi[2];
         
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
             
@@ -217,7 +220,7 @@ void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
                 connec = elementsFluid_[jel] -> getConnectivity();
                 
                 //get boxes information        
-                XK = elementsFluid_[jel] -> getXIntersectionParameter();
+                // XK = elementsFluid_[jel] -> getXIntersectionParameter();
                 
                 //Chech if the node is inside the element box
                 // if ((x(0) < XK.first(0)) || (x(0) > XK.second(0)) ||
@@ -228,23 +231,24 @@ void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
                 xsiCC[1] = 1.e10;
                 xsiCC[2] = 1.e10;
                 
-                xsi(0) = 1. / 3.;
-                xsi(1) = 1. / 3.;
+                xsi[0] = 1. / 3.;
+                xsi[1] = 1. / 3.;
                 
                 shapeQuad.evaluate(xsi,phi_);
                 
-                x_.clear();
+                x_[0] = 0.;
+                x_[1] = 0.;
                 
                 for (int i = 0; i < 6; i++){
-                    xint = nodesFluid_[connec(i)] -> getCoordinates();
-                    x_(0) += xint(0) * phi_(i);
-                    x_(1) += xint(1) * phi_(i);                    
+                    double* xint = nodesFluid_[connec[i]] -> getCoordinates();
+                    x_[0] += xint[0] * phi_[i];
+                    x_[1] += xint[1] * phi_[i];                    
                 };
                 
                 double error = 1.e6;
                 
-                xsi(0) = 1. / 3.;
-                xsi(1) = 1. / 3.;
+                xsi[0] = 1. / 3.;
+                xsi[1] = 1. / 3.;
                 
                 int iterations = 0;
                 
@@ -252,39 +256,48 @@ void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
                     
                     iterations++;
                     
-                    deltaX = x - x_;
+                    deltaX[0] = x[0] - x_[0];
+                    deltaX[1] = x[1] - x_[1];
                     
-                    deltaXsi.clear();
+                    deltaXsi[0] = 0.;
+                    deltaXsi[1] = 0.;
                     
-                    ainv = elementsFluid_[jel] -> getJacobianMatrixValues(xsi);
+                    elementsFluid_[jel] -> getJacobianMatrix(xsi,ainv);
                     
-                    noalias(deltaXsi) = prod(trans(ainv),deltaX);
+                    // noalias(deltaXsi) = prod(trans(ainv),deltaX);
+
+                    for (int i = 0; i < 2; i++)
+                        for (int j = 0; j < 2; j++)
+                            deltaXsi[i] += ainv[j][i] * deltaX[j];
+
+
+                    xsi[0] += deltaXsi[0];
+                    xsi[1] += deltaXsi[1];
                     
-                    xsi += deltaXsi;
-                    
-                    x_.clear();
+                    x_[0] = 0.;
+                    x_[1] = 0.; 
                     
                     shapeQuad.evaluate(xsi,phi_);
                     
                     for (int i=0; i<6; i++){
-                        xint = nodesFluid_[connec(i)] -> getCoordinates();
-                        x_(0) += xint(0) * phi_(i);
-                        x_(1) += xint(1) * phi_(i);   
+                        double* xint = nodesFluid_[connec[i]] -> getCoordinates();
+                        x_[0] += xint[0] * phi_[i];
+                        x_[1] += xint[1] * phi_[i];   
                     };                   
-                    error = norm_2(deltaXsi);
+                    error = sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
                 };
                 
                 double t1 = -1.e-1;
                 double t2 =  1. - t1;
                 
-                xsiCC[0] = xsi(0);
-                xsiCC[1] = xsi(1);       
+                xsiCC[0] = xsi[0];
+                xsiCC[1] = xsi[1];       
                 xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
                 
                 if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
                     (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
                     
-                    xsiC = xsi;
+                    xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
                     elemC = jel;
                     break;
                 };           
@@ -306,21 +319,24 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
-        typename Nodes::VecLocD xint, x_, deltaX, deltaXsi, x;
-        typename Elements::Connectivity connec;
-        ublas::bounded_vector<double,2>            xsi, xsiC;
+        int *connec;
         QuadShapeFunction<2>                       shapeQuad;
-        typename QuadShapeFunction<2>::Values      phi_;
-        typename Elements::DimMatrix               ainv;
+        double phi_[6] = {};
+        double ainv[2][2] = {};
         double xsiCC[3];
-        std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
+        // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
         int elemC;
 
-        x = nodesSolid_[iSol][isolid] -> getCoordinates();
+        double* x = nodesSolid_[iSol][isolid] -> getCoordinates();
         
         elemC = 150000;
-        xsiC(0) = 1.e50;
-        xsiC(1) = 1.e50; 
+        double xsiC[2];
+        xsiC[0] = 1.e50;
+        xsiC[1] = 1.e50; 
+        double xsi[2];
+        double x_[2];
+        double deltaX[2];
+        double deltaXsi[2];
         
         for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             
@@ -332,7 +348,7 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
                 connec = elementsArlequinFine_[jel] -> getConnectivity();
                 
                 //get boxes information        
-                XK = elementsArlequinFine_[jel] -> getXIntersectionParameter();
+                // XK = elementsArlequinFine_[jel] -> getXIntersectionParameter();
                 
                 //Chech if the node is inside the element box
                 // if ((x(0) < XK.first(0)) || (x(0) > XK.second(0)) ||
@@ -343,23 +359,24 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
                 xsiCC[1] = 1.e10;
                 xsiCC[2] = 1.e10;
                 
-                xsi(0) = 1. / 3.;
-                xsi(1) = 1. / 3.;
+                xsi[0] = 1. / 3.;
+                xsi[1] = 1. / 3.;
                 
                 shapeQuad.evaluate(xsi,phi_);
                 
-                x_.clear();
+                x_[0] = 0.;
+                x_[1] = 0.;
                 
                 for (int i = 0; i < 6; i++){
-                    xint = nodesArlequinFine_[connec(i)] -> getCoordinates();
-                    x_(0) += xint(0) * phi_(i);
-                    x_(1) += xint(1) * phi_(i);                    
+                    double *xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
+                    x_[0] += xint[0] * phi_[i];
+                    x_[1] += xint[1] * phi_[i];                    
                 };
                 
                 double error = 1.e6;
                 
-                xsi(0) = 1. / 3.;
-                xsi(1) = 1. / 3.;
+                xsi[0] = 1. / 3.;
+                xsi[1] = 1. / 3.;
                 
                 int iterations = 0;
                 
@@ -367,41 +384,47 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
                     
                     iterations++;
                     
-                    deltaX = x - x_;
+                    deltaX[0] = x[0] - x_[0];
+                    deltaX[1] = x[1] - x_[1];
                     
-                    deltaXsi.clear();
+                    deltaXsi[0] = 0.;
+                    deltaXsi[1] = 0.;
                     
-                    ainv = elementsArlequinFine_[jel] -> 
-                        getJacobianMatrixValues(xsi);
+                    elementsArlequinFine_[jel] -> getJacobianMatrix(xsi,ainv);
                     
-                    noalias(deltaXsi) = prod(trans(ainv),deltaX);
+                    // noalias(deltaXsi) = prod(trans(ainv),deltaX);
+
+                    for (int i = 0; i < 2; i++)
+                        for (int j = 0; j < 2; j++)
+                            deltaXsi[i] += ainv[j][i] * deltaX[j];
                     
-                    xsi += deltaXsi;
+                    xsi[0] += deltaXsi[0];
+                    xsi[1] += deltaXsi[1];
                     
-                    x_.clear();
+                    x_[0] = 0.;
+                    x_[1] = 0.;
                     
                     shapeQuad.evaluate(xsi,phi_);
                     
                     for (int i=0; i<6; i++){
-                        xint = nodesArlequinFine_[connec(i)] -> 
-                            getCoordinates();
-                        x_(0) += xint(0) * phi_(i);
-                        x_(1) += xint(1) * phi_(i);   
+                        double* xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
+                        x_[0] += xint[0] * phi_[i];
+                        x_[1] += xint[1] * phi_[i];   
                     };                   
-                    error = norm_2(deltaXsi);
+                    error = sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
                 };
                 
                 double t1 = -1.e-1;
                 double t2 =  1. - t1;
                 
-                xsiCC[0] = xsi(0);
-                xsiCC[1] = xsi(1);       
+                xsiCC[0] = xsi[0];
+                xsiCC[1] = xsi[1];       
                 xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
                 
                 if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
                     (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
                     
-                    xsiC = xsi;
+                    xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
                     elemC = jel;
                     break;
                 };           
@@ -410,7 +433,7 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
 
         nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
-        // std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x(0) << " " << x(1) << " " << xsiC(0) << " " << xsiC(1) << std::endl;
+        // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x(0) << " " << x(1) << " " << xsiC(0) << " " << xsiC(1) << std::endl;
     };
 };
 
@@ -423,8 +446,6 @@ void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
     for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
 
         if (boundaryFluid_[ibound] -> getBoundaryGroup() == interface){    
-
-            typename Nodes::VecLocD         x, xsi;
             typename Boundary::BoundConnect connec;
             int elemC;
             double xsiC;
@@ -432,11 +453,11 @@ void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
             connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < 3; inode++){
-                x = nodesFluid_[connec(inode)] -> getCoordinates();
+                double* x = nodesFluid_[connec(inode)] -> getCoordinates();
                 
-                searchcorrespondencefluid_(&x(0), &x(1), &elemC, &xsiC);
-                xsi.clear();
-                xsi(0) = xsiC;
+                searchcorrespondencefluid_(&x[0], &x[1], &elemC, &xsiC);
+                double xsi[2] = {};
+                xsi[0] = xsiC;
 
                 //std::cout << "asdasd " << elemC << " " << xsiC << std::endl; 
 
@@ -458,7 +479,6 @@ void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
 
         if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interface){
 
-            typename Nodes::VecLocD         x, xsi;
             typename Boundary::BoundConnect connec;
             int elemC;
             double xsiC;
@@ -466,16 +486,15 @@ void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
             connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < 3; inode++){
-                x = nodesArlequinFine_[connec(inode)] -> getCoordinates();
+                double* x = nodesArlequinFine_[connec(inode)] -> getCoordinates();
                 
-                searchcorrespondencefluid_(&x(0), &x(1), &elemC, &xsiC);
-                xsi.clear();
-                xsi(0) = xsiC;
+                searchcorrespondencefluid_(&x[0], &x[1], &elemC, &xsiC);
+                double xsi[2] = {};
+                xsi[0] = xsiC;
 
-                //std::cout << "asdasd " << elemC << " " << xsiC << std::endl; 
+                // if (rank == 0) std::cout << "asdasd " << elemC << " " << xsiC << " " << interface << std::endl; 
 
-                nodesArlequinFine_[connec(inode)] -> 
-                    setNodalCorrespondence(elemC,xsi);
+                nodesArlequinFine_[connec(inode)] -> setNodalCorrespondence(elemC,xsi);
                 
                 // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
             };
@@ -489,9 +508,8 @@ void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
 template<>
 void FSInteraction<2>::setElementBoxes() {
     
-    typename Elements::Connectivity connec;
-    typename Nodes::VecLocD x1, x2, x3;
-    ublas::bounded_vector<double,2> d1, d2, d3, xk, Xk;
+    int *connec;
+    double xk[2], Xk[2];
     double dCk[3], dck[3];
     std::vector<ublas::bounded_vector<double,2> > di1, di2;
 
@@ -501,15 +519,15 @@ void FSInteraction<2>::setElementBoxes() {
     //Only function for straight elements
     for (int jel = 0; jel < numElemFluid; jel++){
         connec = elementsFluid_[jel] -> getConnectivity();
-        x1 = nodesFluid_[connec(0)] -> getCoordinates();
-        x2 = nodesFluid_[connec(1)] -> getCoordinates();
-        x3 = nodesFluid_[connec(2)] -> getCoordinates();      
+        double* x1 = nodesFluid_[connec[0]] -> getCoordinates();
+        double* x2 = nodesFluid_[connec[1]] -> getCoordinates();
+        double* x3 = nodesFluid_[connec[2]] -> getCoordinates();      
 
-        xk(0) = std::min(x1(0),std::min(x2(0), x3(0)));
-        xk(1) = std::min(x1(1),std::min(x2(1), x3(1)));
+        xk[0] = std::min(x1[0],std::min(x2[0], x3[0]));
+        xk[1] = std::min(x1[1],std::min(x2[1], x3[1]));
 
-        Xk(0) = std::max(x1(0),std::max(x2(0), x3(0)));
-        Xk(1) = std::max(x1(1),std::max(x2(1), x3(1)));        
+        Xk[0] = std::max(x1[0],std::max(x2[0], x3[0]));
+        Xk[1] = std::max(x1[1],std::max(x2[1], x3[1]));        
         
         elementsFluid_[jel] -> setIntersectionParameters(xk, Xk);
     };
@@ -542,15 +560,15 @@ void FSInteraction<2>::preProcessFluid(){
             connectB = boundaryFluid_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElemFluid; j++){
-                typename Elements::Connectivity connect;
+                int *connect;
                 connect = elementsFluid_[j] -> getConnectivity();
                 
                 int flag = 0;
                 int side[3];
                 for (int k=0; k<6; k++){
-                    if ((connectB(0) == connect(k)) || 
-                        (connectB(1) == connect(k)) ||
-                        (connectB(2) == connect(k))){
+                    if ((connectB(0) == connect[k]) || 
+                        (connectB(1) == connect[k]) ||
+                        (connectB(2) == connect[k])){
                         side[flag] = k;
                         flag++;
                     };
@@ -612,9 +630,9 @@ void FSInteraction<2>::preProcessFluid(){
         int index = 0;
         
         for (int i=0; i<numNodesSolid; i++){
-            typename Nodes::VecLocD x;
+            double x[2];
             int inode = i+1;
-            getsolidposition_(&inode,&x(0),&x(1));
+            getsolidposition_(&inode,&x[0],&x[1]);
             
             Nodes *node = new Nodes(x,index++);
             nodesSolid_[k].push_back(node);
@@ -678,15 +696,15 @@ void FSInteraction<2>::preProcessArlequin(){
             connectB = boundaryArlequinFine_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElemArlequinFine; j++){
-                typename Elements::Connectivity connect;
-                connect = elementsArlequinFine_[j] -> getConnectivity();
+                
+                int *connect = elementsArlequinFine_[j] -> getConnectivity();
                 
                 int flag = 0;
                 int side[3];
                 for (int k=0; k<6; k++){
-                    if ((connectB(0) == connect(k)) || 
-                        (connectB(1) == connect(k)) ||
-                        (connectB(2) == connect(k))){
+                    if ((connectB(0) == connect[k]) || 
+                        (connectB(1) == connect[k]) ||
+                        (connectB(2) == connect[k])){
                         side[flag] = k;
                         flag++;
                     };
@@ -752,9 +770,9 @@ void FSInteraction<2>::preProcessArlequin(){
         int index = 0;
         
         for (int i=0; i<numNodesSolid; i++){
-            typename Nodes::VecLocD x;
+            double x[2];
             int inode = i+1;
-            getsolidposition_(&inode,&x(0),&x(1));
+            getsolidposition_(&inode,&x[0],&x[1]);
             
             Nodes *node = new Nodes(x,index++);
             nodesSolid_[k].push_back(node);
@@ -885,27 +903,21 @@ void FSInteraction<2>::updateFluidMesh(){
                 typename Boundary::BoundConnect connec;
                 connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
-                typename Nodes::VecLocD x, xsi, xant;
-
                 for (int k=0; k<3; k++){
 
-                    x.clear();
+                    double x[2];
                     
-                    int elem = nodesFluid_[connec(k)] ->
-                        getNodalElemCorrespondence();
-                    xsi = nodesFluid_[connec(k)] -> 
-                        getNodalXsiCorrespondence();
+                    int elem = nodesFluid_[connec(k)] -> getNodalElemCorrespondence();
+                    double* xsi = nodesFluid_[connec(k)] -> getNodalXsiCorrespondence();
                     
                     
-                    if (rank == 0) 
-                        getupdatedcoordinates_(&x(0),&x(1),&elem,&xsi(0));
+                    if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
               
-                    MPI_Bcast(&x(0),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                    MPI_Bcast(&x(1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                    MPI_Bcast(&x[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                    MPI_Bcast(&x[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
                     nodesFluid_[connec(k)] -> setUpdatedCoordinates(x);
                     nodesFluid_[connec(k)] -> setCoordinates(x);
-                    // xant = nodesFluid_[connec(k)] -> getCoordinates();
 
                     //if(connec(k) == 29)std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
                 };
@@ -919,16 +931,15 @@ void FSInteraction<2>::updateFluidMesh(){
     fluidModel.solveSteadyLaplaceProblem(5,1.e-6);
    
     for (int i = 0; i < numNodesFluid; i++){
-        typename Nodes::VecLocD x, xp, up;
-        double u[2];
+        double u[2], up[2];
             
-        x = nodesFluid_[i] -> getCoordinates();
-        xp = nodesFluid_[i] -> getPreviousCoordinates();
-        up(0) = nodesFluid_[i] -> getPreviousMeshVelocity(0);
-        up(1) = nodesFluid_[i] -> getPreviousMeshVelocity(1);
+        double *x = nodesFluid_[i] -> getCoordinates();
+        double *xp = nodesFluid_[i] -> getPreviousCoordinates();
+        up[0] = nodesFluid_[i] -> getPreviousMeshVelocity(0);
+        up[1] = nodesFluid_[i] -> getPreviousMeshVelocity(1);
         
-        u[0] = (x(0) - xp(0)) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
-        u[1] = (x(1) - xp(1)) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
+        u[0] = (x[0] - xp[0]) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
+        u[1] = (x[1] - xp[1]) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
         
         nodesFluid_[i] -> setMeshVelocity(u);
     };
@@ -955,32 +966,27 @@ void FSInteraction<2>::updateArlequinMesh(){
                 typename Boundary::BoundConnect connec;
                 connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
-                typename Nodes::VecLocD x, xsi, xant;
-
                 for (int k=0; k<3; k++){
 
-                    x.clear();
+                    double x[2];
                     
                     int elem = nodesArlequinFine_[connec(k)] -> getNodalElemCorrespondence();
-                    xsi = nodesArlequinFine_[connec(k)] -> getNodalXsiCorrespondence();
+                    double* xsi = nodesArlequinFine_[connec(k)] -> getNodalXsiCorrespondence();
 
-                    // std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
+                    // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     
-                    if (rank == 0) getupdatedcoordinates_(&x(0),&x(1),&elem,&xsi(0));
+                    if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
 
+                    MPI_Bcast(&x[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                    MPI_Bcast(&x[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
-                    // std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
-                    // MPI_Barrier(PETSC_COMM_WORLD);
-
-
-                    MPI_Bcast(&x(0),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                    MPI_Bcast(&x(1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                    // if (rank == 0) std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
+                    MPI_Barrier(PETSC_COMM_WORLD);
 
                     nodesArlequinFine_[connec(k)] -> setUpdatedCoordinates(x);
                     nodesArlequinFine_[connec(k)] -> setCoordinates(x);
-                    // xant = nodesFluid_[connec(k)] -> getCoordinates();
 
-                    //std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
+                    // std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
                 };
                 
             };//if interface
@@ -992,25 +998,25 @@ void FSInteraction<2>::updateArlequinMesh(){
 
 
     //Solves Laplace Smoothing mesh moving scheme
-    arlequinModel.fineModel.solveSteadyLaplaceProblem(5,1.e-4);
+    arlequinModel.fineModel.solveSteadyLaplaceProblem(1,1.e-4);
    
     // std::cout << "AQUI6.3 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
 
-    // for (int i = 0; i < numNodesArlequinFine; i++){
-    //     typename Nodes::VecLocD x, xp, up;
-    //     double u[2];
+    for (int i = 0; i < numNodesArlequinFine; i++){
+        double up[2];
+        double u[2];
             
-    //     x = nodesArlequinFine_[i] -> getCoordinates();
-    //     xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
-    //     up(0) = nodesArlequinFine_[i] -> getPreviousMeshVelocity(0);
-    //     up(1) = nodesArlequinFine_[i] -> getPreviousMeshVelocity(1);
+        double* x = nodesArlequinFine_[i] -> getCoordinates();
+        double* xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
+        up[0] = nodesArlequinFine_[i] -> getPreviousMeshVelocity(0);
+        up[1] = nodesArlequinFine_[i] -> getPreviousMeshVelocity(1);
         
-    //     u[0] = (x(0) - xp(0)) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
-    //     u[1] = (x(1) - xp(1)) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
+        u[0] = (x[0] - xp[0]) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
+        u[1] = (x[1] - xp[1]) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
         
-    //     nodesArlequinFine_[i] -> setMeshVelocity(u);
-    // };
+        nodesArlequinFine_[i] -> setMeshVelocity(u);
+    };
 
 
 };
@@ -1032,19 +1038,16 @@ void FSInteraction<2>::transferSolidVelocity(){
                 typename Boundary::BoundConnect connec;
                 connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
-                typename Nodes::VecLocD xsi,x,Acc;
                 double u[2];
 
                 for (int k=0; k<3; k++){
                     
-                    int elem = nodesFluid_[connec(k)] ->
-                        getNodalElemCorrespondence();
-                    xsi = nodesFluid_[connec(k)] -> 
-                        getNodalXsiCorrespondence();
+                    int elem = nodesFluid_[connec(k)] -> getNodalElemCorrespondence();
+                    double* xsi = nodesFluid_[connec(k)] -> getNodalXsiCorrespondence();
                     
                     
                     if (rank == 0) 
-                        getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi(0));
+                        getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
                         
                     MPI_Bcast(&u[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&u[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
@@ -1081,18 +1084,15 @@ void FSInteraction<2>::transferSolidVelocityArlequin(){
                 connec = boundaryArlequinFine_[ibound] -> 
                     getBoundaryConnectivity();
               
-                typename Nodes::VecLocD xsi,x,Acc;
                 double u[2];
 
                 for (int k=0; k<3; k++){
                     
-                    int elem = nodesArlequinFine_[connec(k)] ->
-                        getNodalElemCorrespondence();
-                    xsi = nodesArlequinFine_[connec(k)] -> 
-                        getNodalXsiCorrespondence();
+                    int elem = nodesArlequinFine_[connec(k)] -> getNodalElemCorrespondence();
+                    double* xsi = nodesArlequinFine_[connec(k)] ->  getNodalXsiCorrespondence();
                     
                     if (rank == 0) 
-                        getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi(0));
+                        getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
                         
                     MPI_Bcast(&u[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&u[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
@@ -1123,17 +1123,14 @@ void FSInteraction<2>::transferFluidLoad(){
     for (int iInterf = 0; iInterf < numInterfaces; iInterf++){
         for (int isolid = 0; isolid < numNodesSolid; isolid++){
             
-            typename Nodes::VecLocD xsi, x;
-            ublas::bounded_vector<double,2> load;
+            int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
+            double* xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
 
-            int ielem = nodesSolid_[iInterf][isolid] ->
-                getNodalElemCorrespondence();
-            xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
-            
-            load = elementsFluid_[ielem] -> getBoundaryLoad(xsi);
+            double load[2] = {};
+            elementsFluid_[ielem] -> getBoundaryLoad(xsi,load);
 
             int inode = isolid+1;
-            setcouplingload_(&load(0),&load(1),&inode);
+            setcouplingload_(&load[0],&load[1],&inode);
                        
         };//isolid
     };//iInterf
@@ -1150,18 +1147,15 @@ void FSInteraction<2>::transferArlequinLoad(){
     
     for (int iInterf = 0; iInterf < numInterfaces; iInterf++){
         for (int isolid = 0; isolid < numNodesSolid; isolid++){
+        
+            int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
+            double* xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
             
-            typename Nodes::VecLocD xsi, x;
-            ublas::bounded_vector<double,2> load;
-
-            int ielem = nodesSolid_[iInterf][isolid] ->
-                getNodalElemCorrespondence();
-            xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
-            
-            load = elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi);
-
+            double load[2] = {};
+            if (sqrt(xsi[0]*xsi[0]+xsi[1]*xsi[1]) < 3) elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi,load);
+        
             int inode = isolid+1;
-            setcouplingload_(&load(0),&load(1),&inode);
+            setcouplingload_(&load[0],&load[1],&inode);
                        
         };//isolid
     };//iInterf
@@ -1257,17 +1251,17 @@ void FSInteraction<2>::solveFSIProblem(int numTimeSteps){
 
 
         for (int i = 0; i < numNodesFluid; i++){
-            typename Nodes::VecLocD x, um;
+            double um[2];
+            double *x = nodesFluid_[i] -> getCoordinates();
             
-            x = nodesFluid_[i] -> getCoordinates();
-            um(0) = nodesFluid_[i] -> getMeshVelocity(0);
-            um(1) = nodesFluid_[i] -> getMeshVelocity(1);
+            um[0] = nodesFluid_[i] -> getMeshVelocity(0);
+            um[1] = nodesFluid_[i] -> getMeshVelocity(1);
 
-            nodesFluid_[i] -> setPreviousCoordinates(0,x(0));
-            nodesFluid_[i] -> setPreviousCoordinates(1,x(1));
+            nodesFluid_[i] -> setPreviousCoordinates(0,x[0]);
+            nodesFluid_[i] -> setPreviousCoordinates(1,x[1]);
 
-            nodesFluid_[i] -> setPreviousMeshVelocity(0,um(0));
-            nodesFluid_[i] -> setPreviousMeshVelocity(1,um(1));           
+            nodesFluid_[i] -> setPreviousMeshVelocity(0,um[0]);
+            nodesFluid_[i] -> setPreviousMeshVelocity(1,um[1]);           
         };
 
         
@@ -1416,11 +1410,9 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
         if (rank == 0) updateqsrs_();
 
         for (int i = 0; i < numNodesFluid; i++){
-            typename Nodes::VecLocD x;
-            
-            x = nodesFluid_[i] -> getCoordinates();
-            nodesFluid_[i] -> setPreviousCoordinates(0,x(0));
-            nodesFluid_[i] -> setPreviousCoordinates(1,x(1));
+            double* x = nodesFluid_[i] -> getCoordinates();
+            nodesFluid_[i] -> setPreviousCoordinates(0,x[0]);
+            nodesFluid_[i] -> setPreviousCoordinates(1,x[1]);
         };
 
         for (int i = 0; i < numNodesSolid; i++){
@@ -1595,6 +1587,11 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
     double omega = 1.;
     double mu = 0.;
 
+    if (rank == 0) {
+        arlequinModel.printResults(0);
+        printstructure_();
+    };
+
     X_k.clear();Y_k.clear();deltaXi.clear();deltaXii.clear();
 
     double &alpha_f = arlequinModel.fineModel.fluidParameters.getAlphaF();
@@ -1698,36 +1695,34 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         // MPI_Barrier(PETSC_COMM_WORLD);
 
         //Compute Qs and Rs for mesh moving problem
+        // for (int i = 0; i < numNodesArlequinFine; i++){
+        //     double x = nodesArlequinFine_[i] -> getCoordinateValue(0);
+        //     double y = nodesArlequinFine_[i] -> getCoordinateValue(1);
+        //     double xp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(0);
+        //     double yp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(1);
+        //     double vx = nodesArlequinFine_[i] -> getMeshVelocity(0);
+        //     double vy = nodesArlequinFine_[i] -> getMeshVelocity(1);
+        //     double ax = nodesArlequinFine_[i] -> getMeshAcceleration(0);
+        //     double ay = nodesArlequinFine_[i] -> getMeshAcceleration(1);
+
+        //     double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
+        //     double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
+
+        //     nodesArlequinFine_[i] -> setMeshAccelerationComponent(0,accelx);
+        //     nodesArlequinFine_[i] -> setMeshAccelerationComponent(1,accely);
+
+        //     double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
+        //     double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
+
+        //     nodesArlequinFine_[i] -> setMeshVelocityComponent(0,velx);
+        //     nodesArlequinFine_[i] -> setMeshVelocityComponent(1,vely);
+        // }
+
+
         for (int i = 0; i < numNodesArlequinFine; i++){
-            double x = nodesArlequinFine_[i] -> getCoordinateValue(0);
-            double y = nodesArlequinFine_[i] -> getCoordinateValue(1);
-            double xp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(0);
-            double yp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(1);
-            double vx = nodesArlequinFine_[i] -> getMeshVelocity(0);
-            double vy = nodesArlequinFine_[i] -> getMeshVelocity(1);
-            double ax = nodesArlequinFine_[i] -> getMeshAcceleration(0);
-            double ay = nodesArlequinFine_[i] -> getMeshAcceleration(1);
-
-            double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
-            double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
-
-            nodesArlequinFine_[i] -> setMeshAccelerationComponent(0,accelx);
-            nodesArlequinFine_[i] -> setMeshAccelerationComponent(1,accely);
-
-            double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
-            double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
-
-            nodesArlequinFine_[i] -> setMeshVelocityComponent(0,velx);
-            nodesArlequinFine_[i] -> setMeshVelocityComponent(1,vely);
-        }
-
-
-        for (int i = 0; i < numNodesArlequinFine; i++){
-            typename Nodes::VecLocD x;
-            
-            x = nodesArlequinFine_[i] -> getCoordinates();
-            nodesArlequinFine_[i] -> setPreviousCoordinates(0,x(0));
-            nodesArlequinFine_[i] -> setPreviousCoordinates(1,x(1));
+            double* x = nodesArlequinFine_[i] -> getCoordinates();
+            nodesArlequinFine_[i] -> setPreviousCoordinates(0,x[0]);
+            nodesArlequinFine_[i] -> setPreviousCoordinates(1,x[1]);
         };
 
 
@@ -1783,26 +1778,32 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         int iterations = 0;
 
         //Gauss-Seidel iterations
-        while ((residual > 1.e-5) && (iterations < 10)) {
+        while (((residual > 1.e-5) && (iterations < 5))){//} || (iterations < 3)) {
             if(rank == 0) {std::cout << 
                     "........................... GAUSS-SEIDEL ITERATION "
                                      << iterations + 1 << 
                     " ..........................." << std:: endl;};
 
             X_k = Y_k;
-            
+            // std::cout << "AQUI-2 " << rank << std::endl;            
+            //     MPI_Barrier(PETSC_COMM_WORLD);
             updateArlequinMesh();
             
             // std::cout << "AQUI7 " << rank << std::endl;
             // MPI_Barrier(PETSC_COMM_WORLD); 
-
+            // std::cout << "AQUI-1 " << rank << std::endl;            
+            //     MPI_Barrier(PETSC_COMM_WORLD);
             transferSolidVelocityArlequin();
 
             // std::cout << "AQUI8 " << rank << std::endl;
             // MPI_Barrier(PETSC_COMM_WORLD);
-            
+                // std::cout << "AQUI0 " << rank << std::endl;            
+                // MPI_Barrier(PETSC_COMM_WORLD);
             // if (iTimeStep < 50){
-                arlequinModel.solveFSIArlequin(3, 1.e-3, 2, iTimeStep);
+            arlequinModel.solveFSIArlequin(4, 1.e-3, 2, iTimeStep);
+
+                // std::cout << "AQUI4 " << rank << std::endl;
+                // MPI_Barrier(PETSC_COMM_WORLD);
             // }else{
             //     arlequinModel.solveFSIArlequin(5, 1.e-3, 2, iTimeStep);
             // }
@@ -1811,14 +1812,24 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             // MPI_Barrier(PETSC_COMM_WORLD);
 
             if (rank == 0) transferArlequinLoad();
-            
+            // if ((rank == 0) && (iTimeStep < 250)) {
+            //     int inode = 43;
+            //     double load[2];
+            //     load[0] = 0.;
+            //     load[1] = 500.;
+            //     setcouplingload_(&load[0],&load[1],&inode);
+            //     inode = 39;
+            //     load[1] = -500;
+            //     setcouplingload_(&load[0],&load[1],&inode);
+            // }
+            // std::cout << "AQUI5 " << rank << std::endl;
             // std::cout << "AQUI10 " << rank << std::endl;
             // MPI_Barrier(PETSC_COMM_WORLD);
 
             //  if (iTimeStep > 3){
             if (rank == 0) solveframestructure_(&iTimeStep);
             // };
-
+            // std::cout << "AQUI6 " << rank << std::endl;
             // std::cout << "AQUI11 " << rank << std::endl;
             // MPI_Barrier(PETSC_COMM_WORLD);
             
@@ -1830,7 +1841,7 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
                 MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                 MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
             };
-
+// std::cout << "AQUI7 " << rank << std::endl;
             // std::cout << "AQUI12 " << rank << std::endl;
             // MPI_Barrier(PETSC_COMM_WORLD);
             
@@ -1865,7 +1876,7 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << std::endl;
 
             iterations++;
-
+// std::cout << "AQUI8 " << rank << std::endl;
             if(rank == 0) std::cout << "GAUSS-SEIDEL OMEGA = " 
                                     << omega <<  std::endl;
 

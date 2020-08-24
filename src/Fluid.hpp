@@ -76,6 +76,7 @@ private:
     int iAux;
     bool computeDragAndLift;
     int iTimeStep;
+    Mat               A;
     
     
 
@@ -225,11 +226,10 @@ void Fluid<2>::domainDecompositionMETIS() {
         elem_start[i]=(4*dd-2)*i;
     };
     for (idx_t jel = 0; jel < numEl; jel++){
-        typename Elements::Connectivity connec;
-        connec=elements_[jel]->getConnectivity();        
+        int *connec=elements_[jel]->getConnectivity();        
         
         for (idx_t i=0; i<(4*dd-2); i++){
-        elem_connec[(4*dd-2)*jel+i] = connec(i);
+        elem_connec[(4*dd-2)*jel+i] = connec[i];
         };
     };
 
@@ -285,9 +285,8 @@ void Fluid<2>::printResults(int step) {
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
     for (int i=0; i<numNodes; i++){
-        typename Node::VecLocD x;
-        x=nodes_[i]->getCoordinates();
-        output_v << x(0) << " " << x(1) << " " << 0.0 << std::endl;        
+        double* x = nodes_[i] -> getCoordinates();
+        output_v << x[0] << " " << x[1] << " " << 0.0 << std::endl;        
     };
     output_v << "      </DataArray>" << std::endl
              << "    </Points>" << std::endl;
@@ -298,10 +297,9 @@ void Fluid<2>::printResults(int step) {
              << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
     
     for (int i=0; i<numElem; i++){
-        typename Elements::Connectivity connec;
-        connec=elements_[i]->getConnectivity();
-        output_v << connec(0) << " " << connec(1) << " " << connec(2) << " " \
-                 << connec(3) << " " << connec(4) << " " << connec(5) << \
+        int *connec = elements_[i] -> getConnectivity();
+        output_v << connec[0] << " " << connec[1] << " " << connec[2] << " " \
+                 << connec[3] << " " << connec[4] << " " << connec[5] << \
             std::endl;
     };
     output_v << "      </DataArray>" << std::endl;
@@ -377,11 +375,10 @@ void Fluid<2>::printResults(int step) {
         output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
                  << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
         for (int i=0; i<numNodes; i++){       
-            typename Node::VecLocD x, xp;
-            x=nodes_[i]->getCoordinates();
-            xp=nodes_[i]->getInitialCoordinates();
+            double* x = nodes_[i] -> getCoordinates();
+            double* xp = nodes_[i] -> getInitialCoordinates();
             
-            output_v << x(0)-xp(0) << " " << x(1)-xp(1) << " " 
+            output_v << x[0]-xp[0] << " " << x[1]-xp[1] << " " 
                      << 0. << std::endl;
         };
         output_v << "      </DataArray> " << std::endl;
@@ -708,12 +705,12 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
     if (rank == 0) std::cout << "Number of Nodes " << " " << numNodes << std::endl;
     for (int i = 0; i < numNodes; i++)
     {
-        typename Node::VecLocD x;
+        double x[2];
         std::getline(file, line);
         std::vector<std::string> tokens = split(line, " ");
         bounded_vector<double,2> coord;
-        std::istringstream(tokens[1]) >> x(0);
-        std::istringstream(tokens[2]) >> x(1);
+        std::istringstream(tokens[1]) >> x[0];
+        std::istringstream(tokens[2]) >> x[1];
         //addNode(i, coord);
          Node *node = new Node(x, index++);
          nodes_.push_back(node);
@@ -722,10 +719,10 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
 
     mirrorData << "Nodal Coordinates " << numNodes << std::endl;
     for (int i = 0 ; i<numNodes; i++){
-        typename Node::VecLocD x;
-        x = nodes_[i]->getCoordinates();       
+        
+        double* x = nodes_[i]->getCoordinates();       
         for (int j=0; j<2; j++){
-            mirrorData << x(j) << " ";
+            mirrorData << x[j] << " ";
         };
         mirrorData << std::endl;
         nodes_[i] -> setVelocity(velocityInf);
@@ -737,8 +734,8 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
         nodes_[i] -> setPreviousMeshVelocityComponent(0,0.);
         nodes_[i] -> setPreviousMeshVelocityComponent(1,0.);
 
-        nodes_[i] -> setPreviousCoordinates(0,x(0));
-        nodes_[i] -> setPreviousCoordinates(1,x(1));
+        nodes_[i] -> setPreviousCoordinates(0,x[0]);
+        nodes_[i] -> setPreviousCoordinates(1,x[1]);
 
     };
 
@@ -756,7 +753,7 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
 
     numBoundElems = 0;
     numElem = 0;
-    numFSIInterfaces = 0;//É melhor setar esse valor no main
+    numFSIInterfaces = 0;//Ã‰ melhor setar esse valor no main
 
     std::vector<BoundaryCondition*> dirichlet, neumann, glue, FSinterface;
     dirichlet = geometry_->getBoundaryCondition("DIRICHLET"); 
@@ -795,16 +792,16 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
             double thickness = object -> getThickness();
             numElem++;
 
-            typename Elements::Connectivity connect;
-            connect.clear();
-            for (int j = 0 ; j < 6; j++) connect(j) = elementNodes[j];
+            int *connect;
+            connect = new int[6];
+            for (int j = 0 ; j < 6; j++) connect[j] = elementNodes[j];
            
 
 
             Elements *el = new Elements(index++,connect,nodes_,fluidParameters);
             elements_.push_back(el);
             for (int k = 0; k<6; k++){
-                nodes_[connect(k)] -> pushInverseIncidence(index);
+                nodes_[connect[k]] -> pushInverseIncidence(index);
             };
         }
         else if (name[0] == 'l')
@@ -906,18 +903,25 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
     if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
                              << numElem << " " << numBoundElems << std::endl;
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
+    
     for (int jel=0; jel<numElem; jel++){
-        typename Elements::Connectivity connec;
-        connec=elements_[jel]->getConnectivity();       
+        int *connec = elements_[jel] -> getConnectivity();       
         for (int i=0; i<4*dimension-2; i++){
-            mirrorData << connec(i) << " ";
+            mirrorData << connec[i] << " ";
         };
         mirrorData << std::endl;
     };
 
 
-
-
+    // for (int i = 0; i < numNodes; ++i){
+    //     typename Node::VecLocD x;
+    //     x = nodes_[i]->getCoordinates();    
+    //     if ((x(0) == 0) && (x(1) == 0)) {
+    //         nodes_[i] -> setConstrainsLaplace(0,1,0);
+    //         nodes_[i] -> setConstrainsLaplace(0,1,0);
+    //     }
+    // }
+    
 
 
 
@@ -930,16 +934,20 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
         int no1 = connectB(0);
         int no2 = connectB(1);
         int no3 = connectB(2);
-        if ((boundary_[ibound] -> getConstrain(0) != 2) && (boundary_[ibound] -> getConstrain(0) != 0)){
+        //if ((boundary_[ibound] -> getConstrain(0) != 2) && (boundary_[ibound] -> getConstrain(0) != 0)){
+        if (boundary_[ibound] -> getConstrain(0) == 3){
             nodes_[no1] -> setConstrainsLaplace(0,1,0);
             nodes_[no2] -> setConstrainsLaplace(0,1,0);
             nodes_[no3] -> setConstrainsLaplace(0,1,0);
         };
-        if ((boundary_[ibound] -> getConstrain(1) != 2) && (boundary_[ibound] -> getConstrain(1) != 0)){
+        // if ((boundary_[ibound] -> getConstrain(1) != 2) && (boundary_[ibound] -> getConstrain(1) != 0)){
+        if (boundary_[ibound] -> getConstrain(1) == 3){
             nodes_[no1] -> setConstrainsLaplace(1,1,0);
             nodes_[no2] -> setConstrainsLaplace(1,1,0);
             nodes_[no3] -> setConstrainsLaplace(1,1,0);
         };
+
+
         
         if ((boundary_[ibound] -> getConstrain(0) == 1) || (boundary_[ibound] -> getConstrain(0) == 3)){
 
@@ -1038,15 +1046,14 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
             connectB = boundary_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElem; j++){
-                typename Elements::Connectivity connect;
-                connect = elements_[j] -> getConnectivity();
+                int *connect = elements_[j] -> getConnectivity();
                 
                 int flag = 0;
                 int side[3];
                 for (int k=0; k<6; k++){
-                    if ((connectB(0) == connect(k)) || 
-                        (connectB(1) == connect(k)) ||
-                        (connectB(2) == connect(k))){
+                    if ((connectB(0) == connect[k]) || 
+                        (connectB(1) == connect[k]) ||
+                        (connectB(2) == connect[k])){
                         side[flag] = k;
                         flag++;
                     };
@@ -1095,7 +1102,6 @@ return;
 template<>
 int Fluid<2>::getInitialAcceleration() {
 
-    Mat               A;
     Vec               b, u, All;
     PetscErrorCode    ierr;
     PetscInt          Ii, Ione, iterations;
@@ -1132,39 +1138,43 @@ int Fluid<2>::getInitialAcceleration() {
         
         //if (part_elem[jel] == rank) {
             //Compute Element matrix
-            typename Elements::Connectivity connec;
-            connec = elements_[jel] -> getConnectivity();
+            int *connec = elements_[jel] -> getConnectivity();
 
             std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
-            localMV = elements_[jel] -> getTransientNavierStokesInitial();            
+            double **matrix;
+            double rhs[18] = {};
+            matrix = new double*[18]();
+            for (int i = 0; i < 18; i++) matrix[i] = new double[18]();
+
+            elements_[jel] -> getTransientNavierStokesInitial(rhs,matrix);
             //Disperse local contributions into the global matrix
             //Matrix K and C
             for (int i=0; i<6; i++){
                 for (int j=0; j<6; j++){
                     if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
-                        int dof_i = 2 * connec(i);
-                        int dof_j = 2 * connec(j);
-                        ierr = MatSetValues(A, 1, &dof_i,1, &dof_j,
+                        int dof_i = 2 * connec[i];
+                        int dof_j = 2 * connec[j];
+                        ierr = MatSetValues(A,1,&dof_i,1, &dof_j,
                                             &localMV.first(2*i  ,2*j  ),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
-                        int dof_i = 2 * connec(i) + 1;
-                        int dof_j = 2 * connec(j);
+                        int dof_i = 2 * connec[i] + 1;
+                        int dof_j = 2 * connec[j];
                         ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
                                             &localMV.first(2*i+1,2*j  ),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
-                        int dof_i = 2 * connec(i);
-                        int dof_j = 2 * connec(j) + 1;
+                        int dof_i = 2 * connec[i];
+                        int dof_j = 2 * connec[j] + 1;
                         ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
                                             &localMV.first(2*i  ,2*j+1),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
-                        int dof_i = 2 * connec(i) + 1;
-                        int dof_j = 2 * connec(j) + 1;
+                        int dof_i = 2 * connec[i] + 1;
+                        int dof_j = 2 * connec[j] + 1;
                         ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
                                             &localMV.first(2*i+1,2*j+1),
                                             ADD_VALUES);
@@ -1172,36 +1182,36 @@ int Fluid<2>::getInitialAcceleration() {
                 
                     //Matrix Q and Qt
                     if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
-                        int dof_i = 2 * connec(i);
-                        int dof_j = 2 * numNodes + connec(j);
+                        int dof_i = 2 * connec[i];
+                        int dof_j = 2 * numNodes + connec[j];
                         ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
                                             &localMV.first(2*i  ,12+j),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
-                        int dof_i = 2 * connec(i);
-                        int dof_j = 2 * numNodes + connec(j);
+                        int dof_i = 2 * connec[i];
+                        int dof_j = 2 * numNodes + connec[j];
                         ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i,
                                             &localMV.first(12+j,2*i  ),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
-                        int dof_i = 2 * connec(i) + 1;
-                        int dof_j = 2 * numNodes + connec(j);
+                        int dof_i = 2 * connec[i] + 1;
+                        int dof_j = 2 * numNodes + connec[j];
                         ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
                                             &localMV.first(2*i+1,12+j),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
-                        int dof_i = 2 * connec(i) + 1;
-                        int dof_j = 2 * numNodes + connec(j);
+                        int dof_i = 2 * connec[i] + 1;
+                        int dof_j = 2 * numNodes + connec[j];
                         ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i,
                                             &localMV.first(12+j,2*i+1),
                                             ADD_VALUES);
                     };
                     if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
-                        int dof_i = 2 * numNodes + connec(i);
-                        int dof_j = 2 * numNodes + connec(j);
+                        int dof_i = 2 * numNodes + connec[i];
+                        int dof_j = 2 * numNodes + connec[j];
                         ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
                                             &localMV.first(12+i,12+j),
                                             ADD_VALUES);
@@ -1210,22 +1220,24 @@ int Fluid<2>::getInitialAcceleration() {
                 
                 //Rhs vector
                 if (fabs(localMV.second(2*i  )) >= 1.e-15){
-                    int dof_i = 2 * connec(i);
+                    int dof_i = 2 * connec[i];
                     ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i  ),
                                         ADD_VALUES);
                 };
                 
                 if (fabs(localMV.second(2*i+1)) >= 1.e-15){
-                    int dof_i = 2 * connec(i)+1;
+                    int dof_i = 2 * connec[i]+1;
                     ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i+1),
                                         ADD_VALUES);
                 };
                 if (fabs(localMV.second(12+i)) >= 1.e-15){
-                    int dof_i = 2 * numNodes + connec(i);
+                    int dof_i = 2 * numNodes + connec[i];
                     ierr = VecSetValues(b, 1, &dof_i, &localMV.second(12+i),
                                         ADD_VALUES);
                 };
             };
+            for (int i = 0; i < 18; ++i) delete [] matrix[i];
+            delete [] matrix;
         //};
     }; //Elements
     
@@ -1378,7 +1390,6 @@ int Fluid<2>::getInitialAcceleration() {
 template<>
 int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
-    Mat               A;
     Vec               b, u, All;
     PetscErrorCode    ierr;
     PetscInt          Istart, Iend, Ii, Ione, iterations;
@@ -1395,7 +1406,7 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                             2*numNodes, 2*numNodes,
-                            50,NULL,50,NULL,&A); CHKERRQ(ierr);
+                            100,NULL,100,NULL,&A); CHKERRQ(ierr);
         
         ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
         
@@ -1413,8 +1424,7 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
             //if (part_elem[jel] == rank) {
             
             //Compute Element matrix
-            typename Elements::Connectivity connec;
-            connec = elements_[jel] -> getConnectivity();
+            int *connec = elements_[jel] -> getConnectivity();
 
             std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
             localMV = elements_[jel] -> getSteadyLaplace2();            
@@ -1424,26 +1434,26 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
             for (int i=0; i<6; i++){
                 for (int j=0; j<6; j++){
                     if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-8){
-                        int dof_i = 2*connec(i);
-                        int dof_j = 2*connec(j);
+                        int dof_i = 2*connec[i];
+                        int dof_j = 2*connec[j];
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
                                             &localMV.first(2*i  ,2*j  ),ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-8){
-                        int dof_i = 2*connec(i)+1;
-                        int dof_j = 2*connec(j);
+                        int dof_i = 2*connec[i]+1;
+                        int dof_j = 2*connec[j];
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
                                             &localMV.first(2*i+1,2*j  ),ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-8){
-                        int dof_i = 2*connec(i);
-                        int dof_j = 2*connec(j)+1;
+                        int dof_i = 2*connec[i];
+                        int dof_j = 2*connec[j]+1;
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
                                             &localMV.first(2*i  ,2*j+1),ADD_VALUES);
                     };
                     if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-8){
-                        int dof_i = 2*connec(i)+1;
-                        int dof_j = 2*connec(j)+1;
+                        int dof_i = 2*connec[i]+1;
+                        int dof_j = 2*connec[j]+1;
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,    \
                                             &localMV.first(2*i+1,2*j+1),ADD_VALUES);
                     };
@@ -1451,12 +1461,12 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
                                     
                 //Rhs vector
                 if (fabs(localMV.second(2*i  )) >= 1.e-8){
-                    int dof_i = 2*connec(i);
+                    int dof_i = 2*connec[i];
                     ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i  ),ADD_VALUES);
                 };
                 
                 if (fabs(localMV.second(2*i+1)) >= 1.e-8){
-                    int dof_i = 2*connec(i)+1;
+                    int dof_i = 2*connec[i]+1;
                     ierr = VecSetValues(b,1,&dof_i,&localMV.second(2*i+1),ADD_VALUES);
                 };
             };
@@ -1522,26 +1532,26 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
 
 
-            double x = nodes_[i] -> getCoordinateValue(0);
-            double y = nodes_[i] -> getCoordinateValue(1);
-            double xp = nodes_[i] -> getPreviousCoordinateValue(0);
-            double yp = nodes_[i] -> getPreviousCoordinateValue(1);
-            double vx = nodes_[i] -> getMeshVelocity(0);
-            double vy = nodes_[i] -> getMeshVelocity(1);
-            double ax = nodes_[i] -> getMeshAcceleration(0);
-            double ay = nodes_[i] -> getMeshAcceleration(1);
+            // double x = nodes_[i] -> getCoordinateValue(0);
+            // double y = nodes_[i] -> getCoordinateValue(1);
+            // double xp = nodes_[i] -> getPreviousCoordinateValue(0);
+            // double yp = nodes_[i] -> getPreviousCoordinateValue(1);
+            // double vx = nodes_[i] -> getMeshVelocity(0);
+            // double vy = nodes_[i] -> getMeshVelocity(1);
+            // double ax = nodes_[i] -> getMeshAcceleration(0);
+            // double ay = nodes_[i] -> getMeshAcceleration(1);
 
-            double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
-            double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
+            // double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
+            // double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
 
-            nodes_[i] -> setMeshAccelerationComponent(0,accelx);
-            nodes_[i] -> setMeshAccelerationComponent(1,accely);
+            // nodes_[i] -> setMeshAccelerationComponent(0,accelx);
+            // nodes_[i] -> setMeshAccelerationComponent(1,accely);
 
-            double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
-            double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
-            // std::cout << "asd as " << vx << " " << velx << " " << accelx << " " << ax << std::endl;
-            nodes_[i] -> setMeshVelocityComponent(0,velx);
-            nodes_[i] -> setMeshVelocityComponent(1,vely);
+            // double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
+            // double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
+            // // std::cout << "asd as " << vx << " " << velx << " " << accelx << " " << ax << std::endl;
+            // nodes_[i] -> setMeshVelocityComponent(0,velx);
+            // nodes_[i] -> setMeshVelocityComponent(1,vely);
 
         };
         
@@ -1575,881 +1585,6 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
     return 0;
 };
-//------------------------------------------------------------------------------
-//-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
-//------------------------------------------------------------------------------
-template<>
-int Fluid<2>::solveTransientProblem(int iterNumber, double tolerance, bool accel) {
-
-    Mat               A;
-    Vec               b, u, All, Allu;
-    PetscErrorCode    ierr;
-    PetscInt          Istart, Iend, Ii, Ione, iterations;
-    KSP               ksp;
-    PC                pc;
-    VecScatter        ctx;
-    PetscScalar       val;
-    PetscLogDouble bytes = 0;
-   
-    int rank;
-
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-
-    std::ofstream dragLift;
-    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
-    if (rank == 0) {
-        dragLift << "Time   Pressure Drag   Pressure Lift " 
-                 << "Friction Drag  Friction Lift Drag    Lift " 
-                 << std::endl;
-    };    
-        
-    iTimeStep = 0;
-
-    if (accel) getInitialAcceleration();
-
-    double &alpha_f = fluidParameters.getAlphaF();
-    double &alpha_m = fluidParameters.getAlphaM();
-    double &gamma = fluidParameters.getGamma();
-    // for (int i = 0; i < numElem; i++) elements_[i] -> setTimeIntegrationScheme(integScheme);
-
-    std::cout << "Time Integration Parameters " << rank << " " << alpha_f << " " << alpha_m << " " << gamma << std::endl;
-
-    for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
-    
-        // Start the analysis with first order time integration and then change to the user defined
-        // if (iTimeStep == 50){
-        //     dTime = 0.02;
-        //     for (int i = 0; i < numElem; i++) elements_[i] -> setTimeStep(dTime);
-        // }
-
-        // if (iTimeStep == 10){
-        //     integScheme = 1.;
-        //     alpha_f = 1. / (1. + integScheme);
-        //     alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
-        //     gamma = 0.5 + alpha_m - alpha_f;
-        //     for (int i = 0; i < numElem; i++) elements_[i] -> setTimeIntegrationScheme(integScheme);
-        // }
-
-
-
-
-
-        if (rank == 0) {std::cout << "------------------------- TIME STEP = "
-                                  << iTimeStep << " -------------------------"
-                                  << std::endl;}
-        PetscMemoryGetCurrentUsage(&bytes);
-        PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
-        
-        for (int i = 0; i < numNodes; i++){
-            double accel[2], u[2], p_;
-            
-            //Compute acceleration
-            u[0] = nodes_[i] -> getVelocity(0);
-            u[1] = nodes_[i] -> getVelocity(1);
-            
-            nodes_[i] -> setPreviousVelocity(u);
-
-            //
-            accel[0] = nodes_[i] -> getAcceleration(0);
-            accel[1] = nodes_[i] -> getAcceleration(1);
-
-            nodes_[i] -> setPreviousAcceleration(accel);
-
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
-
-            nodes_[i] -> setAcceleration(accel);
-        };
-
-        double duNorm = 100.;
-
-        // if (iTimeStep == 5) iterNumber = 2;
-        
-        for (int inewton = 0; inewton < iterNumber; inewton++){
-            boost::posix_time::ptime t1 =                             
-                               boost::posix_time::microsec_clock::local_time();
-            
-            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                3*numNodes, 3*numNodes,
-                                100,NULL,100,NULL,&A);CHKERRQ(ierr);
-            
-            //Create PETSc vectors
-            ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
-            ierr = VecSetSizes(b,PETSC_DECIDE,2*numNodes+numNodes);
-            CHKERRQ(ierr);
-            ierr = VecSetFromOptions(b);CHKERRQ(ierr);
-            ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
-            ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
-
-            // Loop over the elements
-            for (int jel = 0; jel < numElem; jel++){   
-                
-                if (part_elem[jel] == rank) {
-                    //Compute Element matrix
-
-                    typename Elements::Connectivity connec;
-                    connec = elements_[jel] -> getConnectivity();
-
-                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
-                    localMV = elements_[jel] -> getTransientNavierStokes();                    
-
-                    //Disperse local contributions into the global matrix
-                    //Matrix K and C
-                    for (int i=0; i<6; i++){
-                        for (int j=0; j<6; j++){
-                            if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i,1, &dof_j,
-                                                    &localMV.first(2*i  ,2*j  ),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i+1,2*j  ),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i  ,2*j+1),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i+1,2*j+1),
-                                                    ADD_VALUES);
-                            };
-                        
-                            //Matrix Q and Qt
-                            if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i  ,12+j),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i,
-                                                    &localMV.first(12+j,2*i  ),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i+1,12+j),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i,
-                                                    &localMV.first(12+j,2*i+1),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
-                                int dof_i = 2 * numNodes + connec(i);
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(12+i,12+j),
-                                                    ADD_VALUES);
-                            };
-                        };
-                        
-                        //Rhs vector
-                        if (fabs(localMV.second(2*i  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i  ),
-                                                ADD_VALUES);
-                        };
-                        
-                        if (fabs(localMV.second(2*i+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i)+1;
-                            ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i+1),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(localMV.second(12+i)) >= 1.e-15){
-                            int dof_i = 2 * numNodes + connec(i);
-                            ierr = VecSetValues(b, 1, &dof_i, &localMV.second(12+i),
-                                                ADD_VALUES);
-                        };
-                    };
-                };
-            }; //Elements
-            
-            //Assemble matrices and vectors
-            ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            
-            ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-            ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-            
-
-            // Mat Aperm;
-            // MatGetOrdering(A,MATORDERINGRCM,&rowperm,&colperm);
-            // MatPermute(A,rowperm,colperm,&Aperm);
-            // VecPermute(b,colperm,PETSC_FALSE);
-            // MatDestroy(&A);
-            // A    = Aperm;    
-
-            //MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            //MatView(A,PETSC_VIEWER_DRAW_WORLD);CHKERRQ(ierr);
-            //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            
-            //Create KSP context to solve the linear system
-            ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-            
-            ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-            
-            // ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-            //                         500);CHKERRQ(ierr);
-            
-            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            
-            // // ierr = KSPGetPC(ksp,&pc);
-            
-            // // ierr = PCSetType(pc,PCNONE);
-            
-            // // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
-
-            // ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
-            
-            // //    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-            
-
-        // //   //   ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
-        // // // ierr = MatSetNullSpace(A, nullsp);
-        // // // ierr = MatNullSpaceDestroy(&nullsp);
-
-   
-
-#if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
-#endif          
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            ierr = KSPSetUp(ksp);
-
-
-            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-            ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
-
-            ierr = KSPGetTotalIterations(ksp, &iterations);            
-
-            // VecPermute(u,rowperm,PETSC_TRUE);
-
-            //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
-            
-            //Gathers the solution vector to the master process
-            ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-            ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-            
-            ierr = VecScatterCreateToAll(b, &ctx, &Allu);CHKERRQ(ierr);
-            ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-
-            //Updates nodal values
-            double p_;
-            duNorm = 0.;
-            double dpNorm = 0.;
-            Ione = 1;
-            double u_;
-            double nor;
-            
-            for (int i = 0; i < numNodes; ++i){
-                Ii = 2*i;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                nodes_[i] -> incrementAcceleration(0,val);
-                nodes_[i] -> incrementVelocity(0,val*gamma*dTime);
-
-                ierr = VecGetValues(Allu, Ione, &Ii, &val);CHKERRQ(ierr);
-                duNorm += val*val;
-            
-                Ii = 2*i+1;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                nodes_[i] -> incrementAcceleration(1,val);
-                nodes_[i] -> incrementVelocity(1,val*gamma*dTime);
-
-                ierr = VecGetValues(Allu, Ione, &Ii, &val);CHKERRQ(ierr);
-                duNorm += val*val;
-            };
-            
-            for (int i = 0; i<numNodes; i++){
-                Ii = 2*numNodes+i;
-                ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                p_ = val;
-                nodes_[i] -> incrementPressure(p_);
-
-                ierr = VecGetValues(Allu,Ione,&Ii,&val);CHKERRQ(ierr);
-                dpNorm += val*val;
-            };
-            
-            //Computes the solution vector norm
-            //ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-   
-            boost::posix_time::ptime t2 =                               \
-                               boost::posix_time::microsec_clock::local_time();
-         
-            if(rank == 0){
-                boost::posix_time::time_duration diff = t2 - t1;
-
-                std::cout << "Iteration = " << inewton 
-                          << " (" << iterations << ")"  
-                          << "   Du Norm = " << std::scientific << sqrt(duNorm) 
-                          << " " << sqrt(dpNorm)
-                          << "  Time (s) = " << std::fixed
-                          << diff.total_milliseconds()/1000. << std::endl;
-            };
-                      
-            ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-            ierr = VecDestroy(&b); CHKERRQ(ierr);
-            ierr = VecDestroy(&u); CHKERRQ(ierr);
-            ierr = VecDestroy(&All); CHKERRQ(ierr);
-            ierr = VecDestroy(&Allu); CHKERRQ(ierr);
-            ierr = MatDestroy(&A); CHKERRQ(ierr);
-
-            if (sqrt(duNorm) <= tolerance) {
-                break;
-            };
-        };//Newton-Raphson
-
-        // Compute and print drag and lift coefficients
-        if (computeDragAndLift){
-            dragAndLiftCoefficients(dragLift);
-        };
-        
-        
-        // if (printVorticity){
-        //     for (int i = 0; i < numNodes; i++){
-        //         nodes_[i] -> clearVorticity();
-        //     };
-        //     for (int jel = 0; jel < numElem; jel++){
-        //         elements_[jel] -> computeVorticity();
-        //     };
-        //     MPI_Barrier(PETSC_COMM_WORLD);
-
-        //     for (int i = 0; i < numNodes; ++i){
-            
-        //         double vort = nodes_[i] -> getVorticity();
-        //         double signal = 1.;
-        //         if (fabs(vort) > 1.e-6) signal = vort / fabs(vort);
-        //         int root;
-
-        //         if(i == 16131) std::cout << "vort " << rank << " " << vort << std::endl;
-        //         struct { 
-        //             double val; 
-        //             int   rank; 
-        //         } in, out; 
-
-        //         in.val = fabs(vort);
-        //         in.rank = rank;
-
-        //         MPI_Reduce(&in,&out,1,MPI_DOUBLE_INT,MPI_MAXLOC,root,PETSC_COMM_WORLD);
-        //         MPI_Bcast(&out.val,1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-        //         MPI_Bcast(&out.rank,1,MPI_INT,0,PETSC_COMM_WORLD);
-        //         MPI_Bcast(&signal,1,MPI_DOUBLE,out.rank,PETSC_COMM_WORLD);
-
-        //         vort = out.val * signal;
-
-        //         nodes_[i] -> setVorticity(vort); 
-        //     }
-        // };
-
-
-        //Printing results
-        printResults(iTimeStep);
-
-        
-    };
-    
-    return 0;
-};
-
-//------------------------------------------------------------------------------
-//-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
-//------------------------------------------------------------------------------
-template<>
-int Fluid<2>::solveTransientProblemMoving(int iterNumber, double tolerance, bool accel) {
-
-    Mat               A;
-    Vec               b, u, All, Allu;
-    PetscErrorCode    ierr;
-    PetscInt          Istart, Iend, Ii, Ione, iterations;
-    KSP               ksp;
-    PC                pc;
-    VecScatter        ctx;
-    PetscScalar       val;
-    PetscLogDouble bytes = 0;
-
-    //    MatNullSpace      nullsp;
-    int rank;
-
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-
-    std::ofstream dragLift;
-    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
-    if (rank == 0) {
-        dragLift << "Time   Pressure Drag   Pressure Lift " 
-                 << "Friction Drag  Friction Lift Drag    Lift " 
-                 << std::endl;
-    };    
-
-    // Set element mesh moving parameters
-    double vMax = 0., vMin = 1.e10;
-    for (int i = 0; i < numElem; i++){
-        double v = elements_[i] -> getJacobian();
-        if (v > vMax) vMax = v;
-        if (v < vMin) vMin = v;
-    };
-    for (int i = 0; i < numElem; i++){
-        double v = elements_[i] -> getJacobian();
-        double eta = 1 + (1. - vMin / vMax) / (v / vMax);
-        elements_[i] -> setMeshMovingParameter(eta);
-    };
-
-    iTimeStep = 0.;
-
-    if (accel) getInitialAcceleration();
-
-    double &alpha_f = fluidParameters.getAlphaF();
-    double &alpha_m = fluidParameters.getAlphaM();
-    double &gamma = fluidParameters.getGamma();
-    double &pi = fluidParameters.getPi();
-
-    for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
-        
-        if (rank == 0) {std::cout << "------------------------- TIME STEP = "
-                                  << iTimeStep << " -------------------------"
-                                  << std::endl;}
-        PetscMemoryGetCurrentUsage(&bytes);
-        PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
-        
-        for (int i = 0; i < numNodes; i++){
-            double accel[2], u[2], p_;
-            
-            //Compute acceleration
-            u[0] = nodes_[i] -> getVelocity(0);
-            u[1] = nodes_[i] -> getVelocity(1);
-            
-            nodes_[i] -> setPreviousVelocity(u);
-
-            //
-            accel[0] = nodes_[i] -> getAcceleration(0);
-            accel[1] = nodes_[i] -> getAcceleration(1);
-
-            nodes_[i] -> setPreviousAcceleration(accel);
-
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
-
-            nodes_[i] -> setAcceleration(accel);
-        };
-
-
-
-        // Moving boundary
-        for (int i = 0; i < numNodes; i++){
-            typename Node::VecLocD x;
-            
-            x = nodes_[i] -> getCoordinates();
-            nodes_[i] -> setPreviousCoordinates(0,x(0));
-            nodes_[i] -> setPreviousCoordinates(1,x(1));
-        };
-
-        for (int i=0; i < numBoundElems; i++){
-            if (boundary_[i] -> getConstrain(0) == 3){
-                //std::cout << "asasa " << i << std::endl;
-                Boundaries::BoundConnect connectB;
-                connectB = boundary_[i] -> getBoundaryConnectivity();
-                int no1 = connectB(0);
-                int no2 = connectB(1);
-                int no3 = connectB(2);
-                
-                typename Node::VecLocD x, xi, xn;
-                double u_[2], a;
-                a = -20 * pi / 180 + 10 * pi / 180 * cos(2.*pi*1.0*iTimeStep*dTime) + 10 * pi / 180;
-
-                //Node 1
-                x = nodes_[no1] -> getCoordinates();
-                xi = nodes_[no1] -> getInitialCoordinates();
-
-                xn(0) = 0.5 + (xi(0)-0.5) * cos(a) - (xi(1)-0.0) * sin(a);
-                xn(1) = 0.0 + (xi(0)-0.5) * sin(a) + (xi(1)-0.0) * cos(a);
-
-                u_[0] = (xn(0) - x(0)) / dTime;
-                u_[1] = (xn(1) - x(1)) / dTime;    
-
-                nodes_[no1] -> setUpdatedCoordinates(xn);
-                // nodes_[no1] -> setMeshVelocity(u_);
-
-                //Node 2
-                x = nodes_[no2] -> getCoordinates();
-                xi = nodes_[no2] -> getInitialCoordinates();
-
-                xn(0) = 0.5 + (xi(0)-0.5) * cos(a) - (xi(1)-0.0) * sin(a);
-                xn(1) = 0.0 + (xi(0)-0.5) * sin(a) + (xi(1)-0.0) * cos(a);
-
-                u_[0] = (xn(0) - x(0)) / dTime;
-                u_[1] = (xn(1) - x(1)) / dTime;    
-
-                nodes_[no2] -> setUpdatedCoordinates(xn);
-                // nodes_[no2] -> setMeshVelocity(u_);
-
-                //Node 3
-                x = nodes_[no3] -> getCoordinates();
-                xi = nodes_[no3] -> getInitialCoordinates();
-
-                xn(0) = 0.5 + (xi(0)-0.5) * cos(a) - (xi(1)-0.0) * sin(a);
-                xn(1) = 0.0 + (xi(0)-0.5) * sin(a) + (xi(1)-0.0) * cos(a);
-
-                u_[0] = (xn(0) - x(0)) / dTime;
-                u_[1] = (xn(1) - x(1)) / dTime;    
-
-                nodes_[no3] -> setUpdatedCoordinates(xn);
-                // nodes_[no3] -> setMeshVelocity(u_);
-            };
-        };
-
-        solveSteadyLaplaceProblem(1, 1.e-6);
-
-        for (int i=0; i< numNodes; i++){
-            typename Node::VecLocD x,xp;
-            double u[2];
-            
-            x = nodes_[i] -> getCoordinates();
-            xp = nodes_[i] -> getPreviousCoordinates();
-            
-            u[0] = (x(0) - xp(0)) / dTime;
-            u[1] = (x(1) - xp(1)) / dTime;
-
-            nodes_[i] -> setMeshVelocity(u);
-        };
-
-
-        double duNorm=100.;
-        
-        for (int inewton = 0; inewton < iterNumber; inewton++){
-            boost::posix_time::ptime t1 =                             
-                               boost::posix_time::microsec_clock::local_time();
-            
-            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                2*numNodes+numNodes, 2*numNodes+numNodes,
-                                100,NULL,300,NULL,&A); 
-            CHKERRQ(ierr);
-            
-            ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
-            
-            //Create PETSc vectors
-            ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
-            ierr = VecSetSizes(b,PETSC_DECIDE,2*numNodes+numNodes);
-            CHKERRQ(ierr);
-            ierr = VecSetFromOptions(b);CHKERRQ(ierr);
-            ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
-            ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
-            
-            // Loop over the elements
-            for (int jel = 0; jel < numElem; jel++){   
-                
-                //if (part_elem[jel] == rank) {
-                    //Compute Element matrix
-                    typename Elements::Connectivity connec;
-                    connec = elements_[jel] -> getConnectivity();
-
-                    std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
-                    localMV = elements_[jel] -> getTransientNavierStokes();
-                    
-                    //Disperse local contributions into the global matrix
-                    //Matrix K and C
-                    for (int i=0; i<6; i++){
-                        for (int j=0; j<6; j++){
-                            if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i,1, &dof_j,
-                                                    &localMV.first(2*i  ,2*j  ),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i+1,2*j  ),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i  ,2*j+1),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * connec(j) + 1;
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i+1,2*j+1),
-                                                    ADD_VALUES);
-                            };
-                        
-                            //Matrix Q and Qt
-                            if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i  ,12+j),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
-                                int dof_i = 2 * connec(i);
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i,
-                                                    &localMV.first(12+j,2*i  ),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(2*i+1,12+j),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
-                                int dof_i = 2 * connec(i) + 1;
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i,
-                                                    &localMV.first(12+j,2*i+1),
-                                                    ADD_VALUES);
-                            };
-                            if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
-                                int dof_i = 2 * numNodes + connec(i);
-                                int dof_j = 2 * numNodes + connec(j);
-                                ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j,
-                                                    &localMV.first(12+i,12+j),
-                                                    ADD_VALUES);
-                            };
-                        };
-                        
-                        //Rhs vector
-                        if (fabs(localMV.second(2*i  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i  ),
-                                                ADD_VALUES);
-                        };
-                        
-                        if (fabs(localMV.second(2*i+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i)+1;
-                            ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i+1),
-                                                ADD_VALUES);
-                        };
-                        if (fabs(localMV.second(12+i)) >= 1.e-15){
-                            int dof_i = 2 * numNodes + connec(i);
-                            ierr = VecSetValues(b, 1, &dof_i, &localMV.second(12+i),
-                                                ADD_VALUES);
-                        };
-                    };
-                //};
-            }; //Elements
-            
-            //Assemble matrices and vectors
-            ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            
-            ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-            ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-            
- 
-            // MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            
-            //Create KSP context to solve the linear system
-            ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-            
-            ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-            
-
-
-
-            // ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-            //                         500);CHKERRQ(ierr);
-            
-            //ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            
-            // ierr = KSPGetPC(ksp,&pc);
-            
-            // ierr = PCSetType(pc,PCJACOBI);
-            
-            // ierr = KSPSetType(ksp,KSPDGMRES); CHKERRQ(ierr);
-
-            //ierr = KSPGMRESSetRestart(ksp, 500); CHKERRQ(ierr);
-            
-            // //    ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-            
-
-            // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,NULL,&nullsp);
-            // ierr = MatSetNullSpace(A, nullsp);
-            // ierr = MatNullSpaceDestroy(&nullsp);
-
- 
-
-#if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
-            //      MatMumpsSetIcntl(A,25,-1);
-#endif          
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            ierr = KSPSetUp(ksp);
-
-
-            ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
-
-            ierr = KSPGetTotalIterations(ksp, &iterations);            
-
-            //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
-            
-            //Gathers the solution vector to the master process
-            ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-            ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-            
-            ierr = VecScatterCreateToAll(b, &ctx, &Allu);CHKERRQ(ierr);
-            ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-            
-            //Updates nodal values
-            double p_;
-            duNorm = 0.;
-            double dpNorm = 0.;
-            Ione = 1;
-            double u_;
-            double nor;
-            
-            for (int i = 0; i < numNodes; ++i){
-                Ii = 2*i;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                nodes_[i] -> incrementAcceleration(0,val);
-                nodes_[i] -> incrementVelocity(0,val*gamma*dTime);
-
-                ierr = VecGetValues(Allu, Ione, &Ii, &val);CHKERRQ(ierr);
-                duNorm += val*val;
-            
-                Ii = 2*i+1;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                nodes_[i] -> incrementAcceleration(1,val);
-                nodes_[i] -> incrementVelocity(1,val*gamma*dTime);
-
-                ierr = VecGetValues(Allu, Ione, &Ii, &val);CHKERRQ(ierr);
-                duNorm += val*val;
-            };
-            
-            for (int i = 0; i<numNodes; i++){
-                Ii = 2*numNodes+i;
-                ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                p_ = val;
-                nodes_[i] -> incrementPressure(p_);
-
-                ierr = VecGetValues(Allu,Ione,&Ii,&val);CHKERRQ(ierr);
-                dpNorm += val*val;
-            };
-            
-            
-            //Computes the solution vector norm
-            //ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-   
-            boost::posix_time::ptime t2 =                               \
-                               boost::posix_time::microsec_clock::local_time();
-         
-            if(rank == 0){
-                boost::posix_time::time_duration diff = t2 - t1;
-
-                std::cout << "Iteration = " << inewton 
-                          << " (" << iterations << ")"  
-                          << "   Du Norm = " << std::scientific << sqrt(duNorm) 
-                          << " " << sqrt(dpNorm)
-                          << "  Time (s) = " << std::fixed
-                          << diff.total_milliseconds()/1000. << std::endl;
-            };
-                      
-            ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-            ierr = VecDestroy(&b); CHKERRQ(ierr);
-            ierr = VecDestroy(&u); CHKERRQ(ierr);
-            ierr = VecDestroy(&All); CHKERRQ(ierr);
-            ierr = VecDestroy(&Allu); CHKERRQ(ierr);
-            ierr = MatDestroy(&A); CHKERRQ(ierr);
-
-            if (sqrt(duNorm) <= tolerance) {
-                break;
-            };
-
-            //Updates SUPG Parameter
-            // for (int i = 0; i < numElem; i++){
-            //     elements_[i] -> getParameterSUPG();
-            // };
-            
-        };//Newton-Raphson
-
-        // Compute and print drag and lift coefficients
-        if (computeDragAndLift){
-            dragAndLiftCoefficients(dragLift);
-        };
-
-        if (printVorticity){
-            for (int i = 0; i < numNodes; i++){
-                nodes_[i] -> clearVorticity();
-            };
-            for (int jel = 0; jel < numElem; jel++){
-                elements_[jel] -> computeVorticity();
-            };
-
-            for (int i = 0; i < numNodes; ++i){
-                double vort = nodes_[i] -> getVorticity();
-                double signal = vort / fabs(vort);
-                int root;
-                struct { 
-                    double val; 
-                    int   rank; 
-                } in, out; 
-
-                in.val = fabs(vort);
-                in.rank = rank;
-
-                MPI_Reduce(&in,&out,1,MPI_DOUBLE_INT,MPI_MAXLOC,root,PETSC_COMM_WORLD);
-                MPI_Bcast(&out.val,1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                MPI_Bcast(&out.rank,1,MPI_INT,0,PETSC_COMM_WORLD);
-                MPI_Bcast(&signal,1,MPI_DOUBLE,out.rank,PETSC_COMM_WORLD);
-
-                vort = out.val * signal;
-
-                nodes_[i] -> setVorticity(vort); 
-            }
-
-
-        };
-
-        //Printing results
-        printResults(iTimeStep);
-        
-    };
-
-   
-    return 0;
-};
-
-
 
 //------------------------------------------------------------------------------
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
@@ -2742,7 +1877,6 @@ void Fluid<2>::readInitialValues(const std::string& inputPrev, const std::string
 template<>
 int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
 
-    Mat               A;
     Vec               b, u, All, Allu;
     PetscErrorCode    ierr;
     PetscInt          Ii, Ione, iterations;
@@ -2793,80 +1927,87 @@ int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
             
             if (part_elem[jel] == rank) {
                 //Compute Element matrix
-                typename Elements::Connectivity connec;
-                connec = elements_[jel] -> getConnectivity();
+                int *connec = elements_[jel] -> getConnectivity();
 
                 std::pair<Elements::LocalMatrix, Elements::LocalVector> localMV;
-                localMV = elements_[jel] -> getTransientNavierStokes();
+
+                double **matrix;
+                double rhs[18] = {};
+                matrix = new double*[18]();
+                for (int i = 0; i < 18; i++) matrix[i] = new double[18]();
+
+                elements_[jel] -> getTransientNavierStokes(matrix,rhs);
                 
                 //Disperse local contributions into the global matrix
                 //Matrix K and C
                 for (int i=0; i<6; i++){
                     for (int j=0; j<6; j++){
                         if (fabs(localMV.first(2*i  ,2*j  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * connec(j);
+                            int dof_i = 2 * connec[i];
+                            int dof_j = 2 * connec[j];
                             ierr = MatSetValues(A, 1, &dof_i,1, &dof_j, &localMV.first(2*i  ,2*j  ), ADD_VALUES);
                         };
                         if (fabs(localMV.first(2*i+1,2*j  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * connec(j);
+                            int dof_i = 2 * connec[i] + 1;
+                            int dof_j = 2 * connec[j];
                             ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j, &localMV.first(2*i+1,2*j  ), ADD_VALUES);
                         };
                         if (fabs(localMV.first(2*i  ,2*j+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * connec(j) + 1;
+                            int dof_i = 2 * connec[i];
+                            int dof_j = 2 * connec[j] + 1;
                             ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j, &localMV.first(2*i  ,2*j+1), ADD_VALUES);
                         };
                         if (fabs(localMV.first(2*i+1,2*j+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * connec(j) + 1;
+                            int dof_i = 2 * connec[i] + 1;
+                            int dof_j = 2 * connec[j] + 1;
                             ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j, &localMV.first(2*i+1,2*j+1), ADD_VALUES);
                         };
                     
                         //Matrix Q and Qt
                         if (fabs(localMV.first(2*i  ,12+j)) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * numNodes + connec(j);
+                            int dof_i = 2 * connec[i];
+                            int dof_j = 2 * numNodes + connec[j];
                             ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j, &localMV.first(2*i  ,12+j), ADD_VALUES);
                         };
                         if (fabs(localMV.first(12+j,2*i  )) >= 1.e-15){
-                            int dof_i = 2 * connec(i);
-                            int dof_j = 2 * numNodes + connec(j);
+                            int dof_i = 2 * connec[i];
+                            int dof_j = 2 * numNodes + connec[j];
                             ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i, &localMV.first(12+j,2*i  ), ADD_VALUES);
                         };
                         if (fabs(localMV.first(2*i+1,12+j)) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * numNodes + connec(j);
+                            int dof_i = 2 * connec[i] + 1;
+                            int dof_j = 2 * numNodes + connec[j];
                             ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j, &localMV.first(2*i+1,12+j), ADD_VALUES);
                         };
                         if (fabs(localMV.first(12+j,2*i+1)) >= 1.e-15){
-                            int dof_i = 2 * connec(i) + 1;
-                            int dof_j = 2 * numNodes + connec(j);
+                            int dof_i = 2 * connec[i] + 1;
+                            int dof_j = 2 * numNodes + connec[j];
                             ierr = MatSetValues(A, 1, &dof_j, 1, &dof_i, &localMV.first(12+j,2*i+1), ADD_VALUES);
                         };
                         if (fabs(localMV.first(12+i,12+j)) >= 1.e-15){
-                            int dof_i = 2 * numNodes + connec(i);
-                            int dof_j = 2 * numNodes + connec(j);
+                            int dof_i = 2 * numNodes + connec[i];
+                            int dof_j = 2 * numNodes + connec[j];
                             ierr = MatSetValues(A, 1, &dof_i, 1, &dof_j, &localMV.first(12+i,12+j), ADD_VALUES);
                         };
                     };
                     
                     //Rhs vector
                     if (fabs(localMV.second(2*i  )) >= 1.e-15){
-                        int dof_i = 2 * connec(i);
+                        int dof_i = 2 * connec[i];
                         ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i  ), ADD_VALUES);
                     };
                     
                     if (fabs(localMV.second(2*i+1)) >= 1.e-15){
-                        int dof_i = 2 * connec(i)+1;
+                        int dof_i = 2 * connec[i]+1;
                         ierr = VecSetValues(b, 1, &dof_i, &localMV.second(2*i+1), ADD_VALUES);
                     };
                     if (fabs(localMV.second(12+i)) >= 1.e-15){
-                        int dof_i = 2 * numNodes + connec(i);
+                        int dof_i = 2 * numNodes + connec[i];
                         ierr = VecSetValues(b, 1, &dof_i, &localMV.second(12+i), ADD_VALUES);
                     };
                 };
+                for (int i = 0; i < 18; ++i) delete [] matrix[i];
+                delete [] matrix;
             };
         }; //Elements
         
