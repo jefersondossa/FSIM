@@ -16,6 +16,7 @@
 
 #include "Fluid.hpp"
 #include "Glue.hpp"
+#include <petscviewerhdf5.h>
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -198,6 +199,7 @@ public:
     /// Print the results for Paraview post-processing
     /// @param int time step
     void printResults(int step);
+    void printResults2(int step);
 
     void initialAcceleration();
 
@@ -374,8 +376,6 @@ void Arlequin<2>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes,
 template<>
 void Arlequin<2>::setNodalCorrespondenceFine() {
 
-    ublas::bounded_vector<double,2>            xsi;
-
     //FINE MESH
     // for (int inode=0; inode < numNodesFine; inode ++){
     //     nodesFine_[inode] -> setNodalCorrespondence(1.e10,xsi);
@@ -418,7 +418,6 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
         
         double x1[6], x2[6];
         int *connec;
-        std::pair<int, ublas::bounded_vector<double,2> > corresp;
 
         connec = elementsFine_[elementsGlueZoneFine_[ielem]] -> getConnectivity();
         
@@ -455,10 +454,6 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
                  // std::cout << "CORRESP " << elCorr << " " << corresp.first << std::endl 
                  //  << xsiCorr[0] << " " << xsiCorr[1] << " " << corresp.second[0] << " " << corresp.second[1] << std::endl;
 
-
-                // elCorr = corresp.first;
-                // xsiCorr[0] = corresp.second[0];
-                // xsiCorr[1] = corresp.second[1];
                 elementsFine_[elementsGlueZoneFine_[ielem]] -> 
                     setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
                 // };
@@ -473,12 +468,10 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
 template<>
 void Arlequin<2>::setNodalCorrespondenceCoarse() {
 
-    ublas::bounded_vector<double,2>            xsi;
-
     //COARSE MESH
     for (int inode=0; inode < numNodesCoarse; inode ++){
-        double xsi2[2] = {};
-        nodesCoarse_[inode] -> setNodalCorrespondence(1.e10,xsi2);
+        double xsi[2] = {};
+        nodesCoarse_[inode] -> setNodalCorrespondence(1.e10,xsi);
     };
 
     for (int inode = 0; inode < numNodesGlueZoneFine; inode++) {
@@ -509,7 +502,6 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
         
         double x1[6], x2[6];
         int *connec;
-        std::pair<int, ublas::bounded_vector<double,2> > corresp;
 
         connec = elementsCoarse_[elementsGlueZoneFine_[ielem]] -> getConnectivity();
         
@@ -1936,6 +1928,156 @@ void Arlequin<2>::printResults(int step) {
 
 
 //------------------------------------------------------------------------------
+//----------------------------PRINT VELOCITY RESULTS----------------------------
+//------------------------------------------------------------------------------
+template<>
+void Arlequin<2>::printResults2(int step) {
+
+    //PRINT COARSE MODEL RESULTS
+    
+    std::string result;
+    std::ostringstream convert;
+
+    convert << step+100000;
+    result = convert.str();
+    std::string s = "experiment"+result+".xdmf";
+    
+    std::fstream output_v(s.c_str(), std::ios_base::out);
+
+
+
+    const std::string filename("scalar.h5");
+
+    double coords2[numNodesCoarse*2] = {};
+    int connec2[numElemCoarse*6] = {};
+    double dist2[numNodesCoarse] = {};
+    for (int i = 0; i < numNodesCoarse; i++) {
+        double *x = nodesCoarse_[i] -> getCoordinates();
+        dist2[i] = nodesCoarse_[i] -> getDistFunction();
+        coords2[2*i  ] = x[0];
+        coords2[2*i+1] = x[1];
+    }
+    for (int i = 0; i < numElemCoarse; i++){
+        int* con = elementsCoarse_[i] -> getConnectivity();
+        connec2[6*i  ] = con[0];
+        connec2[6*i+1] = con[1];
+        connec2[6*i+2] = con[2];
+        connec2[6*i+3] = con[3];
+        connec2[6*i+4] = con[4];
+        connec2[6*i+5] = con[5];
+    }
+   
+    hid_t file; 
+    hid_t dataset; 
+    hid_t dataspace;
+
+    herr_t status;
+    hsize_t xdim = numNodesCoarse;
+    hsize_t coorddims[2] = { numNodesCoarse, 2 };
+    hsize_t distdims[2] = { numNodesCoarse, 1 };
+    hsize_t conncdims[2] = { numElemCoarse, 6 };
+
+    std::cout << "Calling H5Fcreate..." << std::endl;
+    file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    //Inicio coordenadas
+    std::cout << "Calling H5Screate_simple for coords..." << std::endl;
+    dataspace = H5Screate_simple(2, coorddims, NULL);
+
+    std::cout << "Calling H5Dcreate2 for coords..." << std::endl;
+    dataset = H5Dcreate2(file, "/coords", H5T_IEEE_F32LE, dataspace,
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    std::cout << "Calling H5Dwrite for coords..." << std::endl;
+    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &coords2);
+
+    status = H5Dclose(dataset);
+    status = H5Sclose(dataspace);
+    //Fim coordenadas
+
+    //Inicio connectividade
+    std::cout << "Calling H5Screate_simple for coords..." << std::endl;
+    dataspace = H5Screate_simple(2, conncdims, NULL);
+
+    std::cout << "Calling H5Dcreate2 for coords..." << std::endl;
+    dataset = H5Dcreate2(file, "/connec", H5T_IEEE_F32LE, dataspace,
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    std::cout << "Calling H5Dwrite for coords..." << std::endl;
+    status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &connec2);
+
+    status = H5Dclose(dataset);
+    status = H5Sclose(dataspace);
+    //Fim conectividade
+
+    //Inicio coordenadas
+    std::cout << "Calling H5Screate_simple for coords..." << std::endl;
+    dataspace = H5Screate_simple(2, distdims, NULL);
+
+    std::cout << "Calling H5Dcreate2 for coords..." << std::endl;
+    dataset = H5Dcreate2(file, "/distfunction", H5T_IEEE_F32LE, dataspace,
+            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    std::cout << "Calling H5Dwrite for coords..." << std::endl;
+    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &dist2);
+
+    status = H5Dclose(dataset);
+    status = H5Sclose(dataspace);
+    //Fim coordenadas
+
+
+    status = H5Fclose(file);
+
+    output_v << "<?xml version=\"1.0\"?>" << std::endl
+             << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>" << std::endl
+             << "<Xdmf Version=\"2.0\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" >" << std::endl
+             << "<Domain>" << std::endl
+             << "  <Grid>"  << std::endl
+             << "    <Topology TopologyType=\"Tri_6\" NumberOfElements=\"" << numElemCoarse << "\" >" << std::endl
+             << "      <DataItem Format=    \"HDF\" NumberType=\"int\" Dimensions=\"" << numElemCoarse << " 6\" >" << std::endl;
+   
+    output_v << "        scalar.h5:/connec" << std::endl;  
+    // for (int i = 0; i < numElemCoarse; i++){
+    //     int* connec = elementsCoarse_[i] -> getConnectivity();
+    //     output_v << connec[0] << " " << connec[1] << " " << connec[2] << " " 
+    //              << connec[3] << " " << connec[4] << " " << connec[5] << std::endl;    
+    // }
+
+    output_v << "      </DataItem>" << std::endl
+             << "    </Topology>" << std::endl
+             << "    <Geometry GeometryType=\"XY\">" << std::endl
+             << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 2\">" << std::endl;
+   
+    output_v << "        scalar.h5:/coords" << std::endl; 
+
+    // for (int i = 0; i < numNodesCoarse; i++){
+    //     double* x = nodesCoarse_[i] -> getCoordinates();
+    //     output_v << x[0] << " " << x[1] << " 0" << std::endl;    
+    // }
+
+    output_v << "      </DataItem>" << std::endl
+             << "    </Geometry>" << std::endl
+             << "    <Attribute Name=\"test\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+             << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesCoarse <<"\">" << std::endl;  
+
+    output_v << "        scalar.h5:/distfunction" << std::endl; 
+    
+    // for (int i = 0; i < numNodesCoarse; i++){
+    //     output_v << nodesCoarse_[i] -> getDistFunction() << " " ;    
+    // }                 
+    
+    output_v << std::endl
+             << "      </DataItem>" << std::endl
+             << "    </Attribute>" << std::endl
+             << "  </Grid>" << std::endl
+             << "</Domain>" << std::endl
+             << "</Xdmf>" << std::endl;
+
+    return;
+};
+
+
+//------------------------------------------------------------------------------
 //------------SETS COARSE/FINE MESHES AND GETS ITS BASIC INFORMATIONS-----------
 //------------------------------------------------------------------------------
 template<>
@@ -2664,16 +2806,16 @@ void Arlequin<2>::assembleArlequinSystem(){
                 
                 int iElemCoarse = diffElem[ielem];
                 double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
-                ublas::bounded_vector<double, 6> press_, velX_, velY_, velXPrev_, velYPrev_;
+                double press_[6], velX_[6], velY_[6], velXPrev_[6], velYPrev_[6];
 
                 connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
 
                 for (int k = 0; k < 6; k++){
-                    press_(k) = nodesCoarse_[connecC[k]] -> getPressure();
-                    velX_(k) = nodesCoarse_[connecC[k]] -> getVelocity(0);
-                    velY_(k) = nodesCoarse_[connecC[k]] -> getVelocity(1);
-                    velXPrev_(k) = nodesCoarse_[connecC[k]] -> getPreviousVelocity(0);
-                    velYPrev_(k) = nodesCoarse_[connecC[k]] -> getPreviousVelocity(1);
+                    press_[k] = nodesCoarse_[connecC[k]] -> getPressure();
+                    velX_[k] = nodesCoarse_[connecC[k]] -> getVelocity(0);
+                    velY_[k] = nodesCoarse_[connecC[k]] -> getVelocity(1);
+                    velXPrev_[k] = nodesCoarse_[connecC[k]] -> getPreviousVelocity(0);
+                    velYPrev_[k] = nodesCoarse_[connecC[k]] -> getPreviousVelocity(1);
                 }
                 
                 Ajac2 = new double*[18]();
@@ -2745,8 +2887,7 @@ void Arlequin<2>::initialAcceleration(){
 
     if (rank == 0) {std::cout << "--- INITIAL ACCELERATION ---" << std::endl;}
             
-    boost::posix_time::ptime t1 =
-        boost::posix_time::microsec_clock::local_time();
+    std::clock_t t1 = std::clock();
     
     // Preallocates the matrix
     ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
@@ -2811,11 +2952,7 @@ void Arlequin<2>::initialAcceleration(){
                           
         int jel = elementsGlueZoneFine_[l];
                           
-        if (domDecompFine.first[jel] == rank) {
-          
-            typename Elements::LocalMatrix Ajac, AjacAnt, AStab, ArlequinM, ArlequinM2;
-            typename Elements::LocalVector Rhs, RhsStab, RhsArlequin,rhsLagMult;
-              
+        if (domDecompFine.first[jel] == rank) {              
             int *connecC;
             int *connec = elementsFine_[jel] -> getConnectivity();
             int *connecL = glueZoneFine_[l] -> getConnectivity();
@@ -2910,16 +3047,16 @@ void Arlequin<2>::initialAcceleration(){
                 
                 int iElemCoarse = diffElem[ielem];
                 double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
-                ublas::bounded_vector<double, 6> press_, velX_, velY_, velXPrev_, velYPrev_;
+                double press_[6], velX_[6], velY_[6], velXPrev_[6], velYPrev_[6];
 
                 connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
 
                 for (int k = 0; k < 6; k++){
-                    press_(k) = nodesCoarse_[connecC[k]] -> getPressure();
-                    velX_(k) = nodesCoarse_[connecC[k]] -> getVelocity(0);
-                    velY_(k) = nodesCoarse_[connecC[k]] -> getVelocity(1);
-                    velXPrev_(k) = nodesCoarse_[connecC[k]] -> getPreviousVelocity(0);
-                    velYPrev_(k) = nodesCoarse_[connecC[k]] -> getPreviousVelocity(1);
+                    press_[k] = nodesCoarse_[connecC[k]] -> getPressure();
+                    velX_[k] = nodesCoarse_[connecC[k]] -> getVelocity(0);
+                    velY_[k] = nodesCoarse_[connecC[k]] -> getVelocity(1);
+                    velXPrev_[k] = nodesCoarse_[connecC[k]] -> getPreviousVelocity(0);
+                    velYPrev_[k] = nodesCoarse_[connecC[k]] -> getPreviousVelocity(1);
                 }
                 
                 Ajac2 = new double*[18]();
@@ -3116,7 +3253,7 @@ void Arlequin<2>::initialAcceleration(){
         // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
     };
                                         
-    boost::posix_time::ptime t2 = boost::posix_time::microsec_clock::local_time();
+    std::clock_t t2 = std::clock();
       
     ierr = KSPDestroy(&ksp); 
     ierr = VecDestroy(&b); 
@@ -3265,8 +3402,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         //STARTS NEWTON-RAPHSON
         for (int inewton = 0; inewton < iterNumber; inewton++){
             
-            boost::posix_time::ptime t1 =
-                boost::posix_time::microsec_clock::local_time();
+            std::clock_t t1 = std::clock();
             
             // Preallocates the matrix
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
@@ -3290,7 +3426,10 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 
             }
             
+
+            std::clock_t t3 = std::clock();
             assembleArlequinSystem();
+            std::clock_t t4 = std::clock();
 
             //std::cout << "Enter PETSc " << rank << std::endl;
             
@@ -3300,7 +3439,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             
             ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
             ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-
+            std::clock_t t5 = std::clock();
 
             // MatScale(A,1000.);
             // VecScale(b,1000.);
@@ -3446,6 +3585,11 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             
             ierr = KSPGetTotalIterations(ksp, &iterations);
             
+            std::clock_t t6 = std::clock();
+
+            if (rank == 0) std::cout << "TIME " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << " " 
+                                                << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << " " 
+                                                << 1000.*(t6-t5)/CLOCKS_PER_SEC/1000. << std::endl;
             //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
         
             //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
@@ -3543,19 +3687,16 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             //Computes the solution vector norm
             ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
             
-            boost::posix_time::ptime t2 =
-                boost::posix_time::microsec_clock::local_time();
+            std::clock_t t2 = std::clock();
             
             if(rank == 0){
-                boost::posix_time::time_duration diff = t2 - t1;
-                
                 std::cout<<"Iteration = " << inewton << " (" << iterations <<  
                     ")  Du Norm = " << std::scientific << sqrt(normU) 
                          << " " << sqrt(normP) 
                          << " " << sqrt(normL) 
                          << " " << val << 
                     "  Time (s) = " << std::fixed << 
-                    diff.total_milliseconds()/1000. << std::endl;
+                    1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
             };
             
             ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
@@ -3691,6 +3832,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
             //Printing results
             printResults(iTimeStep);
+            printResults2(iTimeStep);
         };        
  
 
@@ -3807,12 +3949,12 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             double *xi = nodesFine_[i] -> getInitialCoordinates();       
             double *x = nodesFine_[i] -> getCoordinates();       
     
-            double a = -20 * pi / 180 + 10 * pi / 180 * cos(2.*pi*iTimeStep*dTime);// + 10 * pi / 180;
+            double a = -20 * pi / 180 + 10 * pi / 180 * std::cos(2.*pi*iTimeStep*dTime);// + 10 * pi / 180;
 
             // std::cout << " AAA " << a << std::endl;
 
-            xn[0] = 0.5 + (xi[0]-0.5) * cos(a) - (xi[1]-0.0) * sin(a);
-            xn[1] = 0.0 + (xi[0]-0.5) * sin(a) + (xi[1]-0.0) * cos(a);
+            xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
+            xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
 
             u[0] = (xn[0] - x[0]) / dTime;
             u[1] = (xn[1] - x[1]) / dTime;
@@ -3835,8 +3977,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         //STARTS NEWTON-RAPHSON
         for (int inewton = 0; inewton < iterNumber; inewton++){
             
-            boost::posix_time::ptime t1 =
-                boost::posix_time::microsec_clock::local_time();
+            std::clock_t t1 = std::clock();
             
             // Preallocates the matrix
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
@@ -4049,19 +4190,16 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             //Computes the solution vector norm
             ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
             
-            boost::posix_time::ptime t2 =
-                boost::posix_time::microsec_clock::local_time();
+            std::clock_t t2 = std::clock();
             
-            if(rank == 0){
-                boost::posix_time::time_duration diff = t2 - t1;
-                
+            if(rank == 0){                
                 std::cout<<"Iteration = " << inewton << " (" << iterations <<  
                     ")  Du Norm = " << std::scientific << sqrt(normU) 
                          << " " << sqrt(normP) 
                          << " " << sqrt(normL) 
                          << " " << val << 
                     "  Time (s) = " << std::fixed << 
-                    diff.total_milliseconds()/1000. << std::endl;
+                    1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
             };
             
             ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
@@ -4213,8 +4351,7 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
     //STARTS NEWTON-RAPHSON
     for (int inewton = 0; inewton < iterNumber; inewton++){
         
-        boost::posix_time::ptime t1 =
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t1 = std::clock();
         
         // Preallocates the matrix
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
@@ -4442,19 +4579,16 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         //Computes the solution vector norm
         ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
         
-        boost::posix_time::ptime t2 =
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t2 = std::clock();
         
         if(rank == 0){
-            boost::posix_time::time_duration diff = t2 - t1;
-            
             std::cout<<"Iteration = " << inewton << " (" << iterations <<  
                 ")  Du Norm = " << std::scientific << sqrt(normU) 
                      << " " << sqrt(normP) 
                      << " " << sqrt(normL) 
                      << " " << val << 
                 "  Time (s) = " << std::fixed << 
-                diff.total_milliseconds()/1000. << std::endl;
+                1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
         };
         
         ierr = KSPDestroy(&ksp); CHKERRQ(ierr);

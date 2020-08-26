@@ -48,31 +48,31 @@ public:
         pointCoord[0][0] = 1. / 3.;
         pointCoord[0][1] = 1. / 3.;
             
-        pointCoord[1][0] = (9. + 2. * sqrt(15.)) / 21.;
-        pointCoord[1][1] = (6. - sqrt(15.)) / 21.;
+        pointCoord[1][0] = (9. + 2. * std::sqrt(15.)) / 21.;
+        pointCoord[1][1] = (6. - std::sqrt(15.)) / 21.;
           
-        pointCoord[2][0] = (6. - sqrt(15.)) / 21.;
-        pointCoord[2][1] = (9. + 2. * sqrt(15.)) / 21.;
+        pointCoord[2][0] = (6. - std::sqrt(15.)) / 21.;
+        pointCoord[2][1] = (9. + 2. * std::sqrt(15.)) / 21.;
           
-        pointCoord[3][0] = (6. - sqrt(15.)) / 21.;
-        pointCoord[3][1] = (6. - sqrt(15.)) / 21.;
+        pointCoord[3][0] = (6. - std::sqrt(15.)) / 21.;
+        pointCoord[3][1] = (6. - std::sqrt(15.)) / 21.;
           
-        pointCoord[4][0] = (6. + sqrt(15.)) / 21.;
-        pointCoord[4][1] = (6. + sqrt(15.)) / 21.;
+        pointCoord[4][0] = (6. + std::sqrt(15.)) / 21.;
+        pointCoord[4][1] = (6. + std::sqrt(15.)) / 21.;
           
-        pointCoord[5][0] = (9. - 2. * sqrt(15.)) / 21.;
-        pointCoord[5][1] = (6. + sqrt(15.)) / 21.;
+        pointCoord[5][0] = (9. - 2. * std::sqrt(15.)) / 21.;
+        pointCoord[5][1] = (6. + std::sqrt(15.)) / 21.;
           
-        pointCoord[6][0] = (6. + sqrt(15.)) / 21.;
-        pointCoord[6][1] = (9. - 2. * sqrt(15.)) / 21.;
+        pointCoord[6][0] = (6. + std::sqrt(15.)) / 21.;
+        pointCoord[6][1] = (9. - 2. * std::sqrt(15.)) / 21.;
 
         pointWeight[0] = 0.11250;
-        pointWeight[1] = (155. - sqrt(15.)) / 2400.;
-        pointWeight[2] = (155. - sqrt(15.)) / 2400.;
-        pointWeight[3] = (155. - sqrt(15.)) / 2400.;
-        pointWeight[4] = (155. + sqrt(15.)) / 2400.;
-        pointWeight[5] = (155. + sqrt(15.)) / 2400.;
-        pointWeight[6] = (155. + sqrt(15.)) / 2400.;
+        pointWeight[1] = (155. - std::sqrt(15.)) / 2400.;
+        pointWeight[2] = (155. - std::sqrt(15.)) / 2400.;
+        pointWeight[3] = (155. - std::sqrt(15.)) / 2400.;
+        pointWeight[4] = (155. + std::sqrt(15.)) / 2400.;
+        pointWeight[5] = (155. + std::sqrt(15.)) / 2400.;
+        pointWeight[6] = (155. + std::sqrt(15.)) / 2400.;
     }
 
 private:

@@ -20,17 +20,14 @@ template<int DIM>
 class Boundary{
 
 public: 
-    /// Defines a type to store the boundary element connectivity vector
-    typedef ublas::bounded_vector<int, 3*(DIM-1)>         BoundConnect;
-
     /// Boundary element constructor
     /// @param BoundConnect boundary element connectivity
     /// @param int boundary element index
     /// @param int boundary element constrain type 
     /// @param int boundary element constrain value @see Node::setConstrains()
-    Boundary(BoundConnect& connec, int index,
-             int *constrain, double *values, int gr){
-        connectB_ = connec;
+    Boundary(int *connec, int index, int *constrain, double *values, int gr){
+        
+        for (int i = 0; i < 3*(DIM-1); i++) connectB_[i] = connec[i];
         index_ = index;
         group_ = gr;
 
@@ -56,7 +53,7 @@ public:
 
     /// Returns the boundary element connectivity
     /// @return boundary element connectivity
-    BoundConnect getBoundaryConnectivity(){return connectB_;}
+    int* getBoundaryConnectivity(){return connectB_;}
 
     /// Sets the boundary element group
     /// @param int boundary element group
@@ -83,7 +80,7 @@ public:
     int getElementSide(){return elementSide_;}
 
 private:
-    BoundConnect connectB_;         //Boundary element connectivity
+    int          connectB_[3*(DIM-1)];         //Boundary element connectivity
     int          index_;            //Boundary element index
     int          constrainType[3];  //Element type of constrain
     double       constrainValue[3]; //Element constrain value

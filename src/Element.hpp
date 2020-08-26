@@ -21,6 +21,7 @@
 #include "IntegrationQuadrature.hpp"
 #include "IntegrationQuadrature11.hpp"
 // #include "PartitionedQuadrature.hpp"
+#include <iostream>
 
 /// Defines the fluid element object and all the element information
 
@@ -30,14 +31,6 @@ class Element{
 public:
     /// Defines the class Node locally
     typedef Node<DIM>                                           Nodes;
-
-    /// Defines the local vector type with dimension 18 for DIM=2 
-    /// and 40 for DIM=3
-    typedef ublas::bounded_vector<double, 22*DIM-26>            LocalVector;
-
-    /// Defines the local matrix type with dimension 18x18
-    /// for DIM=2 and 40x40 for DIM=3
-    typedef ublas::bounded_matrix<double, 22*DIM-26, 22*DIM-26> LocalMatrix;
 
     ///Defines the partitioned integration quadrature rule class locally
     typedef IntegQuadratureSpecial<DIM>                         SpecialQuad;
@@ -328,14 +321,14 @@ public:
     void getElemMatrixInitial(int &index, double phi_[], double dphi_dx[][6], double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double **jacobianNRMatrix);
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
-    void getElemLaplMatrix(double &weight_, double dphi_dx[][6], LocalMatrix &jacobianNRMatrix);
+    void getElemLaplMatrix(double &weight_, double dphi_dx[][6], double** jacobianNRMatrix);
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(double **jacobianNRMatrix, double *rhsVector);
     void setBoundaryConditions2(double **jacobianNRMatrix, double *rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
-    void setBoundaryConditionsLaplace(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector);
+    void setBoundaryConditionsLaplace(double** jacobianNRMatrix, double* rhsVector);
 
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
@@ -343,7 +336,7 @@ public:
     void getResidualVectorInitial(int &index, double phi_[], double dphi_dx[][6], double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double *rhsVector);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
-    void getResidualVectorLaplace(LocalVector &rhsVector);
+    void getResidualVectorLaplace(double *rhsVector);
 
     /// Apply the boundary conditions and returns the matrix and residual vector
     /// for the Lagrange multiplier operator matrix, used when computing the 
@@ -351,14 +344,13 @@ public:
     /// @param LocalMatrix Lagrange multiplier operator matrix
     /// @return residual vector and Lagrange multiplier operator matrix with
     /// boundary conditions applied
-    std::pair<LocalVector,LocalMatrix> 
-    getRhsVectorAndBoundaryConditions(LocalMatrix Ajac){
-        LocalVector rhsVector; rhsVector.clear();
+    void getRhsVectorAndBoundaryConditions(double** Ajac, double* rhsVector){
         setBoundaryConditionsLagrangeMultipliers(Ajac, rhsVector);       
-        return std::make_pair(rhsVector,Ajac);};
+        return;
+    };
 
     /// Sets the boundary conditions to the Lagrange multiplier operator
-    void setBoundaryConditionsLagrangeMultipliers(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector);
+    void setBoundaryConditionsLagrangeMultipliers(double** jacobianNRMatrix, double* rhsVector);
 
     /// Compute and store the Lagrange multiplier operator when integrating 
     /// the same mesh portion
@@ -370,15 +362,11 @@ public:
     /// the different mesh portion
     /// @param int element of the coarse mesh (used to verify which integration
     /// point belongs to the coarse mesh element)
-    void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,ublas::bounded_vector<double, 6> &press, 
-                                             ublas::bounded_vector<double, 6> &velx, ublas::bounded_vector<double, 6> &vely,
-                                             ublas::bounded_vector<double, 6> &velxPrev, ublas::bounded_vector<double, 6> &velyPrev,
-                                             double **lagrMultMatrix, double *rhsVectorLM, double *rhsVector);
-    void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,ublas::bounded_vector<double, 6> &press, 
-                                                       ublas::bounded_vector<double, 6> &velx, ublas::bounded_vector<double, 6> &vely,
+    void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
+                                             double* velxPrev, double* velyPrev, double **lagrMultMatrix, double *rhsVectorLM, double *rhsVector);
+    void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
                                                        double **jacobianNRMatrix, double *rhsVector);
-    void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,ublas::bounded_vector<double, 6> &press, 
-                                                     ublas::bounded_vector<double, 6> &velx, ublas::bounded_vector<double, 6> &vely,
+    void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
                                                      double **arlequinStab, double **laplMatrix, double *arlequinStabVector);
 
     //...............................Problem type...............................
@@ -388,8 +376,8 @@ public:
 
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)
-    std::pair <LocalMatrix, LocalVector> getSteadyLaplace();
-    std::pair <LocalMatrix, LocalVector> getSteadyLaplace2();
+    void getSteadyLaplace(double** jacobianNRMatrix, double* rhsVector);
+    void getSteadyLaplace2(double** jacobianNRMatrix, double* rhsVector);
 
 };
 
@@ -592,7 +580,7 @@ void Element<2>::getJacobianMatrix(double xsi[], double ainv_[][2]) {
 
     //Computing the jacobian determinant
     djac_ = dx_dxsi1 * dy_dxsi2 - dx_dxsi2 * dy_dxsi1;
-    //djac_ = fabs(djac_);
+    //djac_ = std::fabs(djac_);
 
     //Computing Jacobian inverse
     ainv_[0][0] =  dy_dxsi2 / djac_;
@@ -899,8 +887,8 @@ void Element<2>::getBoundaryLoad(double* xsi, double* load) {
         std::cout << "VERIFICAR VETOR NORMAL - getBoundaryLoad" << std::endl;
     };
 
-    n_vector[0] =  t_vector[1] / sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
-    n_vector[1] = -t_vector[0] / sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
+    n_vector[0] =  t_vector[1] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
+    n_vector[1] = -t_vector[0] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
 
     for (int i = 0; i < 2; i++)
         for (int j = 0; j < 2; j++)
@@ -923,17 +911,13 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
                                           double &pitchingMoment, double & perimeter) {
     
     double localNodesBoundary_[3][2] = {};
-    //Values of velocity shape functins
-    typename BoundShapeFunction<2>::Values     phib_;     
-    //Values of velocity shape functins
-    typename BoundShapeFunction<2>::ValueDeriv dphib_;
     BoundShapeFunction<2> shapeBound;//Boundary shape function 
 
-    ublas::bounded_vector<double, 3> nodesb_; 
+    int nodesb_[3]; 
     if(sideBoundary_ == 0){
-        nodesb_(0) = connect_[1]; 
-        nodesb_(1) = connect_[4]; 
-        nodesb_(2) = connect_[2]; 
+        nodesb_[0] = connect_[1]; 
+        nodesb_[1] = connect_[4]; 
+        nodesb_[2] = connect_[2]; 
         for (int i=0; i<2; i++){
             localNodesBoundary_[0][i] = (*nodes_)[connect_[1]] -> getCoordinateValue(i);
             localNodesBoundary_[1][i] = (*nodes_)[connect_[4]] -> getCoordinateValue(i);
@@ -941,18 +925,18 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
         };
     }else{
         if(sideBoundary_ == 1){
-            nodesb_(0) = connect_[2]; 
-            nodesb_(1) = connect_[5]; 
-            nodesb_(2) = connect_[0]; 
+            nodesb_[0] = connect_[2]; 
+            nodesb_[1] = connect_[5]; 
+            nodesb_[2] = connect_[0]; 
             for (int i=0; i<2; i++){
                 localNodesBoundary_[0][i] = (*nodes_)[connect_[2]] -> getCoordinateValue(i);
                 localNodesBoundary_[1][i] = (*nodes_)[connect_[5]] -> getCoordinateValue(i);
                 localNodesBoundary_[2][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
             };
         }else{
-            nodesb_(0) = connect_[0];
-            nodesb_(1) = connect_[3];
-            nodesb_(2) = connect_[1];
+            nodesb_[0] = connect_[0];
+            nodesb_[1] = connect_[3];
+            nodesb_[2] = connect_[1];
             for (int i=0; i<2; i++){
                 localNodesBoundary_[0][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
                 localNodesBoundary_[1][i] = (*nodes_)[connect_[3]] -> getCoordinateValue(i);
@@ -965,22 +949,16 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
     ShapeFunction          shapeQuad;
     double phi_[6] = {};
     double dphi_dx[2][6] = {};
-    std::pair<BoundaryQuad::PointCoord,BoundaryQuad::PointWeight> gaussQuad;
+    std::pair<double*,double*> gaussQuad;
     double n_vector[2] = {};
     double shearStress[2][2] = {};
     double ident[2][2] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
-    ublas::bounded_vector<double,2>            load_friction;
-    ublas::bounded_vector<double,2>            load_pressure;
+    double load_friction[2] = {};
+    double load_pressure[2] = {};
 
     double ainv_[2][2] = {};
     
     double xsi[2] = {};
-
-    gaussQuad.first.clear();
-    gaussQuad.second.clear();
-
-    load_friction.clear();
-    load_pressure.clear();
 
     double &visc_ = parameters.getViscosity();
 
@@ -989,11 +967,10 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
     double per = 0.;
 
     int index = 0;
-    for(typename BoundaryQuad::QuadratureListIt it = bQuad.begin(); 
-        it != bQuad.end(); it++){
+    for(double* it = bQuad.begin(); it != bQuad.end(); it++){
         
-        double xsiB = gaussQuad.first(index);
-        double weightB = gaussQuad.second(index);
+        double xsiB = gaussQuad.first[index];
+        double weightB = gaussQuad.second[index];
 
         if(sideBoundary_ == 2){
             xsi[0] = (-xsiB + 1.) / 2.;
@@ -1020,17 +997,17 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
         //Interpolates velocity and its derivatives values
         getVelAndDerivatives(phi_, dphi_dx);        
 
-        phib_ = shapeBound.getShapeFunction(gaussQuad.first(index));
-        dphib_ = shapeBound.getShapeFunctionDerivative(gaussQuad.first(index));
+        double* phib_ = shapeBound.getShapeFunction(gaussQuad.first[index]);
+        double* dphib_ = shapeBound.getShapeFunctionDerivative(gaussQuad.first[index]);
 
         double Tx=0.; double Ty = 0.;
         
         for (int i=0; i<3; i++){
-            Tx += localNodesBoundary_[i][0] * dphib_(i);
-            Ty += localNodesBoundary_[i][1] * dphib_(i);
+            Tx += localNodesBoundary_[i][0] * dphib_[i];
+            Ty += localNodesBoundary_[i][1] * dphib_[i];
         };
 
-        double jacb_ = sqrt(Tx*Tx + Ty*Ty);
+        double jacb_ = std::sqrt(Tx*Tx + Ty*Ty);
         
         n_vector[0] =  Ty / jacb_;
         n_vector[1] = -Tx / jacb_;
@@ -1042,8 +1019,8 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
 
         for (int i = 0; i < 2; i++){
             for (int j = 0; j < 2; j++){
-                load_pressure(i) += -p_ * ident[i][j] * n_vector[j] * jacb_ * weightB;
-                load_friction(i) += shearStress[i][j] * n_vector[j] * jacb_ * weightB;
+                load_pressure[i] += -p_ * ident[i][j] * n_vector[j] * jacb_ * weightB;
+                load_friction[i] += shearStress[i][j] * n_vector[j] * jacb_ * weightB;
             }
         }
 
@@ -1058,11 +1035,11 @@ void Element<2>::computeDragAndLiftForces(double &pressureDragForce, double &pre
     perimeter = per;
     pitchingMoment = moment;
 
-    pressureDragForce = -load_pressure(0);
-    pressureLiftForce = -load_pressure(1);
+    pressureDragForce = -load_pressure[0];
+    pressureLiftForce = -load_pressure[1];
     
-    frictionDragForce = -load_friction(0);
-    frictionLiftForce = -load_friction(1);
+    frictionDragForce = -load_friction[0];
+    frictionLiftForce = -load_friction[1];
 
     dragForce = pressureDragForce + frictionDragForce;
     liftForce = pressureLiftForce + frictionLiftForce;
@@ -1080,17 +1057,13 @@ template<>
 double Element<2>::computeSeparationAngle() {
 
     double localNodesBoundary_[3][2] = {};
-    //Values of velocity shape functins
-    typename BoundShapeFunction<2>::Values     phib_;     
-    //Values of velocity shape functins
-    typename BoundShapeFunction<2>::ValueDeriv dphib_;   
     BoundShapeFunction<2> shapeBound;//Boundary shape function
 
-    ublas::bounded_vector<double, 3> nodesb_; 
+    int nodesb_[3]; 
     if(sideBoundary_ == 0){
-        nodesb_(0) = connect_[1]; 
-        nodesb_(1) = connect_[4]; 
-        nodesb_(2) = connect_[2]; 
+        nodesb_[0] = connect_[1]; 
+        nodesb_[1] = connect_[4]; 
+        nodesb_[2] = connect_[2]; 
         for (int i=0; i<2; i++){
             localNodesBoundary_[0][i] = (*nodes_)[connect_[1]] -> getCoordinateValue(i);
             localNodesBoundary_[1][i] = (*nodes_)[connect_[4]] -> getCoordinateValue(i);
@@ -1098,18 +1071,18 @@ double Element<2>::computeSeparationAngle() {
         };
     }else{
         if(sideBoundary_ == 1){
-            nodesb_(0) = connect_[2]; 
-            nodesb_(1) = connect_[5]; 
-            nodesb_(2) = connect_[0]; 
+            nodesb_[0] = connect_[2]; 
+            nodesb_[1] = connect_[5]; 
+            nodesb_[2] = connect_[0]; 
             for (int i=0; i<2; i++){
                 localNodesBoundary_[0][i] = (*nodes_)[connect_[4]] -> getCoordinateValue(i);
                 localNodesBoundary_[1][i] = (*nodes_)[connect_[5]] -> getCoordinateValue(i);
                 localNodesBoundary_[2][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
             };
         }else{
-            nodesb_(0) = connect_[0];
-            nodesb_(1) = connect_[3];
-            nodesb_(2) = connect_[1];
+            nodesb_[0] = connect_[0];
+            nodesb_[1] = connect_[3];
+            nodesb_[2] = connect_[1];
             for (int i=0; i<2; i++){
                 localNodesBoundary_[0][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
                 localNodesBoundary_[1][i] = (*nodes_)[connect_[3]] -> getCoordinateValue(i);
@@ -1122,24 +1095,18 @@ double Element<2>::computeSeparationAngle() {
     ShapeFunction          shapeQuad;
     double phi_[6] = {};
     double dphi_dx[2][6] = {};
-    std::pair<BoundaryQuad::PointCoord,BoundaryQuad::PointWeight> gaussQuad;
+    std::pair<double*, double*> gaussQuad;
     double n_vector[2] = {};
     double t_vector[2] = {};
     double shearStress[2][2] = {};
     double ident[2][2] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
-    ublas::bounded_vector<double,2>            load_friction;
-    ublas::bounded_vector<double,2>            load_pressure;
-    ublas::bounded_vector<double,3>            shear_nodal;
+    double load_friction[2] = {};
+    double load_pressure[2] = {};
+    double shear_nodal[3] = {};
 
     double ainv_[2][2] = {};
     
     double xsi[2] = {};
-
-    gaussQuad.first.clear();
-    gaussQuad.second.clear();
-
-    load_friction.clear();
-    load_pressure.clear();
 
     gaussQuad = bQuad.GaussQuadrature();
 
@@ -1181,20 +1148,20 @@ double Element<2>::computeSeparationAngle() {
         //Interpolates velocity and its derivatives values
         getVelAndDerivatives(phi_, dphi_dx);        
 
-        phib_ = shapeBound.getShapeFunction(xsiB);
-        dphib_ = shapeBound.getShapeFunctionDerivative(xsiB);
+        double* phib_ = shapeBound.getShapeFunction(xsiB);
+        double* dphib_ = shapeBound.getShapeFunctionDerivative(xsiB);
 
         double Tx = 0.; double Ty = 0.;
         
         for (int i=0; i<3; i++){
-            Tx += localNodesBoundary_[i][0] * dphib_(i);
-            Ty += localNodesBoundary_[i][1] * dphib_(i);
+            Tx += localNodesBoundary_[i][0] * dphib_[i];
+            Ty += localNodesBoundary_[i][1] * dphib_[i];
         };
 
         t_vector[0] = Tx;
         t_vector[1] = Ty;
         
-        double jacb_ = sqrt(Tx*Tx + Ty*Ty);
+        double jacb_ = std::sqrt(Tx*Tx + Ty*Ty);
         
         n_vector[0] =  Ty / jacb_;
         n_vector[1] = -Tx / jacb_;
@@ -1207,13 +1174,13 @@ double Element<2>::computeSeparationAngle() {
 
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < 2; j++)
-                load_friction(i) += shearStress[i][j] * n_vector[j] * jacb_ * weightB;
+                load_friction[i] += shearStress[i][j] * n_vector[j] * jacb_ * weightB;
 
         // load_friction = prod(shearStress,n_vector) * jacb_ * weightB;
 
 
         
-        shear_nodal(it) = load_friction(0)*t_vector[0] + load_friction(1)*t_vector[1];
+        shear_nodal[it] = load_friction[0]*t_vector[0] + load_friction[1]*t_vector[1];
         //std::cout << "n_vector " << load_pressure(0) << " " << load_pressure(1) << std::endl;
         index++;
     };
@@ -1223,16 +1190,16 @@ double Element<2>::computeSeparationAngle() {
     double theta = 0.;
     double &pi = parameters.getPi();
 
-    if ((shear_nodal(0)/shear_nodal(1) < 0) || (shear_nodal(1)/shear_nodal(2) < 0)){
-        double a = 0.5 * (shear_nodal(0) + shear_nodal(2) - 2*shear_nodal(1));
-        double b = 0.5 * (shear_nodal(2) - shear_nodal(0));
-        double c = shear_nodal(1);
+    if ((shear_nodal[0]/shear_nodal[1] < 0) || (shear_nodal[1]/shear_nodal[2] < 0)){
+        double a = 0.5 * (shear_nodal[0] + shear_nodal[2] - 2*shear_nodal[1]);
+        double b = 0.5 * (shear_nodal[2] - shear_nodal[0]);
+        double c = shear_nodal[1];
 
         //Bhaskara
         double delta = b * b - 4 * a * c;
 
-        double x1 = (-b + sqrt(delta)) / (2*a);
-        double x2 = (-b - sqrt(delta)) / (2*a);
+        double x1 = (-b + std::sqrt(delta)) / (2*a);
+        double x2 = (-b - std::sqrt(delta)) / (2*a);
 
         double xsiB;
         if((x1 > -1.00001) && (x1 < 1.00001)) xsiB = x1;
@@ -1262,7 +1229,7 @@ double Element<2>::computeSeparationAngle() {
            y_ += (*nodes_)[connect_[i]] -> getCoordinateValue(1) * phi_[i];
         }
 
-        theta = acos(-x_/sqrt(x_*x_+y_*y_)) * 180 / pi;
+        theta = std::acos(-x_/std::sqrt(x_*x_+y_*y_)) * 180 / pi;
         //if(rank == 0) std::cout << "AQUI SEPARATION ANGLE " << index_ << " " << theta << std::endl;
 
     }
@@ -1316,14 +1283,14 @@ void Element<2>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_
         v__ += va * phi_[i];
     };
 
-    double uNorm = sqrt(u__ * u__ + v__ * v__);
+    double uNorm = std::sqrt(u__ * u__ + v__ * v__);
 
     if(uNorm > 1.e-10){
         s[0] = u__ / uNorm;
         s[1] = v__ / uNorm;
     }else{
-        s[0] = 1. / sqrt(2.);
-        s[1] = 1. / sqrt(2.);
+        s[0] = 1. / std::sqrt(2.);
+        s[1] = 1. / std::sqrt(2.);
     };
 
 
@@ -1338,23 +1305,23 @@ void Element<2>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_
         ua -= uma;
         va -= vma;
         
-        r[0] += sqrt(ua * ua + va * va) * dphi_dx[0][i];
-        r[1] += sqrt(ua * ua + va * va) * dphi_dx[1][i];
+        r[0] += std::sqrt(ua * ua + va * va) * dphi_dx[0][i];
+        r[1] += std::sqrt(ua * ua + va * va) * dphi_dx[1][i];
     };
 
-    double rNorm = sqrt(r[0]*r[0] + r[1]*r[1]);
+    double rNorm = std::sqrt(r[0]*r[0] + r[1]*r[1]);
 
     if (rNorm >= 1.e-10){
         r[0] /= rNorm;
         r[1] /= rNorm;
     }else{
-        r[0] = 1. / sqrt(2.);
-        r[1] = 1. / sqrt(2.);
+        r[0] = 1. / std::sqrt(2.);
+        r[1] = 1. / std::sqrt(2.);
     };
     
     for (int i = 0; i < 6; i++){
-        hRGN_ += fabs(r[0] * dphi_dx[0][i] + r[1] * dphi_dx[1][i]);
-        hUGN_ += fabs(s[0] * dphi_dx[0][i] + s[1] * dphi_dx[1][i]);        
+        hRGN_ += std::fabs(r[0] * dphi_dx[0][i] + r[1] * dphi_dx[1][i]);
+        hUGN_ += std::fabs(s[0] * dphi_dx[0][i] + s[1] * dphi_dx[1][i]);        
     };
 
     if (hRGN_ >= 1.e-10){
@@ -1381,12 +1348,12 @@ void Element<2>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &tLSIC_
     tSUGN3_ = hRGN_ * hRGN_ / (4. * visc_ / dens_);
 
    
-    if (fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
-    if (fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
+    if (std::fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
+    if (std::fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
 
     //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << std::endl;
     //Computing tSUPG parameter
-    tSUPG_ = 1. / sqrt(1. / (tSUGN1_ * tSUGN1_) + 
+    tSUPG_ = 1. / std::sqrt(1. / (tSUGN1_ * tSUGN1_) + 
                        1. / (tSUGN2_ * tSUGN2_) + 
                        1. / (tSUGN3_ * tSUGN3_));
     //tSUPG_ = 0.;
@@ -1456,22 +1423,22 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
         ly__ += lya * phi_[i];
     };
 
-    double uNorm = sqrt(u__ * u__ + v__ * v__);
-    double lNorm = sqrt(lx__ * lx__ + ly__ * ly__);
+    double uNorm = std::sqrt(u__ * u__ + v__ * v__);
+    double lNorm = std::sqrt(lx__ * lx__ + ly__ * ly__);
 
     if(uNorm > 1.e-10){
         s[0] = u__ / uNorm;
         s[1] = v__ / uNorm;
     }else{
-        s[0] = 1. / sqrt(2.);
-        s[1] = 1. / sqrt(2.);
+        s[0] = 1. / std::sqrt(2.);
+        s[1] = 1. / std::sqrt(2.);
     };
     if(lNorm > 1.e-10){
         sl[0] = lx__ / lNorm;
         sl[1] = ly__ / lNorm;
     }else{
-        sl[0] = 1. / sqrt(2.);
-        sl[1] = 1. / sqrt(2.);
+        sl[0] = 1. / std::sqrt(2.);
+        sl[1] = 1. / std::sqrt(2.);
     };
 
 
@@ -1490,40 +1457,40 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
         ua -= uma;
         va -= vma;
         
-        r[0] += sqrt(ua * ua + va * va) * dphi_dx[0][i];
-        r[1] += sqrt(ua * ua + va * va) * dphi_dx[1][i];
+        r[0] += std::sqrt(ua * ua + va * va) * dphi_dx[0][i];
+        r[1] += std::sqrt(ua * ua + va * va) * dphi_dx[1][i];
 
-        rl[0] += sqrt(lxa * lxa + lya * lya) * dphi_dx[0][i];
-        rl[1] += sqrt(lxa * lxa + lya * lya) * dphi_dx[1][i];
+        rl[0] += std::sqrt(lxa * lxa + lya * lya) * dphi_dx[0][i];
+        rl[1] += std::sqrt(lxa * lxa + lya * lya) * dphi_dx[1][i];
     };
 
-    double rNorm = sqrt(r[0]*r[0] + r[1]*r[1]);
-    double rlNorm = sqrt(rl[0]*rl[0] + rl[1]*rl[1]);
+    double rNorm = std::sqrt(r[0]*r[0] + r[1]*r[1]);
+    double rlNorm = std::sqrt(rl[0]*rl[0] + rl[1]*rl[1]);
 
     if (rNorm >= 1.e-10){
         r[0] /= rNorm;
         r[1] /= rNorm;
     }else{
-        r[0] = 1. / sqrt(2.);
-        r[1] = 1. / sqrt(2.);
+        r[0] = 1. / std::sqrt(2.);
+        r[1] = 1. / std::sqrt(2.);
     };
 
     if (rlNorm >= 1.e-10){
         rl[0] /= rlNorm;
         rl[1] /= rlNorm;
     }else{
-        rl[0] = 1. / sqrt(2.);
-        rl[1] = 1. / sqrt(2.);
+        rl[0] = 1. / std::sqrt(2.);
+        rl[1] = 1. / std::sqrt(2.);
     };
     
     double hUGNL_ = 0.;
     double hRGNL_ = 0.;
     for (int i = 0; i < 6; i++){
-        hRGN_ += fabs(r[0] * dphi_dx[0][i] + r[1] * dphi_dx[1][i]);
-        hUGN_ += fabs(s[0] * dphi_dx[0][i] + s[1] * dphi_dx[1][i]);        
+        hRGN_ += std::fabs(r[0] * dphi_dx[0][i] + r[1] * dphi_dx[1][i]);
+        hUGN_ += std::fabs(s[0] * dphi_dx[0][i] + s[1] * dphi_dx[1][i]);        
 
-        hRGNL_ += fabs(rl[0] * dphi_dx[0][i] + rl[1] * dphi_dx[1][i]);
-        hUGNL_ += fabs(sl[0] * dphi_dx[0][i] + sl[1] * dphi_dx[1][i]);        
+        hRGNL_ += std::fabs(rl[0] * dphi_dx[0][i] + rl[1] * dphi_dx[1][i]);
+        hUGNL_ += std::fabs(sl[0] * dphi_dx[0][i] + sl[1] * dphi_dx[1][i]);        
     };
 
     if (hRGN_ >= 1.e-10){
@@ -1571,20 +1538,20 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     tSUGN3L_ = hRGNL_ * hRGNL_ / (4. * visc_ / dens_);
 
    
-    if (fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
-    if (fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
+    if (std::fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
+    if (std::fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
 
-    if (fabs(tSUGN1L_) <= 1.e-10) tSUGN1L_ = 1.e-10;
-    if (fabs(tSUGN3L_) <= 1.e-10) tSUGN3L_ = 1.e-10;
+    if (std::fabs(tSUGN1L_) <= 1.e-10) tSUGN1L_ = 1.e-10;
+    if (std::fabs(tSUGN3L_) <= 1.e-10) tSUGN3L_ = 1.e-10;
 
     //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << std::endl;
     //Computing tSUPG parameter
-    tSUPG_ = 1. / sqrt(1. / (tSUGN1_ * tSUGN1_) + 
+    tSUPG_ = 1. / std::sqrt(1. / (tSUGN1_ * tSUGN1_) + 
                        1. / (tSUGN2_ * tSUGN2_) + 
                        1. / (tSUGN3_ * tSUGN3_));
     //tSUPG_ = 0.;
 
-    tARLQ_ = -1. / sqrt(1. / (tSUGN1L_ * tSUGN1L_) + 
+    tARLQ_ = -1. / std::sqrt(1. / (tSUGN1L_ * tSUGN1L_) + 
                        1. / (tSUGN2_ * tSUGN2_) + 
                        1. / (tSUGN3L_ * tSUGN3L_))*0;
 
@@ -1592,9 +1559,9 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //if (tSUPG_ > 10) tSUPG_ = 0.;
 
     tPSPG_ = 1*tSUPG_;
-    // if (fabs(lagMx_) > 0){
+    // if (std::fabs(lagMx_) > 0){
     //  //   std::cout << "aqe" << std::endl;
-    //     tARLQ_ = djac_ * sqrt(u_ * u_ + v_ * v_) / sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
+    //     tARLQ_ = djac_ * std::sqrt(u_ * u_ + v_ * v_) / std::sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
     tARLQ_ = -1. * k1 * tSUPG_ * 1.e1;
     //}
@@ -1662,16 +1629,16 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     // //std::cout << "asd " << index_ << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
     //  // std::cout << "antes " << index_ << " " << tARLQ_ << std::endl;
 
-    // double tp1 = fabs(le) / fabs(lc);
-    // double tp2 = fabs(le) / fabs(li);
+    // double tp1 = std::fabs(le) / std::fabs(lc);
+    // double tp2 = std::fabs(le) / std::fabs(li);
     // double tp3 = tp1 / visc_;
     // tp3 = le / (visc_*lv);
 
-    // if (fabs(tp1) <= 1.e-10) tp1 = 1.e-10;
-    // if (fabs(tp2) <= 1.e-10) tp2 = 1.e-10;
-    // if (fabs(tp3) <= 1.e-10) tp3 = 1.e-10;
+    // if (std::fabs(tp1) <= 1.e-10) tp1 = 1.e-10;
+    // if (std::fabs(tp2) <= 1.e-10) tp2 = 1.e-10;
+    // if (std::fabs(tp3) <= 1.e-10) tp3 = 1.e-10;
 
-    // tARLQ_ = -0.0 * k1 / sqrt(1. / (tp1*tp1) +
+    // tARLQ_ = -0.0 * k1 / std::sqrt(1. / (tp1*tp1) +
     //                         1. / (tp2*tp2) +
     //                         1. / (tp3*tp3));
 
@@ -1700,8 +1667,11 @@ void Element<2>::getParameterArlequin2() {
     double &dTime_ = parameters.getTimeStep();
     double &k1 = parameters.getArlequinK1();
 
-    LocalMatrix lambda, inercia, conveccao, visccc;
-    lambda.clear(); inercia.clear(); conveccao.clear(); visccc.clear();
+    double lambda[18][18] = {};
+    double inercia[18][18] = {};
+    double conveccao[18][18] = {};
+    double visccc[18][18] = {};
+
     double le = 0.;
     double li = 0.;
     double lc = 0.;
@@ -1733,18 +1703,18 @@ void Element<2>::getParameterArlequin2() {
         for (int i = 0; i < 6; i++){
             for (int j = 0; j < 6; j++){
                 
-                lambda(2*i  ,2*j  ) += phi_[i] * phi_[j] * weight_ * djac_;
-                lambda(2*i+1,2*j+1) += phi_[i] * phi_[j] * weight_ * djac_;
+                lambda[2*i  ][2*j  ] += phi_[i] * phi_[j] * weight_ * djac_;
+                lambda[2*i+1][2*j+1] += phi_[i] * phi_[j] * weight_ * djac_;
 
-                conveccao(2*i  ,2*j  ) += dphi_dx[0][i] * (du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) * weight_ * djac_;
-                conveccao(2*i  ,2*j+1) += dphi_dx[1][i] * (du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) * weight_ * djac_;
-                conveccao(2*i+1,2*j  ) += dphi_dx[0][i] * (du_dy*dphi_dx[0][j] + dv_dy*dphi_dx[1][j]) * weight_ * djac_;
-                conveccao(2*i+1,2*j+1) += dphi_dx[1][i] * (du_dy*dphi_dx[0][j] + dv_dy*dphi_dx[1][j]) * weight_ * djac_;
+                conveccao[2*i  ][2*j  ] += dphi_dx[0][i] * (du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) * weight_ * djac_;
+                conveccao[2*i  ][2*j+1] += dphi_dx[1][i] * (du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) * weight_ * djac_;
+                conveccao[2*i+1][2*j  ] += dphi_dx[0][i] * (du_dy*dphi_dx[0][j] + dv_dy*dphi_dx[1][j]) * weight_ * djac_;
+                conveccao[2*i+1][2*j+1] += dphi_dx[1][i] * (du_dy*dphi_dx[0][j] + dv_dy*dphi_dx[1][j]) * weight_ * djac_;
 
-                inercia(2*i  ,2*j  ) += dphi_dx[0][i] * dphi_dx[0][j] * weight_ * djac_;
-                inercia(2*i  ,2*j+1) += dphi_dx[1][i] * dphi_dx[1][j] * weight_ * djac_;
-                inercia(2*i+1,2*j  ) += dphi_dx[0][i] * dphi_dx[0][j] * weight_ * djac_;
-                inercia(2*i+1,2*j+1) += dphi_dx[1][i] * dphi_dx[1][j] * weight_ * djac_;
+                inercia[2*i  ][2*j  ] += dphi_dx[0][i] * dphi_dx[0][j] * weight_ * djac_;
+                inercia[2*i  ][2*j+1] += dphi_dx[1][i] * dphi_dx[1][j] * weight_ * djac_;
+                inercia[2*i+1][2*j  ] += dphi_dx[0][i] * dphi_dx[0][j] * weight_ * djac_;
+                inercia[2*i+1][2*j+1] += dphi_dx[1][i] * dphi_dx[1][j] * weight_ * djac_;
 
                 // visccc(2*i  ,2*j  ) += ((ddphi_dx(0,0)(i)+ddphi_dx(0,1)(i)) * (2. * ddphi_dx(0,0)(j) + ddphi_dx(1,1)(j))) * weight_ * djac_;
                 // visccc(2*i  ,2*j+1) += ((ddphi_dx(0,0)(i)+ddphi_dx(0,1)(i)) * (ddphi_dx(0,1)(j))) * weight_ * djac_;
@@ -1755,34 +1725,56 @@ void Element<2>::getParameterArlequin2() {
         index++;
     }
 
-    LocalVector U_, DU_;
-    U_.clear(); DU_.clear(); 
+    double U_[18] = {};
+    double DU_[18] = {};
 
     for (int i=0; i<6; i++){
-        U_(2*i  ) = (*nodes_)[connect_[i]] -> getVelocity(0);
-        U_(2*i+1) = (*nodes_)[connect_[i]] -> getVelocity(1);
-        DU_(2*i  ) = (*nodes_)[connect_[i]] -> getAcceleration(0);
-        DU_(2*i+1) = (*nodes_)[connect_[i]] -> getAcceleration(1);
+        U_[2*i  ] = (*nodes_)[connect_[i]] -> getVelocity(0);
+        U_[2*i+1] = (*nodes_)[connect_[i]] -> getVelocity(1);
+        DU_[2*i  ] = (*nodes_)[connect_[i]] -> getAcceleration(0);
+        DU_[2*i+1] = (*nodes_)[connect_[i]] -> getAcceleration(1);
     };
 
-    le = norm_2(prod(lambda,U_));
-    lc = norm_2(prod(conveccao,U_));
-    li = norm_2(prod(inercia,DU_));
-    lv = norm_2(prod(visccc,U_));
+    double a1[18] = {};
+    double a2[18] = {};
+    double a3[18] = {};
+    double a4[18] = {};
+
+    for (int i = 0; i < 18; i++){
+        for (int j = 0; j < 18; j++){
+            a1[i] += lambda[i][j] * U_[j];
+            a2[i] += conveccao[i][j] * U_[j];
+            a3[i] += inercia[i][j] * DU_[j];
+            a4[i] += visccc[i][j] * U_[j];
+        }
+    }
+
+    le = 0.; //norm_2(prod(lambda,U_));
+    lc = 0.; //norm_2(prod(conveccao,U_));
+    li = 0.; //norm_2(prod(inercia,DU_));
+    lv = 0.; //norm_2(prod(visccc,U_));
+    
+    for (int i = 0; i < 18; i++){
+        le += a1[i] * a1[i];
+        lc += a2[i] * a2[i];
+        li += a3[i] * a3[i];
+        lv += a4[i] * a4[i];
+    }
+
 
     // //std::cout << "asd " << index_ << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
     //  // std::cout << "antes " << index_ << " " << tARLQ_ << std::endl;
 
-    double tp1 = fabs(le) / fabs(lc);
-    double tp2 = fabs(le) / fabs(li);
+    double tp1 = std::fabs(le) / std::fabs(lc);
+    double tp2 = std::fabs(le) / std::fabs(li);
     double tp3 = tp1 / visc_;
     tp3 = le / (visc_*lv);
 
-    if (fabs(tp1) <= 1.e-10) tp1 = 1.e-10;
-    if (fabs(tp2) <= 1.e-10) tp2 = 1.e-10;
-    if (fabs(tp3) <= 1.e-10) tp3 = 1.e-10;
+    if (std::fabs(tp1) <= 1.e-10) tp1 = 1.e-10;
+    if (std::fabs(tp2) <= 1.e-10) tp2 = 1.e-10;
+    if (std::fabs(tp3) <= 1.e-10) tp3 = 1.e-10;
 
-    tARLQ_ = -1000.0 * k1 / sqrt(1. / (tp1*tp1) +
+    tARLQ_ = -1000.0 * k1 / std::sqrt(1. / (tp1*tp1) +
                             1. / (tp2*tp2) +
                             1. / (tp3*tp3));
 
@@ -1827,8 +1819,8 @@ void Element<2>::getElemMatrix(int &index, double phi_[], double dphi_dx[][6], d
     //             y1 += (*nodes_)[connect_[i]] -> getCoordinateValue(1) * phi_[i];
     //         }
             
-    //         double dist0 = sqrt(x0*x0+y0*y0);
-    //         double dist1 = sqrt(x1*x1+y1*y1);
+    //         double dist0 = std::sqrt(x0*x0+y0*y0);
+    //         double dist1 = std::sqrt(x1*x1+y1*y1);
     //         double vel_0 = -20. * pi * pi / 180. * sin(2. * pi * (iTimeStep-1) * dTime_) * dist0;
     //         double vel_1 = -20. * pi * pi / 180. * sin(2. * pi * iTimeStep * dTime_) * dist1;
 
@@ -2220,26 +2212,26 @@ void Element<2>::setBoundaryConditions2(double **jacobianNRMatrix, double *rhsVe
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::setBoundaryConditionsLaplace(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector){
+void Element<2>::setBoundaryConditionsLaplace(double **jacobianNRMatrix, double *rhsVector){
 
     for (int i = 0; i < 6; i++){
 
         if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(0) == 1) {
             for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(2*i  ,j) = 0.;
-                jacobianNRMatrix(j,2*i  ) = 0.;
+                jacobianNRMatrix[2*i  ][j] = 0.;
+                jacobianNRMatrix[j][2*i  ] = 0.;
             };
-            jacobianNRMatrix(2*i  , 2*i  ) = 1.;
-            rhsVector(2*i  ) = 0.;
+            jacobianNRMatrix[2*i  ][2*i  ] = 1.;
+            rhsVector[2*i  ] = 0.;
         };
 
         if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(1) == 1) {
             for (int j = 0; j < 18; j++){
-                jacobianNRMatrix(2*i+1,j) = 0.;
-                jacobianNRMatrix(j,2*i+1) = 0.;
+                jacobianNRMatrix[2*i+1][j] = 0.;
+                jacobianNRMatrix[j][2*i+1] = 0.;
             };
-            jacobianNRMatrix(2*i+1, 2*i+1) = 1.;
-            rhsVector(2*i+1) =  0.;
+            jacobianNRMatrix[2*i+1][2*i+1] = 1.;
+            rhsVector[2*i+1] =  0.;
         };
     };
     
@@ -2251,43 +2243,43 @@ void Element<2>::setBoundaryConditionsLaplace(LocalMatrix &jacobianNRMatrix, Loc
 //---------------APPLY BOUNDARY CONDITIONS TO LAGRANGE MULTIPLIERS--------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::setBoundaryConditionsLagrangeMultipliers(LocalMatrix &jacobianNRMatrix, LocalVector &rhsVector){
+void Element<2>::setBoundaryConditionsLagrangeMultipliers(double** jacobianNRMatrix, double* rhsVector){
 
-    rhsVector.clear();
+    for (int i = 0; i < 18; i++) rhsVector[i] = 0.;
     
-    LocalVector U_;
-
-    U_.clear();
+    double U_[18] = {};
 
     double &alpha_f = parameters.getAlphaF();
 
     for (int i=0; i<6; i++){
         // U_(2*i  ) = (*nodes_)[connect_[i]] -> getVelocity(0);
         // U_(2*i+1) = (*nodes_)[connect_[i]] -> getVelocity(1);
-        U_(2*i  ) = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(0);
-        U_(2*i+1) = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(1);
+        U_[2*i  ] = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(0);
+        U_[2*i+1] = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(1);
     };
 
-    noalias(rhsVector) = - prod(jacobianNRMatrix,U_); 
+    for (int i = 0; i < 18; i++)
+        for (int j = 0; j < 18; j++)
+            rhsVector[i] -= jacobianNRMatrix[i][j] * U_[j];
     
     for (int i = 0; i < 6; i++){
         if ((*nodes_)[connect_[i]] -> getConstrains(0) == 1) {
             for (int j = 0; j < 18; j++){
                 //jacobianNRMatrix(2*i  ,j) = 0.;
-                jacobianNRMatrix(j,2*i  ) = 0.;
+                jacobianNRMatrix[j][2*i  ] = 0.;
             };
             //jacobianNRMatrix(12+i,12+i) = 1.;
-            rhsVector(2*i  ) = 0.0;
+            rhsVector[2*i  ] = 0.0;
         };
 
         if ((*nodes_)[connect_[i]] -> getConstrains(1) == 1) {
             // std::cout << "aqui" << std::endl;
             for (int j = 0; j < 18; j++){
                 //jacobianNRMatrix(2*i+1,j) = 0.;
-                jacobianNRMatrix(j,2*i+1) = 0.;
+                jacobianNRMatrix[j][2*i+1] = 0.;
             };
-            jacobianNRMatrix(12+i,12+i) = 1.;
-            rhsVector(2*i+1) = 0.0;
+            jacobianNRMatrix[12+i][12+i] = 1.;
+            rhsVector[2*i+1] = 0.0;
         };
     };
 
@@ -2371,7 +2363,7 @@ void Element<2>::getResidualVector(int &index, double phi_[], double dphi_dx[][6
             // my -= vna_ * (intPointWeightFunction(index) - 
             //               intPointWeightFunctionPrev(index)) / dTime_ * phi_[i] * dens_;
             // if (index_ == 2117) std::cout << "Int point " << intPointWeightFunction(index) << " " << intPointWeightFunctionPrev(index) << std::endl;
-            // if (fabs((intPointWeightFunction(index) - intPointWeightFunctionPrev(index)) / dTime_) > 1.e-8) std::cout << "AQUI " << (intPointWeightFunction(index) - 
+            // if (std::fabs((intPointWeightFunction(index) - intPointWeightFunctionPrev(index)) / dTime_) > 1.e-8) std::cout << "AQUI " << (intPointWeightFunction(index) - 
             //                     intPointWeightFunctionPrev(index)) / dTime_ << " " << una_ << " " << vna_ << std::endl;
         } else {
             // mx += una_ * dens_ * (dumesh_dx + dvmesh_dy) * phi_[i] * dens_;
@@ -2487,23 +2479,21 @@ void Element<2>::getResidualVectorInitial(int &index, double phi_[], double dphi
 //------------------------------------------------------------------------------
 
 template<>
-void Element<2>::getResidualVectorLaplace(LocalVector &rhsVector){
+void Element<2>::getResidualVectorLaplace(double *rhsVector){
 
     // rhsVector.clear();
     
-    LocalVector U_;
-
-    U_.clear();
+    double U_[18] = {};
 
     for (int i=0; i<6; i++){
 
         double *x_up = (*nodes_)[connect_[i]] -> getUpdatedCoordinates();        
         
         if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(0) == 1){
-            U_(2*i  ) = x_up[0] - (*nodes_)[connect_[i]] -> getCoordinateValue(0);
+            U_[2*i  ] = x_up[0] - (*nodes_)[connect_[i]] -> getCoordinateValue(0);
         };
         if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(1) == 1){
-            U_(2*i+1) = x_up[1] - (*nodes_)[connect_[i]] -> getCoordinateValue(1);
+            U_[2*i+1] = x_up[1] - (*nodes_)[connect_[i]] -> getCoordinateValue(1);
         };
 
         //if(connect_[i] == 29) std::cout << "Element 29 " << x_up(0) << " " << x_up(1) <<std::endl;
@@ -2518,7 +2508,7 @@ void Element<2>::getResidualVectorLaplace(LocalVector &rhsVector){
 //---------------------------ELEMENT LAPLACIAN MATRIX---------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getElemLaplMatrix(double &weight_, double dphi_dx[][6], LocalMatrix &jacobianNRMatrix){
+void Element<2>::getElemLaplMatrix(double &weight_, double dphi_dx[][6], double **jacobianNRMatrix){
 
     // for (int i = 0; i < 6; i++){
     //     for (int j = 0; j < 6; j++){        
@@ -2533,10 +2523,10 @@ void Element<2>::getElemLaplMatrix(double &weight_, double dphi_dx[][6], LocalMa
      
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){        
-            jacobianNRMatrix(2*i  ,2*j  ) += (dphi_dx[0][i] * dphi_dx[0][j] +
+            jacobianNRMatrix[2*i  ][2*j  ] += (dphi_dx[0][i] * dphi_dx[0][j] +
                                               dphi_dx[1][i] * dphi_dx[1][j]) 
                                         * weight_ * djac_ * meshMovingParameter;
-            jacobianNRMatrix(2*i+1,2*j+1) += (dphi_dx[0][i] * dphi_dx[0][j] +
+            jacobianNRMatrix[2*i+1][2*j+1] += (dphi_dx[0][i] * dphi_dx[0][j] +
                                               dphi_dx[1][i] * dphi_dx[1][j]) 
                                         * weight_ * djac_ * meshMovingParameter;
         };
@@ -2551,18 +2541,16 @@ void Element<2>::getElemLaplMatrix(double &weight_, double dphi_dx[][6], LocalMa
 template<>
 void Element<2>::computeVorticity(){
     
-    ublas::bounded_matrix <double, 6, 6>      least_squares;
+    double least_squares [6][6] = {};
     
     double xsi[2] = {};
     ShapeFunction   shapeQuad;
     double phi_[6] = {};
     double dphi_dx[2][6] = {};
-    ublas::bounded_vector <double, 6>         nodal_values,results;
+    double nodal_values[6] = {};
+    double results[6] = {};
     
     int in = 0;
-    nodal_values.clear();
-    least_squares.clear();
-    results.clear();
     NormalQuad nQuad = NormalQuad();
     double ainv_[2][2] = {};
 
@@ -2585,61 +2573,61 @@ void Element<2>::computeVorticity(){
         getVelAndDerivatives(phi_, dphi_dx);
 
         for (int i=0; i<6; i++){
-            nodal_values(i) += (-du_dy + dv_dx) * phi_[i];
+            nodal_values[i] += (-du_dy + dv_dx) * phi_[i];
             //nodal_values(i) += du_dxx * phi_[i];
         };
                         
         in++;
     };    
-
-    least_squares.clear();
     
-    least_squares(0,0) =  4.825;
-    least_squares(0,1) =  1.025;
-    least_squares(0,2) =  1.025;
-    least_squares(0,3) = -0.275480769230769;  
-    least_squares(0,4) =  0.712019230769232;
-    least_squares(0,5) = -0.275480769230769;
+    least_squares[0][0] =  4.825;
+    least_squares[0][1] =  1.025;
+    least_squares[0][2] =  1.025;
+    least_squares[0][3] = -0.275480769230769;  
+    least_squares[0][4] =  0.712019230769232;
+    least_squares[0][5] = -0.275480769230769;
 
-    least_squares(1,0) =  least_squares(0,1);
-    least_squares(1,1) =  4.825;
-    least_squares(1,2) =  1.025;
-    least_squares(1,3) = -0.275480769230769;  
-    least_squares(1,4) = -0.275480769230769;
-    least_squares(1,5) =  0.712019230769232;    
+    least_squares[1][0] =  least_squares[0][1];
+    least_squares[1][1] =  4.825;
+    least_squares[1][2] =  1.025;
+    least_squares[1][3] = -0.275480769230769;  
+    least_squares[1][4] = -0.275480769230769;
+    least_squares[1][5] =  0.712019230769232;    
 
-    least_squares(2,0) =  least_squares(0,2);
-    least_squares(2,1) =  least_squares(1,2);
-    least_squares(2,2) =  4.825;
-    least_squares(2,3) =  0.712019230769232;  
-    least_squares(2,4) = -0.275480769230769;
-    least_squares(2,5) = -0.275480769230769;
+    least_squares[2][0] =  least_squares[0][2];
+    least_squares[2][1] =  least_squares[1][2];
+    least_squares[2][2] =  4.825;
+    least_squares[2][3] =  0.712019230769232;  
+    least_squares[2][4] = -0.275480769230769;
+    least_squares[2][5] = -0.275480769230769;
 
-    least_squares(3,0) =  least_squares(0,3);
-    least_squares(3,1) =  least_squares(1,3);
-    least_squares(3,2) =  least_squares(2,3);
-    least_squares(3,3) =  1.304890902366860;  
-    least_squares(3,4) = -0.432609097633136;
-    least_squares(3,5) = -0.432609097633136;
+    least_squares[3][0] =  least_squares[0][3];
+    least_squares[3][1] =  least_squares[1][3];
+    least_squares[3][2] =  least_squares[2][3];
+    least_squares[3][3] =  1.304890902366860;  
+    least_squares[3][4] = -0.432609097633136;
+    least_squares[3][5] = -0.432609097633136;
 
-    least_squares(4,0) =  least_squares(0,4);
-    least_squares(4,1) =  least_squares(1,4);
-    least_squares(4,2) =  least_squares(2,4);
-    least_squares(4,3) =  least_squares(3,4);  
-    least_squares(4,4) =  1.304890902366860;
-    least_squares(4,5) = -0.432609097633136;
+    least_squares[4][0] =  least_squares[0][4];
+    least_squares[4][1] =  least_squares[1][4];
+    least_squares[4][2] =  least_squares[2][4];
+    least_squares[4][3] =  least_squares[3][4];  
+    least_squares[4][4] =  1.304890902366860;
+    least_squares[4][5] = -0.432609097633136;
 
-    least_squares(5,0) =  least_squares(0,5);
-    least_squares(5,1) =  least_squares(1,5);
-    least_squares(5,2) =  least_squares(2,5);
-    least_squares(5,3) =  least_squares(3,5);  
-    least_squares(5,4) =  least_squares(4,5);
-    least_squares(5,5) =  1.304890902366860;
+    least_squares[5][0] =  least_squares[0][5];
+    least_squares[5][1] =  least_squares[1][5];
+    least_squares[5][2] =  least_squares[2][5];
+    least_squares[5][3] =  least_squares[3][5];  
+    least_squares[5][4] =  least_squares[4][5];
+    least_squares[5][5] =  1.304890902366860;
 
-    results = prod(least_squares,nodal_values);
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 6; j++)
+            results[i] = least_squares[i][j] * nodal_values[j];
 
     for (int i=0; i<6; i++){
-        (*nodes_)[connect_[i]] -> incrementVorticity(results(i));
+        (*nodes_)[connect_[i]] -> incrementVorticity(results[i]);
     };
     
     // ublas::bounded_matrix <double, 2, 6>      int_points;
@@ -2673,10 +2661,6 @@ void Element<2>::computeVorticity(){
         
     //     (*nodes_)[connect_[i]] -> incrementVorticity(-du_dy + dv_dx);        
     // };
-    
-    return;
-
-
 
 
     return;
@@ -2824,7 +2808,7 @@ void Element<2>::getTransientNavierStokesInitial(double *rhsVector, double **jac
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 18> > Element<2>::getSteadyLaplace(){
+void Element<2>::getSteadyLaplace(double** jacobianNRMatrix, double* rhsVector){
 
     double xsi[2] = {};
     double phi_[6] = {}; 
@@ -2832,11 +2816,6 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     double dphi_dx[2][6] = {};
     int index = 0;
     NormalQuad nQuad = NormalQuad();
-
-    LocalMatrix jacobianNRMatrix;
-    jacobianNRMatrix.clear();
-    LocalVector rhsVector;
-    rhsVector.clear();
 
     double ainv_[2][2] = {};
 
@@ -2873,9 +2852,6 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
         //Computes spatial derivatives
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-
-
-
         // ublas::bounded_matrix<double, 3,18> bMatrix,aux;
         // bMatrix.clear(); aux.clear();
 
@@ -2886,14 +2862,10 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
         //     bMatrix(1,2*i+1) = dphi_dx[1][i];
         //     bMatrix(2,2*i+1) = dphi_dx[0][i];
         // };
-        
 
         // aux = prod(hooke,bMatrix);        
 
         // laplMatrix += prod(trans(bMatrix),aux) * djac_ * weight_;
-
-
-
 
         getElemLaplMatrix(weight_, dphi_dx, jacobianNRMatrix);
 
@@ -2906,14 +2878,14 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     //Apply boundary conditions
     setBoundaryConditionsLaplace(jacobianNRMatrix, rhsVector);
 
-    return std::make_pair(jacobianNRMatrix, rhsVector);
+    return;
 };
 
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 18> > Element<2>::getSteadyLaplace2(){
+void Element<2>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsVector){
 
     double xsi[2] = {};
     double phi_[6] = {}; 
@@ -2924,10 +2896,6 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
-    LocalMatrix jacobianNRMatrix;
-    jacobianNRMatrix.clear();
-    LocalVector rhsVector;
-    rhsVector.clear();
     double &dTime_ = parameters.getTimeStep();
         
     for(double* it = nQuad.begin(); it != nQuad.end(); it++){
@@ -3050,7 +3018,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
                 // double b;
                 // (k==1) ? b = phi(a) * density * gravity : 0.0;
 
-                rhsVector(2 * a + k) -= (f+c) * weight_ * j0;
+                rhsVector[2 * a + k] -= (f+c) * weight_ * j0;
 
                 //element tangent matrix
                 for (int b = 0; b < 6; b++){
@@ -3092,7 +3060,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
                         // (k==l)? m = (1.0 / (beta * deltat * deltat)) * density * phi(a) * phi(b) : m = 0.0;
                         (k==l)? m = (1.0 / (0.25 * dTime_)) *0* phi_[a] * phi_[b] : m = 0.0;
 
-                        jacobianNRMatrix(2 * a + k, 2 * b + l) += (e+m) * j0 * weight_;
+                        jacobianNRMatrix[2 * a + k][2 * b + l] += (e+m) * j0 * weight_;
                     }
                 }
             }
@@ -3121,7 +3089,7 @@ std::pair <ublas::bounded_matrix<double, 18, 18>, ublas::bounded_vector<double, 
     //Apply boundary conditions
     setBoundaryConditionsLaplace(jacobianNRMatrix, rhsVector);
 
-    return std::make_pair(jacobianNRMatrix, rhsVector);
+    return;
 };
 
 //------------------------------------------------------------------------------
@@ -3139,8 +3107,7 @@ void Element<2>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double 
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
-    LocalMatrix diffMatrix;
-    diffMatrix.clear();
+    double diffMatrix[18][18] = {};
 
     double tSUPG_; double tPSPG_; double tLSIC_;
 
@@ -3169,34 +3136,41 @@ void Element<2>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double 
         
         getVelAndDerivatives(phi_, dphi_dx);
 
-        // H1 COUPLING OPERATOR        
-        ublas::bounded_matrix<double, 3,18> Bmatrix, Baux;
-        ublas::bounded_matrix<double, 18,3> BmatrixT; 
-        ublas::bounded_matrix<double, 3,3>  Maux;
+        // H1 COUPLING OPERATOR  
+        if (k2 > 0){      
+            double Bmatrix[3][18] = {};
+            double Baux[3][18] = {};
+            double BmatrixT[18][3] = {}; 
+            double Maux[3][3] = {};
 
-        Bmatrix.clear(); BmatrixT.clear(); Maux.clear(); Baux.clear();
+            for (int i = 0; i < 6; i++){
+                Bmatrix[0][2*i  ] = dphi_dx[0][i];
+                Bmatrix[2][2*i  ] = dphi_dx[1][i];       
+                
+                BmatrixT[2*i  ][0] = dphi_dx[0][i];
+                BmatrixT[2*i  ][2] = dphi_dx[1][i];        
+                
+                Bmatrix[1][2*i+1] = dphi_dx[1][i];
+                Bmatrix[2][2*i+1] = dphi_dx[0][i];
+                
+                BmatrixT[2*i+1][1] = dphi_dx[1][i];
+                BmatrixT[2*i+1][2] = dphi_dx[0][i];
+            };
+            
+            Maux[0][0] = 2.; 
+            Maux[1][1] = 2.;
+            Maux[2][2] = 1.;
+            
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 18; j++)
+                    for (int k = 0; k < 3; k++)
+                        Baux[i][j] += Maux[i][k] * Bmatrix[k][j];
 
-        for (int i = 0; i < 6; i++){
-            Bmatrix(0,2*i  ) = dphi_dx[0][i];
-            Bmatrix(2,2*i  ) = dphi_dx[1][i];       
-            
-            BmatrixT(2*i  ,0) = dphi_dx[0][i];
-            BmatrixT(2*i  ,2) = dphi_dx[1][i];        
-            
-            Bmatrix(1,2*i+1) = dphi_dx[1][i];
-            Bmatrix(2,2*i+1) = dphi_dx[0][i];
-            
-            BmatrixT(2*i+1,1) = dphi_dx[1][i];
-            BmatrixT(2*i+1,2) = dphi_dx[0][i];
-        };
-        
-        Maux(0,0) =  2.;
-        Maux(1,1) =  2.;
-        Maux(2,2) =  1.;
-        
-        Baux = prod(Maux,Bmatrix);
-        
-        diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
+            for (int i = 0; i < 18; i++)
+                for (int j = 0; j < 18; j++)
+                    for (int k = 0; k < 3; k++)
+                        diffMatrix[i][j] += BmatrixT[i][k] * Baux[k][j] * weight_ * djac_ * k2;
+        }
 
         double una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
         double vna_ = alpha_f * v_ + (1. - alpha_f) * vPrev_;
@@ -3211,8 +3185,8 @@ void Element<2>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double 
         for (int i = 0; i < 6; i++){
             for (int j = 0; j < 6; j++){
                 // L2 COUPLING OPERATOR
-                lagrMultMatrix[2*j  ][2*i  ] -= phi_[i] * phi_[j] * weight_ * djac_ * k1;
-                lagrMultMatrix[2*j+1][2*i+1] -= phi_[i] * phi_[j] * weight_ * djac_ * k1;
+                lagrMultMatrix[2*i  ][2*j  ] -= phi_[i] * phi_[j] * weight_ * djac_ * k1;
+                lagrMultMatrix[2*i+1][2*j+1] -= phi_[i] * phi_[j] * weight_ * djac_ * k1;
             };
             // Lagrange multipliers residual
             lagrMultVector[2*i  ] += (lagMx_ * phi_[i] * k1 +
@@ -3237,9 +3211,10 @@ void Element<2>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double 
         index++; 
     }; 
 
-    for (int i = 0; i < 18; i++)
-        for (int j = 0; j < 18; j++)
-            lagrMultMatrix[i][j] -= diffMatrix(j,i);
+    if (k2 > 0)
+        for (int i = 0; i < 18; i++)
+            for (int j = 0; j < 18; j++)
+                lagrMultMatrix[i][j] -= diffMatrix[i][j];
 
     return;
 };
@@ -3504,9 +3479,8 @@ void Element<2>::getLagrangeMultipliersArlequinSameMesh(double **arlequinStab, d
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, ublas::bounded_vector<double, 6> &press, 
-                                                     ublas::bounded_vector<double, 6> &velx, ublas::bounded_vector<double, 6> &vely,
-                                                     ublas::bounded_vector<double, 6> &velxPrev, ublas::bounded_vector<double, 6> &velyPrev,
+void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, double* press, 
+                                                     double* velx, double* vely, double* velxPrev, double* velyPrev,
                                                      double **lagrMultMatrix, double *rhsVectorLM, double *rhsVector){
 
     double xsi[2]= {};
@@ -3532,11 +3506,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
     double &k2 = parameters.getArlequinK2();
     int &iTimeStep = parameters.getTimeInstant();
 
-    LocalMatrix diffMatrix;
-    diffMatrix.clear();
-    // lagrMultMatrix.clear();
-    // rhsVectorLM.clear();
-    // rhsVector.clear();
+    double diffMatrix[18][18] = {};
 
     double ainv_[2][2] = {};
 
@@ -3602,41 +3572,49 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
                 // dalpha_dy += (alpha_f * (*nodes_)[connect_[i]] -> getWeightFunction() + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousWeightFunction()) * dphi_dx[1][i];
                 dalpha_dx += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[0][i];
                 dalpha_dy += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[1][i];
-                unaL_ += alpha_f * velx(i) * phiLM_[i] + (1. - alpha_f) * velxPrev(i) * phiLM_[i];
-                vnaL_ += alpha_f * vely(i) * phiLM_[i] + (1. - alpha_f) * velyPrev(i) * phiLM_[i];
+                unaL_ += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
+                vnaL_ += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
             }
 
             // if (index_ == 3056 ) std::cout << "DADX " << dalpha_dx << " " << dalpha_dy << " " << index << " " << ielem << std::endl;
 
-            ublas::bounded_matrix<double, 3,18> Bmatrix, Baux;
-            ublas::bounded_matrix<double, 18,3> BmatrixT; 
-            ublas::bounded_matrix<double, 3,3>  Maux;
-            
-            //H1 COUPLING OPERATOR
-            Bmatrix.clear(); BmatrixT.clear(); Maux.clear(); Baux.clear();
-            
-            for (int i = 0; i < 6; i++){
-                Bmatrix(0,2*i  ) = dphi_dx[0][i];
-                Bmatrix(2,2*i  ) = dphi_dx[1][i];       
+            if (k2 > 0){
+                //H1 COUPLING OPERATOR
+                double Bmatrix[3][18] = {};
+                double Baux[3][18] = {};
+                double BmatrixT[18][3] = {}; 
+                double Maux[3][3] = {};        
                 
-                BmatrixT(2*i  ,0) = dphiL_dx[0][i];
-                BmatrixT(2*i  ,2) = dphiL_dx[1][i];        
+                for (int i = 0; i < 6; i++){
+                    Bmatrix[0][2*i  ] = dphi_dx[0][i];
+                    Bmatrix[2][2*i  ] = dphi_dx[1][i];       
+                    
+                    BmatrixT[2*i  ][0] = dphiL_dx[0][i];
+                    BmatrixT[2*i  ][2] = dphiL_dx[1][i];        
+                    
+                    Bmatrix[1][2*i+1] = dphi_dx[1][i];
+                    Bmatrix[2][2*i+1] = dphi_dx[0][i];
+                    
+                    BmatrixT[2*i+1][1] = dphiL_dx[1][i];
+                    BmatrixT[2*i+1][2] = dphiL_dx[0][i];
+                };
+
+                Maux[0][0] = 2.; 
+                Maux[1][1] = 2.;
+                Maux[2][2] = 1.;
                 
-                Bmatrix(1,2*i+1) = dphi_dx[1][i];
-                Bmatrix(2,2*i+1) = dphi_dx[0][i];
-                
-                BmatrixT(2*i+1,1) = dphiL_dx[1][i];
-                BmatrixT(2*i+1,2) = dphiL_dx[0][i];
-            };
-            
-            Maux(0,0) =  2.;
-            Maux(1,1) =  2.;
-            Maux(2,2) =  1.;
-            
-            Baux = prod(Maux,Bmatrix);
-            
-            diffMatrix += prod(BmatrixT,Baux) * weight_ * djac_ * k2;
-            
+                for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 18; j++)
+                        for (int k = 0; k < 3; k++)
+                            Baux[i][j] += Maux[i][k] * Bmatrix[k][j];
+
+                for (int i = 0; i < 18; i++)
+                    for (int j = 0; j < 18; j++)
+                        for (int k = 0; k < 3; k++)
+                            diffMatrix[i][j] += BmatrixT[i][k] * Baux[k][j] * weight_ * djac_ * k2;
+
+            }
+
             for (int i = 0; i < 6; i++){
                 for (int j = 0; j < 6; j++){     
                     //L2 COUPLING OPERATOR   
@@ -3668,9 +3646,10 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
     
     // if (index_ == 3056 ) std::cout << "RHS " << rhsVectorLM << std::endl;
 
-    for (int i = 0; i < 18; i++)
-        for (int j = 0; j < 18; j++)
-            lagrMultMatrix[i][j] += diffMatrix(j,i);
+    if (k2 > 0)
+        for (int i = 0; i < 18; i++)
+            for (int j = 0; j < 18; j++)
+                lagrMultMatrix[i][j] += diffMatrix[j][i];
 
     // LocalVector U_;
     // U_.clear();
@@ -3690,8 +3669,7 @@ void Element<2>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_, ublas::bounded_vector<double, 6> &press, 
-                                                               ublas::bounded_vector<double, 6> &velx, ublas::bounded_vector<double, 6> &vely,
+void Element<2>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_, double* press, double* velx, double* vely,
                                                                double **jacobianNRMatrix, double *rhsVector){
 
     double xsi[2] = {};
@@ -3783,13 +3761,13 @@ void Element<2>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, doubl
 
             //Interpolates the velocity components and its spatial derivatives
             for (int i = 0; i < 6; i++){
-                u_ += velx(i) * phiLM_[i];
-                v_ += vely(i) * phiLM_[i];
+                u_ += velx[i] * phiLM_[i];
+                v_ += vely[i] * phiLM_[i];
 
-                du_dx += velx(i) * dphiL_dx[0][i];
-                du_dy += velx(i) * dphiL_dx[1][i];
-                dv_dx += vely(i) * dphiL_dx[0][i];
-                dv_dy += vely(i) * dphiL_dx[1][i];
+                du_dx += velx[i] * dphiL_dx[0][i];
+                du_dy += velx[i] * dphiL_dx[1][i];
+                dv_dx += vely[i] * dphiL_dx[0][i];
+                dv_dy += vely[i] * dphiL_dx[1][i];
             };  
             
             for (int i = 0; i < 6; i++){
@@ -3843,8 +3821,7 @@ void Element<2>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, doubl
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Element<2>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,ublas::bounded_vector<double, 6> &press, 
-                                                             ublas::bounded_vector<double, 6> &velx, ublas::bounded_vector<double, 6> &vely,
+void Element<2>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
                                                              double **arlequinStab, double **laplMatrix, double *arlequinStabVector){
 
     double xsi[2] = {};
@@ -3939,13 +3916,13 @@ void Element<2>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double 
 
             //Interpolates the velocity components and its spatial derivatives
             for (int i = 0; i < 6; i++){
-                u_ += velx(i) * phiLM_[i];
-                v_ += vely(i) * phiLM_[i];
+                u_ += velx[i] * phiLM_[i];
+                v_ += vely[i] * phiLM_[i];
 
-                du_dx += velx(i) * dphiL_dx[0][i];
-                du_dy += velx(i) * dphiL_dx[1][i];
-                dv_dx += vely(i) * dphiL_dx[0][i];
-                dv_dy += vely(i) * dphiL_dx[1][i];
+                du_dx += velx[i] * dphiL_dx[0][i];
+                du_dy += velx[i] * dphiL_dx[1][i];
+                dv_dx += vely[i] * dphiL_dx[0][i];
+                dv_dy += vely[i] * dphiL_dx[1][i];
             };  
 
             for (int i = 0; i < 6; i++){

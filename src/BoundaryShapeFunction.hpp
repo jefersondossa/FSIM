@@ -14,21 +14,10 @@
 #ifndef BOUND_SHAPEFUNCTION_H
 #define BOUND_SHAPEFUNCTION_H
 
-using namespace boost::numeric;
-
 /// Defines the fluid boundary shape functions
 
 template<int DIM>
 class BoundShapeFunction {
-public:
-   
-    /// Defines the type "Values" which stores the shape function values
-    typedef ublas::bounded_vector<double, 3*(DIM-1)>           Values;
-
-    /// Defines the type "ValuesDeriv" which stores the shape function
-    /// derivatives
-    typedef ublas::bounded_vector<double, 3*(DIM-1)>           ValueDeriv;
-
 public:
     
     /// Evaluates the shape function value
@@ -38,7 +27,7 @@ public:
     /// Returns the shape function value
     /// @param double Adimensional coordinates 
     /// @return boundary shape function value
-    Values getShapeFunction(double Xsi){
+    double* getShapeFunction(double Xsi){
         evaluate(Xsi);
         return phi_;
     };
@@ -46,14 +35,14 @@ public:
     /// Returns the shape function derivative value
     /// @param double Adimensional coordinates 
     /// @return boundary shape function derivative value
-    Values getShapeFunctionDerivative(double Xsi){
+    double* getShapeFunctionDerivative(double Xsi){
         evaluate(Xsi);
         return dphi_;
     };
 
 private:
-    Values     phi_;
-    ValueDeriv dphi_;
+    double    phi_[3*(DIM-1)];
+    double    dphi_[3*(DIM-1)];
     
 };
 
@@ -76,8 +65,8 @@ void BoundShapeFunction<2>::evaluate(double Xsi){
     
     for (int j=0; j<Nnos; j++) {
 
-        phi_(j) = 1.0;
-        dphi_(j) = 0.0;
+        phi_[j] = 1.0;
+        dphi_[j] = 0.0;
 
         for (int i=0; i<Nnos; i++) {
 
@@ -85,20 +74,20 @@ void BoundShapeFunction<2>::evaluate(double Xsi){
 
             if(i != j){
                 
-                phi_(j) = phi_(j) * (Xsi - AdimCoord[i]) / 
+                phi_[j] = phi_[j] * (Xsi - AdimCoord[i]) / 
                     (AdimCoord[j] - AdimCoord[i]);
                 
                 for (int k=0; k<Nnos; k++) {
                     if ((i != k) && (j != k)) aux = aux*(Xsi-AdimCoord[k]);
                 };
-                dphi_(j) += aux;
+                dphi_[j] += aux;
             };
         };
     };
 
     for (int i=0; i<Nnos; i++) {
         for (int k=0; k<Nnos; k++) {
-            if (i != k) dphi_(i) = dphi_(i)/(AdimCoord[i]-AdimCoord[k]);
+            if (i != k) dphi_[i] = dphi_[i]/(AdimCoord[i]-AdimCoord[k]);
         };
     };    
     

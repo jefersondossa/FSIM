@@ -14,11 +14,20 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
+// #include <boost/numeric/ublas/io.hpp>
 
-using namespace boost::numeric;
+// using namespace boost::numeric;
+
+#include <math.h> 
+#include <stdio.h> 
+#include <vector>
+#include <algorithm>
+#include <functional>
+#include <array>
+#include <iomanip>
+#include <cmath>
+#include <limits>
+#include <ctime>
 
 /// Defines the node object and stores all nodal variables information
 

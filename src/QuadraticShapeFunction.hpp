@@ -14,8 +14,6 @@
 #ifndef QUADSHAPEFUNCTION_H
 #define QUADSHAPEFUNCTION_H
 
-using namespace boost::numeric;
-
 /// Defines the quadratic shape functions and its derivatives
 
 template<int DIM>
