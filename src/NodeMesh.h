@@ -1,20 +1,17 @@
 #pragma once
 
 #include <vector>
-#include <boost/numeric/ublas/vector.hpp>
-
-using namespace boost::numeric::ublas;
 
 class NodeMesh
 {
 public:
-	NodeMesh(const int& index, const bounded_vector<double,2>& coord);
+	NodeMesh(const int& index, double* coord);
 
 	~NodeMesh();
 
 	int getIndex();
 
-	bounded_vector<double, 2> getCoordinates();
+	double* getCoordinates();
 
 	double getX();
 
@@ -22,7 +19,7 @@ public:
 
 	void setIndex(const int& index);
 
-	void setCoordinates(const bounded_vector<double, 2>& coord);
+	void setCoordinates(double* coord);
 
 	void setX(const double& x);
 
@@ -30,17 +27,18 @@ public:
 
 private:
 	int index_;
-	bounded_vector<double, 2> coord_;
+	double coord_[2];
 };
 
 ///----------------------------------------------------------------------------
 ///-------------------------------IMPLEMENTATION-------------------------------
 ///----------------------------------------------------------------------------
 
-NodeMesh::NodeMesh(const int& index, const bounded_vector<double,2>& coord)
+NodeMesh::NodeMesh(const int& index, double* coord)
 {
 	index_ = index;
-	coord_ = coord;
+	coord_[0] = coord[0];
+	coord_[1] = coord[1];
 }
 
 NodeMesh::~NodeMesh() {}
@@ -52,15 +50,15 @@ int NodeMesh::getIndex()
 
 double NodeMesh::getX()
 {
-	return coord_(0);
+	return coord_[0];
 }
 
 double NodeMesh::getY()
 {
-	return coord_(1);
+	return coord_[1];
 }
 
-bounded_vector<double, 2> NodeMesh::getCoordinates()
+double* NodeMesh::getCoordinates()
 {
 	return coord_;
 }
@@ -72,10 +70,10 @@ void NodeMesh::setIndex(const int& index)
 
 void NodeMesh::setX(const double& x)
 {
-	coord_(0) = x;
+	coord_[0] = x;
 }
 
 void NodeMesh::setY(const double& y)
 {
-	coord_(1) = y;
+	coord_[1] = y;
 }

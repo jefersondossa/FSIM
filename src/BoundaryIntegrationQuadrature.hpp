@@ -21,53 +21,49 @@
 template<int DIM>
 class BoundaryIntegQuadrature{
 public:
-    /// Defines the type "PointCoord" which stores the 
-    /// integration points coordinates
-    typedef ublas::bounded_vector<double, DIM>  PointCoord;
-
-    /// Defines the type "PointWeight" which stores the
-    /// integration points weights
-    typedef ublas::bounded_vector<double, DIM>      PointWeight;
-
-    /// Defines the numerical integration iterator
-    typedef typename PointWeight::iterator              QuadratureListIt;
+    static const int numIntPoints = 2;
 
 private:
     //List of integration points coordinates
-    PointCoord pointCoord;
+    double pointCoord[numIntPoints];
 
     //List of integration points weights
-    PointWeight pointWeight;
+    double pointWeight[numIntPoints];
 
     double pi = M_PI;
 
 public:
     /// Returns the index of the first integration point
     /// @return First integration point index
-    QuadratureListIt begin() {
-        return pointWeight.begin();
+    double* begin() {
+        return std::begin(pointWeight);
     }
 
     /// Returns the index of the last integration point
     /// @return Last integration point index
-    QuadratureListIt end() {
-        return pointWeight.end();
+    double* end() {
+        return std::end(pointWeight);
     }
 
     /// Returns the integration point adimensional coordinate and weight
     /// @return Adimensional coordinate and weight of the integration point
-    std::pair<PointCoord,PointWeight> GaussQuadrature(){
+    std::pair<double* ,double* > GaussQuadrature(){
 
         double xmga, xlga, zga, p1ga, p2ga, p3ga, ppga, z1ga;
         int mga;
-        double nga = DIM;
+        int nga = numIntPoints;
+
+        for (int i = 0; i < nga; i++){
+            pointCoord[i] = 0.;
+            pointWeight[i] = 0.;
+        }
 
         mga=(nga+1.)/2.;
         xmga=0.0;
         xlga=1.0;
         
         for (int iga=1; iga<=mga; iga++) {
-            zga = cos(pi*(double(iga)-0.25)/(double(nga)+0.5));
+            zga = std::cos(pi*(double(iga)-0.25)/(double(nga)+0.5));
         g1:
             p1ga = 1.0;
             p2ga = 0.0;
@@ -82,12 +78,12 @@ public:
             z1ga = zga;
             zga = z1ga-p1ga/ppga;
             
-            if (fabs(zga-z1ga) > 1.0e-15) goto g1;
+            if (std::fabs(zga-z1ga) > 1.0e-15) goto g1;
             
-            pointCoord(iga-1) = xmga-xlga*zga;
-            pointCoord(nga-iga) = xmga + xlga*zga;
-            pointWeight(iga-1) = 2.0*xlga/((1.0-zga*zga)*ppga*ppga);
-            pointWeight(nga-iga) = pointWeight(iga-1);             
+            pointCoord[iga-1] = xmga-xlga*zga;
+            pointCoord[nga-iga] = xmga + xlga*zga;
+            pointWeight[iga-1] = 2.0*xlga/((1.0-zga*zga)*ppga*ppga);
+            pointWeight[nga-iga] = pointWeight[iga-1];             
         };
 
         return std::make_pair(pointCoord,pointWeight);

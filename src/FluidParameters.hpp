@@ -14,8 +14,6 @@
 #ifndef FLUID_PARAMETERS_H
 #define FLUID_PARAMETERS_H
 
-using namespace boost::numeric;
-
 /// Defines the fluid boundary shape functions
 
 template<int DIM>

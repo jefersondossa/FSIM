@@ -14,9 +14,6 @@
 #ifndef FSINTERACTION_H
 #define FSINTERACTION_H
 
-#include <boost/timer.hpp> 
-#include <boost/thread.hpp>
-
 #include "Arlequin.hpp"
 
 //Solid extern functions (from porticomb.for)
@@ -446,14 +443,13 @@ void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
     for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
 
         if (boundaryFluid_[ibound] -> getBoundaryGroup() == interface){    
-            typename Boundary::BoundConnect connec;
             int elemC;
             double xsiC;
 
-            connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+            int* connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < 3; inode++){
-                double* x = nodesFluid_[connec(inode)] -> getCoordinates();
+                double* x = nodesFluid_[connec[inode]] -> getCoordinates();
                 
                 searchcorrespondencefluid_(&x[0], &x[1], &elemC, &xsiC);
                 double xsi[2] = {};
@@ -461,7 +457,7 @@ void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
 
                 //std::cout << "asdasd " << elemC << " " << xsiC << std::endl; 
 
-                nodesFluid_[connec(inode)] -> setNodalCorrespondence(elemC,xsi);
+                nodesFluid_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
                 
                 // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
             };
@@ -479,14 +475,13 @@ void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
 
         if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interface){
 
-            typename Boundary::BoundConnect connec;
             int elemC;
             double xsiC;
 
-            connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
+            int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < 3; inode++){
-                double* x = nodesArlequinFine_[connec(inode)] -> getCoordinates();
+                double* x = nodesArlequinFine_[connec[inode]] -> getCoordinates();
                 
                 searchcorrespondencefluid_(&x[0], &x[1], &elemC, &xsiC);
                 double xsi[2] = {};
@@ -494,7 +489,7 @@ void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
 
                 // if (rank == 0) std::cout << "asdasd " << elemC << " " << xsiC << " " << interface << std::endl; 
 
-                nodesArlequinFine_[connec(inode)] -> setNodalCorrespondence(elemC,xsi);
+                nodesArlequinFine_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
                 
                 // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
             };
@@ -511,9 +506,6 @@ void FSInteraction<2>::setElementBoxes() {
     int *connec;
     double xk[2], Xk[2];
     double dCk[3], dck[3];
-    std::vector<ublas::bounded_vector<double,2> > di1, di2;
-
-    di1.reserve(3);
 
     //Compute element boxes for coarse model
     //Only function for straight elements
@@ -556,8 +548,7 @@ void FSInteraction<2>::preProcessFluid(){
         if ((boundaryFluid_[i] -> getConstrain(0) == 3) ||
             (boundaryFluid_[i] -> getConstrain(1) == 3)) {
 
-            typename Boundary::BoundConnect connectB;
-            connectB = boundaryFluid_[i] -> getBoundaryConnectivity();
+            int* connectB = boundaryFluid_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElemFluid; j++){
                 int *connect;
@@ -566,9 +557,9 @@ void FSInteraction<2>::preProcessFluid(){
                 int flag = 0;
                 int side[3];
                 for (int k=0; k<6; k++){
-                    if ((connectB(0) == connect[k]) || 
-                        (connectB(1) == connect[k]) ||
-                        (connectB(2) == connect[k])){
+                    if ((connectB[0] == connect[k]) || 
+                        (connectB[1] == connect[k]) ||
+                        (connectB[2] == connect[k])){
                         side[flag] = k;
                         flag++;
                     };
@@ -692,8 +683,7 @@ void FSInteraction<2>::preProcessArlequin(){
         if ((boundaryArlequinFine_[i] -> getConstrain(0) == 3) ||
             (boundaryArlequinFine_[i] -> getConstrain(1) == 3)) {
 
-            typename Boundary::BoundConnect connectB;
-            connectB = boundaryArlequinFine_[i] -> getBoundaryConnectivity();
+            int* connectB = boundaryArlequinFine_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElemArlequinFine; j++){
                 
@@ -702,9 +692,9 @@ void FSInteraction<2>::preProcessArlequin(){
                 int flag = 0;
                 int side[3];
                 for (int k=0; k<6; k++){
-                    if ((connectB(0) == connect[k]) || 
-                        (connectB(1) == connect[k]) ||
-                        (connectB(2) == connect[k])){
+                    if ((connectB[0] == connect[k]) || 
+                        (connectB[1] == connect[k]) ||
+                        (connectB[2] == connect[k])){
                         side[flag] = k;
                         flag++;
                     };
@@ -900,15 +890,14 @@ void FSInteraction<2>::updateFluidMesh(){
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){          
             if (boundaryFluid_[ibound] -> getBoundaryGroup() == interf){
                 
-                typename Boundary::BoundConnect connec;
-                connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+                int* connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
                 for (int k=0; k<3; k++){
 
                     double x[2];
                     
-                    int elem = nodesFluid_[connec(k)] -> getNodalElemCorrespondence();
-                    double* xsi = nodesFluid_[connec(k)] -> getNodalXsiCorrespondence();
+                    int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
+                    double* xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
                     
                     
                     if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
@@ -916,8 +905,8 @@ void FSInteraction<2>::updateFluidMesh(){
                     MPI_Bcast(&x[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&x[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
-                    nodesFluid_[connec(k)] -> setUpdatedCoordinates(x);
-                    nodesFluid_[connec(k)] -> setCoordinates(x);
+                    nodesFluid_[connec[k]] -> setUpdatedCoordinates(x);
+                    nodesFluid_[connec[k]] -> setCoordinates(x);
 
                     //if(connec(k) == 29)std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
                 };
@@ -963,15 +952,14 @@ void FSInteraction<2>::updateArlequinMesh(){
         for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interf){
 
-                typename Boundary::BoundConnect connec;
-                connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
+                int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
                 for (int k=0; k<3; k++){
 
                     double x[2];
                     
-                    int elem = nodesArlequinFine_[connec(k)] -> getNodalElemCorrespondence();
-                    double* xsi = nodesArlequinFine_[connec(k)] -> getNodalXsiCorrespondence();
+                    int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
+                    double* xsi = nodesArlequinFine_[connec[k]] -> getNodalXsiCorrespondence();
 
                     // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     
@@ -983,8 +971,8 @@ void FSInteraction<2>::updateArlequinMesh(){
                     // if (rank == 0) std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     MPI_Barrier(PETSC_COMM_WORLD);
 
-                    nodesArlequinFine_[connec(k)] -> setUpdatedCoordinates(x);
-                    nodesArlequinFine_[connec(k)] -> setCoordinates(x);
+                    nodesArlequinFine_[connec[k]] -> setUpdatedCoordinates(x);
+                    nodesArlequinFine_[connec[k]] -> setCoordinates(x);
 
                     // std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
                 };
@@ -1035,15 +1023,14 @@ void FSInteraction<2>::transferSolidVelocity(){
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){          
             if (boundaryFluid_[ibound] -> getBoundaryGroup() == interf){
                 
-                typename Boundary::BoundConnect connec;
-                connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+                int* connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
                 double u[2];
 
                 for (int k=0; k<3; k++){
                     
-                    int elem = nodesFluid_[connec(k)] -> getNodalElemCorrespondence();
-                    double* xsi = nodesFluid_[connec(k)] -> getNodalXsiCorrespondence();
+                    int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
+                    double* xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
                     
                     
                     if (rank == 0) 
@@ -1052,7 +1039,7 @@ void FSInteraction<2>::transferSolidVelocity(){
                     MPI_Bcast(&u[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&u[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                
-                    nodesFluid_[connec(k)] -> setVelocity(u);
+                    nodesFluid_[connec[k]] -> setVelocity(u);
   
                     // x = nodesFluid_[connec(k)] -> getCoordinates();
                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
@@ -1080,16 +1067,14 @@ void FSInteraction<2>::transferSolidVelocityArlequin(){
         for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interf){
                 
-                typename Boundary::BoundConnect connec;
-                connec = boundaryArlequinFine_[ibound] -> 
-                    getBoundaryConnectivity();
+                int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
                 double u[2];
 
                 for (int k=0; k<3; k++){
                     
-                    int elem = nodesArlequinFine_[connec(k)] -> getNodalElemCorrespondence();
-                    double* xsi = nodesArlequinFine_[connec(k)] ->  getNodalXsiCorrespondence();
+                    int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
+                    double* xsi = nodesArlequinFine_[connec[k]] ->  getNodalXsiCorrespondence();
                     
                     if (rank == 0) 
                         getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
@@ -1097,7 +1082,7 @@ void FSInteraction<2>::transferSolidVelocityArlequin(){
                     MPI_Bcast(&u[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&u[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                
-                    nodesArlequinFine_[connec(k)] -> setVelocity(u);
+                    nodesArlequinFine_[connec[k]] -> setVelocity(u);
   
                     // x = nodesFluid_[connec(k)] -> getCoordinates();
                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
@@ -1171,8 +1156,7 @@ void FSInteraction<2>::solveFSIProblem(int numTimeSteps){
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
-        boost::posix_time::ptime t1 =                                 
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t1 = std::clock();
 
         if (rank == 0) {
             std::cout << std::endl;
@@ -1188,22 +1172,17 @@ void FSInteraction<2>::solveFSIProblem(int numTimeSteps){
         // // Updates fluid velocity profile
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
         
-            Boundary::BoundConnect connectB;
-            connectB = boundaryFluid_[ibound] -> getBoundaryConnectivity();
-            int no1 = connectB(0);
-            int no2 = connectB(1);
-            int no3 = connectB(2);
+            int* connectB = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+            int no1 = connectB[0];
+            int no2 = connectB[1];
+            int no3 = connectB[2];
         
             if (boundaryFluid_[ibound] -> getConstrain(0) == 1){
-                
                 double value = boundaryFluid_[ibound] -> getConstrainValue(0) * 
-                    (1. - cos(0.4 * pi * dTime * iTimeStep));
-                nodesFluid_[no1] -> setConstrains(0,boundaryFluid_[ibound] -> 
-                                                  getConstrain(0),value);
-                nodesFluid_[no2] -> setConstrains(0,boundaryFluid_[ibound] -> 
-                                                  getConstrain(0),value);
-                nodesFluid_[no3] -> setConstrains(0,boundaryFluid_[ibound] ->
-                                                  getConstrain(0),value);
+                    (1. - std::cos(0.4 * pi * dTime * iTimeStep));
+                nodesFluid_[no1] -> setConstrains(0,boundaryFluid_[ibound] -> getConstrain(0),value);
+                nodesFluid_[no2] -> setConstrains(0,boundaryFluid_[ibound] -> getConstrain(0),value);
+                nodesFluid_[no3] -> setConstrains(0,boundaryFluid_[ibound] ->getConstrain(0),value);
             };
             
         // };
@@ -1291,16 +1270,14 @@ void FSInteraction<2>::solveFSIProblem(int numTimeSteps){
         
         fluidModel.solveFSIFluid(3, 1.e-5, 2);
         
-        boost::posix_time::ptime t2 =                                   \
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t2 = std::clock();
 
         if (rank == 0) {
-            boost::posix_time::time_duration diff = t2 - t1;
             std::cout << "****************************************"
                       << "****************************************"
                       << std::endl;
             std::cout << "********************** PROCESSING TIME = " << 
-                std::fixed << diff.total_milliseconds()/1000.
+                std::fixed << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000.
                       << " seconds **********************" 
                        << std::endl;
             std::cout << "****************************************"
@@ -1333,8 +1310,15 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
 
     double sizeSolid = 3 * numNodesSolid;
 
-    ublas::vector<double> X_k(sizeSolid), Y_k(sizeSolid), deltaXi(sizeSolid),
-        deltaXii(sizeSolid);
+    double *X_k;
+    double *Y_k;
+    double *deltaXi;
+    double *deltaXii;  
+
+    X_k = new double[3* numNodesSolid]();
+    Y_k = new double[3* numNodesSolid]();
+    deltaXi = new double[3* numNodesSolid]();
+    deltaXii = new double[3* numNodesSolid]();
     
 
     double omega = 1.;
@@ -1344,12 +1328,9 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
     double &alpha_m = fluidModel.fluidParameters.getAlphaM();
     double &gamma = fluidModel.fluidParameters.getGamma();
 
-    X_k.clear();Y_k.clear();deltaXi.clear();deltaXii.clear();
-
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
-        boost::posix_time::ptime t1 =                                 
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t1 = std::clock();
 
         if (rank == 0) {
             std::cout << std::endl;
@@ -1417,11 +1398,11 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
 
         for (int i = 0; i < numNodesSolid; i++){
             int dof = 3*i+1;
-            if (rank == 0) getposition_(&dof,&Y_k(3*i  ));
+            if (rank == 0) getposition_(&dof,&Y_k[3*i  ]);
             dof++;
-            if (rank == 0) getposition_(&dof,&Y_k(3*i+1));
-            MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-            MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            if (rank == 0) getposition_(&dof,&Y_k[3*i+1]);
+            MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
         };
       
         saidaOmega << std::endl << "Passo de tempo " << iTimeStep << std::endl;
@@ -1432,26 +1413,26 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
                 double v_ = 0.;
                 double v_prev = 0.;
                 int dof = 3*i+1;
-                getposition_(&dof,&Y_k(3*i  ));
+                getposition_(&dof,&Y_k[3*i  ]);
                 getvelocity_(&dof,&v_);
                 getpreviousvelocity_(&dof,&v_prev);
 
-                Y_k(3*i  ) += dTime * (1.5 * v_ - 0.5 * v_prev);
+                Y_k[3*i  ] += dTime * (1.5 * v_ - 0.5 * v_prev);
 
-                setposition_(&dof,&Y_k(3*i  ));
+                setposition_(&dof,&Y_k[3*i  ]);
                 
                 dof++;
 
-                getposition_(&dof,&Y_k(3*i+1));
+                getposition_(&dof,&Y_k[3*i+1]);
                 getvelocity_(&dof,&v_);
                 getpreviousvelocity_(&dof,&v_prev);
 
-                Y_k(3*i+1) += dTime * (1.5 * v_ - 0.5 * v_prev);
+                Y_k[3*i+1] += dTime * (1.5 * v_ - 0.5 * v_prev);
 
-                setposition_(&dof,&Y_k(3*i+1));
+                setposition_(&dof,&Y_k[3*i+1]);
             };
-            MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-            MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
         };
            
         //X_k = Y_k;
@@ -1467,7 +1448,7 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
                                      << iterations + 1 << 
                     " ..........................." << std:: endl;};
 
-            X_k = Y_k;
+            for (int i=0; i<sizeSolid; i++) X_k[i] = Y_k[i];
             
             updateFluidMesh();
              
@@ -1482,39 +1463,51 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
             
             for (int i = 0; i < numNodesSolid; i++){
                 int dof = 3*i+1;
-                if (rank == 0) getposition_(&dof,&Y_k(3*i  ));
+                if (rank == 0) getposition_(&dof,&Y_k[3*i  ]);
                 dof++;
-                if (rank == 0) getposition_(&dof,&Y_k(3*i+1));
-                MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                if (rank == 0) getposition_(&dof,&Y_k[3*i+1]);
+                MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
             };
             
-            deltaXii = X_k - Y_k;
+            for (int i=0; i<sizeSolid; i++) deltaXii[i] = X_k[i] - Y_k[i];
             
             //Aitken Relaxation
             if (iterations > 0){
-                mu = mu + (mu - 1.0) * inner_prod(deltaXi-deltaXii,deltaXii) / 
-                    norm_2(deltaXi-deltaXii);
-              
+                double aux1 = 0.;
+                double aux2 = 0.;
+
+                for (int i=0; i<sizeSolid; i++){
+                    aux1 += (deltaXi[i]-deltaXii[i]) * deltaXii[i];
+                    aux2 += (deltaXi[i]-deltaXii[i]) * (deltaXi[i]-deltaXii[i]);
+                }
+
+                mu = mu + (mu - 1.0) * aux1 / sqrt(aux2);
             };        
             
-            deltaXi = deltaXii;
-            residual = norm_2(deltaXii);
+            residual = 0.;
+
+            for (int i=0; i<sizeSolid; i++) {
+                deltaXi[i] = deltaXii[i];
+                residual += deltaXii[i] * deltaXii[i];
+            }
+            
+            residual = sqrt(residual);
 
             omega = 1. - mu;
 
-            Y_k = (1. - omega) * X_k + omega * Y_k;
+            for (int i=0; i<sizeSolid; i++) Y_k[i] = (1. - omega) * X_k[i] + omega * Y_k[i];
             
 
             for (int i = 0; i < numNodesSolid; i++){
                 if (rank == 0) {
                     int dof = 3*i+1;
-                    setposition_(&dof,&Y_k(3*i  ));
+                    setposition_(&dof,&Y_k[3*i  ]);
                     dof++;
-                    setposition_(&dof,&Y_k(3*i+1));
+                    setposition_(&dof,&Y_k[3*i+1]);
                 };
-                MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
             };
        
             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << std::endl;
@@ -1536,16 +1529,14 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
         //     elementsFluid_[i] -> getParameterSUPG();
         // };
                 
-        boost::posix_time::ptime t2 =                                   \
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t2 = std::clock();
 
         if (rank == 0) {
-            boost::posix_time::time_duration diff = t2 - t1;
             std::cout << "****************************************"
                       << "****************************************"
                       << std::endl;
             std::cout << "********************** PROCESSING TIME = " << 
-                std::fixed << diff.total_milliseconds()/1000.
+                std::fixed << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000.
                       << " seconds **********************" 
                        << std::endl;
             std::cout << "****************************************"
@@ -1563,6 +1554,13 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
 
 
     };//Time Steps
+
+    delete [] X_k;
+    delete [] Y_k;
+    delete [] deltaXi;
+    delete [] deltaXii;
+
+    return;
 };
 
 
@@ -1580,9 +1578,15 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
 
     double sizeSolid = 3 * numNodesSolid;
 
-    ublas::vector<double> X_k(sizeSolid), Y_k(sizeSolid), deltaXi(sizeSolid),
-        deltaXii(sizeSolid);
-    
+    double *X_k;
+    double *Y_k;
+    double *deltaXi;
+    double *deltaXii;  
+
+    X_k = new double[3* numNodesSolid]();
+    Y_k = new double[3* numNodesSolid]();
+    deltaXi = new double[3* numNodesSolid]();
+    deltaXii = new double[3* numNodesSolid]();
 
     double omega = 1.;
     double mu = 0.;
@@ -1592,16 +1596,13 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         printstructure_();
     };
 
-    X_k.clear();Y_k.clear();deltaXi.clear();deltaXii.clear();
-
     double &alpha_f = arlequinModel.fineModel.fluidParameters.getAlphaF();
     double &alpha_m = arlequinModel.fineModel.fluidParameters.getAlphaM();
     double &gamma = arlequinModel.fineModel.fluidParameters.getGamma();
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
-        boost::posix_time::ptime t1 =                                 
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t1 = std::clock();
 
         if (rank == 0) {
             std::cout << std::endl;
@@ -1731,11 +1732,11 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
 
         for (int i = 0; i < numNodesSolid; i++){
             int dof = 3*i+1;
-            if (rank == 0) getposition_(&dof,&Y_k(3*i  ));
+            if (rank == 0) getposition_(&dof,&Y_k[3*i  ]);
             dof++;
-            if (rank == 0) getposition_(&dof,&Y_k(3*i+1));
-            MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-            MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            if (rank == 0) getposition_(&dof,&Y_k[3*i+1]);
+            MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
         };
       
         saidaOmega << std::endl << "Passo de tempo " << iTimeStep << std::endl;
@@ -1748,26 +1749,26 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
                 double v_ = 0.;
                 double v_prev = 0.;
                 int dof = 3*i+1;
-                getposition_(&dof,&Y_k(3*i  ));
+                getposition_(&dof,&Y_k[3*i  ]);
                 getvelocity_(&dof,&v_);
                 getpreviousvelocity_(&dof,&v_prev);
 
-                Y_k(3*i  ) += dTime * (1.5 * v_ - 0.5 * v_prev);
+                Y_k[3*i  ] += dTime * (1.5 * v_ - 0.5 * v_prev);
 
-                setposition_(&dof,&Y_k(3*i  ));
+                setposition_(&dof,&Y_k[3*i  ]);
                 
                 dof++;
 
-                getposition_(&dof,&Y_k(3*i+1));
+                getposition_(&dof,&Y_k[3*i+1]);
                 getvelocity_(&dof,&v_);
                 getpreviousvelocity_(&dof,&v_prev);
 
-                Y_k(3*i+1) += dTime * (1.5 * v_ - 0.5 * v_prev);
+                Y_k[3*i+1] += dTime * (1.5 * v_ - 0.5 * v_prev);
 
-                setposition_(&dof,&Y_k(3*i+1));
+                setposition_(&dof,&Y_k[3*i+1]);
             };
-            MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-            MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+            MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
         };
            
         // std::cout << "AQUI6 " << rank << std::endl;
@@ -1784,7 +1785,8 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
                                      << iterations + 1 << 
                     " ..........................." << std:: endl;};
 
-            X_k = Y_k;
+            for (int i=0; i<sizeSolid; i++) X_k[i] = Y_k[i];
+        
             // std::cout << "AQUI-2 " << rank << std::endl;            
             //     MPI_Barrier(PETSC_COMM_WORLD);
             updateArlequinMesh();
@@ -1835,42 +1837,55 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
             
             for (int i = 0; i < numNodesSolid; i++){
                 int dof = 3*i+1;
-                if (rank == 0) getposition_(&dof,&Y_k(3*i  ));
+                if (rank == 0) getposition_(&dof,&Y_k[3*i  ]);
                 dof++;
-                if (rank == 0) getposition_(&dof,&Y_k(3*i+1));
-                MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                if (rank == 0) getposition_(&dof,&Y_k[3*i+1]);
+                // std::cout << "SASDASD " << Y_k[3*i  ] << " " << Y_k[3*i+1] << " " << rank << std::endl;
+                MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
             };
 // std::cout << "AQUI7 " << rank << std::endl;
             // std::cout << "AQUI12 " << rank << std::endl;
             // MPI_Barrier(PETSC_COMM_WORLD);
             
-            deltaXii = X_k - Y_k;
+            for (int i=0; i<sizeSolid; i++) deltaXii[i] = X_k[i] - Y_k[i];
             
             //Aitken Relaxation
-            if (iterations > 0){
-                mu = mu + (mu - 1.0) * inner_prod(deltaXi-deltaXii,deltaXii) / 
-                    norm_2(deltaXi-deltaXii);
-              
+             if (iterations > 0){
+                double aux1 = 0.;
+                double aux2 = 0.;
+
+                for (int i=0; i<sizeSolid; i++){
+                    aux1 += (deltaXi[i]-deltaXii[i]) * deltaXii[i];
+                    aux2 += (deltaXi[i]-deltaXii[i]) * (deltaXi[i]-deltaXii[i]);
+                }
+                // std::cout << "AASDASD " << aux1 << " " << aux2 << std::endl;
+                mu = mu + (mu - 1.0) * aux1 / sqrt(aux2);
             };        
             
-            deltaXi = deltaXii;
-            residual = norm_2(deltaXii);
+            residual = 0.;
+
+            for (int i=0; i<sizeSolid; i++) {
+                deltaXi[i] = deltaXii[i];
+                residual += deltaXii[i] * deltaXii[i];
+            }
+            
+            residual = sqrt(residual);
 
             omega = 1. - mu;
 
-            Y_k = (1. - omega) * X_k + omega * Y_k;
+            for (int i=0; i<sizeSolid; i++) Y_k[i] = (1. - omega) * X_k[i] + omega * Y_k[i];
             
 
             for (int i = 0; i < numNodesSolid; i++){
                 if (rank == 0) {
                     int dof = 3*i+1;
-                    setposition_(&dof,&Y_k(3*i  ));
+                    setposition_(&dof,&Y_k[3*i  ]);
                     dof++;
-                    setposition_(&dof,&Y_k(3*i+1));
+                    setposition_(&dof,&Y_k[3*i+1]);
                 };
-                MPI_Bcast(&Y_k(3*i  ),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-                MPI_Bcast(&Y_k(3*i+1),1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
+                MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
             };
        
             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << std::endl;
@@ -1892,16 +1907,14 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         //     elementsFluid_[i] -> getParameterSUPG();
         // };
                 
-        boost::posix_time::ptime t2 =                                   \
-            boost::posix_time::microsec_clock::local_time();
+        std::clock_t t2 = std::clock();
 
         if (rank == 0) {
-            boost::posix_time::time_duration diff = t2 - t1;
             std::cout << "****************************************"
                       << "****************************************"
                       << std::endl;
             std::cout << "********************** PROCESSING TIME = " << 
-                std::fixed << diff.total_milliseconds()/1000.
+                std::fixed << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000.
                       << " seconds **********************" 
                        << std::endl;
             std::cout << "****************************************"
@@ -1919,6 +1932,13 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
 
 
     };//Time Steps
+
+    delete [] X_k;
+    delete [] Y_k;
+    delete [] deltaXi;
+    delete [] deltaXii;
+
+    return;
 };
 
 #endif

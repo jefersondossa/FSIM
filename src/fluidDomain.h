@@ -12,7 +12,7 @@ public:
 
 	NodeMesh* getNode(const int& index);
 
-	void addNode(const int& index, const bounded_vector<double,2>& coord);
+	void addNode(const int& index, double* coord);
 
 	void addSurfaceMaterial(const std::vector<PlaneSurface*> surfaces, const double& young, const double& poisson, const double& density = 0.0, const std::string& behaviour = "PLANE_STRESS");
 
@@ -68,7 +68,7 @@ NodeMesh* FluidDomain::getNode(const int& index)
 	return nodes_[index];
 }
 
-void FluidDomain::addNode(const int& index, const bounded_vector<double,2>& coord)
+void FluidDomain::addNode(const int& index, double* coord)
 {
 	NodeMesh* n = new NodeMesh(index, coord);
 	nodes_.push_back(n);
@@ -134,9 +134,9 @@ void FluidDomain::readInput(const std::string& inputFile, const bool& deleteFile
 	{
 		std::getline(file, line);
 		std::vector<std::string> tokens = split(line, " ");
-		bounded_vector<double,2> coord;
-		std::istringstream(tokens[1]) >> coord(0);
-		std::istringstream(tokens[2]) >> coord(1);
+		double coord[2];
+		std::istringstream(tokens[1]) >> coord[0];
+		std::istringstream(tokens[2]) >> coord[1];
 		addNode(i, coord);
 	}
 	std::getline(file, line); std::getline(file, line);
