@@ -13,6 +13,7 @@
 
 #ifndef FSINTERACTION_H
 #define FSINTERACTION_H
+#include <petscviewerhdf5.h>
 
 #include "Arlequin.hpp"
 
@@ -1592,7 +1593,8 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
     double mu = 0.;
 
     if (rank == 0) {
-        arlequinModel.printResults(0);
+        arlequinModel.printResultsCoarse(0);
+        arlequinModel.printResultsFine(0);
         printstructure_();
     };
 
@@ -1925,7 +1927,8 @@ void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
         // Printing Results
         if (rank == 0) {
             if(iTimeStep % 1 == 0){
-                arlequinModel.printResults(iTimeStep);
+                arlequinModel.printResultsCoarse(iTimeStep);
+                arlequinModel.printResultsFine(iTimeStep);
                 printstructure_();
             };
         };

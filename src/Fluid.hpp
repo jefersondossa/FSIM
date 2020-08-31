@@ -90,6 +90,7 @@ public:
     double arlequinEpsilon;
     int weightFunctionBehavior;
     bool printVelocity;
+    bool printAcceleration;
     bool printRealVelocity;
     bool printLagrangeMultipliers;
     bool printElementCorrespondence;
@@ -104,6 +105,7 @@ public:
     bool printGlueZone;
     bool printJacobian;
     bool printProcess;
+    bool printLines;
     double integScheme;    //Time Integration Scheme
     Parameters fluidParameters;
 
@@ -640,6 +642,7 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
 
     //Printing results
     inputData >> printVelocity;              getline(inputData,line);
+    inputData >> printAcceleration;              getline(inputData,line);
     inputData >> printRealVelocity;          getline(inputData,line);
     inputData >> printLagrangeMultipliers;   getline(inputData,line);
     inputData >> printElementCorrespondence; getline(inputData,line);
@@ -653,9 +656,11 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
     inputData >> printMeshDisplacement;      getline(inputData,line);
     inputData >> printGlueZone;              getline(inputData,line);
     inputData >> printJacobian;              getline(inputData,line);
-    inputData >> printProcess;              
+    inputData >> printProcess;               getline(inputData,line);
+    inputData >> printLines;              
 
     mirrorData << "PrintVelocity              = " << printVelocity << std::endl;
+    mirrorData << "printAcceleration          = " << printAcceleration << std::endl;
     mirrorData << "PrintRealVelocity          = " << printRealVelocity << std::endl;
     mirrorData << "PrintLagrangeMultipliers   = " << printLagrangeMultipliers << std::endl;
     mirrorData << "PrintElementCorrespondence = " << printElementCorrespondence << std::endl;
@@ -669,7 +674,8 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
     mirrorData << "PrintMeshDisplacement      = " << printMeshDisplacement << std::endl;
     mirrorData << "PrintGlueZone              = " << printGlueZone << std::endl;
     mirrorData << "PrintJacobian              = " << printJacobian << std::endl;
-    mirrorData << "PrintProcess               = " << printProcess << std::endl << std::endl;
+    mirrorData << "PrintProcess               = " << printProcess << std::endl;
+    mirrorData << "PrintLines                 = " << printLines << std::endl << std::endl;
 
     int dimension = 2;
 
@@ -1547,277 +1553,74 @@ void Fluid<2>::readInitialValues(const std::string& inputPrev, const std::string
     int rank;
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-    std::ifstream inputPrevious(inputPrev.c_str());
-    std::ifstream inputCurrent(inputCurr.c_str());
 
-    std::string line;
+    hid_t filePrevious;
+    hid_t fileCurrent;
+    hid_t dataset;
+    herr_t status;
 
-    
-    std::string searchVel = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Velocity\" format=\"ascii\">"; 
-    std::string searchAcc = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Acceleration\" format=\"ascii\">"; 
-    std::string searchPre = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Pressure\" format=\"ascii\">"; 
-    std::string searchLag = "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" Name=\"Lagrange Multipliers\" format=\"ascii\">"; 
+    double *vecValues;
+    double *scaValues;
+    vecValues = new double[3*numNodes];
+    scaValues = new double[numNodes];
 
-    // Reading previous time step file
-    bool isFoundVel= 0;
-    bool isFoundAcc= 0;
-    bool isFoundPre= 0;
-    bool isFoundLag= 0;
+    filePrevious = H5Fopen(inputPrev.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
+    fileCurrent = H5Fopen(inputCurr.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
 
-    // Velocity
-    while (!inputPrevious.eof()) {
-        std::string tempVel = "";
-        getline(inputPrevious,tempVel);
-        for (int i = 0; i < searchVel.size(); ++i){
-            if (tempVel[i] == searchVel[i]){
-                isFoundVel = 1;
-            } else {
-                isFoundVel = 0;
-                break;
-            }
-        }
-        if(isFoundVel){
-            for(int i = searchVel.size()+1;i<tempVel.size();i++)
-                std::cout << tempVel[i];
-
-            // std::cout << tempVel << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputPrevious >> u_[0] >> u_[1] >> uz;
-                nodes_[j] -> setPreviousVelocity(u_);
-            }
-            break;
-        }
+    char datasetName[] = "/velocity";
+    dataset = H5Dopen( filePrevious, datasetName, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setPreviousVelocityComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setPreviousVelocityComponent(1,vecValues[3*i+1]);
+    }
+    dataset = H5Dopen( fileCurrent, datasetName, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setVelocityComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setVelocityComponent(1,vecValues[3*i+1]);
     }
 
-    //Acceleration
-    inputPrevious.clear();
-    while (!inputPrevious.eof()) {
-        std::string tempAcc = "";
-        getline(inputPrevious,tempAcc);
-        for (int i = 0; i < searchAcc.size(); ++i){
-            if (tempAcc[i] == searchAcc[i]){
-                isFoundAcc = 1;
-            } else {
-                isFoundAcc = 0;
-                break;
-            }
-        }
-        if(isFoundAcc){
-            for(int i = searchAcc.size()+1;i<tempAcc.size();i++)
-                std::cout << tempAcc[i];
-
-            // std::cout << tempAcc << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputPrevious >> u_[0] >> u_[1] >> uz;
-                nodes_[j] -> setPreviousAcceleration(u_);
-            }   
-            break;
-        }
+    char datasetName2[] = "/acceleration";
+    dataset = H5Dopen( filePrevious, datasetName2, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setPreviousAccelerationComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setPreviousAccelerationComponent(1,vecValues[3*i+1]);
+    }
+    dataset = H5Dopen( fileCurrent, datasetName2, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setAccelerationComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setAccelerationComponent(1,vecValues[3*i+1]);
     }
 
-    //Lagrange Multipliers
-    inputPrevious.clear();
-    while (!inputPrevious.eof()) {
-        std::string tempLag = "";
-        getline(inputPrevious,tempLag);
-        for (int i = 0; i < searchLag.size(); ++i){
-            if (tempLag[i] == searchLag[i]){
-                isFoundLag = 1;
-            } else {
-                isFoundLag = 0;
-                break;
-            }
-        }
-        if(isFoundLag){
-            for(int i = searchLag.size()+1;i<tempLag.size();i++)
-                std::cout << tempLag[i];
-
-            // std::cout << tempLag << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputPrevious >> u_[0] >> u_[1] >> uz;
-                // nodes_[j] -> setPreviousLagrangeMultiplier(0,u_[0]);
-                // nodes_[j] -> setPreviousLagrangeMultiplier(1,u_[1]);
-            }   
-            break;
-        }
+    char datasetName3[] = "/lagrangeMultiplers";
+    dataset = H5Dopen( fileCurrent, datasetName3, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setLagrangeMultiplier(0,vecValues[3*i  ]);
+        nodes_[i] -> setLagrangeMultiplier(1,vecValues[3*i+1]);
     }
 
-    //Pressure
-    inputPrevious.clear();
-    while (!inputPrevious.eof()) {
-        std::string tempPre = "";
-        getline(inputPrevious,tempPre);
-        for (int i = 0; i < searchPre.size(); ++i){
-            if (tempPre[i] == searchPre[i]){
-                isFoundPre = 1;
-            } else {
-                isFoundPre = 0;
-                break;
-            }
-        }
-        if(isFoundPre){
-            for(int i = searchPre.size()+1;i<tempPre.size();i++)
-                std::cout << tempPre[i];
-
-            // std::cout << tempPre << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputPrevious >> u_[0] >> u_[1] >> uz;
-                // nodes_[j] -> setPreviousPressure(uz);
-            }   
-            break;
-        }
+    char datasetName4[] = "/pressure";
+    dataset = H5Dopen( fileCurrent, datasetName4, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &scaValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setPressure(vecValues[i]);
     }
 
-    if(inputPrevious.eof()&&(!isFoundVel)) std::cout << "Name not found Velocity 0! " << rank << std::endl;
-    if(inputPrevious.eof()&&(!isFoundAcc)) std::cout << "Name not found Acceleration 0! " << rank << std::endl;
-    if(inputPrevious.eof()&&(!isFoundLag)) std::cout << "Name not found Lagrange Multipliers 0! " << rank << std::endl;
-    if(inputPrevious.eof()&&(!isFoundPre)) std::cout << "Name not found Pressure 0! " << rank << std::endl;
+    delete [] vecValues;
+    delete [] scaValues;
 
-
-
-
-
-
-    // Reading current time step file
-    isFoundVel= 0;
-    isFoundAcc= 0;
-    isFoundPre= 0;
-    isFoundLag= 0;
-
-    // Velocity
-    while (!inputCurrent.eof()) {
-        std::string tempVel = "";
-        getline(inputCurrent,tempVel);
-        for (int i = 0; i < searchVel.size(); ++i){
-            if (tempVel[i] == searchVel[i]){
-                isFoundVel = 1;
-            } else {
-                isFoundVel = 0;
-                break;
-            }
-        }
-        if(isFoundVel){
-            for(int i = searchVel.size()+1;i<tempVel.size();i++)
-                std::cout << tempVel[i];
-
-            // std::cout << tempVel << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputCurrent >> u_[0] >> u_[1] >> uz;
-                nodes_[j] -> setVelocity(u_);
-            }
-            break;
-        }
-    }
-
-    //Acceleration
-    inputCurrent.clear();
-    while (!inputCurrent.eof()) {
-        std::string tempAcc = "";
-        getline(inputCurrent,tempAcc);
-        for (int i = 0; i < searchAcc.size(); ++i){
-            if (tempAcc[i] == searchAcc[i]){
-                isFoundAcc = 1;
-            } else {
-                isFoundAcc = 0;
-                break;
-            }
-        }
-        if(isFoundAcc){
-            for(int i = searchAcc.size()+1;i<tempAcc.size();i++)
-                std::cout << tempAcc[i];
-
-            // std::cout << tempAcc << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputCurrent >> u_[0] >> u_[1] >> uz;
-                nodes_[j] -> setAcceleration(u_);
-            }   
-            break;
-        }
-    }
-
-    //Lagrange Multipliers
-    inputCurrent.clear();
-    while (!inputCurrent.eof()) {
-        std::string tempLag = "";
-        getline(inputCurrent,tempLag);
-        for (int i = 0; i < searchLag.size(); ++i){
-            if (tempLag[i] == searchLag[i]){
-                isFoundLag = 1;
-            } else {
-                isFoundLag = 0;
-                break;
-            }
-        }
-        if(isFoundLag){
-            for(int i = searchLag.size()+1;i<tempLag.size();i++)
-                std::cout << tempLag[i];
-
-            // std::cout << tempLag << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputCurrent >> u_[0] >> u_[1] >> uz;
-                nodes_[j] -> setLagrangeMultiplier(0,u_[0]);
-                nodes_[j] -> setLagrangeMultiplier(1,u_[1]);
-            }   
-            break;
-        }
-    }
-
-    //Pressure
-    inputCurrent.clear();
-    while (!inputCurrent.eof()) {
-        std::string tempPre = "";
-        getline(inputCurrent,tempPre);
-        for (int i = 0; i < searchPre.size(); ++i){
-            if (tempPre[i] == searchPre[i]){
-                isFoundPre = 1;
-            } else {
-                isFoundPre = 0;
-                break;
-            }
-        }
-        if(isFoundPre){
-            for(int i = searchPre.size()+1;i<tempPre.size();i++)
-                std::cout << tempPre[i];
-
-            // std::cout << tempPre << std::endl;
-
-            for (int j = 0; j < numNodes ; ++j){
-                double u_[2];
-                double uz;
-                inputCurrent >> u_[0] >> u_[1] >> uz;
-                nodes_[j] -> setPressure(uz);
-            }   
-            break;
-        }
-    }
-
-    if(inputCurrent.eof()&&(!isFoundVel)) std::cout << "Name not found Velocity 1!" << rank << std::endl;
-    if(inputCurrent.eof()&&(!isFoundAcc)) std::cout << "Name not found Acceleration 1!" << rank << std::endl;
-    if(inputCurrent.eof()&&(!isFoundLag)) std::cout << "Name not found Lagrange Multipliers 1!" << rank << std::endl;
-    if(inputCurrent.eof()&&(!isFoundPre)) std::cout << "Name not found Pressure 1!" << rank << std::endl;
- 
-    // if (rank == 0) printResults(100);
+    //End HDF5 file
+    status = H5Fclose(filePrevious);
 
     return;
 }

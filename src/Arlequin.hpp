@@ -16,7 +16,6 @@
 
 #include "Fluid.hpp"
 #include "Glue.hpp"
-#include <petscviewerhdf5.h>
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -198,8 +197,8 @@ public:
 
     /// Print the results for Paraview post-processing
     /// @param int time step
-    void printResults(int step);
-    void printResults2(int step);
+    void printResultsCoarse(int step);
+    void printResultsFine(int step);
 
     void initialAcceleration();
 
@@ -1397,637 +1396,73 @@ void Arlequin<2>::setWeightFunction(double val){
     return;
 };
 
+
 //------------------------------------------------------------------------------
-//----------------------------PRINT VELOCITY RESULTS----------------------------
+//-----------------------------PRINT COARSE RESULTS-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::printResults(int step) {
+void Arlequin<2>::printResultsCoarse(int step) {
 
     //PRINT COARSE MODEL RESULTS
-    
     std::string result;
     std::ostringstream convert;
 
     convert << step+100000;
     result = convert.str();
-    std::string s = "saidaVelCoarse"+result+".vtu";
-    
+
+    std::string s = "saidaVelCoarse"+result+".xdmf";
     std::fstream output_v(s.c_str(), std::ios_base::out);
 
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodesCoarse
-             << "\"  NumberOfCells=\"" << numElemCoarse
-             << "\">" << std::endl;
+    std::string s1 = "resultCoarse"+result+".h5";
+    std::fstream filename(s1.c_str(), std::ios_base::out);
 
-    //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-    for (int i = 0; i < numNodesCoarse; i++){
-        double *x = nodesCoarse_[i] -> getCoordinates();
-        output_v << x[0] << " " << x[1] << " " << 0.0 << std::endl;
-        std::string b;
-        std::ostringstream a;
-        a << x[0] << " " << x[1] << " " << 0.0 << " ";
-    };
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
-    
-    //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemCoarse; i++){
-        int *connec;
-        connec = elementsCoarse_[i] -> getConnectivity();
-        output_v << connec[0] << " " << connec[1] << " " << connec[2] << " " 
-                 << connec[3] << " " << connec[4] << " " << connec[5] << std::endl;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE OFFSETS IN DATA ARRAY
-    output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    int aux = 0;
-    for (int i = 0; i < numElemCoarse; i++){
-        output_v << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE ELEMENT TYPES
-    output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemCoarse; i++){
-        output_v << 22 << std::endl;
-    };
-
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
-
-    //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
-
-    if (coarseModel.printVelocity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getVelocity(0) << " "              
-                     << nodesCoarse_[i] -> getVelocity(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Acceleration\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getAcceleration(0) << " "              
-                     << nodesCoarse_[i] -> getAcceleration(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (coarseModel.printRealVelocity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getVelocityArlequin(0) << " " 
-                     << nodesCoarse_[i] -> getVelocityArlequin(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
+    std::string s2 = "geometryCoarse.h5";
+    if (step == 0){
+        std::fstream filename(s2.c_str(), std::ios_base::out);
     }
 
-    if (coarseModel.printLagrangeMultipliers){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Lagrange Multipliers\" format=\"ascii\">"
-                 << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getLagrangeMultiplier(0) << " "
-                     << nodesCoarse_[i] -> getLagrangeMultiplier(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
+    //Auxiliary vectors to write HDF5 file
+    double *pointVector;
+    int *connec2;
+    double *pointScalar;
+    int *intCellScalar;
+    double *douCellScalar;
 
-    if (coarseModel.printElementCorrespondence){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Element\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << nodesCoarse_[i] -> getNodalElemCorrespondence()
-                     << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-    
-    if (coarseModel.printDistFunction){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){        
-            output_v << nodesCoarse_[i] -> getDistFunction() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
+    pointVector = new double[3*numNodesCoarse]();
+    connec2 = new int[6*numElemCoarse]();
+    pointScalar = new double[numNodesCoarse]();
+    intCellScalar = new int[numElemCoarse]();
+    douCellScalar = new double[numElemCoarse]();
 
-    if (coarseModel.printEnergyWeightFunction){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << nodesCoarse_[i] -> getWeightFunction() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printPressure){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << 0. << " " << 0. << " " 
-                     << nodesCoarse_[i] -> getPressure() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printRealPressure){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << 0. << " " << 0. << " " 
-                     << nodesCoarse_[i] -> getPressureArlequin() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (coarseModel.printVorticity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesCoarse; i++){
-            output_v << nodesCoarse_[i] -> getVorticity() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-
-    output_v << "    </PointData>" << std::endl; 
-
-    //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
-    
-    if (coarseModel.printProcess){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemCoarse; i++){
-            output_v << domDecompCoarse.first[i] << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    if (coarseModel.printEnergyWeightFunction){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemCoarse; i++){
-            output_v << elementsCoarse_[i] -> getIntegPointWeightFunction(0)
-                     << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-    output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElemCoarse; i++){
-        int res = 0;
-        for (int j=0; j<numBoundElemCoarse; j++){
-           if (boundaryCoarse_[j] -> getElement() == i) res = boundaryCoarse_[j] -> getBoundaryGroup();
-        }
-        output_v << res << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
-
-
-    int cont=0;
-    
-    // if (coarseModel.printGlueZone){
-    //     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //              << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-    //     cont = 0;
-    //     for (int i=0; i<numElemCoarse; i++){
-    //         if (elementsGlueZoneCoarse_[cont] == i){
-    //             output_v << 1.0 << std::endl;
-    //             cont++;
-    //         }else{
-    //             output_v << 0.0 << std::endl;
-    //         };
-    //     };
-    //     output_v << "      </DataArray> " << std::endl;
-    // }
-
-    if (coarseModel.printJacobian){
-        output_v <<"      <DataArray type=\"Float32\" NumberOfComponents=\"1\" "
-                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemCoarse; i++){
-            output_v << elementsCoarse_[i] -> getJacobian() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    }
-
-
-    // std::cout << lala << std::endl;
-
-    output_v << "    </CellData>" << std::endl; 
-
-    //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl
-           << "  </UnstructuredGrid>" << std::endl
-           << "</VTKFile>" << std::endl;
-
-
-
-
-
-    //PRINT FINE MODEL RESULTS
-    
-    std::string f = "saidaVelFine"+result+".vtu";
-    
-    std::fstream output_vf(f.c_str(), std::ios_base::out);
-
-    output_vf << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodesFine
-             << "\"  NumberOfCells=\"" << numElemFine
-             << "\">" << std::endl;
-
-    //WRITE NODAL COORDINATES
-    output_vf << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-    for (int i = 0; i < numNodesFine; i++){
-        double* x = nodesFine_[i] -> getCoordinates();
-        output_vf << x[0] << " " << x[1] << " " << 0.001 << std::endl;        
-    };
-    output_vf << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
-    
-    //WRITE ELEMENT CONNECTIVITY
-    output_vf << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemFine; i++){
-        int *connec;
-        connec = elementsFine_[i] -> getConnectivity();
-        output_vf << connec[0] << " " << connec[1] << " " << connec[2] << " " 
-                  << connec[3] << " " << connec[4] << " " << connec[5] << std::endl;
-    };
-    output_vf << "      </DataArray>" << std::endl;
-  
-    //WRITE OFFSETS IN DATA ARRAY
-    output_vf << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    aux = 0;
-    for (int i = 0; i < numElemFine; i++){
-        output_vf << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_vf << "      </DataArray>" << std::endl;
-  
-    //WRITE ELEMENT TYPES
-    output_vf << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
-    
-    for (int i = 0; i < numElemFine; i++){
-        output_vf << 22 << std::endl;
-    };
-
-    output_vf << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
-
-    //WRITE NODAL RESULTS
-    output_vf << "    <PointData>" << std::endl;
-
-    if (fineModel.printVelocity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                  << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getVelocity(0) << " "              
-                      << nodesFine_[i] -> getVelocity(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                  << "Name=\"Acceleration\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getAcceleration(0) << " "              
-                      << nodesFine_[i] -> getAcceleration(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printInnerNormal){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Inner Normal\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            double *n = nodesFine_[i] -> getInnerNormal();
-            output_vf << n[0] << " " << n[1] << " " << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printRealVelocity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getVelocityArlequin(0) << " "
-                      << nodesFine_[i] -> getVelocityArlequin(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printMeshVelocity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getMeshVelocity(0) << " " 
-                      << nodesFine_[i] -> getMeshVelocity(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printLagrangeMultipliers){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Lagrange Multipliers\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getLagrangeMultiplier(0) << " " 
-                      << nodesFine_[i] -> getLagrangeMultiplier(1) << " " 
-                      << 0. << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printDistFunction){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Dist Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getDistFunction() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printElementCorrespondence){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Element\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getNodalElemCorrespondence() 
-                      << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printEnergyWeightFunction){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getWeightFunction() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-    
-    if (fineModel.printMeshDisplacement){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            double* x = nodesFine_[i] -> getCoordinates();
-            double *xi = nodesFine_[i] -> getInitialCoordinates();
-            output_vf << x[0] - xi[0] << " " << x[1] - xi[1] << " " << 0. 
-                      << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printPressure){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << 0. << " " << 0. << " " 
-                      << nodesFine_[i] -> getPressure() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printRealPressure){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Real Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << 0. << " " << 0. << " " 
-                      << nodesFine_[i] -> getPressureArlequin() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    if (fineModel.printVorticity){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodesFine; i++){
-            output_vf << nodesFine_[i] -> getVorticity() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Element\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numNodesFine; i++){
-        output_vf << nodesFine_[i] -> getNodalElemCorrespondence() 
-                  << std::endl;
-    };
-    output_vf << "      </DataArray> " << std::endl;
-
-
-    output_vf << "    </PointData>" << std::endl; 
-
-    //WRITE ELEMENT RESULTS
-    output_vf << "    <CellData>" << std::endl;
-    
-    if (fineModel.printProcess){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemFine; i++){
-            output_vf << domDecompFine.first[i] << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-    output_vf <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElemFine; i++){
-        int res = 0;
-        for (int j=0; j<numBoundElemFine; j++){
-           if (boundaryFine_[j] -> getElement() == i) res = boundaryFine_[j] -> getBoundaryGroup();
-        }
-        output_vf << res << std::endl;
-    };
-    output_vf << "      </DataArray> " << std::endl;
-
-
-    if (fineModel.printGlueZone){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Glue Zone\" format=\"ascii\">" << std::endl;
-        cont=0;
-        for (int i=0; i<numElemFine; i++){
-            if (elementsGlueZoneFine_[cont] == i){
-                output_vf << 1.0 << std::endl;
-                cont += 1; 
-            }else{
-                output_vf << 0.0 << std::endl;
-            };
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    }
-
-
-    if (fineModel.printEnergyWeightFunction){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Weight Function\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemFine; i++){
-            output_vf << elementsFine_[i] -> getIntegPointWeightFunction(0)
-                      << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    if (fineModel.printJacobian){
-        output_vf<<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElemFine; i++){
-            output_vf << elementsFine_[i] -> getJacobian() << std::endl;
-        };
-        output_vf << "      </DataArray> " << std::endl;
-    };
-
-    output_vf << "    </CellData>" << std::endl; 
-
-    //FINALIZE OUTPUT FILE
-    output_vf << "  </Piece>" << std::endl
-           << "  </UnstructuredGrid>" << std::endl
-           << "</VTKFile>" << std::endl;
-
-
-    
-    
-};
-
-
-//------------------------------------------------------------------------------
-//----------------------------PRINT VELOCITY RESULTS----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Arlequin<2>::printResults2(int step) {
-
-    //PRINT COARSE MODEL RESULTS
-    
-    std::string result;
-    std::ostringstream convert;
-
-    convert << step+100000;
-    result = convert.str();
-    std::string s = "experiment"+result+".xdmf";
-    
-    std::fstream output_v(s.c_str(), std::ios_base::out);
-
-
-
-    const std::string filename("scalar.h5");
-
-    double coords2[numNodesCoarse*2] = {};
-    int connec2[numElemCoarse*6] = {};
-    double dist2[numNodesCoarse] = {};
     for (int i = 0; i < numNodesCoarse; i++) {
         double *x = nodesCoarse_[i] -> getCoordinates();
-        dist2[i] = nodesCoarse_[i] -> getDistFunction();
-        coords2[2*i  ] = x[0];
-        coords2[2*i+1] = x[1];
+        pointVector[3*i  ] = x[0];
+        pointVector[3*i+1] = x[1];
+        pointVector[3*i+2] = 0.0;
     }
     for (int i = 0; i < numElemCoarse; i++){
         int* con = elementsCoarse_[i] -> getConnectivity();
-        connec2[6*i  ] = con[0];
-        connec2[6*i+1] = con[1];
-        connec2[6*i+2] = con[2];
-        connec2[6*i+3] = con[3];
-        connec2[6*i+4] = con[4];
-        connec2[6*i+5] = con[5];
+        connec2[6*i  ] = con[0]; connec2[6*i+1] = con[1];
+        connec2[6*i+2] = con[2]; connec2[6*i+3] = con[3];
+        connec2[6*i+4] = con[4]; connec2[6*i+5] = con[5];
     }
    
-    hid_t file; 
+    hid_t file, file2; 
     hid_t dataset; 
     hid_t dataspace;
 
     herr_t status;
     hsize_t xdim = numNodesCoarse;
-    hsize_t coorddims[2] = { numNodesCoarse, 2 };
-    hsize_t distdims[2] = { numNodesCoarse, 1 };
-    hsize_t conncdims[2] = { numElemCoarse, 6 };
+    hsize_t pointVectorDims[2] = { numNodesCoarse, 3 };
+    hsize_t pointScalarDims[2] = { numNodesCoarse, 1 };
+    hsize_t pointCellScalarDims[2] = { numElemCoarse, 1 };
+    hsize_t connec2Dims[2] = { numElemCoarse, 6 };
 
-    std::cout << "Calling H5Fcreate..." << std::endl;
-    file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    //Create HDF5 file
+    file = H5Fcreate(s1.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (step == 0) file2 = H5Fcreate(s2.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-    //Inicio coordenadas
-    std::cout << "Calling H5Screate_simple for coords..." << std::endl;
-    dataspace = H5Screate_simple(2, coorddims, NULL);
-
-    std::cout << "Calling H5Dcreate2 for coords..." << std::endl;
-    dataset = H5Dcreate2(file, "/coords", H5T_IEEE_F32LE, dataspace,
-            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-    std::cout << "Calling H5Dwrite for coords..." << std::endl;
-    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &coords2);
-
-    status = H5Dclose(dataset);
-    status = H5Sclose(dataspace);
-    //Fim coordenadas
-
-    //Inicio connectividade
-    std::cout << "Calling H5Screate_simple for coords..." << std::endl;
-    dataspace = H5Screate_simple(2, conncdims, NULL);
-
-    std::cout << "Calling H5Dcreate2 for coords..." << std::endl;
-    dataset = H5Dcreate2(file, "/connec", H5T_IEEE_F32LE, dataspace,
-            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-    std::cout << "Calling H5Dwrite for coords..." << std::endl;
-    status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &connec2);
-
-    status = H5Dclose(dataset);
-    status = H5Sclose(dataspace);
-    //Fim conectividade
-
-    //Inicio coordenadas
-    std::cout << "Calling H5Screate_simple for coords..." << std::endl;
-    dataspace = H5Screate_simple(2, distdims, NULL);
-
-    std::cout << "Calling H5Dcreate2 for coords..." << std::endl;
-    dataset = H5Dcreate2(file, "/distfunction", H5T_IEEE_F32LE, dataspace,
-            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-    std::cout << "Calling H5Dwrite for coords..." << std::endl;
-    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &dist2);
-
-    status = H5Dclose(dataset);
-    status = H5Sclose(dataspace);
-    //Fim coordenadas
-
-
-    status = H5Fclose(file);
-
+    //Write xdmf file
     output_v << "<?xml version=\"1.0\"?>" << std::endl
              << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>" << std::endl
              << "<Xdmf Version=\"2.0\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" >" << std::endl
@@ -2035,43 +1470,748 @@ void Arlequin<2>::printResults2(int step) {
              << "  <Grid>"  << std::endl
              << "    <Topology TopologyType=\"Tri_6\" NumberOfElements=\"" << numElemCoarse << "\" >" << std::endl
              << "      <DataItem Format=    \"HDF\" NumberType=\"int\" Dimensions=\"" << numElemCoarse << " 6\" >" << std::endl;
-   
-    output_v << "        scalar.h5:/connec" << std::endl;  
-    // for (int i = 0; i < numElemCoarse; i++){
-    //     int* connec = elementsCoarse_[i] -> getConnectivity();
-    //     output_v << connec[0] << " " << connec[1] << " " << connec[2] << " " 
-    //              << connec[3] << " " << connec[4] << " " << connec[5] << std::endl;    
-    // }
+    
+    //Connectivity
+    output_v << "        " << s2 << ":/connec" << std::endl;
+    //Start connectivity
+    if (step == 0){
+        dataspace = H5Screate_simple(2, connec2Dims, NULL);
+        dataset = H5Dcreate2(file2, "/connec", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &connec2[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+    }
+    //End connectivity
 
     output_v << "      </DataItem>" << std::endl
              << "    </Topology>" << std::endl
-             << "    <Geometry GeometryType=\"XY\">" << std::endl
-             << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 2\">" << std::endl;
-   
-    output_v << "        scalar.h5:/coords" << std::endl; 
+             << "    <Geometry GeometryType=\"XYZ\">" << std::endl
+             << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;
 
-    // for (int i = 0; i < numNodesCoarse; i++){
-    //     double* x = nodesCoarse_[i] -> getCoordinates();
-    //     output_v << x[0] << " " << x[1] << " 0" << std::endl;    
-    // }
-
+    //Coordinates   
+    output_v << "        " << s2 << ":/coords" << std::endl;
+    //Start coordinates
+    if (step == 0){
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file2, "/coords", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+    }
+    //End coordinates
     output_v << "      </DataItem>" << std::endl
-             << "    </Geometry>" << std::endl
-             << "    <Attribute Name=\"test\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
-             << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesCoarse <<"\">" << std::endl;  
+             << "    </Geometry>" << std::endl;
 
-    output_v << "        scalar.h5:/distfunction" << std::endl; 
-    
-    // for (int i = 0; i < numNodesCoarse; i++){
-    //     output_v << nodesCoarse_[i] -> getDistFunction() << " " ;    
-    // }                 
-    
-    output_v << std::endl
-             << "      </DataItem>" << std::endl
-             << "    </Attribute>" << std::endl
-             << "  </Grid>" << std::endl
+    //LISTS
+    //Velocity
+    if (coarseModel.printVelocity){
+        output_v << "    <Attribute Name=\"Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/velocity" << std::endl;     
+        //Start Velocity
+        for (int i = 0; i < numNodesCoarse; i++) {
+            pointVector[3*i  ] = nodesCoarse_[i] -> getVelocity(0);
+            pointVector[3*i+1] = nodesCoarse_[i] -> getVelocity(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/velocity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Velocity
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Acceleration
+    if (coarseModel.printAcceleration){
+        output_v << "    <Attribute Name=\"Acceleration\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/acceleration" << std::endl;     
+        //Start Acceleration
+        for (int i = 0; i < numNodesCoarse; i++) {
+            pointVector[3*i  ] = nodesCoarse_[i] -> getAcceleration(0);
+            pointVector[3*i+1] = nodesCoarse_[i] -> getAcceleration(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/acceleration", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Acceleration
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Real Velocity
+    if (coarseModel.printRealVelocity){
+        output_v << "    <Attribute Name=\"Real Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/realVelocity" << std::endl;     
+        //Start Real Velocity
+        for (int i = 0; i < numNodesCoarse; i++) {
+            pointVector[3*i  ] = nodesCoarse_[i] -> getVelocityArlequin(0);
+            pointVector[3*i+1] = nodesCoarse_[i] -> getVelocityArlequin(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/realVelocity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Velocity
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Lagrange Multipliers
+    if (coarseModel.printLagrangeMultipliers){
+        output_v << "    <Attribute Name=\"Lagrange Multipliers\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/lagrangeMultiplers" << std::endl;     
+        //Start Lagrange Multipliers
+        for (int i = 0; i < numNodesCoarse; i++) {
+            pointVector[3*i  ] = nodesCoarse_[i] -> getLagrangeMultiplier(0);
+            pointVector[3*i+1] = nodesCoarse_[i] -> getLagrangeMultiplier(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/lagrangeMultiplers", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Velocity
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Dist Function
+    if (coarseModel.printDistFunction){
+        output_v << "    <Attribute Name=\"Dist Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesCoarse <<"\">" << std::endl;  
+        output_v << "        " << s1 << ":/distfunction" << std::endl;     
+        //Start Dist Function
+        for (int i = 0; i < numNodesCoarse; i++) pointScalar[i] = nodesCoarse_[i] -> getDistFunction();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/distfunction", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Dist Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Weight Function
+    if (coarseModel.printEnergyWeightFunction){
+        output_v << "    <Attribute Name=\"Weight Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesCoarse <<"\">" << std::endl;  
+        output_v << "        " << s1 << ":/weightFunction" << std::endl;     
+        //Start Weigth Function
+        for (int i = 0; i < numNodesCoarse; i++) pointScalar[i] = nodesCoarse_[i] -> getWeightFunction();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/weightFunction", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Weight Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Pressure
+    if (coarseModel.printPressure){
+        output_v << "    <Attribute Name=\"Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/pressure" << std::endl;     
+        //Start Pressure
+        for (int i = 0; i < numNodesCoarse; i++) pointScalar[i] = nodesCoarse_[i] -> getPressure();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/pressure", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Pressure
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Real Pressure
+    if (coarseModel.printRealPressure){
+        output_v << "    <Attribute Name=\"Real Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/realPressure" << std::endl;     
+        //Start Real Pressure
+        for (int i = 0; i < numNodesCoarse; i++) pointScalar[i] = nodesCoarse_[i] -> getPressureArlequin();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/realPressure", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Pressure
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    if (coarseModel.printVorticity){
+        output_v << "    <Attribute Name=\"Vorticity\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/vorticity" << std::endl;     
+        //Start Real Pressure
+        for (int i = 0; i < numNodesCoarse; i++) pointScalar[i] = nodesCoarse_[i] -> getVorticity();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/vorticity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Pressure
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    };
+
+    //Process
+    if (coarseModel.printProcess){
+        output_v << "    <Attribute Name=\"Process\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/process" << std::endl;
+        //Start Process
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/process", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &domDecompCoarse.first[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Process
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //WeightFunction2
+    if (coarseModel.printEnergyWeightFunction){
+        output_v << "    <Attribute Name=\"Weight Function\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/weightFunction2" << std::endl;     
+        //Start Weight Function
+        for (int i = 0; i < numElemCoarse; i++) douCellScalar[i] = elementsCoarse_[i] -> getIntegPointWeightFunction(0);
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/weightFunction2", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &douCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Weight Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Lines
+    if (coarseModel.printLines){
+        output_v << "    <Attribute Name=\"Lines\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/lines" << std::endl;     
+        //Start Lines
+        for (int i = 0; i < numElemCoarse; i++){
+            int res = 0;
+            for (int j = 0; j < numBoundElemCoarse; j++)
+               if (boundaryCoarse_[j] -> getElement() == i) res = boundaryCoarse_[j] -> getBoundaryGroup();
+            intCellScalar[i] = res;
+        };
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/lines", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &intCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Lines
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    // Jacobian
+    if (coarseModel.printJacobian){
+        output_v << "    <Attribute Name=\"Jacobian\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/jacobian" << std::endl;     
+        //Start Weight Function
+        for (int i = 0; i < numElemCoarse; i++) douCellScalar[i] = elementsCoarse_[i] -> getJacobian();
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/jacobian", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &douCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Weight Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    // END FILE
+    output_v << "  </Grid>" << std::endl
              << "</Domain>" << std::endl
              << "</Xdmf>" << std::endl;
+
+    //Delete auxiliary vectors
+    delete [] pointVector;
+    delete [] connec2;
+    delete [] pointScalar;
+    delete [] intCellScalar;
+    delete [] douCellScalar;
+
+    //End HDF5 file
+    status = H5Fclose(file);
+    if (step == 0) status = H5Fclose(file2);
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//------------------------------PRINT FINE RESULTS------------------------------
+//------------------------------------------------------------------------------
+template<>
+void Arlequin<2>::printResultsFine(int step) {
+
+    //PRINT FINE MODEL RESULTS
+    std::string result;
+    std::ostringstream convert;
+
+    convert << step+100000;
+    result = convert.str();
+
+    std::string s = "saidaVelFine"+result+".xdmf";
+    std::fstream output_v(s.c_str(), std::ios_base::out);
+
+    std::string s1 = "resultFine"+result+".h5";
+    std::fstream filename(s1.c_str(), std::ios_base::out);
+
+    //Auxiliary vectors to write HDF5 file
+    double *pointVector;
+    int *connec2;
+    double *pointScalar;
+    int *intCellScalar;
+    double *douCellScalar;
+
+    pointVector = new double[3*numNodesFine]();
+    connec2 = new int[6*numElemFine]();
+    pointScalar = new double[numNodesFine]();
+    intCellScalar = new int[numElemFine]();
+    douCellScalar = new double[numElemFine]();
+
+    for (int i = 0; i < numNodesFine; i++) {
+        double *x = nodesFine_[i] -> getCoordinates();
+        pointVector[3*i  ] = x[0];
+        pointVector[3*i+1] = x[1];
+        pointVector[3*i+2] = 0.0;
+    }
+    for (int i = 0; i < numElemFine; i++){
+        int* con = elementsFine_[i] -> getConnectivity();
+        connec2[6*i  ] = con[0]; connec2[6*i+1] = con[1];
+        connec2[6*i+2] = con[2]; connec2[6*i+3] = con[3];
+        connec2[6*i+4] = con[4]; connec2[6*i+5] = con[5];
+    }
+   
+    hid_t file; 
+    hid_t dataset; 
+    hid_t dataspace;
+
+    herr_t status;
+    hsize_t xdim = numNodesFine;
+    hsize_t pointVectorDims[2] = { numNodesFine, 3 };
+    hsize_t pointScalarDims[2] = { numNodesFine, 1 };
+    hsize_t pointCellScalarDims[2] = { numElemFine, 1 };
+    hsize_t connec2Dims[2] = { numElemFine, 6 };
+
+    //Create HDF5 file
+    file = H5Fcreate(s1.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    //Write xdmf file
+    output_v << "<?xml version=\"1.0\"?>" << std::endl
+             << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>" << std::endl
+             << "<Xdmf Version=\"2.0\" xmlns:xi=\"http://www.w3.org/2001/XInclude\" >" << std::endl
+             << "<Domain>" << std::endl
+             << "  <Grid>"  << std::endl
+             << "    <Topology TopologyType=\"Tri_6\" NumberOfElements=\"" << numElemFine << "\" >" << std::endl
+             << "      <DataItem Format=    \"HDF\" NumberType=\"int\" Dimensions=\"" << numElemFine << " 6\" >" << std::endl;
+    
+    //Connectivity
+    output_v << "        " << s1 << ":/connec" << std::endl;
+    //Start connectivity
+    dataspace = H5Screate_simple(2, connec2Dims, NULL);
+    dataset = H5Dcreate2(file, "/connec", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &connec2[0]);
+    status = H5Dclose(dataset);
+    status = H5Sclose(dataspace);
+    //End connectivity
+
+    output_v << "      </DataItem>" << std::endl
+             << "    </Topology>" << std::endl
+             << "    <Geometry GeometryType=\"XYZ\">" << std::endl
+             << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;
+
+    //Coordinates   
+    output_v << "        " << s1 << ":/coords" << std::endl;
+    //Start coordinates
+    dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+    dataset = H5Dcreate2(file, "/coords", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+    status = H5Dclose(dataset);
+    status = H5Sclose(dataspace);
+    //End coordinates
+    output_v << "      </DataItem>" << std::endl
+             << "    </Geometry>" << std::endl;
+
+    //LISTS
+    //Velocity
+    if (fineModel.printVelocity){
+        output_v << "    <Attribute Name=\"Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/velocity" << std::endl;     
+        //Start Velocity
+        for (int i = 0; i < numNodesFine; i++) {
+            pointVector[3*i  ] = nodesFine_[i] -> getVelocity(0);
+            pointVector[3*i+1] = nodesFine_[i] -> getVelocity(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/velocity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Velocity
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Acceleration
+    if (fineModel.printAcceleration){
+        output_v << "    <Attribute Name=\"Acceleration\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/acceleration" << std::endl;     
+        //Start Acceleration
+        for (int i = 0; i < numNodesFine; i++) {
+            pointVector[3*i  ] = nodesFine_[i] -> getAcceleration(0);
+            pointVector[3*i+1] = nodesFine_[i] -> getAcceleration(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/acceleration", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Acceleration
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Real Velocity
+    if (fineModel.printRealVelocity){
+        output_v << "    <Attribute Name=\"Real Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/realVelocity" << std::endl;     
+        //Start Real Velocity
+        for (int i = 0; i < numNodesFine; i++) {
+            pointVector[3*i  ] = nodesFine_[i] -> getVelocityArlequin(0);
+            pointVector[3*i+1] = nodesFine_[i] -> getVelocityArlequin(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/realVelocity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Velocity
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Lagrange Multipliers
+    if (fineModel.printLagrangeMultipliers){
+        output_v << "    <Attribute Name=\"Lagrange Multipliers\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/lagrangeMultiplers" << std::endl;     
+        //Start Lagrange Multipliers
+        for (int i = 0; i < numNodesFine; i++) {
+            pointVector[3*i  ] = nodesFine_[i] -> getLagrangeMultiplier(0);
+            pointVector[3*i+1] = nodesFine_[i] -> getLagrangeMultiplier(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/lagrangeMultiplers", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Lagrange Multipliers
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Normal vector
+    if (fineModel.printInnerNormal){
+        output_v << "    <Attribute Name=\"Normal Vector\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/normalVector" << std::endl;     
+        //Start Normal vector
+        for (int i = 0; i < numNodesFine; i++) {
+            double *n = nodesFine_[i] -> getInnerNormal();
+            pointVector[3*i  ] = n[0];
+            pointVector[3*i+1] = n[1];
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/normalVector", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Normal Vector
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Mesh Velocity
+    if (fineModel.printMeshVelocity){
+        output_v << "    <Attribute Name=\"Mesh Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/meshVelocity" << std::endl;     
+        //Start mesh Velocity
+        for (int i = 0; i < numNodesFine; i++) {
+            pointVector[3*i  ] = nodesFine_[i] -> getMeshVelocity(0);
+            pointVector[3*i+1] = nodesFine_[i] -> getMeshVelocity(1);
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/meshVelocity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Mesh Velocity
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    };
+
+    //Mesh Displacement
+    if (fineModel.printMeshDisplacement){
+        output_v << "    <Attribute Name=\"Mesh Displacement\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
+        output_v << "        " << s1 << ":/meshDisplacement" << std::endl;     
+        //Start Mesh displacement
+        for (int i = 0; i < numNodesFine; i++) {
+            double* x = nodesFine_[i] -> getCoordinates();
+            double *xi = nodesFine_[i] -> getInitialCoordinates();
+            pointVector[3*i  ] = x[0] - xi[0];
+            pointVector[3*i+1] = x[1] - xi[1];
+            pointVector[3*i+2] = 0.0;
+        };
+        dataspace = H5Screate_simple(2, pointVectorDims, NULL);
+        dataset = H5Dcreate2(file, "/meshDisplacement", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointVector[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Mesh displacement
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    };
+
+    //Element correspondence
+    if (fineModel.printElementCorrespondence){
+        output_v << "    <Attribute Name=\"Element\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesFine <<"\">" << std::endl;  
+        output_v << "        " << s1 << ":/elementCorresp" << std::endl;     
+        //Start Element correspondence
+        for (int i = 0; i < numNodesFine; i++) pointScalar[i] = nodesFine_[i] -> getNodalElemCorrespondence();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/elementCorresp", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Element correspondence
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Dist Function
+    if (fineModel.printDistFunction){
+        output_v << "    <Attribute Name=\"Dist Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesFine <<"\">" << std::endl;  
+        output_v << "        " << s1 << ":/distfunction" << std::endl;     
+        //Start Dist Function
+        for (int i = 0; i < numNodesFine; i++) pointScalar[i] = nodesFine_[i] -> getDistFunction();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/distfunction", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Dist Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Weight Function
+    if (fineModel.printEnergyWeightFunction){
+        output_v << "    <Attribute Name=\"Weight Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesFine <<"\">" << std::endl;  
+        output_v << "        " << s1 << ":/weightFunction" << std::endl;     
+        //Start Weigth Function
+        for (int i = 0; i < numNodesFine; i++) pointScalar[i] = nodesFine_[i] -> getWeightFunction();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/weightFunction", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Weight Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Pressure
+    if (fineModel.printPressure){
+        output_v << "    <Attribute Name=\"Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/pressure" << std::endl;     
+        //Start Pressure
+        for (int i = 0; i < numNodesFine; i++) pointScalar[i] = nodesFine_[i] -> getPressure();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/pressure", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Pressure
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Real Pressure
+    if (fineModel.printRealPressure){
+        output_v << "    <Attribute Name=\"Real Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/realPressure" << std::endl;     
+        //Start Real Pressure
+        for (int i = 0; i < numNodesFine; i++) pointScalar[i] = nodesFine_[i] -> getPressureArlequin();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/realPressure", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Pressure
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    if (fineModel.printVorticity){
+        output_v << "    <Attribute Name=\"Vorticity\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/vorticity" << std::endl;     
+        //Start Real Pressure
+        for (int i = 0; i < numNodesFine; i++) pointScalar[i] = nodesFine_[i] -> getVorticity();
+        dataspace = H5Screate_simple(2, pointScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/vorticity", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &pointScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Real Pressure
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    };
+
+    //Process
+    if (fineModel.printProcess){
+        output_v << "    <Attribute Name=\"Process\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/process" << std::endl;
+        //Start Process
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/process", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &domDecompFine.first[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Process
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //WeightFunction2
+    if (fineModel.printEnergyWeightFunction){
+        output_v << "    <Attribute Name=\"Weight Function\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/weightFunction2" << std::endl;     
+        //Start Weight Function
+        for (int i = 0; i < numElemFine; i++) douCellScalar[i] = elementsFine_[i] -> getIntegPointWeightFunction(0);
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/weightFunction2", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &douCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Weight Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Lines
+    if (fineModel.printLines){
+        output_v << "    <Attribute Name=\"Lines\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/lines" << std::endl;     
+        //Start Lines
+        for (int i = 0; i < numElemFine; i++){
+            int res = 0;
+            for (int j = 0; j < numBoundElemFine; j++)
+               if (boundaryFine_[j] -> getElement() == i) res = boundaryFine_[j] -> getBoundaryGroup();
+            intCellScalar[i] = res;
+        };
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/lines", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &intCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Lines
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    // Jacobian
+    if (fineModel.printJacobian){
+        output_v << "    <Attribute Name=\"Jacobian\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/jacobian" << std::endl;     
+        //Start Weight Function
+        for (int i = 0; i < numElemFine; i++) douCellScalar[i] = elementsFine_[i] -> getJacobian();
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/jacobian", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &douCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Weight Function
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    //Glue Zone
+    if (fineModel.printGlueZone){
+        output_v << "    <Attribute Name=\"Glue Zone\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
+                 << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
+        output_v << "        " << s1 << ":/glueZone" << std::endl;     
+        //Start Lines
+        for (int i = 0; i < numElemFine; i++) intCellScalar[i] = elementsFine_[i] -> getGlueZoneInt();
+        dataspace = H5Screate_simple(2, pointCellScalarDims, NULL);
+        dataset = H5Dcreate2(file, "/glueZone", H5T_IEEE_F32LE, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &intCellScalar[0]);
+        status = H5Dclose(dataset);
+        status = H5Sclose(dataspace);
+        //End Lines
+        output_v << "      </DataItem>" << std::endl
+                 << "    </Attribute>" << std::endl;
+    }
+
+    // END FILE
+    output_v << "  </Grid>" << std::endl
+             << "</Domain>" << std::endl
+             << "</Xdmf>" << std::endl;
+
+    //Delete auxiliary vectors
+    delete [] pointVector;
+    delete [] connec2;
+    delete [] pointScalar;
+    delete [] intCellScalar;
+    delete [] douCellScalar;
+
+    //End HDF5 file
+    status = H5Fclose(file);
 
     return;
 };
@@ -3264,7 +3404,10 @@ void Arlequin<2>::initialAcceleration(){
     //ierr = MatDestroy(&C); CHKERRQ(ierr);
     
     //Printing results
-    if (rank == 0) printResults(100);
+    if (rank == 0) {
+        printResultsCoarse(100);
+        printResultsFine(100);
+    }
         
     return;
 
@@ -3305,7 +3448,10 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
     //Computes the Nodal correspondence between fine nodes and coarse elements
     setNodalCorrespondenceFine();
-    if (rank == 0) printResults(100);
+    if (rank == 0) {
+        printResultsCoarse(100);
+        printResultsFine(100);
+    }
     // Computes the system size
     int sysSize = 3 * numNodesCoarse +  
         + 3 * numNodesFine + 2 * numNodesGlueZoneFine;
@@ -3831,8 +3977,8 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             };
 
             //Printing results
-            printResults(iTimeStep);
-            printResults2(iTimeStep);
+            printResultsCoarse(iTimeStep);
+            printResultsFine(iTimeStep);
         };        
  
 
@@ -4308,7 +4454,8 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             };
             
             //Printing results
-            printResults(iTimeStep);
+            printResultsCoarse(iTimeStep);
+            printResultsFine(iTimeStep);
         };
     };
         

@@ -254,6 +254,11 @@ public:
     /// Sets if the element is in the gluing zone
     /// @param glueZone: if true is in the glue zone
     void setGlueZone(){glueZone = true;}
+    bool getGlueZone(){return glueZone;}
+    bool getGlueZoneInt(){
+        int aux = 0;
+        if (glueZone) aux = 1;
+        return aux;}
 
     /// Sets which model the fluid element belongs
     /// @param bool model: true = fine; false = coarse.
