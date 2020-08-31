@@ -10,7 +10,7 @@ include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${PETSC_DIR}/lib/petsc/conf/test
 
 f: modules.o porticomb.o $(CSOURCES:.cpp=.o) 
-	@-${CLINKER} -o $@ $^ ${PETSC_KSP_LIB} -lboost_system -lgfortran -std=c++0x
+	@-${CLINKER} -o $@ $^ ${PETSC_KSP_LIB} -lgfortran -std=c++0x
 
 debug: $(CSOURCES:.cpp=.o)
 	@-${CLINKER} -o $@ $^ ${PETSC_KSP_LIB} -g
@@ -23,7 +23,7 @@ porticomb.o: porticomb.for
 	@ ${FCOMPILER} -c porticomb.for
 
 clear:
-	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt
+	@$ rm *.o *~ f *.vtu mirror* domain* *.mod *.dat ma26* tensao* esforc* saida omega.txt *.xdmf *.h5
 
 run1:
 	@$ mpirun -np 1 ./f
@@ -38,7 +38,7 @@ run4:
 	@$ export OMP_NUM_THREADS=1 && mpirun -n 4 ./f
 
 run5:
-	@$ mpirun -np 5 ./f -info -logsummary
+	@$ mpirun -np 5 ./f
 
 run6:
 	@$ export OMP_NUM_THREADS=1 && mpirun -n 6 ./f

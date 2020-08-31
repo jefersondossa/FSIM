@@ -333,8 +333,8 @@ int main(int argc, char **args) {
     arlequinProblem.setFluidModels(coarseModel, fineModel);
     coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
  
-    // coarseModel.readInitialValues("saidaVelCoarse102000.txt","saidaVelCoarse102001.txt");
-    // fineModel.readInitialValues("saidaVelFine102000.txt","saidaVelFine102001.txt");
+    // coarseModel.readInitialValues("resultCoarse100005.h5","resultCoarse100006.h5");
+    // fineModel.readInitialValues("resultFine100005.h5","resultFine100006.h5");
     
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
 

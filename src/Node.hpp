@@ -266,6 +266,7 @@ public:
     /// Sets the previous time step acceleration vector
     /// @param double* previous time step acceleration vector
     void setPreviousAcceleration(double *u);
+    void setPreviousAccelerationComponent(int dir, double val){previousAcceleration_[dir] = val;};
 
     /// Gets the acceleration vector
     /// @return acceleration vector
