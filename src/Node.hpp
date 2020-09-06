@@ -203,6 +203,10 @@ public:
     /// Gets an specific member of the inverse incidence
     /// @param int index @return int element of the inverse incidence
     int getInverseIncidenceElement(int i){return invIncidence[i];}
+    void clearInverseIncidence(){
+        invIncidence.clear();
+        invIncidence.shrink_to_fit();
+    }
     
     //............................Velocity functions............................
     /// Sets the velocity vector

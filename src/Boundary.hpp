@@ -54,6 +54,7 @@ public:
     /// Returns the boundary element connectivity
     /// @return boundary element connectivity
     int* getBoundaryConnectivity(){return connectB_;}
+    void setBoundaryConnectivity(int* connec){for(int i = 0; i<3*(DIM-1); i++) connectB_[i] = connec[i];}
 
     /// Sets the boundary element group
     /// @param int boundary element group

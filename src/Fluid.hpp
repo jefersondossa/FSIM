@@ -905,6 +905,124 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
         }   
     }
 
+
+
+
+    // Renumber nodes - start
+    std::vector<int > neighborNodes;
+
+    idx_t* xadj;
+    idx_t numNd = numNodes;
+    std::vector<int> adjncy;
+    xadj = new idx_t[numNd+1]();
+    adjncy.reserve(10*numNodes);
+
+    for (int iNode = 0; iNode < numNodes; iNode++){
+        neighborNodes.reserve(nodes_[iNode] -> getNumberOfElements()*3);
+        neighborNodes.push_back(iNode);
+
+        for (int j = 0; j < nodes_[iNode] -> getNumberOfElements(); j++){
+            int elem = nodes_[iNode] -> getInverseIncidenceElement(j);
+            int *connec = elements_[elem-1] -> getConnectivity();
+            bool flag = false;
+            for (int i = 0; i < 6; i++){
+                for (int iNeig = 0; iNeig < neighborNodes.size(); iNeig++){
+                    if (connec[i] == neighborNodes[iNeig]){
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag == false) neighborNodes.push_back(connec[i]);
+                flag = false;
+            }
+        }
+        //Save nodal adjacency for domain partitioning
+        xadj[iNode+1] = xadj[iNode] + neighborNodes.size() - 1;
+        for (int i = 1; i < neighborNodes.size(); i++){
+            adjncy.push_back(neighborNodes[i]);
+        }
+        neighborNodes.clear();
+        neighborNodes.shrink_to_fit();
+    }
+
+    //Save a second adjacency vector in idx_t format
+    idx_t *adjncy2;
+    idx_t adj_size = adjncy.size();
+    adjncy2 = new idx_t[adj_size];
+    for (int i = 0; i < adjncy.size(); i++) adjncy2[i] = adjncy[i];
+    
+    adjncy.clear(); adjncy.shrink_to_fit();
+
+    idx_t* perm;
+    idx_t* iperm;
+    perm = new idx_t[numNd];
+    iperm = new idx_t[numNd];
+    
+    // Call METIS for node renumbering
+    METIS_NodeND(&numNd, xadj, adjncy2, NULL, NULL, perm, iperm);
+
+    //Reorder nodes
+    for (int i = 0, j; i < numNodes; ++i) {
+        for (j = iperm[i]; j < i; j = iperm[j]);
+        if (j == i) while (j = iperm[j],j != i) std::swap(nodes_[i],nodes_[j]);
+    }
+
+    // Update connectivity
+    for (int i = 0; i < elements_.size(); i++){
+        int* connect = elements_[i] -> getConnectivity();
+
+        //Reorder connectivity
+        connect[0] = iperm[connect[0]];
+        connect[1] = iperm[connect[1]];
+        connect[2] = iperm[connect[2]];
+        connect[3] = iperm[connect[3]];
+        connect[4] = iperm[connect[4]];
+        connect[5] = iperm[connect[5]];
+        elements_[i] -> setConnectivity(connect);
+    }
+    // Update boundary connectivity
+    for (int ibound = 0; ibound < numBoundElems; ibound++){
+        int *connectB = boundary_[ibound] -> getBoundaryConnectivity();
+        connectB[0] = iperm[connectB[0]];
+        connectB[1] = iperm[connectB[1]];
+        connectB[2] = iperm[connectB[2]];
+
+        boundary_[ibound] -> setBoundaryConnectivity(connectB);
+    }
+    
+    for (int i = 0; i < numNodes; i++) nodes_[i] -> clearInverseIncidence();
+
+    for (int i = 0; i < elements_.size(); i++){
+        int* connect = elements_[i] -> getConnectivity();
+
+        for (int k = 0; k < 6; k++) nodes_[connect[k]] -> pushInverseIncidence(i);
+    }
+
+    delete [] perm;
+    delete [] iperm;
+    delete [] adjncy2;
+    delete [] xadj;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Renumber nodes - end
+
+
+
     if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
                              << numElem << " " << numBoundElems << std::endl;
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
