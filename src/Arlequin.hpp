@@ -2287,6 +2287,49 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     //Computes the Weight function for all the finite elements
     setWeightFunction(16.); 
 
+    //Update domain decomposition - Start
+    int size;
+    MPI_Comm_size(PETSC_COMM_WORLD, &size);
+
+    Vec  b;
+    PetscErrorCode    ierr;
+    int start[size], end[size];
+    int numDOF = 3*numNodesCoarse + 3*numNodesFine + 2*numNodesGlueZoneFine;
+
+    ierr = VecCreate(PETSC_COMM_WORLD,&b);
+    ierr = VecSetSizes(b,PETSC_DECIDE,numDOF);
+    VecSetFromOptions(b);
+    ierr = VecGetOwnershipRange(b,&start[rank],&end[rank]);
+
+    VecDestroy(&b);
+    
+    for (int i = 0; i < size; ++i){
+        MPI_Bcast(&start[i],1,MPI_INT,i,PETSC_COMM_WORLD);
+        MPI_Bcast(&end[i],1,MPI_INT,i,PETSC_COMM_WORLD);
+    }
+
+    for (int i = 0; i < numElemCoarse; i++){
+        int* connec = elementsCoarse_[i] -> getConnectivity();
+        for (int j = 0; j < size; j++){
+            if ((3*connec[3] >= start[j]) && (3*connec[3] <= end[j])) {
+                domDecompCoarse.first[i] = j;
+                break;
+            }
+        }
+    }    
+    for (int i = 0; i < numElemFine; i++){
+        int* connec = elementsFine_[i] -> getConnectivity();
+        for (int j = 0; j < size; j++){
+            if ((3*(numNodesCoarse + connec[3]) >= start[j]) && (3*(numNodesCoarse + connec[3]) <= end[j])) {
+                domDecompFine.first[i] = j;
+                break;
+            }
+        }
+    }    
+
+    //Update domain decomposition - End
+
+
 
     if(rank == 0){
         std::cout << "---------------------ARLEQUIN DATA---------------------" 
@@ -2407,52 +2450,46 @@ void Arlequin<2>::setMatVecValuesCoarseModel(double **matrix, double *rhs, int* 
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
             //Matrix K and C            
-            int dof_i = 2 * connec[i];
-            int dof_j = 2 * connec[j];
+            int dof_i = 3 * connec[i];
+            int dof_j = 3 * connec[j];
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i  ][2*j  ],ADD_VALUES);
             
-            dof_i = 2 * connec[i] + 1;
-            dof_j = 2 * connec[j];
+            dof_i = 3 * connec[i] + 1;
+            dof_j = 3 * connec[j];
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i+1][2*j  ],ADD_VALUES);
             
-            dof_i = 2 * connec[i];
-            dof_j = 2 * connec[j] + 1;
+            dof_i = 3 * connec[i];
+            dof_j = 3 * connec[j] + 1;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i  ][2*j+1],ADD_VALUES);
             
-            dof_i = 2 * connec[i] + 1;
-            dof_j = 2 * connec[j] + 1;
+            dof_i = 3 * connec[i] + 1;
+            dof_j = 3 * connec[j] + 1;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i+1][2*j+1],ADD_VALUES);
         
             //Matrix G and Gt
-            dof_i = 2 * connec[i];
-            dof_j = 2 * numNodesCoarse + connec[j];
+            dof_i = 3 * connec[i];
+            dof_j = 3 * connec[j] + 2;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i  ][12+j],ADD_VALUES);
-            
-            dof_i = 2 * connec[i];
-            dof_j = 2 * numNodesCoarse + connec[j];
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[12+j][2*i  ],ADD_VALUES);
             
-            dof_i = 2 * connec[i] + 1;
-            dof_j = 2 * numNodesCoarse + connec[j];
+            dof_i = 3 * connec[i] + 1;
+            dof_j = 3 * connec[j] + 2;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i+1][12+j],ADD_VALUES);
-
-            dof_i = 2 * connec[i] + 1;
-            dof_j = 2 * numNodesCoarse + connec[j];
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[12+j][2*i+1],ADD_VALUES);
 
             // Matrix Q
-            dof_i = 2 * numNodesCoarse + connec[i];
-            dof_j = 2 * numNodesCoarse + connec[j];
+            dof_i = 3 * connec[i] + 2;
+            dof_j = 3 * connec[j] + 2;
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[12+i][12+j],ADD_VALUES);
         };                  
         //Rhs vector
-        int dof_i = 2 * connec[i];
+        int dof_i = 3 * connec[i];
         VecSetValues(b,1,&dof_i,&rhs[2*i  ],ADD_VALUES);
         
-        dof_i = 2 * connec[i] + 1;
+        dof_i = 3 * connec[i] + 1;
         VecSetValues(b,1,&dof_i,&rhs[2*i+1],ADD_VALUES);
 
-        dof_i = 2 * numNodesCoarse + connec[i];
+        dof_i = 3 * connec[i] + 2;
         VecSetValues(b,1,&dof_i,&rhs[12+i],ADD_VALUES);
     };
 
@@ -2469,52 +2506,46 @@ void Arlequin<2>::setMatVecValuesFineModel(double **matrix, double *rhs, int* co
     for (int i = 0; i < 6; i++){
         for (int j = 0; j < 6; j++){
             //Matrix K and C
-            int dof_i = 3*numNodesCoarse + 2 * connec[i];
-            int dof_j = 3*numNodesCoarse + 2 * connec[j];
+            int dof_i = 3*numNodesCoarse + 3 * connec[i];
+            int dof_j = 3*numNodesCoarse + 3 * connec[j];
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i  ][2*j  ],ADD_VALUES);
             
-            dof_i = 3*numNodesCoarse + 2 * connec[i] +1;
-            dof_j = 3*numNodesCoarse + 2 * connec[j];
+            dof_i = 3*numNodesCoarse + 3 * connec[i] + 1;
+            dof_j = 3*numNodesCoarse + 3 * connec[j];
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i+1][2*j  ],ADD_VALUES);
             
-            dof_i = 3*numNodesCoarse + 2 * connec[i];
-            dof_j = 3*numNodesCoarse + 2 * connec[j] +1;
+            dof_i = 3*numNodesCoarse + 3 * connec[i];
+            dof_j = 3*numNodesCoarse + 3 * connec[j] + 1;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i  ][2*j+1],ADD_VALUES);
 
-            dof_i = 3*numNodesCoarse + 2 * connec[i] +1;
-            dof_j = 3*numNodesCoarse + 2 * connec[j] +1;
+            dof_i = 3*numNodesCoarse + 3 * connec[i] + 1;
+            dof_j = 3*numNodesCoarse + 3 * connec[j] + 1;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i+1][2*j+1],ADD_VALUES);
             
             //Matrix G and Gt
-            dof_i = 3 * numNodesCoarse + 2 * connec[i];
-            dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec[j];
+            dof_i = 3 * numNodesCoarse + 3 * connec[i];
+            dof_j = 3 * numNodesCoarse + 3 * connec[j] + 2;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i  ][12+j],ADD_VALUES);
-
-            dof_i = 3 * numNodesCoarse + 2 * connec[i];
-            dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec[j];
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[12+j][2*i  ],ADD_VALUES);
             
-            dof_i = 3 * numNodesCoarse + 2 * connec[i] + 1;
-            dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec[j];
+            dof_i = 3 * numNodesCoarse + 3 * connec[i] + 1;
+            dof_j = 3 * numNodesCoarse + 3 * connec[j] + 2;
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[2*i+1][12+j],ADD_VALUES);
-            
-            dof_i = 3 * numNodesCoarse + 2 * connec[i] + 1;
-            dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec[j];
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[12+j][2*i+1],ADD_VALUES);
             
             //Matrix Q
-            dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec[i];
-            dof_j = 3 * numNodesCoarse + 2 * numNodesFine + connec[j];
+            dof_i = 3 * numNodesCoarse + 3 * connec[i] + 2;
+            dof_j = 3 * numNodesCoarse + 3 * connec[j] + 2;
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[12+i][12+j],ADD_VALUES);
         };     
         ///Rhs vector
-        int dof_i = 3 * numNodesCoarse + 2 * connec[i];
+        int dof_i = 3 * numNodesCoarse + 3 * connec[i];
         VecSetValues(b,1,&dof_i,&rhs[2*i  ],ADD_VALUES);
         
-        dof_i = 3 * numNodesCoarse + 2 * connec[i] + 1;
+        dof_i = 3 * numNodesCoarse + 3 * connec[i] + 1;
         VecSetValues(b,1,&dof_i,&rhs[2*i+1],ADD_VALUES);
 
-        dof_i = 3 * numNodesCoarse + 2 * numNodesFine + connec[i];
+        dof_i = 3 * numNodesCoarse + 3 * connec[i] + 2;
         VecSetValues(b,1,&dof_i,&rhs[12+i],ADD_VALUES);
     }; 
 
@@ -2542,28 +2573,28 @@ void Arlequin<2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localM
             //COUPLING OPERATOR
             if (fabs(Ajac2[2*i  ][2*j  ]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int d_j = 3*numNodesCoarse + 2*connec[j];
+                int d_j = 3*numNodesCoarse + 3*connec[j];
                 double value = Ajac2[2*i  ][2*j  ]*integ;
                 MatSetValues(A,1,&d_i,1,&d_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&d_j,1,&d_i,&Ajac2[2*i  ][2*j  ],ADD_VALUES);
             };
             if (fabs(Ajac2[2*i+1][2*j  ]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int d_j = 3*numNodesCoarse + 2*connec[j];
+                int d_j = 3*numNodesCoarse + 3*connec[j];
                 double value = Ajac2[2*i+1][2*j  ]*integ;
                 MatSetValues(A,1,&d_i,1,&d_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&d_j,1,&d_i,&Ajac2[2*i+1][2*j  ],ADD_VALUES);
             };
             if (fabs(Ajac2[2*i+1][2*j+1]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int d_j = 3*numNodesCoarse + 2*connec[j] + 1;
+                int d_j = 3*numNodesCoarse + 3*connec[j] + 1;
                 double value = Ajac2[2*i+1][2*j+1]*integ;
                 MatSetValues(A,1,&d_i,1,&d_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&d_j,1,&d_i,&Ajac2[2*i+1][2*j+1],ADD_VALUES);
             };
             if (fabs(Ajac2[2*i  ][2*j+1]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int d_j = 3 * numNodesCoarse + 2*connec[j] + 1;
+                int d_j = 3*numNodesCoarse + 3*connec[j] + 1;
                 double value = Ajac2[2*i  ][2*j+1]*integ;
                 MatSetValues(A,1,&d_i,1,&d_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&d_j,1,&d_i,&Ajac2[2*i  ][2*j+1],ADD_VALUES);
@@ -2572,23 +2603,23 @@ void Arlequin<2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localM
             //SUPG STABILIZATION
             if (fabs(localMV_mat[2*i  ][2*j  ]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int d_j = 3*numNodesCoarse + 2*connec[j];
+                int d_j = 3*numNodesCoarse + 3*connec[j];
                 MatSetValues(A,1,&d_j,1,&d_i,&localMV_mat[2*i  ][2*j  ],ADD_VALUES);
             };
             if (fabs(localMV_mat[2*i+1][2*j+1]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int d_j = 3*numNodesCoarse + 2*connec[j] + 1;
+                int d_j = 3*numNodesCoarse + 3*connec[j] + 1;
                 MatSetValues(A,1,&d_j,1,&d_i,&localMV_mat[2*i+1][2*j+1],ADD_VALUES);
             };
 
             //PSPG STABILIZATION
             if (fabs(localMV_mat[2*i  ][12+j]) >= 1.e-15){
-                int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec[i];
+                int dof_i = 3*numNodesCoarse + 3*connec[i] + 2;
                 int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_mat[2*i  ][12+j],ADD_VALUES);
             };
             if (fabs(localMV_mat[2*i+1][12+j]) >= 1.e-15){
-                int dof_i = 3*numNodesCoarse + 2*numNodesFine + connec[i];
+                int dof_i = 3*numNodesCoarse + 3*connec[i] + 2;
                 int dof_j = 3*numNodesCoarse + 3*numNodesFine + connecL[j] + 1;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_mat[2*i+1][12+j],ADD_VALUES);
             };
@@ -2596,22 +2627,22 @@ void Arlequin<2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localM
             //ARLEQUIN STABILIZATION
             if (fabs(ArlequinA2[2*i  ][2*j  ]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int d_j = 3*numNodesCoarse + 2*connec[j];
+                int d_j = 3*numNodesCoarse + 3*connec[j];
                 MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2[2*i  ][2*j  ],ADD_VALUES);
             };
             if (fabs(ArlequinA2[2*i+1][2*j+1]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int d_j = 3*numNodesCoarse + 2*connec[j] + 1;
+                int d_j = 3*numNodesCoarse + 3*connec[j] + 1;
                 MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2[2*i+1][2*j+1],ADD_VALUES);
             };
             if (fabs(ArlequinA2[12+i][2*j  ]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec[j];
+                int dof_j = 3*numNodesCoarse + 3*connec[j] + 2;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2[12+i][2*j  ],ADD_VALUES);
             };
             if (fabs(ArlequinA2[12+i][2*j+1]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int dof_j = 3*numNodesCoarse + 2*numNodesFine + connec[j];
+                int dof_j = 3*numNodesCoarse + 3*connec[j] + 2;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2[12+i][2*j+1],ADD_VALUES);
             };
             if (fabs(ArlequinA1[2*i  ][2*j  ]) >= 1.e-15){
@@ -2631,21 +2662,21 @@ void Arlequin<2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localM
         dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
         VecSetValues(b,1,&dof_i,&Rhs2[2*i+1],ADD_VALUES);
 
-        dof_i = 3*numNodesCoarse + 2*connec[i];
+        dof_i = 3*numNodesCoarse + 3*connec[i];
         VecSetValues(b,1,&dof_i,&rhsLagMult2[2*i  ],ADD_VALUES);
 
-        dof_i = 3*numNodesCoarse + 2*connec[i] + 1;
+        dof_i = 3*numNodesCoarse + 3*connec[i] + 1;
         VecSetValues(b,1,&dof_i,&rhsLagMult2[2*i+1],ADD_VALUES);
 
         //SUPG STABILIZATION
-        dof_i = 3*numNodesCoarse + 2*connec[i];                       
+        dof_i = 3*numNodesCoarse + 3*connec[i];                       
         VecSetValues(b,1,&dof_i,&localMV_vec[2*i  ],ADD_VALUES);
 
-        dof_i = 3*numNodesCoarse + 2*connec[i] + 1;
+        dof_i = 3*numNodesCoarse + 3*connec[i] + 1;
         VecSetValues(b,1,&dof_i,&localMV_vec[2*i+1],ADD_VALUES);
 
         //PSPG STABILIZATION
-        dof_i = 3*numNodesCoarse + 2*numNodesFine + connec[i];
+        dof_i = 3*numNodesCoarse + 3*connec[i] + 2;
         VecSetValues(b,1,&dof_i,&localMV_vec[12+i],ADD_VALUES);
 
         // ///ARLEQUIN STABILIZATION
@@ -2681,28 +2712,28 @@ void Arlequin<2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **loca
             //COUPLING OPERATOR
             if (fabs(Ajac2[2*i  ][2*j  ]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int dof_j = 2*connecC[j];
+                int dof_j = 3*connecC[j];
                 double value = Ajac2[2*i  ][2*j  ] * integ;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2[2*i  ][2*j  ],ADD_VALUES);
             }
             if (fabs(Ajac2[2*i+1][2*j  ]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int dof_j = 2*connecC[j];
+                int dof_j = 3*connecC[j];
                 double value = Ajac2[2*i+1][2*j  ]*integ;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2[2*i+1][2*j  ],ADD_VALUES);
             };
             if (fabs(Ajac2[2*i+1][2*j+1]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int dof_j = 2*connecC[j] + 1;
+                int dof_j = 3*connecC[j] + 1;
                 double value = Ajac2[2*i+1][2*j+1]*integ;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2[2*i+1][2*j+1],ADD_VALUES);
             };
             if (fabs(Ajac2[2*i  ][2*j+1]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int dof_j = 2*connecC[j] + 1;
+                int dof_j = 3*connecC[j] + 1;
                 double value = Ajac2[2*i  ][2*j+1]*integ;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&value,ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2[2*i  ][2*j+1],ADD_VALUES);
@@ -2718,23 +2749,23 @@ void Arlequin<2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **loca
             //SUPG STABILIZATION
             if (fabs(localMV_mat[2*i  ][2*j  ]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int dof_j = 2*connecC[j];
+                int dof_j = 3*connecC[j];
                 MatSetValues(A,1,&dof_j,1,&dof_i,&localMV_mat[2*i  ][2*j  ],ADD_VALUES);
             };
             if (fabs(localMV_mat[2*i+1][2*j+1]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int dof_j = 2*connecC[j] + 1;
+                int dof_j = 3*connecC[j] + 1;
                 MatSetValues(A,1,&dof_j,1,&dof_i,&localMV_mat[2*i+1][2*j+1],ADD_VALUES);
             };
 
             //PSPG STABILIZATION
             if (fabs(localMV_mat[2*i  ][12+j]) >= 1.e-15){
-                int dof_i = 2*numNodesCoarse + connecC[i];
+                int dof_i = 3*connecC[i] + 2;
                 int dof_j = 3*numNodesCoarse + 2*numNodesFine + connecL[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_mat[2*i  ][12+j],ADD_VALUES);
             };
             if (fabs(localMV_mat[2*i+1][12+j]) >= 1.e-15){
-                int dof_i = 2*numNodesCoarse + connecC[i];
+                int dof_i = 3*connecC[i] + 2;
                 int dof_j = 3*numNodesCoarse + 2*numNodesFine + connecL[j] + 1;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_mat[2*i+1][12+j],ADD_VALUES);
             };
@@ -2742,23 +2773,23 @@ void Arlequin<2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **loca
             //ARLEQUIN STABILIZATION
             if (fabs(ArlequinA2[2*i  ][2*j  ]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int d_j = 2*connecC[j];
+                int d_j = 3*connecC[j];
                 MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2[2*i  ][2*j  ],ADD_VALUES);
             };
             if (fabs(ArlequinA2[2*i+1][2*j+1]) >= 1.e-15){
                 int d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int d_j = 2*connecC[j] + 1;
+                int d_j = 3*connecC[j] + 1;
                 MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2[2*i+1][2*j+1],ADD_VALUES);
             };
 
             if (fabs(ArlequinA2[12+i][2*j  ]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i];
-                int dof_j = 2*numNodesCoarse + connecC[j];
+                int dof_j = 3*connecC[j] + 2;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2[12+i][2*j  ],ADD_VALUES);
             };
             if (fabs(ArlequinA2[12+i][2*j+1]) >= 1.e-15){
                 int dof_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
-                int dof_j = 2*numNodesCoarse + connecC[j];
+                int dof_j = 2*connecC[j] + 2;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2[12+i][2*j+1],ADD_VALUES);
             };
 
@@ -2778,21 +2809,21 @@ void Arlequin<2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **loca
         d_i = 3*numNodesCoarse + 3*numNodesFine + 2*connecL[i] + 1;
         VecSetValues(b,1,&d_i,&Rhs2[2*i+1],ADD_VALUES);
 
-        int dof_i = 2*connecC[i];
+        int dof_i = 3*connecC[i];
         VecSetValues(b,1,&dof_i,&rhsLagMult2[2*i  ],ADD_VALUES);
 
-        dof_i = 2*connecC[i] + 1;
+        dof_i = 3*connecC[i] + 1;
         VecSetValues(b,1,&dof_i,&rhsLagMult2[2*i+1],ADD_VALUES);
 
         //SUPG STABILIZATION
-        dof_i = 2*connecC[i];
+        dof_i = 3*connecC[i];
         VecSetValues(b,1,&dof_i,&localMV_vec[2*i  ],ADD_VALUES);
 
-        dof_i = 2*connecC[i] + 1;
+        dof_i = 3*connecC[i] + 1;
         VecSetValues(b,1,&dof_i,&localMV_vec[2*i+1],ADD_VALUES);
 
         //PSPG STABILIZATION
-        dof_i = 2*numNodesCoarse + connecC[i];
+        dof_i = 3*connecC[i] + 2;
         VecSetValues(b,1,&dof_i,&localMV_vec[12+i],ADD_VALUES);
 
         //ARLEQUIN STABILIZATION
@@ -3566,11 +3597,11 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
             ierr = VecDuplicate(b, &All); CHKERRQ(ierr);
                         
-            for (int i=0; i<sysSize; i++){
-                double val = 1.e-20;
-                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
+            // for (int i=0; i<sysSize; i++){
+            //     double val = 1.e-20;
+            //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
                 
-            }
+            // }
             
 
             std::clock_t t3 = std::clock();
@@ -3661,7 +3692,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             // ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
             
             // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 
 
 
@@ -3693,14 +3724,19 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
             
 #endif
+            // std::cout << "AQQQEQE1 " << rank << std::endl;
+            // ierr = PCSetFromOptions(pc);CHKERRQ(ierr);
+            // std::cout << "AQQQEQE2 " << rank << std::endl;
             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+            // std::cout << "AQQQEQE3 " << rank << std::endl;
             ierr = KSPSetUp(ksp);
+            // std::cout << "AQQQEQE4 " << rank << std::endl;
             
-#if defined(PETSC_HAVE_MUMPS)
-            PetscInt  info1,info2,icntl14;
+// #if defined(PETSC_HAVE_MUMPS)
+//             PetscInt  info1,info2,icntl14;
             
-            MatMumpsGetInfo(F,1,&info1);
-            MatMumpsGetInfo(F,2,&info2);
+//             MatMumpsGetInfo(F,1,&info1);
+//             MatMumpsGetInfo(F,2,&info2);
 
             // PetscReal info5,info6,info7,info8,info9,info10,info11;
             // MatMumpsGetRinfog(F,5,&info5);
@@ -3719,11 +3755,11 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             // if(rank==0) std::cout << "ICNTL = " << info21 << " " << info32 << std::endl;
           
             // if(rank==0) std::cout << "INFOG = " << info5 << " " << info6 << " " << info7 << " " << info8 << " " << info9 << " " << info10 << " " << info11 << std::endl;
-            MatMumpsGetIcntl(F,14,&icntl14);    
-            if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-                                                      << " " << info2 << " " 
-                                                      << icntl14 << std::endl;
-#endif
+//             MatMumpsGetIcntl(F,14,&icntl14);    
+//             if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
+//                                                       << " " << info2 << " " 
+//                                                       << icntl14 << std::endl;
+// #endif
             
             // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
@@ -3764,7 +3800,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
 
             for (int i = 0; i < numNodesCoarse; ++i){
-                Ii = 2 * i;
+                Ii = 3 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
                 u_[0] = val;
@@ -3772,17 +3808,15 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
                 nodesCoarse_[i] -> incrementAcceleration(0,u_[0]);
                 nodesCoarse_[i] -> incrementVelocity(0,u_[0]*gamma*dTime);
                 
-                Ii = 2 * i + 1;
+                Ii = 3 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
                 u_[1] = val;
                 normU += val*val;
                 nodesCoarse_[i] -> incrementAcceleration(1,u_[1]);
                 nodesCoarse_[i] -> incrementVelocity(1,u_[1]*gamma*dTime);
-            };
-            
-            for (int i = 0; i<numNodesCoarse; i++){
-                Ii = 2 * numNodesCoarse + i;
+
+                Ii = 3 * i + 2;
                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
                 p_ = val;
                 normP += val*val;
@@ -3790,23 +3824,21 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             };
             
             for (int i = 0; i < numNodesFine; ++i){
-                Ii = 3 * numNodesCoarse + 2 * i;
+                Ii = 3 * numNodesCoarse + 3 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[0] = val;
                 normU += val*val;
                 nodesFine_[i] -> incrementAcceleration(0,u_[0]);
                 nodesFine_[i] -> incrementVelocity(0,u_[0]*gamma*dTime);
                 
-                Ii = 3 * numNodesCoarse + 2 * i + 1;
+                Ii = 3 * numNodesCoarse + 3 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[1] = val;
                 normU += val*val;
                 nodesFine_[i] -> incrementAcceleration(1,u_[1]);
                 nodesFine_[i] -> incrementVelocity(1,u_[1]*gamma*dTime);
-            };
-            
-            for (int i = 0; i<numNodesFine; i++){
-                Ii = 3 * numNodesCoarse + 2 * numNodesFine + i;
+        
+                Ii = 3 * numNodesCoarse + 3 * i + 2;
                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
                 p_ = val;
                 normP += val*val;
@@ -4265,8 +4297,9 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             Ione = 1;
 
 
+
             for (int i = 0; i < numNodesCoarse; ++i){
-                Ii = 2 * i;
+                Ii = 3 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
                 u_[0] = val;
@@ -4274,17 +4307,15 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 nodesCoarse_[i] -> incrementAcceleration(0,u_[0]);
                 nodesCoarse_[i] -> incrementVelocity(0,u_[0]*gamma*dTime);
                 
-                Ii = 2 * i + 1;
+                Ii = 3 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
                 u_[1] = val;
                 normU += val*val;
                 nodesCoarse_[i] -> incrementAcceleration(1,u_[1]);
                 nodesCoarse_[i] -> incrementVelocity(1,u_[1]*gamma*dTime);
-            };
-            
-            for (int i = 0; i<numNodesCoarse; i++){
-                Ii = 2 * numNodesCoarse + i;
+
+                Ii = 3 * i + 2;
                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
                 p_ = val;
                 normP += val*val;
@@ -4292,23 +4323,21 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             };
             
             for (int i = 0; i < numNodesFine; ++i){
-                Ii = 3 * numNodesCoarse + 2 * i;
+                Ii = 3 * numNodesCoarse + 3 * i;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[0] = val;
                 normU += val*val;
                 nodesFine_[i] -> incrementAcceleration(0,u_[0]);
                 nodesFine_[i] -> incrementVelocity(0,u_[0]*gamma*dTime);
                 
-                Ii = 3 * numNodesCoarse + 2 * i + 1;
+                Ii = 3 * numNodesCoarse + 3 * i + 1;
                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                 u_[1] = val;
                 normU += val*val;
                 nodesFine_[i] -> incrementAcceleration(1,u_[1]);
                 nodesFine_[i] -> incrementVelocity(1,u_[1]*gamma*dTime);
-            };
-            
-            for (int i = 0; i<numNodesFine; i++){
-                Ii = 3 * numNodesCoarse + 2 * numNodesFine + i;
+        
+                Ii = 3 * numNodesCoarse + 3 * i + 2;
                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
                 p_ = val;
                 normP += val*val;
@@ -4331,7 +4360,6 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                 normL += val*val;
                 // std::cout << "LAG M " << u_[0] << " " << u_[1] << std::endl;
             };
-
 
             //Computes the solution vector norm
             ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
@@ -4653,11 +4681,8 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         double p_;
         Ione = 1;
 
-        
-
-
         for (int i = 0; i < numNodesCoarse; ++i){
-            Ii = 2 * i;
+            Ii = 3 * i;
             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
             // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
             u_[0] = val;
@@ -4665,17 +4690,15 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
             nodesCoarse_[i] -> incrementAcceleration(0,u_[0]);
             nodesCoarse_[i] -> incrementVelocity(0,u_[0]*gamma*dTime);
             
-            Ii = 2 * i + 1;
+            Ii = 3 * i + 1;
             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
             // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
             u_[1] = val;
             normU += val*val;
             nodesCoarse_[i] -> incrementAcceleration(1,u_[1]);
             nodesCoarse_[i] -> incrementVelocity(1,u_[1]*gamma*dTime);
-        };
-        
-        for (int i = 0; i<numNodesCoarse; i++){
-            Ii = 2 * numNodesCoarse + i;
+
+            Ii = 3 * i + 2;
             ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
             p_ = val;
             normP += val*val;
@@ -4683,23 +4706,21 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         };
         
         for (int i = 0; i < numNodesFine; ++i){
-            Ii = 3 * numNodesCoarse + 2 * i;
+            Ii = 3 * numNodesCoarse + 3 * i;
             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
             u_[0] = val;
             normU += val*val;
             nodesFine_[i] -> incrementAcceleration(0,u_[0]);
             nodesFine_[i] -> incrementVelocity(0,u_[0]*gamma*dTime);
             
-            Ii = 3 * numNodesCoarse + 2 * i + 1;
+            Ii = 3 * numNodesCoarse + 3 * i + 1;
             ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
             u_[1] = val;
             normU += val*val;
             nodesFine_[i] -> incrementAcceleration(1,u_[1]);
             nodesFine_[i] -> incrementVelocity(1,u_[1]*gamma*dTime);
-        };
-        
-        for (int i = 0; i<numNodesFine; i++){
-            Ii = 3 * numNodesCoarse + 2 * numNodesFine + i;
+    
+            Ii = 3 * numNodesCoarse + 3 * i + 2;
             ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
             p_ = val;
             normP += val*val;
