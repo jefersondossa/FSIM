@@ -177,7 +177,7 @@ public:
     /// @param int number of elements of the fluid model
     void searchNodeCorrespondence(double* x, std::vector<Nodes *> nodes,
                                   std::vector<Elements *> elements,
-                                  int numElem, int &elCorr, double* xsiCorr);
+                                  int numElem, int &elCorr, double* xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(double **matrix, double *rhs, int* connec);
     void setMatVecValuesCoarseModel(double **matrix, double *rhs, int* connec);
@@ -261,7 +261,7 @@ void Arlequin<2>::setElementBoxes() {
 template<>
 void Arlequin<2>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes, 
                                            std::vector<Elements *> elements, 
-                                           int numElem, int &elCorr, double* xsiCorr){
+                                           int numElem, int &elCorr, double* xsiCorr, int elSearch){
     
     
     int *connec;
@@ -279,88 +279,164 @@ void Arlequin<2>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes,
     double x_[2];
     double deltaX[2] = {};
     double deltaXsi[2] = {};
+    bool flg = true;
 
-    for (int jel = 0; jel < numElem; jel++){
+    // std::cout << "elSearch " << elSearch << std::endl;
+
+
+    connec = elements[elSearch] -> getConnectivity();
+    xsiCC[0] = 1.e10;
+    xsiCC[1] = 1.e10;
+    xsiCC[2] = 1.e10;
+    
+    xsi[0] = 1. / 3.;
+    xsi[1] = 1. / 3.;
+
+    shapeQuad.evaluate(xsi,phi_);
+    
+    x_[0] = 0.;
+    x_[1] = 0.;
+
+    for (int i = 0; i < 6; i++){
+        double* xint = nodes[connec[i]] -> getCoordinates();
+        x_[0] += xint[0] * phi_[i];
+        x_[1] += xint[1] * phi_[i];                    
+    };
+
+    double error = 1.e6;
+    
+    int iterations = 0;
+
+    while ((error > 1.e-8) && (iterations < 4)) {
         
-        connec = elements[jel] -> getConnectivity();
-
-        //get boxes information        
-        XK = elements[jel] -> getXIntersectionParameter();
-
-        //Chech if the node is inside the element box
-        if ((x[0] < XK.first[0]) || (x[0] > XK.second[0]) ||
-            (x[1] < XK.first[1]) || (x[1] > XK.second[1])) continue;
+        iterations++;
         
-        //Compute nodal correspondence
-        xsiCC[0] = 1.e10;
-        xsiCC[1] = 1.e10;
-        xsiCC[2] = 1.e10;
+        deltaX[0] = x[0] - x_[0];
+        deltaX[1] = x[1] - x_[1];
         
-        xsi[0] = 1. / 3.;
-        xsi[1] = 1. / 3.;
+        deltaXsi[0] = 0.;
+        deltaXsi[1] = 0.;
+        
+        elements[elSearch] -> getJacobianMatrix(xsi,ainv);
+    
+        // noalias(deltaXsi) = prod(trans(ainv),deltaX);
 
-        shapeQuad.evaluate(xsi,phi_);
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                deltaXsi[i] += ainv[j][i] * deltaX[j];
+        
+        xsi[0] += deltaXsi[0];
+        xsi[1] += deltaXsi[1];
         
         x_[0] = 0.;
         x_[1] = 0.;
-
-        for (int i = 0; i < 6; i++){
+    
+        shapeQuad.evaluate(xsi,phi_);
+        
+        for (int i=0; i<6; i++){
             double* xint = nodes[connec[i]] -> getCoordinates();
             x_[0] += xint[0] * phi_[i];
             x_[1] += xint[1] * phi_[i];                    
-        };
+        };                   
+        error = sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+    };
+    
+    double t1 = -1.e-2;
+    double t2 =  1. - t1;
+    
+    xsiCC[0] = xsi[0];
+    xsiCC[1] = xsi[1];       
+    xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
 
-        double error = 1.e6;
-        
-        int iterations = 0;
+    if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
+        (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
 
-        while ((error > 1.e-8) && (iterations < 4)) {
-            
-            iterations++;
-            
-            deltaX[0] = x[0] - x_[0];
-            deltaX[1] = x[1] - x_[1];
-            
-            deltaXsi[0] = 0.;
-            deltaXsi[1] = 0.;
-            
-            elements[jel] -> getJacobianMatrix(xsi,ainv);
-        
-            // noalias(deltaXsi) = prod(trans(ainv),deltaX);
+        xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+        elCorr = elSearch;
+        // return;
+    } else {
+        for (int jel = 0; jel < numElem; jel++){
+            connec = elements[jel] -> getConnectivity();
 
-            for (int i = 0; i < 2; i++)
-                for (int j = 0; j < 2; j++)
-                    deltaXsi[i] += ainv[j][i] * deltaX[j];
+            //get boxes information        
+            XK = elements[jel] -> getXIntersectionParameter();
+
+            //Chech if the node is inside the element box
+            if ((x[0] < XK.first[0]) || (x[0] > XK.second[0]) ||
+                (x[1] < XK.first[1]) || (x[1] > XK.second[1])) continue;
             
-            xsi[0] += deltaXsi[0];
-            xsi[1] += deltaXsi[1];
+            //Compute nodal correspondence
+            xsiCC[0] = 1.e10;
+            xsiCC[1] = 1.e10;
+            xsiCC[2] = 1.e10;
+            
+            xsi[0] = 1. / 3.;
+            xsi[1] = 1. / 3.;
+
+            shapeQuad.evaluate(xsi,phi_);
             
             x_[0] = 0.;
             x_[1] = 0.;
-        
-            shapeQuad.evaluate(xsi,phi_);
-            
-            for (int i=0; i<6; i++){
+
+            for (int i = 0; i < 6; i++){
                 double* xint = nodes[connec[i]] -> getCoordinates();
                 x_[0] += xint[0] * phi_[i];
                 x_[1] += xint[1] * phi_[i];                    
-            };                   
-            error = sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
-        };
-        
-        double t1 = -1.e-2;
-        double t2 =  1. - t1;
-        
-        xsiCC[0] = xsi[0];
-        xsiCC[1] = xsi[1];       
-        xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
+            };
 
-        if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-            (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+            double error = 1.e6;
+            
+            int iterations = 0;
 
-            xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
-            elCorr = jel;
-        };           
+            while ((error > 1.e-8) && (iterations < 4)) {
+                
+                iterations++;
+                
+                deltaX[0] = x[0] - x_[0];
+                deltaX[1] = x[1] - x_[1];
+                
+                deltaXsi[0] = 0.;
+                deltaXsi[1] = 0.;
+                
+                elements[jel] -> getJacobianMatrix(xsi,ainv);
+            
+                // noalias(deltaXsi) = prod(trans(ainv),deltaX);
+
+                for (int i = 0; i < 2; i++)
+                    for (int j = 0; j < 2; j++)
+                        deltaXsi[i] += ainv[j][i] * deltaX[j];
+                
+                xsi[0] += deltaXsi[0];
+                xsi[1] += deltaXsi[1];
+                
+                x_[0] = 0.;
+                x_[1] = 0.;
+            
+                shapeQuad.evaluate(xsi,phi_);
+                
+                for (int i=0; i<6; i++){
+                    double* xint = nodes[connec[i]] -> getCoordinates();
+                    x_[0] += xint[0] * phi_[i];
+                    x_[1] += xint[1] * phi_[i];                    
+                };                   
+                error = sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+            };
+            
+            double t1 = -1.e-2;
+            double t2 =  1. - t1;
+            
+            xsiCC[0] = xsi[0];
+            xsiCC[1] = xsi[1];       
+            xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
+
+            if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
+                (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+
+                xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+                elCorr = jel;
+                break;
+            }
+        }
     };
 
     if (fabs(xsi[0]) > 2.) std::cout << "PROBEM SEARCHING NODE CORRESPONDENCE " 
@@ -388,13 +464,30 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
 
         int elCorr = 0;
         double xsiCorr[2] = {};
-        searchNodeCorrespondence(x, nodesCoarse_, elementsCoarse_, 
-                                 elementsCoarse_.size(),elCorr,xsiCorr);
+
+
+        // searchNodeCorrespondence(x, nodesCoarse_, elementsCoarse_[nodesFine_[nodesGlueZoneFine_[inode]]->getNodalElemCorrespondence()], 
+        //                          1,elCorr,xsiCorr, );
+
+        // double t1 = -1.e-2;
+        // double t2 =  1. - t1;
+
+        // if ((xsiCorr[0] >= t1) && (xsiCorr[1] >= t1) && (1. - xsiCorr[0] - xsiCorr[1] >= t1) &&
+        //     (xsiCorr[0] <= t2) && (xsiCorr[1] <= t2) && (1. - xsiCorr[0] - xsiCorr[1] <= t2)){
+            
+        //     nodesFine_[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);
+        // } else {
+            searchNodeCorrespondence(x, nodesCoarse_, elementsCoarse_, 
+                                 elementsCoarse_.size(),elCorr,xsiCorr,nodesFine_[nodesGlueZoneFine_[inode]] -> getNodalElemCorrespondence());
+            nodesFine_[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);             
+        // }
+
+        
    
         // std::cout << "CORRESP " << elCorr << " " << corresp.first << std::endl 
                   // << xsiCorr[0] << " " << xsiCorr[1] << " " << corresp.second[0] << " " << corresp.second[1] << std::endl;
 
-        nodesFine_[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);
+        
             
         // std::cout << "corresp " << corresp.first 
         //           << " " << corresp.second(0) << " " << corresp.second(1)
@@ -445,7 +538,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
                 double xsiCorr[2] = {};
             
                 searchNodeCorrespondence(x,nodesCoarse_,elementsCoarse_,
-                                         elementsCoarse_.size(),elCorr,xsiCorr);
+                                         elementsCoarse_.size(),elCorr,xsiCorr,elementsFine_[elementsGlueZoneFine_[ielem]] -> getIntegPointCorrespondenceElement(i));
                 // if(ielem == 0){
                 //     if(i==0)std::cout <<" COOr " << corresp.first << " " << corresp.second(0) << " " << corresp.second(1) << std::endl;
                 // };
@@ -481,7 +574,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
         double xsiCorr[2] = {};
 
         searchNodeCorrespondence(x,nodesFine_,elementsFine_, 
-                                 elementsFine_.size(),elCorr,xsiCorr);
+                                 elementsFine_.size(),elCorr,xsiCorr,0);
    
         nodesCoarse_[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);
     };
@@ -527,7 +620,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
                 double xsiCorr[2] = {};
 
                 searchNodeCorrespondence(x,nodesFine_,elementsFine_,
-                                         elementsFine_.size(),elCorr,xsiCorr);
+                                         elementsFine_.size(),elCorr,xsiCorr,0);
 
                 elementsCoarse_[elementsGlueZoneFine_[ielem]] -> 
                     setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
@@ -559,7 +652,7 @@ void Arlequin<2>::setSignaledDistance(){
     //approximate normal calculation
 
     for (int i = 0; i < numBoundElemFine; i++){
-        if (boundaryFine_[i]->getConstrain(0) == 2){
+        if (boundaryFine_[i]->getConstrain(0) >= 2){
             // std::cout <<"AQUIISDUAS  "  << rank << std::endl;
             connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
                             
@@ -3069,7 +3162,6 @@ void Arlequin<2>::initialAcceleration(){
     ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); 
     ierr = VecSetFromOptions(b);
     ierr = VecDuplicate(b, &u);
-    ierr = VecDuplicate(b, &All);
                 
     for (int i=0; i<sysSize; i++){
         double val = 1.e-15;
@@ -3595,7 +3687,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
             ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-            ierr = VecDuplicate(b, &All); CHKERRQ(ierr);
                         
             // for (int i=0; i<sysSize; i++){
             //     double val = 1.e-20;
@@ -4171,7 +4262,6 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
             ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-            ierr = VecDuplicate(b, &All); CHKERRQ(ierr);
                         
             for (int i=0; i<sysSize; i++){
                 double val = 1.e-15;
@@ -4542,7 +4632,6 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
         ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
         ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
         ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-        ierr = VecDuplicate(b, &All); CHKERRQ(ierr);
                     
         for (int i=0; i<sysSize; i++){
             double val = 1.e-20;
