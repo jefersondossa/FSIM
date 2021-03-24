@@ -125,14 +125,14 @@ public:
 
         SpecialQuad sQuad = SpecialQuad();
 
-        intPointWeightFunctionSpecial = new double[sQuad.getNumberOfIntegrationPoints()];
-        intPointWeightFunctionSpecialPrev = new double[sQuad.getNumberOfIntegrationPoints()];
-        intPointDistGlueZone = new double[sQuad.getNumberOfIntegrationPoints()];
-        intPointGlueZone = new bool[sQuad.getNumberOfIntegrationPoints()];
-        intPointCorrespElem = new int[sQuad.getNumberOfIntegrationPoints()];
+        intPointWeightFunctionSpecial = new double[sQuad.getNumberOfIntegrationPoints()]{};
+        intPointWeightFunctionSpecialPrev = new double[sQuad.getNumberOfIntegrationPoints()]{};
+        intPointDistGlueZone = new double[sQuad.getNumberOfIntegrationPoints()]{};
+        intPointGlueZone = new bool[sQuad.getNumberOfIntegrationPoints()]{};
+        intPointCorrespElem = new int[sQuad.getNumberOfIntegrationPoints()]{};
 
-        intPointCoordinates = new double*[sQuad.getNumberOfIntegrationPoints()];
-        intPointCorrespXsi = new double*[sQuad.getNumberOfIntegrationPoints()];
+        intPointCoordinates = new double*[sQuad.getNumberOfIntegrationPoints()]{};
+        intPointCorrespXsi = new double*[sQuad.getNumberOfIntegrationPoints()]{};
         for(int i = 0; i< sQuad.getNumberOfIntegrationPoints(); i++) {
             intPointCoordinates[i] = new double[2]();
             intPointCorrespXsi[i] = new double[2]();
@@ -874,26 +874,75 @@ void Element<2>::getBoundaryLoad(double* xsi, double* load) {
     shearStress[1][0] = visc_ * (du_dy + dv_dx);
     shearStress[1][1] = 2. * visc_ * dv_dy;
 
-    if (sideBoundary_ == 1){
-        for (int i = 0; i < 6; i++){
-            t_vector[0] -= dphi[1][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(0);
-            t_vector[1] -= dphi[1][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(1);
+    int nodesb_[3];
+    int aux[3];
+
+    if(sideBoundary_ == 0){
+        nodesb_[0] = connect_[2]; 
+        nodesb_[1] = connect_[4]; 
+        nodesb_[2] = connect_[1];
+        aux[0] = 2;
+        aux[1] = 4;
+        aux[2] = 1;   
+    }else{
+        if(sideBoundary_ == 1){
+            nodesb_[0] = connect_[0]; 
+            nodesb_[1] = connect_[5]; 
+            nodesb_[2] = connect_[2]; 
+            aux[0] = 0;
+            aux[1] = 5;
+            aux[2] = 2;
+        }else{
+            nodesb_[0] = connect_[1];
+            nodesb_[1] = connect_[3];
+            nodesb_[2] = connect_[0];
+            aux[0] = 1;
+            aux[1] = 3;
+            aux[2] = 0;
         };        
     };
+    double dx_dxsiB[3][1] = {};
+    double xna_[3] = {};
 
-    if (sideBoundary_ == 2){
-        for (int i = 0; i < 6; i++){
-            t_vector[0] += dphi[0][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(0);
-            t_vector[1] += dphi[0][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(1);
-        };        
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 2; j++){
+            // Approximate the integration space
+            xna_[j] = (*nodes_)[nodesb_[i]] -> getCoordinateValue(j);
+
+            dx_dxsiB[j][0] += xna_[j] * dphi[j][aux[i]];    
+        };
     };
+    double Maux[1][1] = {};
+    for (int k = 0; k < 3; k++)
+        Maux[0][0] += dx_dxsiB[k][0] * dx_dxsiB[k][0];
+    double djacb_ = 0.;
+    djacb_ = std::sqrt(Maux[0][0]);
+    n_vector[0] = -dx_dxsiB[1][0] / djacb_;
+    n_vector[1] =  dx_dxsiB[0][0] / djacb_;
 
-    if (sideBoundary_ == 0){
-        std::cout << "VERIFICAR VETOR NORMAL - getBoundaryLoad" << std::endl;
-    };
+    // std::cout << "CONNEc " << nodesb_[0] << " " << nodesb_[1] << " " << nodesb_[2] << std::endl;
+    // std::cout << "N vector " << xna_[0] << " " << xna_[1] << " " << n_vector[0] << " " << n_vector[1] << std::endl;
 
-    n_vector[0] =  t_vector[1] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
-    n_vector[1] = -t_vector[0] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
+    // if (sideBoundary_ == 1){
+    //     for (int i = 0; i < 6; i++){
+    //         t_vector[0] -= dphi[1][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(0);
+    //         t_vector[1] -= dphi[1][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(1);
+    //     };        
+    // };
+
+    // if (sideBoundary_ == 2){
+    //     for (int i = 0; i < 6; i++){
+    //         t_vector[0] += dphi[0][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(0);
+    //         t_vector[1] += dphi[0][i] * (*nodes_)[connect_[i]] -> getCoordinateValue(1);
+    //     };        
+    // };
+
+    // if (sideBoundary_ == 0){
+    //     std::cout << "VERIFICAR VETOR NORMAL - getBoundaryLoad" << std::endl;
+    // };
+
+    // n_vector[0] =  t_vector[1] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
+    // n_vector[1] = -t_vector[0] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
 
     for (int i = 0; i < 2; i++)
         for (int j = 0; j < 2; j++)
@@ -1568,7 +1617,7 @@ void Element<2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tL
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * std::sqrt(u_ * u_ + v_ * v_) / std::sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_ * 1.e1;
+    tARLQ_ = -1. * k1 * tSUPG_ * 1.e0;
     //}
     //tARLQ_ = 0.;
 
