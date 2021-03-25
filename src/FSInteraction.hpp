@@ -41,11 +41,11 @@ extern "C" {void updatesolid_(int *ipt);};
 
 /// Mounts and solve the Fluid-Structure interaction problem.
 
-template<int DIM>
+template<int DIM, int DEG>
 class FSInteraction{
 public:
     /// Defines locally the class Fluid
-    typedef Fluid<DIM>                     FluidModel;
+    typedef Fluid<DIM,DEG>                  FluidModel;
     /// Defines locally the class Element
     typedef typename FluidModel::Elements   Elements;
     /// Defines locally the class Node
@@ -54,7 +54,7 @@ public:
     typedef typename FluidModel::Boundaries Boundary;
 
     /// Defines locally the class Arlequin
-    typedef Arlequin<DIM>                   ArlequinModel;
+    typedef Arlequin<DIM,DEG>               ArlequinModel;
    
 private:
     FluidModel         fluidModel;
@@ -185,15 +185,19 @@ public:
 //------------------------------------------------------------------------------
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
-template<>
-void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
+template<int DIM, int DEG>
+void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iSol){
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
         int *connec;
-        QuadShapeFunction<2>                       shapeQuad;
+        QuadShapeFunction<2,2>                       shapeQuad;
         double phi_[6] = {};
-        double ainv[2][2] = {};
+        
+        double **ainv;
+        ainv = new double*[DIM];
+        for (int i = DIM; i--; ) ainv[i] = new double[DIM];
+
         double xsiCC[3];
         // std::pair<double*,double*> XK;
         int elemC;
@@ -305,22 +309,32 @@ void FSInteraction<2>::searchSolidNodeCorrespondence(int interface, int iSol){
         nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
         //  std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x(0) << " " << x(1) << " " << xsiC(0) << " " << xsiC(1) << std::endl;
+    
+
+        for (int i = DIM; i--; ) delete [] ainv[i];
+        delete [] ainv;
+
     };
+
 };
 
 //------------------------------------------------------------------------------
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
-template<>
-void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface, 
+template<int DIM, int DEG>
+void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface, 
                                                              int iSol){
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
         int *connec;
-        QuadShapeFunction<2>                       shapeQuad;
+        QuadShapeFunction<2,2>                       shapeQuad;
         double phi_[6] = {};
-        double ainv[2][2] = {};
+        
+        double **ainv;
+        ainv = new double*[DIM];
+        for (int i = DIM; i--; ) ainv[i] = new double[DIM];
+
         double xsiCC[3];
         // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
         int elemC;
@@ -431,6 +445,9 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
 
         nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
+        for (int i = DIM; i--; ) delete [] ainv[i];
+        delete [] ainv;
+
         // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x(0) << " " << x(1) << " " << xsiC(0) << " " << xsiC(1) << std::endl;
     };
 };
@@ -438,8 +455,8 @@ void FSInteraction<2>::searchSolidNodeCorrespondenceArlequin(int interface,
 //------------------------------------------------------------------------------
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
-template<>
-void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
+template<int DIM, int DEG>
+void FSInteraction<DIM,DEG>::searchFluidNodeCorrespondence(int interface){
     
     for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
 
@@ -470,7 +487,7 @@ void FSInteraction<2>::searchFluidNodeCorrespondence(int interface){
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
+void FSInteraction<2,2>::searchArlequinNodeCorrespondence(int interface){
     
     for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
 
@@ -502,7 +519,7 @@ void FSInteraction<2>::searchArlequinNodeCorrespondence(int interface){
 //-------------------------COMPUTE ELEMENT REGIONS/BOXES------------------------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::setElementBoxes() {
+void FSInteraction<2,2>::setElementBoxes() {
     
     int *connec;
     double xk[2], Xk[2];
@@ -531,7 +548,7 @@ void FSInteraction<2>::setElementBoxes() {
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::preProcessFluid(){
+void FSInteraction<2,2>::preProcessFluid(){
     
     
     numInterfaces = fluidModel.getNumberofFSIInterfaces();
@@ -668,7 +685,7 @@ void FSInteraction<2>::preProcessFluid(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::preProcessArlequin(){
+void FSInteraction<2,2>::preProcessArlequin(){
     
     
     numInterfaces = arlequinModel.fineModel.getNumberofFSIInterfaces();
@@ -807,7 +824,7 @@ void FSInteraction<2>::preProcessArlequin(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::setFluidAndSolidModels(FluidModel fluid, char *in_solid){
+void FSInteraction<2,2>::setFluidAndSolidModels(FluidModel fluid, char *in_solid){
     
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
@@ -841,7 +858,7 @@ void FSInteraction<2>::setFluidAndSolidModels(FluidModel fluid, char *in_solid){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::setArlequinAndSolidModels(ArlequinModel arlq, 
+void FSInteraction<2,2>::setArlequinAndSolidModels(ArlequinModel arlq, 
                                                  char *in_solid){
     
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
@@ -882,7 +899,7 @@ void FSInteraction<2>::setArlequinAndSolidModels(ArlequinModel arlq,
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::updateFluidMesh(){
+void FSInteraction<2,2>::updateFluidMesh(){
 
     for (int i = 0; i < numInterfaces; i++){
 
@@ -941,7 +958,7 @@ void FSInteraction<2>::updateFluidMesh(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::updateArlequinMesh(){
+void FSInteraction<2,2>::updateArlequinMesh(){
 
     // std::cout << "AQUI6.1 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
@@ -1014,7 +1031,7 @@ void FSInteraction<2>::updateArlequinMesh(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::transferSolidVelocity(){
+void FSInteraction<2,2>::transferSolidVelocity(){
     
 
     for (int i = 0; i < numInterfaces; i++){
@@ -1058,7 +1075,7 @@ void FSInteraction<2>::transferSolidVelocity(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::transferSolidVelocityArlequin(){
+void FSInteraction<2,2>::transferSolidVelocityArlequin(){
     
 
     for (int i = 0; i < numInterfaces; i++){
@@ -1102,7 +1119,7 @@ void FSInteraction<2>::transferSolidVelocityArlequin(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::transferFluidLoad(){
+void FSInteraction<2,2>::transferFluidLoad(){
     
     clearcouplingloads_();
     
@@ -1127,7 +1144,7 @@ void FSInteraction<2>::transferFluidLoad(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::transferArlequinLoad(){
+void FSInteraction<2,2>::transferArlequinLoad(){
     
     clearcouplingloads_();
     
@@ -1153,7 +1170,7 @@ void FSInteraction<2>::transferArlequinLoad(){
 //----------------SOLVES THE FLUID-STRUCTURE INTERACTION PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::solveFSIProblem(int numTimeSteps){
+void FSInteraction<2,2>::solveFSIProblem(int numTimeSteps){
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
@@ -1303,7 +1320,7 @@ void FSInteraction<2>::solveFSIProblem(int numTimeSteps){
 //----------------SOLVES THE FLUID-STRUCTURE INTERACTION PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
+void FSInteraction<2,2>::solveFSIProblemGaussSeidel(int numTimeSteps){
 
     std::string om = "omega.txt";
     std::ofstream saidaOmega(om.c_str());
@@ -1570,7 +1587,7 @@ void FSInteraction<2>::solveFSIProblemGaussSeidel(int numTimeSteps){
 //----------------SOLVES THE FLUID-STRUCTURE INTERACTION PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void FSInteraction<2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
+void FSInteraction<2,2>::solveFSIProblemGaussSeidelArlequin(int numTimeSteps){
 
 
     std::string om = "omega.txt";

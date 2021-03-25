@@ -16,7 +16,7 @@
 
 /// Defines the fluid boundary shape functions
 
-template<int DIM>
+template<int DIM, int DEG>
 class BoundShapeFunction {
 public:
     
@@ -53,7 +53,7 @@ private:
 // Defines quadratic shape functions and its derivatives 
 // for triangles and tetrahedrons
 template<>
-void BoundShapeFunction<2>::evaluate(double Xsi){
+void BoundShapeFunction<2,2>::evaluate(double Xsi){
     
     double aux;
     double Nnos = 3;

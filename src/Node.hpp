@@ -28,10 +28,11 @@
 #include <cmath>
 #include <limits>
 #include <ctime>
+#include <iostream>
 
 /// Defines the node object and stores all nodal variables information
 
-template<int DIM>
+template<int DIM, int DEG>
 
 class Node{
 public:
@@ -211,7 +212,7 @@ public:
     //............................Velocity functions............................
     /// Sets the velocity vector
     /// @param double* velocity vector
-    void setVelocity(double *u);
+    void setVelocity(double *u){for (int i=DIM; i--; ) velocity_[i] = u[i];};
     void setVelocityComponent(int dir, double val){velocity_[dir] = val;};
 
     void setPreviousVelocityComponent(int dir, double val){previousVelocity_[dir] = val;};
@@ -223,7 +224,7 @@ public:
 
     /// Sets the previous velocity vector
     /// @param double* previous time step velocity vector
-    void setPreviousVelocity(double *u);
+    void setPreviousVelocity(double *u){for (int i=DIM; i--; ) previousVelocity_[i] = u[i];};
 
     /// Increment the velocity vector
     /// @param int direction @param double increment value
@@ -255,7 +256,7 @@ public:
     //..........................Acceleration functions..........................
     /// Sets the acceleration vector
     /// @param double* acceleration vector
-    void setAcceleration(double *u);
+    void setAcceleration(double *u){for (int i=DIM; i--; ) acceleration_[i] = u[i];};
     void setAccelerationComponent(int dir, double val){acceleration_[dir] = val;};
 
 
@@ -269,7 +270,7 @@ public:
 
     /// Sets the previous time step acceleration vector
     /// @param double* previous time step acceleration vector
-    void setPreviousAcceleration(double *u);
+    void setPreviousAcceleration(double *u){for (int i=DIM; i--; ) previousAcceleration_[i] = u[i];};
     void setPreviousAccelerationComponent(int dir, double val){previousAcceleration_[dir] = val;};
 
     /// Gets the acceleration vector
@@ -296,7 +297,12 @@ public:
     //.........................Mesh Velocity functions..........................
     /// Sets the node mesh velocity
     /// @param double* mesh velocity
-    void setMeshVelocity(double *u);
+    void setMeshVelocity(double *u){
+        for (int i=DIM; i--; ){
+            previousMeshVelocity_[i] = meshVelocity_[i];
+            meshVelocity_[i] = u[i];          
+        };
+    };
     void setMeshVelocityComponent(int dir,double u){meshVelocity_[dir] = u;} ;
     void setMeshAccelerationComponent(int dir,double u){meshAcceleration_[dir] = u;} ;
 
@@ -415,93 +421,25 @@ public:
 //------------------------------------------------------------------------------
 //-------------------------------CLEAR VARIABLES--------------------------------
 //------------------------------------------------------------------------------
-template<>
-void Node<2>::clearVariables(){
+template<int DIM, int DEG>
+void Node<DIM,DEG>::clearVariables(){
     pressure_ = 0.;   
-    elemCorresp = 0;
-
-    if (constrainType[0] != 1){
-        velocity_[0] = 0.;   
-        previousVelocity_[0] = 0.;   
-        acceleration_[0] = 0.;
-        previousAcceleration_[0] = 0.;
-    };
-
-    if (constrainType[1] != 1){
-        velocity_[1] = 0.;   
-        previousVelocity_[1] = 0.;   
-        acceleration_[1] = 0.;
-        previousAcceleration_[1] = 0.;
-    };
-    
+    elemCorresp = 0;    
     weightFunction_ = 0.;
 
-    for (int i = 0; i < 2; ++i){
+    for (int i = 0; i < DIM; ++i){
+        if (constrainType[i] != 1){
+            velocity_[i] = 0.;   
+            previousVelocity_[i] = 0.;   
+            acceleration_[i] = 0.;
+            previousAcceleration_[i] = 0.;
+        }
         lagMultiplier_[i] = 0.;
         xsiCorresp[i] = 0.;
     }
     
     return;
 };
-
-//------------------------------------------------------------------------------
-//----------------------------NODAL VELOCITY VALUES-----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setVelocity(double *u){
-    //Sets Velocity value
-    velocity_[0] = u[0];
-    velocity_[1] = u[1]; 
-    return;
-};
-
-//------------------------------------------------------------------------------
-//---------------------SETS PREVIOUS NODAL VELOCITY VALUES----------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setPreviousVelocity(double *u){
-    //All element nodes
-    previousVelocity_[0] = u[0];
-    previousVelocity_[1] = u[1]; 
-    return;
-};
-
-//------------------------------------------------------------------------------
-//--------------------------NODAL ACCELERATION VALUES---------------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setAcceleration(double *u){
-    //All element nodes
-    acceleration_[0] = u[0];
-    acceleration_[1] = u[1]; 
-    return;
-};
-
-//------------------------------------------------------------------------------
-//-------------------SETS PREVIOUS NODAL ACCELERATION VALUES--------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setPreviousAcceleration(double *u){
-    //All element nodes
-    previousAcceleration_[0] = u[0];
-    previousAcceleration_[1] = u[1]; 
-    return;
-};
-
-//------------------------------------------------------------------------------
-//----------------------------NODAL VELOCITY VALUES-----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Node<2>::setMeshVelocity(double *u){
-    //All element nodes
-    previousMeshVelocity_[0] = meshVelocity_[0];
-    previousMeshVelocity_[1] = meshVelocity_[1]; 
-
-    meshVelocity_[0] = u[0];
-    meshVelocity_[1] = u[1]; 
-    return;
-};
-
 
 #endif
 

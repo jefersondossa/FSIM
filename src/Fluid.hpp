@@ -29,19 +29,23 @@
 
 /// Mounts the incompressible flow problem
 
-template<int DIM>
+template<int DIM, int DEG>
 class Fluid{
 public:
     /// Defines the class Element locally
-    typedef Element<DIM> Elements;
+    typedef Element<DIM,DEG> Elements;
 
     /// Defines the class Node locally
     typedef typename Elements::Nodes  Node;
 
     /// Defines the class Boundary locally
-    typedef Boundary<DIM> Boundaries;
+    typedef Boundary<DIM,DEG> Boundaries;
 
-    typedef FluidParameters<DIM> Parameters;
+    /// Defines the class Fluid Parameters locally
+    typedef FluidParameters<DIM,DEG> Parameters;
+
+    /// Defines the class Numerical integration locally
+    typedef DomainIntegration<DIM,DEG> DIntegration;
 
     /// Defines the vector of fluid nodes
     std::vector<Node *>       nodes_;
@@ -108,6 +112,7 @@ public:
     bool printLines;
     double integScheme;    //Time Integration Scheme
     Parameters fluidParameters;
+    DIntegration* numIntegration; //Numerical integration
 
 public:
 
@@ -203,7 +208,7 @@ public:
 //---------------------SUBDIVIDES THE FINITE ELEMENT DOMAIN---------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::domainDecompositionMETIS() {
+void Fluid<2,2>::domainDecompositionMETIS() {
     
     std::string mirror2;
     mirror2 = "domain_decomposition.txt";
@@ -262,7 +267,7 @@ void Fluid<2>::domainDecompositionMETIS() {
 //----------------------------PRINT VELOCITY RESULTS----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::printResults(int step) {
+void Fluid<2,2>::printResults(int step) {
 
     //    std::cout << "Printing Velocity Results" << std::endl;
     std::string result;
@@ -453,7 +458,7 @@ void Fluid<2>::printResults(int step) {
 //----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
+void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
 
     double dragCoefficient = 0.;
     double liftCoefficient = 0.;
@@ -484,7 +489,7 @@ void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
                 //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
                 int iel = boundary_[jel] -> getElement();
                 elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
-                elements_[iel] -> computeSeparationAngle();
+                // elements_[iel] -> computeSeparationAngle();
             };
         };
         
@@ -522,7 +527,7 @@ void Fluid<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
 
 
 template<>
-void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles) {
+void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles) {
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //+++++++++++++++++++++++++++++OPPENING FILES+++++++++++++++++++++++++++++
@@ -744,7 +749,11 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
 
     };
 
+    // numIntegration = new DIntegration();
 
+
+    // std::cout << "AAA 1 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++ELEMENTS++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -767,6 +776,9 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
     FSinterface = geometry_->getBoundaryCondition("FSINTERFACE"); 
 
     numFSIInterfaces = FSinterface.size();
+
+    // std::cout << "AAA 2 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
 
     for (int i = 0; i < number_elements; i++)
     {
@@ -801,13 +813,20 @@ void Fluid<2>::meshReading(Geometry* &geometry_, const std::string& inputFile, c
             connect = new int[6];
             for (int j = 0 ; j < 6; j++) connect[j] = elementNodes[j];
            
+            // std::cout << "AAA 3 " << rank << " " << index << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
 
-
-            Elements *el = new Elements(index++,connect,nodes_,fluidParameters);
+            Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
+            // std::cout << "AAA 5 " << rank << " " << index << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
             elements_.push_back(el);
+            // std::cout << "AAA 6 " << rank << " " << index << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
             for (int k = 0; k<6; k++){
                 nodes_[connect[k]] -> pushInverseIncidence(index);
             };
+            // std::cout << "AAA 7 " << rank << " " << index << std::endl;
+            // MPI_Barrier(PETSC_COMM_WORLD);
         }
         else if (name[0] == 'l')
         {
@@ -1218,7 +1237,7 @@ return;
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
 //------------------------------------------------------------------------------
 template<>
-int Fluid<2>::getInitialAcceleration() {
+int Fluid<2,2>::getInitialAcceleration() {
 
     Vec               b, u, All;
     PetscErrorCode    ierr;
@@ -1465,7 +1484,7 @@ int Fluid<2>::getInitialAcceleration() {
 //-------------------------SOLVE STEADY LAPLACE PROBLEM-------------------------
 //------------------------------------------------------------------------------
 template<>
-int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
+int Fluid<2,2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
     Vec               b, u, All;
     PetscErrorCode    ierr;
@@ -1666,7 +1685,7 @@ int Fluid<2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
 //------------------------------------------------------------------------------
 template<>
-void Fluid<2>::readInitialValues(const std::string& inputPrev, const std::string& inputCurr) {
+void Fluid<2,2>::readInitialValues(const std::string& inputPrev, const std::string& inputCurr) {
 
     int rank;
 
@@ -1748,7 +1767,7 @@ void Fluid<2>::readInitialValues(const std::string& inputPrev, const std::string
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
 //------------------------------------------------------------------------------
 template<>
-int Fluid<2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
+int Fluid<2,2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
 
     Vec               b, u, All, Allu;
     PetscErrorCode    ierr;

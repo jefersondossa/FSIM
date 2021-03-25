@@ -18,7 +18,7 @@
 
 /// Defines the gauss quadrature rule for the boundary integration
 
-template<int DIM>
+template<int DIM, int DEG>
 class BoundaryIntegQuadrature{
 public:
     static const int numIntPoints = 2;

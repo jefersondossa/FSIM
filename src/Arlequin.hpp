@@ -19,11 +19,11 @@
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
-template<int DIM>
+template<int DIM, int DEG>
 class Arlequin{
 public:
     /// Defines the class Fluid locally
-    typedef Fluid<DIM>                     FluidMesh;
+    typedef Fluid<DIM,DEG>                 FluidMesh;
 
     /// Defines the class Element locally
     typedef typename FluidMesh::Elements   Elements;
@@ -38,9 +38,9 @@ public:
     typedef typename Elements::SpecialQuad Quadrature;
 
     /// Defines the class Glue locally
-    typedef Glue<DIM>                      GlueZone;
+    typedef Glue<DIM,DEG>                  GlueZone;
 
-    typedef FluidParameters<DIM> Parameters;
+    typedef FluidParameters<DIM,DEG>       Parameters;
 
     FluidMesh coarseModel, fineModel;
 
@@ -212,7 +212,7 @@ public:
 //-------------------------COMPUTE ELEMENT REGIONS/BOXES------------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setElementBoxes() {
+void Arlequin<2,2>::setElementBoxes() {
     
     int *connec;
     double xk[2], Xk[2];
@@ -258,16 +258,20 @@ void Arlequin<2>::setElementBoxes() {
 //------------------------------------------------------------------------------
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
-template<>
-void Arlequin<2>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes, 
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes, 
                                            std::vector<Elements *> elements, 
                                            int numElem, int &elCorr, double* xsiCorr, int elSearch){
     
     
     int *connec;
-    QuadShapeFunction<2>                       shapeQuad;
+    QuadShapeFunction<2,2>                       shapeQuad;
     double phi_[6] = {};
-    double ainv[2][2] = {};
+
+    double **ainv;
+    ainv = new double*[DIM];
+    for (int i = DIM; i--; ) ainv[i] = new double[DIM];
+    
     double xsiCC[3];
     std::pair<double*,double*> XK;
     std::pair<double*,double*> dCk;
@@ -439,6 +443,9 @@ void Arlequin<2>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes,
         }
     };
 
+    for (int i = DIM; i--; ) delete [] ainv[i];
+    delete [] ainv;
+
     if (fabs(xsi[0]) > 2.) std::cout << "PROBEM SEARCHING NODE CORRESPONDENCE " 
                                      << std::endl;
 
@@ -449,7 +456,7 @@ void Arlequin<2>::searchNodeCorrespondence(double* x,std::vector<Nodes *> nodes,
 //--------COMPUTE NODAL CORRESPONDECE OF FINE NODES WITH COARSE ELEMENTS--------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setNodalCorrespondenceFine() {
+void Arlequin<2,2>::setNodalCorrespondenceFine() {
 
     //FINE MESH
     // for (int inode=0; inode < numNodesFine; inode ++){
@@ -558,7 +565,7 @@ void Arlequin<2>::setNodalCorrespondenceFine() {
 //--------COMPUTE NODAL CORRESPONDECE OF COARSE NODES WITH FINE ELEMENTS--------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setNodalCorrespondenceCoarse() {
+void Arlequin<2,2>::setNodalCorrespondenceCoarse() {
 
     //COARSE MESH
     for (int inode=0; inode < numNodesCoarse; inode ++){
@@ -635,7 +642,7 @@ void Arlequin<2>::setNodalCorrespondenceCoarse() {
 //--------------------SETS THE COUPLING ZONE IN COARSE MODEL--------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setSignaledDistance(){
+void Arlequin<2,2>::setSignaledDistance(){
 
 
     int *connec;
@@ -990,7 +997,7 @@ void Arlequin<2>::setSignaledDistance(){
 //--------------------SETS THE COUPLING ZONE IN COARSE MODEL--------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setCouplingZone(){
+void Arlequin<2,2>::setCouplingZone(){
 
     int *connec;
 
@@ -1215,7 +1222,7 @@ void Arlequin<2>::setCouplingZone(){
 //----------------------COMPUTES THE WEIGHT FUNCTION VALUE----------------------
 //------------------------------------------------------------------------------
 template<>
-double Arlequin<2>::weightFunctionFineValue(double r, double epsilon){
+double Arlequin<2,2>::weightFunctionFineValue(double r, double epsilon){
 
     double wFuncValue;
 
@@ -1316,7 +1323,7 @@ double Arlequin<2>::weightFunctionFineValue(double r, double epsilon){
 };
 
 template<>
-double Arlequin<2>::weightFunctionCoarseValue(double r, double epsilon){
+double Arlequin<2,2>::weightFunctionCoarseValue(double r, double epsilon){
 
     double wFuncValue;
 
@@ -1420,7 +1427,7 @@ double Arlequin<2>::weightFunctionCoarseValue(double r, double epsilon){
 //---------------------------SETS THE WEIGHT FUNCTION---------------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setWeightFunction(double val){
+void Arlequin<2,2>::setWeightFunction(double val){
     
     double wFuncValue;
 
@@ -1494,7 +1501,7 @@ void Arlequin<2>::setWeightFunction(double val){
 //-----------------------------PRINT COARSE RESULTS-----------------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::printResultsCoarse(int step) {
+void Arlequin<2,2>::printResultsCoarse(int step) {
 
     //PRINT COARSE MODEL RESULTS
     std::string result;
@@ -1859,7 +1866,7 @@ void Arlequin<2>::printResultsCoarse(int step) {
 //------------------------------PRINT FINE RESULTS------------------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::printResultsFine(int step) {
+void Arlequin<2,2>::printResultsFine(int step) {
 
     //PRINT FINE MODEL RESULTS
     std::string result;
@@ -2314,7 +2321,7 @@ void Arlequin<2>::printResultsFine(int step) {
 //------------SETS COARSE/FINE MESHES AND GETS ITS BASIC INFORMATIONS-----------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
+void Arlequin<2,2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
 
     coarseModel = coarse;
     fineModel = fine;
@@ -2449,7 +2456,7 @@ void Arlequin<2>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
 //----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
+void Arlequin<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
 
 
 
@@ -2537,7 +2544,7 @@ void Arlequin<2>::dragAndLiftCoefficients(std::ofstream& dragLift){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setMatVecValuesCoarseModel(double **matrix, double *rhs, int* connec){
+void Arlequin<2,2>::setMatVecValuesCoarseModel(double **matrix, double *rhs, int* connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < 6; i++){
@@ -2593,7 +2600,7 @@ void Arlequin<2>::setMatVecValuesCoarseModel(double **matrix, double *rhs, int* 
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setMatVecValuesFineModel(double **matrix, double *rhs, int* connec){
+void Arlequin<2,2>::setMatVecValuesFineModel(double **matrix, double *rhs, int* connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < 6; i++){
@@ -2649,7 +2656,7 @@ void Arlequin<2>::setMatVecValuesFineModel(double **matrix, double *rhs, int* co
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localMV_mat, 
+void Arlequin<2,2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localMV_mat, 
                                                  double **ArlequinA1, double **ArlequinA2, 
                                                  double *Rhs2, double *rhsLagMult2,
                                                  double *localMV_vec, double *RhsArlequin2,
@@ -2787,7 +2794,7 @@ void Arlequin<2>::setMatVecValuesLagMultFineFine(double **Ajac2, double **localM
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **localMV_mat, 
+void Arlequin<2,2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **localMV_mat, 
                                                    double **ArlequinA1, double **ArlequinA2, 
                                                    double *Rhs2, double *rhsLagMult2,
                                                    double *localMV_vec, double *RhsArlequin2,
@@ -2934,7 +2941,7 @@ void Arlequin<2>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double **loca
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::assembleArlequinSystem(){
+void Arlequin<2,2>::assembleArlequinSystem(){
 
     //Coarse mesh
     for (int jel = 0; jel < numElemCoarse; jel++){   
@@ -3133,7 +3140,7 @@ void Arlequin<2>::assembleArlequinSystem(){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-void Arlequin<2>::initialAcceleration(){
+void Arlequin<2,2>::initialAcceleration(){
 
     iTimeStep = 0.;
 
@@ -3545,7 +3552,7 @@ void Arlequin<2>::initialAcceleration(){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
+int Arlequin<2,2>::solveArlequinProblem(int iterNumber, double tolerance,
                                       int problem_type, int time_dependency){
 
 
@@ -4015,7 +4022,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 
 
         //Compute real velocity
-        QuadShapeFunction<2>                       shapeQuad;
+        QuadShapeFunction<2,2>                       shapeQuad;
         double phi_[6] = {};
         
         for (int i = 0; i<numNodesFine; i++){
@@ -4084,21 +4091,6 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
         };
 
         if (rank == 0) {
-            if (coarseModel.printVorticity){
-                for (int i = 0; i < numNodesCoarse; i++){
-                    nodesCoarse_[i] -> clearVorticity();
-                };
-                for (int i = 0; i < numNodesFine; i++){
-                    nodesFine_[i] -> clearVorticity();
-                };
-                for (int jel = 0; jel < numElemCoarse; jel++){
-                    elementsCoarse_[jel] -> computeVorticity();
-                };
-                for (int jel = 0; jel < numElemFine; jel++){
-                    elementsFine_[jel] -> computeVorticity();
-                };
-            };
-
             //Printing results
             printResultsCoarse(iTimeStep);
             printResultsFine(iTimeStep);
@@ -4117,7 +4109,7 @@ int Arlequin<2>::solveArlequinProblem(int iterNumber, double tolerance,
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
+int Arlequin<2,2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                             int problem_type, 
                                             int time_dependency){
 
@@ -4488,7 +4480,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 
         //Compute real velocity
         
-        QuadShapeFunction<2>                       shapeQuad;
+        QuadShapeFunction<2,2>                       shapeQuad;
         double phi_[6] = {};
         
         for (int i = 0; i<numNodesFine; i++){
@@ -4556,21 +4548,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
         };
 
         if (rank == 0) {
-            if (coarseModel.printVorticity){
-                for (int i = 0; i < numNodesCoarse; i++){
-                    nodesCoarse_[i] -> clearVorticity();
-                };
-                for (int i = 0; i < numNodesFine; i++){
-                    nodesFine_[i] -> clearVorticity();
-                };
-                for (int jel = 0; jel < numElemCoarse; jel++){
-                    elementsCoarse_[jel] -> computeVorticity();
-                };
-                for (int jel = 0; jel < numElemFine; jel++){
-                    elementsFine_[jel] -> computeVorticity();
-                };
-            };
-            
+                       
             //Printing results
             printResultsCoarse(iTimeStep);
             printResultsFine(iTimeStep);
@@ -4587,7 +4565,7 @@ int Arlequin<2>::solveArlequinProblemMoving(int iterNumber, double tolerance,
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<>
-int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
+int Arlequin<2,2>::solveFSIArlequin(int iterNumber, double tolerance,
                                   int problem_type, int iTimeStep){
 
 
@@ -4896,7 +4874,7 @@ int Arlequin<2>::solveFSIArlequin(int iterNumber, double tolerance,
 
 
     //Compute real velocity
-    QuadShapeFunction<2>                       shapeQuad;
+    QuadShapeFunction<2,2>                       shapeQuad;
     double phi_[6] = {};
     
     for (int i = 0; i<numNodesFine; i++){

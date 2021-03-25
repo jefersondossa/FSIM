@@ -16,7 +16,7 @@
 
 /// Defines the fluid boundary object and its properties
 
-template<int DIM>
+template<int DIM, int DEG>
 class Boundary{
 
 public: 

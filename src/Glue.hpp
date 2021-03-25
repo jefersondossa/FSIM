@@ -18,7 +18,7 @@
 
 /// Defines the gluing zone mesh
 
-template<int DIM>
+template<int DIM,int DEG>
 class Glue{
 private:
     int *connect_;           //Velocity mesh connectivity 
