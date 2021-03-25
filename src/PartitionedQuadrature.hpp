@@ -17,10 +17,9 @@
 
 /// Defines the domain integration sub-element partitioned Hammer quadrature
 
-template<int DIM>
+template<int DIM, int DEG>
 class IntegQuadratureSpecial{
 
-public:
 public:
     int getNumberOfIntegrationPoints(){
         return (*(&pointWeight+1) - pointWeight);
@@ -158,7 +157,7 @@ private:
 //-----------------------QUADRATURE POINTS - COORDINATES------------------------
 //------------------------------------------------------------------------------
 template<>
-double IntegQuadratureSpecial<2>::PointList(int i, int j){
+double IntegQuadratureSpecial<2,2>::PointList(int i, int j){
     
     return pointCoord[i][j];
 };
@@ -168,7 +167,7 @@ double IntegQuadratureSpecial<2>::PointList(int i, int j){
 //-------------------------QUADRATURE POINTS - WEIGHTS--------------------------
 //------------------------------------------------------------------------------
 template<>
-double IntegQuadratureSpecial<2>::WeightList(int i){
+double IntegQuadratureSpecial<2,2>::WeightList(int i){
 
     return pointWeight[i];
 };
@@ -178,7 +177,7 @@ double IntegQuadratureSpecial<2>::WeightList(int i){
 //-----------COMPUTES THE VALUE INTERPOLATED IN THE INTEGRATION POINT-----------
 //------------------------------------------------------------------------------
 template<>
-double IntegQuadratureSpecial<2>::interpolateQuadraticVariable(double nValues[], int point){
+double IntegQuadratureSpecial<2,2>::interpolateQuadraticVariable(double nValues[], int point){
     
     double xsi[2];
 

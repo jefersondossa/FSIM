@@ -16,7 +16,7 @@
 
 /// Defines the fluid boundary shape functions
 
-template<int DIM>
+template<int DIM, int DEG>
 class FluidParameters {
 public:
     

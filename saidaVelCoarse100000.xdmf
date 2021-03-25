@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude" >
+<Domain>
+  <Grid>
+    <Topology TopologyType="Tri_6" NumberOfElements="40902" >
+      <DataItem Format=    "HDF" NumberType="int" Dimensions="40902 6" >
+        geometryCoarse.h5:/connec
+      </DataItem>
+    </Topology>
+    <Geometry GeometryType="XYZ">
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 3">
+        geometryCoarse.h5:/coords
+      </DataItem>
+    </Geometry>
+    <Attribute Name="Velocity" Center="Node" AttributeType="Vector" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 3">
+        resultCoarse100000.h5:/velocity
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Acceleration" Center="Node" AttributeType="Vector" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 3">
+        resultCoarse100000.h5:/acceleration
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Real Velocity" Center="Node" AttributeType="Vector" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 3">
+        resultCoarse100000.h5:/realVelocity
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Lagrange Multipliers" Center="Node" AttributeType="Vector" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 3">
+        resultCoarse100000.h5:/lagrangeMultiplers
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Dist Function" Center="Node" AttributeType="Scalar" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="1 82013">
+        resultCoarse100000.h5:/distfunction
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Weight Function" Center="Node" AttributeType="Scalar" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="1 82013">
+        resultCoarse100000.h5:/weightFunction
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Pressure" Center="Node" AttributeType="Scalar" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 1">
+        resultCoarse100000.h5:/pressure
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Real Pressure" Center="Node" AttributeType="Scalar" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="82013 1">
+        resultCoarse100000.h5:/realPressure
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Process" Center="Cell" AttributeType="Scalar" >
+      <DataItem Format="HDF" NumberType="int" Dimensions="40902 1">
+        resultCoarse100000.h5:/process
+      </DataItem>
+    </Attribute>
+    <Attribute Name="Weight Function" Center="Cell" AttributeType="Scalar" >
+      <DataItem Format="HDF" NumberType="double" Dimensions="40902 1">
+        resultCoarse100000.h5:/weightFunction2
+      </DataItem>
+    </Attribute>
+  </Grid>
+</Domain>
+</Xdmf>

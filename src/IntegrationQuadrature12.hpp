@@ -18,7 +18,7 @@
 
 /// Defines a special quadrature rule (equal to the normal quadradure rule) used for the integration of problems with coincident meshes
 
-template<int DIM>
+template<int DIM, int DEG>
 class IntegQuadratureSpecial{
  
 public:
