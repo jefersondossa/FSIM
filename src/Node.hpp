@@ -28,6 +28,7 @@
 #include <cmath>
 #include <limits>
 #include <ctime>
+#include <numeric>
 #include <iostream>
 
 /// Defines the node object and stores all nodal variables information
