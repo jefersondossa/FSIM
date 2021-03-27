@@ -53,7 +53,7 @@ private:
     const int     nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
     std::vector<Nodes *>   *nodes_;    //Velocity nodes
     FParameters   parameters;
-    int           *connect_;           //Velocity mesh connectivity 
+    int           connect_[3*(DIM*DEG-DEG)-2*DIM+4]; //Velocity mesh connectivity 
     int           index_;             //Element index
     double        djac_;              //Jacobian determinant
     double        x_, y_;
@@ -85,7 +85,7 @@ public:
     /// @param vector<Nodes> 
     Element(int index, int *connect, std::vector<Nodes *> &nodes, FParameters &param, DIntegration* &dInt){
         index_ = index;
-        connect_ = connect;
+        for (int i = nElNodes; i--; ) connect_[i] = connect[i];
         nodes_ = &nodes;
         parameters = param;
 
@@ -95,7 +95,7 @@ public:
 
         djac_ = 0.; 
         glueZone = false;        FSIInterface = false;
-        sideBoundary_ = 0;
+        sideBoundary_ = -1;
 
         NormalQuad nQuad = NormalQuad();
         // std::cout <<"AASASD 3"<<std::endl;
@@ -141,8 +141,8 @@ public:
     void clearVariables();
 
     /// Sets the element connectivity
-    /// @param Connectivity element connectivity
-    void setConnectivity(int *connect){connect_ = connect;};
+    /// @param int* element connectivity
+    void setConnectivity(int *connect){for (int i=nElNodes; i--; ) connect_[i] = connect[i];};
 
     /// Gets the element connectivity
     /// @return element connectivity
@@ -261,6 +261,10 @@ public:
     /// Gets the mesh moving weighting parameter
     /// @return mesh moving weighting parameter
     double getMeshMovingParameter(){return meshMovingParameter;};
+
+    /// Gets the boundary connectivity for boundary integration
+    /// @param int* boundary connectivity
+    void getBoundaryNodes(int *nodesb_);
 
     //.................Element intersection and correspondence..................
     /// Gets the element intersection parameters 
@@ -479,13 +483,124 @@ void Element<3,2>::computeInverseAndDeterminant(double &djac_, double **ainv_, d
     return;
 }
 
+//------------------------------------------------------------------------------
+//---------------CREATES AN AUXILIARY FINITE ELEMENT OF DIMENSION---------------
+//----------------------DIM-1 FOR THE BOUNDARY INTEGRATION----------------------
+//------------------------------------------------------------------------------
+template<>
+void Element<2,1>::getBoundaryNodes(int *nodesb_){
+
+    if(sideBoundary_ == 0){
+        nodesb_[0] = connect_[2]; 
+        nodesb_[1] = connect_[1]; 
+    }else{
+        if(sideBoundary_ == 1){
+            nodesb_[0] = connect_[0]; 
+            nodesb_[1] = connect_[2]; 
+        }else{
+            nodesb_[0] = connect_[1];
+            nodesb_[1] = connect_[0];
+        };        
+    };
+
+    return;
+}
+template<>
+void Element<2,2>::getBoundaryNodes(int *nodesb_){
+    //!!!!!!!ATENÇÃO ESSAS CONECTIVIDADES FORAM ALTERADAS EM RELAÇÃO AO PROGRAMA Fluid.
+    if(sideBoundary_ == 0){
+        nodesb_[0] = connect_[1]; 
+        nodesb_[1] = connect_[2]; 
+        nodesb_[2] = connect_[4];         
+    }else{
+        if(sideBoundary_ == 1){
+            nodesb_[0] = connect_[2]; 
+            nodesb_[1] = connect_[0]; 
+            nodesb_[2] = connect_[5]; 
+        }else{
+            nodesb_[0] = connect_[0];
+            nodesb_[1] = connect_[1];
+            nodesb_[2] = connect_[3];
+        };        
+    };
+
+    return;
+}
+
+template<>
+void Element<3,1>::getBoundaryNodes(int *nodesb_){
+
+    if(sideBoundary_ == 0){
+        nodesb_[0] = connect_[1]; 
+        nodesb_[1] = connect_[2]; 
+        nodesb_[2] = connect_[3];         
+    }else{
+        if(sideBoundary_ == 1){
+            nodesb_[0] = connect_[0]; 
+            nodesb_[1] = connect_[3]; 
+            nodesb_[2] = connect_[2]; 
+        }else{
+            if(sideBoundary_ == 2){
+                nodesb_[0] = connect_[0];
+                nodesb_[1] = connect_[1];
+                nodesb_[2] = connect_[3];
+            }else{
+                nodesb_[0] = connect_[0];
+                nodesb_[1] = connect_[2];
+                nodesb_[2] = connect_[1];
+            }
+        };        
+    };
+
+    return;
+}
+
+template<>
+void Element<3,2>::getBoundaryNodes(int *nodesb_){
+
+    if(sideBoundary_ == 0){
+        nodesb_[0] = connect_[2]; 
+        nodesb_[1] = connect_[3]; 
+        nodesb_[2] = connect_[1];
+        nodesb_[3] = connect_[9]; 
+        nodesb_[4] = connect_[8]; 
+        nodesb_[5] = connect_[5];
+    }else{
+        if(sideBoundary_ == 1){
+            nodesb_[0] = connect_[0]; 
+            nodesb_[1] = connect_[3]; 
+            nodesb_[2] = connect_[2];
+            nodesb_[3] = connect_[7]; 
+            nodesb_[4] = connect_[9]; 
+            nodesb_[5] = connect_[6];
+        }else{
+            if(sideBoundary_ == 2){
+                nodesb_[0] = connect_[3]; 
+                nodesb_[1] = connect_[0]; 
+                nodesb_[2] = connect_[1];
+                nodesb_[3] = connect_[7]; 
+                nodesb_[4] = connect_[4]; 
+                nodesb_[5] = connect_[8];
+            }else{
+                nodesb_[0] = connect_[0]; 
+                nodesb_[1] = connect_[2]; 
+                nodesb_[2] = connect_[1];
+                nodesb_[3] = connect_[6]; 
+                nodesb_[4] = connect_[5]; 
+                nodesb_[5] = connect_[4];
+            }
+        };        
+    };
+
+    return;
+}
 
 
 //------------------------------------------------------------------------------
 //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
 //------------------------------------------------------------------------------
-template<>
-void Element<2,2>::setIntersectionParameters(double *x, double *X) {
+template<int DIM, int DEG>
+void Element<DIM,DEG>::setIntersectionParameters(double *x, double *X) {
     xK[0] = x[0]; xK[1] = x[1]; 
     XK[0] = X[0]; XK[1] = X[1];
     return;
@@ -494,12 +609,12 @@ void Element<2,2>::setIntersectionParameters(double *x, double *X) {
 //------------------------------------------------------------------------------
 //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
 //------------------------------------------------------------------------------
-template<>
-void Element<2,2>::setIntegPointWeightFunction() {
+template<int DIM, int DEG>
+void Element<DIM,DEG>::setIntegPointWeightFunction() {
     
-    double xsi[2] = {};
+    double xsi[DIM] = {};
     ShapeFunction shapeQuad;
-    double phi_[6] = {};
+    double phi_[nElNodes] = {};
     
     NormalQuad nQuad = NormalQuad();
     for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
@@ -522,7 +637,7 @@ void Element<2,2>::setIntegPointWeightFunction() {
        //Computes the velocity shape functions
        shapeQuad.evaluate(xsi,phi_);
 
-       for (int j=0; j<6; j++){
+       for (int j=0; j<nElNodes; j++){
            intPointWeightFunction[index] += phi_[j] * (*nodes_)[connect_[j]] -> getWeightFunction();
        };
        // intPointWeightFunction(index) = 1.;
@@ -547,7 +662,7 @@ void Element<2,2>::setIntegPointWeightFunction() {
        //Computes the velocity shape functions
        shapeQuad.evaluate(xsi,phi_);
 
-       for (int j=0; j<6; j++){
+       for (int j=0; j<nElNodes; j++){
            intPointWeightFunctionSpecial[index] += phi_[j] * (*nodes_)[connect_[j]] -> getWeightFunction();
        };
        // intPointWeightFunction(index) = 1.;
@@ -778,7 +893,6 @@ void Element<DIM,DEG>::interpolateVelocity(int &index, double *u_, double *uPrev
         u_[i] = 0.;
         uPrev_[i] = 0.;
     }
-
     for (int i = nElNodes; i--; ){
         double shapeFi = phi_[i];
         for (int j = DIM; j--; ){
@@ -786,7 +900,6 @@ void Element<DIM,DEG>::interpolateVelocity(int &index, double *u_, double *uPrev
             uPrev_[j] += (*nodes_)[connect_[i]] -> getPreviousVelocity(j) * shapeFi;
         }
     }
-
     return;
 }
 
@@ -1043,7 +1156,7 @@ void Element<DIM,DEG>::computeDragAndLiftForces(double &pressureDragForce, doubl
 
     BoundaryQuad           bQuad;     //Boundary Integration Quadrature
     ShapeFunction          shapeQuad;
-    double phi_[6] = {};
+    double phi_[nElNodes] = {};
     
     double **dphi_dx;
     dphi_dx = new double*[DIM];
@@ -1283,8 +1396,8 @@ void Element<DIM,DEG>::getParameterSUPG(double &tSUPG_, double &tPSPG_, double &
 //------------------------------------------------------------------------------
 //------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
 //------------------------------------------------------------------------------
-template<>
-void Element<2,2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tLSIC_, double *phi_, double **dphi_dx) {
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &tLSIC_, double *phi_, double **dphi_dx) {
 
     double        tSUGN1_;
     double        tSUGN2_;
@@ -1314,7 +1427,7 @@ void Element<2,2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &
     double &dTime_ = parameters.getTimeStep();
     double &k1 = parameters.getArlequinK1();
 
-    for (int i = 0; i < 6; i++){
+    for (int i = 0; i < nElNodes; i++){
         double ua = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(0);
         double va = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(1);
         // double ua = (*nodes_)[connect_[i]] -> getVelocity(0);
@@ -1355,7 +1468,7 @@ void Element<2,2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &
     };
 
 
-    for (int i = 0; i < 6; i++){
+    for (int i = 0; i < nElNodes; i++){
         double ua = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(0);
         double va = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(1) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(1);
         // double ua = (*nodes_)[connect_[i]] -> getVelocity(0);
@@ -1398,7 +1511,7 @@ void Element<2,2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &
     
     double hUGNL_ = 0.;
     double hRGNL_ = 0.;
-    for (int i = 0; i < 6; i++){
+    for (int i = 0; i < nElNodes; i++){
         hRGN_ += std::fabs(r[0] * dphi_dx[0][i] + r[1] * dphi_dx[1][i]);
         hUGN_ += std::fabs(s[0] * dphi_dx[0][i] + s[1] * dphi_dx[1][i]);        
 
@@ -1476,7 +1589,7 @@ void Element<2,2>::getParameterArlequin(double &tSUPG_, double &tPSPG_, double &
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * std::sqrt(u_ * u_ + v_ * v_) / std::sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_ * 1.e0;
+    tARLQ_ = -1. * k1 * tSUPG_ * 1.e-2;
     //}
     //tARLQ_ = 0.;
 
@@ -1914,7 +2027,7 @@ void Element<DIM,DEG>::getResidualVector(int &index, double *phi_, double **dphi
     double &alpha_f = parameters.getAlphaF();
     double &alpha_m = parameters.getAlphaM();
     double &gamma = parameters.getGamma();
-    double* &fieldForce = parameters.getFieldForce();
+    double* fieldForce = parameters.getFieldForce();
 
     //Velocity
     double u_[DIM], uPrev_[DIM], una_[DIM];

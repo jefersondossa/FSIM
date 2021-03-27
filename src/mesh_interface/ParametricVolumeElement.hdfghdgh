@@ -1,0 +1,288 @@
+#pragma once
+#include "ParametricElement.h"
+#include <string>
+#include <iostream>
+
+class ParametricVolumeElement : public ParametricElement
+{
+    public:
+        ParametricVolumeElement(const int& index, const std::vector<NodeMesh*>& nodes, const PartitionOfUnity elementType);
+
+        ~ParametricVolumeElement() override;
+
+        void getShapeFunctions(const double& xsi1, const double& xsi2, const double& xsi3, double*& phi, double*& dphi_dxsi1, double*& dphi_dxsi2, 
+                               double*& dphi_dxsi3);
+
+        void getShapeFunctionsAtIntegrationPoints(double**& phi, double**& dphi_dxsi1, double**& dphi_dxsi2, double**& dphi_dxsi3, double*& weight);
+
+        std::vector<NodeMesh*> getBoundaryNodes(const int& boundaryIndex) const override;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ParametricVolumeElement::ParametricVolumeElement(const int& index, const std::vector<NodeMesh*>& nodes, const PartitionOfUnity elementType)
+    : ParametricElement(index, nodes)
+{
+    switch (elementType)
+    {
+        case TET4:
+            order_ = 1;
+            numberOfIntegrationPoints_ = 4;
+            partitionOfUnity_ = TET4;
+            break;
+        case TET10:
+            order_ = 2;
+            numberOfIntegrationPoints_ = 14;
+            partitionOfUnity_ = TET10;
+            break;
+        case TET20:
+            order_ = 3;
+            numberOfIntegrationPoints_ = 24;
+            partitionOfUnity_ = TET20;
+            break;
+        default:
+            std::cout << "Volume element not implemented!\n";
+            exit(EXIT_FAILURE);
+    }
+}
+
+ParametricVolumeElement::~ParametricVolumeElement() {std::cout << "ParametricVolumeElement " << index_ << " deleted.\n";}
+
+void ParametricVolumeElement::getShapeFunctions(const double& xsi1, const double& xsi2, const double& xsi3, double*& phi, double*& dphi_dxsi1, double*& dphi_dxsi2,
+                                               double*& dphi_dxsi3)
+{
+    const int numberOfNodes = nodes_.size();
+    phi = new double[numberOfNodes];
+    dphi_dxsi1 = new double[numberOfNodes];
+    dphi_dxsi2 = new double[numberOfNodes];
+    dphi_dxsi3 = new double[numberOfNodes];
+
+    switch (partitionOfUnity_)
+    {
+    case TET4:
+        phi[0] = 1.0 - xsi1 - xsi2 - xsi3;
+        phi[1] = xsi1;
+        phi[2] = xsi2;
+        phi[3] = xsi3;
+
+        dphi_dxsi1[0] = -1.0;
+        dphi_dxsi1[1] = 1.0;
+        dphi_dxsi1[2] = 0.0;
+        dphi_dxsi1[3] = 0.0;
+
+        dphi_dxsi2[0] = -1.0;
+        dphi_dxsi2[1] = 0.0;
+        dphi_dxsi2[2] = 1.0;
+        dphi_dxsi2[3] = 0.0;
+
+        dphi_dxsi3[0] = -1.0;
+        dphi_dxsi3[1] = 0.0;
+        dphi_dxsi3[2] = 0.0;
+        dphi_dxsi3[3] = 1.0;
+        break;
+    case TET10:
+        phi[0] = 1.0 - 3.0 * xsi1 + 2.0 * xsi1 * xsi1 - 3.0 * xsi2 + 4.0 * xsi1 * xsi2 + 2.0 * xsi2 * xsi2 - 3.0 * xsi3 + 4.0 * xsi1 * xsi3 + 4.0 * xsi2 * xsi3 + 2.0 * xsi3 * xsi3;
+        phi[1] = (2.0 * xsi1 - 1.0) * xsi1;
+        phi[2] = (2.0 * xsi2 - 1.0) * xsi2;
+        phi[3] = (2.0 * xsi3 - 1.0) * xsi3;
+        phi[4] = 4.0 * xsi1 - 4.0 * xsi1 * xsi1 - 4.0 * xsi1 * xsi2 - 4.0 * xsi1 * xsi3;
+        phi[5] = 4.0 * xsi1 * xsi2;
+        phi[6] = 4.0 * xsi2 - 4.0 * xsi1 * xsi2 - 4.0 * xsi2 * xsi2 - 4.0 * xsi2 * xsi3;
+        phi[7] = 4.0 * xsi3 - 4.0 * xsi1 * xsi3 - 4.0 * xsi2 * xsi3 - 4.0 * xsi3 * xsi3;
+        phi[8] = 4.0 * xsi2 * xsi3;
+        phi[9] = 4.0 * xsi1 * xsi3;
+
+        dphi_dxsi1[0] = -3.0 + 4.0 * xsi1 + 4.0 * xsi2 + 4.0 * xsi3;
+        dphi_dxsi1[1] = -1.0 + 4.0 * xsi1;
+        dphi_dxsi1[2] = 0.0;
+        dphi_dxsi1[3] = 0.0;
+        dphi_dxsi1[4] = 4.0 - 8.0 * xsi1 - 4.0 * xsi2 - 4.0 * xsi3;
+        dphi_dxsi1[5] = 4.0 * xsi2;
+        dphi_dxsi1[6] = -4.0 * xsi2;
+        dphi_dxsi1[7] = -4.0 * xsi3;
+        dphi_dxsi1[8] = 0.0;
+        dphi_dxsi1[9] = 4.0 * xsi3;
+
+        dphi_dxsi2[0] = -3.0 + 4.0 * xsi1 + 4.0 * xsi2 + 4.0 * xsi3;
+        dphi_dxsi2[1] = 0.0;
+        dphi_dxsi2[2] = -1.0 + 4.0 * xsi2;
+        dphi_dxsi2[3] = 0.0;
+        dphi_dxsi2[4] = -4.0 * xsi1;
+        dphi_dxsi2[5] = 4.0 * xsi1;
+        dphi_dxsi2[6] = 4.0 - 4.0 * xsi1 - 8.0 * xsi2 - 4.0 * xsi3;
+        dphi_dxsi2[7] = -4.0 * xsi3;
+        dphi_dxsi2[8] = 4.0 * xsi3;
+        dphi_dxsi2[9] = 0.0;
+
+        dphi_dxsi3[0] = -3.0 + 4.0 * xsi1 + 4.0 * xsi2 + 4.0 * xsi3;
+        dphi_dxsi3[1] = 0.0;
+        dphi_dxsi3[2] = 0.0;
+        dphi_dxsi3[3] = -1.0 + 4.0 * xsi3;
+        dphi_dxsi3[4] = -4.0 * xsi1;
+        dphi_dxsi3[5] = 0.0;
+        dphi_dxsi3[6] = -4.0 * xsi2;
+        dphi_dxsi3[7] = 4.0 - 4.0 * xsi1 - 4.0 * xsi2 - 8.0 * xsi3;
+        dphi_dxsi3[8] = 4.0 * xsi2;
+        dphi_dxsi3[9] = 4.0 * xsi1;
+        break;
+    case TET20:
+        double xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
+
+        phi[0] = (1.0 / 2.0) * (3.0 * xsi4 - 1.0) * (3.0 * xsi4 - 2.0) * xsi4;
+        phi[1] = (1.0 / 2.0) * (3.0 * xsi1 - 1.0) * (3.0 * xsi1 - 2.0) * xsi1;
+        phi[2] = (1.0 / 2.0) * (3.0 * xsi2 - 1.0) * (3.0 * xsi2 - 2.0) * xsi2;
+        phi[3] = (1.0 / 2.0) * (3.0 * xsi3 - 1.0) * (3.0 * xsi3 - 2.0) * xsi3;
+        phi[4] = (9.0 / 2.0) * (3.0 * xsi4 - 1.0) * xsi1 * xsi4;
+        phi[5] = (9.0 / 2.0) * (3.0 * xsi1 - 1.0) * xsi1 * xsi4;
+        phi[6] = (9.0 / 2.0) * (3.0 * xsi1 - 1.0) * xsi1 * xsi2;
+        phi[7] = (9.0 / 2.0) * (3.0 * xsi2 - 1.0) * xsi1 * xsi2;
+        phi[8] = (9.0 / 2.0) * (3.0 * xsi2 - 1.0) * xsi2 * xsi4;
+        phi[9] = (9.0 / 2.0) * (3.0 * xsi4 - 1.0) * xsi2 * xsi4;
+        phi[10] = (9.0 / 2.0) * (3.0 * xsi3 - 1.0) * xsi3 * xsi4;
+        phi[11] = (9.0 / 2.0) * (3.0 * xsi4 - 1.0) * xsi3 * xsi4;
+        phi[12] = (9.0 / 2.0) * (3.0 * xsi3 - 1.0) * xsi2 * xsi3;
+        phi[13] = (9.0 / 2.0) * (3.0 * xsi2 - 1.0) * xsi2 * xsi3;
+        phi[14] = (9.0 / 2.0) * (3.0 * xsi3 - 1.0) * xsi1 * xsi3;
+        phi[15] = (9.0 / 2.0) * (3.0 * xsi1 - 1.0) * xsi1 * xsi3;
+        phi[16] = 27.0 * xsi1 * xsi2 * xsi4;
+        phi[17] = 27.0 * xsi1 * xsi3 * xsi4;
+        phi[18] = 27.0 * xsi2 * xsi3 * xsi4;
+        phi[19] = 27.0 * xsi1 * xsi2 * xsi3;
+
+        dphi_dxsi1[0] = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
+        dphi_dxsi1[1] = 0.50 * (2.0 - 18.0 * xsi1 + 27.0 * xsi1 * xsi1);
+        dphi_dxsi1[2] = 0.0;
+        dphi_dxsi1[3] = 0.0;
+        dphi_dxsi1[4] = 9.0 / 2.0 * (2.0 - 10.0 * xsi1 + 9.0 * xsi1 * xsi1 - 5.0 * xsi2 + 12.0 * xsi1 * xsi2 + 3.0 * xsi2 * xsi2 - 5.0 * xsi3 + 12.0 * xsi1 * xsi3 + 6.0 * xsi2 * xsi3 + 3.0 * xsi3 * xsi3);
+        dphi_dxsi1[5] = -9.0 / 2.0 * (1.0 - 8.0 * xsi1 + 9.0 * xsi1 * xsi1 - xsi2 + 6.0 * xsi1 * xsi2 - xsi3 + 6.0 * xsi1 * xsi3);
+        dphi_dxsi1[6] = 9.0 / 2.0 * (-1.0 + 6.0 * xsi1) * xsi2;
+        dphi_dxsi1[7] = 9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+        dphi_dxsi1[8] = -9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+        dphi_dxsi1[9] = 9.0 / 2.0 * xsi2 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+        dphi_dxsi1[10] = -9.0 / 2.0 * xsi3 * (-1.0 + 3.0 * xsi3);
+        dphi_dxsi1[11] = 9.0 / 2.0 * xsi3 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+        dphi_dxsi1[12] = 0.0;
+        dphi_dxsi1[13] = 0.0;
+        dphi_dxsi1[14] = 9.0 / 2.0 * xsi3 * (-1.0 + 3.0 * xsi3);
+        dphi_dxsi1[15] = 9.0 / 2.0 * (-1.0 + 6.0 * xsi1) * xsi3;
+        dphi_dxsi1[16] = -27.0 * xsi2 * (-1.0 + 2.0 * xsi1 + xsi2 + xsi3);
+        dphi_dxsi1[17] = -27.0 * xsi3 * (-1.0 + 2.0 * xsi1 + xsi2 + xsi3);
+        dphi_dxsi1[18] = -27.0 * xsi2 * xsi3;
+        dphi_dxsi1[19] = 27.0 * xsi2 * xsi3;
+
+        dphi_dxsi2[0] = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
+        dphi_dxsi2[1] = 0.0;
+        dphi_dxsi2[2] = 0.50 * (2.0 - 18.0 * xsi2 + 27.0 * xsi2 * xsi2);
+        dphi_dxsi2[3] = 0.0;
+        dphi_dxsi2[4] = 9.0 / 2.0 * xsi1 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+        dphi_dxsi2[5] = -9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+        dphi_dxsi2[6] = 9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+        dphi_dxsi2[7] = 9.0 / 2.0 * xsi1 * (-1.0 + 6.0 * xsi2);
+        dphi_dxsi2[8] = -9.0 / 2.0 * (1.0 - xsi1 - 8.0 * xsi2 - xsi3 + 6.0 * xsi1 * xsi2 + 6.0 * xsi2 * xsi3 + 9.0 * xsi2 * xsi2);
+        dphi_dxsi2[9] = 9.0 / 2.0 * (2.0 - 5.0 * xsi1 + 3.0 * xsi1 * xsi1 - 10.0 * xsi2 + 12.0 * xsi1 * xsi2 + 9.0 * xsi2 * xsi2 - 5.0 * xsi3 + 6.0 * xsi1 * xsi3 + 12.0 * xsi2 * xsi3 + 3.0 * xsi3 * xsi3);
+        dphi_dxsi2[10] = -9.0 / 2.0 * xsi3 * (-1.0 + 3.0 * xsi3);
+        dphi_dxsi2[11] = 9.0 / 2.0 * xsi3 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+        dphi_dxsi2[12] = 9.0 / 2.0 * (-1.0 + 3.0 * xsi3) * xsi3;
+        dphi_dxsi2[13] = 9.0 / 2.0 * (-1.0 + 6.0 * xsi2) * xsi3;
+        dphi_dxsi2[14] = 0.0;
+        dphi_dxsi2[15] = 0.0;
+        dphi_dxsi2[16] = -27.0 * xsi1 * (-1.0 + xsi1 + 2.0 * xsi2 + xsi3);
+        dphi_dxsi2[17] = -27.0 * xsi1 * xsi3;
+        dphi_dxsi2[18] = -27.0 * xsi3 * (-1.0 + xsi1 + 2.0 * xsi2 + xsi3);
+        dphi_dxsi2[19] = 27.0 * xsi1 * xsi3;
+
+        dphi_dxsi3[0] = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
+        dphi_dxsi3[1] = 0.0;
+        dphi_dxsi3[2] = 0.0;
+        dphi_dxsi3[3] = 0.50 * (2.0 - 18.0 * xsi3 + 27.0 * xsi3 * xsi3);
+        dphi_dxsi3[4] = 9.0 / 2.0 * xsi1 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+        dphi_dxsi3[5] = -9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+        dphi_dxsi3[6] = 0.0;
+        dphi_dxsi3[7] = 0.0;
+        dphi_dxsi3[8] = -9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+        dphi_dxsi3[9] = 9.0 / 2.0 * xsi2 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+        dphi_dxsi3[10] = -9.0 / 2.0 * (1.0 - xsi1 - xsi2 - 8.0 * xsi3 + 6.0 * xsi1 * xsi3 + 6.0 * xsi2 * xsi3 + 9.0 * xsi3 * xsi3);
+        dphi_dxsi3[11] = 9.0 / 2.0 * (2.0 - 5.0 * xsi1 + 3.0 * xsi1 * xsi1 - 5.0 * xsi2 + 6.0 * xsi1 * xsi2 + 3.0 * xsi2 * xsi2 - 10.0 * xsi3 + 12.0 * xsi1 * xsi3 + 12.0 * xsi2 * xsi3 + 9.0 * xsi3 * xsi3);
+        dphi_dxsi3[12] = 9.0 / 2.0 * xsi2 * (-1.0 + 6.0 * xsi3);
+        dphi_dxsi3[13] = 9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+        dphi_dxsi3[14] = 9.0 / 2.0 * xsi1 * (-1.0 + 6.0 * xsi3);
+        dphi_dxsi3[15] = 9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+        dphi_dxsi3[16] = -27.0 * xsi1 * xsi2;
+        dphi_dxsi3[17] = -27.0 * xsi1 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
+        dphi_dxsi3[18] = -27.0 * xsi2 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
+        dphi_dxsi3[19] = 27.0 * xsi1 * xsi2;
+        break;
+    }
+}
+
+void ParametricVolumeElement::getShapeFunctionsAtIntegrationPoints(double**& phi, double**& dphi_dxsi1, double**& dphi_dxsi2, double**& dphi_dxsi3, double*& weight)
+{
+    double *xsi1, *xsi2, *xsi3;
+    switch (partitionOfUnity_)
+    {
+    case TET4:
+    case TET10:
+    case TET20:
+        quadratures::tetrahedronQuadrature(numberOfIntegrationPoints_, xsi1, xsi2, xsi3, weight);
+        break;
+    }
+
+    phi = new double*[numberOfIntegrationPoints_];
+    dphi_dxsi1 = new double*[numberOfIntegrationPoints_];
+    dphi_dxsi2 = new double*[numberOfIntegrationPoints_];
+    dphi_dxsi3 = new double*[numberOfIntegrationPoints_];
+
+    for (int i = 0; i < numberOfIntegrationPoints_; i++)
+    {
+        //double *_phi, *_dphi_dxsi1, *_dphi_dxsi2, *_dphi_dxsi3;
+        getShapeFunctions(xsi1[i], xsi2[i], xsi3[i], phi[i], dphi_dxsi1[i], dphi_dxsi2[i], dphi_dxsi3[i]);
+        // phi[i] = _phi;
+        // dphi_dxsi1[i] = _dphi_dxsi1;
+        // dphi_dxsi2[i] = _dphi_dxsi2;
+        // dphi_dxsi3[i] = _dphi_dxsi3;
+    }
+    delete[] xsi1;
+    delete[] xsi2;
+    delete[] xsi3;
+}
+
+std::vector<NodeMesh*> ParametricVolumeElement::getBoundaryNodes(const int& boundaryIndex) const
+{
+    std::vector<std::vector<NodeMesh*>> boundaryNodes;
+    switch (partitionOfUnity_)
+    {
+        case TET4:
+            boundaryNodes.reserve(4);
+            boundaryNodes.push_back({nodes_[0], nodes_[1], nodes_[2]});
+            boundaryNodes.push_back({nodes_[0], nodes_[1], nodes_[3]});
+            boundaryNodes.push_back({nodes_[0], nodes_[2], nodes_[3]});
+            boundaryNodes.push_back({nodes_[1], nodes_[2], nodes_[3]});
+            break;
+        case TET10:
+            boundaryNodes.reserve(4);
+            boundaryNodes.push_back({nodes_[0], nodes_[1], nodes_[2]});
+            boundaryNodes.push_back({nodes_[0], nodes_[1], nodes_[3]});
+            boundaryNodes.push_back({nodes_[0], nodes_[2], nodes_[3]});
+            boundaryNodes.push_back({nodes_[1], nodes_[2], nodes_[3]});
+            break;
+        case TET20:
+            boundaryNodes.reserve(4);
+            boundaryNodes.push_back({nodes_[0], nodes_[1], nodes_[2]});
+            boundaryNodes.push_back({nodes_[0], nodes_[1], nodes_[3]});
+            boundaryNodes.push_back({nodes_[0], nodes_[2], nodes_[3]});
+            boundaryNodes.push_back({nodes_[1], nodes_[2], nodes_[3]});
+            break;
+    }
+    return boundaryNodes[boundaryIndex];
+}

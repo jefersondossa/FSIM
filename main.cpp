@@ -34,7 +34,6 @@ static char help[] = "Solves the Incompressible flow problem";
   
 // Developed Header Files
 #include "src/FSInteraction.hpp"  
-#include "src/fluidDomain.h"
 
 int main(int argc, char **args) {
 
@@ -54,7 +53,7 @@ int main(int argc, char **args) {
 
     // Defines the problem dimension
     const int dimension = 2;
-    const int degree = 2;
+    const int degree = 1;
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
@@ -145,32 +144,32 @@ int main(int argc, char **args) {
     PlaneSurface* s009 = fluid1 -> addPlaneSurface({ll009});
 
         
-    fluid1 -> addBoundaryCondition("NEUMANN", l005, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l006, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l007, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l012, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l013, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l014, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l019, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l020, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l021, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l008, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l009, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l010, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l015, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l016, {}, {}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("NEUMANN", l017, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l005, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l006, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l007, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l012, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l013, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l014, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l019, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l020, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l021, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l008, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l009, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l010, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l015, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l016, {}, {}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("NEUMANN", l017, {}, {}, {}, "GLOBAL");
     
-    fluid1 -> addBoundaryCondition("DIRICHLET", l001, {}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l002, {}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l003, {}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l022, {}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l023, {}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l024, {}, {0.0}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l001, {}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l002, {}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l003, {}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l022, {}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l023, {}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l024, {}, {0.0}, {}, "GLOBAL");
 
-    fluid1 -> addBoundaryCondition("DIRICHLET", l004, {20.0}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l011, {20.0}, {0.0}, "GLOBAL");
-    fluid1 -> addBoundaryCondition("DIRICHLET", l018, {20.0}, {0.0}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l004, {20.0}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l011, {20.0}, {0.0}, {}, "GLOBAL");
+    fluid1 -> addBoundaryCondition("DIRICHLET", l018, {20.0}, {0.0}, {}, "GLOBAL");
         
         
     // Geometry* fluid1 = new Geometry(0);
@@ -342,27 +341,21 @@ int main(int argc, char **args) {
     Point* p128 = fluid2 -> addPoint({-4.0+e+eg, -e},a2,false);
     Point* p129 = fluid2 -> addPoint({-4.0-e, -e-eg},a2,false);
     Point* p130 = fluid2 -> addPoint({-4.0+e, -e-eg},a2,false);
-
-
-
-
-
-
-    
-    Line* l100 = fluid2 -> addLine({p100,p101,p105});
-    Line* l101 = fluid2 -> addLine({p100,p101,p105});
-    Line* l102 = fluid2 -> addLine({p100,p102,p109});
-    Line* l103 = fluid2 -> addLine({p100,p102,p109});
+   
+    Line* l100 = fluid2 -> addCircle({p100,p101,p105});
+    Line* l101 = fluid2 -> addCircle({p100,p101,p105});
+    Line* l102 = fluid2 -> addCircle({p100,p102,p109});
+    Line* l103 = fluid2 -> addCircle({p100,p102,p109});
     Line* l104 = fluid2 -> addLine({p100,p103});
     Line* l105 = fluid2 -> addLine({p107,p100});
     Line* l106 = fluid2 -> addLine({p104,p105});
     Line* l107 = fluid2 -> addLine({p105,p106});
     Line* l108 = fluid2 -> addLine({p109,p108});
     Line* l109 = fluid2 -> addLine({p110,p109});
-    Line* l110 = fluid2 -> addLine({p107,p101,p106});
-    Line* l111 = fluid2 -> addLine({p103,p101,p104});
-    Line* l112 = fluid2 -> addLine({p107,p102,p108});
-    Line* l113 = fluid2 -> addLine({p103,p102,p110});
+    Line* l110 = fluid2 -> addCircle({p107,p101,p106});
+    Line* l111 = fluid2 -> addCircle({p103,p101,p104});
+    Line* l112 = fluid2 -> addCircle({p107,p102,p108});
+    Line* l113 = fluid2 -> addCircle({p103,p102,p110});
 
     Line* l114 = fluid2 -> addLine({p103,p113});
     Line* l115 = fluid2 -> addLine({p111,p104});
@@ -392,16 +385,16 @@ int main(int argc, char **args) {
     Line* l139 = fluid2 -> addLine({p126,p127});
     // Line* l140 = fluid2 -> addLine({p127,p128});
     Line* l141 = fluid2 -> addLine({p129,p130});
-    Line* l142 = fluid2 -> addLine({p113,p101,p111});
-    Line* l143 = fluid2 -> addLine({p114,p101,p112});
-    Line* l144 = fluid2 -> addLine({p113,p102,p116});
-    Line* l145 = fluid2 -> addLine({p114,p102,p115});
-    Line* l146 = fluid2 -> addLine({p130,p127,p128});
-    Line* l147 = fluid2 -> addLine({p124,p125,p129});
+    Line* l142 = fluid2 -> addCircle({p113,p101,p111});
+    Line* l143 = fluid2 -> addCircle({p114,p101,p112});
+    Line* l144 = fluid2 -> addCircle({p113,p102,p116});
+    Line* l145 = fluid2 -> addCircle({p114,p102,p115});
+    Line* l146 = fluid2 -> addCircle({p130,p127,p128});
+    Line* l147 = fluid2 -> addCircle({p124,p125,p129});
     // Line* l148 = fluid2 -> addLine({p129,p125});
     // Line* l149 = fluid2 -> addLine({p130,p127});
-    Line* l150 = fluid2 -> addLine({p121,p120,p123});
-    Line* l151 = fluid2 -> addLine({p122,p118,p117});
+    Line* l150 = fluid2 -> addCircle({p121,p120,p123});
+    Line* l151 = fluid2 -> addCircle({p122,p118,p117});
 
     
     LineLoop* ll100 = fluid2 -> addLineLoop({ l112 -> operator-(), l105, l102, l108 });
@@ -497,62 +490,62 @@ int main(int argc, char **args) {
     // fluid2 -> transfiniteSurface({ s104 }, "Left", {p100, p107, p106, p105});
 
     
-    fluid2 -> addBoundaryCondition("NEUMANN", l104, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l105, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l106, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l107, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l108, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l109, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l110, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l111, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l112, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l113, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l114, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l115, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l116, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l117, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l118, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l119, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l121, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l122, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l123, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l104, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l105, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l106, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l107, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l108, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l109, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l110, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l111, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l112, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l113, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l114, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l115, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l116, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l117, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l118, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l119, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l121, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l122, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l123, {}, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l125, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l126, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l127, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l126, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l127, {}, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l128, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l129, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l130, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l133, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l134, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l135, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l133, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l134, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l135, {}, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l137, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l138, {}, {}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("NEUMANN", l139, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l138, {}, {}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("NEUMANN", l139, {}, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l140, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l148, {}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("NEUMANN", l149, {}, {}, "GLOBAL");
 
-    fluid2 -> addBoundaryCondition("GLUE", l120, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l124, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l131, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l132, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l136, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l141, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l142, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l143, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l144, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l145, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l146, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l147, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l150, {0}, {0}, "GLOBAL");
-    fluid2 -> addBoundaryCondition("GLUE", l151, {0}, {0}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l120, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l124, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l131, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l132, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l136, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l141, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l142, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l143, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l144, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l145, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l146, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l147, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l150, {0}, {0}, {}, "GLOBAL");
+    fluid2 -> addBoundaryCondition("GLUE", l151, {0}, {0}, {}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("GLUE", l114, {0}, {0}, "GLOBAL");
     // fluid2 -> addBoundaryCondition("GLUE", l115, {0}, {0}, "GLOBAL");
         
-    fluid2 -> addBoundaryCondition("FSINTERFACE", l100, {0}, {0}, "GLOBAL"); // FSI
-    fluid2 -> addBoundaryCondition("FSINTERFACE", l101, {0}, {0}, "GLOBAL"); // FSI
-    fluid2 -> addBoundaryCondition("FSINTERFACE", l102, {0}, {0}, "GLOBAL"); // FSI
-    fluid2 -> addBoundaryCondition("FSINTERFACE", l103, {0}, {0}, "GLOBAL"); // FSI
+    fluid2 -> addBoundaryCondition("FSINTERFACE", l100, {0}, {0}, {}, "GLOBAL"); // FSI
+    fluid2 -> addBoundaryCondition("FSINTERFACE", l101, {0}, {0}, {}, "GLOBAL"); // FSI
+    fluid2 -> addBoundaryCondition("FSINTERFACE", l102, {0}, {0}, {}, "GLOBAL"); // FSI
+    fluid2 -> addBoundaryCondition("FSINTERFACE", l103, {0}, {0}, {}, "GLOBAL"); // FSI
 
 
 
@@ -560,12 +553,10 @@ int main(int argc, char **args) {
   if (rank == 0){
 
     FluidDomain* problem = new FluidDomain(fluid1);
-    problem -> addSurfaceMaterial({ s001,s002,s003,s004,s005,s006,s007,s008,s009 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-    problem -> generateMesh("T6", "DELAUNAY", "coarse", "", false, true);
+    problem -> generateMesh(T3, DELAUNAY, "coarse", "", false, true);
 
     FluidDomain* problem2 = new FluidDomain(fluid2);
-    problem2 -> addSurfaceMaterial({ s101,s102,s103 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-    problem2 -> generateMesh("T6", "FRONT", "fine", "", false, true);
+    problem2 -> generateMesh(T3, FRONT, "fine", "", false, true);
 
     //problem -> readInput("exemplo.msh",0);
 	};
@@ -582,13 +573,13 @@ int main(int argc, char **args) {
     char in_solid[32] = "turbine2.txt";
 
     arlequinProblem.setFluidModels(coarseModel, fineModel);
-    coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
+    // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
 
     // coarseModel.readInitialValues("Coarse8.h5","Coarse9.h5");
     // fineModel.readInitialValues("Fine8.h5","Fine9.h5");
     
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
-    coupledProblem.solveFSIProblemGaussSeidelArlequin(100000);
+    // coupledProblem.solveFSIProblemGaussSeidelArlequin(100000);
         
     // arlequinProblem.setFluidModels(coarseModel, fineModel); 
     // arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 

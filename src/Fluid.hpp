@@ -16,7 +16,7 @@
 
 #include "Element.hpp"
 #include "Boundary.hpp"
-#include "fluidDomain.h"
+#include "mesh_interface/fluidDomain.h"
 
 #include<cstdlib>
 #include<fstream>
@@ -63,6 +63,7 @@ private:
     int numNodes;          //Number of nodes in velocity/quadratic mesh
     int numBoundaries;     //Number of fluid boundaries
     int numBoundElems;     //Number of elements in fluid boundaries
+    int numDOF;
     double pressInf;       //Undisturbed pressure 
     double rhoInf;         //Density
     double tempInf;        //Temperature
@@ -75,16 +76,12 @@ private:
     int numTimeSteps;      //Number of Time Steps
     int printFreq;         //Printing frequence of output files
     double dTime;          //Time Step
-    int rank;
+    int rank, size;
     int numFSIInterfaces;
     int iAux;
     bool computeDragAndLift;
     int iTimeStep;
     Mat               A;
-    
-    
-
-
     
 public:
     std::vector<int> dragAndLiftBoundary;
@@ -113,6 +110,9 @@ public:
     double integScheme;    //Time Integration Scheme
     Parameters fluidParameters;
     DIntegration* numIntegration; //Numerical integration
+    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
 public:
 
@@ -120,7 +120,21 @@ public:
     void meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles);
 
     void readInitialValues(const std::string& inputPrev, const std::string& inputCurr);
+    void readInputFile(const std::string& inputFile, std::ofstream& mirrorData);
+    
+    /// Reads the mesh nodes from a .msh file
+    /// @param std::string input .msh file @param std::string mirror file
+    void readNodes(std::ifstream &file, std::ofstream& mirrorData);
 
+    /// Reads the mesh elements from a .msh file
+    /// @param Geometry* mesh geometry
+    /// @param std::string input .msh file @param std::string mirror file
+    /// @param std::vector<Elements*> auxiliary vector of Elements
+    /// @param std::unordered_map<int, std::string> mesh physical entities
+    void readElements(Geometry* &geometry_,std::ifstream &file, std::ofstream& mirrorData, std::vector<Elements*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities);
+    void renumberConnectivity();
+    void setBoundaryConstrains();
+    void setBoundarySides();
 
     /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
@@ -182,7 +196,7 @@ public:
 
     /// Print the results for Paraview post-processing
     /// @param int time step
-    void printResults(int step);
+    // void printResults(int step);
 
     /// Compute and print drag and lift coefficients
     void dragAndLiftCoefficients(std::ofstream& dragLift);
@@ -201,348 +215,17 @@ public:
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
-
 //------------------------------------------------------------------------------
-//---------------------SUBDIVIDES THE FINITE ELEMENT DOMAIN---------------------
+//---------------------------READS THE .TXT INPUT FILE--------------------------
 //------------------------------------------------------------------------------
-template<>
-void Fluid<2,2>::domainDecompositionMETIS() {
-    
-    std::string mirror2;
-    mirror2 = "domain_decomposition.txt";
-    std::ofstream mirrorData(mirror2.c_str());
-    
-    int size;
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::readInputFile(const std::string& inputFile, std::ofstream& mirrorData){
 
-    MPI_Comm_size(PETSC_COMM_WORLD, &size);
-
-    idx_t objval;
-    idx_t numEl = numElem;
-    idx_t numNd = numNodes;
-    idx_t dd = 2;
-    idx_t ssize = size;
-    idx_t one = 1;
-    idx_t elem_start[numEl+1], elem_connec[(4*dd-2)*numEl];
-    part_elem = new idx_t[numEl];
-    part_nodes = new idx_t[numNd];
-
-
-    for (idx_t i = 0; i < numEl+1; i++){
-        elem_start[i]=(4*dd-2)*i;
-    };
-    for (idx_t jel = 0; jel < numEl; jel++){
-        int *connec=elements_[jel]->getConnectivity();        
-        
-        for (idx_t i=0; i<(4*dd-2); i++){
-        elem_connec[(4*dd-2)*jel+i] = connec[i];
-        };
-    };
-
-    //Performs the domain decomposition
-    METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
-                              NULL, NULL, &one, &ssize, NULL, NULL,    \
-                              &objval, part_elem, part_nodes);
-
-    mirrorData << std::endl \
-               << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
-    for(int i = 0; i < numElem; i++){
-        mirrorData << "process = " << part_elem[i] \
-                   << ", element = " << i << std::endl;
-    };
-
-    mirrorData << std::endl \
-               << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
-    for(int i = 0; i < numNodes; i++){
-        mirrorData << "process = " << part_nodes[i] \
-                   << ", node = " << i << std::endl;
-    };
-    
-    return;
-
-};
-
-//------------------------------------------------------------------------------
-//----------------------------PRINT VELOCITY RESULTS----------------------------
-//------------------------------------------------------------------------------
-template<>
-void Fluid<2,2>::printResults(int step) {
-
-    //    std::cout << "Printing Velocity Results" << std::endl;
-    std::string result;
-    std::ostringstream convert;
-
-    convert << step+100000;
-    result = convert.str();
-    std::string s = "saidaVel"+result+".vtu";
-    
-    std::fstream output_v(s.c_str(), std::ios_base::out);
-
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << numNodes
-             << "\"  NumberOfCells=\"" << numElem
-             << "\">" << std::endl;
-
-    //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
-             << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
-
-    for (int i=0; i<numNodes; i++){
-        double* x = nodes_[i] -> getCoordinates();
-        output_v << x[0] << " " << x[1] << " " << 0.0 << std::endl;        
-    };
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
-    
-    //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
-             << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
-    
-    for (int i=0; i<numElem; i++){
-        int *connec = elements_[i] -> getConnectivity();
-        output_v << connec[0] << " " << connec[1] << " " << connec[2] << " " \
-                 << connec[3] << " " << connec[4] << " " << connec[5] << \
-            std::endl;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE OFFSETS IN DATA ARRAY
-    output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
-    
-    int aux = 0;
-    for (int i=0; i<numElem; i++){
-        output_v << aux + 6 << std::endl;
-        aux += 6;
-    };
-    output_v << "      </DataArray>" << std::endl;
-  
-    //WRITE ELEMENT TYPES
-    output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
-    
-    for (int i=0; i<numElem; i++){
-        output_v << 22 << std::endl;
-    };
-
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
-
-    //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
-
-    if (printVelocity){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getVelocity(0) << " "             
-                     << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (printMeshVelocity){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                << "Name=\"Mesh Velocity\" format=\"ascii\">" << std::endl;
-        
-        for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getMeshVelocity(0) << " "    
-                     << nodes_[i] -> getMeshVelocity(1) << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (printVorticity){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Vorticity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getVorticity() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    if (printPressure){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){
-            output_v << 0. << " " << 0. << " " 
-                     << nodes_[i] -> getPressure() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-
-    if (printMeshDisplacement){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                 << "Name=\"Mesh Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numNodes; i++){       
-            double* x = nodes_[i] -> getCoordinates();
-            double* xp = nodes_[i] -> getInitialCoordinates();
-            
-            output_v << x[0]-xp[0] << " " << x[1]-xp[1] << " " 
-                     << 0. << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    output_v << "    </PointData>" << std::endl; 
-
-    //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
-    
-    if (printProcess){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElem; i++){
-            output_v << part_elem[i] << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-
-    output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-             << "Name=\"Lines\" format=\"ascii\">" << std::endl;
-    for (int i=0; i<numElem; i++){
-        int res = 0;
-        for (int j=0; j<numBoundElems; j++){
-           if (boundary_[j] -> getElement() == i) res = boundary_[j] -> getBoundaryGroup();
-        }
-        output_v << res << std::endl;
-    };
-    output_v << "      </DataArray> " << std::endl;
-
-    if (printJacobian){
-        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                 << "Name=\"Jacobian\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<numElem; i++){
-            output_v << elements_[i] -> getJacobian() << std::endl;
-        };
-        output_v << "      </DataArray> " << std::endl;
-    };
-    
-    output_v << "    </CellData>" << std::endl; 
-
-    //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl;
-    
-    // output_v << "  <FieldData>" << std::endl;
-
-    // output_v << "      <DataArray type=\"Float64\" Name=\"Time\" NumberOfTuples=\"1\" "
-    //          << " format=\"ascii\">" << std::endl;
-    // output_v << step << std::endl;
-    // output_v << "      </DataArray> " << std::endl;
-
-    // output_v << "      <DataArray type=\"Float64\" Name=\"LiftCoefficient\" NumberOfTuples=\"1\" "
-    //          << " format=\"ascii\">" << std::endl;
-    // output_v << liftCoefficient << std::endl;
-    // output_v << "      </DataArray> " << std::endl;
-
-    // // output_v << "      <DataSet type=\"Float64\" Name=\"Drag Coefficient\" NumberOfTuples=\"1\" "
-    // //          << " format=\"ascii\">" << std::endl;
-    // // output_v << dragCoefficient << std::endl;
-    // // output_v << "      </DataSet> " << std::endl;
-
-    // output_v << "  </FieldData>" << std::endl
-    output_v << "  </UnstructuredGrid>" << std::endl
-             << "</VTKFile>" << std::endl;
-
-};
-
-
-//------------------------------------------------------------------------------
-//----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
-//------------------------------------------------------------------------------
-template<>
-void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
-
-    double dragCoefficient = 0.;
-    double liftCoefficient = 0.;
-    double pressureDragCoefficient = 0.;
-    double pressureLiftCoefficient = 0.;
-    double frictionDragCoefficient = 0.;
-    double frictionLiftCoefficient = 0.;
-    
-    for (int jel = 0; jel < numBoundElems; jel++){   
-        
-        double rhoInf = 1.0;
-        double velocityInf[2];
-        velocityInf[0] = -1.;
-        velocityInf[1] = 0.;
-        
-        double dForce = 0.;
-        double lForce = 0.;
-        double pDForce = 0.;
-        double pLForce = 0.;
-        double fDForce = 0.;
-        double fLForce = 0.;
-        double aux_Mom = 0.;
-        double aux_Per = 0.;
-        
-       for (int i=0; i<numberOfLines; i++){
-            //std::cout << "Bound group " << boundary_[jel] -> getBoundaryGroup() << std::endl;
-            if (boundary_[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
-                //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
-                int iel = boundary_[jel] -> getElement();
-                elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
-                // elements_[iel] -> computeSeparationAngle();
-            };
-        };
-        
-        pressureDragCoefficient += pDForce ;/// 
-            //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        pressureLiftCoefficient += pLForce;// / 
-            //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        
-        frictionDragCoefficient += fDForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        frictionLiftCoefficient += fLForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        
-        dragCoefficient += dForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        liftCoefficient += lForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        
-    };
-    // std::cout << "vazao " << pressureDragCoefficient << " " << pressureLiftCoefficient << std::endl;
-    if (rank == 0) {
-        const int timeWidth = 11;
-        const int numWidth = 11;
-        dragLift << std::setprecision(3) << std::scientific;
-        dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
-        dragLift << std::setw(numWidth) << pressureDragCoefficient;
-        dragLift << std::setw(numWidth) << pressureLiftCoefficient;
-        dragLift << std::setw(numWidth) << frictionDragCoefficient;
-        dragLift << std::setw(numWidth) << frictionLiftCoefficient;
-        dragLift << std::setw(numWidth) << dragCoefficient;
-        dragLift << std::setw(numWidth) << liftCoefficient;
-        dragLift << std::endl;
-    }
-}
-
-
-template<>
-void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles) {
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //+++++++++++++++++++++++++++++OPPENING FILES+++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //defyning the maps that are used to store the elements information
-    std::unordered_map<int, std::string> gmshElement = { {1, "line"}, {2, "triangle"}, {3, "quadrilateral"}, {8, "line3"}, {9, "triangle6"}, {10, "quadrilateral9"}, {15, "vertex"}, {16, "quadrilateral8"}, {20, "triangle9"}, {21, "triangle10"}, {26, "line4"}, {36, "quadrilateral16"}, {39, "quadrilateral12"} };
-    std::unordered_map<std::string, int> numNodes2 = { {"vertex", 1}, {"line", 2}, {"triangle", 3}, {"quadrilateral", 4}, {"line3", 3}, {"triangle6", 6}, {"quadrilateral8", 8}, {"quadrilateral9", 9}, {"line4", 4}, {"triangle", 9}, {"triangle10", 10}, {"quadrilateral12", 12}, {"quadrilateral16", 16}};
-    std::unordered_map<std::string, std::string> supportedElements = { {"triangle", "T3"}, {"triangle6", "T6"}, {"triangle10", "T10"}, {"quadrilateral", "Q4"}, {"quadrilateral8", "Q8"}, {"quadrilateral9", "Q9"}, {"quadrilateral12", "Q12"}, {"quadrilateral16", "Q16"} };
-    std::unordered_map<Line*, std::vector< std::vector<int> >> lineElements;
-
-    //opening the .msh file
     std::ifstream inputData(inputFile.c_str());
-    std::ofstream mirrorData(mirror.c_str());
-    std::ifstream file(inputMesh);
     std::string line;
-    std::getline(file, line); std::getline(file, line); std::getline(file, line); std::getline(file, line);
-  
+
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);      
+    MPI_Comm_size(PETSC_COMM_WORLD, &size);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++READING PROBLEM VARIABLES+++++++++++++++++++++++
@@ -621,6 +304,7 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
     fluidParameters.setSpectralRadius(integScheme);
     fluidParameters.setFieldForce(fieldForces);
     fluidParameters.setArlequinOperatorConstants(k1,k2);
+    fluidParameters.setVelocityInf(velocityInf);
 
     //Drag and lift
     inputData >> computeDragAndLift >> numberOfLines; 
@@ -680,108 +364,107 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
     mirrorData << "PrintProcess               = " << printProcess << std::endl;
     mirrorData << "PrintLines                 = " << printLines << std::endl << std::endl;
 
-    int dimension = 2;
+    return;
+}
 
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++READIN MESH+++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    //+++++++++++++++++++++++++++PHYSICAL ENTITIES++++++++++++++++++++++++++++
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    int number_physical_entities;
-    file >> number_physical_entities;
-    std::getline(file, line);
-    std::unordered_map<int, std::string> physicalEntities;
-    physicalEntities.reserve(number_physical_entities);
+//------------------------------------------------------------------------------
+//------------------------------READS THE MESH NODES----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
 
-    for (int i = 0; i < number_physical_entities; i++)
-    {
-        std::getline(file, line);
-        std::vector<std::string> tokens = split(line, " ");
-        int index;
-        std::istringstream(tokens[1]) >> index;
-        physicalEntities[index] = tokens[2].substr(1, tokens[2].size() - 2);
-    }
-    std::getline(file, line); std::getline(file, line);
+    if (rank == 0) std::cout << "2/9 Reading nodes..." << std::endl;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //+++++++++++++++++++++++++++++++++NODES++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    std::string line;
     file >> numNodes;
     nodes_.reserve(numNodes);
     std::getline(file, line);
     int index = 0;
     if (rank == 0) std::cout << "Number of Nodes " << " " << numNodes << std::endl;
-    for (int i = 0; i < numNodes; i++)
-    {
-        double x[2];
+    for (int i = 0; i < numNodes; i++){
+        double x[DIM];
         std::getline(file, line);
-        std::vector<std::string> tokens = split(line, " ");
-        std::istringstream(tokens[1]) >> x[0];
-        std::istringstream(tokens[2]) >> x[1];
-        //addNode(i, coord);
-         Node *node = new Node(x, index++);
-         nodes_.push_back(node);
+        std::vector<std::string> tokens = split2(line, " ");
+        
+        for (int j = 0; j < DIM; j++) std::istringstream(tokens[j+1]) >> x[j];
+        
+        Node *node = new Node(x,index);
+        nodes_.push_back(node);
+        index++;
     }
     std::getline(file, line); std::getline(file, line);
 
     mirrorData << "Nodal Coordinates " << numNodes << std::endl;
     for (int i = 0 ; i<numNodes; i++){
-        
-        double* x = nodes_[i]->getCoordinates();       
-        for (int j=0; j<2; j++){
+        double *x;
+        x = nodes_[i]->getCoordinates();       
+        for (int j=0; j<DIM; j++){
             mirrorData << x[j] << " ";
         };
         mirrorData << std::endl;
-        nodes_[i] -> setVelocity(velocityInf);
-        nodes_[i] -> setPreviousVelocity(velocityInf);
-        double u[2];
-        u[0] = 0.; u[1] = 0.;
-        nodes_[i] -> setMeshVelocity(u);
-
-        nodes_[i] -> setPreviousMeshVelocityComponent(0,0.);
-        nodes_[i] -> setPreviousMeshVelocityComponent(1,0.);
-
-        nodes_[i] -> setPreviousCoordinates(0,x[0]);
-        nodes_[i] -> setPreviousCoordinates(1,x[1]);
-
+        nodes_[i] -> setVelocity(fluidParameters.getVelocityInf());
+        nodes_[i] -> setPreviousVelocity(fluidParameters.getVelocityInf());
+        double zero = 0.;
+        for (int k=0; k<DIM; k++){
+            nodes_[i] -> setMeshVelocityComponent(k,zero);
+            nodes_[i] -> setPreviousMeshVelocityComponent(k,zero);
+            nodes_[i] -> setPreviousCoordinates(k,x[k]);
+        };
     };
+    return;
+}
 
-    // numIntegration = new DIntegration();
+//------------------------------------------------------------------------------
+//---------------------------READS THE MESH ELEMENTS----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std::ofstream& mirrorData, std::vector<Elements*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities){
 
+    if (rank == 0) std::cout << "3/9 Reading elements..." << std::endl;
 
-    // std::cout << "AAA 1 " << rank << std::endl;
-    // MPI_Barrier(PETSC_COMM_WORLD);
+    // int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    // int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+
+    //defyning the maps that are used to store the elements information
+    std::unordered_map<int, std::string> gmshElement = { {1, "line"}, {2, "triangle"}, {3, "quadrilateral"}, {8, "line3"}, {9, "triangle6"}, {10, "quadrilateral9"}, {15, "vertex"}, {16, "quadrilateral8"}, {20, "triangle9"}, {21, "triangle10"}, {26, "line4"}, {36, "quadrilateral16"}, {39, "quadrilateral12"} };
+    std::unordered_map<std::string, int> numNodes2 = { {"vertex", 1}, {"line", 2}, {"triangle", 3}, {"quadrilateral", 4}, {"line3", 3}, {"triangle6", 6}, {"quadrilateral8", 8}, {"quadrilateral9", 9}, {"line4", 4}, {"triangle", 9}, {"triangle10", 10}, {"quadrilateral12", 12}, {"quadrilateral16", 16}};
+    std::unordered_map<std::string, std::string> supportedElements = { {"triangle", "T3"}, {"triangle6", "T6"}, {"triangle10", "T10"}, {"quadrilateral", "Q4"}, {"quadrilateral8", "Q8"}, {"quadrilateral9", "Q9"}, {"quadrilateral12", "Q12"}, {"quadrilateral16", "Q16"}, {"tetrahedron4", "TET4"}, {"tetrahedron10", "TET10"}, {"tetrahedron20", "TET20"} };
+    std::unordered_map<Line*, std::vector< std::vector<int> >> lineElements;
+
+    std::string line;
+
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++ELEMENTS++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     int number_elements;
     file >> number_elements;
-    elements_.reserve(number_elements);
+    //elements_.reserve(number_elements);
+    elementsAux_.reserve(number_elements);
+
     boundary_.reserve(number_elements/10);
-    index = 0;
+    int index = 0;
     std::getline(file, line);
     int cont = 0;
 
     numBoundElems = 0;
     numElem = 0;
-    numFSIInterfaces = 0;//É melhor setar esse valor no main
+    numFSIInterfaces = 0;
 
     std::vector<BoundaryCondition*> dirichlet, neumann, glue, FSinterface;
     dirichlet = geometry_->getBoundaryCondition("DIRICHLET"); 
     neumann = geometry_->getBoundaryCondition("NEUMANN"); 
-    glue = geometry_->getBoundaryCondition("GLUE"); 
-    FSinterface = geometry_->getBoundaryCondition("FSINTERFACE"); 
+    glue = geometry_->getBoundaryCondition("GLUE");
+    FSinterface = geometry_->getBoundaryCondition("FSINTERFACE");
 
     numFSIInterfaces = FSinterface.size();
-
-    // std::cout << "AAA 2 " << rank << std::endl;
-    // MPI_Barrier(PETSC_COMM_WORLD);
 
     for (int i = 0; i < number_elements; i++)
     {
         std::getline(file, line);
-        std::vector<std::string> tokens = split(line, " ");
+        std::vector<std::string> tokens = split2(line, " ");
         std::vector<int> values(tokens.size(), 0);
         for (size_t j = 0; j < tokens.size(); j++)
             std::istringstream(tokens[j]) >> values[j];
@@ -794,53 +477,182 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
             elementNodes.push_back(values[j]-1);
  
         std::string name = physicalEntities[values[3]];
+        //Adding domain elements
+        if (name[0] == 'v'){
+            // if(rank == 0){
+                Volume* object = geometry_ -> getVolume(name);
+                numElem++;
 
-        //Adding 2D elements to surfaces
-        if (name[0] == 's'){
-            if (supportedElements.find(elementType) == supportedElements.end()){
-                std::cout << elementType << " is not supported.\n";
-                exit(EXIT_FAILURE);
-            }
+                int connect[nElNodes];
 
-            PlaneSurface* object = geometry_ -> getPlaneSurface(name);
-            int materialIndex = object -> getMaterial() -> getIndex();
-            double thickness = object -> getThickness();
-            numElem++;
+                if (DEG == 2){
+                    connect[2] = elementNodes[2];
+                    connect[1] = elementNodes[1];
+                    connect[3] = elementNodes[3];
+                    connect[0] = elementNodes[0];
+                    connect[5] = elementNodes[5];
+                    connect[9] = elementNodes[8];
+                    connect[6] = elementNodes[6];
+                    connect[7] = elementNodes[7];
+                    connect[4] = elementNodes[4];
+                    connect[8] = elementNodes[9];
+                } else {
+                    for (int k = 0; k < nElNodes; k++) connect[k] = elementNodes[k];
+                }
 
-            int *connect;
-            connect = new int[6];
-            for (int j = 0 ; j < 6; j++) connect[j] = elementNodes[j];
-           
-            // std::cout << "AAA 3 " << rank << " " << index << std::endl;
-            // MPI_Barrier(PETSC_COMM_WORLD);
+                Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
+                elementsAux_.push_back(el);
 
-            Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
-            // std::cout << "AAA 5 " << rank << " " << index << std::endl;
-            // MPI_Barrier(PETSC_COMM_WORLD);
-            elements_.push_back(el);
-            // std::cout << "AAA 6 " << rank << " " << index << std::endl;
-            // MPI_Barrier(PETSC_COMM_WORLD);
-            for (int k = 0; k<6; k++){
-                nodes_[connect[k]] -> pushInverseIncidence(index);
-            };
-            // std::cout << "AAA 7 " << rank << " " << index << std::endl;
-            // MPI_Barrier(PETSC_COMM_WORLD);
+                for (int k = 0; k < nElNodes; k++){
+                    nodes_[connect[k]] -> pushInverseIncidence(index);
+                };
+            // }
         }
-        else if (name[0] == 'l')
-        {
-            int connectB[3];
+        else if (name[0] == 's') {
+            if (DIM == 3){
+                int connectB[nBdNodes];
 
-            connectB[0] = elementNodes[0];
-            connectB[1] = elementNodes[1];
-            connectB[2] = elementNodes[2];
+                for (int i = 0; i < nBdNodes; i++) connectB[i] = elementNodes[i];
 
+                int ibound;
+
+                std::string::size_type sz;   // alias of size_t
+                ibound = std::stoi (&name[1],nullptr,10);
+
+                int constrain[3];
+                double value[3];
+
+                for (int i = 0; i < dirichlet.size(); i++){
+                    if (name == dirichlet[i] -> getLineName()){
+                        if ((dirichlet[i] -> getComponentX()).size() == 0){
+                            constrain[0] = 0; value[0] = 0;
+                        }else{
+                            std::vector<double> c = dirichlet[i] -> getComponentX();
+                            constrain[0] = 1;
+                            value[0] = c[0];
+                        }
+                        if ((dirichlet[i] -> getComponentY()).size() == 0){
+                            constrain[1] = 0; value[1] = 0;
+                        }else{
+                            std::vector<double> c = dirichlet[i] -> getComponentY();
+                            constrain[1] = 1;
+                            value[1] = c[0];
+                        }
+                        if ((dirichlet[i] -> getComponentZ()).size() == 0){
+                            constrain[2] = 0; value[2] = 0;
+                        }else{
+                            std::vector<double> c = dirichlet[i] -> getComponentZ();
+                            constrain[2] = 1;
+                            value[2] = c[0];
+                        }
+                    }
+                }
+                for (int i = 0; i < neumann.size(); i++){
+                    if (name == neumann[i] -> getLineName()){
+                        if ((neumann[i] -> getComponentX()).size() == 0){
+                            constrain[0] = 0; value[0] = 0;
+                        }else{
+                            std::vector<double> c = neumann[i] -> getComponentX();
+                            constrain[0] = 0;
+                            value[0] = c[0];
+                        }
+                        if ((neumann[i] -> getComponentY()).size() == 0){
+                            constrain[1] = 0; value[1] = 0;
+                        }else{
+                            std::vector<double> c = neumann[i] -> getComponentY();
+                            constrain[1] = 0;
+                            value[1] = c[0];
+                        }
+                        if ((neumann[i] -> getComponentZ()).size() == 0){
+                            constrain[2] = 0; value[2] = 0;
+                        }else{
+                            std::vector<double> c = neumann[i] -> getComponentZ();
+                            constrain[2] = 0;
+                            value[2] = c[0];
+                        }
+                    }
+                }  
+                for (int i = 0; i < glue.size(); i++){
+                    if (name == glue[i] -> getLineName()){
+                        if ((glue[i] -> getComponentX()).size() == 0){
+                            constrain[0] = 2; value[0] = 0;
+                        }else{
+                            std::vector<double> c = glue[i] -> getComponentX();
+                            constrain[0] = 2;
+                            value[0] = c[0];
+                        }
+                        if ((glue[i] -> getComponentY()).size() == 0){
+                            constrain[1] = 2; value[1] = 0;
+                        }else{
+                            std::vector<double> c = glue[i] -> getComponentY();
+                            constrain[1] = 2;
+                            value[1] = c[0];
+                        }
+                        if ((glue[i] -> getComponentZ()).size() == 0){
+                            constrain[2] = 2; value[2] = 0;
+                        }else{
+                            std::vector<double> c = glue[i] -> getComponentZ();
+                            constrain[2] = 2;
+                            value[2] = c[0];
+                        }
+                    }
+                }              
+                for (int i = 0; i < FSinterface.size(); i++){
+                    if (name == FSinterface[i] -> getLineName()){
+                        if ((FSinterface[i] -> getComponentX()).size() == 0){
+                            constrain[0] = 3; value[0] = 0;
+                        }else{
+                            std::vector<double> c = FSinterface[i] -> getComponentX();
+                            constrain[0] = 3;
+                            value[0] = c[0];
+                        }
+                        if ((FSinterface[i] -> getComponentY()).size() == 0){
+                            constrain[1] = 3; value[1] = 0;
+                        }else{
+                            std::vector<double> c = FSinterface[i] -> getComponentY();
+                            constrain[1] = 3;
+                            value[1] = c[0];
+                        }
+                        if ((FSinterface[i] -> getComponentZ()).size() == 0){
+                            constrain[2] = 3; value[2] = 0;
+                        }else{
+                            std::vector<double> c = FSinterface[i] -> getComponentZ();
+                            constrain[2] = 3;
+                            value[2] = c[0];
+                        }
+                    }
+                }        
+                Boundaries * bound = new Boundaries(connectB, numBoundElems++, constrain, value, ibound);
+                // std::cout << "asdasd " << rank << " " << ibound << std::endl;
+                boundary_.push_back(bound);
+            } else {
+                // if(rank == 0){
+                    Surface* object = geometry_ -> getSurface(name);
+                    numElem++;
+
+                    int connect[nElNodes];
+                    for (int j = 0 ; j < nElNodes; j++) connect[j] = elementNodes[j];
+
+                    Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
+                    elementsAux_.push_back(el);
+
+                    for (int k = 0; k < nElNodes; k++){
+                        nodes_[connect[k]] -> pushInverseIncidence(index);
+                    };
+                // }
+            }
+        } else if ((name[0] == 'l') && (DIM == 2)) {
+            int connectB[nBdNodes];
+
+            for (int i = 0; i < nBdNodes; i++) connectB[i] = elementNodes[i];
+            
             int ibound;
+
             std::string::size_type sz;   // alias of size_t
             ibound = std::stoi (&name[1],nullptr,10);
-            
+
             int constrain[3];
             double value[3];
-
 
             for (int i = 0; i < dirichlet.size(); i++){
                 if (name == dirichlet[i] -> getLineName()){
@@ -860,7 +672,6 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
                     }
                 }
             }
-
             for (int i = 0; i < neumann.size(); i++){
                 if (name == neumann[i] -> getLineName()){
                     if ((neumann[i] -> getComponentX()).size() == 0){
@@ -873,13 +684,12 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
                     if ((neumann[i] -> getComponentY()).size() == 0){
                         constrain[1] = 0; value[1] = 0;
                     }else{
-                        std::vector<double> c = neumann[i] -> getComponentX();
+                        std::vector<double> c = neumann[i] -> getComponentY();
                         constrain[1] = 0;
                         value[1] = c[0];
                     }
                 }
             }  
-            
             for (int i = 0; i < glue.size(); i++){
                 if (name == glue[i] -> getLineName()){
                     if ((glue[i] -> getComponentX()).size() == 0){
@@ -895,10 +705,9 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
                         std::vector<double> c = glue[i] -> getComponentY();
                         constrain[1] = 2;
                         value[1] = c[0];
-                    }
+                    }//std::cout <<"aqui " << std::endl;
                 }
             }              
-
             for (int i = 0; i < FSinterface.size(); i++){
                 if (name == FSinterface[i] -> getLineName()){
                     if ((FSinterface[i] -> getComponentX()).size() == 0){
@@ -918,13 +727,19 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
                 }
             }        
             Boundaries * bound = new Boundaries(connectB, numBoundElems++, constrain, value, ibound);
-            boundary_.push_back(bound); 
+            // std::cout << "asdasd " << rank << " " << ibound << std::endl;
+            boundary_.push_back(bound);           
         }   
     }
 
+    return;
+}
 
-
-
+//------------------------------------------------------------------------------
+//---------------------------READS THE MESH ELEMENTS----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::renumberConnectivity(){
     // Renumber nodes - start
     std::vector<int > neighborNodes;
 
@@ -941,8 +756,10 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
         for (int j = 0; j < nodes_[iNode] -> getNumberOfElements(); j++){
             int elem = nodes_[iNode] -> getInverseIncidenceElement(j);
             int *connec = elements_[elem-1] -> getConnectivity();
+
+            // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
             bool flag = false;
-            for (int i = 0; i < 6; i++){
+            for (int i = 0; i < nElNodes; i++){
                 for (int iNeig = 0; iNeig < neighborNodes.size(); iNeig++){
                     if (connec[i] == neighborNodes[iNeig]){
                         flag = true;
@@ -974,7 +791,7 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
     idx_t* iperm;
     perm = new idx_t[numNd];
     iperm = new idx_t[numNd];
-    
+
     // Call METIS for node renumbering
     METIS_NodeND(&numNd, xadj, adjncy2, NULL, NULL, perm, iperm);
 
@@ -989,21 +806,14 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
         int* connect = elements_[i] -> getConnectivity();
 
         //Reorder connectivity
-        connect[0] = iperm[connect[0]];
-        connect[1] = iperm[connect[1]];
-        connect[2] = iperm[connect[2]];
-        connect[3] = iperm[connect[3]];
-        connect[4] = iperm[connect[4]];
-        connect[5] = iperm[connect[5]];
+        for (int k = 0; k < nElNodes; k++) connect[k] = iperm[connect[k]];
         elements_[i] -> setConnectivity(connect);
     }
     // Update boundary connectivity
     for (int ibound = 0; ibound < numBoundElems; ibound++){
         int *connectB = boundary_[ibound] -> getBoundaryConnectivity();
-        connectB[0] = iperm[connectB[0]];
-        connectB[1] = iperm[connectB[1]];
-        connectB[2] = iperm[connectB[2]];
 
+        for (int k = 0; k < nBdNodes; k++) connectB[k] = iperm[connectB[k]];
         boundary_[ibound] -> setBoundaryConnectivity(connectB);
     }
     
@@ -1012,154 +822,301 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
     for (int i = 0; i < elements_.size(); i++){
         int* connect = elements_[i] -> getConnectivity();
 
-        for (int k = 0; k < 6; k++) nodes_[connect[k]] -> pushInverseIncidence(i);
+        for (int k = 0; k < nElNodes; k++) nodes_[connect[k]] -> pushInverseIncidence(i);
     }
 
     delete [] perm;
     delete [] iperm;
     delete [] adjncy2;
     delete [] xadj;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Renumber nodes - end
 
+    
 
 
-    if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
-                             << numElem << " " << numBoundElems << std::endl;
+    return;
+}
+
+//------------------------------------------------------------------------------
+//-------------------------SETS THE BOUNDARY CONDITIONS-------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::setBoundaryConstrains(){
+
+    if (rank == 0) std::cout << "8/9 Setting boundary conditions..." << std::endl;
+
+    for (int ibound = 0; ibound < numBoundElems; ibound++){
+        
+        int *connectB = boundary_[ibound] -> getBoundaryConnectivity();
+
+        for (int k = 0; k < DIM; k++){
+            if ((boundary_[ibound] -> getConstrain(k) == 3)){
+                for (int j = 0; j < nBdNodes; j++) nodes_[connectB[j]] -> setConstrainsLaplace(k,1,0);
+            };
+        };
+
+        for (int k = 0; k < DIM; k++){
+            if ((boundary_[ibound] -> getConstrain(k) == 1) || (boundary_[ibound] -> getConstrain(k) == 3)){
+                for (int j = 0; j < nBdNodes; j++) 
+                    nodes_[connectB[j]] -> setConstrains(k,boundary_[ibound] -> getConstrain(k),
+                                                         boundary_[ibound] -> getConstrainValue(k));
+            };
+        }
+    };
+
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+//DEFINES IF THE ELEMENT BELONGS TO THE BOUNDARY AND THE RESPECTIVE ELEMENT SIDE
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::setBoundarySides(){
+
+    if (rank == 0) std::cout << "9/9 Setting boundary sides..." << std::endl;
+
+    //Sets fluid elements and sides on interface boundaries
+    for (int i=0; i<numBoundElems; i++){
+
+        int group = boundary_[i] -> getBoundaryGroup();
+
+       if ((boundary_[i] -> getConstrain(0) > 0) || (boundary_[i] -> getConstrain(1) > 0)) {
+   
+            int *connectB = boundary_[i] -> getBoundaryConnectivity();
+
+            for (int j=0; j<numElem; j++){
+                int *connect;
+                connect = elements_[j] -> getConnectivity();
+
+                int flag = 0;
+            
+                int side[nBdNodes];
+                for (int k=0; k<nElNodes; k++){
+                    for (int l = 0; l<nBdNodes; l++){
+                        if (connectB[l] == connect[k]){
+                            side[flag] = k;
+                            flag++;
+                        }
+                    };
+                };
+                if (flag == nBdNodes){
+                    boundary_[i] -> setElement(j);
+                    //Sets element index and side
+                    // for (int k=0; k<nBdNodes; k++) std::cout << "BD NODES " << i << " " << j << " " << k << " " << side[k] << std::endl;
+                    
+                    for (int k=0; k<DIM+1; k++){
+                        // std::cout << "DDDDD " << k << std::endl;
+
+                        int* end = side + nBdNodes;
+                        int* foo = std::find(side, end, k);
+
+                        if ((foo == end) && (elements_[j] -> getElemSideInBoundary() < 0)){
+                            int aux = boundary_[i] -> getBoundaryGroup();
+                            boundary_[i] -> setBoundaryGroup(aux);
+                            boundary_[i] -> setElementSide(k);
+                            elements_[j] -> setElemSideInBoundary(k);
+                        }
+                    }
+                };
+            };
+        }
+    };
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+//---------------------SUBDIVIDES THE FINITE ELEMENT DOMAIN---------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::domainDecompositionMETIS() {
+    
+    std::string mirror2;
+    mirror2 = "domain_decomposition.txt";
+    std::ofstream mirrorData(mirror2.c_str());
+    
+    int size;
+
+    MPI_Comm_size(PETSC_COMM_WORLD, &size);
+
+    idx_t objval;
+    idx_t numEl = numElem;
+    idx_t numNd = numNodes;
+    idx_t ssize = size;
+    idx_t one = 1;
+    idx_t elem_start[numEl+1], elem_connec[nElNodes*numEl];
+    part_elem = new idx_t[numEl];
+    part_nodes = new idx_t[numNd];
+
+
+    for (idx_t i = 0; i < numEl+1; i++){
+        elem_start[i]=nElNodes*i;
+    };
+    for (idx_t jel = 0; jel < numEl; jel++){
+        int *connec=elements_[jel]->getConnectivity();        
+        
+        for (idx_t i=0; i<nElNodes; i++){
+        elem_connec[nElNodes*jel+i] = connec[i];
+        };
+    };
+
+    //Performs the domain decomposition
+    METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
+                              NULL, NULL, &one, &ssize, NULL, NULL,    \
+                              &objval, part_elem, part_nodes);
+
+    mirrorData << std::endl \
+               << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
+    for(int i = 0; i < numElem; i++){
+        mirrorData << "process = " << part_elem[i] \
+                   << ", element = " << i << std::endl;
+    };
+
+    mirrorData << std::endl \
+               << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
+    for(int i = 0; i < numNodes; i++){
+        mirrorData << "process = " << part_nodes[i] \
+                   << ", node = " << i << std::endl;
+    };
+    
+    return;
+
+};
+
+//------------------------------------------------------------------------------
+//----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
+//------------------------------------------------------------------------------
+template<>
+void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
+
+    double dragCoefficient = 0.;
+    double liftCoefficient = 0.;
+    double pressureDragCoefficient = 0.;
+    double pressureLiftCoefficient = 0.;
+    double frictionDragCoefficient = 0.;
+    double frictionLiftCoefficient = 0.;
+    
+    for (int jel = 0; jel < numBoundElems; jel++){   
+        
+        double rhoInf = 1.0;
+        double velocityInf[2];
+        velocityInf[0] = -1.;
+        velocityInf[1] = 0.;
+        
+        double dForce = 0.;
+        double lForce = 0.;
+        double pDForce = 0.;
+        double pLForce = 0.;
+        double fDForce = 0.;
+        double fLForce = 0.;
+        double aux_Mom = 0.;
+        double aux_Per = 0.;
+        
+       for (int i=0; i<numberOfLines; i++){
+            //std::cout << "Bound group " << boundary_[jel] -> getBoundaryGroup() << std::endl;
+            if (boundary_[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
+                //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
+                int iel = boundary_[jel] -> getElement();
+                elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
+                // elements_[iel] -> computeSeparationAngle();
+            };
+        };
+        
+        pressureDragCoefficient += pDForce ;/// 
+            //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        pressureLiftCoefficient += pLForce;// / 
+            //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        
+        frictionDragCoefficient += fDForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        frictionLiftCoefficient += fLForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        
+        dragCoefficient += dForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        liftCoefficient += lForce / 
+            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+        
+    };
+    // std::cout << "vazao " << pressureDragCoefficient << " " << pressureLiftCoefficient << std::endl;
+    if (rank == 0) {
+        const int timeWidth = 11;
+        const int numWidth = 11;
+        dragLift << std::setprecision(3) << std::scientific;
+        dragLift << std::left << std::setw(timeWidth) << iTimeStep * dTime;
+        dragLift << std::setw(numWidth) << pressureDragCoefficient;
+        dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+        dragLift << std::setw(numWidth) << frictionDragCoefficient;
+        dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+        dragLift << std::setw(numWidth) << dragCoefficient;
+        dragLift << std::setw(numWidth) << liftCoefficient;
+        dragLift << std::endl;
+    }
+}
+
+
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles) {
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //+++++++++++++++++++++++++++++OPPENING FILES+++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    //opening the .msh file
+    
+    std::ofstream mirrorData(mirror.c_str());
+    std::ifstream file(inputMesh);
+    std::string line;
+    std::getline(file, line); std::getline(file, line); std::getline(file, line); std::getline(file, line);
+  
+
+    readInputFile(inputFile,mirrorData);
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++READIN MESH+++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //+++++++++++++++++++++++++++PHYSICAL ENTITIES++++++++++++++++++++++++++++
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    int number_physical_entities;
+    file >> number_physical_entities;
+    std::getline(file, line);
+    std::unordered_map<int, std::string> physicalEntities;
+    physicalEntities.reserve(number_physical_entities);
+
+    for (int i = 0; i < number_physical_entities; i++)
+    {
+        std::getline(file, line);
+        std::vector<std::string> tokens = split2(line, " ");
+        int index;
+        std::istringstream(tokens[1]) >> index;
+        physicalEntities[index] = tokens[2].substr(1, tokens[2].size() - 2);
+    }
+    std::getline(file, line); std::getline(file, line);
+
+    readNodes(file,mirrorData);
+
+    readElements(geometry_,file,mirrorData,elements_, physicalEntities);
+
+    numDOF = (DIM+1) * numNodes;
+
+    renumberConnectivity();
+
+    // if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
+                             // << numElem << " " << numBoundElems << std::endl;
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
     
-    for (int jel=0; jel<numElem; jel++){
+    for (int jel = 0; jel < numElem; jel++){
         int *connec = elements_[jel] -> getConnectivity();       
-        for (int i=0; i<4*dimension-2; i++){
+        for (int i=0; i < nElNodes; i++){
             mirrorData << connec[i] << " ";
         };
         mirrorData << std::endl;
     };
 
+    setBoundaryConstrains();
 
-    // for (int i = 0; i < numNodes; ++i){
-    //     typename Node::VecLocD x;
-    //     x = nodes_[i]->getCoordinates();    
-    //     if ((x(0) == 0) && (x(1) == 0)) {
-    //         nodes_[i] -> setConstrainsLaplace(0,1,0);
-    //         nodes_[i] -> setConstrainsLaplace(0,1,0);
-    //     }
-    // }
-    
-
-
-
-
-    //Sets boundary constrains
-    for (int ibound = 0; ibound < numBoundElems; ibound++){
-        
-        int* connectB = boundary_[ibound] -> getBoundaryConnectivity();
-        int no1 = connectB[0];
-        int no2 = connectB[1];
-        int no3 = connectB[2];
-        //if ((boundary_[ibound] -> getConstrain(0) != 2) && (boundary_[ibound] -> getConstrain(0) != 0)){
-        if (boundary_[ibound] -> getConstrain(0) == 3){
-            nodes_[no1] -> setConstrainsLaplace(0,1,0);
-            nodes_[no2] -> setConstrainsLaplace(0,1,0);
-            nodes_[no3] -> setConstrainsLaplace(0,1,0);
-        };
-        // if ((boundary_[ibound] -> getConstrain(1) != 2) && (boundary_[ibound] -> getConstrain(1) != 0)){
-        if (boundary_[ibound] -> getConstrain(1) == 3){
-            nodes_[no1] -> setConstrainsLaplace(1,1,0);
-            nodes_[no2] -> setConstrainsLaplace(1,1,0);
-            nodes_[no3] -> setConstrainsLaplace(1,1,0);
-        };
-
-
-        
-        if ((boundary_[ibound] -> getConstrain(0) == 1) || (boundary_[ibound] -> getConstrain(0) == 3)){
-
-            //Desfazer primeira parte do if para voltar a cond. cont. constante
-            // if (boundary_[ibound] -> getConstrainValue(0) <= 1.){
-                
-            //     typename Node::VecLocD x;
-            //     x = nodes_[no1]->getCoordinates();                 
-                
-            //     nodes_[no1] -> setConstrains(0,boundary_[ibound] -> 
-            //                                  getConstrain(0),
-            //                                  x(1) * boundary_[ibound] -> 
-            //                                  getConstrainValue(0));
-                
-            //     x = nodes_[no2]->getCoordinates();                 
-                
-            //     nodes_[no2] -> setConstrains(0,boundary_[ibound] -> 
-            //                                  getConstrain(0),
-            //                                  x(1) * boundary_[ibound] -> 
-            //                                  getConstrainValue(0));
-                
-            //     x = nodes_[no3]->getCoordinates();                 
-                
-            //     nodes_[no3] -> setConstrains(0,boundary_[ibound] -> 
-            //                                  getConstrain(0),
-            //                                  x(1) * boundary_[ibound] -> 
-            //                                  getConstrainValue(0));
-            //     //ate aqui
-            // } else {
-            nodes_[no1] -> setConstrains(0,boundary_[ibound] -> getConstrain(0),
-                                     boundary_[ibound] -> getConstrainValue(0));
-            nodes_[no2] -> setConstrains(0,boundary_[ibound] -> getConstrain(0),
-                                     boundary_[ibound] -> getConstrainValue(0));
-            nodes_[no3] -> setConstrains(0,boundary_[ibound] -> getConstrain(0),
-                                     boundary_[ibound] -> getConstrainValue(0));
-             // };
-        };
-
-        if((boundary_[ibound] -> getConstrain(1) == 1) || (boundary_[ibound] -> getConstrain(1) == 3)){
-            nodes_[no1] -> setConstrains(1,boundary_[ibound] -> getConstrain(1),
-                                     boundary_[ibound] -> getConstrainValue(1));
-            nodes_[no2] -> setConstrains(1,boundary_[ibound] -> getConstrain(1),
-                                     boundary_[ibound] -> getConstrainValue(1));
-            nodes_[no3] -> setConstrains(1,boundary_[ibound] -> getConstrain(1),
-                                     boundary_[ibound] -> getConstrainValue(1));
-        };     
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //Print nodal constrains
+    //Print nodal constrains
     for (int i=0; i<numNodes; i++){
 
         mirrorData<< "Constrains " << i
@@ -1175,48 +1132,8 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
                   << " " << boundary_[i] -> getBoundaryGroup() << std::endl;
     }; 
 
-
-    //Sets fluid elements and sides on interface boundaries
-    for (int i=0; i<numBoundElems; i++){
-        if ((boundary_[i] -> getConstrain(0) > 0) ||
-            (boundary_[i] -> getConstrain(1) > 0)) {
-
-            int* connectB = boundary_[i] -> getBoundaryConnectivity();
-
-            for (int j=0; j<numElem; j++){
-                int *connect = elements_[j] -> getConnectivity();
-                
-                int flag = 0;
-                int side[3];
-                for (int k=0; k<6; k++){
-                    if ((connectB[0] == connect[k]) || 
-                        (connectB[1] == connect[k]) ||
-                        (connectB[2] == connect[k])){
-                        side[flag] = k;
-                        flag++;
-                    };
-                };
-                
-                if (flag == 3){
-                    boundary_[i] -> setElement(j);
-                    //Sets element index and side
-                    if ((side[0]==4) || (side[1]==4) || (side[2]==4)){
-                        boundary_[i] -> setElementSide(0);
-                        elements_[boundary_[i]->getElement()] -> setElemSideInBoundary(0);
-                    };
-                    if ((side[0]==5) || (side[1]==5) || (side[2]==5)){
-                        boundary_[i] -> setElementSide(1);
-                        elements_[boundary_[i]->getElement()] -> setElemSideInBoundary(1);
-                    };
-                    if ((side[0]==3) || (side[1]==3) || (side[2]==3)){
-                        boundary_[i] -> setElementSide(2);
-                        elements_[boundary_[i]->getElement()] -> setElemSideInBoundary(2);
-                    };
-                };
-            };
-        };
-    };
-
+    setBoundarySides();
+ 
     domainDecompositionMETIS();
 
     iAux = 0;
@@ -1225,8 +1142,9 @@ void Fluid<2,2>::meshReading(Geometry* &geometry_, const std::string& inputFile,
     //Closing the file
     file.close();
     if (deleteFiles)
-        system((remove + inputFile).c_str());
+        system((rm + inputFile).c_str());
 
+    // printResults(100);
 
 return;
 };

@@ -27,20 +27,17 @@ public:
     /// @param int boundary element constrain value @see Node::setConstrains()
     Boundary(int *connec, int index, int *constrain, double *values, int gr){
         
-        for (int i = 0; i < 3*(DIM-1); i++) connectB_[i] = connec[i];
+        for(int i = 0; i<nBdNodes; i++) connectB_[i] = connec[i];
         index_ = index;
         group_ = gr;
 
-        constrainType[0] = constrain[0];
-        constrainType[1] = constrain[1];
-        constrainType[2] = constrain[2];
-        
-        constrainValue[0] = values[0];
-        constrainValue[1] = values[1];
-        constrainValue[2] = values[2];
+        for(int i = 0; i<DIM; i++){
+            constrainType[i] = constrain[i];
+            constrainValue[i] = values[i];
+        };
 
-        element_ = 0;
-        elementSide_ = 0;
+        element_ = -1;
+        elementSide_ = 1000;
     };     
 
     /// Returns the boundary element constrain component type
@@ -81,10 +78,11 @@ public:
     int getElementSide(){return elementSide_;}
 
 private:
-    int          connectB_[3*(DIM-1)];         //Boundary element connectivity
+    const int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+    int       connectB_[3*(1-DEG)+DIM*(2*DEG-1)];//Boundary element connectivity
     int          index_;            //Boundary element index
-    int          constrainType[3];  //Element type of constrain
-    double       constrainValue[3]; //Element constrain value
+    int          constrainType[DIM];  //Element type of constrain
+    double       constrainValue[DIM]; //Element constrain value
     int          element_;          //Fluid Element
     int          elementSide_;      //Fluid Element Side
     int          group_;            //Element boundary group
