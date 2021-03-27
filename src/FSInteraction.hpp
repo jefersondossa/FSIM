@@ -1305,7 +1305,7 @@ void FSInteraction<2,2>::solveFSIProblem(int numTimeSteps){
 
         if (rank == 0) {
             //            if(iTimeStep % 5 == 0){
-            fluidModel.printResults(iTimeStep);
+            // fluidModel.printResults(iTimeStep);
             printstructure_();
             //            };
         };
@@ -1565,7 +1565,7 @@ void FSInteraction<2,2>::solveFSIProblemGaussSeidel(int numTimeSteps){
         // Printing Results
         if (rank == 0) {
             if(iTimeStep % 1 == 0){
-                fluidModel.printResults(iTimeStep);
+                // fluidModel.printResults(iTimeStep);
                 printstructure_();
             };
         };

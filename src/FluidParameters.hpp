@@ -47,11 +47,18 @@ public:
         // gamma = 1.;
     }
 
-    void setFieldForce(double* ff){fieldForce = ff;}
+    /// Sets the domain force vector
+    /// @param double* domain force vector
+    void setFieldForce(double* ff){for(int i=0; i<3; i++) fieldForce[i] = ff[i];}
 
     void setArlequinOperatorConstants(double& k_1, double& k_2){k1 = k_1; k2 = k_2;}
     void setTimeInstant(int& it){timeInstant = it;}
-
+    /// Sets the undisturbed velocity field
+    /// @param double* undisturbed velocity field
+    void setVelocityInf(double* u){for(int i=0; i<3; i++) velocityInf[i] = u[i];}
+    /// Gets the undisturbed velocity field
+    /// @return undisturbed velocity field
+    double* getVelocityInf() {return velocityInf;}
 
     double& getTimeStep() {return timeStepSize;}
     double& getDensity() {return density;}
@@ -59,7 +66,11 @@ public:
     double& getAlphaM() {return alpha_m;}
     double& getAlphaF() {return alpha_f;}
     double& getGamma() {return gamma;}
-    double* &getFieldForce() {return fieldForce;}
+    
+    /// Gets the domain force vector
+    /// @return domain force vector
+    double* getFieldForce() {return fieldForce;}
+
     double& getArlequinK1() {return k1;}
     double& getArlequinK2() {return k2;}
     double& getPi() {return pi;}
@@ -73,9 +84,10 @@ private:
     double alpha_m;
     double alpha_f;
     double gamma;
-    double* fieldForce;
+    double fieldForce[3];
     double k1, k2;
     double pi = M_PI;
+    double velocityInf[3];
 
     int timeInstant;
 };

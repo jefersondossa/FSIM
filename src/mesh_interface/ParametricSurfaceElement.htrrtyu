@@ -1,0 +1,226 @@
+#pragma once
+#include "ParametricElement.h"
+#include "string"
+#include <iostream>
+
+class ParametricSurfaceElement : public ParametricElement
+{
+    public:
+        ParametricSurfaceElement(const int& index, const std::vector<NodeMesh*>& nodes, const PartitionOfUnity elementType);
+
+        ~ParametricSurfaceElement() override;
+
+        void getShapeFunctions(const double& xsi1, const double& xsi2, double*& phi, double*& dphi_dxsi1, double*& dphi_dxsi2);
+        
+        void getShapeFunctionsAtIntegrationPoints(double**& phi, double**& dphi_dxsi1, double**& dphi_dxsi2, double*& weight);
+
+        std::vector<NodeMesh*> getBoundaryNodes(const int& boundaryIndex) const override;
+};
+
+
+
+
+
+
+
+
+ParametricSurfaceElement::ParametricSurfaceElement(const int& index, const std::vector<NodeMesh*>& nodes, const PartitionOfUnity elementType)
+    : ParametricElement(index, nodes)
+{
+    switch (elementType)
+    {
+        case T3:
+            order_ = 1;
+            numberOfIntegrationPoints_ = 3;
+            partitionOfUnity_ = T3;
+            break;
+        case T6:
+            order_ = 2;
+            numberOfIntegrationPoints_ = 6;
+            partitionOfUnity_ = T6;
+            break;
+        case T10:
+            order_ = 3;
+            numberOfIntegrationPoints_ = 12;
+            partitionOfUnity_ = T10;
+            break;
+        case Q4:
+            order_ = 1;
+            numberOfIntegrationPoints_ = 4;
+            partitionOfUnity_ = Q4;
+            break;
+        case Q9:
+            order_ = 2;
+            numberOfIntegrationPoints_ = 9;
+            partitionOfUnity_ = Q9;
+            break;
+        case Q16:
+            order_ = 3;
+            numberOfIntegrationPoints_ = 16;
+            partitionOfUnity_ = Q16;
+            break;
+        default:
+            std::cout << "Surface element not implemented!\n";
+            exit(EXIT_FAILURE);
+    }
+}
+
+ParametricSurfaceElement::~ParametricSurfaceElement() {}
+
+void ParametricSurfaceElement::getShapeFunctions(const double& xsi1, const double& xsi2, double*& phi, double*& dphi_dxsi1, double*& dphi_dxsi2)
+{
+    const int numberOfNodes = nodes_.size();
+    phi = new double[numberOfNodes];
+    dphi_dxsi1 = new double[numberOfNodes];
+    dphi_dxsi2 = new double[numberOfNodes];
+
+    switch (partitionOfUnity_)
+    {
+    case T3:
+        phi[0] = xsi1;
+        phi[1] = xsi2;
+	    phi[2] = 1.0 - xsi1 - xsi2;
+        
+        dphi_dxsi1[0] = 1.0;    
+	    dphi_dxsi1[1] = 0.0;    
+        dphi_dxsi1[2] = -1.0;   
+        
+        dphi_dxsi2[0] = 0.0;
+        dphi_dxsi2[1] = 1.0;
+        dphi_dxsi2[2] = -1.0;
+        break;
+    case T6:
+        phi[0] = xsi1 * (2.0 * xsi1 - 1.0);
+        phi[1] = xsi2 * (2.0 * xsi2 - 1.0);
+        phi[2] = (xsi2 + xsi1 - 1.0) * (2.0 * xsi2 + 2.0 * xsi1 - 1.0);
+        phi[3] = 4.0 * xsi1 * xsi2;
+        phi[4] = -4.0 * xsi2 * (xsi2 + xsi1 - 1.0);
+        phi[5] = -4.0 * xsi1 * (xsi2 + xsi1 - 1.0);
+
+        dphi_dxsi1[0] = 4.0 * xsi1 - 1.0;
+        dphi_dxsi1[1] = 0.0;
+        dphi_dxsi1[2] = 4.0 * xsi2 + 4.0 * xsi1 - 3.0;
+        dphi_dxsi1[3] = 4.0 * xsi2;
+        dphi_dxsi1[4] = -4.0 * xsi2;
+        dphi_dxsi1[5] = -4.0 * (xsi2 + 2.0 * xsi1 - 1.0);
+
+        dphi_dxsi2[0] = 0.0;
+        dphi_dxsi2[1] = 4.0 * xsi2 - 1.0;
+        dphi_dxsi2[2] = 4.0 * xsi2 + 4.0 * xsi1 - 3.0;
+        dphi_dxsi2[3] = 4.0 * xsi1;
+        dphi_dxsi2[4] = -4.0 * (2.0 * xsi2 + xsi1 - 1.0);
+        dphi_dxsi2[5] = -4.0 * xsi1;
+        break;
+    case T10:
+        phi[0] = (xsi1 * (3.0 * xsi1 - 2.0) * (3.0 * xsi1 - 1.0)) / 2.0;
+        phi[1] = (xsi2 * (3.0 * xsi2 - 2.0) * (3.0 * xsi2 - 1.0)) / 2.0;
+        phi[2] = -((xsi2 + xsi1 - 1.0) * (3.0 * xsi2 + 3.0 * xsi1 - 2.0) * (3.0 * xsi2 + 3.0 * xsi1 - 1.0)) / 2.0;
+        phi[3] = (9.0 * xsi1 * xsi2 * (3.0 * xsi1 - 1.0)) / 2.0;
+        phi[4] = (9.0 * xsi1 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
+        phi[5] = -(9.0 * xsi2 * (xsi2 + xsi1 - 1.0) * (3.0 * xsi2 - 1.0)) / 2.0;
+        phi[6] = (9.0 * xsi2 * (xsi2 + xsi1 - 1.0) * (3.0 * xsi2 + 3.0 * xsi1 - 2.0)) / 2.0;
+        phi[7] = (9.0 * xsi1 * (xsi2 + xsi1 - 1.0) * (3.0 * xsi2 + 3.0 * xsi1 - 2.0)) / 2.0;
+        phi[8] = -(9.0 * xsi1 * (3.0 * xsi1 - 1.0) * (xsi2 + xsi1 - 1.0)) / 2.0;
+        phi[9] = -27.0 * xsi1 * xsi2 * (xsi2 + xsi1 - 1.0);
+
+        dphi_dxsi1[0] = (27.0 * xsi1 * xsi1 - 18.0 * xsi1 + 2.0) / 2.0;
+        dphi_dxsi1[1] = 0.0;
+        dphi_dxsi1[2] = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
+        dphi_dxsi1[3] = (9.0 * xsi2 * (6.0 * xsi1 - 1.0)) / 2.0;
+        dphi_dxsi1[4] = (9.0 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
+        dphi_dxsi1[5] = -(9.0 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
+        dphi_dxsi1[6] = (9.0 * xsi2 * (6.0 * xsi2 + 6.0 * xsi1 - 5.0)) / 2.0;
+        dphi_dxsi1[7] = (9.0 * (3.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 5.0 * xsi2 + 9.0 * xsi1 * xsi1 - 10.0 * xsi1 + 2.0)) / 2.0;
+        dphi_dxsi1[8] = -(9.0 * (6.0 * xsi1 * xsi2 - xsi2 + 9.0 * xsi1 * xsi1 - 8.0 * xsi1 + 1.0)) / 2.0;
+        dphi_dxsi1[9] = -27.0 * xsi2 * (xsi2 + 2.0 * xsi1 - 1.0);
+
+        dphi_dxsi2[0] = 0.0;
+        dphi_dxsi2[1] = (27.0 * xsi2 * xsi2 - 18.0 * xsi2 + 2) / 2.0;
+        dphi_dxsi2[2] = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
+        dphi_dxsi2[3] = (9.0 * xsi1 * (3.0 * xsi1 - 1.0)) / 2.0;
+        dphi_dxsi2[4] = (9.0 * xsi1 * (6.0 * xsi2 - 1.0)) / 2.0;
+        dphi_dxsi2[5] = -(9.0 * (9.0 * xsi2 * xsi2 + 6.0 * xsi1 * xsi2 - 8.0 * xsi2 - xsi1 + 1.0)) / 2.0;
+        dphi_dxsi2[6] = (9.0 * (9.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 10.0 * xsi2 + 3.0 * xsi1 * xsi1 - 5.0 * xsi1 + 2.0)) / 2.0;
+        dphi_dxsi2[7] = (9.0 * xsi1 * (6.0 * xsi2 + 6.0 * xsi1 - 5.0)) / 2.0;
+        dphi_dxsi2[8] = -(9.0 * xsi1 * (3.0 * xsi1 - 1.0)) / 2.0;
+        dphi_dxsi2[9] = -27.0 * xsi1 * (2.0 * xsi2 + xsi1 - 1.0);
+        break;
+    }
+}
+
+void ParametricSurfaceElement::getShapeFunctionsAtIntegrationPoints(double**& phi, double**& dphi_dxsi1, double**& dphi_dxsi2, double*& weight)
+{
+    double *xsi1, *xsi2;
+    switch (partitionOfUnity_)
+    {
+    case T3:
+    case T6:
+    case T10:
+        quadratures::triangleQuadrature(numberOfIntegrationPoints_, xsi1, xsi2, weight);
+        break;
+    }
+
+    phi = new double*[numberOfIntegrationPoints_];
+    dphi_dxsi1 = new double*[numberOfIntegrationPoints_];
+    dphi_dxsi2 = new double*[numberOfIntegrationPoints_];
+
+    for (int i = 0; i < numberOfIntegrationPoints_; i++)
+    {
+        //double *_phi, *_dphi_dxsi1, *_dphi_dxsi2, *_dphi_dxsi3;
+        getShapeFunctions(xsi1[i], xsi2[i], phi[i], dphi_dxsi1[i], dphi_dxsi2[i]);
+        // phi[i] = _phi;
+        // dphi_dxsi1[i] = _dphi_dxsi1;
+        // dphi_dxsi2[i] = _dphi_dxsi2;
+        // dphi_dxsi3[i] = _dphi_dxsi3;
+    }
+    delete[] xsi1;
+    delete[] xsi2;
+}
+
+std::vector<NodeMesh*> ParametricSurfaceElement::getBoundaryNodes(const int& boundaryIndex) const
+{
+    std::vector<std::vector<NodeMesh*>> boundaryNodes;
+    switch (partitionOfUnity_)
+    {
+        case T3:
+            boundaryNodes.reserve(3);
+            boundaryNodes.push_back({nodes_[0], nodes_[1]});
+            boundaryNodes.push_back({nodes_[1], nodes_[2]});
+            boundaryNodes.push_back({nodes_[2], nodes_[0]});
+            break;
+        case T6:
+            boundaryNodes.reserve(3);
+            boundaryNodes.push_back({nodes_[0], nodes_[3], nodes_[1]});
+            boundaryNodes.push_back({nodes_[1], nodes_[4], nodes_[2]});
+            boundaryNodes.push_back({nodes_[2], nodes_[5], nodes_[0]});
+            break;
+        case T10:
+            boundaryNodes.reserve(3);
+            boundaryNodes.push_back({nodes_[0], nodes_[3], nodes_[4], nodes_[1]});
+            boundaryNodes.push_back({nodes_[1], nodes_[5], nodes_[6], nodes_[2]});
+            boundaryNodes.push_back({nodes_[2], nodes_[7], nodes_[8], nodes_[0]});
+            break;
+        case Q4:
+            boundaryNodes.reserve(4);
+            boundaryNodes.push_back({nodes_[0], nodes_[1]});
+            boundaryNodes.push_back({nodes_[1], nodes_[2]});
+            boundaryNodes.push_back({nodes_[2], nodes_[3]});
+            boundaryNodes.push_back({nodes_[3], nodes_[0]});
+            break;
+        case Q9:
+            boundaryNodes.reserve(4);
+            boundaryNodes.push_back({nodes_[0], nodes_[4], nodes_[1]});
+            boundaryNodes.push_back({nodes_[1], nodes_[5], nodes_[2]});
+            boundaryNodes.push_back({nodes_[2], nodes_[6], nodes_[3]});
+            boundaryNodes.push_back({nodes_[3], nodes_[7], nodes_[0]});
+            break;
+        case Q16:
+            boundaryNodes.reserve(4);
+            boundaryNodes.push_back({nodes_[0], nodes_[4],  nodes_[5],  nodes_[1]});
+            boundaryNodes.push_back({nodes_[1], nodes_[6],  nodes_[7],  nodes_[2]});
+            boundaryNodes.push_back({nodes_[2], nodes_[8],  nodes_[9],  nodes_[3]});
+            boundaryNodes.push_back({nodes_[3], nodes_[10], nodes_[11], nodes_[0]});
+            break;
+    }
+    return boundaryNodes[boundaryIndex];
+}

@@ -1,0 +1,117 @@
+#pragma once
+#include "ParametricElement.h"
+#include <string>
+#include <iostream>
+
+class ParametricLineElement : public ParametricElement
+{
+    public:
+        ParametricLineElement(const int& index, const std::vector<NodeMesh*>& nodes, const PartitionOfUnity elementType);
+
+        ~ParametricLineElement() override;
+
+        void getShapeFunctions(const double& xsi, double*& phi, double*& dphi_dxsi);
+
+        void getShapeFunctionsAtIntegrationPoints(double**& phi, double**& dphi_dxsi, double*& weight);
+
+        std::vector<NodeMesh*> getBoundaryNodes(const int& boundaryIndex) const override;
+};
+
+
+
+
+
+
+
+
+ParametricLineElement::ParametricLineElement(const int& index, const std::vector<NodeMesh*>& nodes, const PartitionOfUnity elementType)
+    :ParametricElement(index, nodes)
+{
+    switch (elementType)
+    {
+    case L2:
+        order_ = 1;
+        numberOfIntegrationPoints_ = 1;
+        partitionOfUnity_ = L2;
+        break;
+    case L3:
+        order_ = 2;
+        numberOfIntegrationPoints_ = 2;
+        partitionOfUnity_ = L3;
+        break;
+    case L4:
+        order_ = 3;
+        numberOfIntegrationPoints_ = 3;
+        partitionOfUnity_ = L4;
+        break;
+    default:
+        std::cout << "Line element not implemented!\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
+ParametricLineElement::~ParametricLineElement() {std::cout << "ParametricLineElement " << index_ << " deleted.\n";}
+
+void ParametricLineElement::getShapeFunctions(const double& xsi, double*& phi, double*& dphi_dxsi)
+{
+    if (phi) phi = new double[order_ + 1];
+    if (dphi_dxsi) dphi_dxsi = new double[order_ + 1];
+
+    switch (partitionOfUnity_)
+    {
+    case L2:
+        if (phi)
+        {
+            phi[0] = 0.5 * (1.0 - xsi);
+	        phi[1] = 0.5 * (1.0 + xsi);
+        }
+        if (dphi_dxsi)
+        {
+            dphi_dxsi[0] = -0.5;
+	        dphi_dxsi[1] = 0.5;
+        }
+        break;
+    case L3:
+        if (phi)
+        {
+            phi[0] = xsi * (xsi - 1.0) * 0.5;
+	        phi[1] = xsi * (xsi + 1.0) * 0.5;
+            phi[2] = (1.0 + xsi) * (1.0 - xsi);
+        }
+        if (dphi_dxsi)
+        {
+            dphi_dxsi[0] = xsi - 0.5;
+	        dphi_dxsi[1] = xsi + 0.5;
+	        dphi_dxsi[2] = -2.0 * xsi;
+        }
+        break;
+    case L4:
+        if (phi)
+        {
+            phi[0] = -9.0/16.0 * (xsi + 1.0/3.0)*(xsi - 1.0/3.0)*(xsi - 1.0);
+            phi[1] = 9.0/16.0 * (xsi + 1.0)*(xsi + 1.0/3.0)*(xsi - 1.0/3.0);
+            phi[2] = 27.0/16.0 * (xsi + 1.0)*(xsi - 1.0/3.0)*(xsi - 1.0);
+            phi[3] = -27.0/16.0 * (xsi + 1.0)*(xsi + 1.0/3.0)*(xsi - 1.0);
+        }
+        if (dphi_dxsi)
+        {
+            dphi_dxsi[0] = -9.0/16.0 * ((xsi-1.0/3.0)*(xsi-1.0) + (xsi+1.0/3.0)*(xsi-1.0) + (xsi+1.0/3.0)*(xsi-1.0/3.0));
+	        dphi_dxsi[1] = 9.0/16.0 * ((xsi+1.0/3.0)*(xsi-1.0/3.0) + (xsi+1.0)*(xsi-1.0/3.0) + (xsi+1.0)*(xsi+1.0/3.0));
+	        dphi_dxsi[2] = 27.0/16.0 * ((xsi-1.0/3.0)*(xsi-1.0) + (xsi+1.0)*(xsi-1.0) + (xsi+1.0)*(xsi-1.0/3.0));
+	        dphi_dxsi[3] = -27.0/16.0 * ((xsi+1.0/3.0)*(xsi-1.0) + (xsi+1.0)*(xsi-1.0) + (xsi+1.0)*(xsi+1.0/3.0));
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void ParametricLineElement::getShapeFunctionsAtIntegrationPoints(double**& phi, double**& dphi_dxsi, double*& weight)
+{
+
+}
+
+std::vector<NodeMesh*> ParametricLineElement::getBoundaryNodes(const int& boundaryIndex) const
+{
+    return nodes_;
+}
