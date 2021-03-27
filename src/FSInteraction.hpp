@@ -264,7 +264,8 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
                     deltaXsi[0] = 0.;
                     deltaXsi[1] = 0.;
                     
-                    elementsFluid_[jel] -> getJacobianMatrix(xsi,ainv);
+                    double djac_ = 0.;
+                    elementsFluid_[jel] -> getJacobianMatrix(xsi,ainv,djac_);
                     
                     // noalias(deltaXsi) = prod(trans(ainv),deltaX);
 
@@ -402,7 +403,8 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
                     deltaXsi[0] = 0.;
                     deltaXsi[1] = 0.;
                     
-                    elementsArlequinFine_[jel] -> getJacobianMatrix(xsi,ainv);
+                    double djac_ = 0.;
+                    elementsArlequinFine_[jel] -> getJacobianMatrix(xsi,ainv,djac_);
                     
                     // noalias(deltaXsi) = prod(trans(ainv),deltaX);
 

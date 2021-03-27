@@ -33,8 +33,8 @@ public:
         double phiAux_[nElNodes] = {};
 
         double **dphiAux;
-        dphiAux = new double*[DIM];
-        for (int i = 0; i < DIM; ++i) dphiAux[i] = new double[nElNodes];
+        dphiAux = new double*[nElNodes];
+        for (int i = 0; i < nElNodes; ++i) dphiAux[i] = new double[DIM];
 
         for(double* it = quad.begin(); it != quad.end(); it++){
             //Defines the integration points adimentional coordinates
@@ -46,7 +46,7 @@ public:
             shapeFunction.evaluateGradient(xsi,dphiAux);
             for (int i = 0; i < nElNodes; i++)
                 for (int j = 0; j < DIM; j++)
-                    dphi_[j][i][index] = dphiAux[i][j];
+                    dphi_[i][j][index] = dphiAux[i][j];
 
             index++;
         }
@@ -56,8 +56,7 @@ public:
     }
 
     double phi_[3*(DIM*DEG-DEG)-2*DIM+4][-5*DIM-8*DEG+6*DIM*DEG+9];
-    double dphi_[DIM][3*(DIM*DEG-DEG)-2*DIM+4][-5*DIM-8*DEG+6*DIM*DEG+9];
-
+    double dphi_[3*(DIM*DEG-DEG)-2*DIM+4][DIM][-5*DIM-8*DEG+6*DIM*DEG+9];
 
 private:
 
