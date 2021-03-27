@@ -299,8 +299,8 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(double* x,std::vector<Nodes *> 
             deltaXsi[k] = 0.;
         }
         
-        elements[elSearch] -> getJacobianMatrix(xsi,ainv);
-    
+        double djac_ = 0.;
+        elements[elSearch] -> getJacobianMatrix(xsi,ainv,djac_);
 
         for (int i = 0; i < DIM; i++)
             for (int j = 0; j < DIM; j++)
@@ -374,7 +374,8 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(double* x,std::vector<Nodes *> 
                     deltaXsi[k] = 0.;
                 }
                 
-                elements[jel] -> getJacobianMatrix(xsi,ainv);
+                double djac_ = 0.;
+                elements[jel] -> getJacobianMatrix(xsi,ainv,djac_);
             
                 for (int i = 0; i < DIM; i++)
                     for (int j = 0; j < DIM; j++)

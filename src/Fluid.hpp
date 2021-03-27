@@ -1094,8 +1094,9 @@ void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputF
     }
     std::getline(file, line); std::getline(file, line);
 
-    readNodes(file,mirrorData);
+    numIntegration = new DIntegration();
 
+    readNodes(file,mirrorData);
     readElements(geometry_,file,mirrorData,elements_, physicalEntities);
 
     numDOF = (DIM+1) * numNodes;
