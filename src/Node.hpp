@@ -91,7 +91,7 @@ public:
 
         pressure_ = 0.;          
         vorticity_ = 0.;
-        elemCorresp = 0;         
+        elemCorresp = 0;   
         presArlequin_=0.;
         weightFunction_ = 0.;   previousWeightFunction_ = 0.;
         distGlueZone = 0.;

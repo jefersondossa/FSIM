@@ -319,7 +319,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(double* x,std::vector<Nodes *> 
             for (int k = DIM; k--; ) x_[k] += xint[k] * phi_[i];
         };
 
-        error = std::sqrt(std::inner_product(deltaXsi,deltaXsi,deltaXsi,0.0L));
+        error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
     };
     
     double t1 = -1.e-2;
@@ -393,7 +393,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(double* x,std::vector<Nodes *> 
                     for (int k = DIM; k--; ) x_[k] += xint[k] * phi_[i];
                 };
                         
-                error = std::sqrt(std::inner_product(deltaXsi,deltaXsi,deltaXsi,0.0L));
+                error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
             };
             
             double t1 = -1.e-2;
@@ -453,7 +453,7 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
         nodesFine_[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);             
         // }
 
-        
+        // std::cout << "INODE " << nodesGlueZoneFine_[inode] << " " << elCorr << " " << xsiCorr[0] << " " << xsiCorr[1] << std::endl;
    
         // std::cout << "CORRESP " << elCorr << " " << corresp.first << std::endl 
                   // << xsiCorr[0] << " " << xsiCorr[1] << " " << corresp.second[0] << " " << corresp.second[1] << std::endl;
@@ -537,7 +537,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
     //approximate normal calculation
 
     for (int i = 0; i < numBoundElemFine; i++){
-        if (boundaryFine_[i]->getConstrain(0) >= 2){
+        if (boundaryFine_[i]->getConstrain(0) == 2){
             connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
             
             elementsFine_[boundaryFine_[i] -> getElement()] -> getBoundaryNodes(bconnec);
@@ -1852,22 +1852,22 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     parametersFine = &fineModel.fluidParameters;
     parametersCoarse = &coarseModel.fluidParameters;
 
-    std::cout << "AA1 " << rank << std::endl;
-    MPI_Barrier(PETSC_COMM_WORLD);
+    // std::cout << "AA1 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
 
     setSignaledDistance();
 
-    std::cout << "AA2 " << rank << std::endl;
-    MPI_Barrier(PETSC_COMM_WORLD);
+    // std::cout << "AA2 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
 
     //Construct the glue zone based on some defined criterion
     setCouplingZone();
-    std::cout << "AA3 " << rank << std::endl;
-    MPI_Barrier(PETSC_COMM_WORLD);
+    // std::cout << "AA3 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
     //Computes the Weight function for all the finite elements
     setWeightFunction(16.); 
-    std::cout << "AA4 " << rank << std::endl;
-    MPI_Barrier(PETSC_COMM_WORLD);
+    // std::cout << "AA4 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
     //Update domain decomposition - Start
     int size;
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
@@ -1888,8 +1888,8 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
         MPI_Bcast(&start[i],1,MPI_INT,i,PETSC_COMM_WORLD);
         MPI_Bcast(&end[i],1,MPI_INT,i,PETSC_COMM_WORLD);
     }
-    std::cout << "AA5 " << rank << std::endl;
-    MPI_Barrier(PETSC_COMM_WORLD);
+    // std::cout << "AA5 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
     for (int i = 0; i < numElemCoarse; i++){
         int* connec = elementsCoarse_[i] -> getConnectivity();
         for (int j = 0; j < size; j++){
@@ -1908,8 +1908,8 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
             }
         }
     }    
-    std::cout << "AA6 " << rank << std::endl;
-    MPI_Barrier(PETSC_COMM_WORLD);
+    // std::cout << "AA6 " << rank << std::endl;
+    // MPI_Barrier(PETSC_COMM_WORLD);
     //Update domain decomposition - End
 
     if(rank == 0){
@@ -1977,7 +1977,7 @@ void Arlequin<DIM,DEG>::dragAndLiftCoefficients(std::ofstream& dragLift){
             if (boundaryFine_[jel] -> getBoundaryGroup() == fineModel.dragAndLiftBoundary[i]){
                 
                 int iel = boundaryFine_[jel] -> getElement();
-                elementsFine_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
+                // elementsFine_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
 
                 pMom += aux_Mom;
                 per += aux_Per;

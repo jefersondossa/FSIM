@@ -22,14 +22,35 @@ template<int DIM, int DEG>
 class DomainIntegration{
 public:
     DomainIntegration(){
-        IntegQuadrature<DIM,DEG>      quad;
-        QuadShapeFunction<DIM,DEG>    shapeFunction;
+        IntegQuadrature<DIM,DEG>        quad;
+        QuadShapeFunction<DIM,DEG>      shapeFunction;
+        IntegQuadratureSpecial<DIM,DEG> Squad;
+        int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+
+        int nIntegPointsNormal = quad.getNumberOfIntegrationPoints();
+        int nIntegPointsSpecial = Squad.getNumberOfIntegrationPoints();
+
+        phi_ = new double*[nElNodes];
+        for (int i = 0; i < nElNodes; i++) phi_[i] = new double[nIntegPointsNormal];
+
+        dphi_ = new double**[nElNodes];
+        for (int i = 0; i < nElNodes; i++){ 
+            dphi_[i] = new double*[DIM];
+            for (int j = 0; j < DIM; j++) dphi_[i][j] = new double[nIntegPointsNormal];
+        }
+
+        phiS_ = new double*[nElNodes];
+        for (int i = 0; i < nElNodes; i++) phiS_[i] = new double[nIntegPointsSpecial];
+
+        dphiS_ = new double**[nElNodes];
+        for (int i = 0; i < nElNodes; i++){ 
+            dphiS_[i] = new double*[DIM];
+            for (int j = 0; j < DIM; j++) dphiS_[i][j] = new double[nIntegPointsSpecial];
+        }
 
         double xsi[DIM] = {};
         int index = 0;
-            
-        int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
-
+        
         double phiAux_[nElNodes] = {};
 
         double **dphiAux;
@@ -50,13 +71,31 @@ public:
 
             index++;
         }
+        index = 0;
+        for(double* it = Squad.begin(); it != Squad.end(); it++){
+            //Defines the integration points adimentional coordinates
+            for (int i = 0; i < DIM; i++) xsi[i] = Squad.PointList(index,i);       
+            //Shape functions
+            shapeFunction.evaluate(xsi,phiAux_);
+            for (int i = 0; i < nElNodes; i++) phiS_[i][index] = phiAux_[i];
+            //Derivatives
+            shapeFunction.evaluateGradient(xsi,dphiAux);
+            for (int i = 0; i < nElNodes; i++)
+                for (int j = 0; j < DIM; j++)
+                    dphiS_[i][j][index] = dphiAux[i][j];
+
+            index++;
+        }
 
         for (int i = 0; i < nElNodes; ++i) delete [] dphiAux[i];
         delete [] dphiAux;
     }
 
-    double phi_[3*(DIM*DEG-DEG)-2*DIM+4][-5*DIM-8*DEG+6*DIM*DEG+9];
-    double dphi_[3*(DIM*DEG-DEG)-2*DIM+4][DIM][-5*DIM-8*DEG+6*DIM*DEG+9];
+    double **phi_;
+    double ***dphi_;
+
+    double **phiS_;
+    double ***dphiS_;
 
 private:
 

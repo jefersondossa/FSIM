@@ -205,22 +205,24 @@ public:
         for (int i = DIM; i--; ) ainv_[i] = new double[DIM];
         
         double **dphi_dx;
-        dphi_dx = new double*[DIM];
-        for (int i = DIM; i--; ) dphi_dx[i] = new double[nElNodes];
+        dphi_dx = new double*[nElNodes];
+        for (int i = nElNodes; i--; ) dphi_dx[i] = new double[DIM];
 
         QuadShapeFunction<DIM,DEG>    shapeQuad;
 
         xsi[0] = 0.5;
         xsi[1] = 0.5;
-                        
+        
+        // std::cout << "AAA 1 "<< std::endl;
+
         double djac_ = 0.;
         //Computes the jacobian matrix
         getJacobianMatrix(xsi, ainv_, djac_);
-        
+        // std::cout << "AAA 2 "<< std::endl;        
         //Computes spatial derivatives
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
-
-        for (int i = DIM; i--; ) delete [] dphi_dx[i];
+        // std::cout << "AAA 3 "<< std::endl;
+        for (int i = nElNodes; i--; ) delete [] dphi_dx[i];
         delete [] dphi_dx;
         for (int i = DIM; i--; ) delete [] ainv_[i];
         delete [] ainv_;
@@ -289,6 +291,7 @@ public:
 
     /// Sets if the element belongs to the fluid structure interface
     void setFSIInterface(){FSIInterface = true;};
+    bool getFSIInterface(){return FSIInterface;};
 
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
@@ -984,6 +987,8 @@ void Element<DIM,DEG>::interpolateLagMultiplierDerivatives(double **dphi_dx, dou
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
+    // std::cout << "asdasd 0 " << std::endl;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
     double &visc_ = parameters.getViscosity();
     double &alpha_f = parameters.getAlphaF();
@@ -1003,21 +1008,20 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
     ainv_ = new double*[DIM];
     for (int i = DIM; i--; ) ainv_[i] = new double[DIM];
 
-    double t_vector[2] = {};
-    double n_vector[2] = {};
-    double ident[2][2] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
+    double ident[DIM][DIM] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
     ShapeFunction shapeQuad;
     
+    // std::cout << "asdasd 1 " << std::endl;
 
     //Computes the shape functions        
     shapeQuad.evaluate(xsi,phi_);
     double djac_ = 0.;
     //Computes the jacobian matrix
     getJacobianMatrix(xsi, ainv_, djac_);
-    
+    // std::cout << "asdasd 2 " << std::endl;
     //Computes spatial derivatives
     getSpatialDerivatives(xsi, ainv_, dphi_dx);
-
+    // std::cout << "asdasd 3 " << std::endl;
     shapeQuad.evaluateGradient(xsi, dphi); 
 
     //Velocity Derivatives
@@ -1026,66 +1030,110 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
     for (int i=DIM; i--; )
         for (int j = DIM; j--; )
             duna_dx[i][j] = alpha_f * du_dx[i][j] + (1. - alpha_f) * duprev_dx[i][j];
-
+        // std::cout << "asdasd 4 " << std::endl;
     //Pressure
     double p_;
     double dp_dx[DIM] = {};
     int index = 0;
     interpolatePressure(index, dphi_dx, p_, dp_dx);
-   
+    // std::cout << "asdasd 5 " << std::endl;
     shearStress[0][0] = 2. * visc_ * duna_dx[0][0];
     shearStress[0][1] = visc_ * (duna_dx[0][1] + duna_dx[1][0]);
     shearStress[1][0] = visc_ * (duna_dx[0][1] + duna_dx[1][0]);
     shearStress[1][1] = 2. * visc_ * duna_dx[1][1];
 
-    int nodesb_[3];
-    int aux[3];
-
-    if(sideBoundary_ == 0){
-        nodesb_[0] = connect_[2]; 
-        nodesb_[1] = connect_[4]; 
-        nodesb_[2] = connect_[1];
-        aux[0] = 2;
-        aux[1] = 4;
-        aux[2] = 1;   
-    }else{
-        if(sideBoundary_ == 1){
-            nodesb_[0] = connect_[0]; 
-            nodesb_[1] = connect_[5]; 
-            nodesb_[2] = connect_[2]; 
-            aux[0] = 0;
-            aux[1] = 5;
-            aux[2] = 2;
+    int nodesb_[nBdNodes];
+    double xsiB[DIM-1] = {};
+    
+    if (DEG == 2){
+        if(sideBoundary_ == 0){
+            nodesb_[0] = connect_[1]; 
+            nodesb_[1] = connect_[4]; 
+            nodesb_[2] = connect_[2];
+            xsiB[0] = 2. * xsi[0] - 1.;
         }else{
-            nodesb_[0] = connect_[1];
-            nodesb_[1] = connect_[3];
-            nodesb_[2] = connect_[0];
-            aux[0] = 1;
-            aux[1] = 3;
-            aux[2] = 0;
-        };        
-    };
-    double dx_dxsiB[3][1] = {};
+            if(sideBoundary_ == 1){
+                nodesb_[0] = connect_[2]; 
+                nodesb_[1] = connect_[5]; 
+                nodesb_[2] = connect_[0]; 
+                xsiB[0] = 2. * xsi[1] - 1.;
+            }else{
+                nodesb_[0] = connect_[0];
+                nodesb_[1] = connect_[3];
+                nodesb_[2] = connect_[1];
+                xsiB[0] = 1. - 2. * xsi[0];
+            };        
+        };
+    } else {
+        if(sideBoundary_ == 0){
+            nodesb_[0] = connect_[2]; 
+            nodesb_[1] = connect_[1];
+            xsiB[0] = 2. * xsi[0] - 1.;
+        }else{
+            if(sideBoundary_ == 1){
+                nodesb_[0] = connect_[0]; 
+                nodesb_[1] = connect_[2];
+                xsiB[0] = 2. * xsi[1] - 1.;
+            }else{
+                nodesb_[0] = connect_[1];
+                nodesb_[1] = connect_[0];
+                xsiB[0] = 1. - 2. * xsi[0];
+            };        
+        };
+    }
+
+    BoundShapeFunction<DIM,DEG>   shapeBound;
+    double phib_[nBdNodes] = {};
+
+    double **dphib_;
+    dphib_ = new double*[nBdNodes];
+    for (int i = nBdNodes; i--; ) dphib_[i] = new double[DIM-1];
+
+    double dx_dxsiB[3][DIM-1] = {};
     double xna_[3] = {};
 
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 2; j++){
-            // Approximate the integration space
-            xna_[j] = (*nodes_)[nodesb_[i]] -> getCoordinateValue(j);
+    shapeBound.getShapeFunction(xsiB,phib_,dphib_);
 
-            dx_dxsiB[j][0] += xna_[j] * dphi[aux[i]][j];    
+    // shapeBound.getShapeFunction(xsiB,phib_,dphib_);
+
+    // std::cout << "asdasd 7 " << std::endl;
+    for (int i = 0; i < nBdNodes; i++){
+        for (int j = 0; j < DIM; j++){
+            // Approximate the integration space
+            xna_[j] = alpha_f * (*nodes_)[nodesb_[i]] -> getCoordinateValue(j) + 
+                    (1.-alpha_f) * (*nodes_)[nodesb_[i]] -> getPreviousCoordinateValue(j);
+            for (int k = DIM-1; k--; ) dx_dxsiB[j][k] += xna_[j] * dphib_[i][k];
         };
     };
-    double Maux[1][1] = {};
-    for (int k = 0; k < 3; k++)
-        Maux[0][0] += dx_dxsiB[k][0] * dx_dxsiB[k][0];
-    double djacb_ = 0.;
-    djacb_ = std::sqrt(Maux[0][0]);
-    n_vector[0] = -dx_dxsiB[1][0] / djacb_;
-    n_vector[1] =  dx_dxsiB[0][0] / djacb_;
+    // std::cout << "asdasd 8 " << std::endl;
+    double Maux[DIM-1][DIM-1] = {};
+        for (int i = DIM-1; i--; )
+            for (int j = DIM-1; j--; )
+                for (int k = 3; k--; )
+                    Maux[i][j] += dx_dxsiB[k][i] * dx_dxsiB[k][j];
 
-    // std::cout << "CONNEc " << nodesb_[0] << " " << nodesb_[1] << " " << nodesb_[2] << std::endl;
-    // std::cout << "N vector " << xna_[0] << " " << xna_[1] << " " << n_vector[0] << " " << n_vector[1] << std::endl;
+    double djacb_ = 0.;
+    if (DIM == 2){
+        djacb_ = std::sqrt(Maux[0][0]);
+    } else {
+        djacb_ = std::sqrt(Maux[0][0] * Maux[1][1] - Maux[0][1] * Maux[1][0]);
+    }
+
+    double n_vector[DIM] = {};
+    if (DIM == 2){
+        n_vector[0] =  dx_dxsiB[1][0] / djacb_;
+        n_vector[1] = -dx_dxsiB[0][0] / djacb_;
+    } else {
+        n_vector[0] = (dx_dxsiB[1][0]*dx_dxsiB[2][1] - dx_dxsiB[2][0]*dx_dxsiB[1][1]) / djacb_;
+        n_vector[1] = (dx_dxsiB[2][0]*dx_dxsiB[0][1] - dx_dxsiB[0][0]*dx_dxsiB[2][1]) / djacb_;
+        n_vector[2] = (dx_dxsiB[0][0]*dx_dxsiB[1][1] - dx_dxsiB[1][0]*dx_dxsiB[0][1]) / djacb_;
+    }
+
+    for (int i = 0; i < nBdNodes; i++) (*nodes_)[nodesb_[i]] -> setInnerNormal(n_vector);
+    
+    // std::cout << "asdasd 9 " << std::endl;
+    // std::cout << "dx_dxsiB " << dx_dxsiB[0][0] << " " << dx_dxsiB[1][0] << " " << dx_dxsiB[2][0] << std::endl;
+    // std::cout << "N vector " << xna_[0] << " " << xna_[1] << " " << n_vector[0] << " " << n_vector[1] << " " << djacb_<< " " << index_ << std::endl;
 
     // if (sideBoundary_ == 1){
     //     for (int i = 0; i < 6; i++){
@@ -1108,14 +1156,14 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
     // n_vector[0] =  t_vector[1] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
     // n_vector[1] = -t_vector[0] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
 
-    for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 2; j++)
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++)
             load[i] += -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
     // load = -p_ * prod(ident,n_vector) + prod(shearStress,n_vector);
 
     //std::cout << "N Vector " << sideBoundary_ << " " <<  n_vector(0) << " " << n_vector(1) << " " << load(0) << " " << load(1) << " " << p_ << std::endl;
     
-
+    // std::cout << "asdasd 10 " << std::endl;
     for (int i = nElNodes; i--; ) delete [] dphi_dx[i];
     delete [] dphi_dx;
     for (int i = nElNodes; i--; ) delete [] dphi[i];
@@ -1129,170 +1177,170 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
 //------------------------------------------------------------------------------
 //-------------INTERPOLATES VELOCITY, PRESSURE AND ITS DERIVATIVES--------------
 //------------------------------------------------------------------------------
-template<int DIM, int DEG>
-void Element<DIM,DEG>::computeDragAndLiftForces(double &pressureDragForce, double &pressureLiftForce, double &frictionDragForce,
-                                          double &frictionLiftForce, double &dragForce, double &liftForce,
-                                          double &pitchingMoment, double & perimeter) {
+// template<int DIM, int DEG>
+// void Element<DIM,DEG>::computeDragAndLiftForces(double &pressureDragForce, double &pressureLiftForce, double &frictionDragForce,
+//                                           double &frictionLiftForce, double &dragForce, double &liftForce,
+//                                           double &pitchingMoment, double & perimeter) {
     
-    double localNodesBoundary_[3][2] = {};
-    BoundShapeFunction<2,2> shapeBound;//Boundary shape function 
+//     double localNodesBoundary_[3][2] = {};
+//     BoundShapeFunction<2,2> shapeBound;//Boundary shape function 
 
-    int nodesb_[3]; 
-    if(sideBoundary_ == 0){
-        nodesb_[0] = connect_[1]; 
-        nodesb_[1] = connect_[4]; 
-        nodesb_[2] = connect_[2]; 
-        for (int i=0; i<2; i++){
-            localNodesBoundary_[0][i] = (*nodes_)[connect_[1]] -> getCoordinateValue(i);
-            localNodesBoundary_[1][i] = (*nodes_)[connect_[4]] -> getCoordinateValue(i);
-            localNodesBoundary_[2][i] = (*nodes_)[connect_[2]] -> getCoordinateValue(i);
-        };
-    }else{
-        if(sideBoundary_ == 1){
-            nodesb_[0] = connect_[2]; 
-            nodesb_[1] = connect_[5]; 
-            nodesb_[2] = connect_[0]; 
-            for (int i=0; i<2; i++){
-                localNodesBoundary_[0][i] = (*nodes_)[connect_[2]] -> getCoordinateValue(i);
-                localNodesBoundary_[1][i] = (*nodes_)[connect_[5]] -> getCoordinateValue(i);
-                localNodesBoundary_[2][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
-            };
-        }else{
-            nodesb_[0] = connect_[0];
-            nodesb_[1] = connect_[3];
-            nodesb_[2] = connect_[1];
-            for (int i=0; i<2; i++){
-                localNodesBoundary_[0][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
-                localNodesBoundary_[1][i] = (*nodes_)[connect_[3]] -> getCoordinateValue(i);
-                localNodesBoundary_[2][i] = (*nodes_)[connect_[1]] -> getCoordinateValue(i);
-            };
-        };        
-    };
+//     int nodesb_[3]; 
+//     if(sideBoundary_ == 0){
+//         nodesb_[0] = connect_[1]; 
+//         nodesb_[1] = connect_[4]; 
+//         nodesb_[2] = connect_[2]; 
+//         for (int i=0; i<2; i++){
+//             localNodesBoundary_[0][i] = (*nodes_)[connect_[1]] -> getCoordinateValue(i);
+//             localNodesBoundary_[1][i] = (*nodes_)[connect_[4]] -> getCoordinateValue(i);
+//             localNodesBoundary_[2][i] = (*nodes_)[connect_[2]] -> getCoordinateValue(i);
+//         };
+//     }else{
+//         if(sideBoundary_ == 1){
+//             nodesb_[0] = connect_[2]; 
+//             nodesb_[1] = connect_[5]; 
+//             nodesb_[2] = connect_[0]; 
+//             for (int i=0; i<2; i++){
+//                 localNodesBoundary_[0][i] = (*nodes_)[connect_[2]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[1][i] = (*nodes_)[connect_[5]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[2][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
+//             };
+//         }else{
+//             nodesb_[0] = connect_[0];
+//             nodesb_[1] = connect_[3];
+//             nodesb_[2] = connect_[1];
+//             for (int i=0; i<2; i++){
+//                 localNodesBoundary_[0][i] = (*nodes_)[connect_[0]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[1][i] = (*nodes_)[connect_[3]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[2][i] = (*nodes_)[connect_[1]] -> getCoordinateValue(i);
+//             };
+//         };        
+//     };
 
-    BoundaryQuad           bQuad;     //Boundary Integration Quadrature
-    ShapeFunction          shapeQuad;
-    double phi_[nElNodes] = {};
+//     BoundaryQuad           bQuad;     //Boundary Integration Quadrature
+//     ShapeFunction          shapeQuad;
+//     double phi_[nElNodes] = {};
     
-    double **dphi_dx;
-    dphi_dx = new double*[nElNodes];
-    for (int i = nElNodes; i--; ) dphi_dx[i] = new double[DIM];
+//     double **dphi_dx;
+//     dphi_dx = new double*[nElNodes];
+//     for (int i = nElNodes; i--; ) dphi_dx[i] = new double[DIM];
 
 
 
-    std::pair<double*,double*> gaussQuad;
-    double n_vector[2] = {};
-    double shearStress[2][2] = {};
-    double ident[2][2] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
-    double load_friction[2] = {};
-    double load_pressure[2] = {};
+//     std::pair<double*,double*> gaussQuad;
+//     double n_vector[2] = {};
+//     double shearStress[2][2] = {};
+//     double ident[2][2] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
+//     double load_friction[2] = {};
+//     double load_pressure[2] = {};
 
-    double **ainv_;
-    ainv_ = new double*[DIM];
-    for (int i = DIM; i--; ) ainv_[i] = new double[DIM];
+//     double **ainv_;
+//     ainv_ = new double*[DIM];
+//     for (int i = DIM; i--; ) ainv_[i] = new double[DIM];
     
-    double xsi[2] = {};
+//     double xsi[2] = {};
 
-    double &visc_ = parameters.getViscosity();
+//     double &visc_ = parameters.getViscosity();
 
-    gaussQuad = bQuad.GaussQuadrature();
-    double moment = 0.;
-    double per = 0.;
+//     gaussQuad = bQuad.GaussQuadrature();
+//     double moment = 0.;
+//     double per = 0.;
 
-    int index = 0;
-    for(double* it = bQuad.begin(); it != bQuad.end(); it++){
+//     int index = 0;
+//     for(double* it = bQuad.begin(); it != bQuad.end(); it++){
         
-        double xsiB = gaussQuad.first[index];
-        double weightB = gaussQuad.second[index];
+//         double xsiB = gaussQuad.first[index];
+//         double weightB = gaussQuad.second[index];
 
-        if(sideBoundary_ == 2){
-            xsi[0] = (-xsiB + 1.) / 2.;
-            xsi[1] = 0.;
-        };
-        if(sideBoundary_ == 1){
-            xsi[1] = (xsiB + 1.) / 2.;
-            xsi[0] = 0.;
-        };
-        if(sideBoundary_ == 0){
-            xsi[0] = (xsiB + 1.) / 2.;
-            xsi[1] = 1. - xsi[0];
-        };
+//         if(sideBoundary_ == 2){
+//             xsi[0] = (-xsiB + 1.) / 2.;
+//             xsi[1] = 0.;
+//         };
+//         if(sideBoundary_ == 1){
+//             xsi[1] = (xsiB + 1.) / 2.;
+//             xsi[0] = 0.;
+//         };
+//         if(sideBoundary_ == 0){
+//             xsi[0] = (xsiB + 1.) / 2.;
+//             xsi[1] = 1. - xsi[0];
+//         };
 
-        //Computes the velocity shape functions
-        shapeQuad.evaluate(xsi,phi_);
-        double djac_ = 0.;
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_);
+//         //Computes the velocity shape functions
+//         shapeQuad.evaluate(xsi,phi_);
+//         double djac_ = 0.;
+//         //Computes the jacobian matrix
+//         getJacobianMatrix(xsi, ainv_, djac_);
 
-        //Computes spatial derivatives
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+//         //Computes spatial derivatives
+//         getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-        //Velocity Derivatives
-        double du_dx[DIM][DIM], duprev_dx[DIM][DIM], duna_dx[DIM][DIM];
-        interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+//         //Velocity Derivatives
+//         double du_dx[DIM][DIM], duprev_dx[DIM][DIM], duna_dx[DIM][DIM];
+//         interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
 
-        //Pressure
-        double p_;
-        double dp_dx[DIM] = {};
-        interpolatePressure(index, dphi_dx, p_, dp_dx);
+//         //Pressure
+//         double p_;
+//         double dp_dx[DIM] = {};
+//         interpolatePressure(index, dphi_dx, p_, dp_dx);
 
-        double x_[DIM] = {}; double xPrev_[DIM] = {};
-        interpolateCoordinates(index, x_, xPrev_);
+//         double x_[DIM] = {}; double xPrev_[DIM] = {};
+//         interpolateCoordinates(index, x_, xPrev_);
 
 
-        double* phib_ = shapeBound.getShapeFunction(gaussQuad.first[index]);
-        double* dphib_ = shapeBound.getShapeFunctionDerivative(gaussQuad.first[index]);
+//         double* phib_ = shapeBound.getShapeFunction(gaussQuad.first[index]);
+//         double* dphib_ = shapeBound.getShapeFunctionDerivative(gaussQuad.first[index]);
 
-        double Tx=0.; double Ty = 0.;
+//         double Tx=0.; double Ty = 0.;
         
-        for (int i=0; i<3; i++){
-            Tx += localNodesBoundary_[i][0] * dphib_[i];
-            Ty += localNodesBoundary_[i][1] * dphib_[i];
-        };
+//         for (int i=0; i<3; i++){
+//             Tx += localNodesBoundary_[i][0] * dphib_[i];
+//             Ty += localNodesBoundary_[i][1] * dphib_[i];
+//         };
 
-        double jacb_ = std::sqrt(Tx*Tx + Ty*Ty);
+//         double jacb_ = std::sqrt(Tx*Tx + Ty*Ty);
         
-        n_vector[0] =  Ty / jacb_;
-        n_vector[1] = -Tx / jacb_;
+//         n_vector[0] =  Ty / jacb_;
+//         n_vector[1] = -Tx / jacb_;
 
-        shearStress[0][0] = 2. * visc_ * du_dx[0][0];
-        shearStress[0][1] = visc_ * (du_dx[0][1] + du_dx[1][0]);
-        shearStress[1][0] = visc_ * (du_dx[0][1] + du_dx[1][0]);
-        shearStress[1][1] = 2. * visc_ * du_dx[1][1];
+//         shearStress[0][0] = 2. * visc_ * du_dx[0][0];
+//         shearStress[0][1] = visc_ * (du_dx[0][1] + du_dx[1][0]);
+//         shearStress[1][0] = visc_ * (du_dx[0][1] + du_dx[1][0]);
+//         shearStress[1][1] = 2. * visc_ * du_dx[1][1];
 
-        for (int i = 0; i < DIM; i++){
-            for (int j = 0; j < DIM; j++){
-                load_pressure[i] += -p_ * ident[i][j] * n_vector[j] * jacb_ * weightB;
-                load_friction[i] += shearStress[i][j] * n_vector[j] * jacb_ * weightB;
-            }
-        }
+//         for (int i = 0; i < DIM; i++){
+//             for (int j = 0; j < DIM; j++){
+//                 load_pressure[i] += -p_ * ident[i][j] * n_vector[j] * jacb_ * weightB;
+//                 load_friction[i] += shearStress[i][j] * n_vector[j] * jacb_ * weightB;
+//             }
+//         }
 
-        moment += ((-p_ + shearStress[0][0] + shearStress[1][0]) * x_[1] 
-                 -(-p_ + shearStress[0][1] + shearStress[1][1]) * (x_[0] - 0.248792267683901))
-                 * jacb_ * weightB;
-        per += jacb_ * weightB;
-        //std::cout << "n_vector " << load_pressure(0) << " " << load_pressure(1) << std::endl;
-        index++;
-    };
+//         moment += ((-p_ + shearStress[0][0] + shearStress[1][0]) * x_[1] 
+//                  -(-p_ + shearStress[0][1] + shearStress[1][1]) * (x_[0] - 0.248792267683901))
+//                  * jacb_ * weightB;
+//         per += jacb_ * weightB;
+//         //std::cout << "n_vector " << load_pressure(0) << " " << load_pressure(1) << std::endl;
+//         index++;
+//     };
 
-    perimeter = per;
-    pitchingMoment = moment;
+//     perimeter = per;
+//     pitchingMoment = moment;
 
-    pressureDragForce = -load_pressure[0];
-    pressureLiftForce = -load_pressure[1];
+//     pressureDragForce = -load_pressure[0];
+//     pressureLiftForce = -load_pressure[1];
     
-    frictionDragForce = -load_friction[0];
-    frictionLiftForce = -load_friction[1];
+//     frictionDragForce = -load_friction[0];
+//     frictionLiftForce = -load_friction[1];
 
-    dragForce = pressureDragForce + frictionDragForce;
-    liftForce = pressureLiftForce + frictionLiftForce;
+//     dragForce = pressureDragForce + frictionDragForce;
+//     liftForce = pressureLiftForce + frictionLiftForce;
 
-    for (int i = nElNodes; i--; ) delete [] dphi_dx[i];
-    delete [] dphi_dx;
-    for (int i = DIM; i--; ) delete [] ainv_[i];
-    delete [] ainv_;
+//     for (int i = nElNodes; i--; ) delete [] dphi_dx[i];
+//     delete [] dphi_dx;
+//     for (int i = DIM; i--; ) delete [] ainv_[i];
+//     delete [] ainv_;
 
-    return;
-};
+//     return;
+// };
 
 
 
