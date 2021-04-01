@@ -33,8 +33,8 @@ public:
         return std::end(pointWeight);
     }
 
-    int getNumberOfIntegrationPoints(){
-        return (*(&pointWeight+1) - pointWeight);
+    int getNumberOfIntegrationPoints() const {
+        return numIntegPoints;
     }
 
     /// Returns the integration point coordinate
@@ -55,11 +55,13 @@ public:
     }
 
 private:
+    const static int numIntegPoints = -5*DIM-8*DEG+6*DIM*DEG+9;
+
     ///List of integration points coordinates
-    double pointCoord[-5*DIM-8*DEG+6*DIM*DEG+9][DIM];
+    double pointCoord[numIntegPoints][DIM];
 
     ///List of integration points weights
-    double pointWeight[-5*DIM-8*DEG+6*DIM*DEG+9];
+    double pointWeight[numIntegPoints];
 
 };
 

@@ -573,13 +573,13 @@ int main(int argc, char **args) {
     char in_solid[32] = "turbine2.txt";
 
     arlequinProblem.setFluidModels(coarseModel, fineModel);
-    // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
+    coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
 
     // coarseModel.readInitialValues("Coarse8.h5","Coarse9.h5");
     // fineModel.readInitialValues("Fine8.h5","Fine9.h5");
     
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
-    // coupledProblem.solveFSIProblemGaussSeidelArlequin(100000);
+    coupledProblem.solveFSIProblemArlequin(100000);
         
     // arlequinProblem.setFluidModels(coarseModel, fineModel); 
     // arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 

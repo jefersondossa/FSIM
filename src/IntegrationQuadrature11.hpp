@@ -22,7 +22,7 @@ template<int DIM, int DEG>
 class IntegQuadratureSpecial{
 public:
     int getNumberOfIntegrationPoints(){
-        return (*(&pointWeight+1) - pointWeight);
+        return numIntegPoints;
     }
 
     //Returns the index of the first integration point
@@ -56,11 +56,13 @@ public:
     double interpolateQuadraticVariable(double nValues[], int point);
 
 private:
+    const static int numIntegPoints = -5*DIM-8*DEG+6*DIM*DEG+9;
+
     ///List of integration points coordinates
-    double pointCoord[-5*DIM-8*DEG+6*DIM*DEG+9][DIM];
+    double pointCoord[numIntegPoints][DIM];
 
     ///List of integration points weights
-    double pointWeight[-5*DIM-8*DEG+6*DIM*DEG+9];
+    double pointWeight[numIntegPoints];
 
     //Defines shape functions
     QuadShapeFunction<DIM,DEG> shapeQuad;

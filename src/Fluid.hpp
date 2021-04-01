@@ -882,7 +882,7 @@ void Fluid<DIM,DEG>::setBoundarySides(){
         int group = boundary_[i] -> getBoundaryGroup();
 
        if ((boundary_[i] -> getConstrain(0) > 0) || (boundary_[i] -> getConstrain(1) > 0)) {
-   
+            
             int *connectB = boundary_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElem; j++){
@@ -915,7 +915,9 @@ void Fluid<DIM,DEG>::setBoundarySides(){
                             int aux = boundary_[i] -> getBoundaryGroup();
                             boundary_[i] -> setBoundaryGroup(aux);
                             boundary_[i] -> setElementSide(k);
+                            boundary_[i] -> setElement(j);
                             elements_[j] -> setElemSideInBoundary(k);
+                            if (boundary_[i] -> getConstrain(0) == 3) elements_[j] -> setFSIInterface();
                         }
                     }
                 };
@@ -1018,7 +1020,7 @@ void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
             if (boundary_[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
                 //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
                 int iel = boundary_[jel] -> getElement();
-                elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
+                // elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
                 // elements_[iel] -> computeSeparationAngle();
             };
         };
@@ -1153,8 +1155,8 @@ return;
 //------------------------------------------------------------------------------
 //-------------------------SOLVE STEADY LAPLACE PROBLEM-------------------------
 //------------------------------------------------------------------------------
-template<>
-int Fluid<2,2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
+template<int DIM, int DEG>
+int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
     Vec               b, u, All;
     PetscErrorCode    ierr;
@@ -1190,16 +1192,16 @@ int Fluid<2,2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
             int *connec = elements_[jel] -> getConnectivity();
 
             double **matrix;
-            double rhs[18] = {};
-            matrix = new double*[18]();
-            for (int i = 0; i < 18; i++) matrix[i] = new double[18]();
+            double rhs[nLocDOF] = {};
+            matrix = new double*[nLocDOF]();
+            for (int i = 0; i < nLocDOF; i++) matrix[i] = new double[nLocDOF]();
 
             elements_[jel] -> getSteadyLaplace2(matrix,rhs);
             
             //Disperse local contributions into the global matrix
             //Matrix K and C
-            for (int i=0; i<6; i++){
-                for (int j=0; j<6; j++){
+            for (int i=0; i<nElNodes; i++){
+                for (int j=0; j<nElNodes; j++){
                     if (fabs(matrix[2*i  ][2*j  ]) >= 1.e-8){
                         int dof_i = 2*connec[i];
                         int dof_j = 2*connec[j];
@@ -1233,7 +1235,7 @@ int Fluid<2,2>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
                     ierr = VecSetValues(b,1,&dof_i,&rhs[2*i+1],ADD_VALUES);
                 };
             };
-            for (int i = 0; i < 18; ++i) delete [] matrix[i];
+            for (int i = 0; i < nLocDOF; ++i) delete [] matrix[i];
             delete [] matrix;
         };
         
