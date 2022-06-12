@@ -58,6 +58,7 @@ private:
     double        xK[DIM], XK[DIM];
     int           sideBoundary_;
     double        meshMovingParameter;
+    std::vector<int> neighborElements;
 
     double* intPointWeightFunction;
     double* intPointWeightFunctionPrev;
@@ -90,6 +91,7 @@ public:
         // std::cout <<"AASASD 2"<<std::endl;
         glueZone = false;        FSIInterface = false;
         sideBoundary_ = -1;
+        neighborElements.clear();
 
         NormalQuad nQuad = NormalQuad();
         // std::cout <<"AASASD 3"<<std::endl;
@@ -243,6 +245,31 @@ public:
     // void getJacobianMatrixValues(double xsi[], double ainv_[][2]){
     //     getJacobianMatrix(xsi, ainv_);
     //     return;};
+
+    /// Pushs back a term of the inverse incidence, i.e., an element which
+    /// contains the node
+    /// @param int element
+    void pushNeighborElement(int el) {neighborElements.push_back(el);}
+
+    /// Gets the number of elements which contains the node
+    /// @return int number of elements which contains the node
+    int getNumberOfNeighborElements(){return neighborElements.size();}
+
+    /// Gets an specific member of the inverse incidence
+    /// @param int index @return int element of the inverse incidence
+    int getNeighborElement(int i){return neighborElements[i];}
+    void clearInverseIncidence(){
+        neighborElements.clear();
+        neighborElements.shrink_to_fit();
+    }
+
+    void sortEraseNeighborElements(){
+        // std::cout << "AA1 " << index_ << " " << neighborElements.size() << std::endl;
+        std::sort(neighborElements.begin(), neighborElements.end());
+        neighborElements.erase(std::unique(neighborElements.begin(),neighborElements.end()), neighborElements.end());
+        // std::cout << "AA2 " << index_ <<" "<< neighborElements.size() << std::endl;
+        // neighborElements.shrink_to_fit();
+    }
 
     /// Sets the element side in boundary
     /// @param int side in boundary
@@ -1158,7 +1185,7 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
 
     for (int i = 0; i < DIM; i++)
         for (int j = 0; j < DIM; j++)
-            load[i] += -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
+            load[i] -= -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
     // load = -p_ * prod(ident,n_vector) + prod(shearStress,n_vector);
 
     //std::cout << "N Vector " << sideBoundary_ << " " <<  n_vector(0) << " " << n_vector(1) << " " << load(0) << " " << load(1) << " " << p_ << std::endl;
@@ -1166,6 +1193,8 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
     // std::cout << "asdasd 10 " << std::endl;
     for (int i = nElNodes; i--; ) delete [] dphi_dx[i];
     delete [] dphi_dx;
+    for (int i = nBdNodes; i--; ) delete [] dphib_[i];
+    delete [] dphib_;
     for (int i = nElNodes; i--; ) delete [] dphi[i];
     delete [] dphi;
     for (int i = DIM; i--; ) delete [] ainv_[i];
@@ -2795,6 +2824,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
 
     double &dens_ = parameters.getDensity();
     double &alpha_f = parameters.getAlphaF();
+    double &alpha_m = parameters.getAlphaM();
     double &k1 = parameters.getArlequinK1();
 
     for(double* it = nQuad.begin(); it != nQuad.end(); it++){
@@ -2818,6 +2848,10 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
         double dL_dx[DIM][DIM];
         interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
 
+        //Acceleration
+        double a_[DIM], aPrev_[DIM], am_[DIM];
+        interpolateAcceleration(index, a_, aPrev_);
+        for(int i=DIM; i--; ) am_[i] = alpha_m * a_[i] + (1. - alpha_m) * aPrev_[i];
 
         for (int i = 0; i < nElNodes; i++){
             for (int j = 0; j < nElNodes; j++){        
@@ -2827,7 +2861,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
                 double Lpx = 0.; double Lpy = 0.;
                 double LC = 0.; double LL = 0.;
 
-                // AM = phi_[i] * phi_[j] * tARLQ_ * intPointWeightFunction(index) * alpha_m;
+                AM = DI->phi_[i][index] * DI->phi_[j][index] * tARLQ_ * wna_* alpha_m;
 
                 // LL = -2 * phi_[i] * phi_[j] * tARLQ_ / dens_;
                 for (int m = DIM; m--; ) LL += dphi_dx[i][m] * dphi_dx[j][m] * tARLQ_ / dens_;
@@ -2840,7 +2874,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
                 // LC = phi_[i] * ((una_ - umesh_) * dphi_dx[0][i] + (vna_ - vmesh_) * dphi_dx[1][i]) * phi_[j] * tARLQ_ * intPointWeightFunction(index);
 
                 for (int k = DIM; k--; )
-                    arlequinStab[DIM*i+k][DIM*j+k] += LL * weight_ * djac_;
+                    arlequinStab[DIM*i+k][DIM*j+k] += (AM + LL) * weight_ * djac_;
                 
 
                 // LC = -(dphi_dx[0][i]*(du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) +
@@ -2869,22 +2903,13 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
             };
 
             //ARLEQUIN STABILIZATION TERMS
-            double Amx = 0.; double Amy = 0.;
             double LCx = 0.; double LCy = 0.;
             double LPx = 0.; double LPy = 0.;
-             double LLy = 0.;
 
-            // if (iTimeStep > 5){
-                // Amx = -phi_[i] * axm_ * tARLQ_;
-                // Amy = -phi_[i] * aym_ * tARLQ_;
-
-            // }
-
-            //if (iTimeStep < 10){
             for (int k = DIM; k--; ){
                 double LLx = 0.;
                 for (int m = DIM; m--; ) LLx -= dphi_dx[i][m] * dL_dx[k][m]/wna_ * tARLQ_ / dens_;
-
+                double Amx = - DI->phi_[i][index] * am_[k] * tARLQ_;
                 arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
             }
 

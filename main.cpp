@@ -73,16 +73,17 @@ int main(int argc, char **args) {
     Geometry* fluid1 = new Geometry(0);
     double e = 5;
 
-    double a1 = 4.;
+    double a1 = 2.;
     double z = 0.;
     double a = 50.;
     double b = 250.;
     double as = 15.;
+    double c = 10.;
 
-    Point* p000 = fluid1 -> addPoint({-a,-a},a1,false);
-    Point* p001 = fluid1 -> addPoint({-4-e,-a},a1,false);
-    Point* p002 = fluid1 -> addPoint({4+e,-a},a1,false);
-    Point* p003 = fluid1 -> addPoint({b, -a},a1,false);
+    Point* p000 = fluid1 -> addPoint({-a,-a-c},a1,false);
+    Point* p001 = fluid1 -> addPoint({-4-e,-a-c},a1,false);
+    Point* p002 = fluid1 -> addPoint({4+e,-a-c},a1,false);
+    Point* p003 = fluid1 -> addPoint({b, -a-c},a1,false);
     Point* p004 = fluid1 -> addPoint({  -a,-4-e},a1,false);
     Point* p005 = fluid1 -> addPoint({-4-e,-4-e},a1/as,false);
     Point* p006 = fluid1 -> addPoint({ 4+e,-4-e},a1/as,false);
@@ -91,10 +92,10 @@ int main(int argc, char **args) {
     Point* p009 = fluid1 -> addPoint({-4-e, 4+e},a1/as,false);
     Point* p010 = fluid1 -> addPoint({ 4+e, 4+e},a1/as,false);
     Point* p011 = fluid1 -> addPoint({   b, 4+e},a1,false);
-    Point* p012 = fluid1 -> addPoint({  -a,a},a1,false);
-    Point* p013 = fluid1 -> addPoint({-4-e,a},a1,false);
-    Point* p014 = fluid1 -> addPoint({ 4+e,a},a1,false);
-    Point* p015 = fluid1 -> addPoint({   b,a},a1,false);
+    Point* p012 = fluid1 -> addPoint({  -a,a+c},a1,false);
+    Point* p013 = fluid1 -> addPoint({-4-e,a+c},a1,false);
+    Point* p014 = fluid1 -> addPoint({ 4+e,a+c},a1,false);
+    Point* p015 = fluid1 -> addPoint({   b,a+c},a1,false);
     
 
     Line* l001 = fluid1 -> addLine({p000,p001});
@@ -305,9 +306,9 @@ int main(int argc, char **args) {
 
     double a2 = 0.1;
     double a4 = 0.1;
-    double a3 = 0.5;
+    double a3 = 0.1;
     e = 1.0;
-    double eg = 0.5;
+    double eg = 0.2;
 
     Point* p100 = fluid2 -> addPoint({ 0.0, 0.000},a2,false);
     Point* p101 = fluid2 -> addPoint({ 2.0, 0.000},a2,false);
@@ -447,46 +448,46 @@ int main(int argc, char **args) {
     // PlaneSurface* s120 = fluid2 -> addPlaneSurface({ll120});
     // PlaneSurface* s121 = fluid2 -> addPlaneSurface({ll121});
 
-    double circ = 61; double prog1 = 1.1;
-    double thic = 16;
+    double circ = 121; double prog1 = 1.1;
+    double thic = 31;
     double bsp = 50;
 
-    fluid2 -> transfiniteLine({l100}, circ);
-    fluid2 -> transfiniteLine({l101}, circ);
-    fluid2 -> transfiniteLine({l102}, circ);
-    fluid2 -> transfiniteLine({l103}, circ);
-    fluid2 -> transfiniteLine({l110}, circ);
-    fluid2 -> transfiniteLine({l111}, circ);
-    fluid2 -> transfiniteLine({l112}, circ);
-    fluid2 -> transfiniteLine({l113}, circ);
-    fluid2 -> transfiniteLine({l104}, thic);
-    fluid2 -> transfiniteLine({l105}, thic);
-    fluid2 -> transfiniteLine({l106}, thic);
-    fluid2 -> transfiniteLine({l107}, thic);
-    fluid2 -> transfiniteLine({l108}, thic);
-    fluid2 -> transfiniteLine({l109}, thic);
-    fluid2 -> transfiniteLine({l133}, thic*0.7);
-    fluid2 -> transfiniteLine({l134}, thic*0.7);
-    fluid2 -> transfiniteLine({l135}, thic*0.7);
-    fluid2 -> transfiniteLine({l138}, thic);
-    fluid2 -> transfiniteLine({l139}, thic);
-    fluid2 -> transfiniteLine({l121}, thic*0.7);
-    fluid2 -> transfiniteLine({l122}, thic*0.7);
-    fluid2 -> transfiniteLine({l123}, thic*0.7);
-    fluid2 -> transfiniteLine({l126}, thic);
-    fluid2 -> transfiniteLine({l127}, thic);
+    // fluid2 -> transfiniteLine({l100}, circ);
+    // fluid2 -> transfiniteLine({l101}, circ);
+    // fluid2 -> transfiniteLine({l102}, circ);
+    // fluid2 -> transfiniteLine({l103}, circ);
+    // fluid2 -> transfiniteLine({l110}, circ);
+    // fluid2 -> transfiniteLine({l111}, circ);
+    // fluid2 -> transfiniteLine({l112}, circ);
+    // fluid2 -> transfiniteLine({l113}, circ);
+    // fluid2 -> transfiniteLine({l104}, thic);
+    // fluid2 -> transfiniteLine({l105}, thic);
+    // fluid2 -> transfiniteLine({l106}, thic);
+    // fluid2 -> transfiniteLine({l107}, thic);
+    // fluid2 -> transfiniteLine({l108}, thic);
+    // fluid2 -> transfiniteLine({l109}, thic);
+    // fluid2 -> transfiniteLine({l133}, thic*0.7);
+    // fluid2 -> transfiniteLine({l134}, thic*0.7);
+    // fluid2 -> transfiniteLine({l135}, thic*0.7);
+    // fluid2 -> transfiniteLine({l138}, thic);
+    // fluid2 -> transfiniteLine({l139}, thic);
+    // fluid2 -> transfiniteLine({l121}, thic*0.7);
+    // fluid2 -> transfiniteLine({l122}, thic*0.7);
+    // fluid2 -> transfiniteLine({l123}, thic*0.7);
+    // fluid2 -> transfiniteLine({l126}, thic);
+    // fluid2 -> transfiniteLine({l127}, thic);
     // fluid2 -> transfiniteLine({l114}, bsp);
     // fluid2 -> transfiniteLine({l115}, bsp);
 
 
-    fluid2 -> transfiniteSurface({ s100 }, "Left", {p108, p107, p100, p109});
-    fluid2 -> transfiniteSurface({ s101 }, "Right", {p100, p103, p110, p109});
-    fluid2 -> transfiniteSurface({ s102 }, "Right", {p100, p103, p104, p105});
-    fluid2 -> transfiniteSurface({ s103 }, "Left", {p100, p107, p106, p105});
-    fluid2 -> transfiniteSurface({ s109 }, "Left", {p104, p105, p119, p118});
-    fluid2 -> transfiniteSurface({ s110 }, "Left", {p105, p106, p120, p119});
-    fluid2 -> transfiniteSurface({ s116 }, "Right", {p109, p110, p125, p126});
-    fluid2 -> transfiniteSurface({ s117 }, "Right", {p108, p109, p126, p127});
+    // fluid2 -> transfiniteSurface({ s100 }, "Left", {p108, p107, p100, p109});
+    // fluid2 -> transfiniteSurface({ s101 }, "Right", {p100, p103, p110, p109});
+    // fluid2 -> transfiniteSurface({ s102 }, "Right", {p100, p103, p104, p105});
+    // fluid2 -> transfiniteSurface({ s103 }, "Left", {p100, p107, p106, p105});
+    // fluid2 -> transfiniteSurface({ s109 }, "Left", {p104, p105, p119, p118});
+    // fluid2 -> transfiniteSurface({ s110 }, "Left", {p105, p106, p120, p119});
+    // fluid2 -> transfiniteSurface({ s116 }, "Right", {p109, p110, p125, p126});
+    // fluid2 -> transfiniteSurface({ s117 }, "Right", {p108, p109, p126, p127});
     // fluid2 -> transfiniteSurface({ s104 }, "Left", {p100, p107, p106, p105});
 
     

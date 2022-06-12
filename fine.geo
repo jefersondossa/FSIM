@@ -12,27 +12,27 @@ p5 = newp; Point(p5) = {4.000000, 0.000000, 0.000000, 0.100000};
 //
 p6 = newp; Point(p6) = {5.000000, 0.000000, 0.000000, 0.100000};
 //
-p7 = newp; Point(p7) = {-1.000000, 0.000000, 0.000000, 0.500000};
+p7 = newp; Point(p7) = {-1.000000, 0.000000, 0.000000, 0.100000};
 //
-p8 = newp; Point(p8) = {-3.000000, 0.000000, 0.000000, 0.500000};
+p8 = newp; Point(p8) = {-3.000000, 0.000000, 0.000000, 0.100000};
 //
-p9 = newp; Point(p9) = {-4.000000, 0.000000, 0.000000, 0.500000};
+p9 = newp; Point(p9) = {-4.000000, 0.000000, 0.000000, 0.100000};
 //
-p10 = newp; Point(p10) = {-5.000000, 0.000000, 0.000000, 0.500000};
+p10 = newp; Point(p10) = {-5.000000, 0.000000, 0.000000, 0.100000};
 //
-p11 = newp; Point(p11) = {2.500000, 0.000000, 0.000000, 0.100000};
+p11 = newp; Point(p11) = {2.800000, 0.000000, 0.000000, 0.100000};
 //
-p12 = newp; Point(p12) = {5.500000, 0.000000, 0.000000, 0.100000};
+p12 = newp; Point(p12) = {5.200000, 0.000000, 0.000000, 0.100000};
 //
-p13 = newp; Point(p13) = {1.500000, 0.000000, 0.000000, 0.100000};
+p13 = newp; Point(p13) = {1.200000, 0.000000, 0.000000, 0.100000};
 //
-p14 = newp; Point(p14) = {-1.500000, 0.000000, 0.000000, 0.100000};
+p14 = newp; Point(p14) = {-1.200000, 0.000000, 0.000000, 0.100000};
 //
-p15 = newp; Point(p15) = {-2.500000, 0.000000, 0.000000, 0.100000};
+p15 = newp; Point(p15) = {-2.800000, 0.000000, 0.000000, 0.100000};
 //
-p16 = newp; Point(p16) = {-5.500000, 0.000000, 0.000000, 0.100000};
+p16 = newp; Point(p16) = {-5.200000, 0.000000, 0.000000, 0.100000};
 //
-p17 = newp; Point(p17) = {2.500000, 1.000000, 0.000000, 0.100000};
+p17 = newp; Point(p17) = {2.800000, 1.000000, 0.000000, 0.100000};
 //
 p18 = newp; Point(p18) = {3.000000, 1.000000, 0.000000, 0.100000};
 //
@@ -40,13 +40,13 @@ p19 = newp; Point(p19) = {4.000000, 1.000000, 0.000000, 0.100000};
 //
 p20 = newp; Point(p20) = {5.000000, 1.000000, 0.000000, 0.100000};
 //
-p21 = newp; Point(p21) = {5.500000, 1.000000, 0.000000, 0.100000};
+p21 = newp; Point(p21) = {5.200000, 1.000000, 0.000000, 0.100000};
 //
-p22 = newp; Point(p22) = {3.000000, 1.500000, 0.000000, 0.100000};
+p22 = newp; Point(p22) = {3.000000, 1.200000, 0.000000, 0.100000};
 //
-p23 = newp; Point(p23) = {5.000000, 1.500000, 0.000000, 0.100000};
+p23 = newp; Point(p23) = {5.000000, 1.200000, 0.000000, 0.100000};
 //
-p24 = newp; Point(p24) = {-5.500000, -1.000000, 0.000000, 0.100000};
+p24 = newp; Point(p24) = {-5.200000, -1.000000, 0.000000, 0.100000};
 //
 p25 = newp; Point(p25) = {-5.000000, -1.000000, 0.000000, 0.100000};
 //
@@ -54,11 +54,11 @@ p26 = newp; Point(p26) = {-4.000000, -1.000000, 0.000000, 0.100000};
 //
 p27 = newp; Point(p27) = {-3.000000, -1.000000, 0.000000, 0.100000};
 //
-p28 = newp; Point(p28) = {-2.500000, -1.000000, 0.000000, 0.100000};
+p28 = newp; Point(p28) = {-2.800000, -1.000000, 0.000000, 0.100000};
 //
-p29 = newp; Point(p29) = {-5.000000, -1.500000, 0.000000, 0.100000};
+p29 = newp; Point(p29) = {-5.000000, -1.200000, 0.000000, 0.100000};
 //
-p30 = newp; Point(p30) = {-3.000000, -1.500000, 0.000000, 0.100000};
+p30 = newp; Point(p30) = {-3.000000, -1.200000, 0.000000, 0.100000};
 //
 l0 = newl; Circle(l0) = {p0, p1, p5}; Physical Line('l0') = {l0};
 //
@@ -203,68 +203,4 @@ s11 = news; Plane Surface(s11) = {ll11}; Physical Surface('s11') = {s11};
 s12 = news; Plane Surface(s12) = {ll12}; Physical Surface('s12') = {s12};
 //
 s13 = news; Plane Surface(s13) = {ll13}; Physical Surface('s13') = {s13};
-//
-Transfinite Line {l0} = 61 Using Progression 1;
-//
-Transfinite Line {l1} = 61 Using Progression 1;
-//
-Transfinite Line {l2} = 61 Using Progression 1;
-//
-Transfinite Line {l3} = 61 Using Progression 1;
-//
-Transfinite Line {l10} = 61 Using Progression 1;
-//
-Transfinite Line {l11} = 61 Using Progression 1;
-//
-Transfinite Line {l12} = 61 Using Progression 1;
-//
-Transfinite Line {l13} = 61 Using Progression 1;
-//
-Transfinite Line {l4} = 16 Using Progression 1;
-//
-Transfinite Line {l5} = 16 Using Progression 1;
-//
-Transfinite Line {l6} = 16 Using Progression 1;
-//
-Transfinite Line {l7} = 16 Using Progression 1;
-//
-Transfinite Line {l8} = 16 Using Progression 1;
-//
-Transfinite Line {l9} = 16 Using Progression 1;
-//
-Transfinite Line {l29} = 11 Using Progression 1;
-//
-Transfinite Line {l30} = 11 Using Progression 1;
-//
-Transfinite Line {l31} = 11 Using Progression 1;
-//
-Transfinite Line {l33} = 16 Using Progression 1;
-//
-Transfinite Line {l34} = 16 Using Progression 1;
-//
-Transfinite Line {l21} = 11 Using Progression 1;
-//
-Transfinite Line {l22} = 11 Using Progression 1;
-//
-Transfinite Line {l23} = 11 Using Progression 1;
-//
-Transfinite Line {l25} = 16 Using Progression 1;
-//
-Transfinite Line {l26} = 16 Using Progression 1;
-//
-Transfinite Surface {s0} = {p8, p7, p0, p9} Left;
-//
-Transfinite Surface {s1} = {p0, p3, p10, p9} Right;
-//
-Transfinite Surface {s2} = {p0, p3, p4, p5} Right;
-//
-Transfinite Surface {s3} = {p0, p7, p6, p5} Left;
-//
-Transfinite Surface {s9} = {p4, p5, p19, p18} Left;
-//
-Transfinite Surface {s10} = {p5, p6, p20, p19} Left;
-//
-Transfinite Surface {s12} = {p9, p10, p25, p26} Right;
-//
-Transfinite Surface {s13} = {p8, p9, p26, p27} Right;
 //

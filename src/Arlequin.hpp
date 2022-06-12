@@ -336,8 +336,21 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(double* x,std::vector<Nodes *> 
         elCorr = elSearch;
         // return;
     } else {
-        for (int jel = 0; jel < numElem; jel++){
-            connec = elements[jel] -> getConnectivity();
+
+        int nEl;
+        if (iTimeStep == 0){
+            nEl = numElem;
+        } else {
+            nEl = elements[elSearch] -> getNumberOfNeighborElements(); 
+        }   
+
+        for (int jel = 0; jel < nEl; jel++){
+
+            if (iTimeStep == 0){
+                connec = elements[jel] -> getConnectivity();
+            } else {
+                connec = elements[elements[elSearch] -> getNeighborElement(jel)] -> getConnectivity();
+            }   
 
             //get boxes information        
             XK = elements[jel] -> getXIntersectionParameter();
@@ -2516,30 +2529,12 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
-        // if (iTimeStep <= 10){
-        //     iterNumber = 3;
-        // } else {
-        //     iterNumber = 3;
+        // if(iTimeStep == 10){
+        //     double dd = 0.75;
+        //     parametersFine -> setSpectralRadius(dd);
+        //     parametersCoarse -> setSpectralRadius(dd);
+        //     std::cout << "AQUI " << rank << std::endl;
         // }
-
-        // if (iTimeStep == 25){
-        //     for (int i = 0; i < numElemFine; ++i){
-        //         double inSch = 0.5;
-        //         elementsFine_[i] -> setTimeIntegrationScheme(inSch);
-        //     }
-        //     for (int i=0; i<numElemCoarse; i++){
-        //         double inSch = 0.5;
-        //         elementsCoarse_[i] -> setTimeIntegrationScheme(inSch);
-        //     }
-        // }
-        // std::cout << " asd " << iTimeStep << " " << rank << std::endl;
-
-        if(iTimeStep == 10){
-            double dd = 0.75;
-            parametersFine -> setSpectralRadius(dd);
-            parametersCoarse -> setSpectralRadius(dd);
-            std::cout << "AQUI " << rank << std::endl;
-        }
            
         parametersCoarse -> setTimeInstant(iTimeStep);
         parametersFine -> setTimeInstant(iTimeStep);
@@ -2601,7 +2596,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             
             // Preallocates the matrix
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 300, NULL, 900, NULL, &A); 
+                                sysSize, sysSize, 400, NULL, 600, NULL, &A); 
             
             CHKERRQ(ierr);
             
@@ -2635,42 +2630,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
             std::clock_t t5 = std::clock();
 
-            // MatScale(A,1000.);
-            // VecScale(b,1000.);
-
-
-            // Vec AuxRow, AuxCol;
-            // ierr = VecDuplicate(b, &AuxRow); CHKERRQ(ierr);
-            // ierr = VecDuplicate(b, &AuxCol); CHKERRQ(ierr);
-            // Vec v1, v2;
-            // MatCreateVecs(A,&v1,&v2);
-            // PetscInt idxm[sysSize];
-            // for (int i = 0; i < sysSize; ++i){
-            //     idxm[i] = i;
-            // }
-
-            // for (int i = 0; i < numNodesCoarse; ++i){
-            //     if (nodesCoarse_[i] -> getWeightFunction() < 1){
-                    
-            //         int lin = 2*i;
-            //         MatGetColumnVector(A,AuxCol,lin);
-            //         VecScale(AuxCol, 1000);
-            //         MatGetRow(A,AuxRow,NULL,NULL,NULL);
-            //         VecScale(AuxRow, 1000);
-            //         MatZeroRowsColumns(A,1,&lin,0.,&v1,&v2);
-            //         MatSetValues(A,1,&lin,sysSize,idxm,AuxRow,ADD_VALUES);
-            //         MatSetValues(A,sysSize,idxm,1,&lin,AuxCol,ADD_VALUES);
-            //     }
-            // }
-
-            // ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            // ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-
-            // VecDestroy(&v1);
-            // VecDestroy(&v2);
-            // VecDestroy(&AuxRow);
-            // VecDestroy(&AuxCol);
-
+          
             
  // PetscViewer    viewer;
 
@@ -2809,40 +2769,41 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             double normU = 0.;
             double normP = 0.;
             double normL = 0.;
-            double normT = 0.;
             double p_;
             Ione = 1;
 
             for (int i = 0; i < numNodesCoarse; ++i){
+                double w_ = nodesCoarse_[i] -> getWeightFunction();
                 for (int k = 0; k < DIM; k++){
                     Ii = (DIM+1) * i + k;
                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                     // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
                     u_[k] = val;
-                    normU += val*val;
+                    normU += val*w_*val*w_;
                     nodesCoarse_[i] -> incrementAcceleration(k,u_[k]);
                     nodesCoarse_[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
                 }
                 Ii = (DIM+1) * i + DIM;
                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
                 p_ = val;
-                normP += val*val;
+                normP += val*w_*val*w_;
                 nodesCoarse_[i] -> incrementPressure(p_);
             };
             
             for (int i = 0; i < numNodesFine; ++i){
+                double w_ = nodesFine_[i] -> getWeightFunction();
                 for (int k = 0; k < DIM; k++){
                     Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + k;
                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                     u_[k] = val;
-                    normU += val*val;
+                    normU += val*w_*val*w_;
                     nodesFine_[i] -> incrementAcceleration(k,u_[k]);
                     nodesFine_[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
                 }        
                 Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + DIM;
                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
                 p_ = val;
-                normP += val*val;
+                normP += val*w_*val*w_;
                 nodesFine_[i] -> incrementPressure(p_);
             };
             
@@ -3117,7 +3078,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             
             // Preallocates the matrix
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 300, NULL, 900, NULL, &A); 
+                                sysSize, sysSize, 400, NULL, 600, NULL, &A); 
             
             CHKERRQ(ierr);
             
@@ -3130,11 +3091,6 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
                         
-            for (int i=0; i<sysSize; i++){
-                double val = 1.e-15;
-                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
-            }
-
             assembleArlequinSystem();
             
             //Assemble matrices and vectors
@@ -3437,7 +3393,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         
         // Preallocates the matrix
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            sysSize, sysSize, 300, NULL, 900, NULL, &A); 
+                            sysSize, sysSize, 400, NULL, 600, NULL, &A); 
         
         CHKERRQ(ierr);
         
@@ -3449,12 +3405,6 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
         ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
         ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-                    
-        for (int i=0; i<sysSize; i++){
-            double val = 1.e-20;
-            ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
-            
-        }
                             
         assembleArlequinSystem();
         

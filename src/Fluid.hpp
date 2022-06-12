@@ -825,6 +825,34 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
         for (int k = 0; k < nElNodes; k++) nodes_[connect[k]] -> pushInverseIncidence(i);
     }
 
+    PetscLogDouble bytes = 0;
+    PetscMemoryGetCurrentUsage(&bytes);
+    PetscPrintf(PETSC_COMM_WORLD,"Memory used-1 %g M\n",bytes/(1024*1024));
+    
+    for (int i = 0; i < numNodes; i++){
+        for (int j = 0; j < nodes_[i] -> getNumberOfElements(); j++){
+            int elJ = nodes_[i] -> getInverseIncidenceElement(j);
+            for (int k = 0; k < nodes_[i] -> getNumberOfElements(); k++)
+                elements_[elJ] -> pushNeighborElement(nodes_[i] -> getInverseIncidenceElement(k)); 
+        }
+    }
+
+    PetscMemoryGetCurrentUsage(&bytes);
+    PetscPrintf(PETSC_COMM_WORLD,"Memory used00 %g M\n",bytes/(1024*1024));
+
+    for (int i = 0; i < elements_.size(); i++) elements_[i] -> sortEraseNeighborElements();
+
+    PetscMemoryGetCurrentUsage(&bytes);
+    PetscPrintf(PETSC_COMM_WORLD,"Memory used11 %g M\n",bytes/(1024*1024));        
+
+    // for (int i = 0; i < elements_.size(); i++){
+    //     if (rank == 0) std::cout << "Neighbor " << i << " ";
+    //     for (int j = 0; j < elements_[i] -> getNumberOfNeighborElements(); j++){
+    //         std::cout << elements_[i] -> getNeighborElement(j) << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+
     delete [] perm;
     delete [] iperm;
     delete [] adjncy2;
