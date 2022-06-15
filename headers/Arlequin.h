@@ -14,8 +14,8 @@
 #ifndef ARLEQUIN_H
 #define ARLEQUIN_H
 
-#include "Fluid.hpp"
-#include "Glue.hpp"
+#include "Fluid.h"
+#include "Glue.h"
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 

@@ -14,7 +14,7 @@
 #ifndef GLUE_H
 #define GLUE_H
 
-#include "Node.hpp"
+#include "Node.h"
 
 /// Defines the gluing zone mesh
 

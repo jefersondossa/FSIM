@@ -14,8 +14,8 @@
 #ifndef FLUID_H
 #define FLUID_H
 
-#include "Element.hpp"
-#include "Boundary.hpp"
+#include "Element.h"
+#include "Boundary.h"
 #include "mesh_interface/fluidDomain.h"
 
 #include<cstdlib>
@@ -992,10 +992,15 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
     };
 
     //Performs the domain decomposition
-    METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
-                              NULL, NULL, &one, &ssize, NULL, NULL,    \
-                              &objval, part_elem, part_nodes);
-
+    if (ssize == 1){
+        for (int i = 0; i < numNd; i++) part_nodes[i] = 0;
+        for (int i = 0; i < numEl; i++) part_elem[i] = 0;
+    } else {
+        METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
+                                NULL, NULL, &one, &ssize, NULL, NULL,    \
+                                &objval, part_elem, part_nodes);
+    }
+    
     mirrorData << std::endl \
                << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
     for(int i = 0; i < numElem; i++){
@@ -1009,8 +1014,7 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
         mirrorData << "process = " << part_nodes[i] \
                    << ", node = " << i << std::endl;
     };
-    
-    return;
+
 
 };
 

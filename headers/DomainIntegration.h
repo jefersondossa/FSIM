@@ -14,8 +14,9 @@
 #ifndef DOMAIN_INTEGRATION_H
 #define DOMAIN_INTEGRATION_H
 
-#include "IntegrationQuadrature.hpp"
-#include "Node.hpp"
+#include "IntegrationQuadrature.h"
+#include "IntegrationQuadrature11.h"
+#include "Node.h"
 
 /// Computes and stores the shape functions and its derivatives
 template<int DIM, int DEG>

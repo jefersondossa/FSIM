@@ -33,7 +33,8 @@ static char help[] = "Solves the Incompressible flow problem";
 #include <fstream> 
   
 // Developed Header Files
-#include "src/FSInteraction.hpp"  
+#include "FSInteraction.h"  
+#include "headers/mesh_interface/fluidDomain.h"
 
 int main(int argc, char **args) {
 

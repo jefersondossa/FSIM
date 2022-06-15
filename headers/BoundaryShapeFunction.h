@@ -14,6 +14,8 @@
 #ifndef BOUND_SHAPEFUNCTION_H
 #define BOUND_SHAPEFUNCTION_H
 
+#include <iterator>
+
 /// Defines the fluid boundary shape functions
 template<int DIM, int DEG>
 class BoundShapeFunction {

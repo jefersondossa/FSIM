@@ -13,9 +13,8 @@
 
 #ifndef FSINTERACTION_H
 #define FSINTERACTION_H
-#include <petscviewerhdf5.h>
-
-#include "Arlequin.hpp"
+#include "hdf5.h"
+#include "Arlequin.h"
 
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
@@ -1639,7 +1638,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
             // MPI_Barrier(PETSC_COMM_WORLD);
 
             //  if (iTimeStep > 3){
-            if (rank == 0) solveframestructure_(&iTimeStep);
+            // if (rank == 0) solveframestructure_(&iTimeStep);
             // };
             // std::cout << "AQUI6 " << rank << std::endl;
             // std::cout << "AQUI11 " << rank << std::endl;

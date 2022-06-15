@@ -14,7 +14,8 @@
 #ifndef BOUND_INTEG_QUADRATURE_H
 #define BOUND_INTEG_QUADRATURE_H
 
-#include "BoundaryShapeFunction.hpp"
+#include "BoundaryShapeFunction.h"
+#include <math.h>
 
 /// Defines the quadrature rule for the boundary integration
 template<int DIM, int DEG>

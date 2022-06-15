@@ -14,13 +14,13 @@
 #ifndef ELEMENT_H
 #define ELEMENT_H
 
-#include "Node.hpp"
-#include "BoundaryIntegrationQuadrature.hpp"
-#include "FluidParameters.hpp"
+#include "Node.h"
+#include "BoundaryIntegrationQuadrature.h"
+#include "FluidParameters.h"
 
-#include "IntegrationQuadrature.hpp"
-#include "IntegrationQuadrature11.hpp"
-#include "DomainIntegration.hpp"
+#include "IntegrationQuadrature.h"
+#include "IntegrationQuadrature11.h"
+#include "DomainIntegration.h"
 // #include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information

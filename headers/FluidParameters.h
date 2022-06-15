@@ -14,6 +14,8 @@
 #ifndef FLUID_PARAMETERS_H
 #define FLUID_PARAMETERS_H
 
+#include <math.h>
+
 /// Defines the fluid boundary shape functions
 
 template<int DIM, int DEG>

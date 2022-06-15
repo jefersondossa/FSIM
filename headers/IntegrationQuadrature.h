@@ -14,7 +14,9 @@
 #ifndef INTEG_QUADRATURE_H
 #define INTEG_QUADRATURE_H
 
-#include "QuadraticShapeFunction.hpp"
+#include "QuadraticShapeFunction.h"
+#include <iterator>
+#include <math.h>
 
 /// Defines the domain integration Hammer quadrature
 
