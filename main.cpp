@@ -76,9 +76,9 @@ int main(int argc, char **args) {
 
     double a1 = 2.;
     double z = 0.;
-    double a = 50.;
-    double b = 250.;
-    double as = 15.;
+    double a = 25.;
+    double b = 150.;
+    double as = 2.;
     double c = 10.;
 
     Point* p000 = fluid1 -> addPoint({-a,-a-c},a1,false);
@@ -305,9 +305,9 @@ int main(int argc, char **args) {
   //       fluid2 -> addBoundaryCondition("DIRICHLET", l116, {0}, {0}, "GLOBAL");       
     Geometry* fluid2 = new Geometry(1);
 
-    double a2 = 0.1;
-    double a4 = 0.1;
-    double a3 = 0.1;
+    double a2 = 0.5;
+    double a4 = 0.5;
+    double a3 = 0.5;
     e = 1.0;
     double eg = 0.2;
 

@@ -613,7 +613,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
                                      (x2[0] - x[0]) * (x2[0] - x[0]));
                         //find signal
                         //side normal vector
-                        double *n = nodesFine_[no2] -> getInnerNormal();
+                        VecDouble n = nodesFine_[no2] -> getInnerNormal();
                         double test[2];
 
                         test[0] = x[0] - x2[0];
@@ -631,7 +631,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
                                      (x[0] - x1[0]) * (x[0] - x1[0]));
                         //find signal
                         //side normal vector
-                        double *n = nodesFine_[no1] -> getInnerNormal();
+                        VecDouble n = nodesFine_[no1] -> getInnerNormal();
                         double test[2];
 
                         test[0] = x[0] - x1[0];
@@ -685,7 +685,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
                                      (x2[0] - x[0]) * (x2[0] - x[0]));
                         //find signal
                         //side normal vector
-                        double *n = nodesFine_[no2] -> getInnerNormal();
+                        VecDouble n = nodesFine_[no2] -> getInnerNormal();
                         
                         double test[2];
                         test[0] = x[0] - x2[0];
@@ -703,7 +703,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
                                      (x[0] - x1[0]) * (x[0] - x1[0]));
                         //find signal
                         //side normal vector
-                        double *n = nodesFine_[no1] -> getInnerNormal();
+                        VecDouble n = nodesFine_[no1] -> getInnerNormal();
                         
                         double test[2];
                         test[0] = x[0] - x1[0];
@@ -1044,10 +1044,12 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
 
     herr_t status;
     hsize_t xdim = numNodesCoarse;
-    hsize_t pointVectorDims[2] = { numNodesCoarse, 3 };
-    hsize_t pointScalarDims[2] = { numNodesCoarse, 1 };
-    hsize_t pointCellScalarDims[2] = { numElemCoarse, 1 };
-    hsize_t connec2Dims[2] = { numElemCoarse, nElNodes };
+    hsize_t eldim = numElemCoarse;
+    hsize_t elnod = nElNodes;
+    hsize_t pointVectorDims[2] = { xdim, 3 };
+    hsize_t pointScalarDims[2] = { xdim, 1 };
+    hsize_t pointCellScalarDims[2] = { eldim, 1 };
+    hsize_t connec2Dims[2] = { eldim, elnod };
 
     std::string elType;
     if ((DIM == 2) && (DEG == 1)) elType = "Triangle";
@@ -1393,10 +1395,12 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
 
     herr_t status;
     hsize_t xdim = numNodesFine;
-    hsize_t pointVectorDims[2] = { numNodesFine, 3 };
-    hsize_t pointScalarDims[2] = { numNodesFine, 1 };
-    hsize_t pointCellScalarDims[2] = { numElemFine, 1 };
-    hsize_t connec2Dims[2] = { numElemFine, nElNodes };
+    hsize_t eldim = numElemCoarse;
+    hsize_t elnod = nElNodes;
+    hsize_t pointVectorDims[2] = { xdim, 3 };
+    hsize_t pointScalarDims[2] = { xdim, 1 };
+    hsize_t pointCellScalarDims[2] = { eldim, 1 };
+    hsize_t connec2Dims[2] = { eldim, elnod };
 
     std::string elType;
     if ((DIM == 2) && (DEG == 1)) elType = "Triangle";
@@ -1535,7 +1539,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
         output_v << "        " << s1 << ":/normalVector" << std::endl;     
         //Start Normal vector
         for (int i = 0; i < numNodesFine; i++) {
-            double *n = nodesFine_[i] -> getInnerNormal();
+            VecDouble n = nodesFine_[i] -> getInnerNormal();
             pointVector[3*i  ] = n[0];
             pointVector[3*i+1] = n[1];
             pointVector[3*i+2] = 0.0;
@@ -2656,17 +2660,17 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 
 
 
-            // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-            //                         1000);CHKERRQ(ierr);
+            ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
+                                    1000);CHKERRQ(ierr);
             
-            // //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+            //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
             
-            // ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+            ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
             
-            // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
+            ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
             
-            // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            // ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
+            //ierr = KSPSetPCSide(ksp, PC_RIGHT);
+            ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
             
             // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
             // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
@@ -2674,33 +2678,33 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 
 
             
-#if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
+// #if defined(PETSC_HAVE_MUMPS)
+//             ierr = KSPSetType(ksp,KSPPREONLY);
+//             ierr = KSPGetPC(ksp,&pc);
+//             ierr = PCSetType(pc, PCLU);
             
-            ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-            PCFactorSetUpMatSolverType(pc);
-            PCFactorGetMatrix(pc,&F);
+//             ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+//             PCFactorSetUpMatSolverType(pc);
+//             PCFactorGetMatrix(pc,&F);
             
-            PetscInt ival,icntl;
-            icntl = 14; ival = 80;
-            MatMumpsSetIcntl(F,icntl,ival);
-            icntl = 28; ival = 2;
-            MatMumpsSetIcntl(F,icntl,ival);
-            icntl = 29; ival = 2;
-            MatMumpsSetIcntl(F,icntl,ival);
-            icntl = 16; ival = 0;
-            MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 4; ival = 3;
-            // MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 11; ival = 1;
-            // MatMumpsSetIcntl(F,11,1);
+//             PetscInt ival,icntl;
+//             icntl = 14; ival = 80;
+//             MatMumpsSetIcntl(F,icntl,ival);
+//             icntl = 28; ival = 2;
+//             MatMumpsSetIcntl(F,icntl,ival);
+//             icntl = 29; ival = 2;
+//             MatMumpsSetIcntl(F,icntl,ival);
+//             icntl = 16; ival = 0;
+//             MatMumpsSetIcntl(F,icntl,ival);
+//             // icntl = 4; ival = 3;
+//             // MatMumpsSetIcntl(F,icntl,ival);
+//             // icntl = 11; ival = 1;
+//             // MatMumpsSetIcntl(F,11,1);
 
-            //MatMumpsSetIcntl(F,21,0);
+//             //MatMumpsSetIcntl(F,21,0);
 
             
-#endif
+// #endif
             // std::cout << "AQQQEQE1 " << rank << std::endl;
             // ierr = PCSetFromOptions(pc);CHKERRQ(ierr);
             // std::cout << "AQQQEQE2 " << rank << std::endl;

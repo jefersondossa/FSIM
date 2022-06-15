@@ -104,7 +104,7 @@ std::pair<std::string, bool> createMesh(Geometry* geometry, const PartitionOfUni
 	file << geometry->getGmshCode();
 	file.close();
 
-	std::string gmshExe = (gmshPath.empty()) ? getCurrentWorkingDir() + "/src/mesh_interface/gmsh" : gmshPath;
+	std::string gmshExe = (gmshPath.empty()) ? "gmsh" : gmshPath;
 	std::string cmd = gmshExe;
 	cmd += " -clscale 1.0 " + geofile + " -o " + mshfile + " -format msh2";
 

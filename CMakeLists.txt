@@ -35,6 +35,10 @@ endif() # CMAKE_BUILD_TYPE
  
 set(CMAKE_CXX_STANDARD 17)
 
+# Eigen
+include(cmake-modules/EnableEigen.cmake)
+enable_eigen()
+
 # add_subdirectory(mesh_interface)
 add_subdirectory(headers)
 # add_subdirectory(examples)
@@ -57,6 +61,6 @@ set(FOR_FILES ${for_files})
 add_executable(f main.cpp  ${MESH_INT} ${HEADERS})
 # add_executable(f main.cpp modules.for porticomb.for ${MESH_INT} ${HEADERS})
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
+target_link_libraries (f ${FOR_FILES} Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
 
 

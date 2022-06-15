@@ -31,6 +31,9 @@
 #include <numeric>
 #include <iostream>
 
+
+#include "DataTypes.h"
+
 /// Defines the node object and stores all nodal variables information
 
 template<int DIM, int DEG>
@@ -46,7 +49,7 @@ private:
     double           coordUpdated_[DIM];           //Updated nodal coordinate vector
     int              index_;                       //Node index
     double           previousCoord_[DIM];          //Previous nodal coordinate vector
-    double           nNodal_[DIM];                 //Nodal normal vector
+    VecDouble        nNodal_;                 //Nodal normal vector
     
     //Fluid
     int              constrainType[DIM];        //Constrain direction
@@ -120,6 +123,7 @@ public:
             initialCoord_[i] = coor[i];
             coord_[i] = coor[i];
         }
+        nNodal_.resize(DIM);
 
     };
 
@@ -175,7 +179,7 @@ public:
 
     /// Gets the nodal normal vector
     /// @return nodal normal vector
-    double* getInnerNormal() {return nNodal_;};
+    VecDouble &getInnerNormal() {return nNodal_;};
 
     /// Sets nodal normal vector
     /// @param VecLocD nodal normal vector

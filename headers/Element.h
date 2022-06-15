@@ -1685,7 +1685,8 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
     //  //   std::cout << "aqe" << std::endl;
     //     tARLQ_ = djac_ * std::sqrt(u_ * u_ + v_ * v_) / std::sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
-    tARLQ_ = -1. * k1 * tSUPG_ * 1.e-2;
+    // tARLQ_ = -1. * k1 * tSUPG_ * 1.e-2;
+    tARLQ_ = -1. * k1 * tSUPG_;
     //}
     //tARLQ_ = 0.;
 
