@@ -60,17 +60,12 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
+add_library(fsarl_library ${HEADERS} ${MESH_INT} ${SOURCES})
+target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen)
 
-# 
-# target_include_directories(fsarl_lib PUBLIC)
-# target_sources(fsarl_lib PRIVATE  ${SOURCES} ${HEADERS} ${MESH_INT})
+add_executable(f main.cpp )
 
-# get_target_property(lib_files fsarl_lib SOURCES)
-
-
-add_executable(f main.cpp ${HEADERS} ${MESH_INT} ${SOURCES})
-# add_executable(f main.cpp modules.for porticomb.for ${MESH_INT} ${HEADERS})
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f ${FOR_FILES} Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
+target_link_libraries (f fsarl_library ${FOR_FILES} Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
 
 

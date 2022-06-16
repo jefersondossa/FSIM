@@ -322,7 +322,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
 
         int *connec;
         QuadShapeFunction<DIM,DEG>                       shapeQuad;
-        double phi_[nElNodes] = {};
+        VecDouble phi_(nElNodes);
         
         double **ainv;
         ainv = new double*[DIM];

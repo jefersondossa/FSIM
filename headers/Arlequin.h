@@ -254,7 +254,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
     
     int *connec;
     QuadShapeFunction<DIM,DEG> shapeQuad;
-    double phi_[nElNodes] = {};
+    VecDouble phi_(nElNodes);
 
     double **ainv;
     ainv = new double*[DIM];
@@ -2878,7 +2878,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 
         //Compute real velocity
         QuadShapeFunction<DIM,DEG>                       shapeQuad;
-        double phi_[nElNodes] = {};
+        VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
             for (int k = 0; k < DIM; k++) 
@@ -3639,7 +3639,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
 
     //Compute real velocity
     QuadShapeFunction<DIM,DEG>                       shapeQuad;
-    double phi_[nElNodes] = {};
+    VecDouble phi_(nElNodes);
     
     for (int i = 0; i<numNodesFine; i++){
         nodesFine_[i] -> setVelocityArlequin(0,nodesFine_[i] -> getVelocity(0));

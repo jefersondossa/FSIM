@@ -31,17 +31,16 @@ public:
         int nIntegPointsNormal = quad.getNumberOfIntegrationPoints();
         int nIntegPointsSpecial = Squad.getNumberOfIntegrationPoints();
 
-        phi_ = new double*[nElNodes];
-        for (int i = 0; i < nElNodes; i++) phi_[i] = new double[nIntegPointsNormal];
-
-        dphi_ = new double**[nElNodes];
+        phi_.resize(nElNodes,nIntegPointsNormal);
+        dphi_.resize(nElNodes);
+        // dphi_ = new double**[nElNodes];
         for (int i = 0; i < nElNodes; i++){ 
-            dphi_[i] = new double*[DIM];
-            for (int j = 0; j < DIM; j++) dphi_[i][j] = new double[nIntegPointsNormal];
+            dphi_[i].resize(DIM,nIntegPointsNormal);
+            // dphi_[i] = new double*[DIM];
+            // for (int j = 0; j < DIM; j++) dphi_[i][j] = new double[nIntegPointsNormal];
         }
 
-        phiS_ = new double*[nElNodes];
-        for (int i = 0; i < nElNodes; i++) phiS_[i] = new double[nIntegPointsSpecial];
+        phiS_.resize(nElNodes,nIntegPointsSpecial);
 
         dphiS_ = new double**[nElNodes];
         for (int i = 0; i < nElNodes; i++){ 
@@ -52,23 +51,21 @@ public:
         VecDouble xsi(DIM);
         int index = 0;
         
-        double phiAux_[nElNodes] = {};
+        VecDouble phiAux_(nElNodes);
 
-        double **dphiAux;
-        dphiAux = new double*[nElNodes];
-        for (int i = 0; i < nElNodes; ++i) dphiAux[i] = new double[DIM];
-
+        MatrixDouble dphiAux(nElNodes,DIM);
+        
         for(double* it = quad.begin(); it != quad.end(); it++){
             //Defines the integration points adimentional coordinates
             for (int i = 0; i < DIM; i++) xsi[i] = quad.PointList(index,i);       
             //Shape functions
             shapeFunction.evaluate(xsi,phiAux_);
-            for (int i = 0; i < nElNodes; i++) phi_[i][index] = phiAux_[i];
+            for (int i = 0; i < nElNodes; i++) phi_(i,index) = phiAux_[i];
             //Derivatives
             shapeFunction.evaluateGradient(xsi,dphiAux);
             for (int i = 0; i < nElNodes; i++)
                 for (int j = 0; j < DIM; j++)
-                    dphi_[i][j][index] = dphiAux[i][j];
+                    dphi_[i](j,index) = dphiAux(i,j);
 
             index++;
         }
@@ -78,24 +75,23 @@ public:
             for (int i = 0; i < DIM; i++) xsi[i] = Squad.PointList(index,i);       
             //Shape functions
             shapeFunction.evaluate(xsi,phiAux_);
-            for (int i = 0; i < nElNodes; i++) phiS_[i][index] = phiAux_[i];
+            for (int i = 0; i < nElNodes; i++) phiS_(i,index) = phiAux_[i];
             //Derivatives
             shapeFunction.evaluateGradient(xsi,dphiAux);
             for (int i = 0; i < nElNodes; i++)
                 for (int j = 0; j < DIM; j++)
-                    dphiS_[i][j][index] = dphiAux[i][j];
+                    dphiS_[i][j][index] = dphiAux(i,j);
 
             index++;
         }
 
-        for (int i = 0; i < nElNodes; ++i) delete [] dphiAux[i];
-        delete [] dphiAux;
     }
 
-    double **phi_;
-    double ***dphi_;
+    MatrixDouble phi_;
+    std::vector<MatrixDouble> dphi_;
+    // double ***dphi_;
 
-    double **phiS_;
+    MatrixDouble phiS_;
     double ***dphiS_;
 
 private:

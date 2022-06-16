@@ -52,13 +52,24 @@ public:
 
     /// Sets the domain force vector
     /// @param double* domain force vector
-    void setFieldForce(double* ff){fieldForce.resize(3); for(int i=0; i<3; i++) fieldForce[i] = ff[i];}
+    void setFieldForce(double* ff){
+        fieldForce.resize(3); 
+        for(int i=0; i<3; i++) fieldForce[i] = ff[i];
+    }
 
-    void setArlequinOperatorConstants(double& k_1, double& k_2){k1 = k_1; k2 = k_2;}
+    void setArlequinOperatorConstants(double& k_1, double& k_2){
+        k1 = k_1; 
+        k2 = k_2;
+    }
+
     void setTimeInstant(int& it){timeInstant = it;}
     /// Sets the undisturbed velocity field
     /// @param double* undisturbed velocity field
-    void setVelocityInf(double* u){velocityInf.resize(3); for(int i=0; i<3; i++) velocityInf[i] = u[i];}
+    void setVelocityInf(double* u){
+        velocityInf.resize(3); 
+        for(int i=0; i<3; i++) velocityInf[i] = u[i];
+    }
+
     /// Gets the undisturbed velocity field
     /// @return undisturbed velocity field
     VecDouble &getVelocityInf() {return velocityInf;}
@@ -94,10 +105,5 @@ private:
 
     int timeInstant;
 };
-
-
-
-
-
 
 #endif

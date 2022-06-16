@@ -287,7 +287,7 @@ double IntegQuadratureSpecial<DIM,DEG>::interpolateQuadraticVariable(double nVal
     int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4; 
     VecDouble xsi(DIM);
     double int_value = 0.;
-    double phi_[nElNodes] = {};
+    VecDouble phi_(nElNodes);
 
     for (int i=0; i<DIM; i++) xsi[i] = PointList(point,i);
 
