@@ -205,7 +205,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
         elemC = 150000;
         double xsiC[DIM];
         for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
-        double xsi[DIM];
+        VecDouble xsi(DIM);
         double x_[DIM];
         double deltaX[DIM];
         double deltaXsi[DIM];
@@ -332,12 +332,12 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
         // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
         int elemC;
 
-        double* x = nodesSolid_[iSol][isolid] -> getCoordinates();
+        VecDouble x = nodesSolid_[iSol][isolid] -> getCoordinates();
         
         elemC = 150000;
-        double xsiC[DIM];
+        VecDouble xsiC(DIM);
         for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
-        double xsi[DIM];
+        VecDouble xsi(DIM);
         double x_[DIM];
         double deltaX[DIM];
         double deltaXsi[DIM];
@@ -371,7 +371,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
                 shapeQuad.evaluate(xsi,phi_);
                                 
                 for (int i = 0; i < nElNodes; i++){
-                    double *xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
+                    VecDouble xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
                     for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];                
                 };
                 
@@ -405,7 +405,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
                     shapeQuad.evaluate(xsi,phi_);
                     
                     for (int i=0; i<nElNodes; i++){
-                        double* xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
+                        VecDouble xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
                         for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];
                     };                   
 
@@ -488,10 +488,10 @@ void FSInteraction<DIM,DEG>::searchArlequinNodeCorrespondence(int interface){
             int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < nBdNodes; inode++){
-                double* x = nodesArlequinFine_[connec[inode]] -> getCoordinates();
+                VecDouble x = nodesArlequinFine_[connec[inode]] -> getCoordinates();
                 
                 searchcorrespondencefluid_(&x[0], &x[1], &elemC, &xsiC);
-                double xsi[DIM] = {};
+                VecDouble xsi(DIM);
                 xsi[0] = xsiC;
 
                 // if (rank == 0) std::cout << "asdasd " << elemC << " " << xsiC << " " << " " << connec[inode] << " " << interface << " " << numElemArlequinFine << " " << flag << std::endl; 
@@ -717,7 +717,7 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
         int index = 0;
         
         for (int i=0; i<numNodesSolid; i++){
-            double x[2];
+            VecDouble x(DIM);
             int inode = i+1;
             getsolidposition_(&inode,&x[0],&x[1]);
             
@@ -913,10 +913,10 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
               
                 for (int k = 0; k < nBdNodes; k++){
 
-                    double x[2];
+                    VecDouble x(2);
                     
                     int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
-                    double* xsi = nodesArlequinFine_[connec[k]] -> getNodalXsiCorrespondence();
+                    VecDouble xsi = nodesArlequinFine_[connec[k]] -> getNodalXsiCorrespondence();
 
                     // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     
@@ -949,11 +949,11 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
     // MPI_Barrier(PETSC_COMM_WORLD);
 
     for (int i = 0; i < numNodesArlequinFine; i++){
-        double up[2];
-        double u[2];
+        VecDouble up(2);
+        VecDouble u(2);
             
-        double* x = nodesArlequinFine_[i] -> getCoordinates();
-        double* xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
+        VecDouble x = nodesArlequinFine_[i] -> getCoordinates();
+        VecDouble xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
         up[0] = nodesArlequinFine_[i] -> getPreviousMeshVelocity(0);
         up[1] = nodesArlequinFine_[i] -> getPreviousMeshVelocity(1);
         
@@ -1026,12 +1026,12 @@ void FSInteraction<DIM,DEG>::transferSolidVelocityArlequin(){
                 
                 int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
-                double u[DIM];
+                VecDouble u(DIM);
 
                 for (int k = 0; k < nBdNodes; k++){
                     
                     int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
-                    double* xsi = nodesArlequinFine_[connec[k]] ->  getNodalXsiCorrespondence();
+                    VecDouble xsi = nodesArlequinFine_[connec[k]] ->  getNodalXsiCorrespondence();
                     
                     if (rank == 0) 
                         getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
@@ -1092,7 +1092,7 @@ void FSInteraction<DIM,DEG>::transferArlequinLoad(){
             // std::cout << "AAAAA 2 "<< std::endl;
             int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
             // std::cout << "AAAAA 3 " << ielem << " " << isolid << " " << std::endl;
-            double* xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
+            VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
             // std::cout << "AAAAA 4 "<< ielem << " " << xsi[0] << " " << xsi[1] << " " << std::sqrt(std::inner_product(xsi,xsi,xsi,0.0L)) << std::endl;
             double load[DIM] = {};
             if (xsi[0] < 3) elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi,load);
@@ -1457,7 +1457,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
         // }
 
         for (int i = 0; i < numNodesArlequinCoarse; i++){
-            double accel[2], u[2], uprev[2];
+            VecDouble accel(DIM), u(DIM), uprev(DIM);
             
             //Compute acceleration
             u[0] = nodesArlequinCoarse_[i] -> getVelocity(0);
@@ -1477,7 +1477,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
         };
 
         for (int i = 0; i < numNodesArlequinFine; i++){
-            double accel[2], u[2], uprev[2], lag[2];
+            VecDouble accel(DIM), u(DIM), uprev(DIM), lag(DIM);
             
             //Compute acceleration
             u[0] = nodesArlequinFine_[i] -> getVelocity(0);
@@ -1530,7 +1530,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
 
 
         for (int i = 0; i < numNodesArlequinFine; i++){
-            double* x = nodesArlequinFine_[i] -> getCoordinates();
+            VecDouble x = nodesArlequinFine_[i] -> getCoordinates();
             nodesArlequinFine_[i] -> setPreviousCoordinates(0,x[0]);
             nodesArlequinFine_[i] -> setPreviousCoordinates(1,x[1]);
         };

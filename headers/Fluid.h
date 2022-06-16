@@ -385,7 +385,7 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
     int index = 0;
     if (rank == 0) std::cout << "Number of Nodes " << " " << numNodes << std::endl;
     for (int i = 0; i < numNodes; i++){
-        double x[DIM];
+        VecDouble x(DIM);
         std::getline(file, line);
         std::vector<std::string> tokens = split2(line, " ");
         
@@ -399,8 +399,7 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
 
     mirrorData << "Nodal Coordinates " << numNodes << std::endl;
     for (int i = 0 ; i<numNodes; i++){
-        double *x;
-        x = nodes_[i]->getCoordinates();       
+        VecDouble x = nodes_[i]->getCoordinates();       
         for (int j=0; j<DIM; j++){
             mirrorData << x[j] << " ";
         };

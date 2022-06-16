@@ -285,7 +285,7 @@ template<int DIM, int DEG>
 double IntegQuadratureSpecial<DIM,DEG>::interpolateQuadraticVariable(double nValues[], int point){
     
     int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4; 
-    double xsi[DIM];
+    VecDouble xsi(DIM);
     double int_value = 0.;
     double phi_[nElNodes] = {};
 

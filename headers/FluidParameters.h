@@ -15,6 +15,7 @@
 #define FLUID_PARAMETERS_H
 
 #include <math.h>
+#include "DataTypes.h"
 
 /// Defines the fluid boundary shape functions
 
@@ -51,16 +52,16 @@ public:
 
     /// Sets the domain force vector
     /// @param double* domain force vector
-    void setFieldForce(double* ff){for(int i=0; i<3; i++) fieldForce[i] = ff[i];}
+    void setFieldForce(double* ff){fieldForce.resize(3); for(int i=0; i<3; i++) fieldForce[i] = ff[i];}
 
     void setArlequinOperatorConstants(double& k_1, double& k_2){k1 = k_1; k2 = k_2;}
     void setTimeInstant(int& it){timeInstant = it;}
     /// Sets the undisturbed velocity field
     /// @param double* undisturbed velocity field
-    void setVelocityInf(double* u){for(int i=0; i<3; i++) velocityInf[i] = u[i];}
+    void setVelocityInf(double* u){velocityInf.resize(3); for(int i=0; i<3; i++) velocityInf[i] = u[i];}
     /// Gets the undisturbed velocity field
     /// @return undisturbed velocity field
-    double* getVelocityInf() {return velocityInf;}
+    VecDouble &getVelocityInf() {return velocityInf;}
 
     double& getTimeStep() {return timeStepSize;}
     double& getDensity() {return density;}
@@ -71,7 +72,7 @@ public:
     
     /// Gets the domain force vector
     /// @return domain force vector
-    double* getFieldForce() {return fieldForce;}
+    VecDouble &getFieldForce() {return fieldForce;}
 
     double& getArlequinK1() {return k1;}
     double& getArlequinK2() {return k2;}
@@ -86,10 +87,10 @@ private:
     double alpha_m;
     double alpha_f;
     double gamma;
-    double fieldForce[3];
+    VecDouble fieldForce;
     double k1, k2;
     double pi = M_PI;
-    double velocityInf[3];
+    VecDouble velocityInf;
 
     int timeInstant;
 };

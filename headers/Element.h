@@ -146,11 +146,11 @@ public:
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    void getJacobianMatrix(double *xsi, double **ainv_, double &djac_);
+    void getJacobianMatrix(VecDouble &xsi, double **ainv_, double &djac_);
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
-    void getSpatialDerivatives(double *xsi, double **ainv_, double **dphi_dx);
+    void getSpatialDerivatives(VecDouble &xsi, double **ainv_, double **dphi_dx);
 
     /// Interpolate pressure and its derivatives
     /// @param int integration point index
@@ -200,7 +200,7 @@ public:
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
     double getJacobian(){
-        double xsi[DIM] = {};
+        VecDouble xsi(DIM);
 
         double **ainv_;
         ainv_ = new double*[DIM];
@@ -237,7 +237,7 @@ public:
                                   double &pitchingMoment, double & perimeter);
 
     /// Compute and store the boundary forces
-    void getBoundaryLoad(double* xsi, double* load);
+    void getBoundaryLoad(VecDouble &xsi, double* load);
 
     /// Gets the spatial jacobian matrix
     /// @param bounded_vector integration point coordinates
@@ -327,7 +327,7 @@ public:
 
     /// Sets the integration point correspondence to the overlapped mesh
     /// @param int element correspondent @param VecLoc Adimensional coordinates
-    void setIntegrationPointCorrespondence(int ipoint, int elem, double* x){
+    void setIntegrationPointCorrespondence(int ipoint, int elem, VecDouble &x){
         intPointCorrespElem[ipoint] = elem;
         intPointCorrespXsi[ipoint][0] = x[0];
         intPointCorrespXsi[ipoint][1] = x[1]; };
@@ -638,7 +638,7 @@ void Element<DIM,DEG>::setIntersectionParameters(double *x, double *X) {
 template<int DIM, int DEG>
 void Element<DIM,DEG>::setIntegPointWeightFunction() {
     
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     ShapeFunction shapeQuad;
     double phi_[nElNodes] = {};
     
@@ -723,7 +723,7 @@ template<int DIM,int DEG>
 void Element<DIM,DEG>::getIntegPointCoordinates(){
 
     SpecialQuad sQuad = SpecialQuad();
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     ShapeFunction   shapeQuad;
     double phi_[nElNodes] = {};
 
@@ -775,7 +775,7 @@ void Element<2,2>::clearVariables(){
 //-------------------------SPATIAL TRANSFORM - JACOBIAN-------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getJacobianMatrix(double *xsi, double **ainv_, double &djac_) {
+void Element<DIM,DEG>::getJacobianMatrix(VecDouble &xsi, double **ainv_, double &djac_) {
 
     //Computes the spatial Jacobian matrix and its inverse
     double **dphi;
@@ -814,7 +814,7 @@ void Element<DIM,DEG>::getJacobianMatrix(double *xsi, double **ainv_, double &dj
 //-----------------------------SPATIAL DERIVATIVES------------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getSpatialDerivatives(double *xsi, double **ainv_, double **dphi_dx) {
+void Element<DIM,DEG>::getSpatialDerivatives(VecDouble &xsi, double **ainv_, double **dphi_dx) {
     
     // typename QuadShapeFunction<2,2>::ValueDDeriv ddphi;
     
@@ -1013,7 +1013,7 @@ void Element<DIM,DEG>::interpolateLagMultiplierDerivatives(double **dphi_dx, dou
 //-------------INTERPOLATES VELOCITY, PRESSURE AND ITS DERIVATIVES--------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
+void Element<DIM,DEG>::getBoundaryLoad(VecDouble &xsi, double* load) {
     // std::cout << "asdasd 0 " << std::endl;
     int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
@@ -1146,7 +1146,7 @@ void Element<DIM,DEG>::getBoundaryLoad(double* xsi, double* load) {
         djacb_ = std::sqrt(Maux[0][0] * Maux[1][1] - Maux[0][1] * Maux[1][0]);
     }
 
-    double n_vector[DIM] = {};
+    VecDouble n_vector(DIM);
     if (DIM == 2){
         n_vector[0] =  dx_dxsiB[1][0] / djacb_;
         n_vector[1] = -dx_dxsiB[0][0] / djacb_;
@@ -2124,7 +2124,7 @@ void Element<DIM,DEG>::getResidualVector(int &index, double **dphi_dx, double &t
     double &alpha_f = parameters.getAlphaF();
     double &alpha_m = parameters.getAlphaM();
     double &gamma = parameters.getGamma();
-    double* fieldForce = parameters.getFieldForce();
+    VecDouble fieldForce = parameters.getFieldForce();
 
     //Velocity
     double u_[DIM], uPrev_[DIM], una_[DIM];
@@ -2269,7 +2269,7 @@ void Element<DIM,DEG>::getElemLaplMatrix(double &weight_, double &djac_, double 
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getTransientNavierStokes(double **jacobianNRMatrix, double *rhsVector){
 
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     
     double **dphi_dx;
     dphi_dx = new double*[nElNodes];
@@ -2331,7 +2331,7 @@ void Element<DIM,DEG>::getTransientNavierStokes(double **jacobianNRMatrix, doubl
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getSteadyLaplace(double** jacobianNRMatrix, double* rhsVector){
 
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     ShapeFunction           shapeQuad;
     
     double **dphi_dx;
@@ -2400,7 +2400,7 @@ void Element<DIM,DEG>::getSteadyLaplace(double** jacobianNRMatrix, double* rhsVe
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsVector){
 
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     double **dphi;
     dphi = new double*[nElNodes];
     for (int i = nElNodes; i--; ) dphi[i] = new double[DIM];
@@ -2430,7 +2430,7 @@ void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsV
                 dx_dxsi[i][j] = 0.0;
 
         for (int i = 0; i < nElNodes; ++i){
-            double* initialCoord = (*nodes_)[connect_[i]] -> getInitialCoordinates();
+            VecDouble initialCoord = (*nodes_)[connect_[i]] -> getInitialCoordinates();
             for (int k = 0; k < DIM; k++)
                 for (int l = 0; l < DIM; l++)
                     dx_dxsi[k][l] += initialCoord[k] * dphi[i][l];
@@ -2462,7 +2462,7 @@ void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsV
                 dy_dxsi[i][j] = 0.0;
         
         for (int i = 0; i < nElNodes; i++){
-            double* currentCoord = (*nodes_)[connect_[i]] -> getCoordinates();
+            VecDouble currentCoord = (*nodes_)[connect_[i]] -> getCoordinates();
 
             for (int k = 0; k < DIM; k++)
                 for (int l = 0; l < DIM; l++)
@@ -2592,7 +2592,7 @@ void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsV
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double *lagrMultVector, double *rhsVector){
 
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     
     double **dphi_dx;
     dphi_dx = new double*[nElNodes];
@@ -2807,7 +2807,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMesh(double **jacobia
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinStab, double **laplMatrix, double *arlequinStabVector){
 
-    double xsi[DIM] = {};
+    VecDouble xsi(DIM);
     
     double **dphi_dx;
     dphi_dx = new double*[nElNodes];
@@ -2968,8 +2968,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
                                                      double* velx, double* vely, double* velxPrev, double* velyPrev,
                                                      double **lagrMultMatrix, double *rhsVectorLM, double *rhsVector){
 
-    double xsi[DIM]= {};
-    double xsi_intp[DIM] = {};
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
     QuadShapeFunction<DIM,DEG> shapeQuad;
     int index = 0;
     SpecialQuad sQuad = SpecialQuad();
@@ -3276,8 +3276,8 @@ template<int DIM, int DEG>
 void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
                                                              double **arlequinStab, double **laplMatrix, double *arlequinStabVector){
 
-    double xsi[DIM] = {};
-    double xsi_intp[DIM] = {};
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
     QuadShapeFunction<DIM,DEG> shapeQuad;
     int index = 0;
     SpecialQuad sQuad = SpecialQuad();

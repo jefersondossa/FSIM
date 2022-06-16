@@ -49,7 +49,7 @@ public:
             for (int j = 0; j < DIM; j++) dphiS_[i][j] = new double[nIntegPointsSpecial];
         }
 
-        double xsi[DIM] = {};
+        VecDouble xsi(DIM);
         int index = 0;
         
         double phiAux_[nElNodes] = {};
