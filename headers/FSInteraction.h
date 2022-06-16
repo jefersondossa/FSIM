@@ -324,9 +324,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
         QuadShapeFunction<DIM,DEG>                       shapeQuad;
         VecDouble phi_(nElNodes);
         
-        double **ainv;
-        ainv = new double*[DIM];
-        for (int i = DIM; i--; ) ainv[i] = new double[DIM];
+        MatrixDouble ainv(DIM,DIM);
 
         double xsiCC[3];
         // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
@@ -395,7 +393,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
 
                     for (int i = 0; i < DIM; i++)
                         for (int j = 0; j < DIM; j++)
-                            deltaXsi[i] += ainv[j][i] * deltaX[j];
+                            deltaXsi[i] += ainv(j,i) * deltaX[j];
                     
                     for (int k = 0; k<DIM; k++){
                         xsi[k] += deltaXsi[k];
@@ -429,11 +427,6 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
                 };           
             };
         };
-
-        
-        
-        for (int i = DIM; i--; ) delete [] ainv[i];
-        delete [] ainv;
 
         // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
     };
