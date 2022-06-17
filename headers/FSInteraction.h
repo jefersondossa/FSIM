@@ -187,8 +187,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
-        
-        int *connec;
+        VecInt connec;
         QuadShapeFunction<DIM,DEG> shapeQuad;
         double phi_[nElNodes] = {};
         
@@ -320,7 +319,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
-        int *connec;
+        VecInt connec;
         QuadShapeFunction<DIM,DEG>                       shapeQuad;
         VecDouble phi_(nElNodes);
         
@@ -444,7 +443,7 @@ void FSInteraction<DIM,DEG>::searchFluidNodeCorrespondence(int interface){
             int elemC;
             double xsiC;
 
-            int* connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+            VecInt connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < nBdNodes; inode++){
                 double* x = nodesFluid_[connec[inode]] -> getCoordinates();
@@ -478,7 +477,7 @@ void FSInteraction<DIM,DEG>::searchArlequinNodeCorrespondence(int interface){
             int elemC;
             double xsiC;
 
-            int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
+            VecInt connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < nBdNodes; inode++){
                 VecDouble x = nodesArlequinFine_[connec[inode]] -> getCoordinates();
@@ -503,7 +502,7 @@ void FSInteraction<DIM,DEG>::searchArlequinNodeCorrespondence(int interface){
 template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::setElementBoxes() {
     
-    int *connec;
+    VecInt connec;
     double xk[DIM], Xk[DIM];
     double dCk[3], dck[3];
 
@@ -548,11 +547,10 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
         if ((boundaryFluid_[i] -> getConstrain(0) == 3) ||
             (boundaryFluid_[i] -> getConstrain(1) == 3)) {
 
-            int* connectB = boundaryFluid_[i] -> getBoundaryConnectivity();
+            VecInt connectB = boundaryFluid_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElemFluid; j++){
-                int *connect;
-                connect = elementsFluid_[j] -> getConnectivity();
+                VecInt connect = elementsFluid_[j] -> getConnectivity();
                 
                 int flag = 0;
                 int side[nBdNodes];
@@ -840,7 +838,7 @@ void FSInteraction<DIM,DEG>::updateFluidMesh(){
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){          
             if (boundaryFluid_[ibound] -> getBoundaryGroup() == interf){
                 
-                int* connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+                VecInt connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
                 for (int k = 0; k < nBdNodes; k++){
 
@@ -902,7 +900,7 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
         for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interf){
 
-                int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
+                VecInt connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
                 for (int k = 0; k < nBdNodes; k++){
 
@@ -973,7 +971,7 @@ void FSInteraction<DIM,DEG>::transferSolidVelocity(){
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){          
             if (boundaryFluid_[ibound] -> getBoundaryGroup() == interf){
                 
-                int* connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
+                VecInt connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
                 double u[DIM];
 
@@ -1017,7 +1015,7 @@ void FSInteraction<DIM,DEG>::transferSolidVelocityArlequin(){
         for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interf){
                 
-                int* connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
+                VecInt connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
                 VecDouble u(DIM);
 
@@ -1087,7 +1085,7 @@ void FSInteraction<DIM,DEG>::transferArlequinLoad(){
             // std::cout << "AAAAA 3 " << ielem << " " << isolid << " " << std::endl;
             VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
             // std::cout << "AAAAA 4 "<< ielem << " " << xsi[0] << " " << xsi[1] << " " << std::sqrt(std::inner_product(xsi,xsi,xsi,0.0L)) << std::endl;
-            double load[DIM] = {};
+            VecDouble load(DIM);
             if (xsi[0] < 3) elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi,load);
             // std::cout << "AAAAA 5 "<< std::endl;
             int inode = isolid+1;

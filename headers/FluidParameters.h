@@ -52,7 +52,7 @@ public:
 
     /// Sets the domain force vector
     /// @param double* domain force vector
-    void setFieldForce(double* ff){
+    void setFieldForce(VecDouble &ff){
         fieldForce.resize(3); 
         for(int i=0; i<3; i++) fieldForce[i] = ff[i];
     }
@@ -65,7 +65,7 @@ public:
     void setTimeInstant(int& it){timeInstant = it;}
     /// Sets the undisturbed velocity field
     /// @param double* undisturbed velocity field
-    void setVelocityInf(double* u){
+    void setVelocityInf(VecDouble &u){
         velocityInf.resize(3); 
         for(int i=0; i<3; i++) velocityInf[i] = u[i];
     }

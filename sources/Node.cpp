@@ -26,7 +26,7 @@ void Node<DIM,DEG>::clearVariables(){
     }
     
     return;
-};
+}; 
 
 template class Node<2,1>;
 template class Node<2,2>;

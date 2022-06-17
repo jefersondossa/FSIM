@@ -169,19 +169,19 @@ public:
                                   std::vector<Elements *> elements,
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
-    void setMatVecValuesFineModel(double **matrix, double *rhs, int* connec);
-    void setMatVecValuesCoarseModel(double **matrix, double *rhs, int* connec);
+    void setMatVecValuesFineModel(double **matrix, double *rhs, VecInt &connec);
+    void setMatVecValuesCoarseModel(double **matrix, double *rhs, VecInt &connec);
     void setMatVecValuesLagMultFineFine(double **Ajac2, double **localMV_mat, 
                                         double **ArlequinA1, double **ArlequinA2, 
                                         double *Rhs2, double *rhsLagMult2,
                                         double *localMV_vec, double *RhsArlequin2,
-                                        int* connec, int* connecL);
+                                        VecInt &connec, VecInt &connecL);
 
     void setMatVecValuesLagMultFineCoarse(double **Ajac2, double **localMV_mat, 
                                           double **ArlequinA1, double **ArlequinA2, 
                                           double *Rhs2, double *rhsLagMult2,
                                           double *localMV_vec, double *RhsArlequin2,
-                                          int* connecC, int* connecL);
+                                          VecInt &connecC, VecInt &connecL);
 
     void assembleArlequinSystem();
 
@@ -202,8 +202,8 @@ public:
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setElementBoxes() {
     
-    int *connec;
-    double xk[DIM], Xk[DIM];
+    VecInt connec;
+    VecDouble xk(DIM), Xk(DIM);
 
     //Compute element boxes for coarse model
     //Only function for straight elements
@@ -251,38 +251,32 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
                                            std::vector<Elements *> elements, 
                                            int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch){
     
-    
-    int *connec;
     QuadShapeFunction<DIM,DEG> shapeQuad;
     VecDouble phi_(nElNodes);
 
     MatrixDouble ainv(DIM,DIM);
     
-    double xsiCC[3] = {};
-    std::pair<double*,double*> XK;
-    std::pair<double*,double*> dCk;
+    VecDouble xsiCC(3);
+    std::pair<VecDouble,VecDouble> XK;
 
     elCorr = 150000;
     VecDouble xsi(DIM);
-    double x_[DIM];
-    double deltaX[DIM] = {};
-    double deltaXsi[DIM] = {};
+    VecDouble x_(DIM);
+    VecDouble deltaX(DIM);
+    VecDouble deltaXsi(DIM);
     bool flg = true;
-    connec = elements[elSearch] -> getConnectivity();
-    for (int i = DIM+1; i--; ) xsiCC[i] = 1.e10;
+    VecInt connec = elements[elSearch] -> getConnectivity();
     
-    for (int i = DIM; i--; ){
-        xsiCorr[i] = 1.e50;
-        xsi[i] = 1. / 3.;
-        x_[i] = 0.;
-    }
+    xsiCC.fill(1.e10);
+    xsiCorr.fill(1.e50);
+    xsi.fill(1./3.);
+    x_.fill(0.);
     
     shapeQuad.evaluate(xsi,phi_);
 
     for (int i = 0; i < nElNodes; i++){
         VecDouble xint = nodes[connec[i]] -> getCoordinates();
-        for (int k = DIM; k--; )
-            x_[k] += xint[k] * phi_[i];
+        x_ += xint * phi_[i];
     };
 
     double error = 1.e6;
@@ -292,29 +286,25 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
         
         iterations++;
         
-        for (int k = DIM; k--; ){
-            deltaX[k] = x[k] - x_[k];
-            deltaXsi[k] = 0.;
-        }
+        deltaX = x - x_;
+        deltaXsi.setZero();
         
         double djac_ = 0.;
         elements[elSearch] -> getJacobianMatrix(xsi,ainv,djac_);
 
-        for (int i = 0; i < DIM; i++)
-            for (int j = 0; j < DIM; j++)
-                deltaXsi[i] += ainv(j,i) * deltaX[j];
-        
+        // for (int i = 0; i < DIM; i++)
+        //     for (int j = 0; j < DIM; j++)
+        //         deltaXsi[i] += ainv(j,i) * deltaX[j];
+        deltaXsi = ainv.transpose()*deltaX;    
 
-        for (int k = DIM; k--; ){
-            xsi[k] += deltaXsi[k];
-            x_[k] = 0.;
-        }
-    
+        xsi += deltaXsi;
+        x_.setZero();
+        
         shapeQuad.evaluate(xsi,phi_);
         
         for (int i=0; i<nElNodes; i++){
             VecDouble xint = nodes[connec[i]] -> getCoordinates();
-            for (int k = DIM; k--; ) x_[k] += xint[k] * phi_[i];
+            x_ += xint * phi_[i];
         };
 
         error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
@@ -487,10 +477,8 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
 
     for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
         
-        double x1[nElNodes], x2[nElNodes];
-        int *connec;
-
-        connec = elementsFine_[elementsGlueZoneFine_[ielem]] -> getConnectivity();
+        VecDouble x1(nElNodes), x2(nElNodes);
+        VecInt connec = elementsFine_[elementsGlueZoneFine_[ielem]] -> getConnectivity();
         
         for (int i = 0; i < nElNodes; i++){
             VecDouble x = nodesFine_[connec[i]] -> getCoordinates();
@@ -531,7 +519,6 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setSignaledDistance(){
 
-    int *connec;
     int bconnec[nBdNodes];
     double dist;
 
@@ -546,7 +533,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
 
     for (int i = 0; i < numBoundElemFine; i++){
         if (boundaryFine_[i]->getConstrain(0) == 2){
-            connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
+            VecInt connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
             
             elementsFine_[boundaryFine_[i] -> getElement()] -> getBoundaryNodes(bconnec);
             
@@ -578,7 +565,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
         
         for (int i = 0; i < numBoundElemFine; i++){
             if (boundaryFine_[i] -> getConstrain(0) == 2){
-                connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
+                VecInt connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
                 
                 elementsFine_[boundaryFine_[i] -> getElement()] -> getBoundaryNodes(bconnec);
 
@@ -655,7 +642,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
         for (int i = 0; i < numBoundElemFine; i++){
             if (boundaryFine_[i] -> getConstrain(0) == 2){
 
-                connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
+                VecInt connec = elementsFine_[boundaryFine_[i] -> getElement()] -> getConnectivity();
                 elementsFine_[boundaryFine_[i] -> getElement()] -> getBoundaryNodes(bconnec);
 
                 for (int iSeg = 0; iSeg < DEG ; ++iSeg){
@@ -730,8 +717,6 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setCouplingZone(){
 
-    int *connec;
-
     // double dist;
     int flag;
     int nodesCZ[numNodesFine];
@@ -751,7 +736,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     //Defines a criterion to select the elements that are in the glue zone
     for (int jel = 0; jel < numElemFine; jel++){
         
-        connec = elementsFine_[jel] -> getConnectivity();
+        VecInt connec = elementsFine_[jel] -> getConnectivity();
         flag = 0;
 
         for (int ino = 0; ino < nElNodes; ino++){
@@ -776,7 +761,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     //Defines which nodes are in the glue zone
     numElemGlueZoneFine = elementsGlueZoneFine_.size();
     for (int i = 0; i < numElemGlueZoneFine; i++){
-        connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
+        VecInt connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
 
         for (int ino = 0; ino < nElNodes; ino++) nodesCZ[connec[ino]]++;
     };
@@ -803,10 +788,9 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     };
 
     for (int i = 0; i < numElemGlueZoneFine; i++){
-        int *connecAux;
-        connecAux = new int[nElNodes];
+        VecInt connecAux(nElNodes);
 
-        connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
+        VecInt connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
         
         for (int ino = 0; ino < numNodesGlueZoneFine; ino++)
             for (int k = 0; k < nElNodes; k++)
@@ -827,7 +811,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     //Defines a criterion to select the elements that are in the glue zone
     for (int jel = 0; jel < numElemCoarse; jel++){
         
-        connec = elementsCoarse_[jel] -> getConnectivity();
+        VecInt connec = elementsCoarse_[jel] -> getConnectivity();
         flag = 0;
 
         for (int ino = 0; ino < nElNodes; ino++){
@@ -854,7 +838,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
             glueZoneCoarse_.push_back(el);
             
             for (int i=0; i < elementsCoarse_[jel] -> getNumberOfIntegrationPoints(); i++){
-                double* x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);
+                VecDouble x = elementsCoarse_[jel] -> getIntegPointCoordinatesValue(i);
 
                 if ((x[0] < lim1) || (x[0] > lim2) || 
                     (x[1] < lim1) || (x[1] > lim2)){
@@ -874,8 +858,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     //Defines which nodes are in the glue zone
     numElemGlueZoneCoarse = elementsGlueZoneCoarse_.size();
     for (int i = 0; i < numElemGlueZoneCoarse; i++){
-        connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> 
-            getConnectivity();
+        VecInt connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> getConnectivity();
 
         for (int ino = 0; ino < nElNodes; ino++){
             nodesCZ2[connec[ino]] += 1;
@@ -899,10 +882,9 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     };
 
     for (int i = 0; i < numElemGlueZoneCoarse; i++){
-        int *connecAux;
-        connecAux = new int[nElNodes];
+        VecInt connecAux(nElNodes);
 
-        connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> getConnectivity();
+        VecInt connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> getConnectivity();
         
         for (int ino = 0; ino < numNodesGlueZoneCoarse; ino++)
             for (int k = 0; k < nElNodes; k++)
@@ -1028,7 +1010,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
         pointVector[3*i+2] = 0.0;
     }
     for (int iElem = 0; iElem < numElemCoarse; iElem++){
-        int* con = elementsCoarse_[iElem] -> getConnectivity();
+        VecInt con = elementsCoarse_[iElem] -> getConnectivity();
 
         for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
     }
@@ -1380,7 +1362,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     for (int iElem = 0; iElem < numElemFine; iElem++){
-        int* con = elementsFine_[iElem] -> getConnectivity();
+        VecInt con = elementsFine_[iElem] -> getConnectivity();
         for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
     }
 
@@ -1903,7 +1885,7 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     // std::cout << "AA5 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
     for (int i = 0; i < numElemCoarse; i++){
-        int* connec = elementsCoarse_[i] -> getConnectivity();
+        VecInt connec = elementsCoarse_[i] -> getConnectivity();
         for (int j = 0; j < size; j++){
             if (((DIM+1)*connec[0] >= start[j]) && ((DIM+1)*connec[0] <= end[j])) {
                 domDecompCoarse.first[i] = j;
@@ -1912,7 +1894,7 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
         }
     }    
     for (int i = 0; i < numElemFine; i++){
-        int* connec = elementsFine_[i] -> getConnectivity();
+        VecInt connec = elementsFine_[i] -> getConnectivity();
         for (int j = 0; j < size; j++){
             if (((DIM+1)*(numNodesCoarse + connec[0]) >= start[j]) && ((DIM+1)*(numNodesCoarse + connec[0]) <= end[j])) {
                 domDecompFine.first[i] = j;
@@ -2038,7 +2020,7 @@ void Arlequin<DIM,DEG>::dragAndLiftCoefficients(std::ofstream& dragLift){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(double **matrix, double *rhs, int* connec){
+void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(double **matrix, double *rhs, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2077,7 +2059,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(double **matrix, double *rhs,
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatVecValuesFineModel(double **matrix, double *rhs, int* connec){
+void Arlequin<DIM,DEG>::setMatVecValuesFineModel(double **matrix, double *rhs, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2120,7 +2102,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(double **Ajac2, double **
                                                        double **ArlequinA1, double **ArlequinA2, 
                                                        double *Rhs2, double *rhsLagMult2,
                                                        double *localMV_vec, double *RhsArlequin2,
-                                                       int* connec, int* connecL){
+                                                       VecInt &connec, VecInt &connecL){
 
     double &alpha_f = parametersFine -> getAlphaF();
     double &alpha_m = parametersFine -> getAlphaM();
@@ -2205,7 +2187,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(double **Ajac2, double 
                                                    double **ArlequinA1, double **ArlequinA2, 
                                                    double *Rhs2, double *rhsLagMult2,
                                                    double *localMV_vec, double *RhsArlequin2,
-                                                   int* connecC, int* connecL){
+                                                   VecInt &connecC, VecInt &connecL){
 
     double &alpha_f = parametersFine -> getAlphaF();
     double &alpha_m = parametersFine -> getAlphaM();
@@ -2333,9 +2315,9 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
         int jel = elementsGlueZoneFine_[l];
         if (domDecompFine.first[jel] == rank) {
             
-            int *connecC;
-            int *connec = elementsFine_[jel] -> getConnectivity();
-            int *connecL = glueZoneFine_[l] -> getConnectivity();
+            VecInt connecC;
+            VecInt connec = elementsFine_[jel] -> getConnectivity();
+            VecInt connecL = glueZoneFine_[l] -> getConnectivity();
             //FINE MESH
             //Matrices
             double **Ajac2;
@@ -2883,7 +2865,6 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         
         for (int i = 0; i<numNodesGlueZoneFine; i++){
             double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
-            int *connecCoarse;
             
             double u = 0.;
             double v = 0.;
@@ -2892,7 +2873,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
             VecDouble xsi = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
                         
-            connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
+            VecInt connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
             
             for (int j=0; j<nElNodes; j++){
                 u_coarse[j] = nodesCoarse_[connecCoarse[j]] -> getVelocity(0);
@@ -3304,7 +3285,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
             double* xsi = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
             
-            int *connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
+            VecInt connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
             
             for (int j = 0; j < nElNodes; j++){
                 u_coarse[j] = nodesCoarse_[connecCoarse[j]] -> getVelocity(0);
@@ -3644,7 +3625,6 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
     
     for (int i = 0; i<numNodesGlueZoneFine; i++){
         double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
-        int *connecCoarse;
         
         double u = 0.;
         double v = 0.;
@@ -3653,7 +3633,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
         VecDouble xsi = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
         
-        connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
+        VecInt connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
         
         for (int j=0; j<nElNodes; j++){
             u_coarse[j] = nodesCoarse_[connecCoarse[j]] -> getVelocity(0);

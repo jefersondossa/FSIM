@@ -27,6 +27,6 @@ typedef Eigen::SparseMatrix<double> SparseMat;
 //typedef Eigen::VectorXi VecInt;
 typedef Eigen::Matrix<int64_t, Dynamic, 1> VecInt;
 typedef Eigen::VectorXd VecDouble;
-
+typedef Eigen::Matrix<bool, Dynamic, 1>  VecBool;
 
 #endif /* defined(__FemSC__DATATYPES__) */

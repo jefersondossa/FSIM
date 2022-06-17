@@ -69,8 +69,8 @@ private:
     double tempInf;        //Temperature
     double viscInf;        //Viscosity
     double ktermInf;       //Thermal condutivity
-    double velocityInf[3]; //Undisturbed velocity
-    double fieldForces[3]; //Field forces (constant)
+    VecDouble velocityInf; //Undisturbed velocity
+    VecDouble fieldForces; //Field forces (constant)
     idx_t* part_elem;      //Fluid Domain Decomposition - Elements
     idx_t* part_nodes;     //Fluid Domain Decomposition - Nodes
     int numTimeSteps;      //Number of Time Steps
@@ -226,6 +226,9 @@ void Fluid<DIM,DEG>::readInputFile(const std::string& inputFile, std::ofstream& 
 
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);      
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
+
+    velocityInf.resize(3);
+    fieldForces.resize(3);
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     //++++++++++++++++++++++++READING PROBLEM VARIABLES+++++++++++++++++++++++
@@ -482,7 +485,7 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                 Volume* object = geometry_ -> getVolume(name);
                 numElem++;
 
-                int connect[nElNodes];
+                VecInt connect(nElNodes);
 
                 if (DEG == 2){
                     connect[2] = elementNodes[2];
@@ -509,7 +512,7 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
         }
         else if (name[0] == 's') {
             if (DIM == 3){
-                int connectB[nBdNodes];
+                VecInt connectB(nBdNodes);
 
                 for (int i = 0; i < nBdNodes; i++) connectB[i] = elementNodes[i];
 
@@ -518,8 +521,8 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                 std::string::size_type sz;   // alias of size_t
                 ibound = std::stoi (&name[1],nullptr,10);
 
-                int constrain[3];
-                double value[3];
+                VecInt constrain(3);
+                VecDouble value(3);
 
                 for (int i = 0; i < dirichlet.size(); i++){
                     if (name == dirichlet[i] -> getLineName()){
@@ -629,7 +632,7 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                     Surface* object = geometry_ -> getSurface(name);
                     numElem++;
 
-                    int connect[nElNodes];
+                    VecInt connect(nElNodes);
                     for (int j = 0 ; j < nElNodes; j++) connect[j] = elementNodes[j];
 
                     Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
@@ -641,7 +644,7 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                 // }
             }
         } else if ((name[0] == 'l') && (DIM == 2)) {
-            int connectB[nBdNodes];
+            VecInt connectB(nBdNodes);
 
             for (int i = 0; i < nBdNodes; i++) connectB[i] = elementNodes[i];
             
@@ -650,8 +653,8 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
             std::string::size_type sz;   // alias of size_t
             ibound = std::stoi (&name[1],nullptr,10);
 
-            int constrain[3];
-            double value[3];
+            VecInt constrain(3);
+            VecDouble value(3);
 
             for (int i = 0; i < dirichlet.size(); i++){
                 if (name == dirichlet[i] -> getLineName()){
@@ -754,7 +757,7 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
 
         for (int j = 0; j < nodes_[iNode] -> getNumberOfElements(); j++){
             int elem = nodes_[iNode] -> getInverseIncidenceElement(j);
-            int *connec = elements_[elem-1] -> getConnectivity();
+            VecInt connec = elements_[elem-1] -> getConnectivity();
 
             // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
             bool flag = false;
@@ -802,7 +805,7 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
 
     // Update connectivity
     for (int i = 0; i < elements_.size(); i++){
-        int* connect = elements_[i] -> getConnectivity();
+        VecInt connect = elements_[i] -> getConnectivity();
 
         //Reorder connectivity
         for (int k = 0; k < nElNodes; k++) connect[k] = iperm[connect[k]];
@@ -810,7 +813,7 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
     }
     // Update boundary connectivity
     for (int ibound = 0; ibound < numBoundElems; ibound++){
-        int *connectB = boundary_[ibound] -> getBoundaryConnectivity();
+        VecInt connectB = boundary_[ibound] -> getBoundaryConnectivity();
 
         for (int k = 0; k < nBdNodes; k++) connectB[k] = iperm[connectB[k]];
         boundary_[ibound] -> setBoundaryConnectivity(connectB);
@@ -819,7 +822,7 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
     for (int i = 0; i < numNodes; i++) nodes_[i] -> clearInverseIncidence();
 
     for (int i = 0; i < elements_.size(); i++){
-        int* connect = elements_[i] -> getConnectivity();
+        VecInt connect = elements_[i] -> getConnectivity();
 
         for (int k = 0; k < nElNodes; k++) nodes_[connect[k]] -> pushInverseIncidence(i);
     }
@@ -874,7 +877,7 @@ void Fluid<DIM,DEG>::setBoundaryConstrains(){
 
     for (int ibound = 0; ibound < numBoundElems; ibound++){
         
-        int *connectB = boundary_[ibound] -> getBoundaryConnectivity();
+        VecInt connectB = boundary_[ibound] -> getBoundaryConnectivity();
 
         for (int k = 0; k < DIM; k++){
             if ((boundary_[ibound] -> getConstrain(k) == 3)){
@@ -910,11 +913,10 @@ void Fluid<DIM,DEG>::setBoundarySides(){
 
        if ((boundary_[i] -> getConstrain(0) > 0) || (boundary_[i] -> getConstrain(1) > 0)) {
             
-            int *connectB = boundary_[i] -> getBoundaryConnectivity();
+            VecInt connectB = boundary_[i] -> getBoundaryConnectivity();
 
             for (int j=0; j<numElem; j++){
-                int *connect;
-                connect = elements_[j] -> getConnectivity();
+                VecInt connect = elements_[j] -> getConnectivity();
 
                 int flag = 0;
             
@@ -983,7 +985,7 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
         elem_start[i]=nElNodes*i;
     };
     for (idx_t jel = 0; jel < numEl; jel++){
-        int *connec=elements_[jel]->getConnectivity();        
+        VecInt connec=elements_[jel]->getConnectivity();        
         
         for (idx_t i=0; i<nElNodes; i++){
         elem_connec[nElNodes*jel+i] = connec[i];
@@ -1141,7 +1143,7 @@ void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputF
     mirrorData << std::endl << "Element Connectivity" << std::endl;        
     
     for (int jel = 0; jel < numElem; jel++){
-        int *connec = elements_[jel] -> getConnectivity();       
+        VecInt connec = elements_[jel] -> getConnectivity();       
         for (int i=0; i < nElNodes; i++){
             mirrorData << connec[i] << " ";
         };
@@ -1220,7 +1222,7 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         
         for (int jel = 0; jel < numElem; jel++){               
             //Compute Element matrix
-            int *connec = elements_[jel] -> getConnectivity();
+            VecInt connec = elements_[jel] -> getConnectivity();
 
             double **matrix;
             double rhs[nLocDOF] = {};
@@ -1522,7 +1524,7 @@ int Fluid<2,2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type
             
             if (part_elem[jel] == rank) {
                 //Compute Element matrix
-                int *connec = elements_[jel] -> getConnectivity();
+                VecInt connec = elements_[jel] -> getConnectivity();
 
                 double **matrix;
                 double rhs[18] = {};

@@ -55,7 +55,7 @@ public:
 
         MatrixDouble dphiAux(nElNodes,DIM);
         
-        for(double* it = quad.begin(); it != quad.end(); it++){
+        for(int it = 0; it < quad.getNumberOfIntegrationPoints(); it++){
             //Defines the integration points adimentional coordinates
             for (int i = 0; i < DIM; i++) xsi[i] = quad.PointList(index,i);       
             //Shape functions
@@ -70,7 +70,7 @@ public:
             index++;
         }
         index = 0;
-        for(double* it = Squad.begin(); it != Squad.end(); it++){
+        for(int it = 0; it < Squad.getNumberOfIntegrationPoints(); it++){
             //Defines the integration points adimentional coordinates
             for (int i = 0; i < DIM; i++) xsi[i] = Squad.PointList(index,i);       
             //Shape functions

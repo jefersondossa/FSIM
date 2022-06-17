@@ -21,7 +21,7 @@
 template<int DIM,int DEG>
 class Glue{
 private:
-    int *connect_;           //Velocity mesh connectivity 
+    VecInt connect_;           //Velocity mesh connectivity 
     int index_;             //Element index
     int elemCorrespondent_;
  
@@ -41,11 +41,14 @@ public:
 
     /// Sets the element connectivity
     /// @param Connectivity element connectivity
-    void setConnectivity(int *connect){connect_ = connect;};
+    void setConnectivity(VecInt &connect){
+        connect_.resize(connect.size());
+        connect_ = connect;
+    };
 
     /// Gets the element connectivity
     /// @return gluing zone element connectivity
-    int *getConnectivity(){return connect_;};
+    VecInt &getConnectivity(){return connect_;};
     
 };
 

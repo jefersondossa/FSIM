@@ -14,6 +14,8 @@
 #ifndef BOUNDARY_H
 #define BOUNDARY_H
 
+#include "DataTypes.h"
+
 /// Defines the fluid boundary object and its properties
 
 template<int DIM, int DEG>
@@ -25,11 +27,16 @@ public:
     /// @param int boundary element index
     /// @param int boundary element constrain type 
     /// @param int boundary element constrain value @see Node::setConstrains()
-    Boundary(int *connec, int index, int *constrain, double *values, int gr){
+    Boundary(VecInt &connec, int index, VecInt &constrain, VecDouble &values, int gr){
         
+        connectB_.resize(nBdNodes);
+
         for(int i = 0; i<nBdNodes; i++) connectB_[i] = connec[i];
         index_ = index;
         group_ = gr;
+
+        constrainType.resize(DIM);
+        constrainValue.resize(DIM);
 
         for(int i = 0; i<DIM; i++){
             constrainType[i] = constrain[i];
@@ -50,8 +57,8 @@ public:
 
     /// Returns the boundary element connectivity
     /// @return boundary element connectivity
-    int* getBoundaryConnectivity(){return connectB_;}
-    void setBoundaryConnectivity(int* connec){for(int i = 0; i<3*(DIM-1); i++) connectB_[i] = connec[i];}
+    VecInt &getBoundaryConnectivity(){return connectB_;}
+    void setBoundaryConnectivity(VecInt &connec){for(int i = 0; i<nBdNodes; i++) connectB_[i] = connec[i];}
 
     /// Sets the boundary element group
     /// @param int boundary element group
@@ -78,11 +85,11 @@ public:
     int getElementSide(){return elementSide_;}
 
 private:
-    const int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
-    int       connectB_[3*(1-DEG)+DIM*(2*DEG-1)];//Boundary element connectivity
+    const int    nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+    VecInt       connectB_;         //Boundary element connectivity
     int          index_;            //Boundary element index
-    int          constrainType[DIM];  //Element type of constrain
-    double       constrainValue[DIM]; //Element constrain value
+    VecInt       constrainType;     //Element type of constrain
+    VecDouble    constrainValue;    //Element constrain value
     int          element_;          //Fluid Element
     int          elementSide_;      //Fluid Element Side
     int          group_;            //Element boundary group

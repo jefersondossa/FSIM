@@ -155,8 +155,8 @@ public:
 
     /// Returns the node coordinate component value
     /// @return node coordinate component value
-    double getCoordinateValue(int dir) {return coord_[dir];};
-    double getPreviousCoordinateValue(int dir) {return previousCoord_[dir];};
+    double getCoordinateValue(int dir) const {return coord_[dir];};
+    double getPreviousCoordinateValue(int dir) const {return previousCoord_[dir];};
 
     /// Returns the node initial coordinate vector
     /// @return node initial coordinate vector
@@ -206,11 +206,11 @@ public:
 
     /// Clears nodal normal vector
     /// @param VecLocD nodal normal vector
-    void clearInnerNormal(){for (int i=0; i<DIM; i++) nNodal_[i] = 0.;};
+    void clearInnerNormal() {nNodal_.setZero();};
 
     /// Gets nodal correspondence of overlapped mesh - element
     /// @return Element correspondence of overlapped mesh
-    int getNodalElemCorrespondence() {return elemCorresp;}
+    int getNodalElemCorrespondence() const {return elemCorresp;}
 
     /// Gets nodal correspondence of overlapped mesh - adim. coordinate
     /// @return Adim. coordinate correspondence of overlapped mesh
@@ -223,11 +223,11 @@ public:
 
     /// Gets the number of elements which contains the node
     /// @return int number of elements which contains the node
-    int getNumberOfElements(){return invIncidence.size();}
+    int getNumberOfElements() const {return invIncidence.size();}
 
     /// Gets an specific member of the inverse incidence
     /// @param int index @return int element of the inverse incidence
-    int getInverseIncidenceElement(int i){return invIncidence[i];}
+    int getInverseIncidenceElement(int i) const {return invIncidence[i];}
     void clearInverseIncidence(){
         invIncidence.clear();
         invIncidence.shrink_to_fit();
@@ -256,11 +256,11 @@ public:
 
     /// Returns the node velocity vector
     /// @return node velocity vector
-    double getVelocity(int dir) {return velocity_[dir];}
+    double getVelocity(int dir) const {return velocity_[dir];}
 
     /// Returns the node previous time step velocity vector
     /// @return node previous time step velocity vector
-    double getPreviousVelocity(int dir) {return previousVelocity_[dir];}
+    double getPreviousVelocity(int dir) const {return previousVelocity_[dir];}
 
     /// Sets the vorticity at the node
     /// @param double vorticity
@@ -268,7 +268,7 @@ public:
 
     /// Returns the nodal vorticity
     /// @return node vorticity
-    double getVorticity() {return vorticity_;}
+    double getVorticity() const {return vorticity_;}
 
     /// Clears the nodal vorticity
     void clearVorticity() {vorticity_ = 0.;}
@@ -299,11 +299,11 @@ public:
 
     /// Gets the acceleration vector
     /// @return acceleration vector
-    double getAcceleration(int dir) {return acceleration_[dir];}
+    double getAcceleration(int dir) const {return acceleration_[dir];}
 
     /// Gets the previous time step acceleration vector
     /// @return previous time step acceleration vector
-    double getPreviousAcceleration(int dir) {return previousAcceleration_[dir];}
+    double getPreviousAcceleration(int dir) const {return previousAcceleration_[dir];}
 
     //............................Pressure functions............................
     /// Sets the nodal pressure
@@ -316,7 +316,7 @@ public:
 
     /// Gets the nodal pressure value
     /// @return nodal pressure value
-    double getPressure() {return pressure_;};
+    double getPressure() const {return pressure_;};
 
     //.........................Mesh Velocity functions..........................
     /// Sets the node mesh velocity
@@ -336,8 +336,8 @@ public:
 
     /// Gets the node mesh velocity
     /// @param int direction @return mesh velocity component
-    double getMeshVelocity(int dir) {return meshVelocity_[dir];}
-    double getMeshAcceleration(int dir) {return meshAcceleration_[dir];}
+    double getMeshVelocity(int dir) const {return meshVelocity_[dir];}
+    double getMeshAcceleration(int dir) const {return meshAcceleration_[dir];}
 
     /// Gets the previous time step mesh velocity
     /// @param int direction @return previous time step mesh velocity component
@@ -364,11 +364,11 @@ public:
 
     /// Gets node constrain type
     /// @return constrain type
-    int getConstrains(int dir) {return constrainType[dir];}
+    int getConstrains(int dir) const {return constrainType[dir];}
 
     /// Gets node constrain value
     /// @return constrain value
-    double getConstrainValue(int dir) {return constrainValue[dir];}
+    double getConstrainValue(int dir) const {return constrainValue[dir];}
 
     /// Sets constrains for solving the mesh moving problem
     /// @param int direction 
@@ -381,11 +381,11 @@ public:
 
     /// Gets constrains of mesh moving problem
     /// @return constrain type
-    int getConstrainsLaplace(int dir) {return constrainTypeLaplace[dir];}
+    int getConstrainsLaplace(int dir) const {return constrainTypeLaplace[dir];}
 
     /// Gets constrain value of mesh moving problem
     /// return constrain value
-    double getConstrainValueLaplace(int dir){return constrainValueLaplace[dir];}
+    double getConstrainValueLaplace(int dir) const {return constrainValueLaplace[dir];}
 
     //............................Arlequin functions............................
     /// Sets Lagrange Multiplier value
@@ -400,7 +400,7 @@ public:
 
     /// Gets Lagrange Multiplier component value
     /// @param int direction @return component value
-    double getLagrangeMultiplier(int dir) {return lagMultiplier_[dir];};
+    double getLagrangeMultiplier(int dir) const {return lagMultiplier_[dir];};
 
     /// Sets the nodal energy weight function value
     /// @param double weight function value
@@ -408,8 +408,8 @@ public:
 
     /// Gets the nodal energy weight function value
     /// @return weight function value
-    double getWeightFunction() {return weightFunction_;};
-    double getPreviousWeightFunction() {return previousWeightFunction_;};
+    double getWeightFunction() const {return weightFunction_;};
+    double getPreviousWeightFunction() const {return previousWeightFunction_;};
 
     /// Sets the interpolated Arlequin pressure 
     /// @param double interpolated pressure value
@@ -417,7 +417,7 @@ public:
 
     /// Gets interpolated Arlequin pressure
     /// @return interpolated Arlequin pressure
-    double getPressureArlequin() {return presArlequin_;};
+    double getPressureArlequin() const {return presArlequin_;};
 
     /// Sets the interpolated Arlequin velocity
     /// @param int direction @param double interpolated velocity component value
@@ -425,7 +425,7 @@ public:
 
     /// Gets the interpolated Arlequin velocity component
     /// @param int direction @return interpolated Arlequin velocity component
-    double getVelocityArlequin(int dir) {return velArlequin_[dir];};
+    double getVelocityArlequin(int dir) const {return velArlequin_[dir];};
 
     //.......................Signaled distance functions........................
     /// Sets the Signaled distance function value
@@ -434,7 +434,7 @@ public:
 
     /// Gets the Signaled distance function value
     /// @return signaled distance value
-    double getDistFunction(){return distGlueZone;};
+    double getDistFunction() const {return distGlueZone;};
 
 };
 
