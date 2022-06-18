@@ -1375,7 +1375,7 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
 //----------------------ELEMENT DIFFUSION/VISCOSITY MATRIX----------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, double **jacobianNRMatrix){
+void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix){
 
     double &dTime_ = parameters.getTimeStep();
     double &visc_ = parameters.getViscosity();
@@ -1433,7 +1433,7 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
 
             for (int k = DIM; k--;  ){
 
-                jacobianNRMatrix[DIM*i+k][DIM*j+k] += (M + C) * WJ;
+                jacobianNRMatrix(DIM*i+k,DIM*j+k) += (M + C) * WJ;
                     
                 double conv = 0.;
                 for (int m = DIM; m--; ) conv += una_[m]*duna_dx(k,m);
@@ -1452,7 +1452,7 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
                     //LSIC
                     double KLS = dphi_dx(i,k) * dphi_dx(j,l) * tLSIC_ * DAGDT;
 
-                    jacobianNRMatrix[DIM*i+k][DIM*j+l] += (K + KLS + Cuu) * WJ;
+                    jacobianNRMatrix(DIM*i+k,DIM*j+l) += (K + KLS + Cuu) * WJ;
                 }
 
                 //SINAL DA PARCELA QUE MULTIPLICA O TSUPG ESTA COM SINAL TROCADO NA FORMULAÇAO DO TEZDUYAR
@@ -1461,8 +1461,8 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
                 //Divergent operator
                 double Q = dphi_dx(i,k) * shapeFj * AGDT;
 
-                jacobianNRMatrix[DIM*i+k][DIM*(nElNodes)+j] += Q_SUPG * WJ;
-                jacobianNRMatrix[DIM*(nElNodes)+j][DIM*i+k] += Q * WJ;
+                jacobianNRMatrix(DIM*i+k,DIM*(nElNodes)+j) += Q_SUPG * WJ;
+                jacobianNRMatrix(DIM*(nElNodes)+j,DIM*i+k) += Q * WJ;
 
 
                 //PSPG stabilization
@@ -1471,12 +1471,12 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
                 double Guu = 0.;
                 // for (int m = DIM; m--; ) Guu += dphi_dx[m][i] * duna_dx[m][k] * shapeFj * tPSPG_ * AGDT;
 
-                jacobianNRMatrix[DIM*(nElNodes)+j][DIM*i+k] += (H + G + Guu) * WJ;
+                jacobianNRMatrix(DIM*(nElNodes)+j,DIM*i+k) += (H + G + Guu) * WJ;
             }
 
             double Q = 0.;
             for (int m = DIM; m--; ) Q += dphi_dx(i,m) * dphi_dx(j,m) * tPSPG_ / dens_;
-            jacobianNRMatrix[DIM*(nElNodes)+j][DIM*(nElNodes)+i] += Q * WJ;
+            jacobianNRMatrix(DIM*(nElNodes)+j,DIM*(nElNodes)+i) += Q * WJ;
         };
     };
 
@@ -1487,17 +1487,17 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::setBoundaryConditions(double **jacobianNRMatrix, double *rhsVector){
+void Element<DIM,DEG>::setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     for (int i = nElNodes; i--; ){
         for (int k = DIM; k--; ){
             if (((*nodes_)[connect_[i]] -> getConstrains(k) == 1) ||
                 ((*nodes_)[connect_[i]] -> getConstrains(k) == 3))  {
                 for (int j = nLocDOF; j--; ){
-                    jacobianNRMatrix[DIM*i+k][j] = 0.;
-                    jacobianNRMatrix[j][DIM*i+k] = 0.;
+                    jacobianNRMatrix(DIM*i+k,j) = 0.;
+                    jacobianNRMatrix(j,DIM*i+k) = 0.;
                 };
-                jacobianNRMatrix[DIM*i+k][DIM*i+k] = 1.;
+                jacobianNRMatrix(DIM*i+k,DIM*i+k) = 1.;
                 rhsVector[DIM*i+k] = 0.;
             };
         }
@@ -1567,7 +1567,7 @@ void Element<DIM,DEG>::setBoundaryConditionsLagrangeMultipliers(double** jacobia
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, double *rhsVector){
+void Element<DIM,DEG>::getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector){
 
     double &dTime_ = parameters.getTimeStep();
     double &visc_ = parameters.getViscosity();
@@ -1716,7 +1716,7 @@ void Element<DIM,DEG>::getElemLaplMatrix(double &weight_, double &djac_, MatrixD
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getTransientNavierStokes(double **jacobianNRMatrix, double *rhsVector){
+void Element<DIM,DEG>::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
     MatrixDouble dphi_dx(nElNodes,DIM);

@@ -16,16 +16,20 @@
 
 #include "Element.h"
 #include "Boundary.h"
-#include "mesh_interface/fluidDomain.h"
+#include "fluidDomain.h"
 
 #include<cstdlib>
 #include<fstream>
 #include<iostream>
+#include "hdf5.h"
 
 
 // PETSc libraries
 #include <metis.h>
 #include <petscksp.h> 
+
+
+
 
 /// Mounts the incompressible flow problem
 
@@ -210,6 +214,16 @@ public:
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
     std::vector<Elements *> getElements(){return elements_;}
+
+    std::vector<std::string> split2(std::string str, std::string delim)
+{
+	std::istringstream is(str);
+	std::vector<std::string> values;
+	std::string token;
+	while (getline(is, token, ' '))
+		values.push_back(token);
+	return values;
+}
 };
 
 //------------------------------------------------------------------------------
@@ -1526,10 +1540,10 @@ int Fluid<2,2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type
                 //Compute Element matrix
                 VecInt connec = elements_[jel] -> getConnectivity();
 
-                double **matrix;
-                double rhs[18] = {};
-                matrix = new double*[18]();
-                for (int i = 0; i < 18; i++) matrix[i] = new double[18]();
+                MatrixDouble matrix(18,18);
+                matrix.setZero();
+                VecDouble rhs(18);
+                rhs.setZero();
 
                 elements_[jel] -> getTransientNavierStokes(matrix,rhs);
                 
@@ -1539,40 +1553,40 @@ int Fluid<2,2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type
                     for (int j=0; j<6; j++){
                         int dof_i = 2 * connec[i];
                         int dof_j = 2 * connec[j];
-                        MatSetValues(A, 1, &dof_i,1, &dof_j, &matrix[2*i  ][2*j  ], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i,1, &dof_j, &matrix(2*i  ,2*j  ), ADD_VALUES);
                         
                         dof_i = 2 * connec[i] + 1;
                         dof_j = 2 * connec[j];
-                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix[2*i+1][2*j  ], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i+1,2*j  ), ADD_VALUES);
                         
                         dof_i = 2 * connec[i];
                         dof_j = 2 * connec[j] + 1;
-                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix[2*i  ][2*j+1], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i  ,2*j+1), ADD_VALUES);
 
                         dof_i = 2 * connec[i] + 1;
                         dof_j = 2 * connec[j] + 1;
-                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix[2*i+1][2*j+1], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i+1,2*j+1), ADD_VALUES);
                         
                         //Matrix Q and Qt
                         dof_i = 2 * connec[i];
                         dof_j = 2 * numNodes + connec[j];
-                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix[2*i  ][12+j], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i  ,12+j), ADD_VALUES);
                     
                         dof_i = 2 * connec[i];
                         dof_j = 2 * numNodes + connec[j];
-                        MatSetValues(A, 1, &dof_j, 1, &dof_i, &matrix[12+j][2*i  ], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_j, 1, &dof_i, &matrix(12+j,2*i  ), ADD_VALUES);
                         
                         dof_i = 2 * connec[i] + 1;
                         dof_j = 2 * numNodes + connec[j];
-                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix[2*i+1][12+j], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i+1,12+j), ADD_VALUES);
                         
                         dof_i = 2 * connec[i] + 1;
                         dof_j = 2 * numNodes + connec[j];
-                        MatSetValues(A, 1, &dof_j, 1, &dof_i, &matrix[12+j][2*i+1], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_j, 1, &dof_i, &matrix(12+j,2*i+1), ADD_VALUES);
                         
                         dof_i = 2 * numNodes + connec[i];
                         dof_j = 2 * numNodes + connec[j];
-                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix[12+i][12+j], ADD_VALUES);
+                        MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(12+i,12+j), ADD_VALUES);
                     };
                     
                     //Rhs vector
@@ -1585,8 +1599,6 @@ int Fluid<2,2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type
                     dof_i = 2 * numNodes + connec[i];
                     VecSetValues(b, 1, &dof_i, &rhs[12+i], ADD_VALUES);
                 };
-                for (int i = 0; i < 18; ++i) delete [] matrix[i];
-                delete [] matrix;
             };
         }; //Elements
         
@@ -1723,5 +1735,7 @@ int Fluid<2,2>::solveFSIFluid(int iterNumber, double tolerance, int problem_type
     
     return 0;
 };
+
+
 
 #endif

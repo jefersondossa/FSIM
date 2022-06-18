@@ -367,20 +367,20 @@ public:
     //.......................Element vectors and matrices.......................
     /// Compute and store the element matrix for the incompressible flow problem
     /// @param int integration point index
-    void getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, double **jacobianNRMatrix);
+    void getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
     void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, double** jacobianNRMatrix);
 
     /// Sets the boundary conditions for the incompressible flow problem
-    void setBoundaryConditions(double **jacobianNRMatrix, double *rhsVector);
+    void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
     void setBoundaryConditionsLaplace(double** jacobianNRMatrix, double* rhsVector);
 
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
-    void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, double *rhsVector);
+    void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
     void getResidualVectorLaplace(double *rhsVector);
@@ -418,7 +418,7 @@ public:
 
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
-    void getTransientNavierStokes(double **jacobianNRMatrix, double *rhsVector);
+    void getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)

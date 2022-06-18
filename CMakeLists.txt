@@ -42,12 +42,13 @@ enable_eigen()
 # add_subdirectory(mesh_interface)
 add_subdirectory(headers)
 add_subdirectory(sources)
+add_subdirectory(mesh_interface)
 # add_subdirectory(examples)
 # add_subdirectory(main)
 
 #Specify where the headers files must be found
 include_directories(
-    # "${PROJECT_SOURCE_DIR}/mesh_interface"
+    "${PROJECT_SOURCE_DIR}/mesh_interface"
 	"${PROJECT_SOURCE_DIR}/headers"
 	"${PROJECT_SOURCE_DIR}/sources"
 )
@@ -60,12 +61,12 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${HEADERS} ${MESH_INT} ${SOURCES})
-target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen)
+add_library(fsarl_library ${HEADERS} ${SOURCES} ${MESH_INT} ${MESH_INT_SRC})
+set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
+target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
 
 add_executable(f main.cpp )
-
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f fsarl_library ${FOR_FILES} Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
+target_link_libraries (f fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
 
 

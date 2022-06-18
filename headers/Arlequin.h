@@ -169,8 +169,8 @@ public:
                                   std::vector<Elements *> elements,
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
-    void setMatVecValuesFineModel(double **matrix, double *rhs, VecInt &connec);
-    void setMatVecValuesCoarseModel(double **matrix, double *rhs, VecInt &connec);
+    void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesLagMultFineFine(double **Ajac2, double **localMV_mat, 
                                         double **ArlequinA1, double **ArlequinA2, 
                                         double *Rhs2, double *rhsLagMult2,
@@ -2020,7 +2020,7 @@ void Arlequin<DIM,DEG>::dragAndLiftCoefficients(std::ofstream& dragLift){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(double **matrix, double *rhs, VecInt &connec){
+void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2030,18 +2030,18 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(double **matrix, double *rhs,
                     //Matrix K and C            
                     int dof_i = (DIM+1) * connec[i] + k;
                     int dof_j = (DIM+1) * connec[j] + l;
-                    MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[DIM*i+k][DIM*j+l],ADD_VALUES);
+                    MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*j+l),ADD_VALUES);
                 }
                 //Matrix G and Gt
                 int dof_i = (DIM+1) * connec[i] + k;
                 int dof_j = (DIM+1) * connec[j] + DIM;
-                MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[DIM*i+k][DIM*nElNodes+j],ADD_VALUES);
-                MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[DIM*nElNodes+j][DIM*i+k],ADD_VALUES);
+                MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*nElNodes+j),ADD_VALUES);
+                MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+j,DIM*i+k),ADD_VALUES);
             }
             // Matrix Q
             int dof_i = (DIM+1) * connec[i] + DIM;
             int dof_j = (DIM+1) * connec[j] + DIM;
-            MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[DIM*nElNodes+i][DIM*nElNodes+j],ADD_VALUES);
+            MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+i,DIM*nElNodes+j),ADD_VALUES);
         };
         for (int k = 0; k < DIM; k++){          
             //Rhs vector
@@ -2059,7 +2059,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(double **matrix, double *rhs,
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatVecValuesFineModel(double **matrix, double *rhs, VecInt &connec){
+void Arlequin<DIM,DEG>::setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2069,18 +2069,18 @@ void Arlequin<DIM,DEG>::setMatVecValuesFineModel(double **matrix, double *rhs, V
                     //Matrix K and C
                     int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
                     int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + l;
-                    MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[DIM*i+k][DIM*j+l],ADD_VALUES);
+                    MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*j+l),ADD_VALUES);
                 }          
                 //Matrix G and Gt
                 int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
                 int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
-                MatSetValues(A,1,&dof_i,1,&dof_j,&matrix[DIM*i+k][DIM*nElNodes+j],ADD_VALUES);
-                MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[DIM*nElNodes+j][DIM*i+k],ADD_VALUES);
+                MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*nElNodes+j),ADD_VALUES);
+                MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+j,DIM*i+k),ADD_VALUES);
             }
             //Matrix Q
             int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
             int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
-            MatSetValues(A,1,&dof_j,1,&dof_i,&matrix[DIM*nElNodes+i][DIM*nElNodes+j],ADD_VALUES);
+            MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+i,DIM*nElNodes+j),ADD_VALUES);
         };
         for (int k = 0; k < DIM; k++){  
             ///Rhs vector
@@ -2277,17 +2277,15 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
     for (int jel = 0; jel < numElemCoarse; jel++){   
         if (domDecompCoarse.first[jel] == rank) {
             //Compute Element matrix
-            double **matrix;
-            double rhs[nLocDOF] = {};
-            matrix = new double*[nLocDOF]();
-            for (int i = 0; i < nLocDOF; i++) matrix[i] = new double[nLocDOF]();
+            MatrixDouble matrix(nLocDOF,nLocDOF);
+            matrix.setZero();
+            VecDouble rhs(nLocDOF);
+            rhs.setZero();
 
             elementsCoarse_[jel] -> getTransientNavierStokes(matrix,rhs);
 
             setMatVecValuesCoarseModel(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
-            
-            for (int i = 0; i < nLocDOF; ++i) delete [] matrix[i];
-            delete [] matrix;
+
         };
     };
 
@@ -2295,17 +2293,15 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
     for (int jel = 0; jel < numElemFine; jel++){           
         if (domDecompFine.first[jel] == rank) {
             //Compute Element matrix                    
-            double **matrix;
-            double rhs[nLocDOF] = {};
-            matrix = new double*[nLocDOF]();
-            for (int i = 0; i < nLocDOF; i++) matrix[i] = new double[nLocDOF]();
+            MatrixDouble matrix(nLocDOF,nLocDOF);
+            matrix.setZero();
+            VecDouble rhs(nLocDOF);
+            rhs.setZero();
 
             elementsFine_[jel] -> getTransientNavierStokes(matrix,rhs);
             
             setMatVecValuesFineModel(matrix,rhs,elementsFine_[jel] -> getConnectivity());
 
-            for (int i = 0; i < nLocDOF; ++i) delete [] matrix[i];
-            delete [] matrix;
         };                
     };
       
@@ -2980,7 +2976,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         
         //Updates velocity and acceleration
         for (int i = 0; i < numNodesCoarse; i++){
-            double accel[DIM], u[DIM], uprev[DIM];
+            VecDouble accel(DIM), u(DIM), uprev(DIM);
             
             //Compute acceleration
             u[0] = nodesCoarse_[i] -> getVelocity(0);
@@ -3004,7 +3000,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         // double w = 2 * pi * f;
 
         for (int i = 0; i < numNodesFine; i++){
-            double accel[2], u[2], uprev[2];
+            VecDouble accel(DIM), u(DIM), uprev(DIM);
             
             //Compute acceleration
             u[0] = nodesFine_[i] -> getVelocity(0);
@@ -3024,9 +3020,9 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
 
 
 
-            double xn[2];
-            double *xi = nodesFine_[i] -> getInitialCoordinates();       
-            double *x = nodesFine_[i] -> getCoordinates();       
+            VecDouble xn(DIM);
+            VecDouble xi = nodesFine_[i] -> getInitialCoordinates();       
+            VecDouble x = nodesFine_[i] -> getCoordinates();       
     
             double a = -20 * pi / 180 + 10 * pi / 180 * std::cos(2.*pi*iTimeStep*dTime);// + 10 * pi / 180;
 
@@ -3267,7 +3263,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         //Compute real velocity
         
         QuadShapeFunction<DIM,DEG> shapeQuad;
-        double phi_[nElNodes] = {};
+        VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
             nodesFine_[i] -> setVelocityArlequin(0,nodesFine_[i] -> getVelocity(0));
@@ -3283,7 +3279,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             double p = 0.;
             
             int elCoarse = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
-            double* xsi = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
+            VecDouble xsi = nodesFine_[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
             
             VecInt connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
             
@@ -3673,6 +3669,5 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
     return 0;
 
 };
-
 
 #endif

@@ -189,25 +189,23 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
 
         VecInt connec;
         QuadShapeFunction<DIM,DEG> shapeQuad;
-        double phi_[nElNodes] = {};
+        VecDouble phi_(nElNodes);
         
-        double **ainv;
-        ainv = new double*[DIM];
-        for (int i = DIM; i--; ) ainv[i] = new double[DIM];
+        MatrixDouble ainv(DIM,DIM);
 
         double xsiCC[3];
         // std::pair<double*,double*> XK;
         int elemC;
 
-        double* x = nodesSolid_[iSol][isolid] -> getCoordinates();
+        VecDouble x = nodesSolid_[iSol][isolid] -> getCoordinates();
         
         elemC = 150000;
-        double xsiC[DIM];
+        VecDouble xsiC(DIM);
         for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
         VecDouble xsi(DIM);
-        double x_[DIM];
-        double deltaX[DIM];
-        double deltaXsi[DIM];
+        VecDouble x_(DIM);
+        VecDouble deltaX(DIM);
+        VecDouble deltaXsi(DIM);
 
         nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
@@ -231,16 +229,14 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
                 xsiCC[1] = 1.e10;
                 xsiCC[2] = 1.e10;
                 
-                for (int k = 0; k<DIM; k++){
-                    xsi[k] = 1. / 3.;
-                    x_[k] = 0.;
-                }
+                x_.setZero();
+                xsi.fill(1./3.);
                 
                 shapeQuad.evaluate(xsi,phi_);
                 
                 for (int i = 0; i < nElNodes; i++){
-                    double* xint = nodesFluid_[connec[i]] -> getCoordinates();
-                    for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];
+                    VecDouble xint = nodesFluid_[connec[i]] -> getCoordinates();
+                    x_ += xint * phi_[i];
                 };
                 
                 double error = 1.e6;                
@@ -249,11 +245,9 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
                 while ((error > 1.e-8) && (iterations < 4)) {
                     
                     iterations++;
-                    
-                    for (int k = 0; k<DIM; k++){
-                        deltaX[k] = x[k] - x_[k];                    
-                        deltaXsi[k] = 0.;
-                    };
+                
+                    deltaX = x - x_;                    
+                    deltaXsi.setZero();
                     
                     double djac_ = 0.;
                     elementsFluid_[jel] -> getJacobianMatrix(xsi,ainv,djac_);
@@ -262,18 +256,16 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
 
                     for (int i = 0; i < DIM; i++)
                         for (int j = 0; j < DIM; j++)
-                            deltaXsi[i] += ainv[j][i] * deltaX[j];
+                            deltaXsi[i] += ainv(j,i) * deltaX[j];
 
-                    for (int k = 0; k<DIM; k++){
-                        xsi[k] += deltaXsi[k];
-                        x_[k] = 0.;
-                    }
+                    xsi += deltaXsi;
+                    x_.setZero();
                     
                     shapeQuad.evaluate(xsi,phi_);
                     
                     for (int i=0; i<nElNodes; i++){
-                        double* xint = nodesFluid_[connec[i]] -> getCoordinates();
-                        for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];  
+                        VecDouble xint = nodesFluid_[connec[i]] -> getCoordinates();
+                        x_ += xint * phi_[i];  
                     }; 
 
                     error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
@@ -300,10 +292,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
         // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
         // std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
-    
 
-        for (int i = DIM; i--; ) delete [] ainv[i];
-        delete [] ainv;
 
     };
 
@@ -446,10 +435,10 @@ void FSInteraction<DIM,DEG>::searchFluidNodeCorrespondence(int interface){
             VecInt connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
             
             for (int inode = 0; inode < nBdNodes; inode++){
-                double* x = nodesFluid_[connec[inode]] -> getCoordinates();
+                VecDouble x = nodesFluid_[connec[inode]] -> getCoordinates();
                 
                 searchcorrespondencefluid_(&x[0], &x[1], &elemC, &xsiC);
-                double xsi[DIM] = {};
+                VecDouble xsi(DIM);
                 xsi[0] = xsiC;
 
                 // std::cout << "asdasd " << elemC << " " << xsiC << std::endl; 
@@ -503,16 +492,16 @@ template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::setElementBoxes() {
     
     VecInt connec;
-    double xk[DIM], Xk[DIM];
+    VecDouble xk(DIM), Xk(DIM);
     double dCk[3], dck[3];
 
     //Compute element boxes for coarse model
     //Only function for straight elements
     for (int jel = 0; jel < numElemFluid; jel++){
         connec = elementsFluid_[jel] -> getConnectivity();
-        double* x1 = nodesFluid_[connec[0]] -> getCoordinates();
-        double* x2 = nodesFluid_[connec[1]] -> getCoordinates();
-        double* x3 = nodesFluid_[connec[2]] -> getCoordinates();      
+        VecDouble x1 = nodesFluid_[connec[0]] -> getCoordinates();
+        VecDouble x2 = nodesFluid_[connec[1]] -> getCoordinates();
+        VecDouble x3 = nodesFluid_[connec[2]] -> getCoordinates();      
 
         xk[0] = std::min(x1[0],std::min(x2[0], x3[0]));
         xk[1] = std::min(x1[1],std::min(x2[1], x3[1]));
@@ -618,7 +607,7 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
         int index = 0;
         
         for (int i=0; i<numNodesSolid; i++){
-            double x[2];
+            VecDouble x(DIM);
             int inode = i+1;
             getsolidposition_(&inode,&x[0],&x[1]);
             
@@ -842,10 +831,10 @@ void FSInteraction<DIM,DEG>::updateFluidMesh(){
               
                 for (int k = 0; k < nBdNodes; k++){
 
-                    double x[2];
+                    VecDouble x(DIM);
                     
                     int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
-                    double* xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
+                    VecDouble xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
                     
                     
                     if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
@@ -868,10 +857,10 @@ void FSInteraction<DIM,DEG>::updateFluidMesh(){
     fluidModel.solveSteadyLaplaceProblem(5,1.e-6);
    
     for (int i = 0; i < numNodesFluid; i++){
-        double u[2], up[2];
+        VecDouble u(DIM), up(DIM);
             
-        double *x = nodesFluid_[i] -> getCoordinates();
-        double *xp = nodesFluid_[i] -> getPreviousCoordinates();
+        VecDouble x = nodesFluid_[i] -> getCoordinates();
+        VecDouble xp = nodesFluid_[i] -> getPreviousCoordinates();
         up[0] = nodesFluid_[i] -> getPreviousMeshVelocity(0);
         up[1] = nodesFluid_[i] -> getPreviousMeshVelocity(1);
         
@@ -973,12 +962,12 @@ void FSInteraction<DIM,DEG>::transferSolidVelocity(){
                 
                 VecInt connec = boundaryFluid_[ibound] -> getBoundaryConnectivity();
               
-                double u[DIM];
+                VecDouble u(DIM);
 
                 for (int k = 0; k < nBdNodes; k++){
                     
                     int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
-                    double* xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
+                    VecDouble xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
                     
                     
                     if (rank == 0) 
@@ -1057,9 +1046,9 @@ void FSInteraction<DIM,DEG>::transferFluidLoad(){
         for (int isolid = 0; isolid < numNodesSolid; isolid++){
             
             int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
-            double* xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
+            VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
 
-            double load[DIM] = {};
+            VecDouble load(DIM);
             elementsFluid_[ielem] -> getBoundaryLoad(xsi,load);
 
             int inode = isolid+1;
@@ -1170,7 +1159,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblem(int numTimeSteps){
         // //SOMENTE PARA EXEMPLO DA CAVIDADE - FIM
 
         for (int i = 0; i < numNodesFluid; i++){
-            double accel[2], u[2], uprev[2];
+            VecDouble accel(DIM), u(DIM), uprev(DIM);
             //Compute acceleration
             u[0] = nodesFluid_[i] -> getVelocity(0);
             u[1] = nodesFluid_[i] -> getVelocity(1);
@@ -1190,7 +1179,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblem(int numTimeSteps){
         if (rank == 0) updateqsrs_();
 
         for (int i = 0; i < numNodesFluid; i++){
-            double* x = nodesFluid_[i] -> getCoordinates();
+            VecDouble x = nodesFluid_[i] -> getCoordinates();
             nodesFluid_[i] -> setPreviousCoordinates(0,x[0]);
             nodesFluid_[i] -> setPreviousCoordinates(1,x[1]);
         };
