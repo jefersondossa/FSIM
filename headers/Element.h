@@ -370,20 +370,20 @@ public:
     void getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
-    void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, double** jacobianNRMatrix);
+    void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
-    void setBoundaryConditionsLaplace(double** jacobianNRMatrix, double* rhsVector);
+    void setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
     void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
-    void getResidualVectorLaplace(double *rhsVector);
+    void getResidualVectorLaplace(VecDouble &rhsVector);
 
     /// Apply the boundary conditions and returns the matrix and residual vector
     /// for the Lagrange multiplier operator matrix, used when computing the 
@@ -401,20 +401,20 @@ public:
 
     /// Compute and store the Lagrange multiplier operator when integrating 
     /// the same mesh portion
-    void getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double *lagrMultVector, double *rhsVector);
-    void getLagrangeMultipliersSUPG_PSPG_SameMesh(double **jacobianNRMatrix, double *rhsVector);
-    void getLagrangeMultipliersArlequinSameMesh(double **arlequinStab, double **laplMatrix, double *arlequinStabVector);
+    void getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
+    void getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     /// Compute and store the Lagrange multiplier operator when integrationg
     /// the different mesh portion
     /// @param int element of the coarse mesh (used to verify which integration
     /// point belongs to the coarse mesh element)
-    void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
-                                             double* velxPrev, double* velyPrev, double **lagrMultMatrix, double *rhsVectorLM, double *rhsVector);
-    void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
-                                                       double **jacobianNRMatrix, double *rhsVector);
-    void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
-                                                     double **arlequinStab, double **laplMatrix, double *arlequinStabVector);
+    void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                             VecDouble &velxPrev, VecDouble &velyPrev, MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector);
+    void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &ely,
+                                                       MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                     MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
@@ -422,8 +422,8 @@ public:
 
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)
-    void getSteadyLaplace(double** jacobianNRMatrix, double* rhsVector);
-    void getSteadyLaplace2(double** jacobianNRMatrix, double* rhsVector);
+    void getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void getSteadyLaplace2(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
 };
 

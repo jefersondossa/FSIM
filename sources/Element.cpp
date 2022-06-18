@@ -1510,16 +1510,16 @@ void Element<DIM,DEG>::setBoundaryConditions(MatrixDouble &jacobianNRMatrix, Vec
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::setBoundaryConditionsLaplace(double **jacobianNRMatrix, double *rhsVector){
+void Element<DIM,DEG>::setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     for (int i = nElNodes; i--; ){
         for (int k = DIM; k--; ){
             if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(k) == 1) {
                 for (int j = nLocDOF; j--; ){
-                    jacobianNRMatrix[DIM*i+k][j] = 0.;
-                    jacobianNRMatrix[j][DIM*i+k] = 0.;
+                    jacobianNRMatrix(DIM*i+k,j) = 0.;
+                    jacobianNRMatrix(j,DIM*i+k) = 0.;
                 };
-                jacobianNRMatrix[DIM*i+k][DIM*i+k] = 1.;
+                jacobianNRMatrix(DIM*i+k,DIM*i+k) = 1.;
                 rhsVector[DIM*i+k] = 0.;
             };
         }
@@ -1662,9 +1662,9 @@ void Element<DIM,DEG>::getResidualVector(int &index, MatrixDouble &dphi_dx, doub
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getResidualVectorLaplace(double *rhsVector){
+void Element<DIM,DEG>::getResidualVectorLaplace(VecDouble &rhsVector){
     
-    double U_[nLocDOF] = {};
+    VecDouble U_(nLocDOF);
 
     for (int i = 0; i < nElNodes; i++){
         VecDouble x_up = (*nodes_)[connect_[i]] -> getUpdatedCoordinates();        
@@ -1681,7 +1681,7 @@ void Element<DIM,DEG>::getResidualVectorLaplace(double *rhsVector){
 //---------------------------ELEMENT LAPLACIAN MATRIX---------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, double **jacobianNRMatrix){
+void Element<DIM,DEG>::getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix){
 
     double WJM = weight_ * djac_ * meshMovingParameter;
     for (int i = 0; i < nElNodes; i++){
@@ -1693,7 +1693,7 @@ void Element<DIM,DEG>::getElemLaplMatrix(double &weight_, double &djac_, MatrixD
                     double K = 0.;
                     if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m);
                     
-                    jacobianNRMatrix[DIM*i+k][DIM*j+l] += K * WJM;
+                    jacobianNRMatrix(DIM*i+k,DIM*j+l) += K * WJM;
                 }
             }
         }
@@ -1767,7 +1767,7 @@ void Element<DIM,DEG>::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, 
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getSteadyLaplace(double** jacobianNRMatrix, double* rhsVector){
+void Element<DIM,DEG>::getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
     ShapeFunction           shapeQuad;
@@ -1827,7 +1827,7 @@ void Element<DIM,DEG>::getSteadyLaplace(double** jacobianNRMatrix, double* rhsVe
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsVector){
+void Element<DIM,DEG>::getSteadyLaplace2(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
     MatrixDouble dphi(nElNodes,DIM);
@@ -1984,7 +1984,7 @@ void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsV
                         double m;
                         (k==l)? m = (1.0 / (0.25 * dTime_)) *0* DI -> phi_(a,index) * DI -> phi_(b,index) : m = 0.0;
 
-                        jacobianNRMatrix[2 * a + k][2 * b + l] += (e+m) * j0 * weight_;
+                        jacobianNRMatrix(2 * a + k,2 * b + l) += (e+m) * j0 * weight_;
                     }
                 }
             }
@@ -2014,7 +2014,7 @@ void Element<DIM,DEG>::getSteadyLaplace2(double** jacobianNRMatrix, double* rhsV
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, double *lagrMultVector, double *rhsVector){
+void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
     
@@ -2071,13 +2071,13 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, d
                 double l2 = DI -> phi_(i,index) * DI -> phi_(j,index) * WJ * k1;
                 for (int k = 0; k < DIM; k++){
                     // L2 COUPLING OPERATOR
-                    lagrMultMatrix[DIM*i+k][DIM*j+k] -= l2;
+                    lagrMultMatrix(DIM*i+k,DIM*j+k) -= l2;
                     for (int l = 0; l < DIM; l++){
                         //H1 COUPLING OPERATOR
                         double K = dphi_dx(i,l) * dphi_dx(j,k);
                         if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m);
 
-                        lagrMultMatrix[DIM*i+k][DIM*j+l] -= K * WJ * k2;
+                        lagrMultMatrix(DIM*i+k,DIM*j+l) -= K * WJ * k2;
                     };
                 };
             };
@@ -2111,7 +2111,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(double **lagrMultMatrix, d
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMesh(double **jacobianNRMatrix, double *rhsVector){
+void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     // double xsi[DIM] = {};
     // double phi_[nElNodes] = {};
@@ -2218,7 +2218,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMesh(double **jacobia
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinStab, double **laplMatrix, double *arlequinStabVector){
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
 
     VecDouble xsi(DIM);    
     MatrixDouble dphi_dx(nElNodes,DIM);
@@ -2282,7 +2282,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
                 // LC = phi_[i] * ((una_ - umesh_) * dphi_dx[0][i] + (vna_ - vmesh_) * dphi_dx[1][i]) * phi_[j] * tARLQ_ * intPointWeightFunction(index);
 
                 for (int k = DIM; k--; )
-                    arlequinStab[DIM*i+k][DIM*j+k] += (AM + LL) * weight_ * djac_;
+                    arlequinStab(DIM*i+k,DIM*j+k) += (AM + LL) * weight_ * djac_;
                 
 
                 // LC = -(dphi_dx[0][i]*(du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) +
@@ -2351,8 +2351,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
         for (int k = DIM; k--; ){
             if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
                 for (int j = 0; j < nLocDOF; j++){
-                    arlequinStab[DIM*i+k][j] = 0.;
-                    arlequinStab[j][DIM*i+k] = 0.;
+                    arlequinStab(DIM*i+k,j) = 0.;
+                    arlequinStab(j,DIM*i+k) = 0.;
                 };
                 arlequinStabVector[DIM*i+k] = 0.0;
             };
@@ -2366,9 +2366,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(double **arlequinS
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, double* press, 
-                                                     double* velx, double* vely, double* velxPrev, double* velyPrev,
-                                                     double **lagrMultMatrix, double *rhsVectorLM, double *rhsVector){
+void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, 
+                                                     VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
+                                                     MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
@@ -2453,13 +2453,13 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
                     double l2 = phi_[i] * phiLM_[j] * WJ * k1;
                     for (int k = 0; k < DIM; k++){
                         // L2 COUPLING OPERATOR
-                        lagrMultMatrix[DIM*i+k][DIM*j+k] += l2;
+                        lagrMultMatrix(DIM*i+k,DIM*j+k) += l2;
                         for (int l = 0; l < DIM; l++){
                             //H1 COUPLING OPERATOR
                             double K = dphi_dx(i,l) * dphiL_dx(j,k);
                             if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphiL_dx(j,m);
 
-                            lagrMultMatrix[DIM*i+k][DIM*j+l] += K * WJ * k2;
+                            lagrMultMatrix(DIM*i+k,DIM*j+l) += K * WJ * k2;
                         };
                     };
                 };
@@ -2494,8 +2494,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_, double* press, double* velx, double* vely,
-                                                               double **jacobianNRMatrix, double *rhsVector){
+void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                               MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     // double xsi[2] = {};
     // double xsi_intp[2] = {};
@@ -2660,8 +2660,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem,
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,double* press, double* velx, double* vely,
-                                                             double **arlequinStab, double **laplMatrix, double *arlequinStabVector){
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                             MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
@@ -2761,7 +2761,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
                     for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_ / dens_;
 
                     for (int k = DIM; k--; )
-                        arlequinStab[DIM*i+k][DIM*j+k] += LL * weight_ * djac_;
+                        arlequinStab(DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
 
 
                     // LL = (dphi_dx[0][i] * dphi_dx[0][j] + dphi_dx[1][i] * dphi_dx[1][j]) * tARLQ_ / dens_;
@@ -2853,8 +2853,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
         for (int k = DIM; k--; ){
             if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
                 for (int j = 0; j < nLocDOF; j++){
-                    arlequinStab[DIM*i+k][j] = 0.;
-                    arlequinStab[j][DIM*i+k] = 0.;
+                    arlequinStab(DIM*i+k,j) = 0.;
+                    arlequinStab(j,DIM*i+k) = 0.;
                 };
                 //lagrMultMatrix(12+i,12+i) = 1.;
                 arlequinStabVector[DIM*i+k] = 0.0;
