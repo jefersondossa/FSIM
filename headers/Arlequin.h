@@ -44,8 +44,8 @@ public:
 
     FluidMesh coarseModel, fineModel;
 
-    std::vector<Nodes *>     nodesCoarse_;
-    std::vector<Nodes *>     nodesFine_;
+    std::vector<Nodes *>     *nodesCoarse_;
+    std::vector<Nodes *>     *nodesFine_;
     std::vector<Nodes *>     nodesLagrangeFine_;
     std::vector<Nodes *>     nodesLagrangeCoarse_;
 
@@ -61,6 +61,8 @@ public:
     std::vector<int>         nodesGlueZoneFine_;
     std::vector<int>         elementsGlueZoneCoarse_;
     std::vector<int>         nodesGlueZoneCoarse_;
+
+    ProblemType fProbType;
 
     Mat               A, F;
     Vec               b, u, All;
@@ -170,20 +172,33 @@ public:
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setMatVecValuesFineModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                         MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                         VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                         VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                         VecInt &connec, VecInt &connecL);
+    void setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                               MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                               VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                               VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                               VecInt &connec, VecInt &connecL);
 
     void setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                           MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                           VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                           VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                           VecInt &connecC, VecInt &connecL);
+    void setMatVecValuesLagMultFineCoarsePoisson(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                                 MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                                 VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                                 VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                                 VecInt &connecC, VecInt &connecL);
 
     void assembleArlequinSystem();
+    void assembleArlequinSystemPoisson();
 
     /// Print the results for Paraview post-processing
     /// @param int time step

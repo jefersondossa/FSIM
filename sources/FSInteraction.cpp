@@ -612,13 +612,13 @@ void FSInteraction<DIM,DEG>::setArlequinAndSolidModels(ArlequinModel arlq, char 
 
     numElemArlequinCoarse = arlequinModel.elementsCoarse_.size();
     numElemArlequinFine = arlequinModel.elementsFine_.size();
-    numNodesArlequinCoarse = arlequinModel.nodesCoarse_.size();
-    numNodesArlequinFine = arlequinModel.nodesFine_.size();
+    numNodesArlequinCoarse = arlequinModel.nodesCoarse_->size();
+    numNodesArlequinFine = arlequinModel.nodesFine_->size();
     numElemArlequinBoundaryCoarse = arlequinModel.boundaryCoarse_.size();
     numElemArlequinBoundaryFine = arlequinModel.boundaryFine_.size();
     
-    nodesArlequinCoarse_ = arlequinModel.nodesCoarse_;
-    nodesArlequinFine_ = arlequinModel.nodesFine_;
+    nodesArlequinCoarse_ = *arlequinModel.nodesCoarse_;
+    nodesArlequinFine_ = *arlequinModel.nodesFine_;
     elementsArlequinCoarse_ = arlequinModel.elementsCoarse_;
     elementsArlequinFine_ = arlequinModel.elementsFine_;
     boundaryArlequinCoarse_ = arlequinModel.boundaryCoarse_;

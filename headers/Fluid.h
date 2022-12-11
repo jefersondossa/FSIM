@@ -21,8 +21,7 @@
 #include<cstdlib>
 #include<fstream>
 #include<iostream>
-#include "hdf5.h"
-
+#include <petscviewerhdf5.h>
 
 // PETSc libraries
 #include <metis.h>
@@ -75,8 +74,8 @@ private:
     double ktermInf;       //Thermal condutivity
     VecDouble velocityInf; //Undisturbed velocity
     VecDouble fieldForces; //Field forces (constant)
-    idx_t* part_elem;      //Fluid Domain Decomposition - Elements
-    idx_t* part_nodes;     //Fluid Domain Decomposition - Nodes
+    int* part_elem;      //Fluid Domain Decomposition - Elements
+    int* part_nodes;     //Fluid Domain Decomposition - Nodes
     int numTimeSteps;      //Number of Time Steps
     int printFreq;         //Printing frequence of output files
     double dTime;          //Time Step
@@ -118,8 +117,11 @@ public:
     int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
     int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
-public:
+    ProblemType fProbType = ProblemType::ENavierStokes;
 
+public:
+    void setProblemType(ProblemType ptype){fProbType = ptype;};
+    ProblemType &getProblemType(){return fProbType;}
 
     void meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles);
 
@@ -142,6 +144,9 @@ public:
 
     /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
+
+    int getNumberOfElements(){return numElem;}
+    int getNumberOfNodes(){return numNodes;}
 
     /// Export the domain decomposition 
     /// @return pair with the elements and nodes domain decompositions
@@ -197,10 +202,12 @@ public:
     int solveFSIFluid(int iterNumber,
                       double tolerance,
                       int problem_type);
+    int solvePoisson();
 
     /// Print the results for Paraview post-processing
     /// @param int time step
     // void printResults(int step);
+    void printResultsPoisson();
 
     /// Compute and print drag and lift coefficients
     void dragAndLiftCoefficients(std::ofstream& dragLift);

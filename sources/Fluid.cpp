@@ -1,5 +1,6 @@
 #include "Fluid.h"
-
+#include "petscpartitioner.h"
+#include "metis.h"
 
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
@@ -534,10 +535,10 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
     // Renumber nodes - start
     std::vector<int > neighborNodes;
 
-    idx_t* xadj;
-    idx_t numNd = numNodes;
+    int* xadj;
+    int numNd = numNodes;
     std::vector<int> adjncy;
-    xadj = new idx_t[numNd+1]();
+    xadj = new int[numNd+1]();
     adjncy.reserve(10*numNodes);
 
     for (int iNode = 0; iNode < numNodes; iNode++){
@@ -571,19 +572,28 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
     }
 
     //Save a second adjacency vector in idx_t format
-    idx_t *adjncy2;
-    idx_t adj_size = adjncy.size();
-    adjncy2 = new idx_t[adj_size];
+    int *adjncy2;
+    int adj_size = adjncy.size();
+    adjncy2 = new int[adj_size];
     for (int i = 0; i < adjncy.size(); i++) adjncy2[i] = adjncy[i];
     
     adjncy.clear(); adjncy.shrink_to_fit();
 
-    idx_t* perm;
-    idx_t* iperm;
-    perm = new idx_t[numNd];
-    iperm = new idx_t[numNd];
+    int* perm;
+    int* iperm;
+    perm = new int[numNd];
+    iperm = new int[numNd];
 
     // Call METIS for node renumbering
+
+    // MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+    //                         numNodes, numNodes,
+    //                         1,NULL,1,NULL,&A); CHKERRQ(ierr);
+    
+    // // MatGetOrdering(A, MATORDERINGMETISND, IS *rperm, IS *cperm)
+
+    // MatDestroy(&A);
+
     METIS_NodeND(&numNd, xadj, adjncy2, NULL, NULL, perm, iperm);
 
     //Reorder nodes
@@ -760,35 +770,43 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
 
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
 
-    idx_t objval;
-    idx_t numEl = numElem;
-    idx_t numNd = numNodes;
-    idx_t ssize = size;
-    idx_t one = 1;
-    idx_t elem_start[numEl+1], elem_connec[nElNodes*numEl];
-    part_elem = new idx_t[numEl];
-    part_nodes = new idx_t[numNd];
+    // idx_t objval;
+    // idx_t numEl = numElem;
+    // idx_t numNd = numNodes;
+    // idx_t ssize = size;
+    // idx_t one = 1;
+    int elem_start[numElem+1], elem_connec[nElNodes*numElem];
+    part_elem = new int[numElem];
+    part_nodes = new int[numNodes];
 
 
-    for (idx_t i = 0; i < numEl+1; i++){
+    for (int i = 0; i < numElem+1; i++){
         elem_start[i]=nElNodes*i;
     };
-    for (idx_t jel = 0; jel < numEl; jel++){
-        VecInt connec=elements_[jel]->getConnectivity();        
+    for (int jel = 0; jel < numElem; jel++){
+        auto connec=elements_[jel]->getConnectivity();        
         
-        for (idx_t i=0; i<nElNodes; i++){
+        for (int i=0; i<nElNodes; i++){
         elem_connec[nElNodes*jel+i] = connec[i];
         };
     };
 
     //Performs the domain decomposition
-    if (ssize == 1){
-        for (int i = 0; i < numNd; i++) part_nodes[i] = 0;
-        for (int i = 0; i < numEl; i++) part_elem[i] = 0;
+    if (size == 1){
+        for (int i = 0; i < numNodes; i++) part_nodes[i] = 0;
+        for (int i = 0; i < numElem; i++) part_elem[i] = 0;
     } else {
-        METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
-                                NULL, NULL, &one, &ssize, NULL, NULL,    \
-                                &objval, part_elem, part_nodes);
+        PetscPartitioner partitioner;
+        PetscPartitionerCreate(PETSC_COMM_WORLD, &partitioner);
+        PetscPartitionerSetType(partitioner, PETSCPARTITIONERPARMETIS);
+        PetscSection partSection;
+        IS *partition;
+        PetscPartitionerPartition(partitioner, size, numNodes, elem_start, elem_connec, NULL, NULL, partSection, partition);
+
+
+        // METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
+        //                         NULL, NULL, &one, &ssize, NULL, NULL,    \
+        //                         &objval, part_elem, part_nodes);
     }
     
     mirrorData << std::endl \
@@ -923,8 +941,12 @@ void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputF
     readNodes(file,mirrorData);
     readElements(geometry_,file,mirrorData,elements_, physicalEntities);
 
-    numDOF = (DIM+1) * numNodes;
-
+    if (fProbType == ProblemType::ENavierStokes){
+        numDOF = (DIM+1) * numNodes;
+    } else if (fProbType == ProblemType::EPoisson) {
+        numDOF = numNodes;
+    }
+    
     renumberConnectivity();
 
     // if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
@@ -1181,75 +1203,75 @@ void Fluid<2,2>::readInitialValues(const std::string& inputPrev, const std::stri
 
     int rank;
 
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    // MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    hid_t filePrevious;
-    hid_t fileCurrent;
-    hid_t dataset;
-    herr_t status;
+    // hid_t filePrevious;
+    // hid_t fileCurrent;
+    // hid_t dataset;
+    // herr_t status;
 
-    double *vecValues;
-    double *scaValues;
-    vecValues = new double[3*numNodes];
-    scaValues = new double[numNodes];
+    // double *vecValues;
+    // double *scaValues;
+    // vecValues = new double[3*numNodes];
+    // scaValues = new double[numNodes];
 
-    filePrevious = H5Fopen(inputPrev.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
-    fileCurrent = H5Fopen(inputCurr.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
+    // filePrevious = H5Fopen(inputPrev.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
+    // fileCurrent = H5Fopen(inputCurr.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
 
-    char datasetName[] = "/velocity";
-    dataset = H5Dopen( filePrevious, datasetName, H5P_DEFAULT );
-    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    status = H5Dclose(dataset);
-    for (int i = 0; i < numNodes; ++i){
-        nodes_[i] -> setPreviousVelocityComponent(0,vecValues[3*i  ]);
-        nodes_[i] -> setPreviousVelocityComponent(1,vecValues[3*i+1]);
-    }
-    dataset = H5Dopen( fileCurrent, datasetName, H5P_DEFAULT );
-    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    status = H5Dclose(dataset);
-    for (int i = 0; i < numNodes; ++i){
-        nodes_[i] -> setVelocityComponent(0,vecValues[3*i  ]);
-        nodes_[i] -> setVelocityComponent(1,vecValues[3*i+1]);
-    }
+    // char datasetName[] = "/velocity";
+    // dataset = H5Dopen( filePrevious, datasetName, H5P_DEFAULT );
+    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    // status = H5Dclose(dataset);
+    // for (int i = 0; i < numNodes; ++i){
+    //     nodes_[i] -> setPreviousVelocityComponent(0,vecValues[3*i  ]);
+    //     nodes_[i] -> setPreviousVelocityComponent(1,vecValues[3*i+1]);
+    // }
+    // dataset = H5Dopen( fileCurrent, datasetName, H5P_DEFAULT );
+    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    // status = H5Dclose(dataset);
+    // for (int i = 0; i < numNodes; ++i){
+    //     nodes_[i] -> setVelocityComponent(0,vecValues[3*i  ]);
+    //     nodes_[i] -> setVelocityComponent(1,vecValues[3*i+1]);
+    // }
 
-    char datasetName2[] = "/acceleration";
-    dataset = H5Dopen( filePrevious, datasetName2, H5P_DEFAULT );
-    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    status = H5Dclose(dataset);
-    for (int i = 0; i < numNodes; ++i){
-        nodes_[i] -> setPreviousAccelerationComponent(0,vecValues[3*i  ]);
-        nodes_[i] -> setPreviousAccelerationComponent(1,vecValues[3*i+1]);
-    }
-    dataset = H5Dopen( fileCurrent, datasetName2, H5P_DEFAULT );
-    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    status = H5Dclose(dataset);
-    for (int i = 0; i < numNodes; ++i){
-        nodes_[i] -> setAccelerationComponent(0,vecValues[3*i  ]);
-        nodes_[i] -> setAccelerationComponent(1,vecValues[3*i+1]);
-    }
+    // char datasetName2[] = "/acceleration";
+    // dataset = H5Dopen( filePrevious, datasetName2, H5P_DEFAULT );
+    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    // status = H5Dclose(dataset);
+    // for (int i = 0; i < numNodes; ++i){
+    //     nodes_[i] -> setPreviousAccelerationComponent(0,vecValues[3*i  ]);
+    //     nodes_[i] -> setPreviousAccelerationComponent(1,vecValues[3*i+1]);
+    // }
+    // dataset = H5Dopen( fileCurrent, datasetName2, H5P_DEFAULT );
+    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    // status = H5Dclose(dataset);
+    // for (int i = 0; i < numNodes; ++i){
+    //     nodes_[i] -> setAccelerationComponent(0,vecValues[3*i  ]);
+    //     nodes_[i] -> setAccelerationComponent(1,vecValues[3*i+1]);
+    // }
 
-    char datasetName3[] = "/lagrangeMultiplers";
-    dataset = H5Dopen( fileCurrent, datasetName3, H5P_DEFAULT );
-    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    status = H5Dclose(dataset);
-    for (int i = 0; i < numNodes; ++i){
-        nodes_[i] -> setLagrangeMultiplier(0,vecValues[3*i  ]);
-        nodes_[i] -> setLagrangeMultiplier(1,vecValues[3*i+1]);
-    }
+    // char datasetName3[] = "/lagrangeMultiplers";
+    // dataset = H5Dopen( fileCurrent, datasetName3, H5P_DEFAULT );
+    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    // status = H5Dclose(dataset);
+    // for (int i = 0; i < numNodes; ++i){
+    //     nodes_[i] -> setLagrangeMultiplier(0,vecValues[3*i  ]);
+    //     nodes_[i] -> setLagrangeMultiplier(1,vecValues[3*i+1]);
+    // }
 
-    char datasetName4[] = "/pressure";
-    dataset = H5Dopen( fileCurrent, datasetName4, H5P_DEFAULT );
-    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &scaValues[0]);
-    status = H5Dclose(dataset);
-    for (int i = 0; i < numNodes; ++i){
-        nodes_[i] -> setPressure(vecValues[i]);
-    }
+    // char datasetName4[] = "/pressure";
+    // dataset = H5Dopen( fileCurrent, datasetName4, H5P_DEFAULT );
+    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &scaValues[0]);
+    // status = H5Dclose(dataset);
+    // for (int i = 0; i < numNodes; ++i){
+    //     nodes_[i] -> setPressure(vecValues[i]);
+    // }
 
-    delete [] vecValues;
-    delete [] scaValues;
+    // delete [] vecValues;
+    // delete [] scaValues;
 
-    //End HDF5 file
-    status = H5Fclose(filePrevious);
+    // //End HDF5 file
+    // status = H5Fclose(filePrevious);
 
     return;
 }
@@ -1510,6 +1532,306 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
 };
 
 
+
+
+//------------------------------------------------------------------------------
+//-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+int Fluid<DIM,DEG>::solvePoisson(){
+
+    Vec               b, u, All, Allu;
+    PetscErrorCode    ierr;
+    PetscInt          Ii, Ione, iterations;
+    KSP               ksp;
+    PC                pc;
+    VecScatter        ctx;
+    PetscScalar       val;
+    //    MatNullSpace      nullsp;
+
+    int rank;
+
+    iAux++;
+
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+            
+    double duNorm=100.;
+                 
+        std::clock_t t1 = std::clock();
+        
+        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                            numNodes, numNodes,
+                            100,NULL,300,NULL,&A); 
+        CHKERRQ(ierr);
+                
+        //Create PETSc vectors
+        ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
+        ierr = VecSetSizes(b,PETSC_DECIDE,numNodes);
+        CHKERRQ(ierr);
+        ierr = VecSetFromOptions(b);CHKERRQ(ierr);
+        ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
+        ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
+        
+        //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
+
+        for (int jel = 0; jel < numElem; jel++){   
+            
+            if (part_elem[jel] == rank) {
+                //Compute Element matrix
+                VecInt connec = elements_[jel] -> getConnectivity();
+
+                MatrixDouble matrix(nElNodes,nElNodes);
+                matrix.setZero();
+                VecDouble rhs(nElNodes);
+                rhs.setZero();
+
+                elements_[jel] -> getPoisson(matrix,rhs);
+                
+                //Disperse local contributions into the global matrix
+                //Matrix K and C
+                for (int i=0; i<nElNodes; i++){
+                    for (int j=0; j<nElNodes; j++){
+                        int dof_i = connec[i];
+                        int dof_j = connec[j];
+                        MatSetValues(A, 1, &dof_i,1, &dof_j, &matrix(i,j), ADD_VALUES);
+                    };
+                    
+                    //Rhs vector
+                    int dof_i = connec[i];
+                    VecSetValues(b, 1, &dof_i, &rhs[i], ADD_VALUES);
+                };
+            };
+        }; //Elements
+        
+        //Assemble matrices and vectors
+        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+        
+        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
+        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+        
+        // MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        
+        //Create KSP context to solve the linear system
+        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+        
+        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+        
+
+
+
+    //     ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
+    //                             500);CHKERRQ(ierr);
+        
+    //     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+        
+    //     ierr = KSPGetPC(ksp,&pc);
+        
+    //     ierr = PCSetType(pc,PCJACOBI);
+        
+    //     //ierr = KSPSetType(ksp,KSPBCGS); CHKERRQ(ierr);
+
+    //     // ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+        
+    //        //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+        
+
+
+
+#if defined(PETSC_HAVE_MUMPS)
+        ierr = KSPSetType(ksp,KSPPREONLY);
+        ierr = KSPGetPC(ksp,&pc);
+        ierr = PCSetType(pc, PCLU);
+#endif          
+        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+        ierr = KSPSetUp(ksp);
+
+
+
+        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+
+        ierr = KSPGetTotalIterations(ksp, &iterations);            
+// 
+        // ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
+        
+        //Gathers the solution vector to the master process
+        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
+        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
+        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
+        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+
+        ierr = VecScatterCreateToAll(b, &ctx, &Allu);CHKERRQ(ierr);
+        ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
+        ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
+        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        
+        //Updates nodal values
+        double p_;
+        duNorm = 0.;
+        double dpNorm = 0.;
+        Ione = 1;
+        
+        for (int i = 0; i < numNodes; ++i){
+            Ii = i;
+            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+            nodes_[i] -> incrementVelocity(0,val);
+        };
+        
+        //Computes the solution vector norm
+        //ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+
+        std::clock_t t2 = std::clock();
+     
+        if(rank == 0){
+
+            std::cout << "  Time (s) = " << std::fixed
+                      << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
+        };
+                  
+        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
+        ierr = VecDestroy(&b); CHKERRQ(ierr);
+        ierr = VecDestroy(&u); CHKERRQ(ierr);
+        ierr = VecDestroy(&All); CHKERRQ(ierr);
+        ierr = VecDestroy(&Allu); CHKERRQ(ierr);
+        ierr = MatDestroy(&A); CHKERRQ(ierr);
+
+    printResultsPoisson();
+
+    return 0;
+};
+
+
+//------------------------------------------------------------------------------
+//-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::printResultsPoisson(){
+
+     //    std::cout << "Printing Velocity Results" << std::endl;
+    std::string s = "ResultsPoisson.vtu";
+    
+    std::fstream output_v(s.c_str(), std::ios_base::out);
+
+    output_v << "<?xml version=\"1.0\"?>" << std::endl
+             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
+             << "  <UnstructuredGrid>" << std::endl
+             << "  <Piece NumberOfPoints=\"" << numNodes
+             << "\"  NumberOfCells=\"" << numElem
+             << "\">" << std::endl;
+
+    //WRITE NODAL COORDINATES
+    output_v << "    <Points>" << std::endl
+             << "      <DataArray type=\"Float64\" "
+             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+
+    for (int i=0; i<numNodes; i++){
+        auto x=nodes_[i]->getCoordinates();
+        output_v << x[0] << " " << x[1] << " " << 0.0 << std::endl;        
+    };
+    output_v << "      </DataArray>" << std::endl
+             << "    </Points>" << std::endl;
+    
+    //WRITE ELEMENT CONNECTIVITY
+    output_v << "    <Cells>" << std::endl
+             << "      <DataArray type=\"Int32\" "
+             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+    
+    for (int i=0; i<numElem; i++){
+        auto connec=elements_[i]->getConnectivity();
+        output_v << connec[0] << " " << connec[1] << " " << connec[2] ;
+        if (DEG == 2){
+            output_v << " " << connec[3] << " " << connec[4] << " " << connec[5] ;
+        }
+        output_v << std::endl;
+    };
+    output_v << "      </DataArray>" << std::endl;
+  
+    //WRITE OFFSETS IN DATA ARRAY
+    output_v << "      <DataArray type=\"Int32\""
+             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+    
+    int aux = 0;
+    for (int i=0; i<numElem; i++){
+        output_v << aux + nElNodes << std::endl;
+        aux += nElNodes;
+    };
+    output_v << "      </DataArray>" << std::endl;
+  
+    //WRITE ELEMENT TYPES
+    output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
+             << "format=\"ascii\">" << std::endl;
+    
+    int val = 0;
+    if (DEG == 1)val = 5;
+    if (DEG == 2)val = 22;
+
+    for (int i=0; i<numElem; i++){
+        output_v << val << std::endl;
+    };
+
+    output_v << "      </DataArray>" << std::endl
+             << "    </Cells>" << std::endl;
+
+    //WRITE NODAL RESULTS
+    output_v << "    <PointData>" << std::endl;
+
+    if (printVelocity){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+                << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> getVelocity(0) << " "             
+                     << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+
+    
+   
+
+    output_v << "    </PointData>" << std::endl; 
+
+    //WRITE ELEMENT RESULTS
+    output_v << "    <CellData>" << std::endl;
+    
+    if (printProcess){
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                 << "Name=\"Process\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numElem; i++){
+            output_v << part_elem[i] << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    };
+    
+    output_v << "    </CellData>" << std::endl; 
+
+    //FINALIZE OUTPUT FILE
+    output_v << "  </Piece>" << std::endl;
+    
+    // output_v << "  <FieldData>" << std::endl;
+
+    // output_v << "      <DataArray type=\"Float64\" Name=\"Time\" NumberOfTuples=\"1\" "
+    //          << " format=\"ascii\">" << std::endl;
+    // output_v << step << std::endl;
+    // output_v << "      </DataArray> " << std::endl;
+
+    // output_v << "      <DataArray type=\"Float64\" Name=\"LiftCoefficient\" NumberOfTuples=\"1\" "
+    //          << " format=\"ascii\">" << std::endl;
+    // output_v << liftCoefficient << std::endl;
+    // output_v << "      </DataArray> " << std::endl;
+
+    // // output_v << "      <DataSet type=\"Float64\" Name=\"Drag Coefficient\" NumberOfTuples=\"1\" "
+    // //          << " format=\"ascii\">" << std::endl;
+    // // output_v << dragCoefficient << std::endl;
+    // // output_v << "      </DataSet> " << std::endl;
+
+    // output_v << "  </FieldData>" << std::endl
+    output_v << "  </UnstructuredGrid>" << std::endl
+             << "</VTKFile>" << std::endl;
+
+
+
+}
 
 template class Fluid<2,1>;
 template class Fluid<2,2>;

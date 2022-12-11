@@ -500,7 +500,7 @@ endif()
 # Try to find HDF5 using an installed hdf5-config.cmake
 if(NOT HDF5_FOUND AND NOT HDF5_NO_FIND_PACKAGE_CONFIG_FILE)
     find_package(HDF5 QUIET NO_MODULE
-      HINTS ${HDF5_ROOT}
+      HINTS ${HDF5_ROOT} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
       ${_HDF5_SEARCH_OPTS}
       )
     if( HDF5_FOUND)
@@ -630,7 +630,7 @@ if(NOT HDF5_FOUND)
       # search options with the wrapper
       find_program(HDF5_${_lang}_COMPILER_EXECUTABLE
         NAMES ${HDF5_${_lang}_COMPILER_NAMES} NAMES_PER_DIR
-        HINTS ${HDF5_ROOT}
+        HINTS ${HDF5_ROOT} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
         PATH_SUFFIXES bin Bin
         DOC "HDF5 ${_lang} Wrapper compiler.  Used only to detect HDF5 compile flags."
         ${_HDF5_SEARCH_OPTS}
@@ -672,7 +672,7 @@ if(NOT HDF5_FOUND)
             endif()
             find_library(HDF5_${_lang}_LIBRARY_${_lib}
               NAMES ${_HDF5_SEARCH_NAMES_LOCAL} ${_lib} NAMES_PER_DIR
-              HINTS ${HDF5_${_lang}_LIBRARY_DIRS}
+              HINTS ${HDF5_${_lang}_LIBRARY_DIRS} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
                     ${HDF5_ROOT}
               ${_HDF5_SEARCH_OPTS_LOCAL}
               )
@@ -704,7 +704,7 @@ if(NOT HDF5_FOUND)
               endif()
               find_library(HDF5_${_lang}_LIBRARY_${_lib}
                 NAMES ${_HDF5_SEARCH_NAMES_LOCAL} ${_lib} NAMES_PER_DIR
-                HINTS ${HDF5_${_lang}_LIBRARY_DIRS}
+                HINTS ${HDF5_${_lang}_LIBRARY_DIRS} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
                       ${HDF5_ROOT}
                 ${_HDF5_SEARCH_OPTS_LOCAL}
                 )
@@ -784,8 +784,8 @@ elseif(NOT HDF5_FOUND AND NOT _HDF5_NEED_TO_SEARCH)
 endif()
 
 find_program( HDF5_DIFF_EXECUTABLE
-    NAMES h5diff
-    HINTS ${HDF5_ROOT}
+    NAMES h5diff 
+    HINTS ${HDF5_ROOT} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
     PATH_SUFFIXES bin Bin
     ${_HDF5_SEARCH_OPTS}
     DOC "HDF5 file differencing tool." )
@@ -841,12 +841,12 @@ if( NOT HDF5_FOUND )
             endif()
             find_library(HDF5_${LIB}_LIBRARY_DEBUG
                 NAMES ${THIS_LIBRARY_SEARCH_DEBUG}
-                HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes}
+                HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
                 ${_HDF5_SEARCH_OPTS}
             )
             find_library(HDF5_${LIB}_LIBRARY_RELEASE
                 NAMES ${THIS_LIBRARY_SEARCH_RELEASE}
-                HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes}
+                HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
                 ${_HDF5_SEARCH_OPTS}
             )
 
@@ -895,7 +895,7 @@ if( NOT HDF5_FOUND )
         unset(_hdf5_main_library)
 
         find_path(HDF5_${_lang}_INCLUDE_DIR ${HDF5_INCLUDE_FILENAME}
-            HINTS ${HDF5_ROOT}
+            HINTS ${HDF5_ROOT} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
             PATHS $ENV{HOME}/.local/include ${_hdf5_inc_extra_paths}
             PATH_SUFFIXES include Include ${_inc_suffixes} ${_lib_suffixes} ${_hdf5_inc_extra_suffixes}
             ${_HDF5_SEARCH_OPTS}
@@ -925,12 +925,12 @@ if( NOT HDF5_FOUND )
                 endif()
                 find_library(HDF5_${LIB}_LIBRARY_DEBUG
                     NAMES ${THIS_LIBRARY_SEARCH_DEBUG}
-                    HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes}
+                    HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
                     ${_HDF5_SEARCH_OPTS}
                 )
                 find_library(HDF5_${LIB}_LIBRARY_RELEASE
                     NAMES ${THIS_LIBRARY_SEARCH_RELEASE}
-                    HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes}
+                    HINTS ${HDF5_ROOT} PATH_SUFFIXES lib Lib ${_lib_suffixes} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
                     ${_HDF5_SEARCH_OPTS}
                 )
 
@@ -1009,6 +1009,9 @@ find_package_handle_standard_args(HDF5
     VERSION_VAR   HDF5_VERSION
     HANDLE_COMPONENTS
 )
+# find_package(HDF5
+#     HINTS
+# )
 
 unset(_HDF5_SEARCH_OPTS)
 

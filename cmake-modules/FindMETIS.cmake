@@ -87,19 +87,19 @@ if(METIS_INCDIR)
   set(METIS_metis.h_DIRS "METIS_metis.h_DIRS-NOTFOUND")
   find_path(METIS_metis.h_DIRS
     NAMES metis.h
-    HINTS ${METIS_INCDIR})
+    HINTS ${METIS_INCDIR} "${PETSC_DIR}/${PETSC_ARCH}/lib/")
 else()
   if(METIS_DIR)
     set(METIS_metis.h_DIRS "METIS_metis.h_DIRS-NOTFOUND")
     find_path(METIS_metis.h_DIRS
       NAMES metis.h
-      HINTS ${METIS_DIR}
+      HINTS ${METIS_DIR} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
       PATH_SUFFIXES "include" "include/metis")
   else()
     set(METIS_metis.h_DIRS "METIS_metis.h_DIRS-NOTFOUND")
     find_path(METIS_metis.h_DIRS
       NAMES metis.h
-      HINTS ${_inc_env})
+      HINTS ${_inc_env} "${PETSC_DIR}/${PETSC_ARCH}/lib/")
   endif()
 endif()
 mark_as_advanced(METIS_metis.h_DIRS)
@@ -145,19 +145,19 @@ if(METIS_LIBDIR)
   set(METIS_metis_LIBRARY "METIS_metis_LIBRARY-NOTFOUND")
   find_library(METIS_metis_LIBRARY
     NAMES metis
-    HINTS ${METIS_LIBDIR})
+    HINTS ${METIS_LIBDIR} "${PETSC_DIR}/${PETSC_ARCH}/lib/")
 else()
   if(METIS_DIR)
     set(METIS_metis_LIBRARY "METIS_metis_LIBRARY-NOTFOUND")
     find_library(METIS_metis_LIBRARY
       NAMES metis
-      HINTS ${METIS_DIR}
+      HINTS ${METIS_DIR} "${PETSC_DIR}/${PETSC_ARCH}/lib/"
       PATH_SUFFIXES lib lib32 lib64)
   else()
     set(METIS_metis_LIBRARY "METIS_metis_LIBRARY-NOTFOUND")
     find_library(METIS_metis_LIBRARY
       NAMES metis
-      HINTS ${_lib_env})
+      HINTS ${_lib_env} "${PETSC_DIR}/${PETSC_ARCH}/lib/")
   endif()
 endif()
 mark_as_advanced(METIS_metis_LIBRARY)
@@ -218,7 +218,7 @@ if(METIS_LIBRARIES)
   set(CMAKE_REQUIRED_INCLUDES)
   set(CMAKE_REQUIRED_FLAGS)
   set(CMAKE_REQUIRED_LIBRARIES)
-endif(METIS_LIBRARIES)
+endif()
 if (METIS_LIBRARIES)
   list(GET METIS_LIBRARIES 0 first_lib)
   get_filename_component(first_lib_path "${first_lib}" PATH)
@@ -234,9 +234,9 @@ mark_as_advanced(METIS_DIR_FOUND)
 # check that METIS has been found
 # ---------------------------------
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(METIS DEFAULT_MSG
-  METIS_LIBRARIES
-  METIS_WORKS)
+# find_package_handle_standard_args(METIS DEFAULT_MSG
+find_package(METIS
+  HINTS )
 #
 # TODO: Add possibility to check for specific functions in the library
 #

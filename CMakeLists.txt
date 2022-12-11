@@ -4,12 +4,15 @@ enable_language( Fortran CXX )
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
-find_package (PETSc REQUIRED)   
-find_package (HDF5 REQUIRED)
-find_package (METIS REQUIRED)
 find_package (MPI REQUIRED)
+find_package (PETSc REQUIRED)   
+find_package (METIS REQUIRED)
+find_package (HDF5 REQUIRED)
 
 # Essential: include our directories first otherwise we can get internal headers from some installed path
+include_directories(include ${MPI_INCLUDE_PATH} ${PETSC_INCLUDES})
+add_definitions(${PETSC_DEFINITIONS})
+
 include_directories ("${FSArl_SOURCE_DIR}/include" "${FSArl_SOURCE_DIR}/include" ${PETSC_INCLUDES} ${PETSC_KSP_LIB})
 add_definitions (${PETSC_DEFINITIONS})
 set (FSArl_DEPENDENT_LIBRARIES "${PETSC_LIBRARIES}")
@@ -67,6 +70,6 @@ target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
 
 add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${HDF5_LIBRARIES} ${METIS_LIBRARIES} ${MPI_LIBRARIES})
+target_link_libraries (f fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
 

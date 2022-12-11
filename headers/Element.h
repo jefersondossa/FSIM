@@ -368,12 +368,14 @@ public:
     /// Compute and store the element matrix for the incompressible flow problem
     /// @param int integration point index
     void getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
+    void getElemMatrixPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
     void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void setBoundaryConditionsPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
     void setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
@@ -381,6 +383,7 @@ public:
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
     void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
+    void getResidualVectorPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
     void getResidualVectorLaplace(VecDouble &rhsVector);
@@ -402,6 +405,7 @@ public:
     /// Compute and store the Lagrange multiplier operator when integrating 
     /// the same mesh portion
     void getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
+    void getLagrangeMultipliersSameMeshPoisson(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
     void getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
@@ -411,6 +415,8 @@ public:
     /// point belongs to the coarse mesh element)
     void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
                                              VecDouble &velxPrev, VecDouble &velyPrev, MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector);
+    void getLagrangeMultipliersDifferentMeshPoisson(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                    VecDouble &velxPrev, VecDouble &velyPrev, MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector);
     void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &ely,
                                                        MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
@@ -419,6 +425,9 @@ public:
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
     void getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    
+    /// Compute the Transient Navier-Stokes problem matrices and vectors
+    void getPoisson(MatrixDouble &matrix, VecDouble &rhsVector);
 
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)

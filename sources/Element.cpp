@@ -1469,7 +1469,7 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
                 double H = dphi_dx(i,k) * shapeFj * tPSPG_ * alpha_m;
                 double G = dphi_dx(i,k) * wSUPGj * tPSPG_ * AGDT;
                 double Guu = 0.;
-                // for (int m = DIM; m--; ) Guu += dphi_dx[m][i] * duna_dx[m][k] * shapeFj * tPSPG_ * AGDT;
+                for (int m = DIM; m--; ) Guu += dphi_dx(i,m) * duna_dx(m,k) * shapeFj * tPSPG_ * AGDT;
 
                 jacobianNRMatrix(DIM*(nElNodes)+j,DIM*i+k) += (H + G + Guu) * WJ;
             }
@@ -1477,6 +1477,37 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
             double Q = 0.;
             for (int m = DIM; m--; ) Q += dphi_dx(i,m) * dphi_dx(j,m) * tPSPG_ / dens_;
             jacobianNRMatrix(DIM*(nElNodes)+j,DIM*(nElNodes)+i) += Q * WJ;
+        };
+    };
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------------ELEMENT DIFFUSION/VISCOSITY MATRIX----------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getElemMatrixPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix){
+
+    double &visc_ = parameters.getViscosity();
+    double &dens_ = parameters.getDensity();
+
+    // Trust me, it improves performance!
+    double VAGDT = visc_; 
+    double DAGDT = dens_; 
+    double WJ = weight_ * djac_ * intPointWeightFunction[index];
+
+    for (int i = nElNodes; i-- ; ){       
+        for (int j = nElNodes; j-- ; ){            
+            for (int k = DIM; k--;  ){
+                // for (int l = DIM; l--; ){
+                    //Diffusion matrix
+                    double K = dphi_dx(i,k) * dphi_dx(j,k) * VAGDT;
+                    // if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m) * VAGDT;
+
+                    jacobianNRMatrix(i,j) += K * WJ;
+                // }
+            }
         };
     };
 
@@ -1503,9 +1534,44 @@ void Element<DIM,DEG>::setBoundaryConditions(MatrixDouble &jacobianNRMatrix, Vec
         }
     }
 
+
+    // for (int i = nElNodes; i--; ){
+        
+    //     if (((*nodes_)[connect_[i]] -> getCoordinateValue(0) > .99) &&
+    //         ((*nodes_)[connect_[i]] -> getCoordinateValue(1) > .99))  {
+    //             for (int j = nLocDOF; j--; ){
+    //                 jacobianNRMatrix(DIM*nElNodes+i,j) = 0.;
+    //                 jacobianNRMatrix(j,DIM*nElNodes+i) = 0.;
+    //             };
+    //             jacobianNRMatrix(DIM*nElNodes+i,DIM*nElNodes+i) = 1.;
+    //             rhsVector[DIM*nElNodes+i] = 0.;
+    //     };
+    // }
+    
+
     return;
 };
 
+
+//------------------------------------------------------------------------------
+//--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::setBoundaryConditionsPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+
+    for (int i = nElNodes; i--; ){
+        if (((*nodes_)[connect_[i]] -> getConstrains(0) == 1) ||
+            ((*nodes_)[connect_[i]] -> getConstrains(0) == 3))  {
+            for (int j = nElNodes; j--; ){
+                jacobianNRMatrix(i,j) = 0.;
+                jacobianNRMatrix(j,i) = 0.;
+            };
+            jacobianNRMatrix(i,i) = 1.;
+            rhsVector[i] = 0.;
+        }
+    }
+
+};
 //------------------------------------------------------------------------------
 //--------------------APPLY THE DIRICHLET BOUNDARY CONDITIONS-------------------
 //------------------------------------------------------------------------------
@@ -1662,6 +1728,46 @@ void Element<DIM,DEG>::getResidualVector(int &index, MatrixDouble &dphi_dx, doub
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
+void Element<DIM,DEG>::getResidualVectorPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector){
+
+    double &visc_ = parameters.getViscosity();
+    double &dens_ = parameters.getDensity();
+    VecDouble fieldForce = parameters.getFieldForce();
+
+    //Velocity
+    VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
+    interpolateVelocity(index, u_, uPrev_);
+    una_ = u_;
+
+    //Velocity Derivatives
+    MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
+    interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+    duna_dx = du_dx;
+
+    double WJ = weight_ * djac_  * intPointWeightFunction[index];
+
+    for (int i = nElNodes; i--; ){
+        double shapeFi = DI -> phi_(i,index);
+
+        //Viscosity
+        double K = 0.;
+        for (int l=DIM; l--; ) K += dphi_dx(i,l) * duna_dx(0,l) * visc_;
+
+        //External force
+        double F = fieldForce[0] * shapeFi * dens_;
+        
+        rhsVector[i] += (-K + F) * WJ;
+        
+                            
+    };
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//-----------------------------RESIDUAL - RHS VECTOR----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
 void Element<DIM,DEG>::getResidualVectorLaplace(VecDouble &rhsVector){
     
     VecDouble U_(nLocDOF);
@@ -1759,6 +1865,50 @@ void Element<DIM,DEG>::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, 
     
     //Apply boundary conditions
     setBoundaryConditions(jacobianNRMatrix, rhsVector);
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+
+    VecDouble xsi(DIM);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeFunction           shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        //Computes spatial derivatives
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        //Computes the element diffusion/viscosity matrix
+        getElemMatrixPoisson(index, dphi_dx, weight_, djac_, jacobianNRMatrix);
+
+        //Computes the RHS vector
+        getResidualVectorPoisson(index, dphi_dx, weight_, djac_, rhsVector); 
+
+        index++;        
+    };  
+    
+    //Apply boundary conditions
+    setBoundaryConditionsPoisson(jacobianNRMatrix, rhsVector);
 
     return;
 };
@@ -2102,6 +2252,115 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatr
         };
         index++; 
     }; 
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                for (int j = 0; j < nLocDOF; j++){
+                    lagrMultMatrix(DIM*i+k,j) = 0.;
+                    lagrMultMatrix(j,DIM*i+k) = 0.;
+                };
+                lagrMultVector[DIM*i+k] = 0.0;
+            };
+        };
+    };
+    
+    return;
+};
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSameMeshPoisson(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector){
+
+    VecDouble xsi(DIM);
+    
+    MatrixDouble dphi_dx(nElNodes,DIM);
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    QuadShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    double tSUPG_; double tPSPG_; double tLSIC_;
+
+    double &k1 = parameters.getArlequinK1();
+    double &k2 = parameters.getArlequinK2();
+    double &alpha_f = parameters.getAlphaF();
+    double &gamma = parameters.getGamma();
+    double &dTime_ = parameters.getTimeStep();
+    
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        //Velocity
+        VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
+        interpolateVelocity(index, u_, uPrev_);
+        una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
+
+        //Velocity Derivatives
+        MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
+        interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+        duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
+
+        //Lagrange Multiplier
+        VecDouble lagM_(DIM);
+        interpolateLagMultiplier(index, lagM_);
+
+        //Lagrange Multiplier Derivatives
+        MatrixDouble dL_dx(DIM,DIM);
+        interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+        
+        double WJ = weight_ * djac_;
+        for (int i = 0; i < nElNodes; i++){
+            for (int j = 0; j < nElNodes; j++){
+                double l2 = DI -> phi_(i,index) * DI -> phi_(j,index) * WJ * k1;
+                // L2 COUPLING OPERATOR
+                lagrMultMatrix(i,j) -= l2;
+                for (int l = 0; l < DIM; l++){
+                    //H1 COUPLING OPERATOR
+                    double K = dphi_dx(i,l) * dphi_dx(j,l);
+                    lagrMultMatrix(i,j) -= K * WJ * k2;
+                };
+            };
+            // Lagrange multipliers residual
+            double L2 = lagM_[0] * DI -> phi_(i,index) * k1;
+
+            double H1 = 0.;
+            for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(0,l) * k2;
+
+            lagrMultVector[i] += (L2 + H1) * WJ;
+
+            double L2u = una_[0] * DI -> phi_(i,index) * k1;
+
+            double H1u = 0.;
+            for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(0,l) * k2;
+
+            rhsVector[i] += (L2u + H1u) * WJ;
+        };
+        index++; 
+    }; 
+
+    for (int i = 0; i < nElNodes; i++){
+        if ((*nodes_)[connect_[i]] -> getConstrains(0) == 1) {
+            for (int j = 0; j < nElNodes; j++){
+                lagrMultMatrix(i,j) = 0.;
+                lagrMultMatrix(j,i) = 0.;
+            };
+            lagrMultVector[i] = 0.0;
+        };
+    };
     
     return;
 };
@@ -2486,6 +2745,154 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
         index++;        
     };  
 
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                for (int j = 0; j < nLocDOF; j++){
+                    lagrMultMatrix(DIM*i+k,j) = 0.;
+                    lagrMultMatrix(j,DIM*i+k) = 0.;
+                };
+                //lagrMultMatrix(12+i,12+i) = 1.;
+                rhsVectorLM[DIM*i+k] = 0.0;
+                // std::cout << "AQUI2 elem different mesh" << std::endl;
+            };
+        }
+    };
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshPoisson(int &ielem, double &tPSPG2_, VecDouble &press, 
+                                                     VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
+                                                     MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector){
+
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
+    QuadShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    SpecialQuad sQuad = SpecialQuad();
+
+    //tARLQ_ = -tPSPG2_;
+
+    VecDouble phiLM_(nElNodes);
+    VecDouble phi_(nElNodes);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble dphiL_dx(nElNodes,DIM);    
+    
+    double &dTime_ = parameters.getTimeStep();
+    double &visc_ = parameters.getViscosity();
+    double &dens_ = parameters.getDensity();
+    double &alpha_f = parameters.getAlphaF();
+    double &alpha_m = parameters.getAlphaM();
+    double &gamma = parameters.getGamma();
+    double &k1 = parameters.getArlequinK1();
+    double &k2 = parameters.getArlequinK2();
+    int &iTimeStep = parameters.getTimeInstant();
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    // if (index_ == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
+    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+        
+        if ((intPointCorrespElem[index] == ielem)){
+
+            //Defines the integration points adimentional coordinates
+            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+            
+            //Computes the velocity shape functions
+            shapeQuad.evaluate(xsi,phi_);
+            
+            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+
+            //Computes the coarse mesh shape functions
+            shapeQuad.evaluate(xsi_intp,phiLM_);
+            
+            //Returns the quadrature integration weight
+            double weight_ = sQuad.WeightList(index);
+            
+            double djac_ = 0.;
+            //Computes the jacobian matrix
+            getJacobianMatrix(xsi_intp, ainv_, djac_);
+                        
+            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+
+            dphiL_dx = dphi_dx;
+
+            djac_ = 0.;
+            getJacobianMatrix(xsi, ainv_, djac_);
+            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+            //Lagrange Multiplier
+            VecDouble lagM_(DIM), una_(DIM);
+            MatrixDouble duna_dx(DIM,DIM);
+            interpolateLagMultiplier(index, lagM_);
+
+            //Lagrange Multiplier Derivatives
+            MatrixDouble dL_dx(DIM,DIM);
+            interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+
+            double dalpha_dx = 0.;
+            double dalpha_dy = 0.;
+            double WJ = weight_ * djac_;
+
+            for (int i = 0; i < nElNodes; ++i){
+                // dalpha_dx += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[0][i];
+                // dalpha_dy += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[1][i];
+                
+                una_[0] += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
+                una_[1] += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
+            }
+            for (int i = 0; i < nElNodes; i++){
+                for (int j = 0; j < nElNodes; j++){
+                    double l2 = phi_[i] * phiLM_[j] * WJ * k1;
+                    // L2 COUPLING OPERATOR
+                    lagrMultMatrix(i,j) += l2;
+                    for (int l = 0; l < DIM; l++){
+                        //H1 COUPLING OPERATOR
+                        double K = dphi_dx(i,l) * dphiL_dx(j,l);
+        
+                        lagrMultMatrix(i,j) += K * WJ * k2;
+                    };
+                };
+                // Lagrange multipliers residual
+                double L2 = lagM_[0] * phiLM_[i] * k1;
+
+                double H1 = 0.;
+                for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(0,l) * k2;
+
+                rhsVectorLM[i] -= (L2 + H1) * WJ;
+
+                double L2u = una_[0] * phi_[i] * k1;
+
+                double H1u = 0.;
+                for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(0,l) * k2;
+
+                rhsVector[i] -= (L2u + H1u) * WJ;
+            };
+        };
+        index++;        
+    };  
+
+
+    for (int i = 0; i < nElNodes; i++){
+        if ((*nodes_)[connect_[i]] -> getConstrains(0) == 1) {
+            for (int j = 0; j < nElNodes; j++){
+                lagrMultMatrix(i,j) = 0.;
+                lagrMultMatrix(j,i) = 0.;
+            };
+            //lagrMultMatrix(12+i,12+i) = 1.;
+            rhsVectorLM[i] = 0.0;
+            // std::cout << "AQUI2 elem different mesh" << std::endl;
+        };
+    };
+
     return;
 };
 
@@ -2858,7 +3265,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
                 };
                 //lagrMultMatrix(12+i,12+i) = 1.;
                 arlequinStabVector[DIM*i+k] = 0.0;
-                std::cout << "AQUI2 elem different mesh" << std::endl;
+                // std::cout << "AQUI2 elem different mesh" << std::endl;
             };
         }
     };

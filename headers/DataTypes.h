@@ -29,4 +29,7 @@ typedef Eigen::Matrix<int64_t, Dynamic, 1> VecInt;
 typedef Eigen::VectorXd VecDouble;
 typedef Eigen::Matrix<bool, Dynamic, 1>  VecBool;
 
+enum ProblemType {ENavierStokes,EPoisson};
+
+
 #endif /* defined(__FemSC__DATATYPES__) */
