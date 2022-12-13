@@ -14,7 +14,7 @@
 #ifndef INTEG_QUADRATURE_H
 #define INTEG_QUADRATURE_H
 
-#include "QuadraticShapeFunction.h"
+#include "ShapeFunction.h"
 #include <iterator>
 #include <math.h>
 #include "DataTypes.h"

@@ -30,6 +30,6 @@ typedef Eigen::VectorXd VecDouble;
 typedef Eigen::Matrix<bool, Dynamic, 1>  VecBool;
 
 enum ProblemType {ENavierStokes,EPoisson};
-
+enum ArlequinStabType{ENoStab, ELocalResidual, EGlobalResidual, EEqualWeighted, EDiffWeighted};
 
 #endif /* defined(__FemSC__DATATYPES__) */

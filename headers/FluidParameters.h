@@ -90,6 +90,37 @@ public:
     double& getPi() {return pi;}
     int& getTimeInstant() {return timeInstant;}
 
+    void setExactSolution(std::function<void (const VecDouble &coord, double &time, double &pres, VecDouble &gradP, VecDouble &vel, MatrixDouble &gradVel)> exSol){
+        exactSolution = exSol;
+    }
+
+    std::function<void (const VecDouble &coord, double &time, double &pres, VecDouble &gradP, VecDouble &vel, MatrixDouble &gradVel)> &getExactSolution(){
+        return exactSolution;
+    }
+
+    void setForcingFunction(std::function<void (const VecDouble &coord, double &time, VecDouble &force)> ffunction){
+        forceFunction = ffunction;
+    }
+
+    std::function<void (const VecDouble &coord, double &time, VecDouble &force)> &getForcingFunction(){
+        return forceFunction;
+    }
+    void setExactSolutionPoisson(std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> exSol){
+        exactSolutionPoisson = exSol;
+    }
+
+    std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> &getExactSolutionPoisson(){
+        return exactSolutionPoisson;
+    }
+
+    void setForcingFunctionPoisson(std::function<void (const VecDouble &coord, double &force)> ffunction){
+        forceFunctionPoisson = ffunction;
+    }
+
+    std::function<void (const VecDouble &coord, double &force)> &getForcingFunctionPoisson(){
+        return forceFunctionPoisson;
+    }
+
 private:
     double viscosity;
     double density;
@@ -104,6 +135,11 @@ private:
     VecDouble velocityInf;
 
     int timeInstant;
+
+    std::function<void (const VecDouble &coord, double &time, double &pres, VecDouble &gradP, VecDouble &vel, MatrixDouble &gradVel)> exactSolution = 0; 
+    std::function<void (const VecDouble &coord, double &time, VecDouble &force)> forceFunction = 0; 
+    std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> exactSolutionPoisson = 0; 
+    std::function<void (const VecDouble &coord, double &force)> forceFunctionPoisson = 0; 
 };
 
 #endif

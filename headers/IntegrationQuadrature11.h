@@ -14,7 +14,7 @@
 #ifndef INTEG_QUADRATURE11_H
 #define INTEG_QUADRATURE11_H
 
-#include "QuadraticShapeFunction.h"
+#include "ShapeFunction.h"
 #include <math.h>
 #include <iterator>
 
@@ -59,7 +59,9 @@ private:
     VecDouble pointWeight;
 
     //Defines shape functions
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction<DIM,DEG> shapeQuad;
+    
+    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
 
 };
 

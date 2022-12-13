@@ -13,7 +13,7 @@
 #ifndef PART_QUADRATURE_H
 #define PART_QUADRATURE_H
 
-#include "QuadraticShapeFunction.hpp"
+#include "ShapeFunction.hpp"
 #include "LinearShapeFunction.hpp"
 
 

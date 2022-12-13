@@ -13,7 +13,7 @@
 #ifndef PART_QUADRATURE_H
 #define PART_QUADRATURE_H
 
-#include "QuadraticShapeFunction.hpp"
+#include "ShapeFunction.hpp"
 
 /// Defines the domain integration sub-element partitioned Hammer quadrature
 

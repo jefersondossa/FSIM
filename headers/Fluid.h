@@ -85,7 +85,10 @@ private:
     bool computeDragAndLift;
     int iTimeStep;
     Mat               A;
-    
+    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+
 public:
     std::vector<int> dragAndLiftBoundary;
     int numberOfLines;
@@ -113,9 +116,6 @@ public:
     double integScheme;    //Time Integration Scheme
     Parameters fluidParameters;
     DIntegration* numIntegration; //Numerical integration
-    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
     ProblemType fProbType = ProblemType::ENavierStokes;
 
@@ -141,6 +141,10 @@ public:
     void renumberConnectivity();
     void setBoundaryConstrains();
     void setBoundarySides();
+
+    Parameters &getFluidParameters(){
+        return fluidParameters;
+    }
 
     /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
@@ -231,6 +235,8 @@ public:
             values.push_back(token);
         return values;
     }
+
+    void computeError();
 };
 
 

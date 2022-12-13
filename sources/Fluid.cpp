@@ -217,9 +217,6 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
 
     if (rank == 0) std::cout << "3/9 Reading elements..." << std::endl;
 
-    // int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
-    // int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
-
     //defyning the maps that are used to store the elements information
     std::unordered_map<int, std::string> gmshElement = { {1, "line"}, {2, "triangle"}, {3, "quadrilateral"}, {8, "line3"}, {9, "triangle6"}, {10, "quadrilateral9"}, {15, "vertex"}, {16, "quadrilateral8"}, {20, "triangle9"}, {21, "triangle10"}, {26, "line4"}, {36, "quadrilateral16"}, {39, "quadrilateral12"} };
     std::unordered_map<std::string, int> numNodes2 = { {"vertex", 1}, {"line", 2}, {"triangle", 3}, {"quadrilateral", 4}, {"line3", 3}, {"triangle6", 6}, {"quadrilateral8", 8}, {"quadrilateral9", 9}, {"line4", 4}, {"triangle", 9}, {"triangle10", 10}, {"quadrilateral12", 12}, {"quadrilateral16", 16}};
@@ -1696,8 +1693,11 @@ int Fluid<DIM,DEG>::solvePoisson(){
         ierr = VecDestroy(&Allu); CHKERRQ(ierr);
         ierr = MatDestroy(&A); CHKERRQ(ierr);
 
+    if (fluidParameters.getExactSolutionPoisson()) computeError();
+
     printResultsPoisson();
 
+    
     return 0;
 };
 
@@ -1831,6 +1831,42 @@ void Fluid<DIM,DEG>::printResultsPoisson(){
 
 
 
+}
+
+//------------------------------------------------------------------------------
+//----------------COMPUTE AND ASSEMBLE THE GLOBAL MATRIX AND VECTOR-------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::computeError() {
+
+    std::ofstream rprint("errors.txt",std::ios::app);
+
+    VecDouble errorsTotal(3);
+    VecDouble errorsProcess(3);
+    errorsTotal.setZero();
+    errorsProcess.setZero();
+
+    // Loop over the elements
+    for (int jel = numElem; jel--; ){
+
+        VecDouble errors(3);
+
+        if (fProbType == ProblemType::EPoisson) elements_[jel] -> computeErrorPoisson(errors);
+        
+        errorsProcess += errors;
+
+    }; //Elements
+
+    MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+
+    if (rank == 0){
+        std::cout << "\n\nERROR REPORT:\n" << std::scientific << std::setprecision(10)
+            << "L2 state var = " << sqrt(errorsTotal[0]) << "\n" 
+            << "Semi H1 state var = " << sqrt(errorsTotal[1]) << "\n" 
+            << "H1 state var = " << sqrt(errorsTotal[2]) << "\n"; 
+        rprint << sqrt(errorsTotal[0]) << " " << sqrt(errorsTotal[1]) << " " << sqrt(errorsTotal[2]) << std::endl;
+    }
+    return;
 }
 
 template class Fluid<2,1>;

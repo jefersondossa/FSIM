@@ -60,7 +60,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
                                            std::vector<Elements *> elements, 
                                            int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch){
     
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction<DIM,DEG> shapeQuad;
     VecDouble phi_(nElNodes);
 
     MatrixDouble ainv(DIM,DIM);
@@ -2061,11 +2061,11 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac
             //     int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
             //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(DIM*nElNodes+i,DIM*j+k),ADD_VALUES);
             // };
-            // if (fabs(ArlequinA1(DIM*i+k,DIM*j+k)) >= 1.e-15){
-            //     int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-            //     int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[j] + k;
-            //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(DIM*i+k,DIM*j+k),ADD_VALUES);
-            // };                   
+            if (fabs(ArlequinA1(i,j)) >= 1.e-15){
+                int dof_i = numNodesCoarse + numNodesFine + connecL[i];
+                int dof_j = numNodesCoarse + numNodesFine + connecL[j];
+                MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(i,j),ADD_VALUES);
+            };                   
         };
         //RHS VECTOR
         //COUPLING OPERATOR
@@ -2075,9 +2075,9 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac
         dof_i = numNodesCoarse + connec[i];
         VecSetValues(b,1,&dof_i,&rhsLagMult2[i],ADD_VALUES);
 
-        // //ARLEQUIN STABILIZATION
-        // dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM*connecL[i] + k;
-        // VecSetValues(b,1,&dof_i,&RhsArlequin2[DIM*i+k],ADD_VALUES);
+        //ARLEQUIN STABILIZATION
+        dof_i = numNodesCoarse + numNodesFine + connecL[i];
+        VecSetValues(b,1,&dof_i,&RhsArlequin2[i],ADD_VALUES);
     };
 
 
@@ -2303,11 +2303,15 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
             //Computes element matrix
 
             elementsFine_[jel] -> getLagrangeMultipliersSameMesh(Ajac2, rhsLagMult2, Rhs2);
-            //PSPG and SUPG stabilizations
-            elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
-
-            //Arlequin Stabilization
-            elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2);
+            
+            if (fArlequinStab != ArlequinStabType::ENoStab){
+                //PSPG and SUPG stabilizations
+                elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
+            
+                //Arlequin Stabilization
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2);
+            }
+            
             
             setMatVecValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
                                            Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
@@ -2380,9 +2384,11 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
                 
                 elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac2,rhsLagMult2,Rhs2);
 
-                elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
-        
-                elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
+                if (fArlequinStab != ArlequinStabType::ENoStab){
+                    elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
+            
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
+                }
 
                 setMatVecValuesLagMultFineCoarse(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
                                                  Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
@@ -2469,12 +2475,12 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
             //Computes element matrix
 
             elementsFine_[jel] -> getLagrangeMultipliersSameMeshPoisson(Ajac2, rhsLagMult2, Rhs2);
-            // //PSPG and SUPG stabilizations
-            // elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
-
-            // //Arlequin Stabilization
-            // elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2);
             
+            if (fArlequinStab != ArlequinStabType::ENoStab){
+                //Arlequin Stabilization
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMeshPoisson(ArlequinA1, ArlequinA2, RhsArlequin2);
+            }
+
             setMatVecValuesLagMultFineFinePoisson(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
                                                   Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
                                                   elementsFine_[jel] -> getConnectivity(),
@@ -2546,10 +2552,10 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
                 
                 elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac2,rhsLagMult2,Rhs2);
 
-                // elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
-        
-                // elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
-
+                if (fArlequinStab != ArlequinStabType::ENoStab){
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
+                }
+                
                 setMatVecValuesLagMultFineCoarsePoisson(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
                                                         Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
                                                         elementsCoarse_[iElemCoarse] -> getConnectivity(), 
@@ -2766,33 +2772,33 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 
 
             
-// #if defined(PETSC_HAVE_MUMPS)
-//             ierr = KSPSetType(ksp,KSPPREONLY);
-//             ierr = KSPGetPC(ksp,&pc);
-//             ierr = PCSetType(pc, PCLU);
+#if defined(PETSC_HAVE_MUMPS)
+            ierr = KSPSetType(ksp,KSPPREONLY);
+            ierr = KSPGetPC(ksp,&pc);
+            ierr = PCSetType(pc, PCLU);
             
-//             ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-//             PCFactorSetUpMatSolverType(pc);
-//             PCFactorGetMatrix(pc,&F);
+            // ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+            // PCFactorSetUpMatSolverType(pc);
+            // PCFactorGetMatrix(pc,&F);
             
-//             PetscInt ival,icntl;
-//             icntl = 14; ival = 80;
-//             MatMumpsSetIcntl(F,icntl,ival);
-//             icntl = 28; ival = 2;
-//             MatMumpsSetIcntl(F,icntl,ival);
-//             icntl = 29; ival = 2;
-//             MatMumpsSetIcntl(F,icntl,ival);
-//             icntl = 16; ival = 0;
-//             MatMumpsSetIcntl(F,icntl,ival);
-//             // icntl = 4; ival = 3;
-//             // MatMumpsSetIcntl(F,icntl,ival);
-//             // icntl = 11; ival = 1;
-//             // MatMumpsSetIcntl(F,11,1);
+            // PetscInt ival,icntl;
+            // icntl = 14; ival = 80;
+            // MatMumpsSetIcntl(F,icntl,ival);
+            // icntl = 28; ival = 2;
+            // MatMumpsSetIcntl(F,icntl,ival);
+            // icntl = 29; ival = 2;
+            // MatMumpsSetIcntl(F,icntl,ival);
+            // icntl = 16; ival = 0;
+            // MatMumpsSetIcntl(F,icntl,ival);
+            // icntl = 4; ival = 3;
+            // MatMumpsSetIcntl(F,icntl,ival);
+            // icntl = 11; ival = 1;
+            // MatMumpsSetIcntl(F,11,1);
 
-//             //MatMumpsSetIcntl(F,21,0);
+            //MatMumpsSetIcntl(F,21,0);
 
             
-// #endif
+#endif
             // std::cout << "AQQQEQE1 " << rank << std::endl;
             // ierr = PCSetFromOptions(pc);CHKERRQ(ierr);
             // std::cout << "AQQQEQE2 " << rank << std::endl;
@@ -2830,7 +2836,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 //                                                       << icntl14 << std::endl;
 // #endif
             
-            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
             
@@ -2995,7 +3001,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         }
 
         //Compute real velocity
-        QuadShapeFunction<DIM,DEG>                       shapeQuad;
+        ShapeFunction<DIM,DEG>                       shapeQuad;
         VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
@@ -3407,7 +3413,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
 
         //Compute real velocity
         
-        QuadShapeFunction<DIM,DEG> shapeQuad;
+        ShapeFunction<DIM,DEG> shapeQuad;
         VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
@@ -3755,7 +3761,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
 
 
     //Compute real velocity
-    QuadShapeFunction<DIM,DEG>                       shapeQuad;
+    ShapeFunction<DIM,DEG>                       shapeQuad;
     VecDouble phi_(nElNodes);
     
     for (int i = 0; i<numNodesFine; i++){

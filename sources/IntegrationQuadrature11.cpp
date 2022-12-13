@@ -215,7 +215,6 @@ void IntegQuadratureSpecial<3,2>::setQuadrature(){
 template<int DIM, int DEG>
 double IntegQuadratureSpecial<DIM,DEG>::interpolateQuadraticVariable(VecDouble &nValues, int point) const {
     
-    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4; 
     VecDouble xsi(DIM);
     double int_value = 0.;
     VecDouble phi_(nElNodes);

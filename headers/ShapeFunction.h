@@ -11,15 +11,15 @@
 //--------------------------QUADRATIC SHAPE FUNCTION----------------------------
 //------------------------------------------------------------------------------
 
-#ifndef QUADSHAPEFUNCTION_H
-#define QUADSHAPEFUNCTION_H
+#ifndef SHAPEFUNCTION_H
+#define SHAPEFUNCTION_H
 
 #include "DataTypes.h"
 
 /// Defines the quadratic shape functions and its derivatives
 
 template<int DIM, int DEG>
-class QuadShapeFunction{
+class ShapeFunction{
 public:
     //Number of element notes    
     static const int numIntpNodes = 4*DIM-2;

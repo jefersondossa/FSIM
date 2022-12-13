@@ -1,11 +1,11 @@
-#include "QuadraticShapeFunction.h"
+#include "ShapeFunction.h"
 #include "DataTypes.h"
 
 //------------------------------------------------------------------------------
 //-------------------------COMPUTE SHAPE FUNCTION VALUE-------------------------
 //------------------------------------------------------------------------------
 template<>
-void QuadShapeFunction<2,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
+void ShapeFunction<2,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -25,7 +25,7 @@ void QuadShapeFunction<2,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
 // Defines quadratic shape functions and its derivatives 
 // for triangles and tetrahedrons
 template<>
-void QuadShapeFunction<2,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
+void ShapeFunction<2,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
     
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -47,7 +47,7 @@ void QuadShapeFunction<2,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
 }
 
 template<>
-void QuadShapeFunction<3,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
+void ShapeFunction<3,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -67,7 +67,7 @@ void QuadShapeFunction<3,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
 // Defines quadratic shape functions and its derivatives 
 // for triangles and tetrahedrons
 template<>
-void QuadShapeFunction<3,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
+void ShapeFunction<3,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
     
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -103,7 +103,7 @@ void QuadShapeFunction<3,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
 //-------------------COMPUTE SHAPE FUNCTION DERIVATIVE VALUE--------------------
 //------------------------------------------------------------------------------
 template<>
-void QuadShapeFunction<2,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
+void ShapeFunction<2,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
 
     dphi(0,0) = -1.;
     dphi(0,1) = -1.;
@@ -122,7 +122,7 @@ void QuadShapeFunction<2,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi)
 }
 
 template<>
-void QuadShapeFunction<2,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
+void ShapeFunction<2,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
 
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
@@ -155,7 +155,7 @@ void QuadShapeFunction<2,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi)
 }
 
 template<>
-void QuadShapeFunction<3,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
+void ShapeFunction<3,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
 
     dphi(0,0) = -1.0;
     dphi(0,1) = -1.0;
@@ -178,7 +178,7 @@ void QuadShapeFunction<3,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi)
 }
 
 template<>
-void QuadShapeFunction<3,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
+void ShapeFunction<3,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const {
 
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
@@ -235,13 +235,13 @@ void QuadShapeFunction<3,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi)
 //----------------COMPUTE SHAPE FUNCTION SECOND DERIVATIVE VALUE----------------
 //------------------------------------------------------------------------------
 template<>
-void QuadShapeFunction<2,1>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<2,1>::evaluateHessian(double ***ddphi) const {
 
     return;
 }
 
 template<>
-void QuadShapeFunction<2,2>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<2,2>::evaluateHessian(double ***ddphi) const {
 
     ddphi[0][0][0] = 4.;
     ddphi[0][1][0] = 4.;
@@ -282,7 +282,7 @@ void QuadShapeFunction<2,2>::evaluateHessian(double ***ddphi) const {
 }
 
 template<>
-void QuadShapeFunction<3,1>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<3,1>::evaluateHessian(double ***ddphi) const {
 
     return;
 }
@@ -290,7 +290,7 @@ void QuadShapeFunction<3,1>::evaluateHessian(double ***ddphi) const {
 
 
 template<>
-void QuadShapeFunction<3,2>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<3,2>::evaluateHessian(double ***ddphi) const {
 
     ddphi[0][0][0] = 4.;
     ddphi[0][1][0] = 0.;
@@ -398,7 +398,7 @@ void QuadShapeFunction<3,2>::evaluateHessian(double ***ddphi) const {
 
 
 template<>
-void QuadShapeFunction<2,1>::getCoordinates(double** &coord) const {
+void ShapeFunction<2,1>::getCoordinates(double** &coord) const {
 
     coord[0][0] = 0.0;
     coord[1][0] = 0.0;
@@ -413,7 +413,7 @@ void QuadShapeFunction<2,1>::getCoordinates(double** &coord) const {
 }
 
 template<>
-void QuadShapeFunction<2,2>::getCoordinates(double** &coord) const {
+void ShapeFunction<2,2>::getCoordinates(double** &coord) const {
 
     coord[0][0] = 0.0;
     coord[1][0] = 0.0;
@@ -437,7 +437,7 @@ void QuadShapeFunction<2,2>::getCoordinates(double** &coord) const {
 }
 
 template<>
-void QuadShapeFunction<3,1>::getCoordinates(double** &coord) const {
+void ShapeFunction<3,1>::getCoordinates(double** &coord) const {
 
     coord[0][0] = 0.0;
     coord[1][0] = 0.0;
@@ -459,7 +459,7 @@ void QuadShapeFunction<3,1>::getCoordinates(double** &coord) const {
 }
 
 template<>
-void QuadShapeFunction<3,2>::getCoordinates(double** &coord) const {
+void ShapeFunction<3,2>::getCoordinates(double** &coord) const {
 
     coord[0][0] = 0.0;
     coord[1][0] = 0.0;

@@ -24,10 +24,11 @@ class DomainIntegration{
 public:
     DomainIntegration(){
         IntegQuadrature<DIM,DEG>        quad;
-        QuadShapeFunction<DIM,DEG>      shapeFunction;
+        ShapeFunction<DIM,DEG>      shapeFunction;
         IntegQuadratureSpecial<DIM,DEG> Squad;
-        int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
 
+        int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+        
         int nIntegPointsNormal = quad.getNumberOfIntegrationPoints();
         int nIntegPointsSpecial = Squad.getNumberOfIntegrationPoints();
 

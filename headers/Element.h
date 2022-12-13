@@ -17,6 +17,7 @@
 #include "Node.h"
 #include "BoundaryIntegrationQuadrature.h"
 #include "FluidParameters.h"
+#include "PanicButton.h"
 
 #include "IntegrationQuadrature.h"
 #include "IntegrationQuadrature11.h"
@@ -43,16 +44,14 @@ public:
 
     typedef FluidParameters<DIM,DEG>                            FParameters;
 
-    typedef QuadShapeFunction<DIM,DEG>                          ShapeFunction;
+    typedef ShapeFunction<DIM,DEG>                              ShapeF;
 
     /// Defines the domain integration class locally
     typedef DomainIntegration<DIM,DEG>                          DIntegration;
 
 private:
-    const int     nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
-    const int     nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
     std::vector<Nodes *>   *nodes_;    //Velocity nodes
-    FParameters   parameters;
+    FParameters   *parameters;
     VecInt        connect_; //Velocity mesh connectivity 
     int           index_;             //Element index
     VecDouble     xK, XK;
@@ -75,6 +74,9 @@ private:
     bool          model; //true for local and false for global
     bool          FSIInterface;
     DIntegration  *DI;   
+    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
 public:
     /// fluid element constructor
@@ -86,7 +88,7 @@ public:
         index_ = index;
         for (int i = nElNodes; i--; ) connect_[i] = connect[i];
         nodes_ = &nodes;
-        parameters = param;
+        parameters = &param;
 
         // std::cout <<"AASASD 1"<<std::endl;
         DI = dInt;
@@ -170,7 +172,7 @@ public:
     /// Interpolate velocity
     /// @param int integration point index @param velocity @param previous time step velocity
     void interpolateVelocity(int &index, VecDouble &u_, VecDouble &uPrev_);
-
+    
     /// Interpolate Coordinates
     /// @param int integration point index @param coordinates @param previous time step coordinates
     void interpolateCoordinates(int &index, VecDouble &x_, VecDouble &xPrev_);
@@ -200,7 +202,7 @@ public:
         MatrixDouble ainv_(DIM,DIM);
         MatrixDouble dphi_dx(nElNodes,DIM);
         
-        QuadShapeFunction<DIM,DEG>    shapeQuad;
+        ShapeFunction<DIM,DEG>    shapeQuad;
 
         xsi[0] = 0.5;
         xsi[1] = 0.5;
@@ -408,6 +410,7 @@ public:
     void getLagrangeMultipliersSameMeshPoisson(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
     void getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
+    void getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     /// Compute and store the Lagrange multiplier operator when integrationg
     /// the different mesh portion
@@ -421,6 +424,8 @@ public:
                                                        MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
                                                      MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
+    void getLagrangeMultipliersArlequinDifferentMeshPoisson(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                            MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
@@ -433,6 +438,8 @@ public:
     /// (usually for the mesh moving step)
     void getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getSteadyLaplace2(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+
+    void computeErrorPoisson(VecDouble &errors);
 
 };
 

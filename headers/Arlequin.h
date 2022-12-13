@@ -75,9 +75,6 @@ public:
     PetscLogDouble bytes = 0;
 
 private:
-    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
     int numElemCoarse;
     int numElemFine;
     int numBoundElemCoarse;
@@ -106,7 +103,17 @@ private:
     double alpha_m;
     double gamma;
 
+    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+
+    ArlequinStabType fArlequinStab = ArlequinStabType::ENoStab;
+
 public:
+
+    void setArlequinStabilization(ArlequinStabType stab){fArlequinStab = stab;}
+    ArlequinStabType &getArlequinStabilization(){return fArlequinStab;}
+
     /// Sets the coarse and mesh models. It is considered that the fine model
     /// is completely immersed on the coarse model.
     /// @param Fluid coarse model @param Fluid fine model

@@ -13,7 +13,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
         VecInt connec;
-        QuadShapeFunction<DIM,DEG> shapeQuad;
+        ShapeFunction<DIM,DEG> shapeQuad;
         VecDouble phi_(nElNodes);
         
         MatrixDouble ainv(DIM,DIM);
@@ -134,7 +134,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
         VecInt connec;
-        QuadShapeFunction<DIM,DEG>                       shapeQuad;
+        ShapeFunction<DIM,DEG>                       shapeQuad;
         VecDouble phi_(nElNodes);
         
         MatrixDouble ainv(DIM,DIM);

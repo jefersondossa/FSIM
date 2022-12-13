@@ -123,7 +123,7 @@ template<int DIM, int DEG>
 void Element<DIM,DEG>::setIntegPointWeightFunction() {
     
     VecDouble xsi(DIM);
-    ShapeFunction shapeQuad;
+    ShapeF shapeQuad;
     VecDouble phi_(nElNodes);
     
     NormalQuad nQuad = NormalQuad();
@@ -208,7 +208,7 @@ void Element<DIM,DEG>::getIntegPointCoordinates(){
 
     SpecialQuad sQuad = SpecialQuad();
     VecDouble xsi(DIM);
-    ShapeFunction   shapeQuad;
+    ShapeF   shapeQuad;
     VecDouble phi_(nElNodes);
 
     for (int i = 0; i < sQuad.getNumberOfIntegrationPoints(); i++){
@@ -280,10 +280,10 @@ void Element<DIM,DEG>::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, do
     MatrixDouble dx_dxsi(DIM,DIM);
     double xna_[DIM] = {};
 
-    ShapeFunction shapeQuad;
+    ShapeF shapeQuad;
     shapeQuad.evaluateGradient(xsi,dphi);
 
-    double &alpha_f = parameters.getAlphaF();
+    double &alpha_f = parameters->getAlphaF();
 
     dx_dxsi.setZero();
     for (int i = nElNodes; i--; ){
@@ -315,7 +315,7 @@ void Element<DIM,DEG>::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
     
     MatrixDouble dphi(nElNodes,DIM);
     
-    ShapeFunction shapeQuad;
+    ShapeF shapeQuad;
     
     shapeQuad.evaluateGradient(xsi,dphi);
     // shapeQuad.evaluateHessian(xsi,ddphi);
@@ -487,8 +487,8 @@ void Element<DIM,DEG>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     // std::cout << "asdasd 0 " << std::endl;
     int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
-    double &visc_ = parameters.getViscosity();
-    double &alpha_f = parameters.getAlphaF();
+    double &visc_ = parameters->getViscosity();
+    double &alpha_f = parameters->getAlphaF();
 
     VecDouble phi_(nElNodes);
 
@@ -500,7 +500,7 @@ void Element<DIM,DEG>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     MatrixDouble ainv_(DIM,DIM);
 
     double ident[DIM][DIM] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
-    ShapeFunction shapeQuad;
+    ShapeF shapeQuad;
     
     // std::cout << "asdasd 1 " << std::endl;
 
@@ -722,7 +722,7 @@ void Element<DIM,DEG>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     
 //     double xsi[2] = {};
 
-//     double &visc_ = parameters.getViscosity();
+//     double &visc_ = parameters->getViscosity();
 
 //     gaussQuad = bQuad.GaussQuadrature();
 //     double moment = 0.;
@@ -847,10 +847,10 @@ void Element<DIM,DEG>::getParameterSUPG(int &index, double &tSUPG_, double &tPSP
     double aux = 0.;
     double aux2 = 0.;
 
-    double &alpha_f = parameters.getAlphaF();
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    double &dTime_ = parameters.getTimeStep();
+    double &alpha_f = parameters->getAlphaF();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &dTime_ = parameters->getTimeStep();
 
     for (int i = nElNodes; i--; ){
         double a1 = 0.;
@@ -970,11 +970,11 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
     double lx__ = 0.;
     double ly__ = 0.;
 
-    double &alpha_f = parameters.getAlphaF();
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    double &dTime_ = parameters.getTimeStep();
-    double &k1 = parameters.getArlequinK1();
+    double &alpha_f = parameters->getAlphaF();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &dTime_ = parameters->getTimeStep();
+    double &k1 = parameters->getArlequinK1();
 
     for (int i = 0; i < nElNodes; i++){
         double ua = alpha_f * (*nodes_)[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousVelocity(0);
@@ -1245,10 +1245,10 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
 //     for (int i = DIM; i--; ) ainv_[i] = new double[DIM];
 //     NormalQuad nQuad = NormalQuad();
 
-//     double &visc_ = parameters.getViscosity();
-//     double &dens_ = parameters.getDensity();
-//     double &dTime_ = parameters.getTimeStep();
-//     double &k1 = parameters.getArlequinK1();
+//     double &visc_ = parameters->getViscosity();
+//     double &dens_ = parameters->getDensity();
+//     double &dTime_ = parameters->getTimeStep();
+//     double &k1 = parameters->getArlequinK1();
 
 //     double lambda[18][18] = {};
 //     double inercia[18][18] = {};
@@ -1377,13 +1377,13 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix){
 
-    double &dTime_ = parameters.getTimeStep();
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    double &alpha_f = parameters.getAlphaF();
-    double &alpha_m = parameters.getAlphaM();
-    double &gamma = parameters.getGamma();
-    int &iTimeStep = parameters.getTimeInstant();
+    double &dTime_ = parameters->getTimeStep();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &gamma = parameters->getGamma();
+    int &iTimeStep = parameters->getTimeInstant();
 
     //Velocity
     VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
@@ -1489,8 +1489,8 @@ void Element<DIM,DEG>::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getElemMatrixPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix){
 
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
 
     // Trust me, it improves performance!
     double VAGDT = visc_; 
@@ -1502,7 +1502,7 @@ void Element<DIM,DEG>::getElemMatrixPoisson(int &index, MatrixDouble &dphi_dx, d
             for (int k = DIM; k--;  ){
                 // for (int l = DIM; l--; ){
                     //Diffusion matrix
-                    double K = dphi_dx(i,k) * dphi_dx(j,k) * VAGDT;
+                    double K = dphi_dx(i,k) * dphi_dx(j,k);
                     // if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m) * VAGDT;
 
                     jacobianNRMatrix(i,j) += K * WJ;
@@ -1603,7 +1603,7 @@ void Element<DIM,DEG>::setBoundaryConditionsLagrangeMultipliers(double** jacobia
 
     for (int i = 0; i < nLocDOF; i++) rhsVector[i] = 0.;
     double U_[nLocDOF] = {};
-    double &alpha_f = parameters.getAlphaF();
+    double &alpha_f = parameters->getAlphaF();
 
     for (int i = 0; i < nElNodes; i++)
         for (int k = 0; k < DIM; k++)
@@ -1635,13 +1635,13 @@ void Element<DIM,DEG>::setBoundaryConditionsLagrangeMultipliers(double** jacobia
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector){
 
-    double &dTime_ = parameters.getTimeStep();
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    double &alpha_f = parameters.getAlphaF();
-    double &alpha_m = parameters.getAlphaM();
-    double &gamma = parameters.getGamma();
-    VecDouble fieldForce = parameters.getFieldForce();
+    double &dTime_ = parameters->getTimeStep();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &gamma = parameters->getGamma();
+    VecDouble fieldForce = parameters->getFieldForce();
 
     //Velocity
     VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
@@ -1730,9 +1730,10 @@ void Element<DIM,DEG>::getResidualVector(int &index, MatrixDouble &dphi_dx, doub
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getResidualVectorPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector){
 
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    VecDouble fieldForce = parameters.getFieldForce();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    VecDouble fieldForce = parameters->getFieldForce();
+    auto force = parameters->getForcingFunctionPoisson();
 
     //Velocity
     VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
@@ -1746,15 +1747,20 @@ void Element<DIM,DEG>::getResidualVectorPoisson(int &index, MatrixDouble &dphi_d
 
     double WJ = weight_ * djac_  * intPointWeightFunction[index];
 
+    VecDouble xna_(DIM), xnaprev(DIM);
+    interpolateCoordinates(index,xna_,xnaprev);
+    double forcingF;
+    if (force) force(xna_,forcingF);
+
     for (int i = nElNodes; i--; ){
         double shapeFi = DI -> phi_(i,index);
 
         //Viscosity
         double K = 0.;
-        for (int l=DIM; l--; ) K += dphi_dx(i,l) * duna_dx(0,l) * visc_;
+        for (int l=DIM; l--; ) K += dphi_dx(i,l) * duna_dx(0,l);
 
         //External force
-        double F = fieldForce[0] * shapeFi * dens_;
+        double F = (fieldForce[0] + forcingF) * shapeFi;
         
         rhsVector[i] += (-K + F) * WJ;
         
@@ -1828,7 +1834,7 @@ void Element<DIM,DEG>::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, 
     MatrixDouble dphi_dx(nElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);
 
-    ShapeFunction           shapeQuad;
+    ShapeF           shapeQuad;
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
@@ -1879,7 +1885,7 @@ void Element<DIM,DEG>::getPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhs
     MatrixDouble dphi_dx(nElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);
 
-    ShapeFunction           shapeQuad;
+    ShapeF           shapeQuad;
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
@@ -1920,7 +1926,7 @@ template<int DIM, int DEG>
 void Element<DIM,DEG>::getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
-    ShapeFunction           shapeQuad;
+    ShapeF           shapeQuad;
     
     MatrixDouble dphi_dx(nElNodes,DIM);
 
@@ -1982,12 +1988,12 @@ void Element<DIM,DEG>::getSteadyLaplace2(MatrixDouble &jacobianNRMatrix, VecDoub
     VecDouble xsi(DIM);
     MatrixDouble dphi(nElNodes,DIM);
     
-    ShapeFunction           shapeQuad;
+    ShapeF           shapeQuad;
     // ShapeFunctionDerivative dphi_dx;
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
-    double &dTime_ = parameters.getTimeStep();
+    double &dTime_ = parameters->getTimeStep();
         
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -2172,17 +2178,17 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatr
 
     MatrixDouble ainv_(DIM,DIM);
 
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeF shapeQuad;
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
     double tSUPG_; double tPSPG_; double tLSIC_;
 
-    double &k1 = parameters.getArlequinK1();
-    double &k2 = parameters.getArlequinK2();
-    double &alpha_f = parameters.getAlphaF();
-    double &gamma = parameters.getGamma();
-    double &dTime_ = parameters.getTimeStep();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    double &alpha_f = parameters->getAlphaF();
+    double &gamma = parameters->getGamma();
+    double &dTime_ = parameters->getTimeStep();
     
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -2279,17 +2285,17 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMeshPoisson(MatrixDouble &lagrM
 
     MatrixDouble ainv_(DIM,DIM);
 
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeF shapeQuad;
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
     double tSUPG_; double tPSPG_; double tLSIC_;
 
-    double &k1 = parameters.getArlequinK1();
-    double &k2 = parameters.getArlequinK2();
-    double &alpha_f = parameters.getAlphaF();
-    double &gamma = parameters.getGamma();
-    double &dTime_ = parameters.getTimeStep();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    double &alpha_f = parameters->getAlphaF();
+    double &gamma = parameters->getGamma();
+    double &dTime_ = parameters->getTimeStep();
     
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -2389,9 +2395,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &ja
 
     // double tSUPG_; double tPSPG_; double tLSIC_;
 
-    // double &dens_ = parameters.getDensity();
-    // double &alpha_f = parameters.getAlphaF();
-    // double &k1 = parameters.getArlequinK1();
+    // double &dens_ = parameters->getDensity();
+    // double &alpha_f = parameters->getAlphaF();
+    // double &k1 = parameters->getArlequinK1();
     
     // for(double* it = nQuad.begin(); it != nQuad.end(); it++){
         
@@ -2483,16 +2489,16 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
     MatrixDouble dphi_dx(nElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);
 
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeF shapeQuad;
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
     double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
 
-    double &dens_ = parameters.getDensity();
-    double &alpha_f = parameters.getAlphaF();
-    double &alpha_m = parameters.getAlphaM();
-    double &k1 = parameters.getArlequinK1();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &k1 = parameters->getArlequinK1();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
@@ -2625,13 +2631,88 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
+
+    VecDouble xsi(DIM);    
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeF shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    double &dens_ = parameters->getDensity();
+    double &k1 = parameters->getArlequinK1();
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        double djac_ = 0.; 
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        
+        getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+
+        double wna_ = intPointWeightFunction[index];
+        
+        //Lagrange Multiplier Derivatives
+        MatrixDouble dL_dx(DIM,DIM);
+        interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+        for (int i = 0; i < nElNodes; i++){
+            for (int j = 0; j < nElNodes; j++){        
+
+                //ARLEQUIN STABILIZATION TERMS
+                double LL = 0.;
+
+                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_;
+
+                arlequinStab(i,j) += LL * weight_ * djac_;
+
+            };
+
+            //ARLEQUIN STABILIZATION TERMS
+            double LLx = 0.;
+            for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(0,m) * tARLQ_;
+            
+            arlequinStabVector[i] += (LLx) * weight_ * djac_;
+        };         
+        
+        index++;        
+    };  
+
+    for (int i = 0; i < nElNodes; i++){
+        if ((*nodes_)[connect_[i]] -> getConstrains(0) == 1) {
+            for (int j = 0; j < nElNodes; j++){
+                arlequinStab(i,j) = 0.;
+                arlequinStab(j,i) = 0.;
+            };
+            arlequinStabVector[i] = 0.0;
+        };
+    };
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
 void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, 
                                                      VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
                                                      MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction<DIM,DEG> shapeQuad;
     int index = 0;
     SpecialQuad sQuad = SpecialQuad();
 
@@ -2642,15 +2723,15 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
     MatrixDouble dphi_dx(nElNodes,DIM);
     MatrixDouble dphiL_dx(nElNodes,DIM);    
     
-    double &dTime_ = parameters.getTimeStep();
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    double &alpha_f = parameters.getAlphaF();
-    double &alpha_m = parameters.getAlphaM();
-    double &gamma = parameters.getGamma();
-    double &k1 = parameters.getArlequinK1();
-    double &k2 = parameters.getArlequinK2();
-    int &iTimeStep = parameters.getTimeInstant();
+    double &dTime_ = parameters->getTimeStep();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &gamma = parameters->getGamma();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    int &iTimeStep = parameters->getTimeInstant();
 
     MatrixDouble ainv_(DIM,DIM);
 
@@ -2773,7 +2854,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshPoisson(int &ielem, do
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction<DIM,DEG> shapeQuad;
     int index = 0;
     SpecialQuad sQuad = SpecialQuad();
 
@@ -2784,15 +2865,15 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshPoisson(int &ielem, do
     MatrixDouble dphi_dx(nElNodes,DIM);
     MatrixDouble dphiL_dx(nElNodes,DIM);    
     
-    double &dTime_ = parameters.getTimeStep();
-    double &visc_ = parameters.getViscosity();
-    double &dens_ = parameters.getDensity();
-    double &alpha_f = parameters.getAlphaF();
-    double &alpha_m = parameters.getAlphaM();
-    double &gamma = parameters.getGamma();
-    double &k1 = parameters.getArlequinK1();
-    double &k2 = parameters.getArlequinK2();
-    int &iTimeStep = parameters.getTimeInstant();
+    double &dTime_ = parameters->getTimeStep();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &gamma = parameters->getGamma();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    int &iTimeStep = parameters->getTimeInstant();
 
     MatrixDouble ainv_(DIM,DIM);
 
@@ -2922,11 +3003,11 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem,
     // dphiL_dx = new double*[DIM];
     // for (int i = DIM; i--; ) dphiL_dx[i] = new double[nElNodes];        
 
-    // double &dens_ = parameters.getDensity();
-    // double &alpha_f = parameters.getAlphaF();
-    // double &k1 = parameters.getArlequinK1();
-    // double &k2 = parameters.getArlequinK2();
-    // int &iTimeStep = parameters.getTimeInstant();
+    // double &dens_ = parameters->getDensity();
+    // double &alpha_f = parameters->getAlphaF();
+    // double &k1 = parameters->getArlequinK1();
+    // double &k2 = parameters->getArlequinK2();
+    // int &iTimeStep = parameters->getTimeInstant();
 
     // // jacobianNRMatrix.clear();
     // // rhsVector.clear();
@@ -3072,7 +3153,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
-    QuadShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction<DIM,DEG> shapeQuad;
     int index = 0;
     SpecialQuad sQuad = SpecialQuad();
 
@@ -3083,10 +3164,10 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
     MatrixDouble dphi_dx(nElNodes,DIM);
     MatrixDouble dphiL_dx(nElNodes,DIM);   
     
-    double &dens_ = parameters.getDensity();
-    double &alpha_f = parameters.getAlphaF();
-    double &k1 = parameters.getArlequinK1();
-    double &k2 = parameters.getArlequinK2();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
 
     // arlequinStab.clear();
     // arlequinStabVector.clear();
@@ -3272,6 +3353,177 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
 
     return;
 };
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                                          MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
+
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
+    ShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    SpecialQuad sQuad = SpecialQuad();
+
+    //tARLQ_ = -tPSPG2_;
+
+    VecDouble phi_(nElNodes);
+    VecDouble phiLM_(nElNodes);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble dphiL_dx(nElNodes,DIM);   
+    
+    double &dens_ = parameters->getDensity();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+
+    MatrixDouble ainv_(DIM,DIM);
+    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+        
+        if ((intPointCorrespElem[index] == ielem)){
+
+            //Defines the integration points adimentional coordinates
+            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+            
+            //Computes the velocity shape functions
+            shapeQuad.evaluate(xsi,phi_);
+            
+            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+
+            //Computes the coarse mesh shape functions
+            shapeQuad.evaluate(xsi_intp,phiLM_);
+            
+            //Returns the quadrature integration weight
+            double weight_ = sQuad.WeightList(index);
+            
+            double djac_ = 0.;
+            //Computes the jacobian matrix
+            getJacobianMatrix(xsi_intp, ainv_, djac_);
+                        
+            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+
+            dphiL_dx = dphi_dx;
+
+            djac_ = 0.;
+            getJacobianMatrix(xsi, ainv_, djac_);
+            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+            getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+
+            double wna_ = intPointWeightFunctionSpecial[index];
+
+            //Lagrange Multiplier Derivatives
+            MatrixDouble dL_dx(DIM,DIM);
+            interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+            for (int i = 0; i < nElNodes; i++){
+                for (int j = 0; j < nElNodes; j++){     
+                    double LL = 0.;
+
+                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_;
+
+                    arlequinStab(i,j) += LL * weight_ * djac_;
+                };
+
+                //ARLEQUIN STABILIZATION TERMS
+                double LLx = 0.;
+                for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m) * tARLQ_;
+
+                arlequinStabVector[i] += (LLx) * weight_ * djac_;
+            };
+        };
+        index++;        
+    };  
+    
+    for (int i = 0; i < nElNodes; i++){
+        if ((*nodes_)[connect_[i]] -> getConstrains(0) == 1) {
+            for (int j = 0; j < nElNodes; j++){
+                arlequinStab(i,j) = 0.;
+                arlequinStab(j,i) = 0.;
+            };
+            arlequinStabVector[i] = 0.0;
+        };
+    };
+
+    return;
+};
+
+
+//------------------------------------------------------------------------------
+//-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::computeErrorPoisson(VecDouble &errors){
+
+    int index = 0;
+    errors.setZero();
+
+    SpecialQuad  nQuad = SpecialQuad(); 
+    ShapeF      shapeQuad;
+
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble ainv_(DIM,DIM);
+    VecDouble xsi(DIM);
+    double weight_;
+
+    auto exactSol = parameters->getExactSolutionPoisson();
+    if (!exactSol) PanicButton();
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int i = DIM; i--; ) xsi[i] = nQuad.PointList(index,i);
+
+        //Returns the quadrature integration weight
+        weight_ = nQuad.WeightList(index);
+
+        //Computes the jacobian matrix
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+                    
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        
+        VecDouble uMEF_(DIM), uPrev_(DIM);
+        interpolateVelocity(index, uMEF_, uPrev_);
+        MatrixDouble du_dxMEF(DIM,DIM), duprev_dx(DIM,DIM);
+        interpolateVelDerivatives(dphi_dx, du_dxMEF, duprev_dx);
+        
+        double u_;
+        VecDouble gradU(DIM);
+
+        VecDouble xna_(DIM);
+        
+        xna_[0] = intPointCoordinates(index,0);
+        xna_[1] = intPointCoordinates(index,1);
+        exactSol(xna_,u_,gradU);
+
+
+        //Consider Arlequin weight function
+        // u_ *= intPointWeightFunction[index];
+        // gradU *= intPointWeightFunction[index];
+        // uMEF_ *= intPointWeightFunction[index];
+        // du_dxMEF *= intPointWeightFunction[index];
+
+        //L2 state variable
+        errors[0] += (u_-uMEF_[0])*(u_-uMEF_[0]) * weight_ * djac_ ;
+        
+        //Semi H1 state variable
+        for (int m = DIM; m--; ){
+            errors[1] += (gradU[m]-du_dxMEF(0,m))* (gradU[m]-du_dxMEF(0,m)) * weight_ * djac_;
+        }
+
+        index++;        
+    }; 
+
+    //H1 state variable
+    errors[2] = errors[0]+errors[1];
+
+    return;
+};
+
 
 template class Element<2,1>;
 template class Element<2,2>;

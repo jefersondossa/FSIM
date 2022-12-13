@@ -89,15 +89,14 @@ private:
     int numNodesArlequinCoarse;
     int numElemArlequinBoundaryCoarse;
     int numElemArlequinBoundaryFine;
-    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
-   
-
 
     int rank, size;
 
     double pi = M_PI;
+
+    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
     std::vector<int>         groupInterfaces;
 

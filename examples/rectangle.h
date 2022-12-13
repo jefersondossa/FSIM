@@ -1,14 +1,16 @@
 
     // Defines the problem dimension
     const int dimension = 2;
-    const int degree = 1;
+    const int degree = 2;
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
     typedef Arlequin<dimension,degree>      Arlequin;
     typedef FSInteraction<dimension,degree> FSI;
 
-
+for (int k = 3; k < 7; k++)
+{
+   
  
 //  Create problem variables 
     FluidModel coarseModel, fineModel, control;  
@@ -22,9 +24,9 @@
         Geometry* fluid1 = new Geometry(0);
 
         Point* p0 = fluid1 -> addPoint({ 0.0, 0.0 },1.5,false);
-        Point* p1 = fluid1 -> addPoint({ 61., 0.0 },1.5,false);
-        Point* p2 = fluid1 -> addPoint({ 61., 32. },1.5,false);
-        Point* p3 = fluid1 -> addPoint({ 0.0, 32. },1.5,false);
+        Point* p1 = fluid1 -> addPoint({ 1., 0.0 },1.5,false);
+        Point* p2 = fluid1 -> addPoint({ 1., 1. },1.5,false);
+        Point* p3 = fluid1 -> addPoint({ 0.0, 1. },1.5,false);
         
         Line* l0 = fluid1 -> addLine({ p0, p1 });
         Line* l1 = fluid1 -> addLine({ p1, p2 });
@@ -36,7 +38,7 @@
         //std::vector<LineLoop*> lin = {ll0, ll1};
         PlaneSurface* s20 = fluid1 -> addPlaneSurface({ll0});
         
-        double h1 = 100; double v1 = 40;
+        double h1 = pow(2,k)+1; double v1 = pow(2,k)+1;
         fluid1 -> transfiniteLine({ l0 }, h1);
         fluid1 -> transfiniteLine({ l1 }, v1);
         fluid1 -> transfiniteLine({ l2 }, h1);
@@ -46,8 +48,8 @@
         
         fluid1 -> addBoundaryCondition("DIRICHLET", l0, {0.0}, {0.0}, {},  "GLOBAL");
         fluid1 -> addBoundaryCondition("DIRICHLET", l1, {0.0}, {0.0}, {},  "GLOBAL");
-        fluid1 -> addBoundaryCondition("DIRICHLET", l2, {1.0}, {0.0}, {},  "GLOBAL");
-        fluid1 -> addBoundaryCondition("DIRICHLET", l3, {1.0}, {0.0}, {},  "GLOBAL");
+        fluid1 -> addBoundaryCondition("DIRICHLET", l2, {0.0}, {0.0}, {},  "GLOBAL");
+        fluid1 -> addBoundaryCondition("DIRICHLET", l3, {0.0}, {0.0}, {},  "GLOBAL");
         
 
         // Fine
@@ -107,11 +109,11 @@
   
         FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s20,s21,s22,s23 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh(T3, DELAUNAY, "coarse", "", false, true);
+        problem -> generateMesh(T6, DELAUNAY, "coarse", "", false, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T3, DELAUNAY, "fine", "", false, true);
+        problem2 -> generateMesh(T6, DELAUNAY, "fine", "", false, true);
 
         //problem -> readInput("exemplo.msh",0);
 	};
@@ -130,9 +132,37 @@
     coarseModel.setProblemType(ProblemType::EPoisson);
     fineModel.setProblemType(ProblemType::EPoisson);
 
-    // coarseModel.solvePoisson();
 
-    arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
 
-    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
+
+auto exactSol = [](const VecDouble &coord, double &u, VecDouble &gradU){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    //
+    u = x * x * (x-1.) * y * y * (y-1.);
+    gradU[0] = x*(3*x-2.)*(y-1.)*y*y;
+    gradU[1] = x*x*(x-1.)*y*(3.*y-2.);
+};
+
+auto forcingFunction = [](const VecDouble &coord, double &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    //
+    force = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
+
+};
+
+    coarseModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
+    coarseModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+    // fineModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
+    // fineModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+
+    coarseModel.solvePoisson();
+}
+    // arlequinProblem.setArlequinStabilization(ArlequinStabType::ELocalResidual);
+    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
+
+    // arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
            
