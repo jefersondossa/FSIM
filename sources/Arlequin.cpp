@@ -440,6 +440,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
             }; //if bf is the glue boundary
         }; //
         if(dist < 0) dist = 0;
+        dist = x[0] - 0.5;
         (*nodesFine_)[ino] -> setDistFunction(dist);
      };
 
@@ -515,6 +516,8 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
         if (fabs((*nodesCoarse_)[ino] -> getDistFunction()) < 1.e-2){
             (*nodesCoarse_)[ino] -> setDistFunction(dist); 
         };
+        dist = x[0] - 0.5;
+        (*nodesCoarse_)[ino] -> setDistFunction(dist); 
      };
 
 
@@ -2452,39 +2455,41 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
             VecInt connecL = glueZoneFine_[l] -> getConnectivity();
             //FINE MESH
             //Matrices
-            MatrixDouble Ajac2(nElNodes,nElNodes);
+            MatrixDouble matC0(nElNodes,nElNodes),matC1(nElNodes,nElNodes);
+            MatrixDouble matA0(nElNodes,nElNodes),matA1(nElNodes,nElNodes);
             MatrixDouble localMV_mat(nElNodes,nElNodes);
-            MatrixDouble ArlequinA1(nElNodes,nElNodes);
+            MatrixDouble matE0(nElNodes,nElNodes),matE1(nElNodes,nElNodes);
             MatrixDouble ArlequinA2(nElNodes,nElNodes);
-            Ajac2.setZero();
+            matC1.setZero();
+            matA1.setZero();
             localMV_mat.setZero();
-            ArlequinA1.setZero();
+            matE1.setZero();
             ArlequinA2.setZero();
 
+            double tARLQ0_, tARLQ1_;
+
             //Vectors
-            VecDouble rhsLagMult2(nElNodes);
-            VecDouble Rhs2(nElNodes);
+            VecDouble vecC0(nElNodes),vecC1(nElNodes);
+            VecDouble vecU0(nElNodes),vecU1(nElNodes);
+            VecDouble RhsA1(nElNodes);
             VecDouble localMV_vec(nElNodes);
-            VecDouble RhsArlequin2(nElNodes);
-            rhsLagMult2.setZero();
-            Rhs2.setZero();
+            VecDouble vecE0(nElNodes),vecE1(nElNodes);
+            vecC1.setZero();
+            vecU1.setZero();
             localMV_vec.setZero();
-            RhsArlequin2.setZero();
+            vecE1.setZero();
 
             // FINE MESH
             //Computes element matrix
-
-            elementsFine_[jel] -> getLagrangeMultipliersSameMeshPoisson(Ajac2, rhsLagMult2, Rhs2);
+            elementsFine_[jel] -> getPoisson(matA1,RhsA1);
+            elementsFine_[jel] -> getLagrangeMultipliersSameMeshPoisson(matC1, vecC1, vecU1);
             
             if (fArlequinStab != ArlequinStabType::ENoStab){
                 //Arlequin Stabilization
-                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMeshPoisson(ArlequinA1, ArlequinA2, RhsArlequin2);
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMeshPoisson(matE1, ArlequinA2, vecE1);
             }
 
-            setMatVecValuesLagMultFineFinePoisson(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
-                                                  Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
-                                                  elementsFine_[jel] -> getConnectivity(),
-                                                  glueZoneFine_[l] -> getConnectivity());
+            
             
             //COAESE MESH
             //Counts number of coarse mesh intersecting the fine element
@@ -2539,29 +2544,41 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
                     velYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(1);
                 }
                 
-                Ajac2.setZero();
+                matC0.setZero();
                 localMV_mat.setZero();
-                ArlequinA1.setZero();
+                matE0.setZero();
                 ArlequinA2.setZero();
                 
                 //Vectors
-                rhsLagMult2.setZero();
-                Rhs2.setZero();
+                vecC0.setZero();
+                vecU0.setZero();
                 localMV_vec.setZero();
-                RhsArlequin2.setZero();
+                vecE0.setZero();
                 
-                elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac2,rhsLagMult2,Rhs2);
+                elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
 
                 if (fArlequinStab != ArlequinStabType::ENoStab){
-                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,matE0,ArlequinA2,vecE0);
                 }
                 
-                setMatVecValuesLagMultFineCoarsePoisson(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
-                                                        Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
+                MatrixDouble matE = matE0+matE1;
+                stabilizeArlequin(matA0,matA1,matC0,matC1,matE,tARLQ0_,tARLQ1_);
+
+                matE0 *= tARLQ0_;
+                vecE0 *= tARLQ0_;
+                setMatVecValuesLagMultFineCoarsePoisson(matC0, localMV_mat, matE0, ArlequinA2, 
+                                                        vecU0, vecC0, localMV_vec, vecE0,
                                                         elementsCoarse_[iElemCoarse] -> getConnectivity(), 
                                                         glueZoneFine_[l] -> getConnectivity());
                 
             }; //Number of intersections
+        
+            matE1 *= tARLQ1_;
+            vecE1 *= tARLQ1_;
+            setMatVecValuesLagMultFineFinePoisson(matC1,localMV_mat,matE1,ArlequinA2, 
+                                                  vecU1,vecC0,localMV_vec,vecE1,
+                                                  elementsFine_[jel] -> getConnectivity(),
+                                                  glueZoneFine_[l] -> getConnectivity());
         }; // if element belongs to the glue zone
     }; // Glue zone
 
@@ -3054,6 +3071,8 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             (*nodesCoarse_)[i] -> setVelocityArlequin(1,(*nodesCoarse_)[i] -> getVelocity(1));
             (*nodesCoarse_)[i] -> setPressureArlequin((*nodesCoarse_)[i] -> getPressure());
         };
+
+        if (parametersCoarse->getExactSolutionPoisson() && parametersFine->getExactSolutionPoisson()) computeErrorPoisson();
         
         // Compute and print drag and lift coefficients
         if (fineModel.getComputeDragAndLift()){
@@ -3820,6 +3839,119 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
     return 0;
 
 };
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::computeErrorPoisson() {
+
+    VecDouble errorFine(3),errorCoarse(3),errorTotal(3);
+
+    coarseModel.computeError(errorCoarse);
+    fineModel.computeError(errorFine);
+
+    std::ofstream rprint("errorsArlequin.txt",std::ios::app);
+    errorTotal = errorFine + errorCoarse;
+
+    if (rank == 0){
+        std::cout << "\n\nERROR REPORT:\n" << std::scientific << std::setprecision(10)
+            << "L2 state var = " << sqrt(errorTotal[0]) << "\n" 
+            << "Semi H1 state var = " << sqrt(errorTotal[1]) << "\n" 
+            << "H1 state var = " << sqrt(errorTotal[2]) << "\n"; 
+        rprint << sqrt(errorTotal[0]) << " " << sqrt(errorTotal[1]) << " " << sqrt(errorTotal[2]) << std::endl;
+    }
+
+
+}
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1, 
+                                          MatrixDouble &C0, MatrixDouble &C1,
+                                          MatrixDouble &E, double &tArlq0, double &tArlq1){
+    
+    //There are in general three main options for taking the norm of a matrix: the L2, L2 and Linfty norms.
+    //In eigen they can be simply obtained by:
+    // normL2 = mat.norm(); 
+    // normL1 = mat.lpNorm<1>(); 
+    // normInfty = mat.lpNorm<Infinity>();
+
+    switch (fArlequinStab)
+    {
+    case ArlequinStabType::ENoStab:
+        {
+            tArlq0 = 0.;
+            tArlq1 = 0.;
+            break;
+        }
+    
+    case ArlequinStabType::EOption1:
+        {
+            double normC0 = C0.norm();
+            double normC1 = C1.norm();
+            double normA0 = A0.norm();
+            double normA1 = A1.norm();
+            double normE = E.norm();
+            tArlq0 = std::min(normC0/normA0, normC0/normE);
+            tArlq1 = std::min(normC1/normA1, normC1/normE);
+            break;
+        }
+
+    case ArlequinStabType::EOption2:
+        {
+            double normC0 = C0.norm();
+            double normC1 = C1.norm();
+            double normA0 = A0.norm();
+            double normA1 = A1.norm();
+            double normE = E.norm();
+            double aux1=std::min(normC0/normA0, normC0/normE);
+            double aux2=std::min(normC1/normA1, normC1/normE);
+            tArlq0 = std::min(aux1,aux2);
+            tArlq1 = tArlq0;
+            break;
+        }
+    
+    case ArlequinStabType::EOption3:
+        {
+            double normC0 = C0.norm();
+            double normC1 = C1.norm();
+            double normA0 = A0.norm();
+            double normA1 = A1.norm();
+            double normE = E.norm();
+            
+            tArlq0 = std::min(normC0/normA0, normC0/normE);
+            tArlq1 = std::min(normC1/normA1, normC1/normE);
+
+            double normC = std::min(normC0,normC1);
+            tArlq0 *= normC/normC0;
+            tArlq1 *= normC/normC1;
+            break;
+        }
+
+    case ArlequinStabType::EOption4:
+        {
+            double normC1 = C1.norm();
+            double normA1 = A1.norm();
+            double normE = E.norm();
+            tArlq0 = 0.;
+            tArlq1 = std::min(normC1/normA1, normC1/normE);
+            break;
+        }
+
+    case ArlequinStabType::EOption5:
+        {
+            double normC0 = C0.norm();
+            double normC1 = C1.norm();
+            double normA1 = A1.norm();
+            double normE = E.norm();
+            double normC = std::min(normC0,normC1);
+            tArlq0 = 0.;
+            tArlq1 = std::min(normC/normA1, normC/normE);
+            break;
+        }
+    default:
+        PanicButton();
+        break;
+    }
+
+}
 
 
 template class Arlequin<2,1>;

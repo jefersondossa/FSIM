@@ -1,7 +1,7 @@
 
     // Defines the problem dimension
     const int dimension = 2;
-    const int degree = 2;
+    const int degree = 1;
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
@@ -59,61 +59,51 @@ for (int k = 3; k < 7; k++)
         double gluing_zone = 1.0;
         double addit_space = 3.0;
 
-        Point* p10 = fluid2 -> addPoint({16.,16.},0.1,false);
-        Point* p11 = fluid2 -> addPoint({16.,16.+radius},0.1,false);
-        Point* p12 = fluid2 -> addPoint({16.,16.+radius+addit_space},0.1,false);
-        Point* p13 = fluid2 -> addPoint({16.,16.+radius+addit_space+gluing_zone},0.1,false);
-        Point* p14 = fluid2 -> addPoint({16.,16.-radius},0.1,false);
-        Point* p15 = fluid2 -> addPoint({16.,16.-radius-addit_space},0.1,false);
-        Point* p16 = fluid2 -> addPoint({16.,16.-radius-addit_space-gluing_zone},0.1,false);
-        
-        Line* l10 = fluid2 -> addCircle({p11,p10,p14});
-        Line* l11 = fluid2 -> addCircle({p12,p10,p15});
-        Line* l12 = fluid2 -> addCircle({p13,p10,p16});
-        Line* l13 = fluid2 -> addCircle({p14,p10,p11});
-        Line* l14 = fluid2 -> addCircle({p15,p10,p12});
-        Line* l15 = fluid2 -> addCircle({p16,p10,p13});
+        Point* p10 = fluid2 -> addPoint({0.5,0.},0.1,false);
+        Point* p11 = fluid2 -> addPoint({1.,0.},0.1,false);
+        Point* p12 = fluid2 -> addPoint({1.,1.},0.1,false);
+        Point* p13 = fluid2 -> addPoint({0.5,1.},0.1,false);
 
-        LineLoop* ll10 = fluid2->addLineLoop({ l10 -> operator-(), l13 -> operator-(), l11, l14});
-        LineLoop* ll11 = fluid2->addLineLoop({ l11 -> operator-(), l14 -> operator-(), l12, l15});
+        Line* l10 = fluid2 -> addLine({ p10, p11 });
+        Line* l11 = fluid2 -> addLine({ p11, p12 });
+        Line* l12 = fluid2 -> addLine({ p12, p13 });
+        Line* l13 = fluid2 -> addLine({ p13, p10 });
+        
+        LineLoop* ll10 = fluid2->addLineLoop({ l10 , l11, l12, l13});
 
         PlaneSurface* s1 = fluid2 -> addPlaneSurface({ll10});
-        PlaneSurface* s2 = fluid2 -> addPlaneSurface({ll11});
 
         fluid2 -> addBoundaryCondition("DIRICHLET", l10, {0.0}, {0.0}, {},  "GLOBAL");
-        fluid2 -> addBoundaryCondition("DIRICHLET", l13, {0.0}, {0.0}, {},  "GLOBAL");
+        fluid2 -> addBoundaryCondition("DIRICHLET", l11, {0.0}, {0.0}, {},  "GLOBAL");
+        fluid2 -> addBoundaryCondition("DIRICHLET", l12, {0.0}, {0.0}, {},  "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l13, {0.0}, {0.0}, {},  "GLOBAL");
         
-        fluid2 -> addBoundaryCondition("NEUMANN", l11, {}, {}, {},  "GLOBAL");
-        fluid2 -> addBoundaryCondition("NEUMANN", l14, {}, {}, {},  "GLOBAL");
-
-        fluid2 -> addBoundaryCondition("GLUE", l12, {0}, {0}, {},  "GLOBAL");
-        fluid2 -> addBoundaryCondition("GLUE", l15, {0}, {0}, {},  "GLOBAL");
         
 
         //Transfinite lines 
         int corn = 20; int side = 7;
+        double h2 = pow(2,k)/2+1;
+        double v2 = pow(2,k)+1;
         //corners
-        fluid2 -> transfiniteLine({ l10 }, corn);
-        fluid2 -> transfiniteLine({ l11 }, corn);
-        fluid2 -> transfiniteLine({ l12 }, corn);
-        fluid2 -> transfiniteLine({ l13 }, corn);
-        fluid2 -> transfiniteLine({ l14 }, corn);
-        fluid2 -> transfiniteLine({ l15 }, corn);
+        fluid2 -> transfiniteLine({ l10 }, h2);
+        fluid2 -> transfiniteLine({ l11 }, v2);
+        fluid2 -> transfiniteLine({ l12 }, h2);
+        fluid2 -> transfiniteLine({ l13 }, v2);
         
         
         //Surfaces
-        // fluid2->transfiniteSurface({ s1 }, "Left", {p10,p11,p16,p15});
+        fluid2->transfiniteSurface({ s1 }, "Left", {p10,p11,p12,p13});
         // fluid2->transfiniteSurface({ s2 }, "Left", {p11,p12,p17,p16});
         
     if (rank == 0){
   
         FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s20,s21,s22,s23 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh(T6, DELAUNAY, "coarse", "", false, true);
+        problem -> generateMesh(T3, DELAUNAY, "coarse", "", false, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T6, DELAUNAY, "fine", "", false, true);
+        problem2 -> generateMesh(T3, DELAUNAY, "fine", "", false, true);
 
         //problem -> readInput("exemplo.msh",0);
 	};
@@ -156,13 +146,13 @@ auto forcingFunction = [](const VecDouble &coord, double &force){
 
     coarseModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
     coarseModel.getFluidParameters().setExactSolutionPoisson(exactSol);
-    // fineModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
-    // fineModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+    fineModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
+    fineModel.getFluidParameters().setExactSolutionPoisson(exactSol);
 
-    coarseModel.solvePoisson();
-}
-    // arlequinProblem.setArlequinStabilization(ArlequinStabType::ELocalResidual);
-    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
+    // coarseModel.solvePoisson();
 
-    // arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
-           
+    arlequinProblem.setArlequinStabilization(ArlequinStabType::EOption5);
+    arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
+
+    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
+}           

@@ -212,6 +212,12 @@ public:
     void printResultsCoarse(int step);
     void printResultsFine(int step);
 
+    void computeErrorPoisson();
+
+    void stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1, 
+                           MatrixDouble &C0, MatrixDouble &C1,
+                           MatrixDouble &E, double &tArlq0, double &tArlq1);
+
 };
 
 

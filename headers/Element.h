@@ -112,6 +112,7 @@ public:
         intPointDistGlueZone.resize(sQuad.getNumberOfIntegrationPoints());
         intPointGlueZone.resize(sQuad.getNumberOfIntegrationPoints());
         intPointCorrespElem.resize(sQuad.getNumberOfIntegrationPoints());
+        intPointCorrespElem.setZero();
 
         intPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),2);
         intPointCorrespXsi.resize(sQuad.getNumberOfIntegrationPoints(),2);

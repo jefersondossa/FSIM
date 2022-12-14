@@ -236,7 +236,7 @@ public:
         return values;
     }
 
-    void computeError();
+    void computeError(VecDouble &errorsTotal);
 };
 
 

@@ -1693,7 +1693,8 @@ int Fluid<DIM,DEG>::solvePoisson(){
         ierr = VecDestroy(&Allu); CHKERRQ(ierr);
         ierr = MatDestroy(&A); CHKERRQ(ierr);
 
-    if (fluidParameters.getExactSolutionPoisson()) computeError();
+        VecDouble errorsTotal(3);
+    if (fluidParameters.getExactSolutionPoisson()) computeError(errorsTotal);
 
     printResultsPoisson();
 
@@ -1837,11 +1838,10 @@ void Fluid<DIM,DEG>::printResultsPoisson(){
 //----------------COMPUTE AND ASSEMBLE THE GLOBAL MATRIX AND VECTOR-------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Fluid<DIM,DEG>::computeError() {
+void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
 
     std::ofstream rprint("errors.txt",std::ios::app);
 
-    VecDouble errorsTotal(3);
     VecDouble errorsProcess(3);
     errorsTotal.setZero();
     errorsProcess.setZero();

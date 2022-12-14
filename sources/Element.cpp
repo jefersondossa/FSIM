@@ -1139,7 +1139,7 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
     //     tARLQ_ = djac_ * std::sqrt(u_ * u_ + v_ * v_) / std::sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
     // tARLQ_ = -1. * k1 * tSUPG_ * 1.e-2;
-    tARLQ_ = -1. * k1 * tSUPG_;
+    tARLQ_ = -.01 * k1 * tSUPG_;
     //}
     //tARLQ_ = 0.;
 
@@ -1747,9 +1747,9 @@ void Element<DIM,DEG>::getResidualVectorPoisson(int &index, MatrixDouble &dphi_d
 
     double WJ = weight_ * djac_  * intPointWeightFunction[index];
 
-    VecDouble xna_(DIM), xnaprev(DIM);
-    interpolateCoordinates(index,xna_,xnaprev);
+    VecDouble xna_(DIM);
     double forcingF;
+    for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
     if (force) force(xna_,forcingF);
 
     for (int i = nElNodes; i--; ){
@@ -2641,10 +2641,15 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDoubl
     int index = 0;
     NormalQuad nQuad = NormalQuad();
 
-    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
-
     double &dens_ = parameters->getDensity();
     double &k1 = parameters->getArlequinK1();
+    
+    auto force = parameters->getForcingFunctionPoisson();
+
+    VecDouble xna_(DIM);
+    double forcingF;
+    for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
+    if (force) force(xna_,forcingF);
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
@@ -2659,7 +2664,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDoubl
 
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
         
-        getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         double wna_ = intPointWeightFunction[index];
         
@@ -2672,16 +2677,17 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDoubl
 
                 //ARLEQUIN STABILIZATION TERMS
                 double LL = 0.;
+                double LF = 0.;
+                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
+                for (int m = DIM; m--; ) LF -=  dphi_dx(i,m) * wna_ * forcingF;
 
-                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_;
-
-                arlequinStab(i,j) += LL * weight_ * djac_;
+                arlequinStab(i,j) += (LL + LF) * weight_ * djac_;
 
             };
 
             //ARLEQUIN STABILIZATION TERMS
             double LLx = 0.;
-            for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(0,m) * tARLQ_;
+            for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(0,m);
             
             arlequinStabVector[i] += (LLx) * weight_ * djac_;
         };         
@@ -3378,7 +3384,14 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
     double &k2 = parameters->getArlequinK2();
 
     MatrixDouble ainv_(DIM,DIM);
-    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    auto force = parameters->getForcingFunctionPoisson();
+
+    VecDouble xna_(DIM);
+    double forcingF;
+    for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
+    if (force) force(xna_,forcingF);
+
 
     for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -3410,8 +3423,6 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
             getJacobianMatrix(xsi, ainv_, djac_);
             getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-            getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
-
             double wna_ = intPointWeightFunctionSpecial[index];
 
             //Lagrange Multiplier Derivatives
@@ -3422,16 +3433,18 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
                 for (int j = 0; j < nElNodes; j++){     
                     double LL = 0.;
 
-                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_;
+                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
 
                     arlequinStab(i,j) += LL * weight_ * djac_;
                 };
 
                 //ARLEQUIN STABILIZATION TERMS
                 double LLx = 0.;
-                for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m) * tARLQ_;
+                double LF = 0.;
+                for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m);
+                for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * wna_ * forcingF;
 
-                arlequinStabVector[i] += (LLx) * weight_ * djac_;
+                arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
             };
         };
         index++;        
@@ -3502,10 +3515,10 @@ void Element<DIM,DEG>::computeErrorPoisson(VecDouble &errors){
 
 
         //Consider Arlequin weight function
-        // u_ *= intPointWeightFunction[index];
-        // gradU *= intPointWeightFunction[index];
-        // uMEF_ *= intPointWeightFunction[index];
-        // du_dxMEF *= intPointWeightFunction[index];
+        u_ *= intPointWeightFunction[index];
+        gradU *= intPointWeightFunction[index];
+        uMEF_ *= intPointWeightFunction[index];
+        du_dxMEF *= intPointWeightFunction[index];
 
         //L2 state variable
         errors[0] += (u_-uMEF_[0])*(u_-uMEF_[0]) * weight_ * djac_ ;
