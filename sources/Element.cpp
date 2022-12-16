@@ -351,6 +351,62 @@ void Element<DIM,DEG>::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
 
     return;
 };
+//------------------------------------------------------------------------------
+//-----------------------------SPATIAL DERIVATIVES------------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx) {
+    
+    
+    std::vector<MatrixDouble> ddphi(nElNodes,MatrixDouble(DIM,DIM));
+    
+    ShapeF shapeQuad;
+    shapeQuad.evaluateHessian(xsi,ddphi);
+    
+    //These derivatives are computed with basis in this reference:
+    //https://scicomp.stackexchange.com/questions/25196/implementing-higher-order-derivatives-for-finite-element
+    MatrixDouble matAux;
+    VecDouble HODerivatives, vecAux;
+    if (DIM == 2){
+        matAux.resize(3,3); HODerivatives.resize(3); vecAux.resize(3);
+        matAux.setZero(); HODerivatives.setZero(); vecAux.setZero();
+
+        matAux(0,0) = ainv_(0,0) * ainv_(0,0);
+        matAux(0,1) = ainv_(0,1) * ainv_(0,1);//Pode estar errado, e ser(1,0)ou seja a transposta
+        matAux(0,2) = 2. * ainv_(0,0) * ainv_(0,1);
+        
+        matAux(1,0) = ainv_(1,0) * ainv_(1,0);
+        matAux(1,1) = ainv_(1,1) * ainv_(1,1);
+        matAux(1,2) = 2. * ainv_(1,0) * ainv_(1,1);
+        
+        matAux(2,0) = ainv_(0,0) * ainv_(1,0);
+        matAux(2,1) = ainv_(0,1) * ainv_(1,1);
+        matAux(2,2) = ainv_(0,0) * ainv_(1,1) + ainv_(1,0) * ainv_(0,1);
+
+        
+
+        
+    } else if (DIM == 3){
+        matAux.resize(6,6); HODerivatives.resize(6); vecAux.resize(6);
+        matAux.setZero(); HODerivatives.setZero(); vecAux.setZero();
+    } else {
+        PanicButton();
+    }
+
+    matAux = matAux.inverse();
+
+    for (int i = 0; i < nElNodes; i++){
+        // vecAux[0] = ddphi[i](0,0) - dphi_dx(i,0) ...
+    
+    }
+
+    // dphi_dx.setZero();
+
+    // //Quadratic shape functions spatial first derivatives
+    // dphi_dx = dphi * ainv_.transpose();
+
+    return;
+};
 
 //------------------------------------------------------------------------------
 //------------------INTERPOLATES PRESSURE AND ITS DERIVATIVES-------------------

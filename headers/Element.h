@@ -152,6 +152,7 @@ public:
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
     void getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx);
+    void getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx);
 
     /// Interpolate pressure and its derivatives
     /// @param int integration point index
