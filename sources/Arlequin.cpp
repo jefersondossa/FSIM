@@ -348,8 +348,23 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
             
             //Loop over the 1D element segments
             for (int iSeg = 0; iSeg < DEG; iSeg++){
-                int no1 = bconnec[2*iSeg+2-DEG];
-                int no2 = bconnec[2*DEG-iSeg-2];
+                int no1,no2;
+                if (iSeg == 0){
+                    no1 = bconnec[0];
+                    if (DEG == 1) {
+                        no2 = bconnec[1];
+                    } else {
+                        no2 = bconnec[2];
+                    }
+                } else {
+                    no1 = bconnec[iSeg+1];
+                    if (DEG == 2 || iSeg == 2){
+                        no2 = bconnec[1];
+                    } else {
+                        no2 = bconnec[3];
+                    }
+                }
+                
                 VecDouble x1 = (*nodesFine_)[no1] -> getCoordinates();
                 VecDouble x2 = (*nodesFine_)[no2] -> getCoordinates();
 
@@ -384,9 +399,22 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
                     
                 
                     //first segment
-                    int no1 = bconnec[2*iSeg+2-DEG];
-                    int no2 = bconnec[2*DEG-iSeg-2];
-                    // std::cout<<no1<<" nos "<<no2<<std::endl;
+                    int no1,no2;
+                    if (iSeg == 0){
+                        no1 = bconnec[0];
+                        if (DEG == 1) {
+                            no2 = bconnec[1];
+                        } else {
+                            no2 = bconnec[2];
+                        }
+                    } else {
+                        no1 = bconnec[iSeg+1];
+                        if (DEG == 2 || iSeg == 2){
+                            no2 = bconnec[1];
+                        } else {
+                            no2 = bconnec[3];
+                        }
+                    }
                   
                     VecDouble x1 = (*nodesFine_)[no1] -> getCoordinates();
                     VecDouble x2 = (*nodesFine_)[no2] -> getCoordinates();
@@ -457,8 +485,22 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
 
                 for (int iSeg = 0; iSeg < DEG ; ++iSeg){
                     //first segment
-                    int no1 = bconnec[2*iSeg+2-DEG];
-                    int no2 = bconnec[2*DEG-iSeg-2];
+                    int no1,no2;
+                    if (iSeg == 0){
+                        no1 = bconnec[0];
+                        if (DEG == 1) {
+                            no2 = bconnec[1];
+                        } else {
+                            no2 = bconnec[2];
+                        }
+                    } else {
+                        no1 = bconnec[iSeg+1];
+                        if (DEG == 2 || iSeg == 2){
+                            no2 = bconnec[1];
+                        } else {
+                            no2 = bconnec[3];
+                        }
+                    }
                     // std::cout<<no1<<" nos "<<no2<<std::endl;
                   
                     VecDouble x1 = (*nodesFine_)[no1] -> getCoordinates();
@@ -824,7 +866,46 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     for (int iElem = 0; iElem < numElemCoarse; iElem++){
         VecInt con = elementsCoarse_[iElem] -> getConnectivity();
 
-        for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
+        if (DIM == 2){
+            switch (DEG)
+            {
+            case 1:
+                for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
+                break;
+            case 2:
+                {
+                    connec2[nElNodes*iElem+0] = con[4];
+                    connec2[nElNodes*iElem+1] = con[1];
+                    connec2[nElNodes*iElem+2] = con[3];
+                    connec2[nElNodes*iElem+3] = con[0];
+                    connec2[nElNodes*iElem+4] = con[5];
+                    connec2[nElNodes*iElem+5] = con[2];
+                    break;
+                }
+            case 3:
+                {
+                    connec2[nElNodes*iElem+0] = con[6];
+                    connec2[nElNodes*iElem+1] = con[9];
+                    connec2[nElNodes*iElem+2] = con[5];
+                    connec2[nElNodes*iElem+3] = con[1];
+                    connec2[nElNodes*iElem+4] = con[4];
+                    connec2[nElNodes*iElem+5] = con[3];
+                    connec2[nElNodes*iElem+6] = con[0];
+                    connec2[nElNodes*iElem+7] = con[8];
+                    connec2[nElNodes*iElem+8] = con[7];
+                    connec2[nElNodes*iElem+9] = con[2];
+                    break;
+                }
+            
+            default:
+                PanicButton();
+                break;
+            }
+        } else {
+            for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
+        }
+        
+        
     }
    
     hid_t file, file2; 
@@ -841,10 +922,8 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     hsize_t connec2Dims[2] = { eldim, elnod };
 
     std::string elType;
-    if ((DIM == 2) && (DEG == 1)) elType = "Triangle";
-    if ((DIM == 2) && (DEG == 2)) elType = "Tri_6";
-    if ((DIM == 3) && (DEG == 1)) elType = "Tetrahedron";
-    if ((DIM == 3) && (DEG == 2)) elType = "Tet_10";
+    if (DIM == 2) elType = "TRIANGLE";
+    if (DIM == 3) elType = "TETRAHEDRON";
 
     //Create HDF5 file
     file = H5Fcreate(s1.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -1175,7 +1254,44 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
 
     for (int iElem = 0; iElem < numElemFine; iElem++){
         VecInt con = elementsFine_[iElem] -> getConnectivity();
-        for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
+        if (DIM == 2){
+            switch (DEG)
+            {
+            case 1:
+                for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
+                break;
+            case 2:
+                {
+                    connec2[nElNodes*iElem+0] = con[4];
+                    connec2[nElNodes*iElem+1] = con[1];
+                    connec2[nElNodes*iElem+2] = con[3];
+                    connec2[nElNodes*iElem+3] = con[0];
+                    connec2[nElNodes*iElem+4] = con[5];
+                    connec2[nElNodes*iElem+5] = con[2];
+                    break;
+                }
+            case 3:
+                {
+                    connec2[nElNodes*iElem+0] = con[6];
+                    connec2[nElNodes*iElem+1] = con[9];
+                    connec2[nElNodes*iElem+2] = con[5];
+                    connec2[nElNodes*iElem+3] = con[1];
+                    connec2[nElNodes*iElem+4] = con[4];
+                    connec2[nElNodes*iElem+5] = con[3];
+                    connec2[nElNodes*iElem+6] = con[0];
+                    connec2[nElNodes*iElem+7] = con[8];
+                    connec2[nElNodes*iElem+8] = con[7];
+                    connec2[nElNodes*iElem+9] = con[2];
+                    break;
+                }      
+            
+            default:
+                PanicButton();
+                break;
+            }
+        } else {
+            for (int i = 0; i < nElNodes; ++i) connec2[nElNodes*iElem+i] = con[i];
+        }
     } 
 
     hid_t file; 
@@ -1192,10 +1308,8 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     hsize_t connec2Dims[2] = { eldim, elnod };
 
     std::string elType;
-    if ((DIM == 2) && (DEG == 1)) elType = "Triangle";
-    if ((DIM == 2) && (DEG == 2)) elType = "Tri_6";
-    if ((DIM == 3) && (DEG == 1)) elType = "Tetrahedron";
-    if ((DIM == 3) && (DEG == 2)) elType = "Tet_10";
+    if (DIM == 2) elType = "TRIANGLE";
+    if (DIM == 3) elType = "TETRAHEDRON";
 
     //Create HDF5 file
     file = H5Fcreate(s1.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -2471,7 +2585,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
             //Vectors
             VecDouble vecC0(nElNodes),vecC1(nElNodes);
             VecDouble vecU0(nElNodes),vecU1(nElNodes);
-            VecDouble RhsA1(nElNodes);
+            VecDouble RhsA0(nElNodes),RhsA1(nElNodes);
             VecDouble localMV_vec(nElNodes);
             VecDouble vecE0(nElNodes),vecE1(nElNodes);
             vecC1.setZero();
@@ -2555,6 +2669,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
                 localMV_vec.setZero();
                 vecE0.setZero();
                 
+                elementsCoarse_[iElemCoarse] -> getPoisson(matA0,RhsA0);
                 elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
 
                 if (fArlequinStab != ArlequinStabType::ENoStab){
@@ -2562,7 +2677,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
                 }
                 
                 MatrixDouble matE = matE0+matE1;
-                stabilizeArlequin(matA0,matA1,matC0,matC1,matE,tARLQ0_,tARLQ1_);
+                stabilizeArlequin(matA0,matA1,matC0,matC1,matE0,tARLQ0_,tARLQ1_);
 
                 matE0 *= tARLQ0_;
                 vecE0 *= tARLQ0_;
@@ -3956,5 +4071,6 @@ void Arlequin<DIM,DEG>::stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1,
 
 template class Arlequin<2,1>;
 template class Arlequin<2,2>;
+template class Arlequin<2,3>;
 template class Arlequin<3,1>;
 template class Arlequin<3,2>;

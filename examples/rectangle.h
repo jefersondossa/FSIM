@@ -1,14 +1,14 @@
 
     // Defines the problem dimension
     const int dimension = 2;
-    const int degree = 1;
+    const int degree = 3;
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
     typedef Arlequin<dimension,degree>      Arlequin;
     typedef FSInteraction<dimension,degree> FSI;
 
-for (int k = 3; k < 7; k++)
+for (int k = 5; k < 6; k++)
 {
    
  
@@ -99,11 +99,11 @@ for (int k = 3; k < 7; k++)
   
         FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s20,s21,s22,s23 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh(T3, DELAUNAY, "coarse", "", false, true);
+        problem -> generateMesh(T10, DELAUNAY, "coarse", "", false, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T3, DELAUNAY, "fine", "", false, true);
+        problem2 -> generateMesh(T10, DELAUNAY, "fine", "", false, true);
 
         //problem -> readInput("exemplo.msh",0);
 	};
@@ -151,7 +151,7 @@ auto forcingFunction = [](const VecDouble &coord, double &force){
 
     // coarseModel.solvePoisson();
 
-    arlequinProblem.setArlequinStabilization(ArlequinStabType::EOption5);
+    arlequinProblem.setArlequinStabilization(ArlequinStabType::EOption3);
     arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
 
     arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 

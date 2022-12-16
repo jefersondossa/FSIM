@@ -27,7 +27,7 @@ public:
         ShapeFunction<DIM,DEG>      shapeFunction;
         IntegQuadratureSpecial<DIM,DEG> Squad;
 
-        int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+        int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
         
         int nIntegPointsNormal = quad.getNumberOfIntegrationPoints();
         int nIntegPointsSpecial = Squad.getNumberOfIntegrationPoints();

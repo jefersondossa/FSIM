@@ -48,7 +48,7 @@ public:
     }
 
 private:
-    const static int numIntegPoints = -5*DIM-8*DEG+6*DIM*DEG+9;
+    const static int numIntegPoints = (DEG*DEG*(3-DIM)-12*(DIM-2)+DEG*(15*DIM-25))/2;
 
     ///List of integration points coordinates
     MatrixDouble pointCoord;

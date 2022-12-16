@@ -85,7 +85,7 @@ private:
     bool computeDragAndLift;
     int iTimeStep;
     Mat               A;
-    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
     int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
     int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 

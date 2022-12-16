@@ -1743,6 +1743,8 @@ void Fluid<DIM,DEG>::printResultsPoisson(){
         output_v << connec[0] << " " << connec[1] << " " << connec[2] ;
         if (DEG == 2){
             output_v << " " << connec[3] << " " << connec[4] << " " << connec[5] ;
+        } else if (DEG == 3){
+            output_v << " " << connec[3] << " " << connec[4] << " " << connec[5] << " " << connec[6] << " " << connec[7] << " " << connec[8] << " " << connec[9] ;
         }
         output_v << std::endl;
     };
@@ -1766,6 +1768,7 @@ void Fluid<DIM,DEG>::printResultsPoisson(){
     int val = 0;
     if (DEG == 1)val = 5;
     if (DEG == 2)val = 22;
+    if (DEG == 3)val = 69;
 
     for (int i=0; i<numElem; i++){
         output_v << val << std::endl;
@@ -1871,5 +1874,7 @@ void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
 
 template class Fluid<2,1>;
 template class Fluid<2,2>;
+template class Fluid<2,3>;
 template class Fluid<3,1>;
 template class Fluid<3,2>;
+template class Fluid<3,3>;

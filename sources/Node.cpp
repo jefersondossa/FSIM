@@ -30,5 +30,7 @@ void Node<DIM,DEG>::clearVariables(){
 
 template class Node<2,1>;
 template class Node<2,2>;
+template class Node<2,3>;
 template class Node<3,1>;
 template class Node<3,2>;
+template class Node<3,3>;

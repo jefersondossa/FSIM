@@ -48,6 +48,30 @@ void Element<2,2>::getBoundaryNodes(int *nodesb_){
 }
 
 template<>
+void Element<2,3>::getBoundaryNodes(int *nodesb_){
+    if(sideBoundary_ == 0){
+        nodesb_[0] = connect_[1]; 
+        nodesb_[1] = connect_[2]; 
+        nodesb_[2] = connect_[5];         
+        nodesb_[3] = connect_[6];         
+    }else{
+        if(sideBoundary_ == 1){
+            nodesb_[0] = connect_[2]; 
+            nodesb_[1] = connect_[0]; 
+            nodesb_[2] = connect_[7]; 
+            nodesb_[3] = connect_[8]; 
+        }else{
+            nodesb_[0] = connect_[0];
+            nodesb_[1] = connect_[1];
+            nodesb_[2] = connect_[3];
+            nodesb_[3] = connect_[4];
+        };        
+    };
+
+    return;
+}
+
+template<>
 void Element<3,1>::getBoundaryNodes(int *nodesb_){
 
     if(sideBoundary_ == 0){
@@ -3540,5 +3564,7 @@ void Element<DIM,DEG>::computeErrorPoisson(VecDouble &errors){
 
 template class Element<2,1>;
 template class Element<2,2>;
+template class Element<2,3>;
 template class Element<3,1>;
 template class Element<3,2>;
+template class Element<3,3>;

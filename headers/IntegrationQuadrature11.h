@@ -50,7 +50,7 @@ public:
     double interpolateQuadraticVariable(VecDouble &nValues, int point) const ;
 
 private:
-    const static int numIntegPoints = -5*DIM-8*DEG+6*DIM*DEG+9;
+    const static int numIntegPoints = (DEG*DEG*(3-DIM)-12*(DIM-2)+DEG*(15*DIM-25))/2;
 
     ///List of integration points coordinates
     MatrixDouble pointCoord;
@@ -61,7 +61,7 @@ private:
     //Defines shape functions
     ShapeFunction<DIM,DEG> shapeQuad;
     
-    int nElNodes = 3*(DIM*DEG-DEG)-2*DIM+4;
+    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
 
 };
 
