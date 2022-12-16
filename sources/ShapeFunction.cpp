@@ -19,7 +19,6 @@ void ShapeFunction<2,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
     //     2
     //     01
 
-    return;
 }
 
 // Defines quadratic shape functions and its derivatives 
@@ -42,8 +41,7 @@ void ShapeFunction<2,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
     //     2
     //     54
     //     031
-     
-    return;
+
 }
 
 template<>
@@ -85,7 +83,6 @@ void ShapeFunction<3,1>::evaluate(VecDouble &xi, VecDouble &phi) const {
     phi[2] = xsi2;
     phi[3] = xsi3;
 
-    return;
 }
 
 //------------------------------------------------------------------------------
@@ -122,8 +119,6 @@ void ShapeFunction<3,2>::evaluate(VecDouble &xi, VecDouble &phi) const {
     //layer 3
     //     0
     
-     
-     return;
 }
 
 template<>
@@ -167,8 +162,6 @@ void ShapeFunction<3,3>::evaluate(VecDouble &xi, VecDouble &phi) const {
     //layer 3
     //     0
     
-     
-     return;
 }
 
 
@@ -191,7 +184,6 @@ void ShapeFunction<2,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) con
     //     2
     //     01
 
-    return;
 }
 
 template<>
@@ -223,8 +215,7 @@ void ShapeFunction<2,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) con
     //     2
     //     54
     //     031
-     
-    return;
+
 }
 
 
@@ -262,8 +253,7 @@ void ShapeFunction<2,3>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) con
     //     76
     //     895
     //     0341
-     
-    return;
+
 }
 
 template<>
@@ -285,8 +275,6 @@ void ShapeFunction<3,1>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) con
     dphi(3,1) = 0.0;
     dphi(3,2) = 1.0;
 
-
-    return;
 }
 
 template<>
@@ -335,8 +323,6 @@ void ShapeFunction<3,2>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) con
     dphi(4,0) = -4. * xsi2;
     dphi(4,1) = 4. * (1. - 2. * xsi2 - xsi1 - xsi3);
     dphi(4,2) = -4. * xsi2;
-
-    return;
 }
 
 
@@ -410,277 +396,543 @@ void ShapeFunction<3,3>::evaluateGradient(VecDouble &xi, MatrixDouble &dphi) con
     dphi(18,2) = -27.0 * xsi2 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
     dphi(19,2) = 27.0 * xsi1 * xsi2;
 
-    return;
 }
 
 //------------------------------------------------------------------------------
 //----------------COMPUTE SHAPE FUNCTION SECOND DERIVATIVE VALUE----------------
 //------------------------------------------------------------------------------
 template<>
-void ShapeFunction<2,1>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<2,1>::evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const {
 
-    return;
 }
 
 template<>
-void ShapeFunction<2,2>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<2,2>::evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const {
 
-    ddphi[0][0][0] = 4.;
-    ddphi[0][1][0] = 4.;
-    ddphi[1][0][0] = 4.;
-    ddphi[1][1][0] = 4.;
+    ddphi[0](0,0) = 4.;
+    ddphi[0](0,1) = 4.;
+    ddphi[0](1,0) = 4.;
+    ddphi[0](1,1) = 4.;
 
-    ddphi[0][0][1] = 4.;
-    ddphi[0][1][1] = 0.;
-    ddphi[1][0][1] = 0.;
-    ddphi[1][1][1] = 0.;
+    ddphi[1](0,0) = 4.;
+    ddphi[1](0,1) = 0.;
+    ddphi[1](1,0) = 0.;
+    ddphi[1](1,1) = 0.;
 
-    ddphi[0][0][2] = 0.;
-    ddphi[0][1][2] = 0.;
-    ddphi[1][0][2] = 0.;
-    ddphi[1][1][2] = 4.;
+    ddphi[2](0,0) = 0.;
+    ddphi[2](0,1) = 0.;
+    ddphi[2](1,0) = 0.;
+    ddphi[2](1,1) = 4.;
 
-    ddphi[0][0][3] = -8.;
-    ddphi[0][1][3] = -4.;
-    ddphi[1][0][3] = -4.;
-    ddphi[1][1][3] = 0.;
+    ddphi[3](0,0) = -8.;
+    ddphi[3](0,1) = -4.;
+    ddphi[3](1,0) = -4.;
+    ddphi[3](1,1) = 0.;
 
-    ddphi[0][0][4] = 0.;
-    ddphi[0][1][4] = 4.;
-    ddphi[1][0][4] = 4.;
-    ddphi[1][1][4] = 0.;
+    ddphi[4](0,0) = 0.;
+    ddphi[4](0,1) = 4.;
+    ddphi[4](1,0) = 4.;
+    ddphi[4](1,1) = 0.;
 
-    ddphi[0][0][5] = 0.;
-    ddphi[0][1][5] = -4.;
-    ddphi[1][0][5] = -4.;
-    ddphi[1][1][5] = -8.;
-
+    ddphi[5](0,0) = 0.;
+    ddphi[5](0,1) = -4.;
+    ddphi[5](1,0) = -4.;
+    ddphi[5](1,1) = -8.;
      // element conectivity
      //     2
      //     54
      //     031
      
+}
+
+template<>
+void ShapeFunction<2,3>::evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const {
+
+    const double xsi1 = xi[0];
+    const double xsi2 = xi[1];
+
+    ddphi[0](0,0) = -9. + 27. * xsi1;
+    ddphi[0](0,1) = 0.;
+    ddphi[0](1,0) = 0.;
+    ddphi[0](1,1) = 0.;
+
+    ddphi[1](0,0) = 0.;
+    ddphi[1](0,1) = 0.;
+    ddphi[1](1,0) = 0.;
+    ddphi[1](1,1) = -9. + 27. * xsi2;
+
+    ddphi[2](0,0) = 18. - 27.*xsi1 - 27.*xsi2;
+    ddphi[2](0,1) = 18. - 27.*xsi1 - 27.*xsi2;
+    ddphi[2](1,0) = 18. - 27.*xsi1 - 27.*xsi2;
+    ddphi[2](1,1) = 18. - 27.*xsi1 - 27.*xsi2;
+
+    ddphi[3](0,0) = 27. * xsi2;
+    ddphi[3](0,1) = -4.5 + 27.*xsi1;
+    ddphi[3](1,0) = -4.5 + 27.*xsi1;
+    ddphi[3](1,1) = 0.;
+
+    ddphi[4](0,0) = 0.;
+    ddphi[4](0,1) = -4.5 + 27.*xsi2;
+    ddphi[4](1,0) = -4.5 + 27.*xsi2;
+    ddphi[4](1,1) = 27.*xsi1;
+
+    ddphi[5](0,0) = 0.;
+    ddphi[5](0,1) = 4.5 - 27.*xsi2;
+    ddphi[5](1,0) = 4.5 - 27.*xsi2;
+    ddphi[5](1,1) = 36. - 27.*xsi1 - 81.*xsi2;
+
+    ddphi[6](0,0) = 27. * xsi2;
+    ddphi[6](0,1) = -22.5 + 27.*xsi1+ 54.*xsi2;
+    ddphi[6](1,0) = -22.5 + 27.*xsi1+ 54.*xsi2;
+    ddphi[6](1,1) = -45. + 54. * xsi1 + 81. * xsi2;
+
+    ddphi[7](0,0) = -45. + 81. * xsi1 + 54. * xsi2;
+    ddphi[7](0,1) = -22.5 + 54.*xsi1+ 27.*xsi2;
+    ddphi[7](1,0) = -22.5 + 54.*xsi1+ 27.*xsi2;
+    ddphi[7](1,1) = 27. * xsi1;
+
+    ddphi[8](0,0) = 36. - 27.*xsi2 - 81.*xsi1;
+    ddphi[8](0,1) = 4.5 - 27.*xsi1;
+    ddphi[8](1,0) = 4.5 - 27.*xsi1;
+    ddphi[8](1,1) = 0.;
+
+    ddphi[9](0,0) = -54. * xsi2;
+    ddphi[9](0,1) = 27. - 54. * xsi1 - 54. * xsi2;
+    ddphi[9](1,0) = 27. - 54. * xsi1 - 54. * xsi2;
+    ddphi[9](1,1) = 54. * xsi1;
+    //     2
+    //     76
+    //     895
+    //     0341
+     
+}
+
+template<>
+void ShapeFunction<3,1>::evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const {
+
+}
+
+
+
+template<>
+void ShapeFunction<3,2>::evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const {
+
+    ddphi[0](0,0) = 4.;
+    ddphi[0](0,1) = 0.;
+    ddphi[0](0,2) = 0.;
+    ddphi[0](1,0) = 0.;
+    ddphi[0](1,1) = 0.;
+    ddphi[0](1,2) = 0.;
+    ddphi[0](2,0) = 0.;
+    ddphi[0](2,1) = 0.;
+    ddphi[0](2,2) = 0.;
+    
+    ddphi[1](0,0) = 0.;
+    ddphi[1](0,1) = 0.;
+    ddphi[1](0,2) = 0.;
+    ddphi[1](1,0) = 0.;
+    ddphi[1](1,1) = 4.;
+    ddphi[1](1,2) = 0.;
+    ddphi[1](2,0) = 0.;
+    ddphi[1](2,1) = 0.;
+    ddphi[1](2,2) = 0.;
+
+    ddphi[2](0,0) = 0.;
+    ddphi[2](0,1) = 0.;
+    ddphi[2](0,2) = 0.;
+    ddphi[2](1,0) = 0.;
+    ddphi[2](1,1) = 0.;
+    ddphi[2](1,2) = 0.;
+    ddphi[2](2,0) = 0.;
+    ddphi[2](2,1) = 0.;
+    ddphi[2](2,2) = 4.;
+
+    ddphi[3](0,0) = 4.;
+    ddphi[3](0,1) = 4.;
+    ddphi[3](0,2) = 4.;
+    ddphi[3](1,0) = 4.;
+    ddphi[3](1,1) = 4.;
+    ddphi[3](1,2) = 4.;
+    ddphi[3](2,0) = 4.;
+    ddphi[3](2,1) = 4.;
+    ddphi[3](2,2) = 4.;
+
+    ddphi[4](0,0) = 0.;
+    ddphi[4](0,1) = 4.;
+    ddphi[4](0,2) = 0.;
+    ddphi[4](1,0) = 4.;
+    ddphi[4](1,1) = 0.;
+    ddphi[4](1,2) = 0.;
+    ddphi[4](2,0) = 0.;
+    ddphi[4](2,1) = 0.;
+    ddphi[4](2,2) = 0.;
+
+    ddphi[5](0,0) = 0.;
+    ddphi[5](0,1) = 0.;
+    ddphi[5](0,2) = 4.;
+    ddphi[5](1,0) = 0.;
+    ddphi[5](1,1) = 0.;
+    ddphi[5](1,2) = 0.;
+    ddphi[5](2,0) = 4.;
+    ddphi[5](2,1) = 0.;
+    ddphi[5](2,2) = 0.;
+
+    ddphi[6](0,0) = -8.;
+    ddphi[6](0,1) = -4.;
+    ddphi[6](0,2) = -4.;
+    ddphi[6](1,0) = -4.;
+    ddphi[6](1,1) = 0.;
+    ddphi[6](1,2) = 0.;
+    ddphi[6](2,0) = -4.;
+    ddphi[6](2,1) = 0.;
+    ddphi[6](2,2) = 0.;
+
+    ddphi[7](0,0) = 0.;
+    ddphi[7](0,1) = 0.;
+    ddphi[7](0,2) = 0.;
+    ddphi[7](1,0) = 0.;
+    ddphi[7](1,1) = 0.;
+    ddphi[7](1,2) = 4.;
+    ddphi[7](2,0) = 0.;
+    ddphi[7](2,1) = 4.;
+    ddphi[7](2,2) = 0.;
+
+    ddphi[8](0,0) = 0.;
+    ddphi[8](0,1) = 0.;
+    ddphi[8](0,2) = -4.;
+    ddphi[8](1,0) = 0.;
+    ddphi[8](1,1) = 0.;
+    ddphi[8](1,2) = -4.;
+    ddphi[8](2,0) = -4.;
+    ddphi[8](2,1) = -4.;
+    ddphi[8](2,2) = -8.;
+
+    ddphi[9](0,0) = 0.;
+    ddphi[9](0,1) = -4.;
+    ddphi[9](0,2) = 0.;
+    ddphi[9](1,0) = -4.;
+    ddphi[9](1,1) = -8.;
+    ddphi[9](1,2) = -4.;
+    ddphi[9](2,0) = 0.;
+    ddphi[9](2,1) = -4.;
+    ddphi[9](2,2) = 0.;
+
+    return;
+}
+
+
+template<>
+void ShapeFunction<3,3>::evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const {
+
+    const double xsi1 = xi[0];
+    const double xsi2 = xi[1];
+    const double xsi3 = xi[2];
+
+    ddphi[0](0,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](0,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](0,2) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](1,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](1,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](1,2) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](2,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](2,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](2,2) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    
+    ddphi[1](0,0) = -9. + 27. * xsi1;
+    ddphi[1](0,1) = 0.;
+    ddphi[1](0,2) = 0.;
+    ddphi[1](1,0) = 0.;
+    ddphi[1](1,1) = 0.;
+    ddphi[1](1,2) = 0.;
+    ddphi[1](2,0) = 0.;
+    ddphi[1](2,1) = 0.;
+    ddphi[1](2,2) = 0.;
+
+    ddphi[2](0,0) = 0.;
+    ddphi[2](0,1) = 0.;
+    ddphi[2](0,2) = 0.;
+    ddphi[2](1,0) = 0.;
+    ddphi[2](1,1) = -9. + 27. * xsi2;
+    ddphi[2](1,2) = 0.;
+    ddphi[2](2,0) = 0.;
+    ddphi[2](2,1) = 0.;
+    ddphi[2](2,2) = 0.;
+
+    ddphi[3](0,0) = 0.;
+    ddphi[3](0,1) = 0.;
+    ddphi[3](0,2) = 0.;
+    ddphi[3](1,0) = 0.;
+    ddphi[3](1,1) = 0.;
+    ddphi[3](1,2) = 0.;
+    ddphi[3](2,0) = 0.;
+    ddphi[3](2,1) = 0.;
+    ddphi[3](2,2) = -9. + 27. * xsi3;
+
+    ddphi[4](0,0) = -45. + 81.* xsi1 + 54. * xsi2 + 54. * xsi3;
+    ddphi[4](0,1) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](0,2) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](1,0) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](1,1) = 27. * xsi1;
+    ddphi[4](1,2) = 27. * xsi1;
+    ddphi[4](2,0) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](2,1) = 27. * xsi1;
+    ddphi[4](2,2) = 27. * xsi1;
+
+    ddphi[5](0,0) = 36. - 81. * xsi1 - 27. * xsi2 - 27. * xsi3;
+    ddphi[5](0,1) = 4.5 - 27. * xsi1;
+    ddphi[5](0,2) = 4.5 - 27. * xsi1;
+    ddphi[5](1,0) = 4.5 - 27. * xsi1;
+    ddphi[5](1,1) = 0.;
+    ddphi[5](1,2) = 0.;
+    ddphi[5](2,0) = 4.5 - 27. * xsi1;
+    ddphi[5](2,1) = 0.;
+    ddphi[5](2,2) = 0.;
+
+    ddphi[6](0,0) = 27. * xsi2;
+    ddphi[6](0,1) = -4.5 + 27. * xsi1;
+    ddphi[6](0,2) = 0.;
+    ddphi[6](1,0) = -4.5 + 27. * xsi1;
+    ddphi[6](1,1) = 0.;
+    ddphi[6](1,2) = 0.;
+    ddphi[6](2,0) = 0.;
+    ddphi[6](2,1) = 0.;
+    ddphi[6](2,2) = 0.;
+
+    ddphi[7](0,0) = 0.;
+    ddphi[7](0,1) = -4.5 + 27. * xsi2;
+    ddphi[7](0,2) = 0.;
+    ddphi[7](1,0) = -4.5 + 27. * xsi2;
+    ddphi[7](1,1) = 27. * xsi1;
+    ddphi[7](1,2) = 0.;
+    ddphi[7](2,0) = 0.;
+    ddphi[7](2,1) = 0.;
+    ddphi[7](2,2) = 0.;
+
+    ddphi[8](0,0) = 0.;
+    ddphi[8](0,1) = 4.5 - 27. * xsi2;
+    ddphi[8](0,2) = 0.;
+    ddphi[8](1,0) = 4.5 - 27. * xsi2;
+    ddphi[8](1,1) = -27. * xsi1 - 81. * xsi2 -27.* xsi3;
+    ddphi[8](1,2) = 4.5 - 27. * xsi2;
+    ddphi[8](2,0) = 0.;
+    ddphi[8](2,1) = 4.5 - 27. * xsi2;
+    ddphi[8](2,2) = 0.;
+
+    ddphi[9](0,0) = 27. * xsi2;
+    ddphi[9](0,1) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](0,2) = 27. * xsi2;
+    ddphi[9](1,0) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](1,1) = -45. + 54. * xsi1 + 81. * xsi2 + 54. * xsi3;
+    ddphi[9](1,2) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](2,0) = 27. * xsi2;
+    ddphi[9](2,1) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](2,2) = 27. * xsi2;
+
+    ddphi[10](0,0) = 0.;
+    ddphi[10](0,1) = 0.;
+    ddphi[10](0,2) = 4.5 - 27. * xsi3;
+    ddphi[10](1,0) = 0.;
+    ddphi[10](1,1) = 0.;
+    ddphi[10](1,2) = 4.5 - 27. * xsi3;
+    ddphi[10](2,0) = 4.5 - 27. * xsi3;
+    ddphi[10](2,1) = 4.5 - 27. * xsi3;
+    ddphi[10](2,2) = 36. - 27. * xsi1 - 27. * xsi2 - 81. * xsi3;
+
+    ddphi[11](0,0) = 27. * xsi3;
+    ddphi[11](0,1) = 27. * xsi3;
+    ddphi[11](0,2) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](1,0) = 27. * xsi3;
+    ddphi[11](1,1) = 27. * xsi3;
+    ddphi[11](1,2) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](2,0) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](2,1) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](2,2) = -45. + 54. * xsi1 + 54. * xsi2 + 81. * xsi3;
+
+    ddphi[12](0,0) = 0.;
+    ddphi[12](0,1) = 0.;
+    ddphi[12](0,2) = 0.;
+    ddphi[12](1,0) = 0.;
+    ddphi[12](1,1) = 0.;
+    ddphi[12](1,2) = -4.5 + 27. * xsi3;
+    ddphi[12](2,0) = 0.;
+    ddphi[12](2,1) = -4.5 + 27. * xsi3;
+    ddphi[12](2,2) = 27. * xsi2;
+
+    ddphi[13](0,0) = 0.;
+    ddphi[13](0,1) = 0.;
+    ddphi[13](0,2) = 0.;
+    ddphi[13](1,0) = 0.;
+    ddphi[13](1,1) = 27. * xsi3;
+    ddphi[13](1,2) = -4.5 + 27. * xsi2;
+    ddphi[13](2,0) = 0.;
+    ddphi[13](2,1) = -4.5 + 27. * xsi2;
+    ddphi[13](2,2) = 0.;
+
+    ddphi[14](0,0) = 0.;
+    ddphi[14](0,1) = 0.;
+    ddphi[14](0,2) = -4.5 + 27. * xsi3;
+    ddphi[14](1,0) = 0.;
+    ddphi[14](1,1) = 0.;
+    ddphi[14](1,2) = 0.;
+    ddphi[14](2,0) = -4.5 + 27. * xsi3;
+    ddphi[14](2,1) = 0.;
+    ddphi[14](2,2) = 27. * xsi1;
+
+    ddphi[15](0,0) = 27. * xsi3;
+    ddphi[15](0,1) = 0.;
+    ddphi[15](0,2) = -4.5 + 27. * xsi1;
+    ddphi[15](1,0) = 0.;
+    ddphi[15](1,1) = 0.;
+    ddphi[15](1,2) = 0.;
+    ddphi[15](2,0) = -4.5 + 27. * xsi1;
+    ddphi[15](2,1) = 0.;
+    ddphi[15](2,2) = 0.;
+
+    ddphi[16](0,0) = -54. * xsi2;
+    ddphi[16](0,1) = 27. - 54. * xsi1 - 54. * xsi2 - 27. * xsi3;
+    ddphi[16](0,2) = -27. * xsi2;
+    ddphi[16](1,0) = 27. - 54. * xsi1 - 54. * xsi2 - 27. * xsi3;
+    ddphi[16](1,1) = -54. * xsi1;
+    ddphi[16](1,2) = -27. * xsi1;
+    ddphi[16](2,0) = -27. * xsi2;
+    ddphi[16](2,1) = -27. * xsi1;
+    ddphi[16](2,2) = 0.;
+
+    ddphi[17](0,0) = -54. * xsi3;
+    ddphi[17](0,1) = -27. * xsi3;
+    ddphi[17](0,2) = 27. - 54. * xsi1 - 27. * xsi2 - 54. * xsi3;
+    ddphi[17](1,0) = -27. * xsi3;
+    ddphi[17](1,1) = 0.;
+    ddphi[17](1,2) = -27. * xsi1;
+    ddphi[17](2,0) = 27. - 54. * xsi1 - 27. * xsi2 - 54. * xsi3;
+    ddphi[17](2,1) = -27. * xsi1;
+    ddphi[17](2,2) = -54. * xsi1;
+
+    ddphi[18](0,0) = 0.;
+    ddphi[18](0,1) = -27. * xsi3;
+    ddphi[18](0,2) = -27. * xsi2;
+    ddphi[18](1,0) = -27. * xsi3;
+    ddphi[18](1,1) = -54. * xsi3;
+    ddphi[18](1,2) = 27. - 27. * xsi1 - 54. * xsi2 - 54. * xsi3;
+    ddphi[18](2,0) = -27. * xsi2;
+    ddphi[18](2,1) = 27. - 27. * xsi1 - 54. * xsi2 - 54. * xsi3;
+    ddphi[18](2,2) = -54. * xsi2;
+
+    ddphi[19](0,0) = 0.;
+    ddphi[19](0,1) = 27. * xsi3;
+    ddphi[19](0,2) = 27. * xsi2;
+    ddphi[19](1,0) = 27. * xsi3;
+    ddphi[19](1,1) = 0.;
+    ddphi[19](1,2) = 27. * xsi1;
+    ddphi[19](2,0) = 27. * xsi2;
+    ddphi[19](2,1) = 27. * xsi1;
+    ddphi[19](2,2) = 0.;
+
     return;
 }
 
 template<>
-void ShapeFunction<3,1>::evaluateHessian(double ***ddphi) const {
+void ShapeFunction<2,1>::getCoordinates(MatrixDouble &coord) const {
 
-    return;
-}
+    coord(0,0) = 0.0;
+    coord(1,0) = 0.0;
 
+    coord(0,1) = 1.0;
+    coord(1,1) = 0.0;
 
-
-template<>
-void ShapeFunction<3,2>::evaluateHessian(double ***ddphi) const {
-
-    ddphi[0][0][0] = 4.;
-    ddphi[0][1][0] = 0.;
-    ddphi[0][2][0] = 0.;
-    ddphi[1][0][0] = 0.;
-    ddphi[1][1][0] = 0.;
-    ddphi[1][2][0] = 0.;
-    ddphi[2][0][0] = 0.;
-    ddphi[2][1][0] = 0.;
-    ddphi[2][2][0] = 0.;
-
-    ddphi[0][0][1] = 0.;
-    ddphi[0][1][1] = 0.;
-    ddphi[0][2][1] = 0.;
-    ddphi[1][0][1] = 0.;
-    ddphi[1][1][1] = 4.;
-    ddphi[1][2][1] = 0.;
-    ddphi[2][0][1] = 0.;
-    ddphi[2][1][1] = 0.;
-    ddphi[2][2][1] = 0.;
-
-    ddphi[0][0][2] = 0.;
-    ddphi[0][1][2] = 0.;
-    ddphi[0][2][2] = 0.;
-    ddphi[1][0][2] = 0.;
-    ddphi[1][1][2] = 0.;
-    ddphi[1][2][2] = 0.;
-    ddphi[2][0][2] = 0.;
-    ddphi[2][1][2] = 0.;
-    ddphi[2][2][2] = 4.;
-
-    ddphi[0][0][3] = 4.;
-    ddphi[0][1][3] = 4.;
-    ddphi[0][2][3] = 4.;
-    ddphi[1][0][3] = 4.;
-    ddphi[1][1][3] = 4.;
-    ddphi[1][2][3] = 4.;
-    ddphi[2][0][3] = 4.;
-    ddphi[2][1][3] = 4.;
-    ddphi[2][2][3] = 4.;
-
-    ddphi[0][0][4] = 0.;
-    ddphi[0][1][4] = 4.;
-    ddphi[0][2][4] = 0.;
-    ddphi[1][0][4] = 4.;
-    ddphi[1][1][4] = 0.;
-    ddphi[1][2][4] = 0.;
-    ddphi[2][0][4] = 0.;
-    ddphi[2][1][4] = 0.;
-    ddphi[2][2][4] = 0.;
-
-    ddphi[0][0][5] = 0.;
-    ddphi[0][1][5] = 0.;
-    ddphi[0][2][5] = 4.;
-    ddphi[1][0][5] = 0.;
-    ddphi[1][1][5] = 0.;
-    ddphi[1][2][5] = 0.;
-    ddphi[2][0][5] = 4.;
-    ddphi[2][1][5] = 0.;
-    ddphi[2][2][5] = 0.;
-
-    ddphi[0][0][6] = -8.;
-    ddphi[0][1][6] = -4.;
-    ddphi[0][2][6] = -4.;
-    ddphi[1][0][6] = -4.;
-    ddphi[1][1][6] = 0.;
-    ddphi[1][2][6] = 0.;
-    ddphi[2][0][6] = -4.;
-    ddphi[2][1][6] = 0.;
-    ddphi[2][2][6] = 0.;
-
-    ddphi[0][0][7] = 0.;
-    ddphi[0][1][7] = 0.;
-    ddphi[0][2][7] = 0.;
-    ddphi[1][0][7] = 0.;
-    ddphi[1][1][7] = 0.;
-    ddphi[1][2][7] = 4.;
-    ddphi[2][0][7] = 0.;
-    ddphi[2][1][7] = 4.;
-    ddphi[2][2][7] = 0.;
-
-    ddphi[0][0][8] = 0.;
-    ddphi[0][1][8] = 0.;
-    ddphi[0][2][8] = -4.;
-    ddphi[1][0][8] = 0.;
-    ddphi[1][1][8] = 0.;
-    ddphi[1][2][8] = -4.;
-    ddphi[2][0][8] = -4.;
-    ddphi[2][1][8] = -4.;
-    ddphi[2][2][8] = -8.;
-
-    ddphi[0][0][9] = 0.;
-    ddphi[0][1][9] = -4.;
-    ddphi[0][2][9] = 0.;
-    ddphi[1][0][9] = -4.;
-    ddphi[1][1][9] = -8.;
-    ddphi[1][2][9] = -4.;
-    ddphi[2][0][9] = 0.;
-    ddphi[2][1][9] = -4.;
-    ddphi[2][2][9] = 0.;
-
-
-    return;
-}
-
-
-template<>
-void ShapeFunction<2,1>::getCoordinates(double** &coord) const {
-
-    coord[0][0] = 0.0;
-    coord[1][0] = 0.0;
-
-    coord[0][1] = 1.0;
-    coord[1][1] = 0.0;
-
-    coord[0][2] = 0.0;
-    coord[1][2] = 1.0;
+    coord(0,2) = 0.0;
+    coord(1,2) = 1.0;
 
     return;
 }
 
 template<>
-void ShapeFunction<2,2>::getCoordinates(double** &coord) const {
+void ShapeFunction<2,2>::getCoordinates(MatrixDouble &coord) const {
 
-    coord[0][0] = 0.0;
-    coord[1][0] = 0.0;
+    coord(0,0) = 0.0;
+    coord(1,0) = 0.0;
 
-    coord[0][1] = 1.0;
-    coord[1][1] = 0.0;
+    coord(0,1) = 1.0;
+    coord(1,1) = 0.0;
 
-    coord[0][2] = 0.0;
-    coord[1][2] = 1.0;
+    coord(0,2) = 0.0;
+    coord(1,2) = 1.0;
 
-    coord[0][3] = 0.5;
-    coord[1][3] = 0.0;
+    coord(0,3) = 0.5;
+    coord(1,3) = 0.0;
 
-    coord[0][4] = 0.5;
-    coord[1][4] = 0.5;
+    coord(0,4) = 0.5;
+    coord(1,4) = 0.5;
 
-    coord[0][5] = 0.0;
-    coord[1][5] = 0.5;
-
-    return;
-}
-
-template<>
-void ShapeFunction<3,1>::getCoordinates(double** &coord) const {
-
-    coord[0][0] = 0.0;
-    coord[1][0] = 0.0;
-    coord[2][0] = 0.0;
-
-    coord[0][1] = 1.0;
-    coord[1][1] = 0.0;
-    coord[2][1] = 0.0;
-
-    coord[0][2] = 0.0;
-    coord[1][2] = 1.0;
-    coord[2][2] = 0.0;
-
-    coord[0][3] = 0.0;
-    coord[1][3] = 0.0;
-    coord[2][3] = 1.0;
+    coord(0,5) = 0.0;
+    coord(1,5) = 0.5;
 
     return;
 }
 
 template<>
-void ShapeFunction<3,2>::getCoordinates(double** &coord) const {
+void ShapeFunction<3,1>::getCoordinates(MatrixDouble &coord) const {
 
-    coord[0][0] = 0.0;
-    coord[1][0] = 0.0;
-    coord[2][0] = 0.0;
+    coord(0,0) = 0.0;
+    coord(1,0) = 0.0;
+    coord(2,0) = 0.0;
 
-    coord[0][1] = 0.0;
-    coord[1][1] = 1.0;
-    coord[2][1] = 0.0;
+    coord(0,1) = 1.0;
+    coord(1,1) = 0.0;
+    coord(2,1) = 0.0;
 
-    coord[0][2] = 0.0;
-    coord[1][2] = 0.0;
-    coord[2][2] = 1.0;
+    coord(0,2) = 0.0;
+    coord(1,2) = 1.0;
+    coord(2,2) = 0.0;
 
-    coord[0][3] = 1.0;
-    coord[1][3] = 0.0;
-    coord[2][3] = 0.0;
+    coord(0,3) = 0.0;
+    coord(1,3) = 0.0;
+    coord(2,3) = 1.0;
 
-    coord[0][4] = 0.0;
-    coord[1][4] = 0.5;
-    coord[2][4] = 0.0;
+    return;
+}
 
-    coord[0][5] = 0.0;
-    coord[1][5] = 0.5;
-    coord[2][5] = 0.5;
+template<>
+void ShapeFunction<3,2>::getCoordinates(MatrixDouble &coord) const {
 
-    coord[0][6] = 0.0;
-    coord[1][6] = 0.0;
-    coord[2][6] = 0.5;
+    coord(0,0) = 0.0;
+    coord(1,0) = 0.0;
+    coord(2,0) = 0.0;
 
-    coord[0][7] = 0.5;
-    coord[1][7] = 0.0;
-    coord[2][7] = 0.0;
+    coord(0,1) = 0.0;
+    coord(1,1) = 1.0;
+    coord(2,1) = 0.0;
 
-    coord[0][8] = 0.5;
-    coord[1][8] = 0.5;
-    coord[2][8] = 0.0;
+    coord(0,2) = 0.0;
+    coord(1,2) = 0.0;
+    coord(2,2) = 1.0;
 
-    coord[0][9] = 0.5;
-    coord[1][9] = 0.0;
-    coord[2][9] = 0.5;
+    coord(0,3) = 1.0;
+    coord(1,3) = 0.0;
+    coord(2,3) = 0.0;
+
+    coord(0,4) = 0.0;
+    coord(1,4) = 0.5;
+    coord(2,4) = 0.0;
+
+    coord(0,5) = 0.0;
+    coord(1,5) = 0.5;
+    coord(2,5) = 0.5;
+
+    coord(0,6) = 0.0;
+    coord(1,6) = 0.0;
+    coord(2,6) = 0.5;
+
+    coord(0,7) = 0.5;
+    coord(1,7) = 0.0;
+    coord(2,7) = 0.0;
+
+    coord(0,8) = 0.5;
+    coord(1,8) = 0.5;
+    coord(2,8) = 0.0;
+
+    coord(0,9) = 0.5;
+    coord(1,9) = 0.0;
+    coord(2,9) = 0.5;
     return;
 }

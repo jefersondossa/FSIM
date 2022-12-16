@@ -15,7 +15,7 @@
 #define SHAPEFUNCTION_H
 
 #include "DataTypes.h"
-
+#include <vector>
 /// Defines the quadratic shape functions and its derivatives
 
 template<int DIM, int DEG>
@@ -36,11 +36,11 @@ public:
 
     /// Evaluates the values of the shape funtion second derivatives    
     /// @param double** Shape function second derivatives values
-    void evaluateHessian(double ***ddphi) const;     
+    void evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const;     
 
     /// Gets the element nodal coordinates
     /// @param double** Non-dimensional coordinate
-    void getCoordinates(double** &coord) const;
+    void getCoordinates(MatrixDouble &coord) const;
 };
 
 
