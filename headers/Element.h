@@ -69,6 +69,8 @@ private:
     VecInt intPointCorrespElem;
     MatrixDouble intPointCoordinates;
     MatrixDouble intPointCorrespXsi;
+    bool isSecondDerivativeInverted = false;
+    MatrixDouble invSecDeriv;
 
     bool          glueZone;
     bool          model; //true for local and false for global

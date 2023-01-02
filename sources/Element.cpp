@@ -302,7 +302,8 @@ void Element<DIM,DEG>::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, do
     //Computes the spatial Jacobian matrix and its inverse
     MatrixDouble dphi(nElNodes,DIM);
     MatrixDouble dx_dxsi(DIM,DIM);
-    double xna_[DIM] = {};
+    VecDouble xna_(DIM);
+    xna_.setZero();
 
     ShapeF shapeQuad;
     shapeQuad.evaluateGradient(xsi,dphi);
@@ -346,7 +347,7 @@ void Element<DIM,DEG>::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
     
     dphi_dx.setZero();
 
-    //Quadratic shape functions spatial first derivatives
+    //Shape functions spatial first derivatives
     dphi_dx = dphi * ainv_.transpose();
 
     return;
@@ -357,9 +358,14 @@ void Element<DIM,DEG>::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx) {
     
-    
+    dDphi_dx.setZero();
     std::vector<MatrixDouble> ddphi(nElNodes,MatrixDouble(DIM,DIM));
+    for (int i = 0; i < nElNodes; i++)
+    {
+        ddphi[i].setZero();
+    }
     
+
     ShapeF shapeQuad;
     shapeQuad.evaluateHessian(xsi,ddphi);
     
@@ -367,43 +373,69 @@ void Element<DIM,DEG>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDoub
     //https://scicomp.stackexchange.com/questions/25196/implementing-higher-order-derivatives-for-finite-element
     MatrixDouble matAux;
     VecDouble HODerivatives, vecAux;
-    if (DIM == 2){
-        matAux.resize(3,3); HODerivatives.resize(3); vecAux.resize(3);
-        matAux.setZero(); HODerivatives.setZero(); vecAux.setZero();
+    if (!isSecondDerivativeInverted){
+        if (DIM == 2){
+            matAux.resize(3,3); HODerivatives.resize(3); vecAux.resize(3); invSecDeriv.resize(3,3);
+            matAux.setZero(); HODerivatives.setZero(); vecAux.setZero(); invSecDeriv.setZero();
 
-        matAux(0,0) = ainv_(0,0) * ainv_(0,0);
-        matAux(0,1) = ainv_(0,1) * ainv_(0,1);//Pode estar errado, e ser(1,0)ou seja a transposta
-        matAux(0,2) = 2. * ainv_(0,0) * ainv_(0,1);
-        
-        matAux(1,0) = ainv_(1,0) * ainv_(1,0);
-        matAux(1,1) = ainv_(1,1) * ainv_(1,1);
-        matAux(1,2) = 2. * ainv_(1,0) * ainv_(1,1);
-        
-        matAux(2,0) = ainv_(0,0) * ainv_(1,0);
-        matAux(2,1) = ainv_(0,1) * ainv_(1,1);
-        matAux(2,2) = ainv_(0,0) * ainv_(1,1) + ainv_(1,0) * ainv_(0,1);
+            matAux(0,0) = ainv_(0,0) * ainv_(0,0);
+            matAux(0,1) = ainv_(0,1) * ainv_(0,1);//Pode estar errado, e ser(1,0)ou seja a transposta
+            matAux(0,2) = 2. * ainv_(0,0) * ainv_(0,1);
+            
+            matAux(1,0) = ainv_(1,0) * ainv_(1,0);
+            matAux(1,1) = ainv_(1,1) * ainv_(1,1);
+            matAux(1,2) = 2. * ainv_(1,0) * ainv_(1,1);
+            
+            matAux(2,0) = ainv_(0,0) * ainv_(1,0);
+            matAux(2,1) = ainv_(0,1) * ainv_(1,1);
+            matAux(2,2) = ainv_(0,0) * ainv_(1,1) + ainv_(1,0) * ainv_(0,1);
 
-        
+            invSecDeriv = matAux.inverse();
 
-        
-    } else if (DIM == 3){
-        matAux.resize(6,6); HODerivatives.resize(6); vecAux.resize(6);
-        matAux.setZero(); HODerivatives.setZero(); vecAux.setZero();
-    } else {
-        PanicButton();
+        } else if (DIM == 3){
+            matAux.resize(6,6); HODerivatives.resize(6); vecAux.resize(6);invSecDeriv.resize(6,6);
+            matAux.setZero(); HODerivatives.setZero(); vecAux.setZero(); invSecDeriv.setZero();
+        } else {
+            PanicButton();
+        }
     }
-
-    matAux = matAux.inverse();
-
-    for (int i = 0; i < nElNodes; i++){
-        // vecAux[0] = ddphi[i](0,0) - dphi_dx(i,0) ...
     
+    //Shape functions spatial second derivatives
+    double ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
+    double &alpha_f = parameters->getAlphaF();
+    VecDouble xna_(DIM);
+
+    for (int i = nElNodes; i--; ){
+        xna_.setZero();
+        for (int j = DIM; j--; ){
+            // Approximate the integration space
+            xna_[j] = alpha_f * (*nodes_)[connect_[i]] -> getCoordinateValue(j) + 
+                      (1. - alpha_f) * (*nodes_)[connect_[i]] -> getPreviousCoordinateValue(j);
+        }
+        ddx_dxsi += xna_[0] * ddphi[i](0,0);
+        ddx_deta += xna_[0] * ddphi[i](1,1);
+        ddx_dxsideta += xna_[0] * ddphi[i](0,1);
+        ddy_dxsi += xna_[1] * ddphi[i](0,0);
+        ddy_deta += xna_[1] * ddphi[i](1,1);
+        ddy_dxsideta += xna_[1] * ddphi[i](0,1);
+    };
+
+    if (DIM == 2){
+        VecDouble vecAux2(3);
+        for (int i = nElNodes; i--; ){
+            vecAux[0] = ddphi[i](0,0) - dphi_dx(i,0)*ddx_dxsi - dphi_dx(i,1)*ddy_dxsi;
+            vecAux[1] = ddphi[i](1,1) - dphi_dx(i,0)*ddx_deta - dphi_dx(i,1)*ddy_deta;
+            vecAux[2] = ddphi[i](0,1) - dphi_dx(i,0)*ddx_dxsideta - dphi_dx(i,1)*ddy_dxsideta;
+
+            vecAux2 = invSecDeriv * vecAux;
+
+            dDphi_dx(i,0) = vecAux2[0];
+            dDphi_dx(i,1) = vecAux2[1];
+            dDphi_dx(i,2) = vecAux2[2];
+        }
+        
+        
     }
-
-    // dphi_dx.setZero();
-
-    // //Quadratic shape functions spatial first derivatives
-    // dphi_dx = dphi * ainv_.transpose();
 
     return;
 };
@@ -2713,8 +2745,13 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
 template<int DIM, int DEG>
 void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
 
+    arlequinStab.setZero();
+    laplMatrix.setZero();
+
     VecDouble xsi(DIM);    
     MatrixDouble dphi_dx(nElNodes,DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dx(nElNodes,dimddphi);
     MatrixDouble ainv_(DIM,DIM);
 
     ShapeF shapeQuad;
@@ -2726,10 +2763,6 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDoubl
     
     auto force = parameters->getForcingFunctionPoisson();
 
-    VecDouble xna_(DIM);
-    double forcingF;
-    for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
-    if (force) force(xna_,forcingF);
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
@@ -2738,11 +2771,18 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDoubl
         //Returns the quadrature integration weight
         double weight_ = nQuad.WeightList(index);
 
+        VecDouble xna_(DIM);
+        double forcingF;
+        for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
+        if (force) force(xna_,forcingF);
+
         double djac_ = 0.; 
         //Computes the jacobian matrix
         getJacobianMatrix(xsi, ainv_, djac_);
 
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        
+        getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
         
         // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
@@ -2757,19 +2797,25 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDoubl
 
                 //ARLEQUIN STABILIZATION TERMS
                 double LL = 0.;
-                double LF = 0.;
                 for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
-                for (int m = DIM; m--; ) LF -=  dphi_dx(i,m) * wna_ * forcingF;
 
-                arlequinStab(i,j) += (LL + LF) * weight_ * djac_;
+                arlequinStab(i,j) += (LL) * weight_ * djac_;
+                
+                //High order derivative
+                double LH = 0.;
+                for (int m = DIM; m--; ) LH -= dphi_dx(i,m) * (ddphi_dx(i,0) + ddphi_dx(i,1));
+
+                laplMatrix(i,j) += LH * wna_ * weight_ * djac_; 
 
             };
 
             //ARLEQUIN STABILIZATION TERMS
             double LLx = 0.;
+            double LF = 0.;
             for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(0,m);
+            for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * wna_ * forcingF;
             
-            arlequinStabVector[i] += (LLx) * weight_ * djac_;
+            arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
         };         
         
         index++;        
@@ -2938,6 +2984,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshPoisson(int &ielem, do
                                                      VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
                                                      MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector){
 
+    lagrMultMatrix.setZero();
+    
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
     ShapeFunction<DIM,DEG> shapeQuad;
@@ -3009,12 +3057,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshPoisson(int &ielem, do
             double dalpha_dy = 0.;
             double WJ = weight_ * djac_;
 
-            for (int i = 0; i < nElNodes; ++i){
-                // dalpha_dx += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[0][i];
-                // dalpha_dy += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[1][i];
-                
-                una_[0] += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
-                una_[1] += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
+            for (int i = 0; i < nElNodes; ++i){                
+                una_[0] += velx[i] * phiLM_[i];
+                una_[1] += vely[i] * phiLM_[i];
             }
             for (int i = 0; i < nElNodes; i++){
                 for (int j = 0; j < nElNodes; j++){
@@ -3457,7 +3502,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
     VecDouble phi_(nElNodes);
     VecDouble phiLM_(nElNodes);
     MatrixDouble dphi_dx(nElNodes,DIM);
-    MatrixDouble dphiL_dx(nElNodes,DIM);   
+    MatrixDouble dphiL_dx(nElNodes,DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dx(nElNodes,dimddphi);
     
     double &dens_ = parameters->getDensity();
     double &k1 = parameters->getArlequinK1();
@@ -3468,14 +3515,15 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
     auto force = parameters->getForcingFunctionPoisson();
 
     VecDouble xna_(DIM);
-    double forcingF;
-    for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
-    if (force) force(xna_,forcingF);
 
 
     for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
         
         if ((intPointCorrespElem[index] == ielem)){
+
+            double forcingF;
+            for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
+            if (force) force(xna_,forcingF);
 
             //Defines the integration points adimentional coordinates
             for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
@@ -3502,6 +3550,8 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
             djac_ = 0.;
             getJacobianMatrix(xsi, ainv_, djac_);
             getSpatialDerivatives(xsi, ainv_, dphi_dx);
+            
+            getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
 
             double wna_ = intPointWeightFunctionSpecial[index];
 
@@ -3513,16 +3563,22 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshPoisson(int &i
                 for (int j = 0; j < nElNodes; j++){     
                     double LL = 0.;
 
-                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
+                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphiL_dx(j,m);
 
                     arlequinStab(i,j) += LL * weight_ * djac_;
+
+                     //High order derivative
+                    double LH = 0.;
+                    for (int m = DIM; m--; ) LH += dphiL_dx(i,m) * (ddphi_dx(i,0) + ddphi_dx(i,1));
+
+                    laplMatrix(i,j) += LH * wna_ * weight_ * djac_; 
                 };
 
                 //ARLEQUIN STABILIZATION TERMS
                 double LLx = 0.;
                 double LF = 0.;
                 for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m);
-                for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * wna_ * forcingF;
+                for (int m = DIM; m--; ) LF +=  dphiL_dx(i,m) * wna_ * forcingF;
 
                 arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
             };

@@ -216,7 +216,8 @@ public:
 
     void stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1, 
                            MatrixDouble &C0, MatrixDouble &C1,
-                           MatrixDouble &E, double &tArlq0, double &tArlq1);
+                           MatrixDouble &E, VecDouble &b0, 
+                           VecDouble &b1, double &tArlq0, double &tArlq1);
 
 };
 

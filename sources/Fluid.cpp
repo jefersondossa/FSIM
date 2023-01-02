@@ -749,7 +749,7 @@ void Fluid<DIM,DEG>::setBoundarySides(){
             };
         }
     };
-
+    
     return;
 }
 
@@ -767,11 +767,11 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
 
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
 
-    // idx_t objval;
-    // idx_t numEl = numElem;
-    // idx_t numNd = numNodes;
-    // idx_t ssize = size;
-    // idx_t one = 1;
+    idx_t objval;
+    idx_t numEl = numElem;
+    idx_t numNd = numNodes;
+    idx_t ssize = size;
+    idx_t one = 1;
     int elem_start[numElem+1], elem_connec[nElNodes*numElem];
     part_elem = new int[numElem];
     part_nodes = new int[numNodes];
@@ -793,17 +793,9 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
         for (int i = 0; i < numNodes; i++) part_nodes[i] = 0;
         for (int i = 0; i < numElem; i++) part_elem[i] = 0;
     } else {
-        PetscPartitioner partitioner;
-        PetscPartitionerCreate(PETSC_COMM_WORLD, &partitioner);
-        PetscPartitionerSetType(partitioner, PETSCPARTITIONERPARMETIS);
-        PetscSection partSection;
-        IS *partition;
-        PetscPartitionerPartition(partitioner, size, numNodes, elem_start, elem_connec, NULL, NULL, partSection, partition);
-
-
-        // METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
-        //                         NULL, NULL, &one, &ssize, NULL, NULL,    \
-        //                         &objval, part_elem, part_nodes);
+        METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
+                                NULL, NULL, &one, &ssize, NULL, NULL,    \
+                                &objval, part_elem, part_nodes);
     }
     
     mirrorData << std::endl \
