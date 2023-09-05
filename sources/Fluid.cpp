@@ -1548,9 +1548,13 @@ int Fluid<DIM,DEG>::solvePoisson(){
                  
         std::clock_t t1 = std::clock();
         
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            numNodes, numNodes,
-                            100,NULL,300,NULL,&A); 
+        if (fluidParameters.getSolverType() == SolverType::ESuiteSparse){
+            ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numNodes, numNodes, 100,NULL,&A);
+        } else {
+            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                            numNodes, numNodes,100,NULL,300,NULL,&A); 
+        }
+
         CHKERRQ(ierr);
                 
         //Create PETSc vectors
@@ -1607,37 +1611,33 @@ int Fluid<DIM,DEG>::solvePoisson(){
         
         ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
         
+        switch (fluidParameters.getSolverType())
+        {
+        case SolverType::ESuiteSparse:
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc, PCLU);
+            PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+            break;
+        case SolverType::EMumps:
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc, PCLU);
+            PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+            break;
 
+        case SolverType::EIterative:
+            KSPSetType(ksp,KSPFGMRES);
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc,PCBJACOBI);
+            KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+            break;
 
+        default:
+            PanicButton();
+            break;
+        }
 
-    //     ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-    //                             500);CHKERRQ(ierr);
+    //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
         
-    //     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        
-    //     ierr = KSPGetPC(ksp,&pc);
-        
-    //     ierr = PCSetType(pc,PCJACOBI);
-        
-    //     //ierr = KSPSetType(ksp,KSPBCGS); CHKERRQ(ierr);
-
-    //     // ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-        
-    //        //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-        
-
-
-
-#if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
-#endif          
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
-
-
-
         ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
 
         ierr = KSPGetTotalIterations(ksp, &iterations);            

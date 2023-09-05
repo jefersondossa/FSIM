@@ -2,6 +2,7 @@
     // Defines the problem dimension
     const int dimension = 2;
     const int degree = 2;
+ 
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
@@ -162,8 +163,10 @@ auto forcingFunction = [](const VecDouble &coord, double &force){
 
     coarseModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
     coarseModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+    coarseModel.getFluidParameters().setSolver(SolverType::ESuiteSparse);
     fineModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
     fineModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+    fineModel.getFluidParameters().setSolver(SolverType::ESuiteSparse);
 
     // coarseModel.solvePoisson();
 

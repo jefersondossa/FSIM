@@ -2797,9 +2797,12 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             std::clock_t t1 = std::clock();
             
             // Preallocates the matrix
-            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 400, NULL, 600, NULL, &A); 
-            
+            if (parametersFine->getSolverType() == SolverType::ESuiteSparse){
+                ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
+            } else {
+                ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                                sysSize, sysSize,400,NULL,600,NULL,&A); 
+            }
 
             for (int i=0; i<sysSize; i++){
                 double val = 1.e-10;
@@ -2857,100 +2860,34 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
             
             ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-            
 
 
+            switch (parametersFine->getSolverType())
+            {
+            case SolverType::ESuiteSparse:
+                KSPGetPC(ksp, &pc);
+                PCSetType(pc, PCLU);
+                PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+                break;
+            case SolverType::EMumps:
+                KSPGetPC(ksp, &pc);
+                PCSetType(pc, PCLU);
+                PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+                break;
 
-            // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
-            // ierr = MatSetNullSpace(A, nullsp);
-            // ierr = MatNullSpaceDestroy(&nullsp);
+            case SolverType::EIterative:
+                KSPSetType(ksp,KSPFGMRES);
+                KSPGetPC(ksp, &pc);
+                PCSetType(pc,PCBJACOBI);
+                KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+                break;
+
+            default:
+                PanicButton();
+                break;
+            }
 
 
-
-
-            ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-                                    1000);CHKERRQ(ierr);
-            
-            //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-            
-            ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-            
-            ierr = PCSetType(pc,PCBJACOBI);CHKERRQ(ierr);
-            
-            //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
-            
-            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-
-
-
-            
-#if defined(PETSC_HAVE_MUMPS)
-            ierr = KSPSetType(ksp,KSPPREONLY);
-            ierr = KSPGetPC(ksp,&pc);
-            ierr = PCSetType(pc, PCLU);
-            
-            // ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-            // PCFactorSetUpMatSolverType(pc);
-            // PCFactorGetMatrix(pc,&F);
-            
-            // PetscInt ival,icntl;
-            // icntl = 14; ival = 80;
-            // MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 28; ival = 2;
-            // MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 29; ival = 2;
-            // MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 16; ival = 0;
-            // MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 4; ival = 3;
-            // MatMumpsSetIcntl(F,icntl,ival);
-            // icntl = 11; ival = 1;
-            // MatMumpsSetIcntl(F,11,1);
-
-            //MatMumpsSetIcntl(F,21,0);
-
-            
-#endif
-            // std::cout << "AQQQEQE1 " << rank << std::endl;
-            // ierr = PCSetFromOptions(pc);CHKERRQ(ierr);
-            // std::cout << "AQQQEQE2 " << rank << std::endl;
-            ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            // std::cout << "AQQQEQE3 " << rank << std::endl;
-            ierr = KSPSetUp(ksp);
-            // std::cout << "AQQQEQE4 " << rank << std::endl;
-            // MatView(A,PETSC_VIEWER_DRAW_WORLD);
-// #if defined(PETSC_HAVE_MUMPS)
-//             PetscInt  info1,info2,icntl14;
-            
-//             MatMumpsGetInfo(F,1,&info1);
-//             MatMumpsGetInfo(F,2,&info2);
-
-            // PetscReal info5,info6,info7,info8,info9,info10,info11;
-            // MatMumpsGetRinfog(F,5,&info5);
-            // MatMumpsGetRinfog(F,6,&info6);
-            // MatMumpsGetRinfog(F,7,&info7);
-            // MatMumpsGetRinfog(F,8,&info8);
-            // MatMumpsGetRinfog(F,9,&info9);
-            // MatMumpsGetRinfog(F,10,&info10);
-            // MatMumpsGetRinfog(F,11,&info11);
-
-            // PetscInt info21,info32;
-            // MatMumpsGetIcntl(F,32,&info32);
-            // MatMumpsGetIcntl(F,21,&info21);
-
-            
-            // if(rank==0) std::cout << "ICNTL = " << info21 << " " << info32 << std::endl;
-          
-            // if(rank==0) std::cout << "INFOG = " << info5 << " " << info6 << " " << info7 << " " << info8 << " " << info9 << " " << info10 << " " << info11 << std::endl;
-//             MatMumpsGetIcntl(F,14,&icntl14);    
-//             if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-//                                                       << " " << info2 << " " 
-//                                                       << icntl14 << std::endl;
-// #endif
-            
-            ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
             
             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
             

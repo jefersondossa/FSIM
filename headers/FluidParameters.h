@@ -17,6 +17,8 @@
 #include <math.h>
 #include "DataTypes.h"
 
+enum SolverType{EMumps, ESuiteSparse, EIterative};
+
 /// Defines the fluid boundary shape functions
 
 template<int DIM, int DEG>
@@ -121,6 +123,13 @@ public:
         return forceFunctionPoisson;
     }
 
+    void setSolver(SolverType st){
+        sType = st;
+    }
+    SolverType &getSolverType(){
+        return sType;
+    }
+
 private:
     double viscosity;
     double density;
@@ -135,7 +144,8 @@ private:
     VecDouble velocityInf;
 
     int timeInstant;
-
+    SolverType sType = SolverType::ESuiteSparse;
+    
     std::function<void (const VecDouble &coord, double &time, double &pres, VecDouble &gradP, VecDouble &vel, MatrixDouble &gradVel)> exactSolution = 0; 
     std::function<void (const VecDouble &coord, double &time, VecDouble &force)> forceFunction = 0; 
     std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> exactSolutionPoisson = 0; 
