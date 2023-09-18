@@ -147,10 +147,10 @@ template<int DIM, int DEG>
 void Element<DIM,DEG>::setIntegPointWeightFunction() {
     
     VecDouble xsi(DIM);
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phi_(fMesh->nElNodes);
     
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
     for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
         intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
         intPointWeightFunction[i] = 0.;
@@ -186,7 +186,7 @@ void Element<DIM,DEG>::setIntegPointWeightFunction() {
     // } 
 
     index = 0;
-    IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
+    IntegQuadratureSpecial sQuad(DIM,DEG);
 
     for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -230,9 +230,9 @@ void Element<DIM,DEG>::setIntegPointWeightFunction() {
 template<int DIM,int DEG>
 void Element<DIM,DEG>::getIntegPointCoordinates(){
 
-    IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
+    IntegQuadratureSpecial sQuad(DIM,DEG);
     VecDouble xsi(DIM);
-    ShapeFunction<DIM,DEG>   shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phi_(fMesh->nElNodes);
 
     for (int i = 0; i < sQuad.getNumberOfIntegrationPoints(); i++){
@@ -263,7 +263,7 @@ void Element<DIM,DEG>::clearVariables(){
         
     glueZone = false;
 
-    IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
+    IntegQuadratureSpecial sQuad(DIM,DEG);
 
     for (int i=0; i < sQuad.getNumberOfIntegrationPoints(); i++){
         intPointWeightFunction[i] = 1.;
@@ -340,7 +340,7 @@ void Element<DIM,DEG>::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
     
     MatrixDouble dphi(fMesh->nElNodes,DIM);
     
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     
     shapeQuad.evaluateGradient(xsi,dphi);
     // shapeQuad.evaluateHessian(xsi,ddphi);
@@ -366,7 +366,7 @@ void Element<DIM,DEG>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDoub
     }
     
 
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     shapeQuad.evaluateHessian(xsi,ddphi);
     
     //These derivatives are computed with basis in this reference:
@@ -612,7 +612,7 @@ void Element<DIM,DEG>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     MatrixDouble ainv_(DIM,DIM);
 
     double ident[DIM][DIM] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     
     // std::cout << "asdasd 1 " << std::endl;
 
@@ -2006,9 +2006,9 @@ void Element<DIM,DEG>::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, 
     MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);
 
-    ShapeFunction<DIM,DEG>           shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     double tSUPG_;
     double tPSPG_;
@@ -2057,9 +2057,9 @@ void Element<DIM,DEG>::getPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhs
     MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);
 
-    ShapeFunction<DIM,DEG>           shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
 
@@ -2098,12 +2098,12 @@ template<int DIM, int DEG>
 void Element<DIM,DEG>::getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
-    ShapeFunction<DIM,DEG>           shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     
     MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
 
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     MatrixDouble ainv_(DIM,DIM);
 
@@ -2158,12 +2158,12 @@ template<int DIM, int DEG>
 void Element<DIM,DEG>::getElasticity2D(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     VecDouble xsi(DIM);
-    ShapeFunction<DIM,DEG>           shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     
     MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
 
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     MatrixDouble ainv_(DIM,DIM);
 
@@ -2221,10 +2221,10 @@ void Element<DIM,DEG>::getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble
     VecDouble xsi(DIM);
     MatrixDouble dphi(fMesh->nElNodes,DIM);
     
-    ShapeFunction<DIM,DEG>           shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     // ShapeFunctionDerivative dphi_dx;
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     double &dTime_ = fMesh->getFluidParameters().getTimeStep();
         
@@ -2411,9 +2411,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatr
 
     MatrixDouble ainv_(DIM,DIM);
 
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     double tSUPG_; double tPSPG_; double tLSIC_;
 
@@ -2670,9 +2670,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
     MatrixDouble ddphi_dx(fMesh->nElNodes,dimddphi);
     MatrixDouble ainv_(DIM,DIM);
 
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
-    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+    IntegQuadrature nQuad(DIM,DEG);
 
     double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
 
@@ -2865,9 +2865,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
-    IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
+    IntegQuadratureSpecial sQuad(DIM,DEG);
 
     //tARLQ_ = -tPSPG2_;
 
@@ -3224,9 +3224,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
 
     VecDouble xsi(DIM);
     VecDouble xsi_intp(DIM);
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
-    IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
+    IntegQuadratureSpecial sQuad(DIM,DEG);
 
     //tARLQ_ = -tPSPG2_;
 
@@ -3479,8 +3479,8 @@ void Element<DIM,DEG>::computeErrorPoisson(VecDouble &errors){
     int index = 0;
     errors.setZero();
 
-    IntegQuadratureSpecial<DIM,DEG>  nQuad = IntegQuadratureSpecial<DIM,DEG>(); 
-    ShapeFunction<DIM,DEG>      shapeQuad;
+    IntegQuadrature nQuad(DIM,DEG);
+    ShapeFunction shapeQuad(DIM,DEG);
 
     MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);

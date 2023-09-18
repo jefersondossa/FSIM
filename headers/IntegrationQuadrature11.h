@@ -20,11 +20,10 @@
 
 /// Defines a special quadrature rule (equal to the normal quadradure rule) used for the integration of problems with coincident meshes
 
-template<int DIM, int DEG>
 class IntegQuadratureSpecial{
 public:
     int getNumberOfIntegrationPoints() const {
-        return numIntegPoints;
+        return pointWeight.size();
     }
 
     /// Returns the integration point coordinate
@@ -40,29 +39,25 @@ public:
     void setQuadrature();
 
     /// Constructor of the domain integration quadrature
-    IntegQuadratureSpecial(){
+    IntegQuadratureSpecial(int dim, int deg){
+        int numIntegPoints = (deg*deg*(3-dim)-12*(dim-2)+deg*(15*dim-25))/2;
+        fOrder = deg;
         pointWeight.resize(numIntegPoints);
-        pointCoord.resize(numIntegPoints,DIM);
+        pointCoord.resize(numIntegPoints,dim);
         setQuadrature();
     }
   
     //Interpolate variables
-    double interpolateQuadraticVariable(VecDouble &nValues, int point) const ;
+    double interpolateQuadraticVariable(VecDouble &nValues, int point, int DIM) const ;
 
 private:
-    const static int numIntegPoints = (DEG*DEG*(3-DIM)-12*(DIM-2)+DEG*(15*DIM-25))/2;
+    int fOrder = 0;
 
     ///List of integration points coordinates
     MatrixDouble pointCoord;
 
     ///List of integration points weights
     VecDouble pointWeight;
-
-    //Defines shape functions
-    ShapeFunction<DIM,DEG> shapeQuad;
-    
-    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-
 };
 
 

@@ -71,14 +71,14 @@ public:
         sideBoundary_ = -1;
         neighborElements.clear();
 
-        IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+        IntegQuadrature nQuad(DIM,DEG);
         intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
 
         intPointWeightFunction.fill(1.);
         intPointWeightFunctionPrev.fill(1.);
         
-        IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
+        IntegQuadratureSpecial sQuad(DIM,DEG);
 
         intPointWeightFunctionSpecial.resize(sQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionSpecialPrev.resize(sQuad.getNumberOfIntegrationPoints());
@@ -170,7 +170,7 @@ public:
         MatrixDouble ainv_(DIM,DIM);
         MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
         
-        ShapeFunction<DIM,DEG>    shapeQuad;
+        ShapeFunction  shapeQuad(DIM,DEG);
 
         xsi[0] = 0.5;
         xsi[1] = 0.5;
@@ -280,7 +280,7 @@ public:
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
-    int getNumberOfIntegrationPoints(){IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>(); return sQuad.getNumberOfIntegrationPoints();};
+    int getNumberOfIntegrationPoints(){IntegQuadratureSpecial sQuad(DIM,DEG); return sQuad.getNumberOfIntegrationPoints();};
 
     /// Sets the integration point correspondence to the overlapped mesh
     /// @param int element correspondent @param VecLoc Adimensional coordinates

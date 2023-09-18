@@ -60,7 +60,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Node<D
                                            std::vector<Element<DIM,DEG> *> elements, 
                                            int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch){
     
-    ShapeFunction<DIM,DEG> shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int nElNodes = fineModel->nElNodes;
     VecDouble phi_(nElNodes);
 
@@ -303,12 +303,13 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
         int numberIntPoints = elementsFine_[elementsGlueZoneFine_[ielem]] -> 
             getNumberOfIntegrationPoints();
 
+        IntegQuadratureSpecial quad(DIM,DEG);
         for (int i = 0; i < numberIntPoints; i++){
 
             VecDouble x(DIM);
-
-            x[0] = quad.interpolateQuadraticVariable(x1,i);
-            x[1] = quad.interpolateQuadraticVariable(x2,i);
+            
+            x[0] = quad.interpolateQuadraticVariable(x1,i,DIM);
+            x[1] = quad.interpolateQuadraticVariable(x2,i,DIM);
 
             int elCorr = 0;
             VecDouble xsiCorr(DIM);
@@ -3218,7 +3219,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         }
 
         //Compute real velocity
-        ShapeFunction<DIM,DEG>                       shapeQuad;
+        ShapeFunction shapeQuad(DIM,DEG);
         int nElNodes = fineModel->nElNodes; 
         VecDouble phi_(nElNodes);
         
@@ -3633,7 +3634,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
 
         //Compute real velocity
         
-        ShapeFunction<DIM,DEG> shapeQuad;
+        ShapeFunction shapeQuad(DIM,DEG);
         int nElNodes = fineModel->nElNodes; 
         VecDouble phi_(nElNodes);
         
@@ -3982,7 +3983,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
 
 
     //Compute real velocity
-    ShapeFunction<DIM,DEG>                       shapeQuad;
+    ShapeFunction shapeQuad(DIM,DEG);
     int nElNodes = fineModel->nElNodes; 
     VecDouble phi_(nElNodes);
     

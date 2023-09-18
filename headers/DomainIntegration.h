@@ -23,9 +23,9 @@ template<int DIM, int DEG>
 class DomainIntegration{
 public:
     DomainIntegration(){
-        IntegQuadrature<DIM,DEG>        quad;
-        ShapeFunction<DIM,DEG>      shapeFunction;
-        IntegQuadratureSpecial<DIM,DEG> Squad;
+        IntegQuadrature quad(DIM,DEG);
+        ShapeFunction shapeFunction(DIM,DEG);
+        IntegQuadratureSpecial Squad(DIM,DEG);
 
         int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
         

@@ -21,11 +21,10 @@
 
 /// Defines the domain integration Hammer quadrature
 
-template<int DIM, int DEG>
 class IntegQuadrature{
 public:
     int getNumberOfIntegrationPoints() const {
-        return numIntegPoints;
+        return pointWeight.size();
     }
 
     /// Returns the integration point coordinate
@@ -41,14 +40,16 @@ public:
     void setQuadrature();
 
     /// Constructor of the domain integration quadrature
-    IntegQuadrature(){
+    IntegQuadrature(int dim, int deg){
+        int numIntegPoints = (deg*deg*(3-dim)-12*(dim-2)+deg*(15*dim-25))/2;
+        fOrder = deg;
         pointWeight.resize(numIntegPoints);
-        pointCoord.resize(numIntegPoints,DIM);
+        pointCoord.resize(numIntegPoints,dim);
         setQuadrature();
     }
 
 private:
-    const static int numIntegPoints = (DEG*DEG*(3-DIM)-12*(DIM-2)+DEG*(15*DIM-25))/2;
+    int fOrder = 0;
 
     ///List of integration points coordinates
     MatrixDouble pointCoord;

@@ -18,11 +18,14 @@
 #include <vector>
 /// Defines the quadratic shape functions and its derivatives
 
-template<int DIM, int DEG>
+// template<int DIM, int DEG>
 class ShapeFunction{
 public:
-    //Number of element notes    
-    static const int numIntpNodes = 4*DIM-2;
+    //Constructor
+    ShapeFunction(int dim, int deg){
+        fDimension = dim;
+        fOrder = deg;
+    }
 
     /// Evaluates the shape function value
     /// @param double* Non-dimensional coordinates 
@@ -41,6 +44,10 @@ public:
     /// Gets the element nodal coordinates
     /// @param double** Non-dimensional coordinate
     void getCoordinates(MatrixDouble &coord) const;
+
+private:
+    int fDimension;
+    int fOrder;
 };
 
 

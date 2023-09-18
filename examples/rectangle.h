@@ -14,7 +14,7 @@ for (int k = 3; k < 4; k++)
    
  
 //  Create problem variables 
-    FluidModel coarseModel(ProblemType::EElastic), fineModel(ProblemType::EElastic);  
+    FluidModel coarseModel(ProblemType::EPoisson), fineModel(ProblemType::EPoisson);  
     Arlequin   arlequinProblem; 
    //FSI        coupledProblem;  
 
@@ -75,7 +75,7 @@ for (int k = 3; k < 4; k++)
         PlaneSurface* s1 = fluid2 -> addPlaneSurface({ll10});
 
         fluid2 -> addBoundaryCondition("DIRICHLET", l10, {0.0}, {0.0}, {},  "GLOBAL");
-        fluid2 -> addBoundaryCondition("DIRICHLET", l11, {1.0}, {0.0}, {},  "GLOBAL");
+        fluid2 -> addBoundaryCondition("DIRICHLET", l11, {0.0}, {0.0}, {},  "GLOBAL");
         fluid2 -> addBoundaryCondition("DIRICHLET", l12, {0.0}, {0.0}, {},  "GLOBAL");
         fluid2 -> addBoundaryCondition("GLUE", l13, {0.0}, {0.0}, {},  "GLOBAL");
         

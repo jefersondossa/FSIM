@@ -8,6 +8,7 @@
 
 #ifndef __DATATYPES__
 #define __DATATYPES__
+#include "PanicButton.h"
 
 ///\cond
 #include <cmath>
