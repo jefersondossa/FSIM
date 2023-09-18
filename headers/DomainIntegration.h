@@ -19,10 +19,9 @@
 #include "Node.h"
 
 /// Computes and stores the shape functions and its derivatives
-template<int DIM, int DEG>
 class DomainIntegration{
 public:
-    DomainIntegration(){
+    DomainIntegration(int DIM, int DEG){
         IntegQuadrature quad(DIM,DEG);
         ShapeFunction shapeFunction(DIM,DEG);
         IntegQuadratureSpecial Squad(DIM,DEG);

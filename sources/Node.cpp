@@ -8,13 +8,12 @@
 //------------------------------------------------------------------------------
 //-------------------------------CLEAR VARIABLES--------------------------------
 //------------------------------------------------------------------------------
-template<int DIM, int DEG>
-void Node<DIM,DEG>::clearVariables(){
+void Node::clearVariables(){
     pressure_ = 0.;   
     elemCorresp = 0;    
     weightFunction_ = 0.;
 
-    for (int i = 0; i < DIM; ++i){
+    for (int i = 0; i < 3; ++i){
         if (constrainType[i] != 1){
             velocity_[i] = 0.;   
             previousVelocity_[i] = 0.;   
@@ -27,10 +26,3 @@ void Node<DIM,DEG>::clearVariables(){
     
     return;
 }; 
-
-template class Node<2,1>;
-template class Node<2,2>;
-template class Node<2,3>;
-template class Node<3,1>;
-template class Node<3,2>;
-template class Node<3,3>;

@@ -56,8 +56,8 @@ void Arlequin<DIM,DEG>::setElementBoxes() {
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Node<DIM,DEG> *> nodes, 
-                                           std::vector<Element<DIM,DEG> *> elements, 
+void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes, 
+                                           std::vector<Element *> elements, 
                                            int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch){
     
     ShapeFunction shapeQuad(DIM,DEG);
@@ -608,7 +608,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
             elementsGlueZoneFine_.push_back(jel);
             elementsFine_[jel] -> setGlueZone();
 
-            GlueZone *el = new GlueZone(index++,jel);
+            Glue *el = new Glue(index++,jel);
             glueZoneFine_.push_back(el);
             
         };        
@@ -640,7 +640,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     for (int i = 0; i < numNodesGlueZoneFine; i++){
         VecDouble x = (*nodesFine_)[nodesGlueZoneFine_[i]] -> getCoordinates();
         
-        Node<DIM,DEG> *no = new Node<DIM,DEG>(x,i);
+        Node *no = new Node(x,i);
         nodesLagrangeFine_.push_back(no);
     };
 
@@ -692,7 +692,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
             elementsGlueZoneCoarse_.push_back(jel);
             elementsCoarse_[jel] -> setGlueZone();
 
-            GlueZone *el = new GlueZone(index++,jel);
+            Glue *el = new Glue(index++,jel);
             glueZoneCoarse_.push_back(el);
             
             for (int i=0; i < elementsCoarse_[jel] -> getNumberOfIntegrationPoints(); i++){
@@ -735,7 +735,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     for (int i = 0; i < numNodesGlueZoneCoarse; i++){
         VecDouble x = (*nodesCoarse_)[nodesGlueZoneCoarse_[i]] -> getCoordinates();
         
-        Node<DIM,DEG> *no = new Node<DIM,DEG>(x,i);
+        Node *no = new Node(x,i);
         nodesLagrangeCoarse_.push_back(no);
     };
 
@@ -2542,18 +2542,17 @@ void Arlequin<DIM,DEG>::assembleCoarseModel(){
             matrix.setZero();
             VecDouble rhs(nLocDOF);
             rhs.setZero();
+            
+            elementsCoarse_[jel] -> ComputeElContribution(matrix,rhs);
 
             switch (fProbType){
             case ENavierStokes:
-                elementsCoarse_[jel] -> getTransientNavierStokes(matrix,rhs);
                 setMatVecValuesCoarseModel(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
                 break;
             case EPoisson:
-                elementsCoarse_[jel] -> getPoisson(matrix,rhs);
                 setMatVecValuesCoarseModelPoisson(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
                 break;
             case EElastic:
-                elementsCoarse_[jel]->getElasticity2D(matrix,rhs);
                 setMatVecValuesCoarseModelElasticity(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
                 break;
             
@@ -2577,18 +2576,16 @@ void Arlequin<DIM,DEG>::assembleFineModel(){
             matrix.setZero();
             VecDouble rhs(nLocDOF);
             rhs.setZero();
+            elementsFine_[jel] -> ComputeElContribution(matrix,rhs);
 
             switch (fProbType){
             case ENavierStokes:
-                elementsFine_[jel] -> getTransientNavierStokes(matrix,rhs);
                 setMatVecValuesFineModel(matrix,rhs,elementsFine_[jel] -> getConnectivity());
                 break;
             case EPoisson:
-                elementsFine_[jel] -> getPoisson(matrix,rhs);
                 setMatVecValuesFineModelPoisson(matrix,rhs,elementsFine_[jel] -> getConnectivity());
                 break;
             case EElastic:
-                elementsFine_[jel] -> getElasticity2D(matrix,rhs);
                 setMatVecValuesFineModelElasticity(matrix,rhs,elementsFine_[jel] -> getConnectivity());
                 break;
             

@@ -28,32 +28,22 @@
 // PETSc libraries
 #include <metis.h>
 #include <petscksp.h> 
+#include "CompMesh.h"
 
 
-template<int DIM,int DEG> class Element;
+class Element;
 
 /// Mounts the incompressible flow problem
 
 template<int DIM, int DEG>
-class Fluid{
+class Fluid : public CompMesh{
 public:
-    /// Defines the class Boundary locally
-    typedef Boundary<DIM,DEG> Boundaries;
-
-    /// Defines the class Fluid Parameters locally
-    // typedef FluidParameters<DIM,DEG> Parameters;
-
-    /// Defines the class Numerical integration locally
-    typedef DomainIntegration<DIM,DEG> DIntegration;
-
-    /// Defines the vector of fluid nodes
-    std::vector<Node<DIM,DEG> *>       nodes_;
+    
 
     /// Defines the vector of fluid elements
-    std::vector<Element<DIM,DEG> *>   elements_;
+    std::vector<Element *>   elements_;
  
-    /// Defines the vector of fluid boundaries mesh nodes
-    std::vector<Boundaries *> boundary_;
+    
 
 private:
     //FLUID VARIABLES
@@ -84,10 +74,6 @@ private:
     
 
 public:
-    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-    int nLocDOF = 0;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
-
     std::vector<int> dragAndLiftBoundary;
     int numberOfLines;
 
@@ -112,10 +98,10 @@ public:
     bool printProcess;
     bool printLines;
     double integScheme;    //Time Integration Scheme
-    FluidParameters<DIM,DEG> fluidParameters;
-    DIntegration* numIntegration; //Numerical integration
+    
+   
 
-    ProblemType fProbType = ProblemType::ENavierStokes;
+    
 
 public:
     Fluid(){
@@ -124,7 +110,9 @@ public:
 
     Fluid(ProblemType ptype){
         fProbType = ptype;
-
+        nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+        nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
+        
         switch (fProbType)
         {
         case ENavierStokes:
@@ -162,14 +150,12 @@ public:
     /// @param std::string input .msh file @param std::string mirror file
     /// @param std::vector<Elements*> auxiliary vector of Elements
     /// @param std::unordered_map<int, std::string> mesh physical entities
-    void readElements(Geometry* &geometry_,std::ifstream &file, std::ofstream& mirrorData, std::vector<Element<DIM,DEG>*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities);
+    void readElements(Geometry* &geometry_,std::ifstream &file, std::ofstream& mirrorData, std::vector<Element*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities);
     void renumberConnectivity();
     void setBoundaryConstrains();
     void setBoundarySides();
 
-    FluidParameters<DIM,DEG> &getFluidParameters(){
-        return fluidParameters;
-    }
+    
 
     /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
@@ -190,7 +176,7 @@ public:
     /// @return time step size
     double &getTimeStep(){return dTime;};
 
-    DIntegration* getNumericalIntegration(){return numIntegration;}
+    
 
     /// Gets the number of fluid-structure interfaces
     /// @return number of fluid boundaries which composes the 
@@ -244,15 +230,12 @@ public:
     /// Compute and print drag and lift coefficients
     void dragAndLiftCoefficients(std::ofstream& dragLift);
 
-    /// Gets the fluid model nodes and export for solving the overlapping
-    /// mesh problem with the Arlequin method
-    /// @return fluid model nodes information
-    std::vector<Node<DIM,DEG> *> &getNodes(){return nodes_;}
+    
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
-    std::vector<Element<DIM,DEG> *> &getElements(){return elements_;}
+    std::vector<Element *> &getElements(){return elements_;}
 
     std::vector<std::string> split2(std::string str, std::string delim)
     {

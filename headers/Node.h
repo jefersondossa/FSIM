@@ -36,13 +36,20 @@
 
 /// Defines the node object and stores all nodal variables information
 
-template<int DIM, int DEG>
+// template<int spaceDim>
 
 class Node{
 public:
-    static const int spaceDim = DIM;
+    static const int spaceDim = 2;
 
 private:
+    int fNStateVariables;
+    VecDouble fSolution;
+    VecDouble fPrevSolution;
+    VecDouble fCoord;
+    VecDouble fPrevCoord;
+    int fIndex, fDimension;
+
     //Main variables
     VecDouble        coord_;                  //Nodal coordinate vector
     VecDouble        initialCoord_;           //Initial nodal coordinate vector
@@ -88,8 +95,22 @@ private:
     std::vector<int> invIncidence;
     
 public:
-    ///Constructor - Defines a node with index and coordinates
-    Node(VecDouble &coor, int index){
+    Node(VecDouble &coor, int index, int nState){
+        fNStateVariables = nState;
+        fIndex = index;
+        fDimension = coor.size();
+
+        fSolution.resize(fNStateVariables);
+        fPrevSolution.resize(fNStateVariables);
+        fCoord.resize(fDimension);
+        fPrevCoord.resize(fDimension);
+        fPrevSolution.setZero();
+        fSolution.setZero();
+        
+        fCoord = coor;
+        fPrevCoord = coor;
+
+
         index_ = index; 
 
         pressure_ = 0.;          
@@ -101,26 +122,26 @@ public:
         
         invIncidence.clear();
 
-        coord_.resize(DIM);
-        previousCoord_.resize(DIM);
-        coordUpdated_.resize(DIM);
-        initialCoord_.resize(DIM);
-        constrainValue.resize(DIM);
-        constrainValueLaplace.resize(DIM);
-        constrainType.resize(DIM);
-        constrainTypeLaplace.resize(DIM);
-        meshVelocity_.resize(DIM);
-        previousMeshVelocity_.resize(DIM);
-        meshAcceleration_.resize(DIM);
-        xsiCorresp.resize(DIM);
-        velArlequin_.resize(DIM);
-        lagMultiplier_.resize(DIM);
-        acceleration_.resize(DIM);
-        previousAcceleration_.resize(DIM);
-        velocity_.resize(DIM);
-        previousVelocity_.resize(DIM);
+        coord_.resize(spaceDim);
+        previousCoord_.resize(spaceDim);
+        coordUpdated_.resize(spaceDim);
+        initialCoord_.resize(spaceDim);
+        constrainValue.resize(spaceDim);
+        constrainValueLaplace.resize(spaceDim);
+        constrainType.resize(spaceDim);
+        constrainTypeLaplace.resize(spaceDim);
+        meshVelocity_.resize(spaceDim);
+        previousMeshVelocity_.resize(spaceDim);
+        meshAcceleration_.resize(spaceDim);
+        xsiCorresp.resize(spaceDim);
+        velArlequin_.resize(spaceDim);
+        lagMultiplier_.resize(spaceDim);
+        acceleration_.resize(spaceDim);
+        previousAcceleration_.resize(spaceDim);
+        velocity_.resize(spaceDim);
+        previousVelocity_.resize(spaceDim);
 
-        for (int i = 0; i < DIM; ++i){
+        for (int i = 0; i < spaceDim; ++i){
             lagMultiplier_[i]= 0.;
             meshVelocity_[i] = 0.;
             previousMeshVelocity_[i] = 0.;
@@ -142,7 +163,64 @@ public:
             initialCoord_[i] = coor[i];
             coord_[i] = coor[i];
         }
-        nNodal_.resize(DIM);
+        nNodal_.resize(spaceDim);
+    }
+
+    ///Constructor - Defines a node with index and coordinates
+    Node(VecDouble &coor, int index){
+        index_ = index; 
+
+        pressure_ = 0.;          
+        vorticity_ = 0.;
+        elemCorresp = 0;   
+        presArlequin_=0.;
+        weightFunction_ = 0.;   previousWeightFunction_ = 0.;
+        distGlueZone = 0.;
+        
+        invIncidence.clear();
+
+        coord_.resize(spaceDim);
+        previousCoord_.resize(spaceDim);
+        coordUpdated_.resize(spaceDim);
+        initialCoord_.resize(spaceDim);
+        constrainValue.resize(spaceDim);
+        constrainValueLaplace.resize(spaceDim);
+        constrainType.resize(spaceDim);
+        constrainTypeLaplace.resize(spaceDim);
+        meshVelocity_.resize(spaceDim);
+        previousMeshVelocity_.resize(spaceDim);
+        meshAcceleration_.resize(spaceDim);
+        xsiCorresp.resize(spaceDim);
+        velArlequin_.resize(spaceDim);
+        lagMultiplier_.resize(spaceDim);
+        acceleration_.resize(spaceDim);
+        previousAcceleration_.resize(spaceDim);
+        velocity_.resize(spaceDim);
+        previousVelocity_.resize(spaceDim);
+
+        for (int i = 0; i < spaceDim; ++i){
+            lagMultiplier_[i]= 0.;
+            meshVelocity_[i] = 0.;
+            previousMeshVelocity_[i] = 0.;
+            meshAcceleration_[i] = 0.;
+            velArlequin_[i] = 0.;
+            velocity_[i] = 0.;
+            previousVelocity_[i] = 0.;
+            acceleration_[i] = 0.;
+            previousAcceleration_[i] = 0.;
+            xsiCorresp[i] = 0.;
+
+            constrainTypeLaplace[i] = 0;
+            constrainValueLaplace[i] = 0.;
+            constrainType[i] = 0;
+            constrainValue[i] = 0.;
+
+            previousCoord_[i] = coor[i];
+            coordUpdated_[i] = coor[i];
+            initialCoord_[i] = coor[i];
+            coord_[i] = coor[i];
+        }
+        nNodal_.resize(spaceDim);
 
     };
 
@@ -180,11 +258,11 @@ public:
 
     /// Sets the node coordinate vector
     /// @param VecLocD Coordinate
-    void setCoordinates(VecDouble &coor){for (int i=0; i<DIM; i++) coord_[i] = coor[i];};
+    void setCoordinates(VecDouble &coor){for (int i=0; i<spaceDim; i++) coord_[i] = coor[i];};
 
     /// Sets the updated coordinate vector
     /// @param VecLocD Updated Coordinate
-    void setUpdatedCoordinates(VecDouble &coor){for (int i=0; i<DIM; i++) coordUpdated_[i] = coor[i];};
+    void setUpdatedCoordinates(VecDouble &coor){for (int i=0; i<spaceDim; i++) coordUpdated_[i] = coor[i];};
 
     /// Updates node coordinate vector
     /// @param int direction @param double updated value
@@ -194,7 +272,7 @@ public:
     /// @param double element @param VecLocD adimensional coordinates
     void setNodalCorrespondence(double elem, VecDouble &xsi){
         elemCorresp = elem;
-        for (int i=0; i<DIM; i++) xsiCorresp[i] = xsi[i];};
+        for (int i=0; i<spaceDim; i++) xsiCorresp[i] = xsi[i];};
 
     /// Gets the nodal normal vector
     /// @return nodal normal vector
@@ -202,7 +280,7 @@ public:
 
     /// Sets nodal normal vector
     /// @param VecLocD nodal normal vector
-    void setInnerNormal(VecDouble &n){for (int i=0; i<DIM; i++) nNodal_[i] = n[i];};
+    void setInnerNormal(VecDouble &n){for (int i=0; i<spaceDim; i++) nNodal_[i] = n[i];};
 
     /// Clears nodal normal vector
     /// @param VecLocD nodal normal vector
@@ -236,7 +314,7 @@ public:
     //............................Velocity functions............................
     /// Sets the velocity vector
     /// @param double* velocity vector
-    void setVelocity(VecDouble &u){for (int i=DIM; i--; ) velocity_[i] = u[i];};
+    void setVelocity(VecDouble &u){for (int i=spaceDim; i--; ) velocity_[i] = u[i];};
     void setVelocityComponent(int dir, double val){velocity_[dir] = val;};
 
     void setPreviousVelocityComponent(int dir, double val){previousVelocity_[dir] = val;};
@@ -248,7 +326,7 @@ public:
 
     /// Sets the previous velocity vector
     /// @param double* previous time step velocity vector
-    void setPreviousVelocity(VecDouble &u){for (int i=DIM; i--; ) previousVelocity_[i] = u[i];};
+    void setPreviousVelocity(VecDouble &u){for (int i=spaceDim; i--; ) previousVelocity_[i] = u[i];};
 
     /// Increment the velocity vector
     /// @param int direction @param double increment value
@@ -280,7 +358,7 @@ public:
     //..........................Acceleration functions..........................
     /// Sets the acceleration vector
     /// @param double* acceleration vector
-    void setAcceleration(VecDouble &u){for (int i=DIM; i--; ) acceleration_[i] = u[i];};
+    void setAcceleration(VecDouble &u){for (int i=spaceDim; i--; ) acceleration_[i] = u[i];};
     void setAccelerationComponent(int dir, double val){acceleration_[dir] = val;};
 
 
@@ -294,7 +372,7 @@ public:
 
     /// Sets the previous time step acceleration vector
     /// @param double* previous time step acceleration vector
-    void setPreviousAcceleration(VecDouble &u){for (int i=DIM; i--; ) previousAcceleration_[i] = u[i];};
+    void setPreviousAcceleration(VecDouble &u){for (int i=spaceDim; i--; ) previousAcceleration_[i] = u[i];};
     void setPreviousAccelerationComponent(int dir, double val){previousAcceleration_[dir] = val;};
 
     /// Gets the acceleration vector
@@ -322,7 +400,7 @@ public:
     /// Sets the node mesh velocity
     /// @param double* mesh velocity
     void setMeshVelocity(VecDouble &u){
-        for (int i=DIM; i--; ){
+        for (int i=spaceDim; i--; ){
             previousMeshVelocity_[i] = meshVelocity_[i];
             meshVelocity_[i] = u[i];          
         };

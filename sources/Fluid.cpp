@@ -1,6 +1,10 @@
 #include "Fluid.h"
 #include "petscpartitioner.h"
 #include "metis.h"
+#include "ElPoisson.h"
+#include "ElElasticity2D.h"
+#include "ElStokes.h"
+#include "ElNavierStokes.h"
 
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
@@ -183,8 +187,20 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
         std::vector<std::string> tokens = split2(line, " ");
         
         for (int j = 0; j < DIM; j++) std::istringstream(tokens[j+1]) >> x[j];
-        
-        Node<DIM,DEG> *node = new Node<DIM,DEG>(x,index);
+
+        int nstate = 0;
+        if (fProbType == ProblemType::ENavierStokes || fProbType == ProblemType::EStokes){
+            nstate = (DIM+1);
+        } else if (fProbType == ProblemType::EPoisson) {
+            nstate = 1;
+        } else if (fProbType == ProblemType::EElastic){
+            nstate = DIM;
+        } else {
+            PanicButton();
+        }
+
+
+        Node *node = new Node(x,index,nstate);
         nodes_.push_back(node);
         index++;
     }
@@ -213,7 +229,7 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
 //---------------------------READS THE MESH ELEMENTS----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std::ofstream& mirrorData, std::vector<Element<DIM,DEG>*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities){
+void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std::ofstream& mirrorData, std::vector<Element*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities){
 
     if (rank == 0) std::cout << "3/9 Reading elements..." << std::endl;
 
@@ -288,9 +304,19 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                 } else {
                     for (int k = 0; k < nElNodes; k++) connect[k] = elementNodes[k];
                 }
-
-                Element<DIM,DEG> *el = new Element<DIM,DEG>(index++,connect,this);
-                elementsAux_.push_back(el);
+                switch (fProbType)
+                {
+                case EPoisson:
+                    {
+                        ElPoisson *el = new ElPoisson(index++,connect,this);
+                        elementsAux_.push_back(el);
+                    }
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }
 
                 for (int k = 0; k < nElNodes; k++){
                     nodes_[connect[k]] -> pushInverseIncidence(index);
@@ -410,8 +436,8 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                             value[2] = c[0];
                         }
                     }
-                }        
-                Boundaries * bound = new Boundaries(connectB, numBoundElems++, constrain, value, ibound);
+                }  
+                Boundary * bound = new Boundary(connectB, numBoundElems++, constrain, value, ibound, this);
                 // std::cout << "asdasd " << rank << " " << ibound << std::endl;
                 boundary_.push_back(bound);
             } else {
@@ -422,8 +448,19 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                     VecInt connect(nElNodes);
                     for (int j = 0 ; j < nElNodes; j++) connect[j] = elementNodes[j];
 
-                    Element<DIM,DEG> *el = new Element<DIM,DEG>(index++,connect,this);
-                    elementsAux_.push_back(el);
+                    switch (fProbType)
+                    {
+                    case EPoisson:
+                        {
+                            ElPoisson *el = new ElPoisson(index++,connect,this);
+                            elementsAux_.push_back(el);
+                        }
+                        break;
+                    
+                    default:
+                        PanicButton();
+                        break;
+                    }
 
                     for (int k = 0; k < nElNodes; k++){
                         nodes_[connect[k]] -> pushInverseIncidence(index);
@@ -514,8 +551,8 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                         value[1] = c[0];
                     }
                 }
-            }        
-            Boundaries * bound = new Boundaries(connectB, numBoundElems++, constrain, value, ibound);
+            }
+            Boundary * bound = new Boundary(connectB, numBoundElems++, constrain, value, ibound, this);
             // std::cout << "asdasd " << rank << " " << ibound << std::endl;
             boundary_.push_back(bound);           
         }   
@@ -925,7 +962,7 @@ void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputF
     }
     std::getline(file, line); std::getline(file, line);
 
-    numIntegration = new DIntegration();
+    numIntegration = new DomainIntegration(DIM,DEG);
 
     readNodes(file,mirrorData);
     readElements(geometry_,file,mirrorData,elements_, physicalEntities);
@@ -1581,7 +1618,7 @@ int Fluid<DIM,DEG>::solvePoisson(){
                 VecDouble rhs(nElNodes);
                 rhs.setZero();
 
-                elements_[jel] -> getPoisson(matrix,rhs);
+                elements_[jel] -> ComputeElContribution(matrix,rhs);
                 
                 //Disperse local contributions into the global matrix
                 //Matrix K and C
@@ -1849,7 +1886,7 @@ void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
 
         VecDouble errors(3);
 
-        if (fProbType == ProblemType::EPoisson) elements_[jel] -> computeErrorPoisson(errors);
+        elements_[jel] -> ComputeError(errors);
         
         errorsProcess += errors;
 

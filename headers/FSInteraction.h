@@ -18,7 +18,6 @@
 
 template<int DIM,int DEG> class Arlequin;
 template<int DIM,int DEG> class Fluid;
-template<int DIM,int DEG> class Element;
 
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
@@ -49,8 +48,6 @@ class FSInteraction{
 public:
     /// Defines locally the class Fluid
     typedef Fluid<DIM,DEG>                  FluidModel;
-    /// Defines locally the class Boundary
-    typedef typename FluidModel::Boundaries Boundary;
 
     /// Defines locally the class Arlequin
     typedef Arlequin<DIM,DEG>               ArlequinModel;
@@ -59,16 +56,16 @@ private:
     FluidModel         *fluidModel;
     ArlequinModel      *arlequinModel;
     
-    std::vector<Node<DIM,DEG> *>     nodesFluid_;
+    std::vector<Node *>     nodesFluid_;
     //    std::vector<Nodes *>     nodesSolid_;
-    std::vector<std::vector<Node<DIM,DEG> *> > nodesSolid_;
-    std::vector<Element<DIM,DEG> *>  elementsFluid_;
+    std::vector<std::vector<Node *> > nodesSolid_;
+    std::vector<Element *>  elementsFluid_;
     std::vector<Boundary *>  boundaryFluid_;
 
-    std::vector<Node<DIM,DEG> *>     nodesArlequinCoarse_;
-    std::vector<Node<DIM,DEG> *>     nodesArlequinFine_;
-    std::vector<Element<DIM,DEG> *>  elementsArlequinCoarse_;
-    std::vector<Element<DIM,DEG> *>  elementsArlequinFine_;
+    std::vector<Node *>     nodesArlequinCoarse_;
+    std::vector<Node *>     nodesArlequinFine_;
+    std::vector<Element *>  elementsArlequinCoarse_;
+    std::vector<Element *>  elementsArlequinFine_;
     std::vector<Boundary *>  boundaryArlequinCoarse_;
     std::vector<Boundary *>  boundaryArlequinFine_;
 

@@ -15,10 +15,11 @@
 #define BOUNDARY_H
 
 #include "DataTypes.h"
+#include "CompMesh.h"
 
+class CompMesh;
 /// Defines the fluid boundary object and its properties
 
-template<int DIM, int DEG>
 class Boundary{
 
 public: 
@@ -27,18 +28,19 @@ public:
     /// @param int boundary element index
     /// @param int boundary element constrain type 
     /// @param int boundary element constrain value @see Node::setConstrains()
-    Boundary(VecInt &connec, int index, VecInt &constrain, VecDouble &values, int gr){
+    Boundary(VecInt &connec, int index, VecInt &constrain, VecDouble &values, int gr, CompMesh* mesh){
         
-        connectB_.resize(nBdNodes);
+        fMesh = mesh;
+        connectB_.resize(fMesh->nBdNodes);
 
-        for(int i = 0; i<nBdNodes; i++) connectB_[i] = connec[i];
+        for(int i = 0; i<fMesh->nBdNodes; i++) connectB_[i] = connec[i];
         index_ = index;
         group_ = gr;
 
-        constrainType.resize(DIM);
-        constrainValue.resize(DIM);
+        constrainType.resize(3);
+        constrainValue.resize(3);
 
-        for(int i = 0; i<DIM; i++){
+        for(int i = 0; i<3; i++){
             constrainType[i] = constrain[i];
             constrainValue[i] = values[i];
         };
@@ -58,7 +60,7 @@ public:
     /// Returns the boundary element connectivity
     /// @return boundary element connectivity
     VecInt &getBoundaryConnectivity(){return connectB_;}
-    void setBoundaryConnectivity(VecInt &connec){for(int i = 0; i<nBdNodes; i++) connectB_[i] = connec[i];}
+    void setBoundaryConnectivity(VecInt &connec){for(int i = 0; i<fMesh->nBdNodes; i++) connectB_[i] = connec[i];}
 
     /// Sets the boundary element group
     /// @param int boundary element group
@@ -85,7 +87,7 @@ public:
     int getElementSide(){return elementSide_;}
 
 private:
-    const int    nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+    CompMesh* fMesh;
     VecInt       connectB_;         //Boundary element connectivity
     int          index_;            //Boundary element index
     VecInt       constrainType;     //Element type of constrain
@@ -94,26 +96,5 @@ private:
     int          elementSide_;      //Fluid Element Side
     int          group_;            //Element boundary group
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif

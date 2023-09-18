@@ -17,14 +17,11 @@
 #include "Node.h"
 
 /// Defines the gluing zone mesh
-
-template<int DIM,int DEG>
 class Glue{
 private:
     VecInt connect_;           //Velocity mesh connectivity 
     int index_;             //Element index
     int elemCorrespondent_;
- 
 
 public:
     /// Glue Zone Element constructor

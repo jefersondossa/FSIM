@@ -18,17 +18,14 @@
 #include "BoundaryIntegrationQuadrature.h"
 #include "FluidParameters.h"
 #include "PanicButton.h"
-
+#include "Boundary.h"
+#include "CompMesh.h"
 #include "IntegrationQuadrature.h"
 #include "IntegrationQuadrature11.h"
 #include "DomainIntegration.h"
-#include "Fluid.h"
 // #include "PartitionedQuadrature.hpp"
 
-template<int DIM,int DEG> class Fluid;
 /// Defines the fluid element object and all the element information
-
-template<int DIM, int DEG>
 class Element{
 private:
     VecInt        connect_; //Velocity mesh connectivity 
@@ -37,7 +34,7 @@ private:
     int           sideBoundary_;
     double        meshMovingParameter;
     std::vector<int> neighborElements;
-    Fluid<DIM,DEG> *fMesh;
+    CompMesh *fMesh;
 
     VecDouble intPointWeightFunction;
     VecDouble intPointWeightFunctionPrev;
@@ -55,30 +52,32 @@ private:
     bool          glueZone;
     bool          model; //true for local and false for global
     bool          FSIInterface;    
-
+    int DIM, DEG;
 public:
     /// fluid element constructor
     /// @param int element index @param Connectivity element connectivity
     /// @param vector<Nodes> 
-    Element(int index, VecInt &connect, Fluid<DIM,DEG>* mesh){
+    Element(int index, VecInt &connect, CompMesh* mesh){
         
         fMesh = mesh;
         connect_.resize(fMesh->nElNodes);
         index_ = index;
         for (int i = fMesh->nElNodes; i--; ) connect_[i] = connect[i];
+        DIM = fMesh->Dimension();
+        DEG = fMesh->GetDefaultOrder();
 
         glueZone = false;        FSIInterface = false;
         sideBoundary_ = -1;
         neighborElements.clear();
 
-        IntegQuadrature nQuad(DIM,DEG);
+        IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
         intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
 
         intPointWeightFunction.fill(1.);
         intPointWeightFunctionPrev.fill(1.);
         
-        IntegQuadratureSpecial sQuad(DIM,DEG);
+        IntegQuadratureSpecial sQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
 
         intPointWeightFunctionSpecial.resize(sQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionSpecialPrev.resize(sQuad.getNumberOfIntegrationPoints());
@@ -98,6 +97,8 @@ public:
         getIntegPointCoordinates();
 
     };
+
+    CompMesh* Mesh() {return fMesh;}
 
     //........................Element basic information.........................
     /// Clear all element variables
@@ -166,11 +167,11 @@ public:
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
     double getJacobian(){
-        VecDouble xsi(DIM);
-        MatrixDouble ainv_(DIM,DIM);
-        MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
+        VecDouble xsi(fMesh->Dimension());
+        MatrixDouble ainv_(fMesh->Dimension(),fMesh->Dimension());
+        MatrixDouble dphi_dx(fMesh->nElNodes,fMesh->Dimension());
         
-        ShapeFunction  shapeQuad(DIM,DEG);
+        ShapeFunction  shapeQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
 
         xsi[0] = 0.5;
         xsi[1] = 0.5;
@@ -280,7 +281,7 @@ public:
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
-    int getNumberOfIntegrationPoints(){IntegQuadratureSpecial sQuad(DIM,DEG); return sQuad.getNumberOfIntegrationPoints();};
+    int getNumberOfIntegrationPoints(){IntegQuadratureSpecial sQuad(fMesh->Dimension(),fMesh->GetDefaultOrder()); return sQuad.getNumberOfIntegrationPoints();};
 
     /// Sets the integration point correspondence to the overlapped mesh
     /// @param int element correspondent @param VecLoc Adimensional coordinates
@@ -338,7 +339,6 @@ public:
     /// Compute and store the element matrix for the incompressible flow problem
     /// @param int integration point index
     void getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
-    void getElemMatrixPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
     void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
@@ -346,7 +346,6 @@ public:
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void setBoundaryConditionsPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
     void setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
@@ -354,7 +353,6 @@ public:
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
     void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
-    void getResidualVectorPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector);
     void getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector, MatrixDouble &Hooke);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
@@ -405,6 +403,18 @@ public:
     void getElasticity2D(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     void computeErrorPoisson(VecDouble &errors);
+
+
+
+
+
+    void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs);
+    virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
+    virtual void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){};
+    virtual void ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){};
+    virtual void ComputeError(VecDouble &errors){};
+    
+
 
 };
 

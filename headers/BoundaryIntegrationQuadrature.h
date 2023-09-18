@@ -19,14 +19,13 @@
 #include "DataTypes.h"
 
 /// Defines the quadrature rule for the boundary integration
-template<int DIM, int DEG>
 class BoundaryIntegQuadrature{
 private:
     double pi = M_PI;  //Pi
 
 public:
     int NPoints() {
-        return -3*DIM-8*DEG+4*DIM*DEG+8;
+        return pointWeight.size();
     }
 
     /// Returns the integration point coordinate
@@ -42,7 +41,8 @@ public:
     void setQuadrature();
 
     /// Boundary integration quadrature constructor
-    BoundaryIntegQuadrature(){
+    BoundaryIntegQuadrature(int DIM, int DEG){
+        fOrder = DEG;
         pointWeight.resize(-3*DIM-8*DEG+4*DIM*DEG+8);
         pointCoord.resize(-3*DIM-8*DEG+4*DIM*DEG+8,DIM-1);
         setQuadrature();
@@ -55,6 +55,8 @@ private:
 
     ///List of integration points weights
     VecDouble pointWeight;
+
+    int fOrder;
 };
 
 

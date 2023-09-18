@@ -426,7 +426,7 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
     // };
 
     for (int k=0; k<numInterfaces; k++){    
-        std::vector<Node<DIM,DEG> *> j;
+        std::vector<Node *> j;
 
         nodesSolid_.push_back(j);
     
@@ -438,7 +438,7 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
             int inode = i+1;
             getsolidposition_(&inode,&x[0],&x[1]);
             
-            Node<DIM,DEG> *node = new Node<DIM,DEG>(x,index++);
+            Node *node = new Node(x,index++);
             nodesSolid_[k].push_back(node);
         };
     };
@@ -516,7 +516,7 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
     
     //Get Solid nodal Positions
     for (int k=0; k<numInterfaces; k++){    
-        std::vector<Node<DIM,DEG> *> j;
+        std::vector<Node *> j;
 
         nodesSolid_.push_back(j);
     
@@ -528,7 +528,7 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
             int inode = i+1;
             getsolidposition_(&inode,&x[0],&x[1]);
             
-            Node<DIM,DEG> *node = new Node<DIM,DEG>(x,index++);
+            Node *node = new Node(x,index++);
             nodesSolid_[k].push_back(node);
         };
     };

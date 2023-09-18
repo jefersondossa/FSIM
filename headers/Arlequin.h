@@ -19,7 +19,6 @@
 #include "IntegrationQuadrature11.h"
 
 template<int DIM,int DEG> class Fluid;
-template<int DIM,int DEG> class Element;
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -29,25 +28,17 @@ public:
     /// Defines the class Fluid locally
     typedef Fluid<DIM,DEG>                 FluidMesh;
 
-    /// Defines the class Boundary locally
-    typedef typename FluidMesh::Boundaries Boundary;
-
-    /// Defines the class Glue locally
-    typedef Glue<DIM,DEG>                  GlueZone;
-
-    typedef FluidParameters<DIM,DEG>       Parameters;
-
     FluidMesh *coarseModel, *fineModel;
 
-    std::vector<Node<DIM,DEG> *>     *nodesCoarse_;
-    std::vector<Node<DIM,DEG> *>     *nodesFine_;
-    std::vector<Node<DIM,DEG> *>     nodesLagrangeFine_;
-    std::vector<Node<DIM,DEG> *>     nodesLagrangeCoarse_;
+    std::vector<Node *>     *nodesCoarse_;
+    std::vector<Node *>     *nodesFine_;
+    std::vector<Node *>     nodesLagrangeFine_;
+    std::vector<Node *>     nodesLagrangeCoarse_;
 
-    std::vector<Element<DIM,DEG> *>  elementsCoarse_;
-    std::vector<Element<DIM,DEG> *>  elementsFine_;
-    std::vector<GlueZone *>  glueZoneFine_;
-    std::vector<GlueZone *>  glueZoneCoarse_;
+    std::vector<Element *>  elementsCoarse_;
+    std::vector<Element *>  elementsFine_;
+    std::vector<Glue *>  glueZoneFine_;
+    std::vector<Glue *>  glueZoneCoarse_;
 
     std::vector<Boundary *>  boundaryCoarse_;
     std::vector<Boundary *>  boundaryFine_;
@@ -85,7 +76,7 @@ private:
     int rank;
     int iTimeStep;
 
-    Parameters *parametersCoarse, *parametersFine;
+    FluidParameters *parametersCoarse, *parametersFine;
 
     std::pair<idx_t*,idx_t*> domDecompCoarse;//Coarse Model Domain Decomposition
     std::pair<idx_t*,idx_t*> domDecompFine;  //Fine Model Domain Decomposition
@@ -164,8 +155,8 @@ public:
     /// @param vector<Nodes> vector of fluid model nodes
     /// @param vector<Elements> vector of fluid model elements
     /// @param int number of elements of the fluid model
-    void searchNodeCorrespondence(VecDouble &x, std::vector<Node<DIM,DEG> *> nodes,
-                                  std::vector<Element<DIM,DEG> *> elements,
+    void searchNodeCorrespondence(VecDouble &x, std::vector<Node *> nodes,
+                                  std::vector<Element *> elements,
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);

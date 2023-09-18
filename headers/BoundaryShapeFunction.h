@@ -18,14 +18,12 @@
 #include "DataTypes.h"
 
 /// Defines the fluid boundary shape functions
-template<int DIM, int DEG>
-class BoundShapeFunction {
-public:
+namespace BoundShapeFunction {
     /// Conputes the boundary shape function value
     /// @param double Adimensional coordinates 
     /// @param double* boundary shape function
     /// @param double* boundary shape function derivatives
-    void getShapeFunction(VecDouble &Xsi, VecDouble &phi_, MatrixDouble &dphi_);
+    void getShapeFunction(int DIM, int DEG, VecDouble &Xsi, VecDouble &phi_, MatrixDouble &dphi_);
 };
 
 

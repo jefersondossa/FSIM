@@ -21,7 +21,6 @@ enum SolverType{EMumps, ESuiteSparse, EIterative};
 
 /// Defines the fluid boundary shape functions
 
-template<int DIM, int DEG>
 class FluidParameters {
 public:
 
