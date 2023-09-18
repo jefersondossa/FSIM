@@ -342,6 +342,7 @@ public:
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
     void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
+    void getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix, MatrixDouble &Hooke);
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
@@ -354,6 +355,7 @@ public:
     /// @param int integration point index
     void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
     void getResidualVectorPoisson(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector);
+    void getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector, MatrixDouble &Hooke);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
     void getResidualVectorLaplace(VecDouble &rhsVector);
@@ -400,6 +402,7 @@ public:
     /// (usually for the mesh moving step)
     void getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void getElasticity2D(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     void computeErrorPoisson(VecDouble &errors);
 

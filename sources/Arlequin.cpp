@@ -1993,6 +1993,35 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDoub
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::setMatVecValuesCoarseModelElasticity(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
+
+    int nElNodes = coarseModel->nElNodes;
+    //Disperse local contributions into the global matrix
+    for (int i = 0; i < nElNodes; i++){
+        for (int j = 0; j < nElNodes; j++){
+            for (int k = 0; k < DIM; k++){
+                for (int l = 0; l < DIM; l++){
+                    //Matrix K 
+                    int dof_i = DIM * connec[i] + k;
+                    int dof_j = DIM * connec[j] + l;
+                    MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*j+l),ADD_VALUES);
+                }
+            }
+        };
+        for (int k = 0; k < DIM; k++){          
+            //Rhs vector
+            int dof_i = DIM * connec[i] + k;
+            VecSetValues(b,1,&dof_i,&rhs[DIM*i+k],ADD_VALUES);
+        }
+    };
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
     int nElNodes = coarseModel->nElNodes;
@@ -2046,6 +2075,35 @@ void Arlequin<DIM,DEG>::setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble
         }
         int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
         VecSetValues(b,1,&dof_i,&rhs[DIM*nElNodes+i],ADD_VALUES);
+    }; 
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::setMatVecValuesFineModelElasticity(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
+
+    int nElNodes = fineModel->nElNodes;
+    //Disperse local contributions into the global matrix
+    for (int i = 0; i < nElNodes; i++){
+        for (int j = 0; j < nElNodes; j++){
+            for (int k = 0; k < DIM; k++){
+                for (int l = 0; l < DIM; l++){
+                    //Matrix K and C
+                    int dof_i = DIM * numNodesCoarse + DIM * connec[i] + k;
+                    int dof_j = DIM * numNodesCoarse + DIM * connec[j] + l;
+                    MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*j+l),ADD_VALUES);
+                }
+            }
+        };
+        for (int k = 0; k < DIM; k++){  
+            ///Rhs vector
+            int dof_i = DIM * numNodesCoarse + DIM * connec[i] + k;
+            VecSetValues(b,1,&dof_i,&rhs[DIM*i+k],ADD_VALUES);
+        }
     }; 
 
     return;
@@ -2153,6 +2211,68 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
         //PSPG STABILIZATION
         int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
         VecSetValues(b,1,&dof_i,&localMV_vec[DIM*nElNodes+i],ADD_VALUES);
+    };
+
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFineElasticity(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                                       MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                                       VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                                       VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                                       VecInt &connec, VecInt &connecL){
+
+    int nElNodes = fineModel->nElNodes;
+
+    //Disperse local contributions into the global matrix
+    for (int i = 0; i < nElNodes; i++){
+        for (int j = 0; j < nElNodes; j++){
+            for (int k = 0; k < DIM; k++){
+                for (int l = 0; l < DIM; l++){
+                    //COUPLING OPERATOR
+                    if (fabs(Ajac2(DIM*i+k,DIM*j+l)) >= 1.e-15){
+                        int d_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+                        int d_j = DIM * numNodesCoarse + DIM * connec[j] + l;
+                        MatSetValues(A,1,&d_i,1,&d_j,&Ajac2(DIM*i+k,DIM*j+l),ADD_VALUES);
+                        MatSetValues(A,1,&d_j,1,&d_i,&Ajac2(DIM*i+k,DIM*j+l),ADD_VALUES);
+                    };
+                }
+                //ARLEQUIN STABILIZATION
+                if (fabs(ArlequinA2(DIM*i+k,DIM*j+k)) >= 1.e-15){
+                    int d_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+                    int d_j = DIM * numNodesCoarse + DIM * connec[j] + k;
+                    MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2(DIM*i+k,DIM*j+k),ADD_VALUES);
+                };
+                // if (fabs(ArlequinA2(DIM*nElNodes+i,DIM*j+k)) >= 1.e-15){
+                //     int dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+                //     int dof_j = DIM * numNodesCoarse + DIM * connec[j] + DIM;
+                //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(DIM*nElNodes+i,DIM*j+k),ADD_VALUES);
+                // };
+                if (fabs(ArlequinA1(DIM*i+k,DIM*j+k)) >= 1.e-15){
+                    int dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+                    int dof_j = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[j] + k;
+                    MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(DIM*i+k,DIM*j+k),ADD_VALUES);
+                };      
+            }                      
+        };
+        //RHS VECTOR
+        for (int k = 0; k < DIM; k++){
+            //COUPLING OPERATOR
+            int dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+            VecSetValues(b,1,&dof_i,&Rhs2[DIM*i+k],ADD_VALUES);
+
+            dof_i = DIM * numNodesCoarse + DIM * connec[i] + k;
+            VecSetValues(b,1,&dof_i,&rhsLagMult2[DIM*i+k],ADD_VALUES);
+
+            //ARLEQUIN STABILIZATION
+            dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM*connecL[i] + k;
+            VecSetValues(b,1,&dof_i,&RhsArlequin2[DIM*i+k],ADD_VALUES);
+        }
     };
 
 
@@ -2296,6 +2416,66 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
     };
     return;
 }
+
+//------------------------------------------------------------------------------
+//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarseElasticity(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                                   MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                                   VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                                   VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                                   VecInt &connecC, VecInt &connecL){
+
+    int nElNodes = fineModel->nElNodes; 
+
+    //Disperse local contribution into the global matrix
+    for (int i = 0; i < nElNodes; i++){
+        for (int j = 0; j < nElNodes; j++){
+            for (int k = 0; k < DIM; k++){
+                for (int l = 0; l < DIM; l++){
+                    //COUPLING OPERATOR
+                    if (fabs(Ajac2(DIM*i+k,DIM*j+l)) >= 1.e-15){
+                        int dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+                        int dof_j = DIM * connecC[j] + l;
+                        MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac2(DIM*i+k,DIM*j+l),ADD_VALUES);
+                        MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2(DIM*i+k,DIM*j+l),ADD_VALUES);
+                    }
+                }
+                //ARLEQUIN STABILIZATION
+                if (fabs(ArlequinA2(DIM*i+k,DIM*j+k)) >= 1.e-15){
+                    int d_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+                    int d_j = DIM * connecC[j] + k;
+                    MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2(2*i  ,2*j  ),ADD_VALUES);
+                };
+                // if (fabs(ArlequinA2(DIM*nElNodes+i,DIM*j+k)) >= 1.e-15){
+                //     int dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + 1;
+                //     int dof_j = DIM * connecC[j] + DIM;
+                //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(DIM*nElNodes+i,DIM*j+k),ADD_VALUES);
+                // };
+                if (fabs(ArlequinA1(DIM*i+k,DIM*j+k)) >= 1.e-15){
+                    int dof_i = DIM * numNodesCoarse + DIM*numNodesFine + DIM * connecL[i] + k;
+                    int dof_j = DIM * numNodesCoarse + DIM*numNodesFine + DIM * connecL[j] + k;
+                    MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(DIM*i+k,DIM*j+k),ADD_VALUES);
+                };
+            }
+        };
+        for (int k = 0; k < DIM; k++){
+            //RHS VECTOR
+            //COUPLING OPERATOR
+            int d_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+            VecSetValues(b,1,&d_i,&Rhs2[DIM*i+k],ADD_VALUES);
+
+            int dof_i = DIM * connecC[i] + k;
+            VecSetValues(b,1,&dof_i,&rhsLagMult2[DIM*i+k],ADD_VALUES);
+            //Arlequin stabilization
+            dof_i = DIM * numNodesCoarse + DIM * numNodesFine + DIM * connecL[i] + k;
+            VecSetValues(b,1,&dof_i,&RhsArlequin2[DIM*i+k],ADD_VALUES);
+        }
+    };
+    return;
+}
+
 //------------------------------------------------------------------------------
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
@@ -2372,7 +2552,8 @@ void Arlequin<DIM,DEG>::assembleCoarseModel(){
                 setMatVecValuesCoarseModelPoisson(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
                 break;
             case EElastic:
-                PanicButton();
+                elementsCoarse_[jel]->getElasticity2D(matrix,rhs);
+                setMatVecValuesCoarseModelElasticity(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
                 break;
             
             default:
@@ -2406,7 +2587,8 @@ void Arlequin<DIM,DEG>::assembleFineModel(){
                 setMatVecValuesFineModelPoisson(matrix,rhs,elementsFine_[jel] -> getConnectivity());
                 break;
             case EElastic:
-                PanicButton();
+                elementsFine_[jel] -> getElasticity2D(matrix,rhs);
+                setMatVecValuesFineModelElasticity(matrix,rhs,elementsFine_[jel] -> getConnectivity());
                 break;
             
             default:
@@ -2422,234 +2604,44 @@ void Arlequin<DIM,DEG>::assembleFineModel(){
 
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::assembleCouplingOperator(){
-
-}
-
-template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::assembleArlequinSystem(){
-
-    assembleCoarseModel();
-    assembleFineModel();
-    assembleCouplingOperator();
-
-
     //Lagrange Multipliers
     for (int l=0; l< numElemGlueZoneFine; l++){
         int jel = elementsGlueZoneFine_[l];
         if (domDecompFine.first[jel] == rank) {
-            int nLocDOF = fineModel->nLocDOF;
+            
+            int nElNodes = fineModel->nElNodes;
+            int dofMatrices = 0;
+            if (fProbType == EPoisson){
+                dofMatrices = nElNodes;
+            } else if (fProbType == EElastic) {
+                dofMatrices = nElNodes * DIM;
+            } else {
+                dofMatrices = nElNodes * (DIM+1);
+            }
+
             VecInt connecC;
             VecInt connec = elementsFine_[jel] -> getConnectivity();
             VecInt connecL = glueZoneFine_[l] -> getConnectivity();
+            
             //FINE MESH
             //Matrices
-            MatrixDouble Ajac2(nLocDOF,nLocDOF);
-            MatrixDouble localMV_mat(nLocDOF,nLocDOF);
-            MatrixDouble ArlequinA1(nLocDOF,nLocDOF);
-            MatrixDouble ArlequinA2(nLocDOF,nLocDOF);
-            Ajac2.setZero();
-            localMV_mat.setZero();
-            ArlequinA1.setZero();
-            ArlequinA2.setZero();
-
-            //Vectors
-            VecDouble rhsLagMult2(nLocDOF);
-            VecDouble Rhs2(nLocDOF);
-            VecDouble localMV_vec(nLocDOF);
-            VecDouble RhsArlequin2(nLocDOF);
-            rhsLagMult2.setZero();
-            Rhs2.setZero();
-            localMV_vec.setZero();
-            RhsArlequin2.setZero();
-
-            // FINE MESH
-            //Computes element matrix
-
-            elementsFine_[jel] -> getLagrangeMultipliersSameMesh(Ajac2, rhsLagMult2, Rhs2);
-            
-            if (fArlequinStab != ArlequinStabType::ENoStab){
-                //PSPG and SUPG stabilizations
-                elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
-                //Arlequin Stabilization
-                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2);
-            }
-            
-            
-            switch (fProbType)
-            {
-            case ENavierStokes:
-            case EStokes:
-                setMatVecValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
-                                           Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
-                                           elementsFine_[jel] -> getConnectivity(),
-                                           glueZoneFine_[l] -> getConnectivity());
-                break;
-            case EPoisson:
-                PanicButton();
-                break;
-            case EElastic:
-                PanicButton();
-                break;
-
-            default:
-                break;
-            }
-
-            
-            
-            //COAESE MESH
-            //Counts number of coarse mesh intersecting the fine element
-            int numberIntPoints = elementsFine_[jel] -> 
-                getNumberOfIntegrationPoints();
-            int aux;
-            
-            std::vector<int> ele, diffElem;
-            ele.clear();
-            diffElem.clear();
-
-            ele.reserve(3);
-            for (int i=0; i<numberIntPoints; i++){
-                aux = elementsFine_[jel] -> 
-                    getIntegPointCorrespondenceElement(i);
-                ele.push_back(aux);
-                //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
-            };
-            
-            int numElemIntersect = 1;
-            int flag = 0;
-            diffElem.push_back(ele[0]);
-            
-            for (int i = 1; i<numberIntPoints; i++){
-                flag = 0;
-                for (int j = 0; j<numElemIntersect; j++){
-                    if (ele[i] == diffElem[j]) {
-                        break;
-                    }else{
-                        flag++;
-                    };
-                    if(flag == numElemIntersect){
-                        numElemIntersect++;
-                        diffElem.push_back(ele[i]);
-                    };
-                };
-            };
-            //Compute the Lagrange Multiplier element matrix
-            for (int ielem = 0; ielem < numElemIntersect; ielem++){
-                int nElNodes = fineModel->nElNodes;
-                int iElemCoarse = diffElem[ielem];
-                double pspg = 0;//(*elementsCoarse_[iElemCoarse]) -> getPSPG();
-                VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes);
-
-                connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
-
-                for (int k = 0; k < nElNodes; k++){
-                    press_[k] = (*nodesCoarse_)[connecC[k]] -> getPressure();
-                    velX_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(0);
-                    velY_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(1);
-                    velXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(0);
-                    velYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(1);
-                }
-                
-                Ajac2.setZero();
-                localMV_mat.setZero();
-                ArlequinA1.setZero();
-                ArlequinA2.setZero();
-                
-                //Vectors
-                rhsLagMult2.setZero();
-                Rhs2.setZero();
-                localMV_vec.setZero();
-                RhsArlequin2.setZero();
-                
-                elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac2,rhsLagMult2,Rhs2);
-
-                if (fArlequinStab != ArlequinStabType::ENoStab){
-                    elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
-            
-                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
-                }
-
-                setMatVecValuesLagMultFineCoarse(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
-                                                 Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
-                                                 elementsCoarse_[iElemCoarse] -> getConnectivity(), 
-                                                 glueZoneFine_[l] -> getConnectivity());
-                
-            }; //Number of intersections
-        }; // if element belongs to the glue zone
-    }; // Glue zone
-
-    return;
-}
-
-
-//------------------------------------------------------------------------------
-//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
-//------------------------------------------------------------------------------
-template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
-
-    //Coarse mesh
-    for (int jel = 0; jel < numElemCoarse; jel++){   
-        if (domDecompCoarse.first[jel] == rank) {
-            int nElNodes = coarseModel->nElNodes;
-            //Compute Element matrix
-            MatrixDouble matrix(nElNodes,nElNodes);
-            matrix.setZero();
-            VecDouble rhs(nElNodes);
-            rhs.setZero();
-
-            elementsCoarse_[jel] -> getPoisson(matrix,rhs);
-
-            setMatVecValuesCoarseModelPoisson(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
-
-        };
-    };
-
-    //Fine mesh
-    for (int jel = 0; jel < numElemFine; jel++){           
-        if (domDecompFine.first[jel] == rank) {
-            int nElNodes = fineModel->nElNodes;
-            //Compute Element matrix                    
-            MatrixDouble matrix(nElNodes,nElNodes);
-            matrix.setZero();
-            VecDouble rhs(nElNodes);
-            rhs.setZero();
-
-            elementsFine_[jel] -> getPoisson(matrix,rhs);
-            
-            setMatVecValuesFineModelPoisson(matrix,rhs,elementsFine_[jel] -> getConnectivity());
-
-        };                
-    };
-      
-
-    //Lagrange Multipliers
-    for (int l=0; l< numElemGlueZoneFine; l++){
-        int jel = elementsGlueZoneFine_[l];
-        if (domDecompFine.first[jel] == rank) {
-            int nElNodes = fineModel->nElNodes;
-            VecInt connecC;
-            VecInt connec = elementsFine_[jel] -> getConnectivity();
-            VecInt connecL = glueZoneFine_[l] -> getConnectivity();
-            //FINE MESH
-            //Matrices
-            MatrixDouble matC0(nElNodes,nElNodes),matC1(nElNodes,nElNodes);
-            MatrixDouble matA0(nElNodes,nElNodes),matA1(nElNodes,nElNodes);
-            MatrixDouble localMV_mat(nElNodes,nElNodes);
-            MatrixDouble matE0(nElNodes,nElNodes),matE1(nElNodes,nElNodes);
+            MatrixDouble matC0(dofMatrices,dofMatrices),matC1(dofMatrices,dofMatrices);
+            MatrixDouble matA0(dofMatrices,dofMatrices),matA1(dofMatrices,dofMatrices);
+            MatrixDouble localMV_mat(dofMatrices,dofMatrices);
+            MatrixDouble matE0(dofMatrices,dofMatrices),matE1(dofMatrices,dofMatrices);
             matC1.setZero();
             matA1.setZero();
             localMV_mat.setZero();
             matE1.setZero();
 
             double tARLQ0_, tARLQ1_;
-
+            
             //Vectors
-            VecDouble vecC0(nElNodes),vecC1(nElNodes);
-            VecDouble vecU0(nElNodes),vecU1(nElNodes);
-            VecDouble RhsA0(nElNodes),RhsA1(nElNodes);
-            VecDouble localMV_vec(nElNodes);
-            VecDouble vecE0(nElNodes),vecE1(nElNodes);
+            VecDouble vecC0(dofMatrices),vecC1(dofMatrices);
+            VecDouble vecU0(dofMatrices),vecU1(dofMatrices);
+            VecDouble RhsA0(dofMatrices),RhsA1(dofMatrices);
+            VecDouble localMV_vec(dofMatrices);
+            VecDouble vecE0(dofMatrices),vecE1(dofMatrices);
             vecC1.setZero();
             vecU1.setZero();
             localMV_vec.setZero();
@@ -2660,12 +2652,14 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
             elementsFine_[jel] -> getLagrangeMultipliersSameMesh(matC1, vecC1, vecU1);
             
             if (fArlequinStab != ArlequinStabType::ENoStab){
+                if (fProbType == ENavierStokes || fProbType == EStokes){
+                    //PSPG and SUPG stabilizations
+                    elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
+                }
                 //Arlequin Stabilization
                 elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(matE1, matA1, vecE1);
             }
 
-            
-            
             //COAESE MESH
             //Counts number of coarse mesh intersecting the fine element
             int numberIntPoints = elementsFine_[jel] -> 
@@ -2733,33 +2727,91 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
                 elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
 
                 if (fArlequinStab != ArlequinStabType::ENoStab){
+                    if (fProbType == ENavierStokes || fProbType == EStokes){
+                        elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
+                    }
+
                     elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,matE0,matA0,vecE0);
-                } 
-                
+                }
                 MatrixDouble matE = matE1;
                 stabilizeArlequin(matA0,matA1,matC0,matC1,matE0,vecE0,vecE1,tARLQ0_,tARLQ1_);
 
                 matE0 *= tARLQ0_;
                 matA0 *= tARLQ0_;
                 vecE0 *= tARLQ0_;
-                setMatVecValuesLagMultFineCoarsePoisson(matC0, localMV_mat, matE0, matA0, 
+                
+                switch (fProbType)
+                {
+                case ENavierStokes:
+                case EStokes:
+                    setMatVecValuesLagMultFineCoarse(matC0, localMV_mat, matE0, matA0, 
+                                                 vecU0, vecC0, localMV_vec, vecE0,
+                                                 elementsCoarse_[iElemCoarse] -> getConnectivity(), 
+                                                 glueZoneFine_[l] -> getConnectivity());
+                    break;
+                case EPoisson:
+                    setMatVecValuesLagMultFineCoarsePoisson(matC0, localMV_mat, matE0, matA0, 
                                                         vecU0, vecC0, localMV_vec, vecE0,
                                                         elementsCoarse_[iElemCoarse] -> getConnectivity(), 
                                                         glueZoneFine_[l] -> getConnectivity());
+                    break;
+                case EElastic:
+                    setMatVecValuesLagMultFineCoarseElasticity(matC0, localMV_mat, matE0, matA0, 
+                                                 vecU0, vecC0, localMV_vec, vecE0,
+                                                 elementsCoarse_[iElemCoarse] -> getConnectivity(), 
+                                                 glueZoneFine_[l] -> getConnectivity());
+                    break;
                 
+                default:
+                    PanicButton();
+                    break;
+                }
             }; //Number of intersections
-        
+
             matE1 *= tARLQ1_;
             matA1 *= tARLQ1_;
             vecE1 *= tARLQ1_;
-            setMatVecValuesLagMultFineFinePoisson(matC1,localMV_mat,matE1,matA1, 
-                                                  vecU1,vecC0,localMV_vec,vecE1,
-                                                  elementsFine_[jel] -> getConnectivity(),
-                                                  glueZoneFine_[l] -> getConnectivity());
+
+            switch (fProbType)
+            {
+            case ENavierStokes:
+            case EStokes:
+                setMatVecValuesLagMultFineFine(matC1,localMV_mat,matE1,matA1, 
+                                        vecU1,vecC1,localMV_vec,vecE1,
+                                        elementsFine_[jel] -> getConnectivity(),
+                                        glueZoneFine_[l] -> getConnectivity());
+                break;
+            case EPoisson:
+                setMatVecValuesLagMultFineFinePoisson(matC1,localMV_mat,matE1,matA1, 
+                                                      vecU1,vecC0,localMV_vec,vecE1,
+                                                      elementsFine_[jel] -> getConnectivity(),
+                                                      glueZoneFine_[l] -> getConnectivity());
+                break;
+            case EElastic:
+                setMatVecValuesLagMultFineFineElasticity(matC1,localMV_mat,matE1,matA1, 
+                                                      vecU1,vecC0,localMV_vec,vecE1,
+                                                      elementsFine_[jel] -> getConnectivity(),
+                                                      glueZoneFine_[l] -> getConnectivity());
+                break;
+            
+            default:
+                PanicButton();
+                break;
+            }
+
+            
+           
         }; // if element belongs to the glue zone
     }; // Glue zone
+}
 
-    return;
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::assembleArlequinSystem(){
+
+    assembleCoarseModel();
+    assembleFineModel();
+    assembleCouplingOperator();
+   
 }
 
 //------------------------------------------------------------------------------
@@ -2997,7 +3049,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             double p_;
             Ione = 1;
 
-            if (fProbType == ProblemType::ENavierStokes){
+            if (fProbType == ENavierStokes || fProbType == EStokes){
                 for (int i = 0; i < numNodesCoarse; ++i){
                     double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
                     for (int k = 0; k < DIM; k++){
@@ -3042,7 +3094,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
                         normL += val*val;
                     }
                 };
-            } else if (fProbType == ProblemType::EPoisson){
+            } else if (fProbType == EPoisson){
                 for (int i = 0; i < numNodesCoarse; ++i){
                     double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
                     Ii = i;
@@ -3070,6 +3122,44 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
                     normL += val*val;
 
                 };
+            } else if (fProbType == EElastic){
+                for (int i = 0; i < numNodesCoarse; ++i){
+                    double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
+                    for (int k = 0; k < DIM; k++){
+                        Ii = DIM * i + k;
+                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+                        // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+                        u_[k] = val;
+                        normU += val*w_*val*w_;
+                        (*nodesCoarse_)[i] -> incrementAcceleration(k,u_[k]);
+                        (*nodesCoarse_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
+                    }
+                };
+                
+                for (int i = 0; i < numNodesFine; ++i){
+                    double w_ = (*nodesFine_)[i] -> getWeightFunction();
+                    for (int k = 0; k < DIM; k++){
+                        Ii = DIM * numNodesCoarse + DIM * i + k;
+                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+                        u_[k] = val;
+                        normU += val*w_*val*w_;
+                        (*nodesFine_)[i] -> incrementAcceleration(k,u_[k]);
+                        (*nodesFine_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
+                    }        
+                };
+                
+                for (int i = 0; i < numNodesGlueZoneFine; ++i){
+                    for (int k = 0; k < DIM; k++){
+                        Ii = DIM * numNodesCoarse + DIM * numNodesFine + DIM * i + k;
+                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+                        u_[k] = val;
+                        (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+                        normL += val*val;
+                    }
+                };
+
+            } else{
+                PanicButton();
             }
             
             //Computes the solution vector norm

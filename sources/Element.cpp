@@ -1886,6 +1886,43 @@ void Element<DIM,DEG>::getResidualVectorPoisson(int &index, MatrixDouble &dphi_d
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
+void Element<DIM,DEG>::getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector, MatrixDouble &Hooke){
+
+    VecDouble fieldForce = fMesh->getFluidParameters().getFieldForce();
+    auto force = fMesh->getFluidParameters().getForcingFunctionPoisson();
+
+    //Velocity Derivatives
+    MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
+    interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+    duna_dx = du_dx;
+
+    double WJ = weight_ * djac_ * intPointWeightFunction[index];
+    MatrixDouble matD(3,2*fMesh->nElNodes);
+    matD.setZero();
+
+    for (int j = 0; j < fMesh->nElNodes; j++){
+        matD(0,DIM*j  ) = dphi_dx(j,0);
+        matD(1,DIM*j+1) = dphi_dx(j,1);
+        matD(2,DIM*j  ) = dphi_dx(j,1);
+        matD(2,DIM*j+1) = dphi_dx(j,0);
+    }
+    
+    VecDouble strain(3);
+    strain.setZero();
+    strain[0] = du_dx(0,0);
+    strain[1] = du_dx(1,1);
+    strain[2] = du_dx(0,1)+du_dx(1,0);
+
+    rhsVector += matD.transpose() * Hooke * strain * WJ;
+
+    return;
+};
+
+
+//------------------------------------------------------------------------------
+//-----------------------------RESIDUAL - RHS VECTOR----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
 void Element<DIM,DEG>::getResidualVectorLaplace(VecDouble &rhsVector){
     
     VecDouble U_(fMesh->nLocDOF);
@@ -1922,6 +1959,29 @@ void Element<DIM,DEG>::getElemLaplMatrix(double &weight_, double &djac_, MatrixD
             }
         }
     }
+
+    return;
+};
+
+
+//------------------------------------------------------------------------------
+//---------------------------ELEMENT LAPLACIAN MATRIX---------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix, MatrixDouble &Hooke){
+
+    double WJ = weight_ * djac_ * intPointWeightFunction[index];
+    MatrixDouble matD(3,2*fMesh->nElNodes);
+    matD.setZero();
+
+    for (int j = 0; j < fMesh->nElNodes; j++){
+        matD(0,DIM*j  ) = dphi_dx(j,0);
+        matD(1,DIM*j+1) = dphi_dx(j,1);
+        matD(2,DIM*j  ) = dphi_dx(j,1);
+        matD(2,DIM*j+1) = dphi_dx(j,0);
+    }
+    
+    jacobianNRMatrix += matD.transpose() * Hooke * matD * WJ;
 
     return;
 };
@@ -2090,6 +2150,67 @@ void Element<DIM,DEG>::getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDoubl
 
     return;
 };
+
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getElasticity2D(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+
+    VecDouble xsi(DIM);
+    ShapeFunction<DIM,DEG>           shapeQuad;
+    
+    MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
+
+    int index = 0;
+    IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    MatrixDouble hooke(3,3);
+    hooke.setZero();
+    // For EPT
+    double elastic_ = 10000.;
+    double poisson_ = 0.0;
+    double k = elastic_ / (1. - poisson_ * poisson_);
+    hooke(0,0) = k;
+    hooke(0,1) = k * poisson_;
+    hooke(1,0) = k * poisson_;
+    hooke(1,1) = k;
+    hooke(2,2) = k * (1. - poisson_) * 0.5;
+
+    
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_, index);
+
+        //Computes spatial derivatives
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        getElemElasticity2DMatrix(index, weight_, djac_, dphi_dx, jacobianNRMatrix, hooke);
+        
+        //Computes the RHS vector
+        getResidualVectorElasticity2D(index, dphi_dx, weight_, djac_, rhsVector, hooke); 
+        index++;        
+    };  
+    
+    //Computes the RHS vector
+    
+
+    //Apply boundary conditions
+    // setBoundaryConditionsLaplace(jacobianNRMatrix, rhsVector);
+
+    return;
+};
+
 
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
@@ -2416,7 +2537,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatr
         for (int i = 0; i < fMesh->nElNodes; i++){
             for (int k = DIM; k--; ){
                 if (fMesh->getNodes()[connect_[i]] -> getConstrains(k) == 1) {
-                    for (int j = 0; j < fMesh->nLocDOF; j++){
+                    for (int j = 0; j < fMesh->nElNodes*DIM; j++){
                         lagrMultMatrix(DIM*i+k,j) = 0.;
                         lagrMultMatrix(j,DIM*i+k) = 0.;
                     };
@@ -2911,7 +3032,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
         for (int i = 0; i < fMesh->nElNodes; i++){
             for (int k = DIM; k--; ){
                 if (fMesh->getNodes()[connect_[i]] -> getConstrains(k) == 1) {
-                    for (int j = 0; j < fMesh->nLocDOF; j++){
+                    for (int j = 0; j < fMesh->nElNodes*DIM; j++){
                         lagrMultMatrix(DIM*i+k,j) = 0.;
                         lagrMultMatrix(j,DIM*i+k) = 0.;
                     };

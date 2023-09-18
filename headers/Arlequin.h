@@ -171,14 +171,21 @@ public:
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesFineModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setMatVecValuesFineModelElasticity(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setMatVecValuesCoarseModelElasticity(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                         MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                         VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                         VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                         VecInt &connec, VecInt &connecL);
     void setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                               MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                               VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                               VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                               VecInt &connec, VecInt &connecL);
+    void setMatVecValuesLagMultFineFineElasticity(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                                MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                                VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                                VecDouble &localMV_vec, VecDouble &RhsArlequin2,
@@ -190,6 +197,11 @@ public:
                                           VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                           VecInt &connecC, VecInt &connecL);
     void setMatVecValuesLagMultFineCoarsePoisson(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                                 MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                                 VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                                 VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                                 VecInt &connecC, VecInt &connecL);
+    void setMatVecValuesLagMultFineCoarseElasticity(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                                  MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                                  VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                                  VecDouble &localMV_vec, VecDouble &RhsArlequin2,
