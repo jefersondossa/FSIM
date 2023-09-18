@@ -9,15 +9,15 @@
     typedef Arlequin<dimension,degree>      Arlequin;
     typedef FSInteraction<dimension,degree> FSI;
 
-for (int k = 3; k < 7; k++)
+for (int k = 3; k < 4; k++)
 {
    
  
 //  Create problem variables 
-    FluidModel coarseModel, fineModel, control;  
+    FluidModel coarseModel(ProblemType::EPoisson), fineModel(ProblemType::EPoisson);  
     Arlequin   arlequinProblem; 
    //FSI        coupledProblem;  
-    
+
 //==========================================================================
 //==============================PROBLEM MESHES==============================
 //==========================================================================
@@ -135,11 +135,6 @@ for (int k = 3; k < 7; k++)
     fineModel.meshReading(fluid2,"problem_data.txt","fine.msh","mirror_fine.txt",0);
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
-
-    coarseModel.setProblemType(ProblemType::EPoisson);
-    fineModel.setProblemType(ProblemType::EPoisson);
-
-
 
 
 auto exactSol = [](const VecDouble &coord, double &u, VecDouble &gradU){

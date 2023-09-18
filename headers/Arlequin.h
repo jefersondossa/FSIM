@@ -16,6 +16,10 @@
 
 #include "Fluid.h"
 #include "Glue.h"
+#include "IntegrationQuadrature11.h"
+
+template<int DIM,int DEG> class Fluid;
+template<int DIM,int DEG> class Element;
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -25,32 +29,23 @@ public:
     /// Defines the class Fluid locally
     typedef Fluid<DIM,DEG>                 FluidMesh;
 
-    /// Defines the class Element locally
-    typedef typename FluidMesh::Elements   Elements;
-
-    /// Defines the class Node locally
-    typedef typename FluidMesh::Node       Nodes;
-
     /// Defines the class Boundary locally
     typedef typename FluidMesh::Boundaries Boundary;
-
-    /// Defines the class SpecialQuad locally
-    typedef typename Elements::SpecialQuad Quadrature;
 
     /// Defines the class Glue locally
     typedef Glue<DIM,DEG>                  GlueZone;
 
     typedef FluidParameters<DIM,DEG>       Parameters;
 
-    FluidMesh coarseModel, fineModel;
+    FluidMesh *coarseModel, *fineModel;
 
-    std::vector<Nodes *>     *nodesCoarse_;
-    std::vector<Nodes *>     *nodesFine_;
-    std::vector<Nodes *>     nodesLagrangeFine_;
-    std::vector<Nodes *>     nodesLagrangeCoarse_;
+    std::vector<Node<DIM,DEG> *>     *nodesCoarse_;
+    std::vector<Node<DIM,DEG> *>     *nodesFine_;
+    std::vector<Node<DIM,DEG> *>     nodesLagrangeFine_;
+    std::vector<Node<DIM,DEG> *>     nodesLagrangeCoarse_;
 
-    std::vector<Elements *>  elementsCoarse_;
-    std::vector<Elements *>  elementsFine_;
+    std::vector<Element<DIM,DEG> *>  elementsCoarse_;
+    std::vector<Element<DIM,DEG> *>  elementsFine_;
     std::vector<GlueZone *>  glueZoneFine_;
     std::vector<GlueZone *>  glueZoneCoarse_;
 
@@ -95,17 +90,13 @@ private:
     std::pair<idx_t*,idx_t*> domDecompCoarse;//Coarse Model Domain Decomposition
     std::pair<idx_t*,idx_t*> domDecompFine;  //Fine Model Domain Decomposition
 
-    Quadrature quad;
+    IntegQuadratureSpecial<DIM,DEG> quad;
 
     double pi = M_PI;
 
     double alpha_f;
     double alpha_m;
     double gamma;
-
-    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
 
     ArlequinStabType fArlequinStab = ArlequinStabType::ENoStab;
 
@@ -174,8 +165,8 @@ public:
     /// @param vector<Nodes> vector of fluid model nodes
     /// @param vector<Elements> vector of fluid model elements
     /// @param int number of elements of the fluid model
-    void searchNodeCorrespondence(VecDouble &x, std::vector<Nodes *> nodes,
-                                  std::vector<Elements *> elements,
+    void searchNodeCorrespondence(VecDouble &x, std::vector<Node<DIM,DEG> *> nodes,
+                                  std::vector<Element<DIM,DEG> *> elements,
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
@@ -205,6 +196,10 @@ public:
                                                  VecInt &connecC, VecInt &connecL);
 
     void assembleArlequinSystem();
+    void assembleCoarseModel();
+    void assembleFineModel();
+    void assembleCouplingOperator();
+
     void assembleArlequinSystemPoisson();
 
     /// Print the results for Paraview post-processing

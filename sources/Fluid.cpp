@@ -184,7 +184,7 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
         
         for (int j = 0; j < DIM; j++) std::istringstream(tokens[j+1]) >> x[j];
         
-        Node *node = new Node(x,index);
+        Node<DIM,DEG> *node = new Node<DIM,DEG>(x,index);
         nodes_.push_back(node);
         index++;
     }
@@ -213,7 +213,7 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
 //---------------------------READS THE MESH ELEMENTS----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std::ofstream& mirrorData, std::vector<Elements*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities){
+void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std::ofstream& mirrorData, std::vector<Element<DIM,DEG>*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities){
 
     if (rank == 0) std::cout << "3/9 Reading elements..." << std::endl;
 
@@ -289,7 +289,7 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                     for (int k = 0; k < nElNodes; k++) connect[k] = elementNodes[k];
                 }
 
-                Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
+                Element<DIM,DEG> *el = new Element<DIM,DEG>(index++,connect,this);
                 elementsAux_.push_back(el);
 
                 for (int k = 0; k < nElNodes; k++){
@@ -422,7 +422,7 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                     VecInt connect(nElNodes);
                     for (int j = 0 ; j < nElNodes; j++) connect[j] = elementNodes[j];
 
-                    Elements *el = new Elements(index++,connect,nodes_,fluidParameters,numIntegration);
+                    Element<DIM,DEG> *el = new Element<DIM,DEG>(index++,connect,this);
                     elementsAux_.push_back(el);
 
                     for (int k = 0; k < nElNodes; k++){
@@ -930,10 +930,14 @@ void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputF
     readNodes(file,mirrorData);
     readElements(geometry_,file,mirrorData,elements_, physicalEntities);
 
-    if (fProbType == ProblemType::ENavierStokes){
+    if (fProbType == ProblemType::ENavierStokes || fProbType == ProblemType::EStokes){
         numDOF = (DIM+1) * numNodes;
     } else if (fProbType == ProblemType::EPoisson) {
         numDOF = numNodes;
+    } else if (fProbType == ProblemType::EElastic){
+        numDOF = numNodes * DIM;
+    } else {
+        PanicButton();
     }
     
     renumberConnectivity();
@@ -1029,7 +1033,7 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
             rhs.setZero();
             matrix.setZero();
 
-            elements_[jel] -> getSteadyLaplace2(matrix,rhs);
+            elements_[jel] -> getSolidProblem(matrix,rhs);
             
             //Disperse local contributions into the global matrix
             //Matrix K and C
@@ -1519,7 +1523,6 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
     
     return 0;
 };
-
 
 
 

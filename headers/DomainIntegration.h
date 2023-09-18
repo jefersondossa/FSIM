@@ -95,9 +95,6 @@ public:
     MatrixDouble phiS_;
     double ***dphiS_;
 
-private:
-
-    
 };
 
 

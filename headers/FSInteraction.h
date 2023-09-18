@@ -16,6 +16,10 @@
 #include "hdf5.h"
 #include "Arlequin.h"
 
+template<int DIM,int DEG> class Arlequin;
+template<int DIM,int DEG> class Fluid;
+template<int DIM,int DEG> class Element;
+
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
 extern "C" {void solveframestructure_(int *ipt);};
@@ -45,10 +49,6 @@ class FSInteraction{
 public:
     /// Defines locally the class Fluid
     typedef Fluid<DIM,DEG>                  FluidModel;
-    /// Defines locally the class Element
-    typedef typename FluidModel::Elements   Elements;
-    /// Defines locally the class Node
-    typedef typename FluidModel::Node       Nodes;
     /// Defines locally the class Boundary
     typedef typename FluidModel::Boundaries Boundary;
 
@@ -56,19 +56,19 @@ public:
     typedef Arlequin<DIM,DEG>               ArlequinModel;
    
 private:
-    FluidModel         fluidModel;
-    ArlequinModel      arlequinModel;
+    FluidModel         *fluidModel;
+    ArlequinModel      *arlequinModel;
     
-    std::vector<Nodes *>     nodesFluid_;
+    std::vector<Node<DIM,DEG> *>     nodesFluid_;
     //    std::vector<Nodes *>     nodesSolid_;
-    std::vector<std::vector<Nodes *> > nodesSolid_;
-    std::vector<Elements *>  elementsFluid_;
+    std::vector<std::vector<Node<DIM,DEG> *> > nodesSolid_;
+    std::vector<Element<DIM,DEG> *>  elementsFluid_;
     std::vector<Boundary *>  boundaryFluid_;
 
-    std::vector<Nodes *>     nodesArlequinCoarse_;
-    std::vector<Nodes *>     nodesArlequinFine_;
-    std::vector<Elements *>  elementsArlequinCoarse_;
-    std::vector<Elements *>  elementsArlequinFine_;
+    std::vector<Node<DIM,DEG> *>     nodesArlequinCoarse_;
+    std::vector<Node<DIM,DEG> *>     nodesArlequinFine_;
+    std::vector<Element<DIM,DEG> *>  elementsArlequinCoarse_;
+    std::vector<Element<DIM,DEG> *>  elementsArlequinFine_;
     std::vector<Boundary *>  boundaryArlequinCoarse_;
     std::vector<Boundary *>  boundaryArlequinFine_;
 
@@ -94,10 +94,6 @@ private:
 
     double pi = M_PI;
 
-    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
-
     std::vector<int>         groupInterfaces;
 
     std::pair<idx_t*,idx_t*> domDecompFluid; //Fluid Model Domain Decomposition
@@ -110,11 +106,11 @@ public:
 
     /// Sets the fluid and solid models and perform the preprocessing tasks
     /// @param Fluid fluid model @param char* solid input file
-    void setFluidAndSolidModels(FluidModel fluid, char *in_solid);
+    void setFluidAndSolidModels(FluidModel& fluid, char *in_solid);
 
     /// Sets the Arlequin and solid models and perform the preprocessing tasks
     /// @param Arlequin Arlequin fluid model @param char* solid input file
-    void setArlequinAndSolidModels(ArlequinModel arlq, char *in_solid);
+    void setArlequinAndSolidModels(ArlequinModel& arlq, char *in_solid);
     
     /// Perform the fluid preprocessing tasks
     void preProcessFluid();

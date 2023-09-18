@@ -17,6 +17,8 @@
 #include "Element.h"
 #include "Boundary.h"
 #include "fluidDomain.h"
+#include "IntegrationQuadrature11.h"
+#include "Node.h"
 
 #include<cstdlib>
 #include<fstream>
@@ -28,33 +30,27 @@
 #include <petscksp.h> 
 
 
-
+template<int DIM,int DEG> class Element;
 
 /// Mounts the incompressible flow problem
 
 template<int DIM, int DEG>
 class Fluid{
 public:
-    /// Defines the class Element locally
-    typedef Element<DIM,DEG> Elements;
-
-    /// Defines the class Node locally
-    typedef typename Elements::Nodes  Node;
-
     /// Defines the class Boundary locally
     typedef Boundary<DIM,DEG> Boundaries;
 
     /// Defines the class Fluid Parameters locally
-    typedef FluidParameters<DIM,DEG> Parameters;
+    // typedef FluidParameters<DIM,DEG> Parameters;
 
     /// Defines the class Numerical integration locally
     typedef DomainIntegration<DIM,DEG> DIntegration;
 
     /// Defines the vector of fluid nodes
-    std::vector<Node *>       nodes_;
+    std::vector<Node<DIM,DEG> *>       nodes_;
 
     /// Defines the vector of fluid elements
-    std::vector<Elements *>   elements_;
+    std::vector<Element<DIM,DEG> *>   elements_;
  
     /// Defines the vector of fluid boundaries mesh nodes
     std::vector<Boundaries *> boundary_;
@@ -85,11 +81,13 @@ private:
     bool computeDragAndLift;
     int iTimeStep;
     Mat               A;
-    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+    
 
 public:
+    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
+    int nLocDOF = 0;
+    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+
     std::vector<int> dragAndLiftBoundary;
     int numberOfLines;
 
@@ -114,12 +112,39 @@ public:
     bool printProcess;
     bool printLines;
     double integScheme;    //Time Integration Scheme
-    Parameters fluidParameters;
+    FluidParameters<DIM,DEG> fluidParameters;
     DIntegration* numIntegration; //Numerical integration
 
     ProblemType fProbType = ProblemType::ENavierStokes;
 
 public:
+    Fluid(){
+        PanicButton();
+    }
+
+    Fluid(ProblemType ptype){
+        fProbType = ptype;
+
+        switch (fProbType)
+        {
+        case ENavierStokes:
+        case EStokes:
+            nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
+        break;
+
+        case EElastic:
+            nLocDOF = nElNodes*DIM;
+            break;
+        
+        case EPoisson:
+            nLocDOF = nElNodes;
+            break;
+
+        default:
+            break;
+        }
+    };
+
     void setProblemType(ProblemType ptype){fProbType = ptype;};
     ProblemType &getProblemType(){return fProbType;}
 
@@ -137,20 +162,20 @@ public:
     /// @param std::string input .msh file @param std::string mirror file
     /// @param std::vector<Elements*> auxiliary vector of Elements
     /// @param std::unordered_map<int, std::string> mesh physical entities
-    void readElements(Geometry* &geometry_,std::ifstream &file, std::ofstream& mirrorData, std::vector<Elements*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities);
+    void readElements(Geometry* &geometry_,std::ifstream &file, std::ofstream& mirrorData, std::vector<Element<DIM,DEG>*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities);
     void renumberConnectivity();
     void setBoundaryConstrains();
     void setBoundarySides();
 
-    Parameters &getFluidParameters(){
+    FluidParameters<DIM,DEG> &getFluidParameters(){
         return fluidParameters;
     }
 
     /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
 
-    int getNumberOfElements(){return numElem;}
-    int getNumberOfNodes(){return numNodes;}
+    int &getNumberOfElements(){return numElem;}
+    int &getNumberOfNodes(){return numNodes;}
 
     /// Export the domain decomposition 
     /// @return pair with the elements and nodes domain decompositions
@@ -159,26 +184,28 @@ public:
 
     /// Gets the number of time steps
     /// @return number of time steps
-    int getNumberOfTimeSteps(){return numTimeSteps;};
+    int &getNumberOfTimeSteps(){return numTimeSteps;};
 
     /// Gets the time step size
     /// @return time step size
-    double getTimeStep(){return dTime;};
+    double &getTimeStep(){return dTime;};
+
+    DIntegration* getNumericalIntegration(){return numIntegration;}
 
     /// Gets the number of fluid-structure interfaces
     /// @return number of fluid boundaries which composes the 
     /// fluid structure interface
-    int getNumberofFSIInterfaces(){return numFSIInterfaces;};
+    int &getNumberofFSIInterfaces(){return numFSIInterfaces;};
     
     /// Gets the flag for computing the Drag and Lift coefficients in a 
     /// specific boundary
     /// @return bool flag for computing Drag and Lift coefficients
-    bool getComputeDragAndLift() {return computeDragAndLift;};
+    bool &getComputeDragAndLift() {return computeDragAndLift;};
 
     /// Gets the number of the boundary for computing the Drag and Lift 
     /// coefficients
     /// @return int boundary number
-    int getDragAndLiftBoundary(int index) {return dragAndLiftBoundary[index];};
+    int &getDragAndLiftBoundary(int index) {return dragAndLiftBoundary[index];};
  
     /// Mounts and solve the transient incompressible flow problem    
     /// @param int maximum number of Newton-Raphson's iterations
@@ -207,6 +234,7 @@ public:
                       double tolerance,
                       int problem_type);
     int solvePoisson();
+    int solveProblem();
 
     /// Print the results for Paraview post-processing
     /// @param int time step
@@ -219,12 +247,12 @@ public:
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model nodes information
-    std::vector<Node *> getNodesVelocity(){return nodes_;}
+    std::vector<Node<DIM,DEG> *> &getNodes(){return nodes_;}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
-    std::vector<Elements *> getElements(){return elements_;}
+    std::vector<Element<DIM,DEG> *> &getElements(){return elements_;}
 
     std::vector<std::string> split2(std::string str, std::string delim)
     {

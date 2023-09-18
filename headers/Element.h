@@ -22,42 +22,22 @@
 #include "IntegrationQuadrature.h"
 #include "IntegrationQuadrature11.h"
 #include "DomainIntegration.h"
+#include "Fluid.h"
 // #include "PartitionedQuadrature.hpp"
 
+template<int DIM,int DEG> class Fluid;
 /// Defines the fluid element object and all the element information
 
 template<int DIM, int DEG>
 class Element{
- 
-public:
-    /// Defines the class Node locally
-    typedef Node<DIM,DEG>                                       Nodes;
-
-    ///Defines the partitioned integration quadrature rule class locally
-    typedef IntegQuadratureSpecial<DIM,DEG>                     SpecialQuad;
-
-    /// Defines the normal integration quadrature rule class locally
-    typedef IntegQuadrature<DIM,DEG>                            NormalQuad;
-
-    /// Defines the boundary integration quadrature rule class locally
-    typedef BoundaryIntegQuadrature<DIM,DEG>                    BoundaryQuad;
-
-    typedef FluidParameters<DIM,DEG>                            FParameters;
-
-    typedef ShapeFunction<DIM,DEG>                              ShapeF;
-
-    /// Defines the domain integration class locally
-    typedef DomainIntegration<DIM,DEG>                          DIntegration;
-
 private:
-    std::vector<Nodes *>   *nodes_;    //Velocity nodes
-    FParameters   *parameters;
     VecInt        connect_; //Velocity mesh connectivity 
     int           index_;             //Element index
     VecDouble     xK, XK;
     int           sideBoundary_;
     double        meshMovingParameter;
     std::vector<int> neighborElements;
+    Fluid<DIM,DEG> *fMesh;
 
     VecDouble intPointWeightFunction;
     VecDouble intPointWeightFunctionPrev;
@@ -74,40 +54,31 @@ private:
 
     bool          glueZone;
     bool          model; //true for local and false for global
-    bool          FSIInterface;
-    DIntegration  *DI;   
-    int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-    int nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-    int nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
+    bool          FSIInterface;    
 
 public:
     /// fluid element constructor
     /// @param int element index @param Connectivity element connectivity
     /// @param vector<Nodes> 
-    Element(int index, VecInt &connect, std::vector<Nodes *> &nodes, FParameters &param, DIntegration* &dInt){
-        connect_.resize(nElNodes);
-
+    Element(int index, VecInt &connect, Fluid<DIM,DEG>* mesh){
+        
+        fMesh = mesh;
+        connect_.resize(fMesh->nElNodes);
         index_ = index;
-        for (int i = nElNodes; i--; ) connect_[i] = connect[i];
-        nodes_ = &nodes;
-        parameters = &param;
+        for (int i = fMesh->nElNodes; i--; ) connect_[i] = connect[i];
 
-        // std::cout <<"AASASD 1"<<std::endl;
-        DI = dInt;
-        // std::cout <<"AASASD 2"<<std::endl;
         glueZone = false;        FSIInterface = false;
         sideBoundary_ = -1;
         neighborElements.clear();
 
-        NormalQuad nQuad = NormalQuad();
-        // std::cout <<"AASASD 3"<<std::endl;
+        IntegQuadrature<DIM,DEG> nQuad = IntegQuadrature<DIM,DEG>();
         intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
 
         intPointWeightFunction.fill(1.);
         intPointWeightFunctionPrev.fill(1.);
         
-        SpecialQuad sQuad = SpecialQuad();
+        IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>();
 
         intPointWeightFunctionSpecial.resize(sQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionSpecialPrev.resize(sQuad.getNumberOfIntegrationPoints());
@@ -124,14 +95,7 @@ public:
         intPointWeightFunctionSpecial.fill(1.);
         intPointWeightFunctionSpecialPrev.fill(1.);
         intPointGlueZone.fill(false);
-
-        // std::cout <<"AASASD 5"<<std::endl;
         getIntegPointCoordinates();
-
-        // double xsi[2] = {};        
-        // double ainv_[2][2] = {};       
-        // getJacobianMatrix(xsi, ainv_);
-        // std::cout <<"AASASD 6"<<std::endl;
 
     };
 
@@ -149,7 +113,7 @@ public:
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    void getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &djac_);
+    void getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &djac_, int index);
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
@@ -204,7 +168,7 @@ public:
     double getJacobian(){
         VecDouble xsi(DIM);
         MatrixDouble ainv_(DIM,DIM);
-        MatrixDouble dphi_dx(nElNodes,DIM);
+        MatrixDouble dphi_dx(fMesh->nElNodes,DIM);
         
         ShapeFunction<DIM,DEG>    shapeQuad;
 
@@ -215,7 +179,7 @@ public:
 
         double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_);
+        getJacobianMatrix(xsi, ainv_, djac_, 0);
         // std::cout << "AAA 2 "<< std::endl;        
         //Computes spatial derivatives
         // getSpatialDerivatives(xsi, ainv_, dphi_dx);
@@ -250,7 +214,7 @@ public:
 
     /// Gets an specific member of the inverse incidence
     /// @param int index @return int element of the inverse incidence
-    int getNeighborElement(int i){return neighborElements[i];}
+    int &getNeighborElement(int i){return neighborElements[i];}
     void clearInverseIncidence(){
         neighborElements.clear();
         neighborElements.shrink_to_fit();
@@ -270,7 +234,7 @@ public:
 
     /// Gets the element side in boundary
     /// @return side in boundary
-    int getElemSideInBoundary(){return sideBoundary_;};
+    int &getElemSideInBoundary(){return sideBoundary_;};
 
     /// Sets the mesh moving weighting parameter for solving the Laplace problem
     /// @param double parameter value
@@ -278,7 +242,7 @@ public:
 
     /// Gets the mesh moving weighting parameter
     /// @return mesh moving weighting parameter
-    double getMeshMovingParameter(){return meshMovingParameter;};
+    double &getMeshMovingParameter(){return meshMovingParameter;};
 
     /// Gets the boundary connectivity for boundary integration
     /// @param int* boundary connectivity
@@ -299,7 +263,7 @@ public:
     /// Sets if the element is in the gluing zone
     /// @param glueZone: if true is in the glue zone
     void setGlueZone(){glueZone = true;}
-    bool getGlueZone(){return glueZone;}
+    bool &getGlueZone(){return glueZone;}
     bool getGlueZoneInt(){
         int aux = 0;
         if (glueZone) aux = 1;
@@ -311,12 +275,12 @@ public:
 
     /// Sets if the element belongs to the fluid structure interface
     void setFSIInterface(){FSIInterface = true;};
-    bool getFSIInterface(){return FSIInterface;};
+    bool &getFSIInterface(){return FSIInterface;};
 
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
-    int getNumberOfIntegrationPoints(){SpecialQuad sQuad = SpecialQuad(); return sQuad.getNumberOfIntegrationPoints();};
+    int getNumberOfIntegrationPoints(){IntegQuadratureSpecial<DIM,DEG> sQuad = IntegQuadratureSpecial<DIM,DEG>(); return sQuad.getNumberOfIntegrationPoints();};
 
     /// Sets the integration point correspondence to the overlapped mesh
     /// @param int element correspondent @param VecLoc Adimensional coordinates
@@ -348,7 +312,7 @@ public:
 
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
-    double getIntegPointWeightFunction(int index)
+    double &getIntegPointWeightFunction(int index)
     {return intPointWeightFunction[index];};
 
     /// Sets if the integration point is the gluing zone
@@ -357,7 +321,7 @@ public:
 
     /// Gets true if the integration point is in the gluing zone
     /// @param int integration point index @return If is in the gluing zone
-    bool getIntegPointInGlueZone(int index){return intPointGlueZone[index];};
+    bool &getIntegPointInGlueZone(int index){return intPointGlueZone[index];};
 
     /// Sets the integration point signaled distance function
     /// @param int integration point index
@@ -367,7 +331,7 @@ public:
 
     /// Gets the integration point signaled distance function value
     /// @return integration point signaled distance function value
-    double getIntegPointDistFunction(int index)
+    double &getIntegPointDistFunction(int index)
     {return intPointDistGlueZone[index];};
 
     //.......................Element vectors and matrices.......................
@@ -411,10 +375,8 @@ public:
     /// Compute and store the Lagrange multiplier operator when integrating 
     /// the same mesh portion
     void getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
-    void getLagrangeMultipliersSameMeshPoisson(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
     void getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
-    void getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     /// Compute and store the Lagrange multiplier operator when integrationg
     /// the different mesh portion
@@ -422,14 +384,10 @@ public:
     /// point belongs to the coarse mesh element)
     void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
                                              VecDouble &velxPrev, VecDouble &velyPrev, MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector);
-    void getLagrangeMultipliersDifferentMeshPoisson(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
-                                                    VecDouble &velxPrev, VecDouble &velyPrev, MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector);
     void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &ely,
                                                        MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
                                                      MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
-    void getLagrangeMultipliersArlequinDifferentMeshPoisson(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
-                                                            MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
@@ -441,7 +399,7 @@ public:
     /// Compute the Steady Laplace problem matrices and vectors 
     /// (usually for the mesh moving step)
     void getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void getSteadyLaplace2(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     void computeErrorPoisson(VecDouble &errors);
 

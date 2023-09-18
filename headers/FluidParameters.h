@@ -24,7 +24,7 @@ enum SolverType{EMumps, ESuiteSparse, EIterative};
 template<int DIM, int DEG>
 class FluidParameters {
 public:
-    
+
     /// Sets the element viscosity
     /// @param double element viscosity
     void setViscosity(double& visc){viscosity = visc;}

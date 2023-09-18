@@ -56,11 +56,12 @@ void Arlequin<DIM,DEG>::setElementBoxes() {
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes *> nodes, 
-                                           std::vector<Elements *> elements, 
+void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Node<DIM,DEG> *> nodes, 
+                                           std::vector<Element<DIM,DEG> *> elements, 
                                            int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch){
     
     ShapeFunction<DIM,DEG> shapeQuad;
+    int nElNodes = fineModel->nElNodes;
     VecDouble phi_(nElNodes);
 
     MatrixDouble ainv(DIM,DIM);
@@ -99,7 +100,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
         deltaXsi.setZero();
         
         double djac_ = 0.;
-        elements[elSearch] -> getJacobianMatrix(xsi,ainv,djac_);
+        elements[elSearch] -> getJacobianMatrix(xsi,ainv,djac_,0);
 
         // for (int i = 0; i < DIM; i++)
         //     for (int j = 0; j < DIM; j++)
@@ -185,7 +186,7 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
                 }
                 
                 double djac_ = 0.;
-                elements[jel] -> getJacobianMatrix(xsi,ainv,djac_);
+                elements[jel] -> getJacobianMatrix(xsi,ainv,djac_,0);
             
                 for (int i = 0; i < DIM; i++)
                     for (int j = 0; j < DIM; j++)
@@ -285,7 +286,7 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
     //if (rank == 0) std::cout << "Int Points " << numberIntPoints << std::endl;
 
     for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
-        
+        int nElNodes = fineModel->nElNodes;
         VecDouble x1(nElNodes), x2(nElNodes);
         VecInt connec = elementsFine_[elementsGlueZoneFine_[ielem]] -> getConnectivity();
         
@@ -327,7 +328,8 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setSignaledDistance(){
-
+    
+    int nBdNodes = fineModel->nBdNodes;
     int bconnec[nBdNodes];
     double dist;
 
@@ -592,12 +594,12 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
         
         VecInt connec = elementsFine_[jel] -> getConnectivity();
         flag = 0;
-
+        int nElNodes = fineModel->nElNodes;
         for (int ino = 0; ino < nElNodes; ino++){
             VecDouble x = (*nodesFine_)[connec[ino]] -> getCoordinates();
             double dist = (*nodesFine_)[connec[ino]] -> getDistFunction();
             //  std::cout << "DIST " << dist << std::endl;
-            if (dist <= fineModel.glueZoneThickness + 0.001) flag++;
+            if (dist <= fineModel->glueZoneThickness + 0.001) flag++;
             
         };
 
@@ -616,7 +618,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     numElemGlueZoneFine = elementsGlueZoneFine_.size();
     for (int i = 0; i < numElemGlueZoneFine; i++){
         VecInt connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
-
+        int nElNodes = fineModel->nElNodes;
         for (int ino = 0; ino < nElNodes; ino++) nodesCZ[connec[ino]]++;
     };
 
@@ -637,11 +639,12 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     for (int i = 0; i < numNodesGlueZoneFine; i++){
         VecDouble x = (*nodesFine_)[nodesGlueZoneFine_[i]] -> getCoordinates();
         
-        Nodes *no = new Nodes(x,i);
+        Node<DIM,DEG> *no = new Node<DIM,DEG>(x,i);
         nodesLagrangeFine_.push_back(no);
     };
 
     for (int i = 0; i < numElemGlueZoneFine; i++){
+        int nElNodes = fineModel->nElNodes;
         VecInt connecAux(nElNodes);
 
         VecInt connec = elementsFine_[elementsGlueZoneFine_[i]] -> getConnectivity();
@@ -664,7 +667,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
 
     //Defines a criterion to select the elements that are in the glue zone
     for (int jel = 0; jel < numElemCoarse; jel++){
-        
+        int nElNodes = coarseModel->nElNodes;
         VecInt connec = elementsCoarse_[jel] -> getConnectivity();
         flag = 0;
 
@@ -713,7 +716,7 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     numElemGlueZoneCoarse = elementsGlueZoneCoarse_.size();
     for (int i = 0; i < numElemGlueZoneCoarse; i++){
         VecInt connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> getConnectivity();
-
+        int nElNodes = coarseModel->nElNodes;
         for (int ino = 0; ino < nElNodes; ino++){
             nodesCZ2[connec[ino]] += 1;
         };
@@ -731,11 +734,12 @@ void Arlequin<DIM,DEG>::setCouplingZone(){
     for (int i = 0; i < numNodesGlueZoneCoarse; i++){
         VecDouble x = (*nodesCoarse_)[nodesGlueZoneCoarse_[i]] -> getCoordinates();
         
-        Nodes *no = new Nodes(x,i);
+        Node<DIM,DEG> *no = new Node<DIM,DEG>(x,i);
         nodesLagrangeCoarse_.push_back(no);
     };
 
     for (int i = 0; i < numElemGlueZoneCoarse; i++){
+        int nElNodes = coarseModel->nElNodes;
         VecInt connecAux(nElNodes);
 
         VecInt connec = elementsCoarse_[elementsGlueZoneCoarse_[i]] -> getConnectivity();
@@ -759,8 +763,8 @@ void Arlequin<DIM,DEG>::setWeightFunction(double val){
     
     double wFuncValue;
 
-    double epsilon = coarseModel.arlequinEpsilon;
-    double lambda = fineModel.glueZoneThickness*1.01;
+    double epsilon = coarseModel->arlequinEpsilon;
+    double lambda = fineModel->glueZoneThickness*1.01;
  
     for (int i = 0; i < numNodesCoarse; i++){
         
@@ -850,6 +854,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     double *pointScalar;
     int *intCellScalar;
     double *douCellScalar;
+    int nElNodes = coarseModel->nElNodes;
 
     pointVector = new double[3*numNodesCoarse]();
     connec2 = new int[nElNodes*numElemCoarse]();
@@ -971,7 +976,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
 
     //LISTS
     //Velocity
-    if (coarseModel.printVelocity){
+    if (coarseModel->printVelocity){
         output_v << "    <Attribute Name=\"Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/velocity" << std::endl;     
@@ -992,7 +997,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Acceleration
-    if (coarseModel.printAcceleration){
+    if (coarseModel->printAcceleration){
         output_v << "    <Attribute Name=\"Acceleration\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/acceleration" << std::endl;     
@@ -1013,7 +1018,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Real Velocity
-    if (coarseModel.printRealVelocity){
+    if (coarseModel->printRealVelocity){
         output_v << "    <Attribute Name=\"Real Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/realVelocity" << std::endl;     
@@ -1034,7 +1039,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Lagrange Multipliers
-    if (coarseModel.printLagrangeMultipliers){
+    if (coarseModel->printLagrangeMultipliers){
         output_v << "    <Attribute Name=\"Lagrange Multipliers\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/lagrangeMultiplers" << std::endl;     
@@ -1055,7 +1060,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Dist Function
-    if (coarseModel.printDistFunction){
+    if (coarseModel->printDistFunction){
         output_v << "    <Attribute Name=\"Dist Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesCoarse <<"\">" << std::endl;  
         output_v << "        " << s1 << ":/distfunction" << std::endl;     
@@ -1072,7 +1077,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Weight Function
-    if (coarseModel.printEnergyWeightFunction){
+    if (coarseModel->printEnergyWeightFunction){
         output_v << "    <Attribute Name=\"Weight Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesCoarse <<"\">" << std::endl;  
         output_v << "        " << s1 << ":/weightFunction" << std::endl;     
@@ -1089,7 +1094,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Pressure
-    if (coarseModel.printPressure){
+    if (coarseModel->printPressure){
         output_v << "    <Attribute Name=\"Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/pressure" << std::endl;     
@@ -1106,7 +1111,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Real Pressure
-    if (coarseModel.printRealPressure){
+    if (coarseModel->printRealPressure){
         output_v << "    <Attribute Name=\"Real Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesCoarse <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/realPressure" << std::endl;     
@@ -1123,7 +1128,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Process
-    if (coarseModel.printProcess){
+    if (coarseModel->printProcess){
         output_v << "    <Attribute Name=\"Process\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/process" << std::endl;
@@ -1139,7 +1144,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //WeightFunction2
-    if (coarseModel.printEnergyWeightFunction){
+    if (coarseModel->printEnergyWeightFunction){
         output_v << "    <Attribute Name=\"Weight Function\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/weightFunction2" << std::endl;     
@@ -1156,7 +1161,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     //Lines
-    if (coarseModel.printLines){
+    if (coarseModel->printLines){
         output_v << "    <Attribute Name=\"Lines\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/lines" << std::endl;     
@@ -1178,7 +1183,7 @@ void Arlequin<DIM,DEG>::printResultsCoarse(int step) {
     }
 
     // Jacobian
-    if (coarseModel.printJacobian){
+    if (coarseModel->printJacobian){
         output_v << "    <Attribute Name=\"Jacobian\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemCoarse <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/jacobian" << std::endl;     
@@ -1238,6 +1243,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     double *pointScalar;
     int *intCellScalar;
     double *douCellScalar;
+    int nElNodes = fineModel->nElNodes;
 
     pointVector = new double[3*numNodesFine]();
     connec2 = new int[nElNodes*numElemFine]();
@@ -1352,7 +1358,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
 
     //LISTS
     //Velocity
-    if (fineModel.printVelocity){
+    if (fineModel->printVelocity){
         output_v << "    <Attribute Name=\"Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/velocity" << std::endl;     
@@ -1373,7 +1379,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Acceleration
-    if (fineModel.printAcceleration){
+    if (fineModel->printAcceleration){
         output_v << "    <Attribute Name=\"Acceleration\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/acceleration" << std::endl;     
@@ -1394,7 +1400,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Real Velocity
-    if (fineModel.printRealVelocity){
+    if (fineModel->printRealVelocity){
         output_v << "    <Attribute Name=\"Real Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/realVelocity" << std::endl;     
@@ -1415,7 +1421,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Lagrange Multipliers
-    if (fineModel.printLagrangeMultipliers){
+    if (fineModel->printLagrangeMultipliers){
         output_v << "    <Attribute Name=\"Lagrange Multipliers\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/lagrangeMultiplers" << std::endl;     
@@ -1436,7 +1442,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Normal vector
-    if (fineModel.printInnerNormal){
+    if (fineModel->printInnerNormal){
         output_v << "    <Attribute Name=\"Normal Vector\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/normalVector" << std::endl;     
@@ -1458,7 +1464,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Mesh Velocity
-    if (fineModel.printMeshVelocity){
+    if (fineModel->printMeshVelocity){
         output_v << "    <Attribute Name=\"Mesh Velocity\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/meshVelocity" << std::endl;     
@@ -1479,7 +1485,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     };
 
     //Mesh Displacement
-    if (fineModel.printMeshDisplacement){
+    if (fineModel->printMeshDisplacement){
         output_v << "    <Attribute Name=\"Mesh Displacement\" Center=\"Node\" AttributeType=\"Vector\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 3\">" << std::endl;  
         output_v << "        " << s1 << ":/meshDisplacement" << std::endl;     
@@ -1502,7 +1508,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     };
 
     //Element correspondence
-    if (fineModel.printElementCorrespondence){
+    if (fineModel->printElementCorrespondence){
         output_v << "    <Attribute Name=\"Element\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesFine <<"\">" << std::endl;  
         output_v << "        " << s1 << ":/elementCorresp" << std::endl;     
@@ -1519,7 +1525,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Dist Function
-    if (fineModel.printDistFunction){
+    if (fineModel->printDistFunction){
         output_v << "    <Attribute Name=\"Dist Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesFine <<"\">" << std::endl;  
         output_v << "        " << s1 << ":/distfunction" << std::endl;     
@@ -1536,7 +1542,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Weight Function
-    if (fineModel.printEnergyWeightFunction){
+    if (fineModel->printEnergyWeightFunction){
         output_v << "    <Attribute Name=\"Weight Function\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\"1 "<< numNodesFine <<"\">" << std::endl;  
         output_v << "        " << s1 << ":/weightFunction" << std::endl;     
@@ -1553,7 +1559,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Pressure
-    if (fineModel.printPressure){
+    if (fineModel->printPressure){
         output_v << "    <Attribute Name=\"Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/pressure" << std::endl;     
@@ -1570,7 +1576,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Real Pressure
-    if (fineModel.printRealPressure){
+    if (fineModel->printRealPressure){
         output_v << "    <Attribute Name=\"Real Pressure\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/realPressure" << std::endl;     
@@ -1586,7 +1592,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
                  << "    </Attribute>" << std::endl;
     }
 
-    if (fineModel.printVorticity){
+    if (fineModel->printVorticity){
         output_v << "    <Attribute Name=\"Vorticity\" Center=\"Node\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numNodesFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/vorticity" << std::endl;     
@@ -1603,7 +1609,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     };
 
     //Process
-    if (fineModel.printProcess){
+    if (fineModel->printProcess){
         output_v << "    <Attribute Name=\"Process\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/process" << std::endl;
@@ -1619,7 +1625,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //WeightFunction2
-    if (fineModel.printEnergyWeightFunction){
+    if (fineModel->printEnergyWeightFunction){
         output_v << "    <Attribute Name=\"Weight Function\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/weightFunction2" << std::endl;     
@@ -1636,7 +1642,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Lines
-    if (fineModel.printLines){
+    if (fineModel->printLines){
         output_v << "    <Attribute Name=\"Lines\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/lines" << std::endl;     
@@ -1658,7 +1664,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     // Jacobian
-    if (fineModel.printJacobian){
+    if (fineModel->printJacobian){
         output_v << "    <Attribute Name=\"Jacobian\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"double\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/jacobian" << std::endl;     
@@ -1675,7 +1681,7 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
     }
 
     //Glue Zone
-    if (fineModel.printGlueZone){
+    if (fineModel->printGlueZone){
         output_v << "    <Attribute Name=\"Glue Zone\" Center=\"Cell\" AttributeType=\"Scalar\" >" << std::endl
                  << "      <DataItem Format=\"HDF\" NumberType=\"int\" Dimensions=\""<< numElemFine <<" 1\">" << std::endl;  
         output_v << "        " << s1 << ":/glueZone" << std::endl;     
@@ -1716,33 +1722,33 @@ void Arlequin<DIM,DEG>::printResultsFine(int step) {
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
 
-    coarseModel = coarse;
-    fineModel = fine;
+    coarseModel = &coarse;
+    fineModel = &fine;
 
     //Gets Fine and Coarse models basic information
-    numElemCoarse = coarseModel.elements_.size();
-    numElemFine   = fineModel.elements_.size();
-    numNodesCoarse = coarseModel.nodes_.size();
-    numNodesFine   = fineModel.nodes_.size();
+    numElemCoarse = coarseModel->elements_.size();
+    numElemFine   = fineModel->elements_.size();
+    numNodesCoarse = coarseModel->nodes_.size();
+    numNodesFine   = fineModel->nodes_.size();
  
-    nodesCoarse_  = &coarseModel.nodes_;
-    nodesFine_    = &fineModel.nodes_;
+    nodesCoarse_  = &coarseModel->nodes_;
+    nodesFine_    = &fineModel->nodes_;
 
-    elementsCoarse_ = coarseModel.elements_;
-    elementsFine_   = fineModel.elements_;
+    elementsCoarse_ = coarseModel->elements_;
+    elementsFine_   = fineModel->elements_;
  
-    boundaryCoarse_ = coarseModel.boundary_;
-    boundaryFine_   = fineModel.boundary_;
-    fProbType = fineModel.getProblemType();
+    boundaryCoarse_ = coarseModel->boundary_;
+    boundaryFine_   = fineModel->boundary_;
+    fProbType = fineModel->getProblemType();
 
     numBoundElemFine = boundaryFine_.size();
     numBoundElemCoarse = boundaryCoarse_.size();
 
-    domDecompCoarse = coarseModel.getDomainDecomposition();
-    domDecompFine = fineModel.getDomainDecomposition();
+    domDecompCoarse = coarseModel->getDomainDecomposition();
+    domDecompFine = fineModel->getDomainDecomposition();
     
-    numTimeSteps = fineModel.getNumberOfTimeSteps();
-    dTime = fineModel.getTimeStep();
+    numTimeSteps = fineModel->getNumberOfTimeSteps();
+    dTime = fineModel->getTimeStep();
 
     for (int i=0; i < numElemFine; i++){
         elementsFine_[i] -> setModel(true);
@@ -1770,8 +1776,8 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     //     (*nodesFine_)[i] -> setPreviousCoordinates(1,xn(1));
     // }
 
-    parametersFine = &fineModel.fluidParameters;
-    parametersCoarse = &coarseModel.fluidParameters;
+    parametersFine = &fineModel->fluidParameters;
+    parametersCoarse = &coarseModel->fluidParameters;
 
     // std::cout << "AA1 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
@@ -1894,8 +1900,8 @@ void Arlequin<DIM,DEG>::dragAndLiftCoefficients(std::ofstream& dragLift){
 
 
 
-        for (int i=0; i<fineModel.numberOfLines; i++){
-            if (boundaryFine_[jel] -> getBoundaryGroup() == fineModel.dragAndLiftBoundary[i]){
+        for (int i=0; i<fineModel->numberOfLines; i++){
+            if (boundaryFine_[jel] -> getBoundaryGroup() == fineModel->dragAndLiftBoundary[i]){
                 
                 int iel = boundaryFine_[jel] -> getElement();
                 // elementsFine_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
@@ -1949,6 +1955,7 @@ void Arlequin<DIM,DEG>::dragAndLiftCoefficients(std::ofstream& dragLift){
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
+    int nElNodes = coarseModel->nElNodes;
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
         for (int j = 0; j < nElNodes; j++){
@@ -1988,6 +1995,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDoub
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
+    int nElNodes = coarseModel->nElNodes;
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
         int dof_i = connec[i];
@@ -2009,6 +2017,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, 
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
+    int nElNodes = fineModel->nElNodes;
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
         for (int j = 0; j < nElNodes; j++){
@@ -2048,6 +2057,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble
 template<int DIM, int DEG>
 void Arlequin<DIM,DEG>::setMatVecValuesFineModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec){
 
+    int nElNodes = fineModel->nElNodes;
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
         int dof_i = numNodesCoarse + connec[i];
@@ -2076,7 +2086,8 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
     double &alpha_f = parametersFine -> getAlphaF();
     double &alpha_m = parametersFine -> getAlphaM();
     double &gamma = parametersFine -> getGamma();
-    
+    int nElNodes = fineModel->nElNodes;
+
     double integ = alpha_f * gamma * dTime;
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2157,6 +2168,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac
                                                               VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                                               VecInt &connec, VecInt &connecL){
 
+    int nElNodes = fineModel->nElNodes;                                                            
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
         for (int j = 0; j < nElNodes; j++){
@@ -2210,6 +2222,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
     double &alpha_m = parametersFine -> getAlphaM();
     double &gamma = parametersFine -> getGamma();
     double integ = alpha_f * gamma * dTime;
+    int nElNodes = fineModel->nElNodes; 
 
     //Disperse local contribution into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2293,6 +2306,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarsePoisson(MatrixDouble &Aj
                                                                 VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                                                 VecInt &connecC, VecInt &connecL){
 
+    int nElNodes = fineModel->nElNodes; 
     //Disperse local contribution into the global matrix
     for (int i = 0; i < nElNodes; i++){
         for (int j = 0; j < nElNodes; j++){
@@ -2336,46 +2350,94 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarsePoisson(MatrixDouble &Aj
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::assembleArlequinSystem(){
+void Arlequin<DIM,DEG>::assembleCoarseModel(){
 
     //Coarse mesh
     for (int jel = 0; jel < numElemCoarse; jel++){   
         if (domDecompCoarse.first[jel] == rank) {
+            int nLocDOF = coarseModel->nLocDOF;
             //Compute Element matrix
             MatrixDouble matrix(nLocDOF,nLocDOF);
             matrix.setZero();
             VecDouble rhs(nLocDOF);
             rhs.setZero();
 
-            elementsCoarse_[jel] -> getTransientNavierStokes(matrix,rhs);
-
-            setMatVecValuesCoarseModel(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
-
+            switch (fProbType){
+            case ENavierStokes:
+                elementsCoarse_[jel] -> getTransientNavierStokes(matrix,rhs);
+                setMatVecValuesCoarseModel(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
+                break;
+            case EPoisson:
+                elementsCoarse_[jel] -> getPoisson(matrix,rhs);
+                setMatVecValuesCoarseModelPoisson(matrix,rhs,elementsCoarse_[jel] -> getConnectivity());
+                break;
+            case EElastic:
+                PanicButton();
+                break;
+            
+            default:
+                PanicButton();
+                break;
+            }
         };
     };
+}
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::assembleFineModel(){
 
     //Fine mesh
     for (int jel = 0; jel < numElemFine; jel++){           
         if (domDecompFine.first[jel] == rank) {
+            int nLocDOF = fineModel->nLocDOF;
             //Compute Element matrix                    
             MatrixDouble matrix(nLocDOF,nLocDOF);
             matrix.setZero();
             VecDouble rhs(nLocDOF);
             rhs.setZero();
 
-            elementsFine_[jel] -> getTransientNavierStokes(matrix,rhs);
+            switch (fProbType){
+            case ENavierStokes:
+                elementsFine_[jel] -> getTransientNavierStokes(matrix,rhs);
+                setMatVecValuesFineModel(matrix,rhs,elementsFine_[jel] -> getConnectivity());
+                break;
+            case EPoisson:
+                elementsFine_[jel] -> getPoisson(matrix,rhs);
+                setMatVecValuesFineModelPoisson(matrix,rhs,elementsFine_[jel] -> getConnectivity());
+                break;
+            case EElastic:
+                PanicButton();
+                break;
             
-            setMatVecValuesFineModel(matrix,rhs,elementsFine_[jel] -> getConnectivity());
+            default:
+                PanicButton();
+                break;
+            }
+            
 
         };                
     };
-      
+
+}
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::assembleCouplingOperator(){
+
+}
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::assembleArlequinSystem(){
+
+    assembleCoarseModel();
+    assembleFineModel();
+    assembleCouplingOperator();
+
 
     //Lagrange Multipliers
     for (int l=0; l< numElemGlueZoneFine; l++){
         int jel = elementsGlueZoneFine_[l];
         if (domDecompFine.first[jel] == rank) {
-            
+            int nLocDOF = fineModel->nLocDOF;
             VecInt connecC;
             VecInt connec = elementsFine_[jel] -> getConnectivity();
             VecInt connecL = glueZoneFine_[l] -> getConnectivity();
@@ -2408,16 +2470,32 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
             if (fArlequinStab != ArlequinStabType::ENoStab){
                 //PSPG and SUPG stabilizations
                 elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
-            
                 //Arlequin Stabilization
                 elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2);
             }
             
             
-            setMatVecValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
+            switch (fProbType)
+            {
+            case ENavierStokes:
+            case EStokes:
+                setMatVecValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
                                            Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
                                            elementsFine_[jel] -> getConnectivity(),
                                            glueZoneFine_[l] -> getConnectivity());
+                break;
+            case EPoisson:
+                PanicButton();
+                break;
+            case EElastic:
+                PanicButton();
+                break;
+
+            default:
+                break;
+            }
+
+            
             
             //COAESE MESH
             //Counts number of coarse mesh intersecting the fine element
@@ -2457,9 +2535,9 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
             };
             //Compute the Lagrange Multiplier element matrix
             for (int ielem = 0; ielem < numElemIntersect; ielem++){
-                
+                int nElNodes = fineModel->nElNodes;
                 int iElemCoarse = diffElem[ielem];
-                double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
+                double pspg = 0;//(*elementsCoarse_[iElemCoarse]) -> getPSPG();
                 VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes);
 
                 connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
@@ -2513,6 +2591,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
     //Coarse mesh
     for (int jel = 0; jel < numElemCoarse; jel++){   
         if (domDecompCoarse.first[jel] == rank) {
+            int nElNodes = coarseModel->nElNodes;
             //Compute Element matrix
             MatrixDouble matrix(nElNodes,nElNodes);
             matrix.setZero();
@@ -2529,6 +2608,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
     //Fine mesh
     for (int jel = 0; jel < numElemFine; jel++){           
         if (domDecompFine.first[jel] == rank) {
+            int nElNodes = fineModel->nElNodes;
             //Compute Element matrix                    
             MatrixDouble matrix(nElNodes,nElNodes);
             matrix.setZero();
@@ -2547,7 +2627,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
     for (int l=0; l< numElemGlueZoneFine; l++){
         int jel = elementsGlueZoneFine_[l];
         if (domDecompFine.first[jel] == rank) {
-            
+            int nElNodes = fineModel->nElNodes;
             VecInt connecC;
             VecInt connec = elementsFine_[jel] -> getConnectivity();
             VecInt connecL = glueZoneFine_[l] -> getConnectivity();
@@ -2577,11 +2657,11 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
 
             // FINE MESH
             //Computes element matrix
-            elementsFine_[jel] -> getLagrangeMultipliersSameMeshPoisson(matC1, vecC1, vecU1);
+            elementsFine_[jel] -> getLagrangeMultipliersSameMesh(matC1, vecC1, vecU1);
             
             if (fArlequinStab != ArlequinStabType::ENoStab){
                 //Arlequin Stabilization
-                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMeshPoisson(matE1, matA1, vecE1);
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(matE1, matA1, vecE1);
             }
 
             
@@ -2624,9 +2704,9 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
             };
             //Compute the Lagrange Multiplier element matrix
             for (int ielem = 0; ielem < numElemIntersect; ielem++){
-                
+                int nElNodes = fineModel->nElNodes;
                 int iElemCoarse = diffElem[ielem];
-                double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
+                double pspg = 0;//(*elementsCoarse_[iElemCoarse]) -> getPSPG();
                 VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes);
 
                 connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
@@ -2650,10 +2730,10 @@ void Arlequin<DIM,DEG>::assembleArlequinSystemPoisson(){
                 vecE0.setZero();
                 matA0.setZero();
                 
-                elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
+                elementsFine_[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
 
                 if (fArlequinStab != ArlequinStabType::ENoStab){
-                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMeshPoisson(iElemCoarse,pspg,press_,velX_,velY_,matE0,matA0,vecE0);
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,matE0,matA0,vecE0);
                 } 
                 
                 MatrixDouble matE = matE1;
@@ -2718,25 +2798,20 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
     }
     // Computes the system size
     int sysSize;
-    if (fProbType == ProblemType::ENavierStokes){
+    if (fProbType == ProblemType::ENavierStokes || fProbType == ProblemType::EStokes){
         sysSize = (DIM+1)*numNodesCoarse + (DIM+1)*numNodesFine + DIM*numNodesGlueZoneFine;
     } else if (fProbType == ProblemType::EPoisson){
         sysSize = numNodesCoarse + numNodesFine + numNodesGlueZoneFine;
+    } else if (fProbType == ProblemType::EElastic){
+        sysSize = (numNodesCoarse + numNodesFine + numNodesGlueZoneFine)*DIM;
     }
-    double integScheme = fineModel.integScheme;
+    double integScheme = fineModel->integScheme;
 
     alpha_f = 1. / (1. + integScheme);
     alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
     gamma = 0.5 + alpha_m - alpha_f;
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
-
-        // if(iTimeStep == 10){
-        //     double dd = 0.75;
-        //     parametersFine -> setSpectralRadius(dd);
-        //     parametersCoarse -> setSpectralRadius(dd);
-        //     std::cout << "AQUI " << rank << std::endl;
-        // }
            
         parametersCoarse -> setTimeInstant(iTimeStep);
         parametersFine -> setTimeInstant(iTimeStep);
@@ -2804,10 +2879,10 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
                                 sysSize, sysSize,400,NULL,600,NULL,&A); 
             }
 
-            for (int i=0; i<sysSize; i++){
-                double val = 1.e-10;
-                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
-            }  
+            // for (int i=0; i<sysSize; i++){
+            //     double val = 1.e-10;
+            //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
+            // }  
             CHKERRQ(ierr);
             
             // Divides the matrix between the processes
@@ -2819,19 +2894,20 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
                         
-            // for (int i=0; i<sysSize; i++){
-            //     double val = 1.e-20;
-            //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
+            for (int i=0; i<sysSize; i++){
+                double val = 1.e-20;
+                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
                 
-            // }
+            }
             
 
             std::clock_t t3 = std::clock();
-            if (fProbType == ProblemType::ENavierStokes){
-                assembleArlequinSystem();
-            } else if (fProbType == ProblemType::EPoisson){
-                assembleArlequinSystemPoisson();
-            }
+            assembleArlequinSystem();
+            // if (fProbType == ProblemType::ENavierStokes){
+            //     assembleArlequinSystem();
+            // } else if (fProbType == ProblemType::EPoisson){
+            //     assembleArlequinSystemPoisson();
+            // }
             
             std::clock_t t4 = std::clock();
 
@@ -2854,7 +2930,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
  //  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
 
             // ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+            // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
             //Create KSP context to solve the linear system
             ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
@@ -2892,7 +2968,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
             
             ierr = KSPGetTotalIterations(ksp, &iterations);
-            
+
             std::clock_t t6 = std::clock();
 
             if (rank == 0) std::cout << "TIME " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << " " 
@@ -3053,6 +3129,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
 
         //Compute real velocity
         ShapeFunction<DIM,DEG>                       shapeQuad;
+        int nElNodes = fineModel->nElNodes; 
         VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
@@ -3109,7 +3186,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         if (parametersCoarse->getExactSolutionPoisson() && parametersFine->getExactSolutionPoisson()) computeErrorPoisson();
         
         // Compute and print drag and lift coefficients
-        if (fineModel.getComputeDragAndLift()){
+        if (fineModel->getComputeDragAndLift()){
             dragAndLiftCoefficients(dragLift);
         };
 
@@ -3158,7 +3235,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
     //Computes the Nodal correspondence between fine nodes and coarse elements
     // setNodalCorrespondenceFine();
 
-    double integScheme = fineModel.integScheme;
+    double integScheme = fineModel->integScheme;
 
     alpha_f = 1. / (1. + integScheme);
     alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
@@ -3456,10 +3533,10 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
 
             //Updates SUPG Parameter
             // for (int i = 0; i < numElemFine; i++){
-            //     elementsFine_[i] -> getParameterSUPG();
+            //     (*elementsFine_[i]) -> getParameterSUPG();
             // };   
             // for (int i = 0; i < numElemCoarse; i++){
-            //     elementsCoarse_[i] -> getParameterSUPG();
+            //     (*elementsCoarse_[i]) -> getParameterSUPG();
             // };
 
         };
@@ -3467,6 +3544,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         //Compute real velocity
         
         ShapeFunction<DIM,DEG> shapeQuad;
+        int nElNodes = fineModel->nElNodes; 
         VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
@@ -3521,7 +3599,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         };
         
         // Compute and print drag and lift coefficients
-        if (fineModel.getComputeDragAndLift()){
+        if (fineModel->getComputeDragAndLift()){
             dragAndLiftCoefficients(dragLift);
         };
 
@@ -3815,6 +3893,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
 
     //Compute real velocity
     ShapeFunction<DIM,DEG>                       shapeQuad;
+    int nElNodes = fineModel->nElNodes; 
     VecDouble phi_(nElNodes);
     
     for (int i = 0; i<numNodesFine; i++){
@@ -3879,8 +3958,8 @@ void Arlequin<DIM,DEG>::computeErrorPoisson() {
 
     VecDouble errorFine(3),errorCoarse(3),errorTotal(3);
 
-    coarseModel.computeError(errorCoarse);
-    fineModel.computeError(errorFine);
+    coarseModel->computeError(errorCoarse);
+    fineModel->computeError(errorFine);
 
     std::ofstream rprint("errorsArlequin.txt",std::ios::app);
     errorTotal = errorFine + errorCoarse;
