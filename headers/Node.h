@@ -224,6 +224,14 @@ public:
 
     };
 
+    int &GetNStateVariables() {return fNStateVariables;}
+    void SetSolution(int istate, double sol){
+        fSolution[istate] = sol;
+    }
+    double GetSolution(int istate){
+        return fSolution[istate];
+    }
+
     /// Clear all node object variables
     void clearVariables();
 
@@ -432,7 +440,14 @@ public:
     void setConstrains(int dir, int type, double value){
         constrainType[dir] = type;
         constrainValue[dir] = value;
-        velocity_[dir] = value;
+        velocity_[dir] = value; 
+        // fSolution[0] = value;
+        // previousVelocity_(dir) = value;
+    };
+    void SetBoundaryCondition(int dir, int type, double value){
+        constrainType[dir] = type;
+        constrainValue[dir] = value;
+        fSolution[dir] = value;
         // previousVelocity_(dir) = value;
     };
 

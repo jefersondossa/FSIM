@@ -456,6 +456,12 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                             elementsAux_.push_back(el);
                         }
                         break;
+                    case EElastic:
+                        {
+                            ElElasticity2D *el = new ElElasticity2D(index++,connect,this);
+                            elementsAux_.push_back(el);
+                        }
+                        break;
                     
                     default:
                         PanicButton();
@@ -622,7 +628,7 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
 
     // MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
     //                         numNodes, numNodes,
-    //                         1,NULL,1,NULL,&A); CHKERRQ(ierr);
+    //                         1,NULL,1,NULL,&A); 
     
     // // MatGetOrdering(A, MATORDERINGMETISND, IS *rperm, IS *cperm)
 
@@ -717,12 +723,31 @@ void Fluid<DIM,DEG>::setBoundaryConstrains(){
                 for (int j = 0; j < nBdNodes; j++) nodes_[connectB[j]] -> setConstrainsLaplace(k,1,0);
             };
         };
-
-        for (int k = 0; k < DIM; k++){
-            if ((boundary_[ibound] -> getConstrain(k) == 1) || (boundary_[ibound] -> getConstrain(k) == 3)){
-                for (int j = 0; j < nBdNodes; j++) 
-                    nodes_[connectB[j]] -> setConstrains(k,boundary_[ibound] -> getConstrain(k),
-                                                         boundary_[ibound] -> getConstrainValue(k));
+ 
+        for (int j = 0; j < nBdNodes; j++){
+            int nstate = nodes_[connectB[j]]->GetNStateVariables();
+            for (int istate = 0; istate < nstate; istate++){
+                if ((boundary_[ibound] -> getConstrain(istate) == 1) || (boundary_[ibound] -> getConstrain(istate) == 3)){
+                    // for (int j = 0; j < nBdNodes; j++) 
+                    //     nodes_[connectB[j]] -> setConstrains(k,boundary_[ibound] -> getConstrain(k),
+                    //                                         boundary_[ibound] -> getConstrainValue(k));
+            
+                    VecDouble exactSol(nstate);
+                    MatrixDouble gradExactSol(DIM,nstate);
+                    auto exact = fluidParameters.getExactSolution();
+                    if (exact){
+                        VecDouble x = nodes_[connectB[j]]->getCoordinates();
+                        exact(x,exactSol,gradExactSol);
+                        
+                            nodes_[connectB[j]] -> SetBoundaryCondition(istate,boundary_[ibound] -> getConstrain(istate),
+                                                                        exactSol[istate]);
+                    } else {
+                        nodes_[connectB[j]] -> SetBoundaryCondition(istate,boundary_[ibound] -> getConstrain(istate),
+                                                                boundary_[ibound] -> getConstrainValue(istate));
+                            
+                        
+                    }
+                }
             };
         }
     };
@@ -991,36 +1016,23 @@ void Fluid<DIM,DEG>::meshReading(Geometry* &geometry_, const std::string& inputF
         mirrorData << std::endl;
     };
 
-    setBoundaryConstrains();
-
-    //Print nodal constrains
-    for (int i=0; i<numNodes; i++){
-
-        mirrorData<< "Constrains " << i
-                  << " " << nodes_[i] -> getConstrains(0)
-                  << " " << nodes_[i] -> getConstrainValue(0)
-                  << " " << nodes_[i] -> getConstrains(1)
-                  << " " << nodes_[i] -> getConstrainValue(1) << std::endl;
-    }; 
-
-    for (int i=0; i<numBoundElems; i++){
-
-        mirrorData<< "Bound Elements " << i
-                  << " " << boundary_[i] -> getBoundaryGroup() << std::endl;
-    }; 
-
-    setBoundarySides();
- 
-    domainDecompositionMETIS();
-
-    iAux = 0;
-
-
     //Closing the file
     file.close();
     if (deleteFiles)
         system((rm + inputFile).c_str());
 
+
+}
+
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::SetUp() {
+
+
+    setBoundaryConstrains();
+
+    setBoundarySides();
+ 
+    domainDecompositionMETIS();
     // printResults(100);
 
 return;
@@ -1048,16 +1060,16 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
 
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                             2*numNodes, 2*numNodes,
-                            100,NULL,100,NULL,&A); CHKERRQ(ierr);
+                            100,NULL,100,NULL,&A); 
         
-        ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
+        ierr = MatGetOwnershipRange(A, &Istart, &Iend);
         
         //Create PETSc vectors
-        ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
-        ierr = VecSetSizes(b,PETSC_DECIDE,2*numNodes);CHKERRQ(ierr);
-        ierr = VecSetFromOptions(b);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
+        ierr = VecCreate(PETSC_COMM_WORLD,&b);
+        ierr = VecSetSizes(b,PETSC_DECIDE,2*numNodes);
+        ierr = VecSetFromOptions(b);
+        ierr = VecDuplicate(b,&u);
+        ierr = VecDuplicate(b,&All);
         
         //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
         
@@ -1112,19 +1124,19 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         };
         
         //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
         
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+        ierr = VecAssemblyBegin(b);
+        ierr = VecAssemblyEnd(b);
         
-        //MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        //MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+        //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);
         
         //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
         
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+        ierr = KSPSetOperators(ksp,A,A);
         
 #if defined(PETSC_HAVE_MUMPS)
         ierr = KSPSetType(ksp,KSPPREONLY);
@@ -1132,27 +1144,27 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         ierr = PCSetType(pc, PCLU);
 #endif
         
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+        ierr = KSPSetFromOptions(ksp);
         ierr = KSPSetUp(ksp);
         
         
         
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+        ierr = KSPSolve(ksp,b,u);
         
         ierr = KSPGetTotalIterations(ksp, &iterations);
 
         //std::cout << "GMRES Iterations = " << iterations << std::endl;
         
-        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
+        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);
         
         //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
+        ierr = VecScatterCreateToAll(u, &ctx, &All);
         
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
+        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
         
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
+        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
         
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        ierr = VecScatterDestroy(&ctx);
                 
         //Updates nodal values
         double u_ [2];
@@ -1160,10 +1172,10 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
 
         for (int i = 0; i < numNodes; ++i){
             Ii = 2*i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(All, Ione, &Ii, &val);
             u_[0] = val;
             Ii = 2*i+1;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(All, Ione, &Ii, &val);
             u_[1] = val;
             if (nodes_[i] -> getConstrainsLaplace(0) != 1) nodes_[i] -> incrementCoordinate(0,u_[0]);
             if (nodes_[i] -> getConstrainsLaplace(1) != 1) nodes_[i] -> incrementCoordinate(1,u_[1]);
@@ -1195,18 +1207,18 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         };
         
         //Computes the solution vector norm
-        ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+        ierr = VecNorm(u,NORM_2,&val);
         
         if(rank == 0){
             std::cout << "MESH MOVING - ERROR = " << val 
                       << std::scientific <<  std::endl;
         };
 
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
+        ierr = KSPDestroy(&ksp); 
+        ierr = VecDestroy(&b); 
+        ierr = VecDestroy(&u); 
+        ierr = VecDestroy(&All); 
+        ierr = MatDestroy(&A); 
 
         if(val <= tolerance){
             break;
@@ -1347,15 +1359,15 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                             2*numNodes+numNodes, 2*numNodes+numNodes,
                             100,NULL,300,NULL,&A); 
-        CHKERRQ(ierr);
+        
                 
         //Create PETSc vectors
-        ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
+        ierr = VecCreate(PETSC_COMM_WORLD,&b);
         ierr = VecSetSizes(b,PETSC_DECIDE,2*numNodes+numNodes);
-        CHKERRQ(ierr);
-        ierr = VecSetFromOptions(b);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
+        
+        ierr = VecSetFromOptions(b);
+        ierr = VecDuplicate(b,&u);
+        ierr = VecDuplicate(b,&All);
         
         //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
 
@@ -1428,35 +1440,35 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         }; //Elements
         
         //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
         
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+        ierr = VecAssemblyBegin(b);
+        ierr = VecAssemblyEnd(b);
         
-        // MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        // MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);
         
         //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
         
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+        ierr = KSPSetOperators(ksp,A,A);
         
 
 
 
     //     ierr = KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,
-    //                             500);CHKERRQ(ierr);
+    //                             500);
         
-    //     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+    //     ierr = KSPSetFromOptions(ksp);
         
     //     ierr = KSPGetPC(ksp,&pc);
         
     //     ierr = PCSetType(pc,PCJACOBI);
         
-    //     //ierr = KSPSetType(ksp,KSPBCGS); CHKERRQ(ierr);
+    //     //ierr = KSPSetType(ksp,KSPBCGS); 
 
-    //     // ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+    //     // ierr = KSPGMRESSetRestart(ksp, 10); 
         
     //        //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
         
@@ -1472,27 +1484,27 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         ierr = KSPGetPC(ksp,&pc);
         ierr = PCSetType(pc, PCLU);
 #endif          
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+        ierr = KSPSetFromOptions(ksp);
         ierr = KSPSetUp(ksp);
 
 
 
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+        ierr = KSPSolve(ksp,b,u);
 
         ierr = KSPGetTotalIterations(ksp, &iterations);            
 
-        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
+        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);
         
         //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        ierr = VecScatterCreateToAll(u, &ctx, &All);
+        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterDestroy(&ctx);
 
-        ierr = VecScatterCreateToAll(b, &ctx, &Allu);CHKERRQ(ierr);
-        ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        ierr = VecScatterCreateToAll(b, &ctx, &Allu);
+        ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterDestroy(&ctx);
         
         //Updates nodal values
         double p_;
@@ -1502,34 +1514,34 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         
         for (int i = 0; i < numNodes; ++i){
             Ii = 2*i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(All, Ione, &Ii, &val);
             nodes_[i] -> incrementAcceleration(0,val);
             nodes_[i] -> incrementVelocity(0,val*gamma*dTime);
 
-            ierr = VecGetValues(Allu, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(Allu, Ione, &Ii, &val);
             duNorm += val*val;
         
             Ii = 2*i+1;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(All, Ione, &Ii, &val);
             nodes_[i] -> incrementAcceleration(1,val);
             nodes_[i] -> incrementVelocity(1,val*gamma*dTime);
 
-            ierr = VecGetValues(Allu, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(Allu, Ione, &Ii, &val);
             duNorm += val*val;
         };
         
         for (int i = 0; i<numNodes; i++){
             Ii = 2*numNodes+i;
-            ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+            ierr = VecGetValues(All,Ione,&Ii,&val);
             p_ = val;
             nodes_[i] -> incrementPressure(p_);
 
-            ierr = VecGetValues(Allu,Ione,&Ii,&val);CHKERRQ(ierr);
+            ierr = VecGetValues(Allu,Ione,&Ii,&val);
             dpNorm += val*val;
         };
         
         //Computes the solution vector norm
-        //ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+        //ierr = VecNorm(u,NORM_2,&val);
 
         std::clock_t t2 = std::clock();
      
@@ -1543,12 +1555,12 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
                       << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
         };
                   
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = VecDestroy(&Allu); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
+        ierr = KSPDestroy(&ksp); 
+        ierr = VecDestroy(&b); 
+        ierr = VecDestroy(&u); 
+        ierr = VecDestroy(&All); 
+        ierr = VecDestroy(&Allu); 
+        ierr = MatDestroy(&A); 
 
         if (sqrt(duNorm) <= tolerance) {
             break;
@@ -1595,15 +1607,15 @@ int Fluid<DIM,DEG>::solvePoisson(){
                             numNodes, numNodes,100,NULL,300,NULL,&A); 
         }
 
-        CHKERRQ(ierr);
+        
                 
         //Create PETSc vectors
-        ierr = VecCreate(PETSC_COMM_WORLD,&b);CHKERRQ(ierr);
+        ierr = VecCreate(PETSC_COMM_WORLD,&b);
         ierr = VecSetSizes(b,PETSC_DECIDE,numNodes);
-        CHKERRQ(ierr);
-        ierr = VecSetFromOptions(b);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&u);CHKERRQ(ierr);
-        ierr = VecDuplicate(b,&All);CHKERRQ(ierr);
+        
+        ierr = VecSetFromOptions(b);
+        ierr = VecDuplicate(b,&u);
+        ierr = VecDuplicate(b,&All);
         
         //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
 
@@ -1637,19 +1649,19 @@ int Fluid<DIM,DEG>::solvePoisson(){
         }; //Elements
         
         //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
         
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+        ierr = VecAssemblyBegin(b);
+        ierr = VecAssemblyEnd(b);
         
-        // MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        // MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+        // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);
         
         //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
         
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+        ierr = KSPSetOperators(ksp,A,A);
         
         switch (fluidParameters.getSolverType())
         {
@@ -1678,22 +1690,22 @@ int Fluid<DIM,DEG>::solvePoisson(){
 
     //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
         
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+        ierr = KSPSolve(ksp,b,u);
 
         ierr = KSPGetTotalIterations(ksp, &iterations);            
 // 
-        // ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);CHKERRQ(ierr);
+        // ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);
         
         //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        ierr = VecScatterCreateToAll(u, &ctx, &All);
+        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterDestroy(&ctx);
 
-        ierr = VecScatterCreateToAll(b, &ctx, &Allu);CHKERRQ(ierr);
-        ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);CHKERRQ(ierr);
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        ierr = VecScatterCreateToAll(b, &ctx, &Allu);
+        ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);
+        ierr = VecScatterDestroy(&ctx);
         
         //Updates nodal values
         double p_;
@@ -1703,12 +1715,12 @@ int Fluid<DIM,DEG>::solvePoisson(){
         
         for (int i = 0; i < numNodes; ++i){
             Ii = i;
-            ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+            ierr = VecGetValues(All, Ione, &Ii, &val);
             nodes_[i] -> incrementVelocity(0,val);
         };
         
         //Computes the solution vector norm
-        //ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+        //ierr = VecNorm(u,NORM_2,&val);
 
         std::clock_t t2 = std::clock();
      
@@ -1718,15 +1730,15 @@ int Fluid<DIM,DEG>::solvePoisson(){
                       << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
         };
                   
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = VecDestroy(&Allu); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
+        ierr = KSPDestroy(&ksp); 
+        ierr = VecDestroy(&b); 
+        ierr = VecDestroy(&u); 
+        ierr = VecDestroy(&All); 
+        ierr = VecDestroy(&Allu); 
+        ierr = MatDestroy(&A); 
 
-        VecDouble errorsTotal(3);
-    if (fluidParameters.getExactSolutionPoisson()) computeError(errorsTotal);
+        VecDouble errorsTotal;
+    if (fluidParameters.getExactSolution()) computeError(errorsTotal);
 
     printResultsPoisson();
 
@@ -1814,10 +1826,15 @@ void Fluid<DIM,DEG>::printResultsPoisson(){
 
     if (printVelocity){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+                << "Name=\"Solution\" format=\"ascii\">" << std::endl;
         for (int i=0; i<numNodes; i++){
-            output_v << nodes_[i] -> getVelocity(0) << " "             
-                     << nodes_[i] -> getVelocity(1) << " " << 0. << std::endl;
+            if (nodes_[i]->GetNStateVariables()==1){
+                output_v << nodes_[i] -> GetSolution(0) << " "             
+                        << 0. << " " << 0. << std::endl;
+            } else if (nodes_[i]->GetNStateVariables()==2){
+                output_v << nodes_[i] -> GetSolution(0) << " "             
+                        << nodes_[i] -> GetSolution(1) << " " << 0. << std::endl;
+            }
         };
         output_v << "      </DataArray> " << std::endl;
     };
@@ -1877,20 +1894,19 @@ void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
 
     std::ofstream rprint("errors.txt",std::ios::app);
 
-    VecDouble errorsProcess(3);
-    errorsTotal.setZero();
-    errorsProcess.setZero();
-
+    VecDouble errorsProcess;
     // Loop over the elements
     for (int jel = numElem; jel--; ){
 
-        VecDouble errors(3);
+        VecDouble errors;
 
         elements_[jel] -> ComputeError(errors);
-        
+        errorsProcess.resize(errors.size());
         errorsProcess += errors;
 
     }; //Elements
+    errorsTotal.resize(errorsProcess.size());
+    errorsTotal.setZero();
 
     MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
 
@@ -1903,6 +1919,205 @@ void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
     }
     return;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::AllocateGlobalMatVec(){
+    
+    if (fluidParameters.getSolverType() == SolverType::ESuiteSparse){
+        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&A);
+    } else {
+        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                        numDOF, numDOF,100,NULL,300,NULL,&A); 
+    }
+
+    //Create PETSc vectors
+    ierr = VecCreate(PETSC_COMM_WORLD,&b);
+    ierr = VecSetSizes(b,PETSC_DECIDE,numDOF);
+    
+    ierr = VecSetFromOptions(b);
+    ierr = VecDuplicate(b,&u);
+    ierr = VecDuplicate(b,&All);
+}
+
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::AssembleGlobalMatVec(){
+   
+    for (int jel = 0; jel < numElem; jel++){   
+        if (part_elem[jel] == rank) {
+            //Compute Element matrix
+            VecInt connec = elements_[jel] -> getConnectivity();
+
+            MatrixDouble matrix(nLocDOF,nLocDOF);
+            matrix.setZero();
+            VecDouble rhs(nLocDOF);
+            rhs.setZero();
+
+            elements_[jel] -> ComputeElContribution(matrix,rhs);
+
+            //Disperse local contributions into the global matrix
+            //Matrix K and C
+            for (int i=0; i<nElNodes; i++){
+                int nstatei = nodes_[connec[i]]->GetNStateVariables();
+                for (int j=0; j<nElNodes; j++){
+                    int nstatej = nodes_[connec[j]]->GetNStateVariables();
+                    for (int istate = 0; istate < nstatei; istate++){
+                        for (int jstate = 0; jstate < nstatej; jstate++){
+                            int dof_i = nstatei * connec[i] + istate;
+                            int dof_j = nstatej * connec[j] + jstate; 
+                            MatSetValues(A, 1, &dof_i,1, &dof_j, &matrix(nstatei*i+istate,nstatej*j+jstate), ADD_VALUES);
+                        }
+                    }
+                };
+                
+                //Rhs vector
+                for (int istate = 0; istate < nstatei; istate++){
+                    int dof_i = nstatei * connec[i] + istate;
+                    VecSetValues(b, 1, &dof_i, &rhs[nstatei*i+istate], ADD_VALUES);
+                }
+            };
+        };
+    }; //Elements
+    
+    //Assemble matrices and vectors
+    ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+    ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+    
+    ierr = VecAssemblyBegin(b);
+    ierr = VecAssemblyEnd(b);
+
+    // MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+    // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
+}
+
+
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::SolveLinearSystem(){
+    //Create KSP context to solve the linear system
+    ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
+    
+    ierr = KSPSetOperators(ksp,A,A);
+    
+    switch (fluidParameters.getSolverType())
+    {
+    case SolverType::ESuiteSparse:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCLU);
+        PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+        break;
+    case SolverType::EMumps:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCLU);
+        PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+        break;
+
+    case SolverType::EIterative:
+        KSPSetType(ksp,KSPFGMRES);
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc,PCBJACOBI);
+        KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+        break;
+
+    default:
+        PanicButton();
+        break;
+    }
+
+    //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+    
+    ierr = KSPSolve(ksp,b,u);
+    ierr = KSPGetTotalIterations(ksp, &iterations); 
+
+    // ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);
+
+}
+
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::UpdateSolution(){
+    //Gathers the solution vector to the master process
+    ierr = VecScatterCreateToAll(u, &ctx, &All);
+    ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+    ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+    ierr = VecScatterDestroy(&ctx);
+
+    ierr = VecScatterCreateToAll(b, &ctx, &Allu);
+    ierr = VecScatterBegin(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);
+    ierr = VecScatterEnd(ctx, b, Allu, INSERT_VALUES, SCATTER_FORWARD);
+    ierr = VecScatterDestroy(&ctx);
+    
+    //Updates nodal values
+    double p_;
+    double duNorm = 0.;
+    double dpNorm = 0.;
+    Ione = 1;
+        
+    for (int i = 0; i < numNodes; ++i){
+        int nstate = nodes_[i]->GetNStateVariables();
+        for (int k = 0; k<nstate; k++){
+            Ii = nstate*i+k;
+            ierr = VecGetValues(All, Ione, &Ii, &val);
+            nodes_[i] -> SetSolution(k,val);
+        }
+    };
+    
+    //Computes the solution vector norm
+    //ierr = VecNorm(u,NORM_2,&val);
+}
+
+//------------------------------------------------------------------------------
+//-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::SolveFEMProblem(){
+    
+    int rank;
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+            
+    double duNorm=100.;
+                 
+    std::clock_t t1 = std::clock();
+    
+    AllocateGlobalMatVec();
+    
+    AssembleGlobalMatVec();
+
+    SolveLinearSystem();
+
+    UpdateSolution();
+        
+    std::clock_t t2 = std::clock();
+    
+    if(rank == 0){
+
+        std::cout << "  Time (s) = " << std::fixed
+                    << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
+    };
+                  
+    ierr = KSPDestroy(&ksp); 
+    ierr = VecDestroy(&b); 
+    ierr = VecDestroy(&u); 
+    ierr = VecDestroy(&All); 
+    ierr = VecDestroy(&Allu); 
+    ierr = MatDestroy(&A); 
+
+    VecDouble errorsTotal;
+    if (fluidParameters.getExactSolution()) computeError(errorsTotal);
+
+    printResultsPoisson();
+
+    
+};
 
 template class Fluid<2,1>;
 template class Fluid<2,2>;

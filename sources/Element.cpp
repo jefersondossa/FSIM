@@ -528,6 +528,22 @@ void Element::interpolateVelocity(int &index, VecDouble &u_, VecDouble &uPrev_) 
     return;
 }
 
+void Element::interpolateSolution(int &index, VecDouble &u_, VecDouble &uPrev_) {
+
+    u_.setZero();
+    uPrev_.setZero();
+
+    for (int i = fMesh->nElNodes; i--; ){
+        double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
+        int nstate = fMesh->getNodes()[connect_[i]]->GetNStateVariables();
+        for (int j = nstate; j--; ){
+            u_[j] += fMesh->getNodes()[connect_[i]] -> GetSolution(j) * shapeFi;
+            // uPrev_[j] += fMesh->getNodes()[connect_[i]] -> getPreviousVelocity(j) * shapeFi;
+        }
+    }
+    return;
+}
+
 //------------------------------------------------------------------------------
 //----------------------------INTERPOLATES VELOCITY-----------------------------
 //------------------------------------------------------------------------------
@@ -555,6 +571,27 @@ void Element::interpolateVelDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_
             for (int k = DIM; k--; ){
                 du_dx(k,j) += fMesh->getNodes()[connect_[i]] -> getVelocity(k) * dphi_dx(i,j);
                 duprev_dx(k,j) += fMesh->getNodes()[connect_[i]] -> getPreviousVelocity(k) * dphi_dx(i,j);
+            }
+        }
+    }
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+//----------------------------INTERPOLATES VELOCITY-----------------------------
+//------------------------------------------------------------------------------
+void Element::interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx) {
+
+    du_dx.setZero();
+    duprev_dx.setZero();
+    
+    for (int i = fMesh->nElNodes; i--; ){
+        int nstate = fMesh->getNodes()[connect_[i]]->GetNStateVariables();
+        for (int j = DIM; j--; ){
+            for (int k = nstate; k--; ){
+                du_dx(k,j) += fMesh->getNodes()[connect_[i]] -> GetSolution(k) * dphi_dx(i,j);
+                // duprev_dx(k,j) += fMesh->getNodes()[connect_[i]] -> getPreviousVelocity(k) * dphi_dx(i,j);
             }
         }
     }
@@ -1766,10 +1803,10 @@ void Element::getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG
 //------------------------------------------------------------------------------
 //-----------------------------RESIDUAL - RHS VECTOR----------------------------
 //------------------------------------------------------------------------------
-void Element::getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector, MatrixDouble &Hooke){
+void Element::getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector){
 
     VecDouble fieldForce = fMesh->getFluidParameters().getFieldForce();
-    auto force = fMesh->getFluidParameters().getForcingFunctionPoisson();
+    auto force = fMesh->getFluidParameters().getForcingFunction();
 
     //Velocity Derivatives
     MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
@@ -1779,6 +1816,18 @@ void Element::getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, d
     double WJ = weight_ * djac_ * intPointWeightFunction[index];
     MatrixDouble matD(3,2*fMesh->nElNodes);
     matD.setZero();
+
+    MatrixDouble Hooke(3,3);
+    Hooke.setZero();
+    // For EPT
+    double elastic_ = 10000.;
+    double poisson_ = 0.0;
+    double k = elastic_ / (1. - poisson_ * poisson_);
+    Hooke(0,0) = k;
+    Hooke(0,1) = k * poisson_;
+    Hooke(1,0) = k * poisson_;
+    Hooke(1,1) = k;
+    Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
     for (int j = 0; j < fMesh->nElNodes; j++){
         matD(0,DIM*j  ) = dphi_dx(j,0);
@@ -1845,11 +1894,23 @@ void Element::getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dp
 //------------------------------------------------------------------------------
 //---------------------------ELEMENT LAPLACIAN MATRIX---------------------------
 //------------------------------------------------------------------------------
-void Element::getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix, MatrixDouble &Hooke){
+void Element::getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix){
 
     double WJ = weight_ * djac_ * intPointWeightFunction[index];
     MatrixDouble matD(3,2*fMesh->nElNodes);
     matD.setZero();
+
+    MatrixDouble Hooke(3,3);
+    Hooke.setZero();
+    // For EPT
+    double elastic_ = 10000.;
+    double poisson_ = 0.0;
+    double k = elastic_ / (1. - poisson_ * poisson_);
+    Hooke(0,0) = k;
+    Hooke(0,1) = k * poisson_;
+    Hooke(1,0) = k * poisson_;
+    Hooke(1,1) = k;
+    Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
     for (int j = 0; j < fMesh->nElNodes; j++){
         matD(0,DIM*j  ) = dphi_dx(j,0);
@@ -2025,10 +2086,10 @@ void Element::getElasticity2D(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVect
         //Computes spatial derivatives
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-        getElemElasticity2DMatrix(index, weight_, djac_, dphi_dx, jacobianNRMatrix, hooke);
+        getElemElasticity2DMatrix(index, weight_, djac_, dphi_dx, jacobianNRMatrix);
         
         //Computes the RHS vector
-        getResidualVectorElasticity2D(index, dphi_dx, weight_, djac_, rhsVector, hooke); 
+        getResidualVectorElasticity2D(index, dphi_dx, weight_, djac_, rhsVector); 
         index++;        
     };  
     
@@ -2507,13 +2568,13 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
     double &alpha_m = fMesh->getFluidParameters().getAlphaM();
     double &k1 = fMesh->getFluidParameters().getArlequinK1();
 
-    auto force = fMesh->getFluidParameters().getForcingFunctionPoisson();
+    auto force = fMesh->getFluidParameters().getForcingFunction();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
         for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
         VecDouble xna_(DIM);
-        double forcingF;
+        VecDouble forcingF(1);
         for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
         if (force) force(xna_,forcingF);
 
@@ -2561,7 +2622,7 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
                 double LLx = 0.;
                 double LF = 0.;
                 for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(0,m);
-                for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * wna_ * forcingF;
+                for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * wna_ * forcingF[0];
                 
                 arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
             };    
@@ -3068,7 +3129,7 @@ void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tP
     // arlequinStab.clear();
     // arlequinStabVector.clear();
     // laplMatrix.clear();
-    auto force = fMesh->getFluidParameters().getForcingFunctionPoisson();
+    auto force = fMesh->getFluidParameters().getForcingFunction();
 
     MatrixDouble ainv_(DIM,DIM);
 
@@ -3079,7 +3140,7 @@ void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tP
         if ((intPointCorrespElem[index] == ielem)){
 
             VecDouble xna_(DIM);
-            double forcingF;
+            VecDouble forcingF(1);
             for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
             if (force) force(xna_,forcingF);
 
@@ -3157,7 +3218,7 @@ void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tP
                     double LLx = 0.;
                     double LF = 0.;
                     for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m);
-                    for (int m = DIM; m--; ) LF +=  dphiL_dx(i,m) * wna_ * forcingF;
+                    for (int m = DIM; m--; ) LF +=  dphiL_dx(i,m) * wna_ * forcingF[0];
 
                     arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
                 };

@@ -1,5 +1,49 @@
+//Analytic Solutions
 
-    // Defines the problem dimension
+auto exactSolPoisson = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    u[0] = x * x * (x-1.) * y * y * (y-1.);
+    gradU(0,0) = x*(3*x-2.)*(y-1.)*y*y;
+    gradU(1,0) = x*x*(x-1.)*y*(3.*y-2.);
+};
+
+auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    force[0] = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
+};
+
+auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    auto pi = M_PI;
+
+    u[0] = cos(pi*x)*sin(2.*pi*y);
+    u[1] = cos(pi*y)*sin(pi*x);
+    gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
+    gradU(1,0) = pi*cos(pi*x)*cos(pi*y);
+    gradU(0,1) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
+    gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
+};
+
+auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    double E=1.;
+    double poisson=0.3;
+    auto pi = M_PI;
+    force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
+    force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
+};
+
+
+
+
+
+   // Defines the problem dimension
     const int dimension = 2;
     const int degree = 2;
  
@@ -9,12 +53,12 @@
     typedef Arlequin<dimension,degree>      Arlequin;
     typedef FSInteraction<dimension,degree> FSI;
 
-for (int k = 3; k < 4; k++)
+for (int k = 4; k <5; k++)
 {
    
  
 //  Create problem variables 
-    FluidModel coarseModel(ProblemType::EPoisson), fineModel(ProblemType::EPoisson);  
+    FluidModel coarseModel(ProblemType::EElastic), fineModel(ProblemType::EElastic);  
     Arlequin   arlequinProblem; 
    //FSI        coupledProblem;  
 
@@ -30,22 +74,22 @@ for (int k = 3; k < 4; k++)
         Point* p3 = fluid1 -> addPoint({ 0.0, 1. },1.5,false);
         
         Line* l0 = fluid1 -> addLine({ p0, p1 });
-        Line* l1 = fluid1 -> addLine({ p1, p2 });
-        Line* l2 = fluid1 -> addLine({ p2, p3 });
+        Line* l1 = fluid1 -> addLine({ p2, p3 });
+        Line* l2 = fluid1 -> addLine({ p1, p2 });
         Line* l3 = fluid1 -> addLine({ p3, p0 }); 
  
-        LineLoop* ll0 = fluid1->addLineLoop({ l0, l1, l2, l3});
+        LineLoop* ll0 = fluid1->addLineLoop({ l0, l2, l1, l3});
  
         //std::vector<LineLoop*> lin = {ll0, ll1};
         PlaneSurface* s20 = fluid1 -> addPlaneSurface({ll0});
         
         double h1 = pow(2,k)+1; double v1 = pow(2,k)+1;
         fluid1 -> transfiniteLine({ l0 }, h1);
-        fluid1 -> transfiniteLine({ l1 }, v1);
-        fluid1 -> transfiniteLine({ l2 }, h1);
+        fluid1 -> transfiniteLine({ l2 }, v1);
+        fluid1 -> transfiniteLine({ l1 }, h1);
         fluid1 -> transfiniteLine({ l3 }, v1);
         
-        fluid1->transfiniteSurface({ s20 }, "Left", {p0,p1,p2,p3});
+        fluid1->transfiniteSurface({ s20 }, "Alternated", {p0,p1,p2,p3});
         
         fluid1 -> addBoundaryCondition("DIRICHLET", l0, {0.0}, {0.0}, {},  "GLOBAL");
         fluid1 -> addBoundaryCondition("DIRICHLET", l1, {0.0}, {0.0}, {},  "GLOBAL");
@@ -137,37 +181,34 @@ for (int k = 3; k < 4; k++)
 	MPI_Barrier(PETSC_COMM_WORLD);
 
 
-auto exactSol = [](const VecDouble &coord, double &u, VecDouble &gradU){
-    const auto &x=coord[0];
-    const auto &y=coord[1];
-    
-    //
-    u = x * x * (x-1.) * y * y * (y-1.);
-    gradU[0] = x*(3*x-2.)*(y-1.)*y*y;
-    gradU[1] = x*x*(x-1.)*y*(3.*y-2.);
-};
 
-auto forcingFunction = [](const VecDouble &coord, double &force){
-    const auto &x=coord[0];
-    const auto &y=coord[1];
-    
-    //
-    force = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
-
-};
-
-    coarseModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
-    coarseModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+    if (coarseModel.getProblemType() == EPoisson){
+        coarseModel.getFluidParameters().setForcingFunction(forcingFunctionPoisson);
+        coarseModel.getFluidParameters().setExactSolution(exactSolPoisson);
+    } else if (coarseModel.getProblemType() == EElastic){
+        coarseModel.getFluidParameters().setForcingFunction(forcingFunctionElasticity2D);
+        coarseModel.getFluidParameters().setExactSolution(exactSolElasticity2D);
+    }
     coarseModel.getFluidParameters().setSolver(SolverType::ESuiteSparse);
-    fineModel.getFluidParameters().setForcingFunctionPoisson(forcingFunction);
-    fineModel.getFluidParameters().setExactSolutionPoisson(exactSol);
+
+
+    if (fineModel.getProblemType() == EPoisson){
+        fineModel.getFluidParameters().setForcingFunction(forcingFunctionPoisson);
+        fineModel.getFluidParameters().setExactSolution(exactSolPoisson);
+    } else if (fineModel.getProblemType() == EElastic){
+        fineModel.getFluidParameters().setForcingFunction(forcingFunctionElasticity2D);
+        fineModel.getFluidParameters().setExactSolution(exactSolElasticity2D);
+    }
     fineModel.getFluidParameters().setSolver(SolverType::ESuiteSparse);
 
-    // coarseModel.solvePoisson();
+    coarseModel.SetUp();
+    fineModel.SetUp();
+
+    coarseModel.SolveFEMProblem();
 
     // arlequinProblem.setArlequinStabilization(ArlequinStabType::EOption2);
-    arlequinProblem.setArlequinStabilization(ArlequinStabType::ENoStab);
-    arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
+    // arlequinProblem.setArlequinStabilization(ArlequinStabType::ENoStab);
+    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
 
-    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
+    // arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
 }           

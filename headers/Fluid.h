@@ -71,7 +71,13 @@ private:
     bool computeDragAndLift;
     int iTimeStep;
     Mat               A;
-    
+    Vec               b, u, All, Allu;
+    PetscErrorCode    ierr;
+    PetscInt          Ii, Ione, iterations;
+    KSP               ksp;
+    PC                pc;
+    VecScatter        ctx;
+    PetscScalar       val;
 
 public:
     std::vector<int> dragAndLiftBoundary;
@@ -109,6 +115,8 @@ public:
     }
 
     Fluid(ProblemType ptype){
+        fOrder=DEG;
+        fDimension = DIM;
         fProbType = ptype;
         nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
         nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
@@ -137,6 +145,7 @@ public:
     ProblemType &getProblemType(){return fProbType;}
 
     void meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles);
+    void SetUp();
 
     void readInitialValues(const std::string& inputPrev, const std::string& inputCurr);
     void readInputFile(const std::string& inputFile, std::ofstream& mirrorData);
@@ -248,6 +257,13 @@ public:
     }
 
     void computeError(VecDouble &errorsTotal);
+
+    void SolveFEMProblem();
+
+    void AllocateGlobalMatVec();
+    void AssembleGlobalMatVec();
+    void SolveLinearSystem();
+    void UpdateSolution();
 };
 
 

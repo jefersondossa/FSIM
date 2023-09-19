@@ -13,7 +13,7 @@ public:
     CompMesh() = default;
 
     int fDimension = 2;
-    int fOrder = 2;
+    int fOrder = 1;
     int nBdNodes = 0;
     int nElNodes = 0;
     int nLocDOF = 0;

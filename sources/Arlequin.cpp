@@ -3271,7 +3271,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             (*nodesCoarse_)[i] -> setPressureArlequin((*nodesCoarse_)[i] -> getPressure());
         };
 
-        if (parametersCoarse->getExactSolutionPoisson() && parametersFine->getExactSolutionPoisson()) computeErrorPoisson();
+        if (parametersCoarse->getExactSolution() && parametersFine->getExactSolution()) computeErrorPoisson();
         
         // Compute and print drag and lift coefficients
         if (fineModel->getComputeDragAndLift()){

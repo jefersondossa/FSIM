@@ -141,6 +141,7 @@ public:
     /// Interpolate velocity
     /// @param int integration point index @param velocity @param previous time step velocity
     void interpolateVelocity(int &index, VecDouble &u_, VecDouble &uPrev_);
+    void interpolateSolution(int &index, VecDouble &u_, VecDouble &uPrev_);
     
     /// Interpolate Coordinates
     /// @param int integration point index @param coordinates @param previous time step coordinates
@@ -158,6 +159,7 @@ public:
     /// @param double** shape function spatial derivatives @param double** velocity derivatives
     /// @param double** previous time step velocity derivatives
     void interpolateVelDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx);
+    void interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx);
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
@@ -342,7 +344,7 @@ public:
 
     /// Compute and store the element matrix for the Laplace/Poisson problem
     void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
-    void getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix, MatrixDouble &Hooke);
+    void getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
@@ -353,7 +355,7 @@ public:
     ///Compute and store the residual vector for the incompressible flow problem
     /// @param int integration point index
     void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
-    void getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector, MatrixDouble &Hooke);
+    void getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector);
 
     /// Compute and store the residual vector for the Laplace/Poisson problem
     void getResidualVectorLaplace(VecDouble &rhsVector);

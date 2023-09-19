@@ -3,52 +3,95 @@
 void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
 
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    MatrixDouble matD(3,2*Mesh()->nElNodes);
+    matD.setZero();
+    int DIM = Mesh()->Dimension();
 
-    for (int i = Mesh()->nElNodes; i-- ; ){       
-        for (int j = Mesh()->nElNodes; j-- ; ){            
-            for (int k = Mesh()->Dimension(); k--;  ){
-                //Diffusion matrix
-                double K = dphi_dx(i,k) * dphi_dx(j,k);
-                Stiffness(i,j) += K * WJ;
-            }
-        };
-    };
+    MatrixDouble Hooke(3,3);
+    Hooke.setZero();
+    // For EPT
+    double elastic_ = 1.;
+    double poisson_ = 0.3;
+    double k = elastic_ / (1. - poisson_ * poisson_);
+    Hooke(0,0) = k;
+    Hooke(0,1) = k * poisson_;
+    Hooke(1,0) = k * poisson_;
+    Hooke(1,1) = k;
+    Hooke(2,2) = k * (1. - poisson_) * 0.5;
+
+    for (int j = 0; j < Mesh()->nElNodes; j++){
+        matD(0,DIM*j  ) = dphi_dx(j,0);
+        matD(1,DIM*j+1) = dphi_dx(j,1);
+        matD(2,DIM*j  ) = dphi_dx(j,1);
+        matD(2,DIM*j+1) = dphi_dx(j,0);
+    }
+    
+    Stiffness += matD.transpose() * Hooke * matD * WJ;
 
 
+    // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
 
 void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
 
     VecDouble fieldForce = Mesh()->getFluidParameters().getFieldForce();
-    auto force = Mesh()->getFluidParameters().getForcingFunctionPoisson();
-    int dim = Mesh()->Dimension();
+    auto force = Mesh()->getFluidParameters().getForcingFunction();
+    int DIM = Mesh()->Dimension();
 
     //Velocity Derivatives
-    MatrixDouble du_dx(dim,dim), duprev_dx(dim,dim), duna_dx(dim,dim);
-    interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
-    duna_dx = du_dx;
+    MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM);
+    interpolateSolDerivatives(dphi_dx, du_dx, duprev_dx);
 
-    double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);
+    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    MatrixDouble matD(3,2*Mesh()->nElNodes);
+    matD.setZero();
 
-    double forcingF;
+    MatrixDouble Hooke(3,3);
+    Hooke.setZero();
+    // For EPT
+    double elastic_ = 1.;
+    double poisson_ = 0.3;
+    double k = elastic_ / (1. - poisson_ * poisson_);
+    Hooke(0,0) = k;
+    Hooke(0,1) = k * poisson_;
+    Hooke(1,0) = k * poisson_;
+    Hooke(1,1) = k;
+    Hooke(2,2) = k * (1. - poisson_) * 0.5;
+
+    for (int j = 0; j < Mesh()->nElNodes; j++){
+        matD(0,DIM*j  ) = dphi_dx(j,0);
+        matD(1,DIM*j+1) = dphi_dx(j,1);
+        matD(2,DIM*j  ) = dphi_dx(j,1);
+        matD(2,DIM*j+1) = dphi_dx(j,0);
+    }
+    
+    VecDouble strain(3);
+    strain.setZero();
+    strain[0] = du_dx(0,0);
+    strain[1] = du_dx(1,1);
+    strain[2] = du_dx(0,1)+du_dx(1,0);
+
+    Rhs -= matD.transpose() * Hooke * strain * WJ;
+
+    VecDouble forcingF(2);
     VecDouble x_ = getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
     for (int i = Mesh()->nElNodes; i--; ){
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
-
-        //Viscosity
-        double K = 0.;
-        for (int l=dim; l--; ) K += dphi_dx(i,l) * duna_dx(0,l);
-
         //External force
-        double F = (fieldForce[0] + forcingF) * shapeFi;
-        Rhs[i] += (-K + F) * WJ;
+        double Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
+        double Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
+        Rhs[2*i  ] += Fx * WJ;
+        Rhs[2*i+1] += Fy * WJ;
     };
+
+    
 };
 
 void ElElasticity2D::ComputeError(VecDouble &errors){
     int index = 0;
+    errors.resize(3);
     errors.setZero();
     int DIM = Mesh()->Dimension();
     int DEG = Mesh()->GetDefaultOrder();
@@ -61,7 +104,7 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
     VecDouble xsi(DIM);
     double weight_;
 
-    auto exactSol = Mesh()->getFluidParameters().getExactSolutionPoisson();
+    auto exactSol = Mesh()->getFluidParameters().getExactSolution();
     if (!exactSol) PanicButton();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
@@ -80,17 +123,16 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
         
         VecDouble uMEF_(DIM), uPrev_(DIM);
-        interpolateVelocity(index, uMEF_, uPrev_);
+        interpolateSolution(index, uMEF_, uPrev_);
         MatrixDouble du_dxMEF(DIM,DIM), duprev_dx(DIM,DIM);
-        interpolateVelDerivatives(dphi_dx, du_dxMEF, duprev_dx);
+        interpolateSolDerivatives(dphi_dx, du_dxMEF, duprev_dx);
         
-        double u_;
-        VecDouble gradU(DIM);
+        VecDouble u_(DIM);
+        MatrixDouble gradU(DIM,DIM);
 
-        VecDouble xna_ = getIntegPointCoordinatesValue(index);
+        VecDouble x_ = getIntegPointCoordinatesValue(index);
         
-        exactSol(xna_,u_,gradU);
-
+        exactSol(x_,u_,gradU);
 
         //Consider Arlequin weight function
         u_ *= getIntegPointWeightFunction(index);
@@ -98,13 +140,16 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
         uMEF_ *= getIntegPointWeightFunction(index);
         du_dxMEF *= getIntegPointWeightFunction(index);
 
-        //L2 state variable
-        errors[0] += (u_-uMEF_[0])*(u_-uMEF_[0]) * weight_ * djac_ ;
+        //L2 displacement
+        errors[0] += ((u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) + (u_[1]-uMEF_[1])*(u_[1]-uMEF_[1]))
+                      * weight_ * djac_ ;
         
-        //Semi H1 state variable
-        for (int m = DIM; m--; ){
-            errors[1] += (gradU[m]-du_dxMEF(0,m))* (gradU[m]-du_dxMEF(0,m)) * weight_ * djac_;
-        }
+
+        std::cout << "Stress and Energy norms not implemented yet\n";
+        // //Semi H1 state variable
+        // for (int m = DIM; m--; ){
+        //     errors[1] += (gradU[m]-du_dxMEF(0,m))* (gradU[m]-du_dxMEF(0,m)) * weight_ * djac_;
+        // }
 
         index++;        
     }; 
@@ -116,14 +161,17 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
 void ElElasticity2D::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
     for (int i = Mesh()->nElNodes; i--; ){
-        if ((Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
-            (Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
-            for (int j = Mesh()->nElNodes; j--; ){
-                Stiffness(i,j) = 0.;
-                Stiffness(j,i) = 0.;
-            };
-            Stiffness(i,i) = 1.;
-            Rhs[i] = 0.;
+        int nstate = Mesh()->getNodes()[getConnectivity()[i]]->GetNStateVariables();
+        for (int istate = 0; istate < nstate; istate++){
+            if ((Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(istate) == 1) ||
+                (Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(istate) == 3))  {
+                for (int j = Mesh()->nElNodes*nstate; j--; ){
+                    Stiffness(nstate*i+istate,j) = 0.;
+                    Stiffness(j,nstate*i+istate) = 0.;
+                };
+                Stiffness(nstate*i+istate,nstate*i+istate) = 1.;
+                Rhs[nstate*i+istate] = Mesh()->getNodes()[getConnectivity()[i]]->GetSolution(istate);
+            }
         }
     }
 

@@ -21,7 +21,7 @@ void ElStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weigh
 void ElStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
 
     VecDouble fieldForce = Mesh()->getFluidParameters().getFieldForce();
-    auto force = Mesh()->getFluidParameters().getForcingFunctionPoisson();
+    auto force = Mesh()->getFluidParameters().getForcingFunction();
     int dim = Mesh()->Dimension();
 
     //Velocity Derivatives
@@ -31,7 +31,7 @@ void ElStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight
 
     double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);
 
-    double forcingF;
+    VecDouble forcingF(1);
     VecDouble x_ = getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
@@ -43,7 +43,7 @@ void ElStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight
         for (int l=dim; l--; ) K += dphi_dx(i,l) * duna_dx(0,l);
 
         //External force
-        double F = (fieldForce[0] + forcingF) * shapeFi;
+        double F = (fieldForce[0] + forcingF[0]) * shapeFi;
         Rhs[i] += (-K + F) * WJ;
     };
 };
@@ -54,7 +54,7 @@ void ElStokes::ComputeError(VecDouble &errors){
 }
 
 void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
-
+    PanicButton();
     for (int i = Mesh()->nElNodes; i--; ){
         if ((Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
             (Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 3))  {

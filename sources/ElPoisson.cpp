@@ -20,17 +20,16 @@ void ElPoisson::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weig
 void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
 
     VecDouble fieldForce = Mesh()->getFluidParameters().getFieldForce();
-    auto force = Mesh()->getFluidParameters().getForcingFunctionPoisson();
+    auto force = Mesh()->getFluidParameters().getForcingFunction();
     int dim = Mesh()->Dimension();
 
     //Velocity Derivatives
-    MatrixDouble du_dx(dim,dim), duprev_dx(dim,dim), duna_dx(dim,dim);
+    MatrixDouble du_dx(dim,dim), duprev_dx(dim,dim);
     interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
-    duna_dx = du_dx;
 
     double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);
 
-    double forcingF;
+    VecDouble forcingF(1);
     VecDouble x_ = getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
@@ -39,16 +38,17 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
 
         //Viscosity
         double K = 0.;
-        for (int l=dim; l--; ) K += dphi_dx(i,l) * duna_dx(0,l);
+        for (int l=dim; l--; ) K += dphi_dx(i,l) * du_dx(0,l);
 
         //External force
-        double F = (fieldForce[0] + forcingF) * shapeFi;
+        double F = (fieldForce[0] + forcingF[0]) * shapeFi;
         Rhs[i] += (-K + F) * WJ;
     };
 };
 
 void ElPoisson::ComputeError(VecDouble &errors){
     int index = 0;
+    errors.resize(3);
     errors.setZero();
     int DIM = Mesh()->Dimension();
     int DEG = Mesh()->GetDefaultOrder();
@@ -61,7 +61,7 @@ void ElPoisson::ComputeError(VecDouble &errors){
     VecDouble xsi(DIM);
     double weight_;
 
-    auto exactSol = Mesh()->getFluidParameters().getExactSolutionPoisson();
+    auto exactSol = Mesh()->getFluidParameters().getExactSolution();
     if (!exactSol) PanicButton();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
@@ -84,8 +84,8 @@ void ElPoisson::ComputeError(VecDouble &errors){
         MatrixDouble du_dxMEF(DIM,DIM), duprev_dx(DIM,DIM);
         interpolateVelDerivatives(dphi_dx, du_dxMEF, duprev_dx);
         
-        double u_;
-        VecDouble gradU(DIM);
+        VecDouble u_(1);
+        MatrixDouble gradU(DIM,1);
 
         VecDouble xna_ = getIntegPointCoordinatesValue(index);
         
@@ -99,11 +99,11 @@ void ElPoisson::ComputeError(VecDouble &errors){
         du_dxMEF *= getIntegPointWeightFunction(index);
 
         //L2 state variable
-        errors[0] += (u_-uMEF_[0])*(u_-uMEF_[0]) * weight_ * djac_ ;
+        errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * weight_ * djac_ ;
         
         //Semi H1 state variable
         for (int m = DIM; m--; ){
-            errors[1] += (gradU[m]-du_dxMEF(0,m))* (gradU[m]-du_dxMEF(0,m)) * weight_ * djac_;
+            errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * weight_ * djac_;
         }
 
         index++;        
@@ -123,8 +123,9 @@ void ElPoisson::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
                 Stiffness(j,i) = 0.;
             };
             Stiffness(i,i) = 1.;
-            Rhs[i] = 0.;
+            Rhs[i] = Mesh()->getNodes()[getConnectivity()[i]]->GetSolution(0);
         }
     }
+    // std::cout<<"Rhs -" << Rhs<<std::endl;
 
 }
