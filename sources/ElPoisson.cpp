@@ -19,8 +19,8 @@ void ElPoisson::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weig
 
 void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
 
-    VecDouble fieldForce = Mesh()->getFluidParameters().getFieldForce();
-    auto force = Mesh()->getFluidParameters().getForcingFunction();
+    VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
+    auto force = Mesh()->getProblemParameters().getForcingFunction();
     int dim = Mesh()->Dimension();
 
     //Velocity Derivatives
@@ -61,7 +61,7 @@ void ElPoisson::ComputeError(VecDouble &errors){
     VecDouble xsi(DIM);
     double weight_;
 
-    auto exactSol = Mesh()->getFluidParameters().getExactSolution();
+    auto exactSol = Mesh()->getProblemParameters().getExactSolution();
     if (!exactSol) PanicButton();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
@@ -116,14 +116,14 @@ void ElPoisson::ComputeError(VecDouble &errors){
 void ElPoisson::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
     for (int i = Mesh()->nElNodes; i--; ){
-        if ((Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
-            (Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
+        if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
+            (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
             for (int j = Mesh()->nElNodes; j--; ){
                 Stiffness(i,j) = 0.;
                 Stiffness(j,i) = 0.;
             };
             Stiffness(i,i) = 1.;
-            Rhs[i] = Mesh()->getNodes()[getConnectivity()[i]]->GetSolution(0);
+            Rhs[i] = Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(0);
         }
     }
     // std::cout<<"Rhs -" << Rhs<<std::endl;

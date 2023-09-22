@@ -49,7 +49,7 @@ double NeumannBoundaryCondition::getForce(const int& dof) const
 //         values[i] = 0.0;
     
 //     const int numberOfNodes = element_->getNumberOfNodes();
-//     const std::vector<NodeMesh*>& nodes = element_->getNodes();
+//     const std::vector<NodeMesh*>& nodes = element_->NodeVec();
     
 //     const int numberOfIntegrationPoints = element_->getNumberOfIntegrationPoints();
 //     double *xsi, *weight;
@@ -118,7 +118,7 @@ double NeumannBoundaryCondition::getForce(const int& dof) const
 //         values[i] = 0.0;
     
 //     const int numberOfNodes = element_->getNumberOfNodes();
-//     const std::vector<NodeMesh*> nodes = element_->getNodes();
+//     const std::vector<NodeMesh*> nodes = element_->NodeVec();
     
 //     const int numberOfIntegrationPoints = element_->getNumberOfIntegrationPoints();
 //     double *xsi1, *xsi2, *weight;

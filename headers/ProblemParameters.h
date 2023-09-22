@@ -21,16 +21,15 @@ enum SolverType{EMumps, ESuiteSparse, EIterative};
 
 /// Defines the fluid boundary shape functions
 
-class FluidParameters {
+class ProblemParameters {
 public:
 
     /// Sets the element viscosity
     /// @param double element viscosity
-    void setViscosity(double& visc){viscosity = visc;}
-
-    /// Sets the element density
-    /// @param double element density
-    void setDensity(double& dens){density = dens;}
+    void SetIncompressibleFluid(double& visc,double &dens){
+        fViscosity = visc;
+        fDensity = dens;
+    }
 
     /// Sets the time step size
     /// @param double time step size
@@ -45,17 +44,13 @@ public:
         alpha_f = 1. / (1. + spectralRadius);
         alpha_m = 0.5 * (3. - spectralRadius) / (1. + spectralRadius);
         gamma = 0.5 + alpha_m - alpha_f;
-
-        // alpha_f = 1.;
-        // alpha_m = 1.;
-        // gamma = 1.;
     }
 
     /// Sets the domain force vector
-    /// @param double* domain force vector
-    void setFieldForce(VecDouble &ff){
-        fieldForce.resize(3); 
-        for(int i=0; i<3; i++) fieldForce[i] = ff[i];
+    /// @param VecDouble domain force vector
+    void SetFieldForce(VecDouble &ff){
+        fFieldForce.resize(3); 
+        for(int i=0; i<3; i++) fFieldForce[i] = ff[i];
     }
 
     void setArlequinOperatorConstants(double& k_1, double& k_2){
@@ -63,28 +58,31 @@ public:
         k2 = k_2;
     }
 
-    void setTimeInstant(int& it){timeInstant = it;}
+    void setTimeInstant(int& it){
+        timeInstant = it;
+    }
+
     /// Sets the undisturbed velocity field
     /// @param double* undisturbed velocity field
-    void setVelocityInf(VecDouble &u){
-        velocityInf.resize(3); 
-        for(int i=0; i<3; i++) velocityInf[i] = u[i];
+    void SetInitialSol(VecDouble &u){
+        fInitialSol.resize(3); 
+        for(int i=0; i<3; i++) fInitialSol[i] = u[i];
     }
 
     /// Gets the undisturbed velocity field
     /// @return undisturbed velocity field
-    VecDouble &getVelocityInf() {return velocityInf;}
+    VecDouble &GetInitialSol() {return fInitialSol;}
 
     double& getTimeStep() {return timeStepSize;}
-    double& getDensity() {return density;}
-    double& getViscosity() {return viscosity;}
+    double& GetDensity() {return fDensity;}
+    double& GetViscosity() {return fViscosity;}
     double& getAlphaM() {return alpha_m;}
     double& getAlphaF() {return alpha_f;}
     double& getGamma() {return gamma;}
     
     /// Gets the domain force vector
     /// @return domain force vector
-    VecDouble &getFieldForce() {return fieldForce;}
+    VecDouble &GetFieldForce() {return fFieldForce;}
 
     double& getArlequinK1() {return k1;}
     double& getArlequinK2() {return k2;}
@@ -106,21 +104,6 @@ public:
     std::function<void (const VecDouble &coord, VecDouble &force)> &getForcingFunction(){
         return forceFunction;
     }
-    // void setExactSolutionPoisson(std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> exSol){
-    //     exactSolutionPoisson = exSol;
-    // }
-
-    // std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> &getExactSolutionPoisson(){
-    //     return exactSolutionPoisson;
-    // }
-
-    // void setForcingFunctionPoisson(std::function<void (const VecDouble &coord, double &force)> ffunction){
-    //     forceFunctionPoisson = ffunction;
-    // }
-
-    // std::function<void (const VecDouble &coord, double &force)> &getForcingFunctionPoisson(){
-    //     return forceFunctionPoisson;
-    // }
 
     void setSolver(SolverType st){
         sType = st;
@@ -130,25 +113,23 @@ public:
     }
 
 private:
-    double viscosity;
-    double density;
+    double fViscosity;
+    double fDensity;
     double timeStepSize;
     double spectralRadius;
     double alpha_m;
     double alpha_f;
     double gamma;
-    VecDouble fieldForce;
+    VecDouble fFieldForce;
     double k1, k2;
     double pi = M_PI;
-    VecDouble velocityInf;
+    VecDouble fInitialSol;
 
     int timeInstant;
     SolverType sType = SolverType::ESuiteSparse;
     
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exactSolution = 0; 
     std::function<void (const VecDouble &coord, VecDouble &force)> forceFunction = 0; 
-    // std::function<void (const VecDouble &coord, double &u, VecDouble &gradU)> exactSolutionPoisson = 0; 
-    // std::function<void (const VecDouble &coord, double &force)> forceFunctionPoisson = 0; 
 };
 
 #endif

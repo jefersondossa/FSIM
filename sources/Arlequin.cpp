@@ -1777,8 +1777,8 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
     //     (*nodesFine_)[i] -> setPreviousCoordinates(1,xn(1));
     // }
 
-    parametersFine = &fineModel->fluidParameters;
-    parametersCoarse = &coarseModel->fluidParameters;
+    parametersFine = &fineModel->fProbParameters;
+    parametersCoarse = &coarseModel->fProbParameters;
 
     // std::cout << "AA1 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);

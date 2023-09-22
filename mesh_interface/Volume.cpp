@@ -45,7 +45,7 @@ std::vector<ElementMesh*> Volume::getElements()
 	return elements_;
 }
 
-std::vector<NodeMesh*> Volume::getNodes()
+std::vector<NodeMesh*> Volume::NodeVec()
 {
 	return nodes_;
 }

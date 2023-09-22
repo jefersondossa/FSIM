@@ -26,7 +26,7 @@ public:
 
 	std::vector<ElementMesh*> getElements();
 
-	std::vector<NodeMesh*> getNodes();
+	std::vector<NodeMesh*> NodeVec();
 
 	void setMaterial(Material* material);
 

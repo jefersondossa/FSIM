@@ -16,8 +16,9 @@
 
 #include "Node.h"
 #include "BoundaryIntegrationQuadrature.h"
-#include "FluidParameters.h"
+#include "ProblemParameters.h"
 #include "PanicButton.h"
+
 #include "Boundary.h"
 #include "CompMesh.h"
 #include "IntegrationQuadrature.h"
@@ -141,7 +142,7 @@ public:
     /// Interpolate velocity
     /// @param int integration point index @param velocity @param previous time step velocity
     void interpolateVelocity(int &index, VecDouble &u_, VecDouble &uPrev_);
-    void interpolateSolution(int &index, VecDouble &u_, VecDouble &uPrev_);
+    void interpolateSolution(int &index, VecDouble &u_);
     
     /// Interpolate Coordinates
     /// @param int integration point index @param coordinates @param previous time step coordinates
@@ -159,7 +160,7 @@ public:
     /// @param double** shape function spatial derivatives @param double** velocity derivatives
     /// @param double** previous time step velocity derivatives
     void interpolateVelDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx);
-    void interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx);
+    void interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx);
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);

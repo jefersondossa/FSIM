@@ -45,7 +45,7 @@ std::vector<ElementMesh*> Surface::getElements()
 	return elements_;
 }
 
-std::vector<NodeMesh*> Surface::getNodes()
+std::vector<NodeMesh*> Surface::NodeVec()
 {
 	return nodes_;
 }

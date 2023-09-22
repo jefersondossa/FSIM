@@ -20,8 +20,8 @@ void ElElasticityPositional2D::ComputeStiffness(int &index, MatrixDouble &dphi_d
 
 void ElElasticityPositional2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
 
-    VecDouble fieldForce = Mesh()->getFluidParameters().getFieldForce();
-    auto force = Mesh()->getFluidParameters().getForcingFunction();
+    VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
+    auto force = Mesh()->getProblemParameters().getForcingFunction();
     int dim = Mesh()->Dimension();
 
     //Velocity Derivatives
@@ -56,8 +56,8 @@ void ElElasticityPositional2D::ComputeError(VecDouble &errors){
 void ElElasticityPositional2D::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
     for (int i = Mesh()->nElNodes; i--; ){
-        if ((Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
-            (Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
+        if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
+            (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
             for (int j = Mesh()->nElNodes; j--; ){
                 Stiffness(i,j) = 0.;
                 Stiffness(j,i) = 0.;

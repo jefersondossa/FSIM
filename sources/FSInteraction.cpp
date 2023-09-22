@@ -940,9 +940,9 @@ void FSInteraction<DIM,DEG>::solveFSIProblem(int numTimeSteps){
     double omega = 1.;
     double mu = 0.;
 
-    double &alpha_f = fluidModel->fluidParameters.getAlphaF();
-    double &alpha_m = fluidModel->fluidParameters.getAlphaM();
-    double &gamma = fluidModel->fluidParameters.getGamma();
+    double &alpha_f = fluidModel->fProbParameters.getAlphaF();
+    double &alpha_m = fluidModel->fProbParameters.getAlphaM();
+    double &gamma = fluidModel->fProbParameters.getGamma();
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
@@ -960,7 +960,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblem(int numTimeSteps){
 
         // if (iTimeStep == 20){
         //     double integ = 1.0;
-        //     fluidModel->fluidParameters.setSpectralRadius(integ);  
+        //     fluidModel->ProblemParameters.setSpectralRadius(integ);  
         // } 
         
         // //SOMENTE PARA EXEMPLO DA CAVIDADE - INICIO
@@ -1213,9 +1213,9 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
         printstructure_();
     };
 
-    double &alpha_f = arlequinModel->fineModel->fluidParameters.getAlphaF();
-    double &alpha_m = arlequinModel->fineModel->fluidParameters.getAlphaM();
-    double &gamma = arlequinModel->fineModel->fluidParameters.getGamma();
+    double &alpha_f = arlequinModel->fineModel->fProbParameters.getAlphaF();
+    double &alpha_m = arlequinModel->fineModel->fProbParameters.getAlphaM();
+    double &gamma = arlequinModel->fineModel->fProbParameters.getGamma();
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
@@ -1259,8 +1259,8 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
 
         // if (iTimeStep == 10){
         //     double spec = 0.0;
-        //     arlequinModel->fineModel->fluidParameters.setSpectralRadius(spec);
-        //     arlequinModel->coarseModel->fluidParameters.setSpectralRadius(spec);
+        //     arlequinModel->fineModel->ProblemParameters.setSpectralRadius(spec);
+        //     arlequinModel->coarseModel->ProblemParameters.setSpectralRadius(spec);
         //     std::cout << "AQUI " << rank << std::endl;
         // }
 

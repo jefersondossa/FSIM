@@ -4,7 +4,7 @@
 #include "Element.h"
 
 class ElElasticityPositional2D : public Element{
-
+public:
     ElElasticityPositional2D(int index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){};
 
     void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness) override;

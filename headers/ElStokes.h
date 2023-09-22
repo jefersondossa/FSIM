@@ -4,7 +4,7 @@
 #include "Element.h"
 
 class ElStokes : public Element{
-
+public:
     ElStokes(int index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){};
 
     void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness) override;
@@ -15,8 +15,9 @@ class ElStokes : public Element{
     
     void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs) override;
 
-
-
+// private:
+    void GetStabilizationParameter(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
+    double tPSPG_, tSUPG_, tLSIC_; 
 
 };
 

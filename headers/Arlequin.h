@@ -76,7 +76,7 @@ private:
     int rank;
     int iTimeStep;
 
-    FluidParameters *parametersCoarse, *parametersFine;
+    ProblemParameters *parametersCoarse, *parametersFine;
 
     std::pair<idx_t*,idx_t*> domDecompCoarse;//Coarse Model Domain Decomposition
     std::pair<idx_t*,idx_t*> domDecompFine;  //Fine Model Domain Decomposition

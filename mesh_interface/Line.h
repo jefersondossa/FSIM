@@ -26,7 +26,7 @@ public:
 
 	bool getDiscretization();
 
-	std::vector<NodeMesh*> getNodes();
+	std::vector<NodeMesh*> NodeVec();
 
 	// std::vector<ParametricLineElement*> getParametricElements();
 

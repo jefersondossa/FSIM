@@ -95,13 +95,12 @@ void Fluid<DIM,DEG>::readInputFile(const std::string& inputFile, std::ofstream& 
     getline(inputData,line);getline(inputData,line);getline(inputData,line);
     getline(inputData,line);getline(inputData,line);
 
-    fluidParameters.setViscosity(viscInf);
-    fluidParameters.setDensity(rhoInf);
-    fluidParameters.setTimeStep(dTime);
-    fluidParameters.setSpectralRadius(integScheme);
-    fluidParameters.setFieldForce(fieldForces);
-    fluidParameters.setArlequinOperatorConstants(k1,k2);
-    fluidParameters.setVelocityInf(velocityInf);
+    fProbParameters.SetIncompressibleFluid(viscInf,rhoInf);
+    fProbParameters.setTimeStep(dTime);
+    fProbParameters.setSpectralRadius(integScheme);
+    fProbParameters.SetFieldForce(fieldForces);
+    fProbParameters.setArlequinOperatorConstants(k1,k2);
+    fProbParameters.SetInitialSol(velocityInf);
 
     //Drag and lift
     inputData >> computeDragAndLift >> numberOfLines; 
@@ -213,8 +212,8 @@ void Fluid<DIM,DEG>::readNodes(std::ifstream &file, std::ofstream& mirrorData){
             mirrorData << x[j] << " ";
         };
         mirrorData << std::endl;
-        nodes_[i] -> setVelocity(fluidParameters.getVelocityInf());
-        nodes_[i] -> setPreviousVelocity(fluidParameters.getVelocityInf());
+        nodes_[i] -> setVelocity(fProbParameters.GetInitialSol());
+        nodes_[i] -> setPreviousVelocity(fProbParameters.GetInitialSol());
         double zero = 0.;
         for (int k=0; k<DIM; k++){
             nodes_[i] -> setMeshVelocityComponent(k,zero);
@@ -459,6 +458,18 @@ void Fluid<DIM,DEG>::readElements(Geometry* &geometry_, std::ifstream &file, std
                     case EElastic:
                         {
                             ElElasticity2D *el = new ElElasticity2D(index++,connect,this);
+                            elementsAux_.push_back(el);
+                        }
+                        break;
+                    case EStokes:
+                        {
+                            ElStokes *el = new ElStokes(index++,connect,this);
+                            elementsAux_.push_back(el);
+                        }
+                        break;
+                    case ENavierStokes:
+                        {
+                            ElNavierStokes *el = new ElNavierStokes(index++,connect,this);
                             elementsAux_.push_back(el);
                         }
                         break;
@@ -734,13 +745,13 @@ void Fluid<DIM,DEG>::setBoundaryConstrains(){
             
                     VecDouble exactSol(nstate);
                     MatrixDouble gradExactSol(DIM,nstate);
-                    auto exact = fluidParameters.getExactSolution();
+                    auto exact = fProbParameters.getExactSolution();
                     if (exact){
                         VecDouble x = nodes_[connectB[j]]->getCoordinates();
                         exact(x,exactSol,gradExactSol);
                         
-                            nodes_[connectB[j]] -> SetBoundaryCondition(istate,boundary_[ibound] -> getConstrain(istate),
-                                                                        exactSol[istate]);
+                        nodes_[connectB[j]] -> SetBoundaryCondition(istate,boundary_[ibound] -> getConstrain(istate),
+                                                                exactSol[istate]);
                     } else {
                         nodes_[connectB[j]] -> SetBoundaryCondition(istate,boundary_[ibound] -> getConstrain(istate),
                                                                 boundary_[ibound] -> getConstrainValue(istate));
@@ -1130,8 +1141,8 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         ierr = VecAssemblyBegin(b);
         ierr = VecAssemblyEnd(b);
         
-        //MatView(A,PETSC_VIEWER_STDOUT_WORLD);
-        //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);
+        // MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+        // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
         
         //Create KSP context to solve the linear system
         ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
@@ -1348,9 +1359,9 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
             
     double duNorm=100.;
 
-    double &alpha_f = fluidParameters.getAlphaF();
-    double &alpha_m = fluidParameters.getAlphaM();
-    double &gamma = fluidParameters.getGamma();
+    double &alpha_f = fProbParameters.getAlphaF();
+    double &alpha_m = fProbParameters.getAlphaM();
+    double &gamma = fProbParameters.getGamma();
          
     for (int inewton = 0; inewton < iterNumber; inewton++){
         
@@ -1600,7 +1611,7 @@ int Fluid<DIM,DEG>::solvePoisson(){
                  
         std::clock_t t1 = std::clock();
         
-        if (fluidParameters.getSolverType() == SolverType::ESuiteSparse){
+        if (fProbParameters.getSolverType() == SolverType::ESuiteSparse){
             ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numNodes, numNodes, 100,NULL,&A);
         } else {
             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
@@ -1663,7 +1674,7 @@ int Fluid<DIM,DEG>::solvePoisson(){
         
         ierr = KSPSetOperators(ksp,A,A);
         
-        switch (fluidParameters.getSolverType())
+        switch (fProbParameters.getSolverType())
         {
         case SolverType::ESuiteSparse:
             KSPGetPC(ksp, &pc);
@@ -1738,7 +1749,7 @@ int Fluid<DIM,DEG>::solvePoisson(){
         ierr = MatDestroy(&A); 
 
         VecDouble errorsTotal;
-    if (fluidParameters.getExactSolution()) computeError(errorsTotal);
+    if (fProbParameters.getExactSolution()) computeError(errorsTotal);
 
     printResultsPoisson();
 
@@ -1823,24 +1834,47 @@ void Fluid<DIM,DEG>::printResultsPoisson(){
 
     //WRITE NODAL RESULTS
     output_v << "    <PointData>" << std::endl;
-
-    if (printVelocity){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-                << "Name=\"Solution\" format=\"ascii\">" << std::endl;
+    if (this->fProbType==EPoisson){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+            << "Name=\"Solution\" format=\"ascii\">" << std::endl;
         for (int i=0; i<numNodes; i++){
-            if (nodes_[i]->GetNStateVariables()==1){
-                output_v << nodes_[i] -> GetSolution(0) << " "             
-                        << 0. << " " << 0. << std::endl;
-            } else if (nodes_[i]->GetNStateVariables()==2){
-                output_v << nodes_[i] -> GetSolution(0) << " "             
-                        << nodes_[i] -> GetSolution(1) << " " << 0. << std::endl;
-            }
-        };
+            output_v << nodes_[i] -> GetSolution(0) << std::endl;
+        }
         output_v << "      </DataArray> " << std::endl;
-    };
-
-    
-   
+    } else if (this->fProbType==EElastic || this->fProbType == ESolidPositional){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+            << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){           
+            output_v << nodes_[i] -> GetSolution(0) << " "             
+                    << nodes_[i] -> GetSolution(1) << " ";
+            if (DIM == 2) {
+                output_v <<  0. << std::endl;
+            } else {
+                output_v <<  nodes_[i] -> GetSolution(2) << std::endl;
+            }
+        }
+        output_v << "      </DataArray> " << std::endl;
+    } else if (this->fProbType==EStokes || this->fProbType==ENavierStokes){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+            << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            // std::cout << "Solution - " << nodes_[i] -> GetSolution(0) << " " << nodes_[i] -> GetSolution(0) << std::endl;
+            output_v << nodes_[i] -> GetSolution(0) << " "             
+                    << nodes_[i] -> GetSolution(1) << " ";
+            if (DIM == 2) {
+                output_v <<  0. << std::endl;
+            } else {
+                output_v <<  nodes_[i] -> GetSolution(2) << std::endl;
+            }
+        }
+        output_v << "      </DataArray> " << std::endl;
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+            << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<numNodes; i++){
+            output_v << nodes_[i] -> GetSolution(DIM) << std::endl;
+        }
+        output_v << "      </DataArray> " << std::endl;
+    }
 
     output_v << "    </PointData>" << std::endl; 
 
@@ -1908,9 +1942,9 @@ void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
     errorsTotal.resize(errorsProcess.size());
     errorsTotal.setZero();
 
-    MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+    if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
 
-    if (rank == 0){
+    if (rank == 0 && errorsTotal.size()>0){
         std::cout << "\n\nERROR REPORT:\n" << std::scientific << std::setprecision(10)
             << "L2 state var = " << sqrt(errorsTotal[0]) << "\n" 
             << "Semi H1 state var = " << sqrt(errorsTotal[1]) << "\n" 
@@ -1935,11 +1969,15 @@ void Fluid<DIM,DEG>::computeError(VecDouble &errorsTotal) {
 template<int DIM, int DEG>
 void Fluid<DIM,DEG>::AllocateGlobalMatVec(){
     
-    if (fluidParameters.getSolverType() == SolverType::ESuiteSparse){
+    if (fProbParameters.getSolverType() == SolverType::ESuiteSparse){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&A);
     } else {
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&A); 
+    }
+    for (int i=0; i<numDOF; i++){
+        double val = 1.e-20;
+        ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
     }
 
     //Create PETSc vectors
@@ -1997,8 +2035,9 @@ void Fluid<DIM,DEG>::AssembleGlobalMatVec(){
     ierr = VecAssemblyBegin(b);
     ierr = VecAssemblyEnd(b);
 
-    // MatView(A,PETSC_VIEWER_STDOUT_WORLD);
-    // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
+    MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+    // MatView(A,PETSC_VIEWER_DRAW_WORLD);
+    VecView(b,PETSC_VIEWER_STDOUT_WORLD);
 }
 
 
@@ -2009,7 +2048,7 @@ void Fluid<DIM,DEG>::SolveLinearSystem(){
     
     ierr = KSPSetOperators(ksp,A,A);
     
-    switch (fluidParameters.getSolverType())
+    switch (fProbParameters.getSolverType())
     {
     case SolverType::ESuiteSparse:
         KSPGetPC(ksp, &pc);
@@ -2039,7 +2078,7 @@ void Fluid<DIM,DEG>::SolveLinearSystem(){
     ierr = KSPSolve(ksp,b,u);
     ierr = KSPGetTotalIterations(ksp, &iterations); 
 
-    // ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);
+    ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);
 
 }
 
@@ -2112,7 +2151,7 @@ void Fluid<DIM,DEG>::SolveFEMProblem(){
     ierr = MatDestroy(&A); 
 
     VecDouble errorsTotal;
-    if (fluidParameters.getExactSolution()) computeError(errorsTotal);
+    if (fProbParameters.getExactSolution()) computeError(errorsTotal);
 
     printResultsPoisson();
 

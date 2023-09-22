@@ -40,8 +40,7 @@ class Fluid : public CompMesh{
 public:
     
 
-    /// Defines the vector of fluid elements
-    std::vector<Element *>   elements_;
+    
  
     
 
@@ -52,7 +51,7 @@ private:
     int numNodes;          //Number of nodes in velocity/quadratic mesh
     int numBoundaries;     //Number of fluid boundaries
     int numBoundElems;     //Number of elements in fluid boundaries
-    int numDOF;
+    
     double pressInf;       //Undisturbed pressure 
     double rhoInf;         //Density
     double tempInf;        //Temperature
@@ -60,8 +59,7 @@ private:
     double ktermInf;       //Thermal condutivity
     VecDouble velocityInf; //Undisturbed velocity
     VecDouble fieldForces; //Field forces (constant)
-    int* part_elem;      //Fluid Domain Decomposition - Elements
-    int* part_nodes;     //Fluid Domain Decomposition - Nodes
+    
     int numTimeSteps;      //Number of Time Steps
     int printFreq;         //Printing frequence of output files
     double dTime;          //Time Step
@@ -163,7 +161,7 @@ public:
     void renumberConnectivity();
     void setBoundaryConstrains();
     void setBoundarySides();
-
+   
     
 
     /// Performs the domain decomposition for parallel processing
@@ -241,10 +239,7 @@ public:
 
     
 
-    /// Gets the fluid model elements and export for solving the overlapping
-    /// mesh problem with the Arlequin method
-    /// @return fluid model elements information
-    std::vector<Element *> &getElements(){return elements_;}
+    
 
     std::vector<std::string> split2(std::string str, std::string delim)
     {

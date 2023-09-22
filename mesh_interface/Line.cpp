@@ -45,7 +45,7 @@ bool Line::getDiscretization()
 {
 	return discretization_;
 }
-std::vector<NodeMesh*> Line::getNodes()
+std::vector<NodeMesh*> Line::NodeVec()
 {
 	return nodes_;
 }

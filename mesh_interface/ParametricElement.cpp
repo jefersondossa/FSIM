@@ -68,7 +68,7 @@ PartitionOfUnity ParametricElement::getPartitionOfUnity() const
     return partitionOfUnity_;
 }
 
-std::vector<NodeMesh*> ParametricElement::getNodes() const
+std::vector<NodeMesh*> ParametricElement::NodeVec() const
 {
     return nodes_;
 }

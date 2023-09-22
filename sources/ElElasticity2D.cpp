@@ -34,13 +34,13 @@ void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
 
 void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
 
-    VecDouble fieldForce = Mesh()->getFluidParameters().getFieldForce();
-    auto force = Mesh()->getFluidParameters().getForcingFunction();
+    VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
+    auto force = Mesh()->getProblemParameters().getForcingFunction();
     int DIM = Mesh()->Dimension();
 
     //Velocity Derivatives
-    MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM);
-    interpolateSolDerivatives(dphi_dx, du_dx, duprev_dx);
+    MatrixDouble du_dx(DIM,DIM);
+    interpolateSolDerivatives(dphi_dx, du_dx);
 
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
     MatrixDouble matD(3,2*Mesh()->nElNodes);
@@ -104,7 +104,7 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
     VecDouble xsi(DIM);
     double weight_;
 
-    auto exactSol = Mesh()->getFluidParameters().getExactSolution();
+    auto exactSol = Mesh()->getProblemParameters().getExactSolution();
     if (!exactSol) PanicButton();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
@@ -122,10 +122,10 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
                     
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
         
-        VecDouble uMEF_(DIM), uPrev_(DIM);
-        interpolateSolution(index, uMEF_, uPrev_);
-        MatrixDouble du_dxMEF(DIM,DIM), duprev_dx(DIM,DIM);
-        interpolateSolDerivatives(dphi_dx, du_dxMEF, duprev_dx);
+        VecDouble uMEF_(DIM);
+        interpolateSolution(index, uMEF_);
+        MatrixDouble du_dxMEF(DIM,DIM);
+        interpolateSolDerivatives(dphi_dx, du_dxMEF);
         
         VecDouble u_(DIM);
         MatrixDouble gradU(DIM,DIM);
@@ -161,16 +161,16 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
 void ElElasticity2D::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
     for (int i = Mesh()->nElNodes; i--; ){
-        int nstate = Mesh()->getNodes()[getConnectivity()[i]]->GetNStateVariables();
+        int nstate = Mesh()->NodeVec()[getConnectivity()[i]]->GetNStateVariables();
         for (int istate = 0; istate < nstate; istate++){
-            if ((Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(istate) == 1) ||
-                (Mesh()->getNodes()[getConnectivity()[i]] -> getConstrains(istate) == 3))  {
+            if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 1) ||
+                (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 3))  {
                 for (int j = Mesh()->nElNodes*nstate; j--; ){
                     Stiffness(nstate*i+istate,j) = 0.;
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
                 Stiffness(nstate*i+istate,nstate*i+istate) = 1.;
-                Rhs[nstate*i+istate] = Mesh()->getNodes()[getConnectivity()[i]]->GetSolution(istate);
+                Rhs[nstate*i+istate] = Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(istate);
             }
         }
     }

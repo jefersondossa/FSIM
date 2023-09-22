@@ -51,7 +51,7 @@ class ParametricElement
 
         PartitionOfUnity getPartitionOfUnity() const;
 
-        std::vector<NodeMesh*> getNodes() const;
+        std::vector<NodeMesh*> NodeVec() const;
 
         virtual std::vector<NodeMesh*> getBoundaryNodes(const int& boundaryIndex) const = 0;
     
