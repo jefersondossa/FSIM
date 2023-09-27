@@ -226,7 +226,11 @@ public:
 
     int &GetNStateVariables() {return fNStateVariables;}
     void SetSolution(int istate, double sol){
+        fPrevSolution[istate] = fSolution[istate];
         fSolution[istate] = sol;
+    }
+    void IncrementSolution(int istate, double sol){
+        fSolution[istate] += sol;
     }
     double GetSolution(int istate){
         return fSolution[istate];

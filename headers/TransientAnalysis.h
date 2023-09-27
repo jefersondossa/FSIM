@@ -4,19 +4,20 @@
 #include "LinearAnalysis.h"
 #include "NonLinearAnalysis.h"
 
-class TransientAnalysis : public LinearAnalysis, public NonLinearAnalysis
+class TransientAnalysis : public Analysis
 {
-private:
-    /* data */
 public:
-    // TransientAnalysis(/* args */);
-    // ~TransientAnalysis();
+    TransientAnalysis() : Analysis(){};
+    TransientAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
+
+    void Compute() override;
+
+    void UpdateSolution() override;
+
+    void Run() override;
+
 };
 
-
-// TransientAnalysis::~TransientAnalysis()
-// {
-// }
 
 
 #endif

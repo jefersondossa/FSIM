@@ -10,26 +10,26 @@
 
 void Assemble::Monomodel(Analysis *fAnalysis){
 
-    int nLocDOF = fAnalysis->Mesh()->nLocDOF; 
-    int nElNodes = fAnalysis->Mesh()->nElNodes; 
-    for (int jel = 0; jel < fAnalysis->Mesh()->ElementVec().size(); jel++){   
-        if (fAnalysis->Mesh()->part_elem[jel] == 0) {
+    int nLocDOF = fAnalysis->MeshVector()[0]->nLocDOF; 
+    int nElNodes = fAnalysis->MeshVector()[0]->nElNodes; 
+    for (int jel = 0; jel < fAnalysis->MeshVector()[0]->ElementVec().size(); jel++){   
+        if (fAnalysis->MeshVector()[0]->part_elem[jel] == 0) {
             //Compute Element matrix
-            VecInt connec = fAnalysis->Mesh()->ElementVec()[jel] -> getConnectivity();
+            VecInt connec = fAnalysis->MeshVector()[0]->ElementVec()[jel] -> getConnectivity();
 
             MatrixDouble matrix(nLocDOF,nLocDOF);
             matrix.setZero();
             VecDouble rhs(nLocDOF);
             rhs.setZero();
 
-            fAnalysis->Mesh()->ElementVec()[jel] -> ComputeElContribution(matrix,rhs);
+            fAnalysis->MeshVector()[0]->ElementVec()[jel] -> ComputeElContribution(matrix,rhs);
 
             //Disperse local contributions into the global matrix
             //Stiffness matrix
             for (int i=0; i<nElNodes; i++){
-                int nstatei = fAnalysis->Mesh()->nodes_[connec[i]]->GetNStateVariables();
+                int nstatei = fAnalysis->MeshVector()[0]->nodes_[connec[i]]->GetNStateVariables();
                 for (int j=0; j<nElNodes; j++){
-                    int nstatej = fAnalysis->Mesh()->NodeVec()[connec[j]]->GetNStateVariables();
+                    int nstatej = fAnalysis->MeshVector()[0]->NodeVec()[connec[j]]->GetNStateVariables();
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
                             int dof_i = nstatei * connec[i] + istate;

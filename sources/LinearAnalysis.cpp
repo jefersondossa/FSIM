@@ -1,11 +1,12 @@
 #include "LinearAnalysis.h"
 #include "Assemble.h"
 
-void Analysis::Compute(){
-    Assemble::Monomodel(this);
+void LinearAnalysis::Compute(){
+    Assemble a;
+    a.Monomodel(this);
 } 
 
-void Analysis::UpdateSolution(){
+void LinearAnalysis::UpdateSolution(){
     VecScatter        ctx;
     Vec               All, Allu;
     PetscErrorCode    ierr;
@@ -27,12 +28,12 @@ void Analysis::UpdateSolution(){
     PetscInt Ii;
     PetscScalar val;
         
-    for (int i = 0; i < this->Mesh()->NodeVec().size(); ++i){
-        int nstate = this->Mesh()->NodeVec()[i]->GetNStateVariables();
+    for (int i = 0; i < this->MeshVector()[0]->NodeVec().size(); ++i){
+        int nstate = this->MeshVector()[0]->NodeVec()[i]->GetNStateVariables();
         for (int k = 0; k<nstate; k++){
             Ii = nstate*i+k;
             ierr = VecGetValues(All, Ione, &Ii, &val);
-            this->Mesh()->NodeVec()[i] -> SetSolution(k,val);
+            this->MeshVector()[0]->NodeVec()[i] -> SetSolution(k,val);
         }
     };
     ierr = VecDestroy(&All); 

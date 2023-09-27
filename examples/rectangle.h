@@ -73,7 +73,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 };
 
 
-#include "LinearAnalysis.h"
+
 
    // Defines the problem dimension
     const int dimension = 2;
@@ -83,14 +83,13 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
     typedef Arlequin<dimension,degree>      Arlequin;
-    typedef FSInteraction<dimension,degree> FSI;
 
-for (int k = 5; k <6; k++)
+for (int k = 3; k <4; k++)
 {
    
   
 //  Create problem variables 
-    FluidModel coarseModel(ProblemType::ENavierStokes), fineModel(ProblemType::ENavierStokes);  
+    FluidModel coarseModel(ProblemType::EPoisson), fineModel(ProblemType::EPoisson);  
     Arlequin   arlequinProblem; 
    //FSI        coupledProblem;  
 
@@ -250,7 +249,7 @@ for (int k = 5; k <6; k++)
 
     // coarseModel.SolveFEMProblem();
     CompMesh *cmesh = dynamic_cast<CompMesh*> (&coarseModel);
-    Analysis an(cmesh,SolverType::ESuiteSparse);
+    LinearAnalysis an(cmesh,SolverType::ESuiteSparse);
     an.Run();
     coarseModel.printResultsPoisson();
 

@@ -4,7 +4,6 @@
 #include "CompMesh.h"
 #include "Assemble.h"
 
-
 Analysis::~Analysis()
 {
     KSPDestroy(&ksp); 
@@ -56,7 +55,7 @@ void Analysis::Solve(){
 void Analysis::AllocateProblem(){
 
     PetscErrorCode    ierr;
-    int numDOF = fCompMesh->NumDOF();
+    int numDOF = fMeshVector[0]->NumDOF();
     if (fSolverType == SolverType::ESuiteSparse){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
     } else {
@@ -75,3 +74,5 @@ void Analysis::AllocateProblem(){
     ierr = VecSetFromOptions(fGlobalRhs);
     ierr = VecDuplicate(fGlobalRhs,&fGlobalSolution);
 }
+
+

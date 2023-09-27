@@ -103,10 +103,6 @@ public:
     bool printLines;
     double integScheme;    //Time Integration Scheme
     
-   
-
-    
-
 public:
     Fluid(){
         PanicButton();

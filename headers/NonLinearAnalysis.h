@@ -9,7 +9,15 @@ class NonLinearAnalysis : public Analysis
 private:
     /* data */
 public:
-    NonLinearAnalysis(CompMesh *cmesh, SolverType stype):Analysis(cmesh,stype){};
+    NonLinearAnalysis() : Analysis(){};
+    NonLinearAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
+
+    void Compute() override;
+
+    void UpdateSolution() override;
+
+    void Run() override;
+
     ~NonLinearAnalysis();
 };
 

@@ -1,22 +1,20 @@
-#ifndef LINEARANALYSIS_H
-#define LINEARANALYSIS_H
+#ifndef LINEARANALYSIS_HPP
+#define LINEARANALYSIS_HPP
 
 #include "Analysis.h"
+#include "Assemble.h"
 
 class LinearAnalysis : public Analysis {
 public:
+    LinearAnalysis() : Analysis(){};
     LinearAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
-    ~LinearAnalysis(){
-        delete [] this;
-    };
 
     void Compute() override;
 
     void UpdateSolution() override;
+
+    ~LinearAnalysis(){};
 };
-
-
-
 
 
 #endif

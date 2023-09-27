@@ -2,8 +2,11 @@
 #define ASSEMBLE_H
 
 #include "Analysis.h"
+#include "LinearAnalysis.h"
 
-namespace Assemble{
+class Assemble{
+public:
+    Assemble()=default;
     void Monomodel(Analysis *fAnalysis);
 };
 

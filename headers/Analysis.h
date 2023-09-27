@@ -13,7 +13,7 @@ class Analysis
 {
 private:
     
-    CompMesh *fCompMesh;
+    std::vector<CompMesh *> fMeshVector;
     SolverType fSolverType;
 
     //PetscVariable
@@ -28,22 +28,28 @@ public:
     Analysis() = default;
 
     Analysis(CompMesh *cmesh, SolverType stype){
-        fCompMesh = cmesh;
+        fMeshVector.resize(1);
+        fMeshVector[0] = cmesh;
+        fSolverType = stype;
+    };
+
+    Analysis(std::vector<CompMesh *> &meshvec, SolverType stype){
+        fMeshVector = meshvec;
         fSolverType = stype;
     };
 
     Mat &Stiffness(){return fGlobalStiffness;}
     Vec &Rhs(){return fGlobalRhs;}
     Vec &Solution(){return fGlobalSolution;}
-    CompMesh *Mesh(){return fCompMesh;}
+    std::vector<CompMesh *> &MeshVector(){return fMeshVector;}
 
-    virtual void Compute();
-    virtual void UpdateSolution();
+    virtual void Compute() = 0;
+    virtual void UpdateSolution() = 0;
 
     void Solve();
     void AllocateProblem();
     
-    void Run(){
+    virtual void Run(){
         AllocateProblem();
         Compute();
         Solve();
