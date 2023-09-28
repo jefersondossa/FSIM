@@ -55,6 +55,8 @@ public:
         Solve();
         UpdateSolution();
     };
+
+    void PostProcessError(VecDouble &errorsTotal);
     
     ~Analysis();
 };

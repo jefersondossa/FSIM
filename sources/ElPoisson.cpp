@@ -4,8 +4,8 @@ void ElPoisson::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weig
 
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
 
-    for (int i = Mesh()->nElNodes; i-- ; ){       
-        for (int j = Mesh()->nElNodes; j-- ; ){            
+    for (int i = Mesh()->NElNodes(); i-- ; ){       
+        for (int j = Mesh()->NElNodes(); j-- ; ){            
             for (int k = Mesh()->Dimension(); k--;  ){
                 //Diffusion matrix
                 double K = dphi_dx(i,k) * dphi_dx(j,k);
@@ -33,7 +33,7 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
     VecDouble x_ = getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
 
         //Viscosity
@@ -56,7 +56,7 @@ void ElPoisson::ComputeError(VecDouble &errors){
     IntegQuadrature nQuad(DIM,DEG);
     ShapeFunction shapeQuad(DIM,DEG);
 
-    MatrixDouble dphi_dx(Mesh()->nElNodes,DIM);
+    MatrixDouble dphi_dx(Mesh()->NElNodes(),DIM);
     MatrixDouble ainv_(DIM,DIM);
     VecDouble xsi(DIM);
     double weight_;
@@ -115,10 +115,10 @@ void ElPoisson::ComputeError(VecDouble &errors){
 
 void ElPoisson::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
             (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
-            for (int j = Mesh()->nElNodes; j--; ){
+            for (int j = Mesh()->NElNodes(); j--; ){
                 Stiffness(i,j) = 0.;
                 Stiffness(j,i) = 0.;
             };

@@ -4,9 +4,7 @@
 #include "Analysis.h"
 #include "LinearAnalysis.h"
 
-class Assemble{
-public:
-    Assemble()=default;
+namespace Assemble{
     void Monomodel(Analysis *fAnalysis);
 };
 

@@ -15,12 +15,12 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
     MatrixDouble du_dx(DIM+1,DIM);
     interpolateSolDerivatives(dphi_dx, du_dx);
 
-    for (int i = Mesh()->nElNodes; i-- ; ){        
+    for (int i = Mesh()->NElNodes(); i-- ; ){        
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
         double wSUPGi = 0.;
         for (int m=DIM; m--; ) wSUPGi += u_[m] * dphi_dx(i,m);
  
-        for (int j = Mesh()->nElNodes; j-- ; ){           
+        for (int j = Mesh()->NElNodes(); j-- ; ){           
 
             double shapeFj = Mesh()->getNumericalIntegration()-> phi_(j,index);
             double shapeFij = shapeFi * shapeFj;
@@ -102,7 +102,7 @@ void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
     double divrU = 0.;
     for (int l=DIM; l--; ) divrU += du_dx(l,l);
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         // std::cout << "Sol = " << Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(0) << std::endl;
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
 

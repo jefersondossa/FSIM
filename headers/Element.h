@@ -61,9 +61,9 @@ public:
     Element(int index, VecInt &connect, CompMesh* mesh){
         
         fMesh = mesh;
-        connect_.resize(fMesh->nElNodes);
+        connect_.resize(fMesh->NElNodes());
         index_ = index;
-        for (int i = fMesh->nElNodes; i--; ) connect_[i] = connect[i];
+        for (int i = fMesh->NElNodes(); i--; ) connect_[i] = connect[i];
         DIM = fMesh->Dimension();
         DEG = fMesh->GetDefaultOrder();
 
@@ -172,7 +172,7 @@ public:
     double getJacobian(){
         VecDouble xsi(fMesh->Dimension());
         MatrixDouble ainv_(fMesh->Dimension(),fMesh->Dimension());
-        MatrixDouble dphi_dx(fMesh->nElNodes,fMesh->Dimension());
+        MatrixDouble dphi_dx(fMesh->NElNodes(),fMesh->Dimension());
         
         ShapeFunction  shapeQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
 

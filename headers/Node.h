@@ -122,7 +122,8 @@ public:
         
         invIncidence.clear();
 
-        coord_.resize(spaceDim);
+        coord_.resize(3);
+        coord_.setZero();
         previousCoord_.resize(spaceDim);
         coordUpdated_.resize(spaceDim);
         initialCoord_.resize(spaceDim);
@@ -179,7 +180,7 @@ public:
         
         invIncidence.clear();
 
-        coord_.resize(spaceDim);
+        coord_.resize(3);
         previousCoord_.resize(spaceDim);
         coordUpdated_.resize(spaceDim);
         initialCoord_.resize(spaceDim);

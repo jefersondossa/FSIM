@@ -19,6 +19,7 @@
 #include "fluidDomain.h"
 #include "IntegrationQuadrature11.h"
 #include "Node.h"
+#include "GmshTools.h"
 
 #include<cstdlib>
 #include<fstream>
@@ -47,19 +48,8 @@ public:
 private:
     //FLUID VARIABLES
     std::string inputFile; //Fluid input file
-    int numElem;           //Number of elements in fluid mesh 
-    int numNodes;          //Number of nodes in velocity/quadratic mesh
     int numBoundaries;     //Number of fluid boundaries
-    int numBoundElems;     //Number of elements in fluid boundaries
-    
-    double pressInf;       //Undisturbed pressure 
-    double rhoInf;         //Density
-    double tempInf;        //Temperature
-    double viscInf;        //Viscosity
-    double ktermInf;       //Thermal condutivity
-    VecDouble velocityInf; //Undisturbed velocity
-    VecDouble fieldForces; //Field forces (constant)
-    
+        
     int numTimeSteps;      //Number of Time Steps
     int printFreq;         //Printing frequence of output files
     double dTime;          //Time Step
@@ -67,7 +57,6 @@ private:
     int numFSIInterfaces;
     int iAux;
     bool computeDragAndLift;
-    int iTimeStep;
     Mat               A;
     Vec               b, u, All, Allu;
     PetscErrorCode    ierr;
@@ -108,53 +97,14 @@ public:
         PanicButton();
     }
 
-    Fluid(ProblemType ptype){
-        fOrder=DEG;
-        fDimension = DIM;
-        fProbType = ptype;
-        nBdNodes = 3*(1-DEG)+DIM*(2*DEG-1);
-        nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
-        
-        switch (fProbType)
-        {
-        case ENavierStokes:
-        case EStokes:
-            nLocDOF = -8*DIM -21*DEG + 15*DIM*DEG + 16;
-        break;
+    Fluid(ProblemType ptype, int dim, int order) :CompMesh(ptype,dim,order){
 
-        case EElastic:
-            nLocDOF = nElNodes*DIM;
-            break;
-        
-        case EPoisson:
-            nLocDOF = nElNodes;
-            break;
+    }
 
-        default:
-            break;
-        }
-    };
-
-    void setProblemType(ProblemType ptype){fProbType = ptype;};
-    ProblemType &getProblemType(){return fProbType;}
-
-    void meshReading(Geometry* &geometry_, const std::string& inputFile, const std::string& inputMesh, const std::string& mirror, const bool& deleteFiles);
     void SetUp();
 
     void readInitialValues(const std::string& inputPrev, const std::string& inputCurr);
-    void readInputFile(const std::string& inputFile, std::ofstream& mirrorData);
     
-    /// Reads the mesh nodes from a .msh file
-    /// @param std::string input .msh file @param std::string mirror file
-    void readNodes(std::ifstream &file, std::ofstream& mirrorData);
-
-    /// Reads the mesh elements from a .msh file
-    /// @param Geometry* mesh geometry
-    /// @param std::string input .msh file @param std::string mirror file
-    /// @param std::vector<Elements*> auxiliary vector of Elements
-    /// @param std::unordered_map<int, std::string> mesh physical entities
-    void readElements(Geometry* &geometry_,std::ifstream &file, std::ofstream& mirrorData, std::vector<Element*> &elementsAux_, std::unordered_map<int, std::string> &physicalEntities);
-    void renumberConnectivity();
     void setBoundaryConstrains();
     void setBoundarySides();
    
@@ -163,8 +113,8 @@ public:
     /// Performs the domain decomposition for parallel processing
     void domainDecompositionMETIS(); 
 
-    int &getNumberOfElements(){return numElem;}
-    int &getNumberOfNodes(){return numNodes;}
+    int64_t getNumberOfElements(){return ElementVec().size();}
+    int64_t getNumberOfNodes(){return NodeVec().size();}
 
     /// Export the domain decomposition 
     /// @return pair with the elements and nodes domain decompositions
@@ -222,8 +172,6 @@ public:
     int solveFSIFluid(int iterNumber,
                       double tolerance,
                       int problem_type);
-    int solvePoisson();
-    int solveProblem();
 
     /// Print the results for Paraview post-processing
     /// @param int time step
@@ -246,15 +194,7 @@ public:
             values.push_back(token);
         return values;
     }
-
-    void computeError(VecDouble &errorsTotal);
-
-    void SolveFEMProblem();
-
-    void AllocateGlobalMatVec();
-    void AssembleGlobalMatVec();
-    void SolveLinearSystem();
-    void UpdateSolution();
+    
 };
 
 

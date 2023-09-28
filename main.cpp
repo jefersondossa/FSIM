@@ -37,6 +37,9 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "LinearAnalysis.h"
 #include "Fluid.h"
 #include "Arlequin.h"
+#include "GmshTools.h"
+#include "VTUGenerator.h"
+#include "XDMFGenerator.h"
 
 int main(int argc, char **args) {
 

@@ -31,9 +31,9 @@ public:
     Boundary(VecInt &connec, int index, VecInt &constrain, VecDouble &values, int gr, CompMesh* mesh){
         
         fMesh = mesh;
-        connectB_.resize(fMesh->nBdNodes);
+        connectB_.resize(fMesh->NBdNodes());
 
-        for(int i = 0; i<fMesh->nBdNodes; i++) connectB_[i] = connec[i];
+        for(int i = 0; i<fMesh->NBdNodes(); i++) connectB_[i] = connec[i];
         index_ = index;
         group_ = gr;
 
@@ -60,7 +60,7 @@ public:
     /// Returns the boundary element connectivity
     /// @return boundary element connectivity
     VecInt &getBoundaryConnectivity(){return connectB_;}
-    void setBoundaryConnectivity(VecInt &connec){for(int i = 0; i<fMesh->nBdNodes; i++) connectB_[i] = connec[i];}
+    void setBoundaryConnectivity(VecInt &connec){for(int i = 0; i<fMesh->NBdNodes(); i++) connectB_[i] = connec[i];}
 
     /// Sets the boundary element group
     /// @param int boundary element group

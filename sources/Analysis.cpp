@@ -49,13 +49,13 @@ void Analysis::Solve(){
     ierr = KSPSolve(ksp,fGlobalRhs,fGlobalSolution);
     // ierr = KSPGetTotalIterations(ksp, &iterations); 
 
-    ierr = VecView(fGlobalSolution,PETSC_VIEWER_STDOUT_WORLD);
+    // ierr = VecView(fGlobalSolution,PETSC_VIEWER_STDOUT_WORLD);
 }
 
 void Analysis::AllocateProblem(){
 
     PetscErrorCode    ierr;
-    int numDOF = fMeshVector[0]->NumDOF();
+    int numDOF = fMeshVector[0]->NGlobalDOF();
     if (fSolverType == SolverType::ESuiteSparse){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
     } else {
@@ -73,6 +73,42 @@ void Analysis::AllocateProblem(){
     
     ierr = VecSetFromOptions(fGlobalRhs);
     ierr = VecDuplicate(fGlobalRhs,&fGlobalSolution);
+}
+
+void Analysis::PostProcessError(VecDouble &errorsTotal){
+
+    int rank;
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+
+    if (fMeshVector[0]->getProblemParameters().getExactSolution()){
+
+        VecDouble errorsProcess;
+        // Loop over the elements
+        for (int jel = fMeshVector[0]->ElementVec().size(); jel--; ){
+
+            VecDouble errors;
+
+            fMeshVector[0]->ElementVec()[jel] -> ComputeError(errors);
+            errorsProcess.resize(errors.size());
+            errorsProcess += errors;
+
+        }; //Elements
+        errorsTotal.resize(errorsProcess.size());
+        errorsTotal.setZero();
+
+        if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+
+        if (rank == 0 && errorsTotal.size()>0){
+            std::cout << "\n\nERROR REPORT:\n" << std::scientific << std::setprecision(10)
+                << "L2 state var = " << sqrt(errorsTotal[0]) << "\n" 
+                << "Semi H1 state var = " << sqrt(errorsTotal[1]) << "\n" 
+                << "H1 state var = " << sqrt(errorsTotal[2]) << "\n"; 
+        }
+    } else {
+        std::cout << "Exact solution not defined!" << std::endl;
+        PanicButton();
+    }
+
 }
 
 

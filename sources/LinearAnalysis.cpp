@@ -2,8 +2,7 @@
 #include "Assemble.h"
 
 void LinearAnalysis::Compute(){
-    Assemble a;
-    a.Monomodel(this);
+    Assemble::Monomodel(this);
 } 
 
 void LinearAnalysis::UpdateSolution(){

@@ -5,8 +5,8 @@ void ElElasticityPositional2D::ComputeStiffness(int &index, MatrixDouble &dphi_d
 
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
 
-    for (int i = Mesh()->nElNodes; i-- ; ){       
-        for (int j = Mesh()->nElNodes; j-- ; ){            
+    for (int i = Mesh()->NElNodes(); i-- ; ){       
+        for (int j = Mesh()->NElNodes(); j-- ; ){            
             for (int k = Mesh()->Dimension(); k--;  ){
                 //Diffusion matrix
                 double K = dphi_dx(i,k) * dphi_dx(j,k);
@@ -35,7 +35,7 @@ void ElElasticityPositional2D::ComputeResidual(int &index, MatrixDouble &dphi_dx
     VecDouble x_ = getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
 
         //Viscosity
@@ -55,10 +55,10 @@ void ElElasticityPositional2D::ComputeError(VecDouble &errors){
 
 void ElElasticityPositional2D::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
             (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
-            for (int j = Mesh()->nElNodes; j--; ){
+            for (int j = Mesh()->NElNodes(); j--; ){
                 Stiffness(i,j) = 0.;
                 Stiffness(j,i) = 0.;
             };

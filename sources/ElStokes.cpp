@@ -25,7 +25,7 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
     double &dens_ = Mesh()->getProblemParameters().GetDensity();
     double &dTime_ = Mesh()->getProblemParameters().getTimeStep();
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         double a1 = 0.;
         for (int j = DIM; j--; ){
             double ua =Mesh()->NodeVec()[getConnectivity()[i]] -> GetSolution(j);
@@ -64,7 +64,7 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
         for (int j = DIM; j--; ) r[j] = 1. / std::sqrt(2.);
     };
     
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         for (int j = DIM; j--; ){
             hRGN_ += r[j] * dphi_dx(i,j);
             hUGN_ += s[j] * dphi_dx(i,j);
@@ -126,9 +126,9 @@ void ElStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weigh
     // Trust me, it improves performance!
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
 
-    for (int i = Mesh()->nElNodes; i-- ; ){        
+    for (int i = Mesh()->NElNodes(); i-- ; ){        
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
-        for (int j = Mesh()->nElNodes; j-- ; ){
+        for (int j = Mesh()->NElNodes(); j-- ; ){
             
             double shapeFj = Mesh()->getNumericalIntegration()-> phi_(j,index);
 
@@ -182,7 +182,7 @@ void ElStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight
     double divrU = 0.;
     for (int l=DIM; l--; ) divrU += du_dx(l,l);
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         // std::cout << "Sol = " << Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(0) << std::endl;
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
 
@@ -220,12 +220,12 @@ void ElStokes::ComputeError(VecDouble &errors){
 void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
     int DIM = Mesh()->Dimension();
     // std::cout << "Stiffness antes = \n" << Stiffness<< std::endl;
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         int nstate = Mesh()->NodeVec()[getConnectivity()[i]]->GetNStateVariables();
         for (int istate = 0; istate < nstate-1; istate++){
             if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 1) ||
                 (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 3))  {
-                for (int j = Mesh()->nElNodes*nstate; j--; ){
+                for (int j = Mesh()->NElNodes()*nstate; j--; ){
                     Stiffness(nstate*i+istate,j) = 0.;
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
@@ -236,7 +236,7 @@ void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
         if (Mesh()->NodeVec()[getConnectivity()[i]]->getCoordinateValue(0) < 0.0001 &&
             Mesh()->NodeVec()[getConnectivity()[i]]->getCoordinateValue(1) < 0.0001){
-            for (int j = Mesh()->nElNodes*nstate; j--; ){
+            for (int j = Mesh()->NElNodes()*nstate; j--; ){
                 Stiffness(nstate*i+DIM,j) = 0.;
                 Stiffness(j,nstate*i+DIM) = 0.;
             };

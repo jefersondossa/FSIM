@@ -3,7 +3,7 @@
 void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
 
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
-    MatrixDouble matD(3,2*Mesh()->nElNodes);
+    MatrixDouble matD(3,2*Mesh()->NElNodes());
     matD.setZero();
     int DIM = Mesh()->Dimension();
 
@@ -19,7 +19,7 @@ void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
     Hooke(1,1) = k;
     Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
-    for (int j = 0; j < Mesh()->nElNodes; j++){
+    for (int j = 0; j < Mesh()->NElNodes(); j++){
         matD(0,DIM*j  ) = dphi_dx(j,0);
         matD(1,DIM*j+1) = dphi_dx(j,1);
         matD(2,DIM*j  ) = dphi_dx(j,1);
@@ -43,7 +43,7 @@ void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
     interpolateSolDerivatives(dphi_dx, du_dx);
 
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
-    MatrixDouble matD(3,2*Mesh()->nElNodes);
+    MatrixDouble matD(3,2*Mesh()->NElNodes());
     matD.setZero();
 
     MatrixDouble Hooke(3,3);
@@ -58,7 +58,7 @@ void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
     Hooke(1,1) = k;
     Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
-    for (int j = 0; j < Mesh()->nElNodes; j++){
+    for (int j = 0; j < Mesh()->NElNodes(); j++){
         matD(0,DIM*j  ) = dphi_dx(j,0);
         matD(1,DIM*j+1) = dphi_dx(j,1);
         matD(2,DIM*j  ) = dphi_dx(j,1);
@@ -77,7 +77,7 @@ void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
     VecDouble x_ = getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
         //External force
         double Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
@@ -99,7 +99,7 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
     IntegQuadrature nQuad(DIM,DEG);
     ShapeFunction shapeQuad(DIM,DEG);
 
-    MatrixDouble dphi_dx(Mesh()->nElNodes,DIM);
+    MatrixDouble dphi_dx(Mesh()->NElNodes(),DIM);
     MatrixDouble ainv_(DIM,DIM);
     VecDouble xsi(DIM);
     double weight_;
@@ -160,12 +160,12 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
 
 void ElElasticity2D::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = Mesh()->nElNodes; i--; ){
+    for (int i = Mesh()->NElNodes(); i--; ){
         int nstate = Mesh()->NodeVec()[getConnectivity()[i]]->GetNStateVariables();
         for (int istate = 0; istate < nstate; istate++){
             if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 1) ||
                 (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 3))  {
-                for (int j = Mesh()->nElNodes*nstate; j--; ){
+                for (int j = Mesh()->NElNodes()*nstate; j--; ){
                     Stiffness(nstate*i+istate,j) = 0.;
                     Stiffness(j,nstate*i+istate) = 0.;
                 };

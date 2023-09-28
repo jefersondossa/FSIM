@@ -23,12 +23,20 @@ enum SolverType{EMumps, ESuiteSparse, EIterative};
 
 class ProblemParameters {
 public:
+    ProblemParameters(){
+        fFieldForce.resize(3);
+        fFieldForce.setZero();
+    }
 
     /// Sets the element viscosity
     /// @param double element viscosity
-    void SetIncompressibleFluid(double& visc,double &dens){
+    void SetIncompressibleFluid(double visc,double dens){
         fViscosity = visc;
         fDensity = dens;
+    }
+    void SetElasticity(double young,double poisson){
+        fYoung = young;
+        fPoisson = poisson;
     }
 
     /// Sets the time step size
@@ -115,6 +123,8 @@ public:
 private:
     double fViscosity;
     double fDensity;
+    double fYoung;
+    double fPoisson;
     double timeStepSize;
     double spectralRadius;
     double alpha_m;
