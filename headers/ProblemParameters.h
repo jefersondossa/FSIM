@@ -41,13 +41,13 @@ public:
 
     /// Sets the time step size
     /// @param double time step size
-    void setTimeStep(double& dt){timeStepSize = dt;}
+    void setTimeStep(double dt){timeStepSize = dt;}
 
     /// Sets the time integration scheme
     /// @param double time integration scheme: 0.0 - Explicit forward Euler;
     /// 1.0 - Implicit backward Euler;
     /// 0.5 - Implicit Trapezoidal Rule.
-    void setSpectralRadius(double& b){
+    void setSpectralRadius(double b){
         spectralRadius = b;
         alpha_f = 1. / (1. + spectralRadius);
         alpha_m = 0.5 * (3. - spectralRadius) / (1. + spectralRadius);
@@ -61,12 +61,12 @@ public:
         for(int i=0; i<3; i++) fFieldForce[i] = ff[i];
     }
 
-    void setArlequinOperatorConstants(double& k_1, double& k_2){
+    void setArlequinOperatorConstants(double k_1, double k_2){
         k1 = k_1; 
         k2 = k_2;
     }
 
-    void setTimeInstant(int& it){
+    void setTimeInstant(int it){
         timeInstant = it;
     }
 
@@ -81,7 +81,6 @@ public:
     /// @return undisturbed velocity field
     VecDouble &GetInitialSol() {return fInitialSol;}
 
-    double& getTimeStep() {return timeStepSize;}
     double& GetDensity() {return fDensity;}
     double& GetViscosity() {return fViscosity;}
     double& getAlphaM() {return alpha_m;}
@@ -96,6 +95,10 @@ public:
     double& getArlequinK2() {return k2;}
     double& getPi() {return pi;}
     int& getTimeInstant() {return timeInstant;}
+    double& GetSpectralRadius() {return spectralRadius;}
+    double& GetTimeStep() {return timeStepSize;}
+    int& GetNTimeSteps() {return fNTimeSteps;}
+    void SetNTimeSteps(int ntim) {fNTimeSteps = ntim;}
 
     void setExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exSol){
         exactSolution = exSol;
@@ -135,6 +138,7 @@ private:
     double pi = M_PI;
     VecDouble fInitialSol;
 
+    int fNTimeSteps;
     int timeInstant;
     SolverType sType = SolverType::ESuiteSparse;
     

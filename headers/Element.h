@@ -30,7 +30,7 @@
 class Element{
 private:
     VecInt        connect_; //Velocity mesh connectivity 
-    int           index_;             //Element index
+    int64_t       index_;             //Element index
     VecDouble     xK, XK;
     int           sideBoundary_;
     double        meshMovingParameter;
@@ -55,10 +55,12 @@ private:
     bool          FSIInterface;    
     int DIM, DEG;
 public:
+    Element() = default;
+
     /// fluid element constructor
     /// @param int element index @param Connectivity element connectivity
     /// @param vector<Nodes> 
-    Element(int index, VecInt &connect, CompMesh* mesh){
+    Element(int64_t index, VecInt &connect, CompMesh* mesh){
         
         fMesh = mesh;
         connect_.resize(fMesh->NElNodes());
@@ -100,6 +102,7 @@ public:
     };
 
     CompMesh* Mesh() {return fMesh;}
+    void SetMesh(CompMesh* mesh){fMesh = mesh;}
 
     //........................Element basic information.........................
     /// Clear all element variables
@@ -223,6 +226,8 @@ public:
         neighborElements.clear();
         neighborElements.shrink_to_fit();
     }
+
+    int64_t &Index(){return index_;}
 
     void sortEraseNeighborElements(){
         // std::cout << "AA1 " << index_ << " " << neighborElements.size() << std::endl;

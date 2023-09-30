@@ -106,10 +106,9 @@ public:
         fPrevCoord.resize(fDimension);
         fPrevSolution.setZero();
         fSolution.setZero();
-        
+
         fCoord = coor;
         fPrevCoord = coor;
-
 
         index_ = index; 
 
@@ -122,9 +121,6 @@ public:
         
         invIncidence.clear();
 
-        coord_.resize(3);
-        coord_.setZero();
-        previousCoord_.resize(spaceDim);
         coordUpdated_.resize(spaceDim);
         initialCoord_.resize(spaceDim);
         constrainValue.resize(spaceDim);
@@ -159,10 +155,10 @@ public:
             constrainType[i] = 0;
             constrainValue[i] = 0.;
 
-            previousCoord_[i] = coor[i];
+            // previousCoord_[i] = coor[i];
             coordUpdated_[i] = coor[i];
             initialCoord_[i] = coor[i];
-            coord_[i] = coor[i];
+            // coord_[i] = coor[i];
         }
         nNodal_.resize(spaceDim);
     }
@@ -242,12 +238,12 @@ public:
 
     /// Returns the node coordinate vector
     /// @return node coordinate vector
-    VecDouble &getCoordinates() {return coord_;};
+    VecDouble &getCoordinates() {return fCoord;};
 
     /// Returns the node coordinate component value
     /// @return node coordinate component value
-    double getCoordinateValue(int dir) const {return coord_[dir];};
-    double getPreviousCoordinateValue(int dir) const {return previousCoord_[dir];};
+    double getCoordinateValue(int dir) const {return fCoord[dir];};
+    double getPreviousCoordinateValue(int dir) const {return fPrevCoord[dir];};
 
     /// Returns the node initial coordinate vector
     /// @return node initial coordinate vector

@@ -133,7 +133,7 @@ template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface, int iSol){
     
     for (int isolid = 0; isolid < numNodesSolid; isolid++){
-        int nElNodes = arlequinModel->fineModel->NElNodes();
+        int nElNodes = arlequinModel->MeshVec()[1]->NElNodes();
         VecInt connec;
         ShapeFunction shapeQuad(DIM,DEG);
         VecDouble phi_(nElNodes);
@@ -293,7 +293,7 @@ void FSInteraction<DIM,DEG>::searchArlequinNodeCorrespondence(int interface){
             double xsiC;
 
             VecInt connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
-            int nBdNodes = arlequinModel->fineModel->NBdNodes();
+            int nBdNodes = arlequinModel->MeshVec()[1]->NBdNodes();
             for (int inode = 0; inode < nBdNodes; inode++){
                 VecDouble x = nodesArlequinFine_[connec[inode]] -> getCoordinates();
                 
@@ -482,8 +482,8 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
 template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::preProcessArlequin(){
         
-    numInterfaces = arlequinModel->fineModel->getNumberofFSIInterfaces();
-    
+    // numInterfaces = arlequinModel->MeshVec()[1]->getNumberofFSIInterfaces();
+    PanicButton();
     std::cout << "Number of interfaces " << numInterfaces << std::endl;
 
     groupInterfaces.reserve(numInterfaces);
@@ -561,8 +561,9 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
         // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
     };
 
-    domDecompArlequinCoarse =arlequinModel->coarseModel->getDomainDecomposition();
-    domDecompArlequinFine = arlequinModel->fineModel->getDomainDecomposition();
+    PanicButton();
+    // domDecompArlequinCoarse =arlequinModel->MeshVec()[0]->getDomainDecomposition();
+    // domDecompArlequinFine = arlequinModel->MeshVec()[1]->getDomainDecomposition();
 
 };
 
@@ -571,16 +572,16 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
 //---------SETS FLUID AND SOLID MODELS AND GETS ITS BASIC INFORMATIONS----------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void FSInteraction<DIM,DEG>::setFluidAndSolidModels(FluidModel &fluid, char *in_solid){
+void FSInteraction<DIM,DEG>::setFluidAndSolidModels(Fluid &fluid, char *in_solid){
     
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
     MPI_Comm_size(PETSC_COMM_WORLD, &size);
 
     fluidModel = &fluid;
 
-    numElemFluid = fluidModel->ElementVec().size();
-    numNodesFluid = fluidModel->NodeVec().size();
-    numElemFluidBoundary = fluidModel->BoundaryVec().size();
+    numElemFluid = fluidModel->NElements();
+    numNodesFluid = fluidModel->NNodes();
+    numElemFluidBoundary = fluidModel->NBoundElements();
 
     nodesFluid_  = fluidModel->NodeVec();
     elementsFluid_ = fluidModel->ElementVec();
@@ -592,7 +593,7 @@ void FSInteraction<DIM,DEG>::setFluidAndSolidModels(FluidModel &fluid, char *in_
     getnumberofnodessolid_(&numNodesSolid);
     getnumberofelementssolid_(&numElemSolid);
 
-    dTime = fluidModel->getTimeStep();
+    dTime = fluidModel->getProblemParameters().GetTimeStep();
 
     if(rank == 0) std::cout << "NumElemSolid " << numElemSolid << std::endl;
 
@@ -612,19 +613,19 @@ void FSInteraction<DIM,DEG>::setArlequinAndSolidModels(ArlequinModel& arlq, char
 
     arlequinModel = &arlq;
 
-    numElemArlequinCoarse = arlequinModel->elementsCoarse_.size();
-    numElemArlequinFine = arlequinModel->elementsFine_.size();
-    numNodesArlequinCoarse = arlequinModel->nodesCoarse_->size();
-    numNodesArlequinFine = arlequinModel->nodesFine_->size();
-    numElemArlequinBoundaryCoarse = arlequinModel->boundaryCoarse_.size();
-    numElemArlequinBoundaryFine = arlequinModel->boundaryFine_.size();
+    numElemArlequinCoarse = arlequinModel->MeshVec()[0]->NElements();
+    numElemArlequinFine = arlequinModel->MeshVec()[1]->NElements();
+    numNodesArlequinCoarse = arlequinModel->MeshVec()[0]->NNodes();
+    numNodesArlequinFine = arlequinModel->MeshVec()[1]->NNodes();
+    numElemArlequinBoundaryCoarse = arlequinModel->MeshVec()[0]->NBoundElements();
+    numElemArlequinBoundaryFine = arlequinModel->MeshVec()[1]->NBoundElements();
     
-    nodesArlequinCoarse_ = *arlequinModel->nodesCoarse_;
-    nodesArlequinFine_ = *arlequinModel->nodesFine_;
-    elementsArlequinCoarse_ = arlequinModel->elementsCoarse_;
-    elementsArlequinFine_ = arlequinModel->elementsFine_;
-    boundaryArlequinCoarse_ = arlequinModel->boundaryCoarse_;
-    boundaryArlequinFine_ = arlequinModel->boundaryFine_;
+    nodesArlequinCoarse_ = arlequinModel->MeshVec()[0]->NodeVec();
+    nodesArlequinFine_ = arlequinModel->MeshVec()[1]->NodeVec();
+    elementsArlequinCoarse_ = arlequinModel->MeshVec()[0]->ElementVec();
+    elementsArlequinFine_ = arlequinModel->MeshVec()[1]->ElementVec();
+    boundaryArlequinCoarse_ = arlequinModel->MeshVec()[0]->BoundaryVec();
+    boundaryArlequinFine_ = arlequinModel->MeshVec()[1]->BoundaryVec();
 
     // Reads Solid input file
     preprocessing_(in_solid);
@@ -632,7 +633,7 @@ void FSInteraction<DIM,DEG>::setArlequinAndSolidModels(ArlequinModel& arlq, char
     getnumberofnodessolid_(&numNodesSolid);
     getnumberofelementssolid_(&numElemSolid);
 
-    dTime = arlequinModel->fineModel->getTimeStep();
+    dTime = arlequinModel->MeshVec()[1]->getProblemParameters().GetTimeStep();
 
     if(rank == 0) std::cout << "NumElemSolid " << numElemSolid << std::endl;
 
@@ -718,7 +719,7 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
             if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interf){
 
                 VecInt connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
-                int nBdNodes = arlequinModel->fineModel->NBdNodes();
+                int nBdNodes = arlequinModel->MeshVec()[1]->NBdNodes();
                 for (int k = 0; k < nBdNodes; k++){
 
                     VecDouble x(2);
@@ -751,7 +752,8 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
 
 
     //Solves Laplace Smoothing mesh moving scheme
-    arlequinModel->fineModel->solveSteadyLaplaceProblem(1,1.e-4);
+    PanicButton();
+    // arlequinModel->MeshVec()[1]->solveSteadyLaplaceProblem(1,1.e-4);
    
     // std::cout << "AQUI6.3 " << rank << std::endl;
     // MPI_Barrier(PETSC_COMM_WORLD);
@@ -835,7 +837,7 @@ void FSInteraction<DIM,DEG>::transferSolidVelocityArlequin(){
                 VecInt connec = boundaryArlequinFine_[ibound] -> getBoundaryConnectivity();
               
                 VecDouble u(DIM);
-                int nBdNodes = arlequinModel->fineModel->NBdNodes();
+                int nBdNodes = arlequinModel->MeshVec()[1]->NBdNodes();
                 for (int k = 0; k < nBdNodes; k++){
                     
                     int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
@@ -1213,9 +1215,9 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
         printstructure_();
     };
 
-    double &alpha_f = arlequinModel->fineModel->fProbParameters.getAlphaF();
-    double &alpha_m = arlequinModel->fineModel->fProbParameters.getAlphaM();
-    double &gamma = arlequinModel->fineModel->fProbParameters.getGamma();
+    double &alpha_f = arlequinModel->MeshVec()[1]->fProbParameters.getAlphaF();
+    double &alpha_m = arlequinModel->MeshVec()[1]->fProbParameters.getAlphaM();
+    double &gamma = arlequinModel->MeshVec()[1]->fProbParameters.getGamma();
 
     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
@@ -1259,8 +1261,8 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
 
         // if (iTimeStep == 10){
         //     double spec = 0.0;
-        //     arlequinModel->fineModel->ProblemParameters.setSpectralRadius(spec);
-        //     arlequinModel->coarseModel->ProblemParameters.setSpectralRadius(spec);
+        //     arlequinModel->MeshVec()[1]->ProblemParameters.setSpectralRadius(spec);
+        //     arlequinModel->MeshVec()[0]->ProblemParameters.setSpectralRadius(spec);
         //     std::cout << "AQUI " << rank << std::endl;
         // }
 

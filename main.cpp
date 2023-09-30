@@ -33,9 +33,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include <fstream> 
   
 // Developed Header Files
-// #include "FSInteraction.h"  
 #include "LinearAnalysis.h"
-#include "Fluid.h"
 #include "Arlequin.h"
 #include "GmshTools.h"
 #include "VTUGenerator.h"

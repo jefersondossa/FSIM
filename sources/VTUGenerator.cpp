@@ -13,8 +13,8 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     output_v << "<?xml version=\"1.0\"?>" << std::endl
              << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
              << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << cmesh->NodeVec().size()
-             << "\"  NumberOfCells=\"" << cmesh->ElementVec().size()
+             << "  <Piece NumberOfPoints=\"" << cmesh->NNodes()
+             << "\"  NumberOfCells=\"" << cmesh->NElements()
              << "\">" << std::endl;
 
     //WRITE NODAL COORDINATES
@@ -22,7 +22,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << "      <DataArray type=\"Float64\" "
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<cmesh->NodeVec().size(); i++){
+    for (int i=0; i<cmesh->NNodes(); i++){
         auto x = cmesh->NodeVec()[i]->getCoordinates();
         output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
     };
@@ -34,7 +34,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << "      <DataArray type=\"Int32\" "
              << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
     
-    for (int i=0; i<cmesh->ElementVec().size(); i++){
+    for (int i=0; i<cmesh->NElements(); i++){
         auto connec=cmesh->ElementVec()[i]->getConnectivity();
         for (int k = 0; k < connec.size(); k++)
         {
@@ -49,7 +49,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << " Name=\"offsets\" format=\"ascii\">" << std::endl;
     
     int aux = 0;
-    for (int i=0; i<cmesh->ElementVec().size(); i++){
+    for (int i=0; i<cmesh->NElements(); i++){
         output_v << aux +cmesh-> NElNodes() << std::endl;
         aux += cmesh->NElNodes();
     };
@@ -64,7 +64,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     if (DEG == 2)val = 22;
     if (DEG == 3)val = 69;
 
-    for (int i=0; i<cmesh->ElementVec().size(); i++){
+    for (int i=0; i<cmesh->NElements(); i++){
         output_v << val << std::endl;
     };
 
@@ -76,14 +76,14 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     if (cmesh->ProbType()==EPoisson){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
             << "Name=\"Solution\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NodeVec().size(); i++){
+        for (int i=0; i<cmesh->NNodes(); i++){
             output_v << cmesh->NodeVec()[i] -> GetSolution(0) << std::endl;
         }
         output_v << "      </DataArray> " << std::endl;
     } else if (cmesh->ProbType()==EElastic || cmesh->ProbType() == ESolidPositional){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NodeVec().size(); i++){           
+        for (int i=0; i<cmesh->NNodes(); i++){           
             output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
                     << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
             if (DIM == 2) {
@@ -96,7 +96,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     } else if (cmesh->ProbType()==EStokes || cmesh->ProbType()==ENavierStokes){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NodeVec().size(); i++){
+        for (int i=0; i<cmesh->NNodes(); i++){
             // std::cout << "Solution - " << NodeVec()[i] -> GetSolution(0) << " " << NodeVec()[i] -> GetSolution(0) << std::endl;
             output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
                     << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
@@ -109,7 +109,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
         output_v << "      </DataArray> " << std::endl;
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
             << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NodeVec().size(); i++){
+        for (int i=0; i<cmesh->NNodes(); i++){
             output_v << cmesh->NodeVec()[i] -> GetSolution(DIM) << std::endl;
         }
         output_v << "      </DataArray> " << std::endl;
@@ -123,7 +123,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     //Some element wise result
     // output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
     //             << "Name=\"Process\" format=\"ascii\">" << std::endl;
-    // for (int i=0; i<ElementVec().size(); i++){
+    // for (int i=0; i<NElements(); i++){
     //     output_v << part_elem[i] << std::endl;
     // };
     // output_v << "      </DataArray> " << std::endl;

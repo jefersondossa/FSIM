@@ -42,6 +42,13 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
 
         //External force
         double F = (fieldForce[0] + forcingF[0]) * shapeFi;
+
+        if(std::isnan(F)){
+            PanicButton();
+        }
+        if(std::isnan(K)){
+            PanicButton();
+        }
         Rhs[i] += (-K + F) * WJ;
     };
 };
@@ -79,10 +86,10 @@ void ElPoisson::ComputeError(VecDouble &errors){
                     
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
         
-        VecDouble uMEF_(DIM), uPrev_(DIM);
-        interpolateVelocity(index, uMEF_, uPrev_);
-        MatrixDouble du_dxMEF(DIM,DIM), duprev_dx(DIM,DIM);
-        interpolateVelDerivatives(dphi_dx, du_dxMEF, duprev_dx);
+        VecDouble uMEF_(1);
+        interpolateSolution(index, uMEF_);
+        MatrixDouble du_dxMEF(1,DIM);
+        interpolateSolDerivatives(dphi_dx, du_dxMEF);
         
         VecDouble u_(1);
         MatrixDouble gradU(DIM,1);

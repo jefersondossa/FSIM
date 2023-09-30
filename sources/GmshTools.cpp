@@ -56,7 +56,7 @@ void GmshTools::MeshReading(Geometry* &geometry_, const std::string& mshfile,Com
     //                          // << numElem << " " << numBoundElems << std::endl;
     // std::cout << std::endl << "Element Connectivity" << std::endl;        
     
-    // for (int jel = 0; jel < cmesh->ElementVec().size(); jel++){
+    // for (int jel = 0; jel < cmesh->NElements(); jel++){
     //     VecInt connec = cmesh->ElementVec()[jel] -> getConnectivity();       
     //     for (int i=0; i < cmesh->NElNodes(); i++){
     //         std::cout << connec[i] << " ";
@@ -105,6 +105,19 @@ void GmshTools::ReadNodes(std::ifstream &file, CompMesh *cmesh){
     }
     std::getline(file, line); std::getline(file, line);
     
+
+    int DIM = cmesh->Dimension();
+    if (cmesh->ProbType() == ProblemType::ENavierStokes || cmesh->ProbType() == ProblemType::EStokes){
+        cmesh->NGlobalDOF() = (DIM+1) * cmesh->NNodes();
+    } else if (cmesh->ProbType() == ProblemType::EPoisson) {
+        cmesh->NGlobalDOF() = cmesh->NNodes();
+    } else if (cmesh->ProbType() == ProblemType::EElastic){
+        cmesh->NGlobalDOF() = cmesh->NNodes() * DIM;
+    } else {
+        PanicButton();
+    }
+    
+
     return;
 }
 
@@ -466,6 +479,7 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
             cmesh->BoundaryVec().push_back(bound);
         }   
     }
+    cmesh->part_elem= new int[cmesh->NElements()]();
 }
 
 
@@ -474,7 +488,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     std::vector<int > neighborNodes;
 
     int* xadj;
-    int numNd = cmesh->NodeVec().size();
+    int numNd = cmesh->NNodes();
     std::vector<int> adjncy;
     xadj = new int[numNd+1]();
     adjncy.reserve(10*numNd);
@@ -535,13 +549,13 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     METIS_NodeND(&numNd, xadj, adjncy2, NULL, NULL, perm, iperm);
 
     //Reorder nodes
-    for (int i = 0, j; i < cmesh->NodeVec().size(); ++i) {
+    for (int i = 0, j; i < cmesh->NNodes(); ++i) {
         for (j = iperm[i]; j < i; j = iperm[j]);
         if (j == i) while (j = iperm[j],j != i) std::swap(cmesh->NodeVec()[i],cmesh->NodeVec()[j]);
     }
 
     // Update connectivity
-    for (int i = 0; i < cmesh->ElementVec().size(); i++){
+    for (int i = 0; i < cmesh->NElements(); i++){
         VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
 
         //Reorder connectivity
@@ -549,16 +563,16 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
         cmesh->ElementVec()[i] -> setConnectivity(connect);
     }
     // Update boundary connectivity
-    for (int ibound = 0; ibound < cmesh->BoundaryVec().size(); ibound++){
+    for (int ibound = 0; ibound < cmesh->NBoundElements(); ibound++){
         VecInt connectB = cmesh->BoundaryVec()[ibound] -> getBoundaryConnectivity();
 
         for (int k = 0; k < cmesh->NBdNodes(); k++) connectB[k] = iperm[connectB[k]];
         cmesh->BoundaryVec()[ibound] -> setBoundaryConnectivity(connectB);
     }
     
-    for (int i = 0; i < cmesh->NodeVec().size(); i++) cmesh->NodeVec()[i] -> clearInverseIncidence();
+    for (int i = 0; i < cmesh->NNodes(); i++) cmesh->NodeVec()[i] -> clearInverseIncidence();
 
-    for (int i = 0; i < cmesh->ElementVec().size(); i++){
+    for (int i = 0; i < cmesh->NElements(); i++){
         VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
 
         for (int k = 0; k < cmesh->NElNodes(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
@@ -568,7 +582,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     PetscMemoryGetCurrentUsage(&bytes);
     PetscPrintf(PETSC_COMM_WORLD,"Memory used-1 %g M\n",bytes/(1024*1024));
     
-    for (int i = 0; i < cmesh->NodeVec().size(); i++){
+    for (int i = 0; i < cmesh->NNodes(); i++){
         for (int j = 0; j < cmesh->NodeVec()[i] -> getNumberOfElements(); j++){
             int elJ = cmesh->NodeVec()[i] -> getInverseIncidenceElement(j);
             for (int k = 0; k <cmesh-> NodeVec()[i] -> getNumberOfElements(); k++)
@@ -579,12 +593,12 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     PetscMemoryGetCurrentUsage(&bytes);
     PetscPrintf(PETSC_COMM_WORLD,"Memory used00 %g M\n",bytes/(1024*1024));
 
-    for (int i = 0; i < cmesh->ElementVec().size(); i++) cmesh->ElementVec()[i] -> sortEraseNeighborElements();
+    for (int i = 0; i < cmesh->NElements(); i++) cmesh->ElementVec()[i] -> sortEraseNeighborElements();
 
     PetscMemoryGetCurrentUsage(&bytes);
     PetscPrintf(PETSC_COMM_WORLD,"Memory used11 %g M\n",bytes/(1024*1024));        
 
-    // for (int i = 0; i < ElementVec().size(); i++){
+    // for (int i = 0; i < NElements(); i++){
     //     if (rank == 0) std::cout << "Neighbor " << i << " ";
     //     for (int j = 0; j < ElementVec()[i] -> getNumberOfNeighborElements(); j++){
     //         std::cout << ElementVec()[i] -> getNeighborElement(j) << " ";
@@ -603,7 +617,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
 void GmshTools::BoundaryConstrains(CompMesh * cmesh){
     // if (rank == 0) std::cout << "8/9 Setting boundary conditions..." << std::endl;
 
-    for (int ibound = 0; ibound < cmesh->BoundaryVec().size(); ibound++){
+    for (int ibound = 0; ibound < cmesh->NBoundElements(); ibound++){
         
         VecInt connectB = cmesh->BoundaryVec()[ibound] -> getBoundaryConnectivity();
 
@@ -645,7 +659,7 @@ void GmshTools::BoundarySides(CompMesh * cmesh){
     int nBdNodes = cmesh->NBdNodes();
     int DIM = cmesh->Dimension();
     //Sets fluid elements and sides on interface boundaries
-    for (int i=0; i<cmesh->BoundaryVec().size(); i++){
+    for (int i=0; i<cmesh->NBoundElements(); i++){
 
         int group = cmesh->BoundaryVec()[i] -> getBoundaryGroup();
 
@@ -653,7 +667,7 @@ void GmshTools::BoundarySides(CompMesh * cmesh){
             
             VecInt connectB = cmesh->BoundaryVec()[i] -> getBoundaryConnectivity();
 
-            for (int j=0; j<cmesh->ElementVec().size(); j++){
+            for (int j=0; j<cmesh->NElements(); j++){
                 VecInt connect = cmesh->ElementVec()[j] -> getConnectivity();
 
                 int flag = 0;

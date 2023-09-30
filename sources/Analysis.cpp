@@ -13,6 +13,7 @@ Analysis::~Analysis()
 }
 
 void Analysis::Solve(){
+    std::cout << "Solving..." << std::endl;
     PetscErrorCode    ierr;
     //Create KSP context to solve the linear system
     ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
@@ -52,10 +53,37 @@ void Analysis::Solve(){
     // ierr = VecView(fGlobalSolution,PETSC_VIEWER_STDOUT_WORLD);
 }
 
-void Analysis::AllocateProblem(){
+void Analysis::AllocateMonomodel(){
 
     PetscErrorCode    ierr;
     int numDOF = fMeshVector[0]->NGlobalDOF();
+    if (fSolverType == SolverType::ESuiteSparse){
+        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+    } else {
+        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                        numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
+    }
+    for (int i=0; i<numDOF; i++){
+        double val = 1.e-20;
+        ierr = MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
+    }
+
+    //Create PETSc vectors
+    ierr = VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
+    ierr = VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
+    
+    ierr = VecSetFromOptions(fGlobalRhs);
+    ierr = VecDuplicate(fGlobalRhs,&fGlobalSolution);
+}
+
+
+void Analysis::AllocateArlequin(){
+
+    PetscErrorCode    ierr;
+    int64_t numDOFGlobal = fMeshVector[0]->NGlobalDOF();
+    int64_t numDOFLocal = fMeshVector[1]->NGlobalDOF();
+    int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
+    int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
     if (fSolverType == SolverType::ESuiteSparse){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
     } else {
@@ -84,7 +112,7 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
 
         VecDouble errorsProcess;
         // Loop over the elements
-        for (int jel = fMeshVector[0]->ElementVec().size(); jel--; ){
+        for (int jel = fMeshVector[0]->NElements(); jel--; ){
 
             VecDouble errors;
 

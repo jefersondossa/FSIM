@@ -5,7 +5,9 @@
 #include "LinearAnalysis.h"
 
 namespace Assemble{
-    void Monomodel(Analysis *fAnalysis);
+    void Monomodel(Analysis *fAnalysis, int mesh = 0, int64_t startDOF = 0);
+    void Arlequin(Analysis *fAnalysis);
+    void Coupling(Analysis *fAnalysis, int64_t startDOF = 0);
 };
 
 

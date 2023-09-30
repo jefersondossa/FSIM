@@ -35,15 +35,7 @@
 class Element;
 
 /// Mounts the incompressible flow problem
-
-template<int DIM, int DEG>
 class Fluid : public CompMesh{
-public:
-    
-
-    
- 
-    
 
 private:
     //FLUID VARIABLES
@@ -100,22 +92,7 @@ public:
     Fluid(ProblemType ptype, int dim, int order) :CompMesh(ptype,dim,order){
 
     }
-
-    void SetUp();
-
-    void readInitialValues(const std::string& inputPrev, const std::string& inputCurr);
     
-    void setBoundaryConstrains();
-    void setBoundarySides();
-   
-    
-
-    /// Performs the domain decomposition for parallel processing
-    void domainDecompositionMETIS(); 
-
-    int64_t getNumberOfElements(){return ElementVec().size();}
-    int64_t getNumberOfNodes(){return NodeVec().size();}
-
     /// Export the domain decomposition 
     /// @return pair with the elements and nodes domain decompositions
     std::pair<idx_t*,idx_t*> getDomainDecomposition(){

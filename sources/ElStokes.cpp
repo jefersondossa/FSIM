@@ -23,7 +23,7 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
     double &alpha_f = Mesh()->getProblemParameters().getAlphaF();
     double &visc_ = Mesh()->getProblemParameters().GetViscosity();
     double &dens_ = Mesh()->getProblemParameters().GetDensity();
-    double &dTime_ = Mesh()->getProblemParameters().getTimeStep();
+    double &dTime_ = Mesh()->getProblemParameters().GetTimeStep();
 
     for (int i = Mesh()->NElNodes(); i--; ){
         double a1 = 0.;

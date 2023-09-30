@@ -1,79 +1,10 @@
 #include "Fluid.h"
 #include "petscpartitioner.h"
-#include "metis.h"
-#include "ElPoisson.h"
-#include "ElElasticity2D.h"
-#include "ElStokes.h"
-#include "ElNavierStokes.h"
-
-//------------------------------------------------------------------------------
-//---------------------SUBDIVIDES THE FINITE ELEMENT DOMAIN---------------------
-//------------------------------------------------------------------------------
-template<int DIM, int DEG>
-void Fluid<DIM,DEG>::domainDecompositionMETIS() {
-    
-    std::string mirror2;
-    mirror2 = "domain_decomposition.txt";
-    std::ofstream mirrorData(mirror2.c_str());
-    
-    int size;
-
-    MPI_Comm_size(PETSC_COMM_WORLD, &size);
-
-    idx_t objval;
-    idx_t numEl = ElementVec().size();
-    idx_t numNd = NodeVec().size();
-    idx_t ssize = size;
-    idx_t one = 1;
-    int nElNodes = NElNodes();
-    int elem_start[numEl+1], elem_connec[nElNodes*numEl];
-    part_elem = new int[numEl];
-    part_nodes = new int[numNd];
-
-
-    for (int i = 0; i < numEl+1; i++){
-        elem_start[i]=nElNodes*i;
-    };
-    for (int jel = 0; jel < numEl; jel++){
-        auto connec=ElementVec()[jel]->getConnectivity();        
-        
-        for (int i=0; i<nElNodes; i++){
-        elem_connec[nElNodes*jel+i] = connec[i];
-        };
-    };
-
-    //Performs the domain decomposition
-    if (size == 1){
-        for (int i = 0; i < numNd; i++) part_nodes[i] = 0;
-        for (int i = 0; i < numEl; i++) part_elem[i] = 0;
-    } else {
-        METIS_PartMeshDual(&numEl, &numNd, elem_start, elem_connec, \
-                                NULL, NULL, &one, &ssize, NULL, NULL,    \
-                                &objval, part_elem, part_nodes);
-    }
-    
-    mirrorData << std::endl \
-               << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
-    for(int i = 0; i < numEl; i++){
-        mirrorData << "process = " << part_elem[i] \
-                   << ", element = " << i << std::endl;
-    };
-
-    mirrorData << std::endl \
-               << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
-    for(int i = 0; i < numNd; i++){
-        mirrorData << "process = " << part_nodes[i] \
-                   << ", node = " << i << std::endl;
-    };
-
-
-};
 
 //------------------------------------------------------------------------------
 //----------------------COMPUTES DRAG AND LIFT COEFFICIENTS---------------------
 //------------------------------------------------------------------------------
-template<>
-void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
+void Fluid::dragAndLiftCoefficients(std::ofstream& dragLift){
 
     double dragCoefficient = 0.;
     double liftCoefficient = 0.;
@@ -82,7 +13,7 @@ void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
     double frictionDragCoefficient = 0.;
     double frictionLiftCoefficient = 0.;
     
-    for (int jel = 0; jel < BoundaryVec().size(); jel++){   
+    for (int jel = 0; jel < NBoundElements(); jel++){   
         
         double rhoInf = 1.0;
         double velocityInf[2];
@@ -140,29 +71,11 @@ void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
     }
 }
 
-
-template<int DIM, int DEG>
-void Fluid<DIM,DEG>::SetUp() {
-
-    if (ProbType() == ProblemType::ENavierStokes || ProbType() == ProblemType::EStokes){
-        NGlobalDOF() = (DIM+1) * NodeVec().size();
-    } else if (ProbType() == ProblemType::EPoisson) {
-        NGlobalDOF() = NodeVec().size();
-    } else if (ProbType() == ProblemType::EElastic){
-        NGlobalDOF() = NodeVec().size() * DIM;
-    } else {
-        PanicButton();
-    }
- 
-    domainDecompositionMETIS();
-
-};
-
 //------------------------------------------------------------------------------
 //-------------------------SOLVE STEADY LAPLACE PROBLEM-------------------------
 //------------------------------------------------------------------------------
-template<int DIM, int DEG>
-int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
+
+int Fluid::solveSteadyLaplaceProblem(int iterNumber, double tolerance) {
 
     Vec               b, u, All;
     PetscErrorCode    ierr;
@@ -179,21 +92,21 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
     for (int inewton = 0; inewton < iterNumber; inewton++){
 
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            2*NodeVec().size(), 2*NodeVec().size(),
+                            2*NNodes(), 2*NNodes(),
                             100,NULL,100,NULL,&A); 
         
         ierr = MatGetOwnershipRange(A, &Istart, &Iend);
         
         //Create PETSc vectors
         ierr = VecCreate(PETSC_COMM_WORLD,&b);
-        ierr = VecSetSizes(b,PETSC_DECIDE,2*NodeVec().size());
+        ierr = VecSetSizes(b,PETSC_DECIDE,2*NNodes());
         ierr = VecSetFromOptions(b);
         ierr = VecDuplicate(b,&u);
         ierr = VecDuplicate(b,&All);
         
         //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
         
-        for (int jel = 0; jel < ElementVec().size(); jel++){               
+        for (int jel = 0; jel < NElements(); jel++){               
             //Compute Element matrix
             VecInt connec = ElementVec()[jel] -> getConnectivity();
 
@@ -290,7 +203,7 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         double u_ [2];
         Ione = 1;
 
-        for (int i = 0; i < NodeVec().size(); ++i){
+        for (int i = 0; i < NNodes(); ++i){
             Ii = 2*i;
             ierr = VecGetValues(All, Ione, &Ii, &val);
             u_[0] = val;
@@ -345,7 +258,7 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
         };
     };
     
-    // for (int i=0; i<ElementVec().size(); i++){
+    // for (int i=0; i<NElements(); i++){
     //     ElementVec()[i] -> computeNodalGradient();            
     // };
 
@@ -361,8 +274,8 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
 //------------------------------------------------------------------------------
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
 //------------------------------------------------------------------------------
-template<int DIM, int DEG>
-int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
+
+int Fluid::solveFSIFluid(int iterNumber, double tolerance, int problem_type){
 
     Vec               b, u, All, Allu;
     PetscErrorCode    ierr;
@@ -396,13 +309,13 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         std::clock_t t1 = std::clock();
         
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            3*NodeVec().size(), 3*NodeVec().size(),
+                            3*NNodes(), 3*NNodes(),
                             100,NULL,300,NULL,&A); 
         
                 
         //Create PETSc vectors
         ierr = VecCreate(PETSC_COMM_WORLD,&b);
-        ierr = VecSetSizes(b,PETSC_DECIDE,3*NodeVec().size());
+        ierr = VecSetSizes(b,PETSC_DECIDE,3*NNodes());
         
         ierr = VecSetFromOptions(b);
         ierr = VecDuplicate(b,&u);
@@ -410,7 +323,7 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         
         //std::cout << "Istart = " << Istart << " Iend = " << Iend << std::endl;
 
-        for (int jel = 0; jel < ElementVec().size(); jel++){   
+        for (int jel = 0; jel < NElements(); jel++){   
             
             if (part_elem[jel] == rank) {
                 //Compute Element matrix
@@ -445,23 +358,23 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
                         
                         //Matrix Q and Qt
                         dof_i = 2 * connec[i];
-                        dof_j = 2 * NodeVec().size() + connec[j];
+                        dof_j = 2 * NNodes() + connec[j];
                         MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i  ,12+j), ADD_VALUES);
                     
                         dof_i = 2 * connec[i];
-                        dof_j = 2 * NodeVec().size() + connec[j];
+                        dof_j = 2 * NNodes() + connec[j];
                         MatSetValues(A, 1, &dof_j, 1, &dof_i, &matrix(12+j,2*i  ), ADD_VALUES);
                         
                         dof_i = 2 * connec[i] + 1;
-                        dof_j = 2 * NodeVec().size() + connec[j];
+                        dof_j = 2 * NNodes() + connec[j];
                         MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(2*i+1,12+j), ADD_VALUES);
                         
                         dof_i = 2 * connec[i] + 1;
-                        dof_j = 2 * NodeVec().size() + connec[j];
+                        dof_j = 2 * NNodes() + connec[j];
                         MatSetValues(A, 1, &dof_j, 1, &dof_i, &matrix(12+j,2*i+1), ADD_VALUES);
                         
-                        dof_i = 2 * NodeVec().size() + connec[i];
-                        dof_j = 2 * NodeVec().size() + connec[j];
+                        dof_i = 2 * NNodes() + connec[i];
+                        dof_j = 2 * NNodes() + connec[j];
                         MatSetValues(A, 1, &dof_i, 1, &dof_j, &matrix(12+i,12+j), ADD_VALUES);
                     };
                     
@@ -472,7 +385,7 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
                     dof_i = 2 * connec[i]+1;
                     VecSetValues(b, 1, &dof_i, &rhs[2*i+1], ADD_VALUES);
                     
-                    dof_i = 2 * NodeVec().size() + connec[i];
+                    dof_i = 2 * NNodes() + connec[i];
                     VecSetValues(b, 1, &dof_i, &rhs[12+i], ADD_VALUES);
                 };
             };
@@ -551,7 +464,7 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         double dpNorm = 0.;
         Ione = 1;
         
-        for (int i = 0; i < NodeVec().size(); ++i){
+        for (int i = 0; i < NNodes(); ++i){
             Ii = 2*i;
             ierr = VecGetValues(All, Ione, &Ii, &val);
             NodeVec()[i] -> incrementAcceleration(0,val);
@@ -569,8 +482,8 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
             duNorm += val*val;
         };
         
-        for (int i = 0; i<NodeVec().size(); i++){
-            Ii = 2*NodeVec().size()+i;
+        for (int i = 0; i<NNodes(); i++){
+            Ii = 2*NNodes()+i;
             ierr = VecGetValues(All,Ione,&Ii,&val);
             p_ = val;
             NodeVec()[i] -> incrementPressure(p_);
@@ -604,18 +517,7 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
         if (sqrt(duNorm) <= tolerance) {
             break;
         };
-
-
-
     };//Newton-Raphson
     
     return 0;
 };
-
-
-template class Fluid<2,1>;
-template class Fluid<2,2>;
-template class Fluid<2,3>;
-template class Fluid<3,1>;
-template class Fluid<3,2>;
-template class Fluid<3,3>;

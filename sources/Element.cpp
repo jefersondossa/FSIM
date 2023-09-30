@@ -313,8 +313,12 @@ void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &dja
     for (int i = fMesh->NElNodes(); i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            xna_[j] = alpha_f * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) + 
-                      (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousCoordinateValue(j);
+            xna_[j] = fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) ;
+            // xna_[j] = alpha_f * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) + 
+            //           (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousCoordinateValue(j);
+            if(std::isnan(xna_[j])){
+                fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j);
+            }
             for (int k = DIM; k--; ){
                 dx_dxsi(j,k) += xna_[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
@@ -324,6 +328,9 @@ void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &dja
 
     //Computing the jacobian determinant and Inverse
     djac_ = dx_dxsi.determinant();
+    if (fabs(djac_)<1.e-3){
+        PanicButton();
+    }
     ainv_ = dx_dxsi.inverse().transpose();
 
     return;
@@ -973,7 +980,7 @@ void Element::getParameterSUPG(int &index, double &tSUPG_, double &tPSPG_, doubl
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     double &visc_ = fMesh->getProblemParameters().GetViscosity();
     double &dens_ = fMesh->getProblemParameters().GetDensity();
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
 
     for (int i = fMesh->NElNodes(); i--; ){
         double a1 = 0.;
@@ -1095,7 +1102,7 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     double &visc_ = fMesh->getProblemParameters().GetViscosity();
     double &dens_ = fMesh->getProblemParameters().GetDensity();
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
     double &k1 = fMesh->getProblemParameters().getArlequinK1();
 
     for (int i = 0; i < fMesh->NElNodes(); i++){
@@ -1368,7 +1375,7 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 
 //     double &visc_ = fMesh->getProblemParameters().GetViscosity();
 //     double &dens_ = fMesh->getProblemParameters().GetDensity();
-//     double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+//     double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
 //     double &k1 = fMesh->getProblemParameters().getArlequinK1();
 
 //     double lambda[18][18] = {};
@@ -1497,7 +1504,7 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 //------------------------------------------------------------------------------
 void Element::getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix){
 
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
     double &visc_ = fMesh->getProblemParameters().GetViscosity();
     double &dens_ = fMesh->getProblemParameters().GetDensity();
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
@@ -1701,7 +1708,7 @@ void Element::setBoundaryConditionsLagrangeMultipliers(double** jacobianNRMatrix
 //------------------------------------------------------------------------------
 void Element::getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector){
 
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
     double &visc_ = fMesh->getProblemParameters().GetViscosity();
     double &dens_ = fMesh->getProblemParameters().GetDensity();
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
@@ -1966,7 +1973,7 @@ void Element::getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVect
     int index = 0;
     IntegQuadrature nQuad(DIM,DEG);
 
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
         
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -2160,7 +2167,7 @@ void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDo
     double &k2 = fMesh->getProblemParameters().getArlequinK2();
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     double &gamma = fMesh->getProblemParameters().getGamma();
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
     
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         
@@ -2612,7 +2619,7 @@ void Element::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, V
     MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
     MatrixDouble dphiL_dx(fMesh->NElNodes(),DIM);    
     
-    double &dTime_ = fMesh->getProblemParameters().getTimeStep();
+    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
     double &visc_ = fMesh->getProblemParameters().GetViscosity();
     double &dens_ = fMesh->getProblemParameters().GetDensity();
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();

@@ -31,11 +31,13 @@ public:
         fMeshVector.resize(1);
         fMeshVector[0] = cmesh;
         fSolverType = stype;
+        AllocateMonomodel();
     };
 
     Analysis(std::vector<CompMesh *> &meshvec, SolverType stype){
         fMeshVector = meshvec;
         fSolverType = stype;
+        AllocateArlequin();
     };
 
     Mat &Stiffness(){return fGlobalStiffness;}
@@ -47,12 +49,14 @@ public:
     virtual void UpdateSolution() = 0;
 
     void Solve();
-    void AllocateProblem();
+    void AllocateMonomodel();
+    void AllocateArlequin();
     
     virtual void Run(){
-        AllocateProblem();
+        std::cout << "Allocating problem..." << std::endl;
         Compute();
         Solve();
+        std::cout << "Updating solution..." << std::endl;
         UpdateSolution();
     };
 

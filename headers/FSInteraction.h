@@ -16,8 +16,8 @@
 #include "hdf5.h"
 #include "Arlequin.h"
 
-template<int DIM,int DEG> class Arlequin;
-template<int DIM,int DEG> class Fluid;
+class Arlequin;
+class Fluid;
 
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
@@ -46,14 +46,11 @@ extern "C" {void updatesolid_(int *ipt);};
 template<int DIM, int DEG>
 class FSInteraction{
 public:
-    /// Defines locally the class Fluid
-    typedef Fluid<DIM,DEG>                  FluidModel;
-
     /// Defines locally the class Arlequin
-    typedef Arlequin<DIM,DEG>               ArlequinModel;
+    typedef Arlequin               ArlequinModel;
    
 private:
-    FluidModel         *fluidModel;
+    Fluid              *fluidModel;
     ArlequinModel      *arlequinModel;
     
     std::vector<Node *>     nodesFluid_;
@@ -103,7 +100,7 @@ public:
 
     /// Sets the fluid and solid models and perform the preprocessing tasks
     /// @param Fluid fluid model @param char* solid input file
-    void setFluidAndSolidModels(FluidModel& fluid, char *in_solid);
+    void setFluidAndSolidModels(Fluid& fluid, char *in_solid);
 
     /// Sets the Arlequin and solid models and perform the preprocessing tasks
     /// @param Arlequin Arlequin fluid model @param char* solid input file

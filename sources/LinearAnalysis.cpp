@@ -2,7 +2,23 @@
 #include "Assemble.h"
 
 void LinearAnalysis::Compute(){
-    Assemble::Monomodel(this);
+    if (this->MeshVector().size() == 1){
+        Assemble::Monomodel(this);
+    } else {
+        Assemble::Arlequin(this);
+    }
+    PetscErrorCode    ierr;
+
+    //Assemble matrices and vectors
+    ierr = MatAssemblyBegin(this->Stiffness(),MAT_FINAL_ASSEMBLY);
+    ierr = MatAssemblyEnd(this->Stiffness(),MAT_FINAL_ASSEMBLY);
+    
+    ierr = VecAssemblyBegin(this->Rhs());
+    ierr = VecAssemblyEnd(this->Rhs());
+
+    MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
+    MatView(this->Stiffness(),PETSC_VIEWER_DRAW_WORLD);
+    VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
 } 
 
 void LinearAnalysis::UpdateSolution(){
@@ -26,15 +42,19 @@ void LinearAnalysis::UpdateSolution(){
     PetscInt Ione = 1;
     PetscInt Ii;
     PetscScalar val;
-        
-    for (int i = 0; i < this->MeshVector()[0]->NodeVec().size(); ++i){
-        int nstate = this->MeshVector()[0]->NodeVec()[i]->GetNStateVariables();
-        for (int k = 0; k<nstate; k++){
-            Ii = nstate*i+k;
-            ierr = VecGetValues(All, Ione, &Ii, &val);
-            this->MeshVector()[0]->NodeVec()[i] -> SetSolution(k,val);
-        }
-    };
+    
+    int64_t nstartDOF = 0;
+    for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
+        if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
+        for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
+            int nstate = this->MeshVector()[imesh]->NodeVec()[i]->GetNStateVariables();
+            for (int k = 0; k<nstate; k++){
+                Ii = nstartDOF + nstate*i+k;
+                ierr = VecGetValues(All, Ione, &Ii, &val);
+                this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
+            }
+        };
+    }
     ierr = VecDestroy(&All); 
     ierr = VecDestroy(&Allu); 
 }

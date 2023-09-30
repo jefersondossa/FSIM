@@ -22,10 +22,9 @@ private:
     int nBdNodes = 0;
     int nElNodes = 0;
     int nLocDOF = 0;
-    int numDOF;
+    int numDOF = 0;
 
     ProblemType fProbType = ProblemType::ENavierStokes;
-
 
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
@@ -57,10 +56,10 @@ public:
         } else {
             PanicButton();
         }
+
+        
         
     };
-    
-    
     
     int* part_elem;      //Fluid Domain Decomposition - Elements
     int* part_nodes;     //Fluid Domain Decomposition - Nodes
@@ -73,16 +72,19 @@ public:
     /// mesh problem with the Arlequin method
     /// @return fluid model nodes information
     std::vector<Node *> &NodeVec(){return fNodeVector;}
+    int64_t NNodes(){return fNodeVector.size();}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
     std::vector<Element *> &ElementVec(){return fElementVector;}
-    
+    int64_t NElements(){return fElementVector.size();}
+
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
     std::vector<Boundary *> &BoundaryVec(){return fBoundaryVector;}
+    int64_t NBoundElements(){return fBoundaryVector.size();}
 
     ProblemParameters &getProblemParameters(){
         return fProbParameters;

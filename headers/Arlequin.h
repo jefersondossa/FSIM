@@ -17,31 +17,16 @@
 #include "Fluid.h"
 #include "Glue.h"
 #include "IntegrationQuadrature11.h"
-
-template<int DIM,int DEG> class Fluid;
+#include "ElCoupling.h"
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
-
-template<int DIM, int DEG>
 class Arlequin{
 public:
-    /// Defines the class Fluid locally
-    typedef Fluid<DIM,DEG>                 FluidMesh;
-
-    FluidMesh *coarseModel, *fineModel;
-
-    std::vector<Node *>     *nodesCoarse_;
-    std::vector<Node *>     *nodesFine_;
     std::vector<Node *>     nodesLagrangeFine_;
     std::vector<Node *>     nodesLagrangeCoarse_;
 
-    std::vector<Element *>  elementsCoarse_;
-    std::vector<Element *>  elementsFine_;
-    std::vector<Glue *>  glueZoneFine_;
-    std::vector<Glue *>  glueZoneCoarse_;
-
-    std::vector<Boundary *>  boundaryCoarse_;
-    std::vector<Boundary *>  boundaryFine_;
+    std::vector<ElCoupling *>     glueZoneFine_;
+    std::vector<ElCoupling *>     glueZoneCoarse_;
 
     std::vector<int>         elementsGlueZoneFine_;
     std::vector<int>         nodesGlueZoneFine_;
@@ -61,36 +46,29 @@ public:
     PetscLogDouble bytes = 0;
 
 private:
-    int numElemCoarse;
-    int numElemFine;
-    int numBoundElemCoarse;
-    int numBoundElemFine;
+    double fGlueZoneThickness = 0.2;
+    double fArlequinEpsilon = 1.e-3;
+
     int numElemGlueZoneFine;
     int numElemGlueZoneCoarse;
-    int numNodesCoarse;
-    int numNodesFine;
     int numNodesGlueZoneFine;
     int numNodesGlueZoneCoarse;
-    int numTimeSteps;
-    double dTime;
     int rank;
-    int iTimeStep;
-
-    ProblemParameters *parametersCoarse, *parametersFine;
-
-    std::pair<idx_t*,idx_t*> domDecompCoarse;//Coarse Model Domain Decomposition
-    std::pair<idx_t*,idx_t*> domDecompFine;  //Fine Model Domain Decomposition
-
-
-    double pi = M_PI;
-
-    double alpha_f;
-    double alpha_m;
-    double gamma;
 
     ArlequinStabType fArlequinStab = ArlequinStabType::ENoStab;
+    std::vector<CompMesh *> fMeshVector;
 
 public:
+    Arlequin() = default;
+
+    Arlequin(std::vector<CompMesh *> &meshvec, ArlequinStabType stab){
+        fMeshVector = meshvec;
+        fMeshVector.resize(3);
+        fArlequinStab = stab;
+        fMeshVector[2] = new CompMesh(fMeshVector[0]->ProbType(), fMeshVector[0]->Dimension(), fMeshVector[0]->GetDefaultOrder());
+    }
+
+    std::vector<CompMesh *> &MeshVec(){return fMeshVector;}
 
     void setArlequinStabilization(ArlequinStabType stab){fArlequinStab = stab;}
     ArlequinStabType &getArlequinStabilization(){return fArlequinStab;}
@@ -98,7 +76,7 @@ public:
     /// Sets the coarse and mesh models. It is considered that the fine model
     /// is completely immersed on the coarse model.
     /// @param Fluid coarse model @param Fluid fine model
-    void setFluidModels(FluidMesh& coarse, FluidMesh& fine);
+    // void setFluidModels(FluidMesh& coarse, FluidMesh& fine);
 
     /// Mounts and solve the incompressible flow problem with overlapping meshes
     /// using the Arlequin method whit the gluing zone defined in the fine model
@@ -132,7 +110,7 @@ public:
 
     /// Compute and store the element boxes for improving the correspondence 
     /// searching process
-    void setElementBoxes();
+    void SetElementBoxes();
 
     /// Defines the gluing (or coupling) zone
     void setCouplingZone();
@@ -215,6 +193,15 @@ public:
                            MatrixDouble &C0, MatrixDouble &C1,
                            MatrixDouble &E, VecDouble &b0, 
                            VecDouble &b1, double &tArlq0, double &tArlq1);
+
+    void SetUp(){
+        SetElementBoxes();
+        setSignaledDistance();
+        //Construct the glue zone based on some defined criterion
+        setCouplingZone();
+        //Computes the Weight function for all the finite elements
+        setWeightFunction(16.); 
+    };
 
 };
 
