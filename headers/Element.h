@@ -150,15 +150,7 @@ public:
     /// Interpolate Coordinates
     /// @param int integration point index @param coordinates @param previous time step coordinates
     void interpolateCoordinates(int &index, VecDouble &x_, VecDouble &xPrev_);
-
-    /// Interpolate Lagrange Multiplier
-    /// @param int integration point index @param interpolated lagrange multipliers @param shape functions
-    void interpolateLagMultiplier(int &index, VecDouble &lagM_);
-
-    /// Interpolate Lagrange Multiplier
-    /// @param int integration point index @param interpolated lagrange multipliers @param shape functions
-    void interpolateLagMultiplierDerivatives(MatrixDouble &dphi_dx, MatrixDouble &dL_dx);
-
+    
     /// Interpolate velocity derivatives
     /// @param double** shape function spatial derivatives @param double** velocity derivatives
     /// @param double** previous time step velocity derivatives

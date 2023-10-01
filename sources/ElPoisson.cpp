@@ -24,8 +24,8 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
     int dim = Mesh()->Dimension();
 
     //Velocity Derivatives
-    MatrixDouble du_dx(dim,dim), duprev_dx(dim,dim);
-    interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+    MatrixDouble du_dx(dim,dim);
+    interpolateSolDerivatives(dphi_dx, du_dx);
 
     double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);
 

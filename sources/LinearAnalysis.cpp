@@ -2,6 +2,9 @@
 #include "Assemble.h"
 
 void LinearAnalysis::Compute(){
+    // MatZeroEntries(this->Stiffness());
+    // VecZeroEntries(this->Rhs());
+
     if (this->MeshVector().size() == 1){
         Assemble::Monomodel(this);
     } else {
@@ -16,9 +19,9 @@ void LinearAnalysis::Compute(){
     ierr = VecAssemblyBegin(this->Rhs());
     ierr = VecAssemblyEnd(this->Rhs());
 
-    MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
-    MatView(this->Stiffness(),PETSC_VIEWER_DRAW_WORLD);
-    VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
+    // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
+    // MatView(this->Stiffness(),PETSC_VIEWER_DRAW_WORLD);
+    // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
 } 
 
 void LinearAnalysis::UpdateSolution(){

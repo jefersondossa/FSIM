@@ -34,6 +34,7 @@ static char help[] = "Solves the Incompressible flow problem";
   
 // Developed Header Files
 #include "LinearAnalysis.h"
+#include "NonLinearAnalysis.h"
 #include "Arlequin.h"
 #include "GmshTools.h"
 #include "VTUGenerator.h"

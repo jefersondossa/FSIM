@@ -85,7 +85,7 @@ void Analysis::AllocateArlequin(){
     int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
     int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
     if (fSolverType == SolverType::ESuiteSparse){
-        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
     } else {
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
@@ -101,6 +101,12 @@ void Analysis::AllocateArlequin(){
     
     ierr = VecSetFromOptions(fGlobalRhs);
     ierr = VecDuplicate(fGlobalRhs,&fGlobalSolution);
+
+    // ierr = MatAssemblyBegin(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
+    // ierr = MatAssemblyEnd(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
+
+    // ierr = VecAssemblyBegin(fGlobalRhs);
+    // ierr = VecAssemblyEnd(fGlobalRhs);
 }
 
 void Analysis::PostProcessError(VecDouble &errorsTotal){
@@ -108,35 +114,34 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
     int rank;
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    if (fMeshVector[0]->getProblemParameters().getExactSolution()){
+    for (int imesh = 0; imesh < fMeshVector.size(); imesh++){
+        if (fMeshVector[imesh]->getProblemParameters().getExactSolution()){
+            VecDouble errorsProcess;
+            // Loop over the elements
+            for (int jel = fMeshVector[imesh]->NElements(); jel--; ){
 
-        VecDouble errorsProcess;
-        // Loop over the elements
-        for (int jel = fMeshVector[0]->NElements(); jel--; ){
+                VecDouble errors;
 
-            VecDouble errors;
+                fMeshVector[imesh]->ElementVec()[jel] -> ComputeError(errors);
+                errorsProcess.resize(errors.size());
+                errorsProcess += errors;
 
-            fMeshVector[0]->ElementVec()[jel] -> ComputeError(errors);
-            errorsProcess.resize(errors.size());
-            errorsProcess += errors;
+            }; //Elements
+            errorsTotal.resize(errorsProcess.size());
+            errorsTotal.setZero();
 
-        }; //Elements
-        errorsTotal.resize(errorsProcess.size());
-        errorsTotal.setZero();
+            if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
 
-        if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-
-        if (rank == 0 && errorsTotal.size()>0){
-            std::cout << "\n\nERROR REPORT:\n" << std::scientific << std::setprecision(10)
-                << "L2 state var = " << sqrt(errorsTotal[0]) << "\n" 
-                << "Semi H1 state var = " << sqrt(errorsTotal[1]) << "\n" 
-                << "H1 state var = " << sqrt(errorsTotal[2]) << "\n"; 
+            if (rank == 0 && errorsTotal.size()>0){
+                std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10)
+                    << "L2 state var = " << sqrt(errorsTotal[0]) << "\n" 
+                    << "Semi H1 state var = " << sqrt(errorsTotal[1]) << "\n" 
+                    << "H1 state var = " << sqrt(errorsTotal[2]) << "\n"; 
+            }
+        } else {
+            std::cout << "Exact solution not defined for MESHVECTOR[" << imesh << "]:" << std::endl;
         }
-    } else {
-        std::cout << "Exact solution not defined!" << std::endl;
-        PanicButton();
     }
-
 }
 
 

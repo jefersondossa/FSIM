@@ -18,6 +18,7 @@
 #include "Glue.h"
 #include "IntegrationQuadrature11.h"
 #include "ElCouplingLocal.h"
+#include <map>
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 class Arlequin{
@@ -45,8 +46,11 @@ public:
     PetscScalar       val;
     PetscLogDouble bytes = 0;
 
+    std::map<int64_t,int64_t> fNodeLocalToElementGlobal;
+    std::map<int64_t,VecDouble> fNodeLocalToXsiGlobal;
+
 private:
-    double fGlueZoneThickness = 0.2;
+    double fGlueZoneThickness = 0.125;
     double fArlequinEpsilon = 1.e-3;
 
     int numElemGlueZoneFine;
@@ -54,6 +58,10 @@ private:
     int numNodesGlueZoneFine;
     int numNodesGlueZoneCoarse;
     int rank;
+
+    std::map<int64_t,double> fLocalSignaledDistance;
+    std::map<int64_t,double> fGlobalSignaledDistance;
+    
 
     ArlequinStabType fArlequinStab = ArlequinStabType::ENoStab;
     std::vector<CompMesh *> fMeshVector;

@@ -1,31 +1,22 @@
 #ifndef NONLINEARANALYSIS_H
 #define NONLINEARANALYSIS_H
 
-#include "Analysis.h"
-// class CompMesh;
+#include "LinearAnalysis.h"
 
-class NonLinearAnalysis : public Analysis
+class NonLinearAnalysis : public LinearAnalysis
 {
 private:
     /* data */
 public:
-    NonLinearAnalysis() : Analysis(){};
-    NonLinearAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
+    NonLinearAnalysis() : LinearAnalysis(){};
+    NonLinearAnalysis(CompMesh *cmesh, SolverType stype) : LinearAnalysis(cmesh,stype){};
+    NonLinearAnalysis(std::vector<CompMesh *> &meshvector, SolverType stype) : LinearAnalysis(meshvector,stype){};
 
-    void Compute() override;
+    // void Compute() override;
 
     void UpdateSolution() override;
 
     void Run() override;
-
-    ~NonLinearAnalysis();
 };
-
-
-NonLinearAnalysis::~NonLinearAnalysis()
-{
-}
-
-
 
 #endif

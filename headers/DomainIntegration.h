@@ -36,6 +36,7 @@ public:
         // dphi_ = new double**[nElNodes];
         for (int i = 0; i < nElNodes; i++){ 
             dphi_[i].resize(DIM,nIntegPointsNormal);
+            dphi_[i].setZero();
             // dphi_[i] = new double*[DIM];
             // for (int j = 0; j < DIM; j++) dphi_[i][j] = new double[nIntegPointsNormal];
         }

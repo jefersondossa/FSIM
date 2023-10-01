@@ -620,13 +620,7 @@ void GmshTools::BoundaryConstrains(CompMesh * cmesh){
     for (int ibound = 0; ibound < cmesh->NBoundElements(); ibound++){
         
         VecInt connectB = cmesh->BoundaryVec()[ibound] -> getBoundaryConnectivity();
-
-        for (int k = 0; k < cmesh->Dimension(); k++){
-            if ((cmesh->BoundaryVec()[ibound] -> getConstrain(k) == 3)){
-                for (int j = 0; j < cmesh->NBdNodes(); j++) cmesh->NodeVec()[connectB[j]] -> setConstrainsLaplace(k,1,0);
-            };
-        };
- 
+        
         for (int j = 0; j < cmesh->NBdNodes(); j++){
             int nstate = cmesh->NodeVec()[connectB[j]]->GetNStateVariables();
             for (int istate = 0; istate < nstate; istate++){

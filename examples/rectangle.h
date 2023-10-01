@@ -20,13 +20,13 @@ auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDoubl
     const auto &x=coord[0];
     const auto &y=coord[1];
     auto pi = M_PI;
-
-    u[0] = cos(pi*x)*sin(2.*pi*y);
-    u[1] = cos(pi*y)*sin(pi*x);
-    gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
-    gradU(0,1) = pi*cos(pi*x)*cos(pi*y);
-    gradU(1,0) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
-    gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
+    u[0]=1.;
+    // u[0] = cos(pi*x)*sin(2.*pi*y);
+    // u[1] = cos(pi*y)*sin(pi*x);
+    // gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
+    // gradU(0,1) = pi*cos(pi*x)*cos(pi*y);
+    // gradU(1,0) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
+    // gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
 };
 
 auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
@@ -35,8 +35,8 @@ auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
     double E=1.;
     double poisson=0.0;
     auto pi = M_PI;
-    force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
-    force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
+    // force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
+    // force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
 };
 
 auto exactSolStokes = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
@@ -151,8 +151,8 @@ for (int k = 3; k < 4; k++)
 
         //Transfinite lines 
         int corn = 20; int side = 7;
-        double h2 = pow(2,k)/2+1;
-        double v2 = pow(2,k)+1;
+        double h2 = pow(2,k+1)/2+1;
+        double v2 = pow(2,k+1)+1;
         //corners
         fluid2 -> transfiniteLine({ l10 }, h2);
         fluid2 -> transfiniteLine({ l11 }, v2);
@@ -246,9 +246,9 @@ for (int k = 3; k < 4; k++)
     }
     fineModel->getProblemParameters().setSolver(SolverType::ESuiteSparse);
     fineModel->getProblemParameters().setSpectralRadius(1.);
-    fineModel->getProblemParameters().setArlequinOperatorConstants(1.,0.);
+    fineModel->getProblemParameters().setArlequinOperatorConstants(1.,0.00);
     coarseModel->getProblemParameters().setSpectralRadius(1.);
-    coarseModel->getProblemParameters().setArlequinOperatorConstants(1.,0.);
+    coarseModel->getProblemParameters().setArlequinOperatorConstants(1.,0.00);
 
 
     std::vector<CompMesh *> meshvector(2);
@@ -260,6 +260,7 @@ for (int k = 3; k < 4; k++)
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
+    // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
     an.Run();
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse");
@@ -269,7 +270,4 @@ for (int k = 3; k < 4; k++)
     // VecDouble errors;
     // an.PostProcessError(errors);
 
-    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
-
-    // arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 0); 
 }           

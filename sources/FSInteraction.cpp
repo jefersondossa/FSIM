@@ -33,7 +33,9 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
         VecDouble deltaX(DIM);
         VecDouble deltaXsi(DIM);
 
-        nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+        PanicButton();
+        //Create a nodal correspondence structure such as in arlequin. With a std::map
+        // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
         for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
             
@@ -109,7 +111,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
                     
                     xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
                     elemC = jel;
-                    nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+                    // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
                     break;
                 };           
             };
@@ -153,7 +155,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
         double x_[DIM];
         double deltaX[DIM];
         double deltaXsi[DIM];
-        nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+        // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
         for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             
@@ -236,7 +238,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
                     
                     xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
                     elemC = jel;
-                    nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+                    // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
                     break;
                 };           
             };
@@ -269,7 +271,7 @@ void FSInteraction<DIM,DEG>::searchFluidNodeCorrespondence(int interface){
 
                 // std::cout << "asdasd " << elemC << " " << xsiC << std::endl; 
 
-                nodesFluid_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
+                // nodesFluid_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
                 
                 // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
             };
@@ -303,7 +305,7 @@ void FSInteraction<DIM,DEG>::searchArlequinNodeCorrespondence(int interface){
 
                 // if (rank == 0) std::cout << "asdasd " << elemC << " " << xsiC << " " << " " << connec[inode] << " " << interface << " " << numElemArlequinFine << " " << flag << std::endl; 
 
-                nodesArlequinFine_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
+                // nodesArlequinFine_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
                 
                 // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
             };
@@ -438,7 +440,7 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
             int inode = i+1;
             getsolidposition_(&inode,&x[0],&x[1]);
             
-            Node *node = new Node(x,index++);
+            Node *node = new Node(x,index++,DIM);
             nodesSolid_[k].push_back(node);
         };
     };
@@ -528,7 +530,7 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
             int inode = i+1;
             getsolidposition_(&inode,&x[0],&x[1]);
             
-            Node *node = new Node(x,index++);
+            Node *node = new Node(x,index++,DIM);
             nodesSolid_[k].push_back(node);
         };
     };
@@ -662,16 +664,18 @@ void FSInteraction<DIM,DEG>::updateFluidMesh(){
 
                     VecDouble x(DIM);
                     
-                    int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
-                    VecDouble xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
+                    PanicButton();
+                    // int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
+                    // VecDouble xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
                     
                     
-                    if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
+                    // if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
               
                     MPI_Bcast(&x[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&x[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
-                    nodesFluid_[connec[k]] -> setUpdatedCoordinates(x);
+                    PanicButton();
+                    // nodesFluid_[connec[k]] -> setUpdatedCoordinates(x);
                     nodesFluid_[connec[k]] -> setCoordinates(x);
 
                     //if(connec(k) == 29)std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
@@ -686,12 +690,10 @@ void FSInteraction<DIM,DEG>::updateFluidMesh(){
     fluidModel->solveSteadyLaplaceProblem(5,1.e-6);
    
     for (int i = 0; i < numNodesFluid; i++){
-        VecDouble u(DIM), up(DIM);
+        VecDouble u(DIM);
             
         VecDouble x = nodesFluid_[i] -> getCoordinates();
         VecDouble xp = nodesFluid_[i] -> getPreviousCoordinates();
-        up[0] = nodesFluid_[i] -> getPreviousMeshVelocity(0);
-        up[1] = nodesFluid_[i] -> getPreviousMeshVelocity(1);
         
         u[0] = (x[0] - xp[0]) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
         u[1] = (x[1] - xp[1]) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
@@ -723,13 +725,13 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
                 for (int k = 0; k < nBdNodes; k++){
 
                     VecDouble x(2);
-                    
-                    int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
-                    VecDouble xsi = nodesArlequinFine_[connec[k]] -> getNodalXsiCorrespondence();
+                    PanicButton();
+                    // int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
+                    // VecDouble xsi = nodesArlequinFine_[connec[k]] -> getNodalXsiCorrespondence();
 
-                    // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
+                    // // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     
-                    if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
+                    // if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
 
                     MPI_Bcast(&x[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&x[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
@@ -737,7 +739,8 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
                     // if (rank == 0) std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
                     MPI_Barrier(PETSC_COMM_WORLD);
 
-                    nodesArlequinFine_[connec[k]] -> setUpdatedCoordinates(x);
+                    PanicButton();
+                    // nodesArlequinFine_[connec[k]] -> setUpdatedCoordinates(x);
                     nodesArlequinFine_[connec[k]] -> setCoordinates(x);
 
                     // std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
@@ -759,16 +762,13 @@ void FSInteraction<DIM,DEG>::updateArlequinMesh(){
     // MPI_Barrier(PETSC_COMM_WORLD);
 
     for (int i = 0; i < numNodesArlequinFine; i++){
-        VecDouble up(2);
         VecDouble u(2);
             
         VecDouble x = nodesArlequinFine_[i] -> getCoordinates();
         VecDouble xp = nodesArlequinFine_[i] -> getPreviousCoordinates();
-        up[0] = nodesArlequinFine_[i] -> getPreviousMeshVelocity(0);
-        up[1] = nodesArlequinFine_[i] -> getPreviousMeshVelocity(1);
         
-        u[0] = (x[0] - xp[0]) / dTime;//2. * (xp(0) - x(0)) / dTime - up(0);
-        u[1] = (x[1] - xp[1]) / dTime;//2. * (xp(1) - x(1)) / dTime - up(1);
+        u[0] = (x[0] - xp[0]) / dTime;
+        u[1] = (x[1] - xp[1]) / dTime;
         
         nodesArlequinFine_[i] -> setMeshVelocity(u);
     };
@@ -796,18 +796,19 @@ void FSInteraction<DIM,DEG>::transferSolidVelocity(){
                 int nBdNodes = fluidModel->NBdNodes();
                 for (int k = 0; k < nBdNodes; k++){
                     
-                    int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
-                    VecDouble xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
+                    PanicButton();
+                    // int elem = nodesFluid_[connec[k]] -> getNodalElemCorrespondence();
+                    // VecDouble xsi = nodesFluid_[connec[k]] -> getNodalXsiCorrespondence();
                     
                     
-                    if (rank == 0) 
-                        getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
+                    // if (rank == 0) 
+                    //     getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
                         
                     MPI_Bcast(&u[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&u[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                
-                    nodesFluid_[connec[k]] -> setVelocity(u);
-  
+                    // nodesFluid_[connec[k]] -> setVelocity(u);
+                    PanicButton();
                     // x = nodesFluid_[connec(k)] -> getCoordinates();
                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
                     // Acc(1) = nodesFluid_[connec(k)] -> getAcceleration(1);
@@ -840,16 +841,17 @@ void FSInteraction<DIM,DEG>::transferSolidVelocityArlequin(){
                 int nBdNodes = arlequinModel->MeshVec()[1]->NBdNodes();
                 for (int k = 0; k < nBdNodes; k++){
                     
-                    int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
-                    VecDouble xsi = nodesArlequinFine_[connec[k]] ->  getNodalXsiCorrespondence();
+                    PanicButton();
+                    // int elem = arlequinModel->fNodeLocalToElementGlobal[nodesArlequinFine_[connec[k]]];
+                    // VecDouble xsi = arlequinModel->fNodeLocalToXsiGlobal[nodesArlequinFine_[connec[k]]];
                     
-                    if (rank == 0) 
-                        getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
+                    // if (rank == 0) 
+                    //     getinterpolatedvelocity_(&u[0],&u[1],&elem,&xsi[0]);
                         
                     MPI_Bcast(&u[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
                     MPI_Bcast(&u[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
-               
-                    nodesArlequinFine_[connec[k]] -> setVelocity(u);
+                    PanicButton();
+                    // nodesArlequinFine_[connec[k]] -> setVelocity(u);
   
                     // x = nodesFluid_[connec(k)] -> getCoordinates();
                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
@@ -874,12 +876,12 @@ void FSInteraction<DIM,DEG>::transferFluidLoad(){
     
     for (int iInterf = 0; iInterf < numInterfaces; iInterf++){
         for (int isolid = 0; isolid < numNodesSolid; isolid++){
-            
-            int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
-            VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
+            PanicButton();
+            // int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
+            // VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
 
             VecDouble load(DIM);
-            elementsFluid_[ielem] -> getBoundaryLoad(xsi,load);
+            // elementsFluid_[ielem] -> getBoundaryLoad(xsi,load);
 
             int inode = isolid+1;
             setcouplingload_(&load[0],&load[1],&inode);
@@ -900,12 +902,13 @@ void FSInteraction<DIM,DEG>::transferArlequinLoad(){
     for (int iInterf = 0; iInterf < numInterfaces; iInterf++){
         for (int isolid = 0; isolid < numNodesSolid; isolid++){
             // std::cout << "AAAAA 2 "<< std::endl;
-            int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
+            PanicButton();
+            // int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
             // std::cout << "AAAAA 3 " << ielem << " " << isolid << " " << std::endl;
-            VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
+            // VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
             // std::cout << "AAAAA 4 "<< ielem << " " << xsi[0] << " " << xsi[1] << " " << std::sqrt(std::inner_product(xsi,xsi,xsi,0.0L)) << std::endl;
             VecDouble load(DIM);
-            if (xsi[0] < 3) elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi,load);
+            // if (xsi[0] < 3) elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi,load);
             // std::cout << "AAAAA 5 "<< std::endl;
             int inode = isolid+1;
             setcouplingload_(&load[0],&load[1],&inode);
@@ -987,24 +990,24 @@ void FSInteraction<DIM,DEG>::solveFSIProblem(int numTimeSteps){
         //     };
         // };
         // //SOMENTE PARA EXEMPLO DA CAVIDADE - FIM
-
-        for (int i = 0; i < numNodesFluid; i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM);
-            //Compute acceleration
-            u[0] = nodesFluid_[i] -> getVelocity(0);
-            u[1] = nodesFluid_[i] -> getVelocity(1);
+        PanicButton();
+        // for (int i = 0; i < numNodesFluid; i++){
+        //     VecDouble accel(DIM), u(DIM), uprev(DIM);
+        //     //Compute acceleration
+        //     u[0] = nodesFluid_[i] -> getVelocity(0);
+        //     u[1] = nodesFluid_[i] -> getVelocity(1);
             
-            nodesFluid_[i] -> setPreviousVelocity(u);
+        //     nodesFluid_[i] -> setPreviousVelocity(u);
 
-            accel[0] = nodesFluid_[i] -> getAcceleration(0);
-            accel[1] = nodesFluid_[i] -> getAcceleration(1);
+        //     accel[0] = nodesFluid_[i] -> getAcceleration(0);
+        //     accel[1] = nodesFluid_[i] -> getAcceleration(1);
             
-            nodesFluid_[i] -> setPreviousAcceleration(accel);
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
+        //     nodesFluid_[i] -> setPreviousAcceleration(accel);
+        //     accel[0] *= (gamma - 1.) / gamma;
+        //     accel[1] *= (gamma - 1.) / gamma;
 
-            nodesFluid_[i] -> setAcceleration(accel);
-        };
+        //     nodesFluid_[i] -> setAcceleration(accel);
+        // };
 
         if (rank == 0) updateqsrs_();
 
@@ -1265,46 +1268,46 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
         //     arlequinModel->MeshVec()[0]->ProblemParameters.setSpectralRadius(spec);
         //     std::cout << "AQUI " << rank << std::endl;
         // }
+        PanicButton();
+        // for (int i = 0; i < numNodesArlequinCoarse; i++){
+        //     VecDouble accel(DIM), u(DIM), uprev(DIM);
+            
+        //     //Compute acceleration
+        //     u[0] = nodesArlequinCoarse_[i] -> getVelocity(0);
+        //     u[1] = nodesArlequinCoarse_[i] -> getVelocity(1);
 
-        for (int i = 0; i < numNodesArlequinCoarse; i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM);
+        //     nodesArlequinCoarse_[i] -> setPreviousVelocity(u);
             
-            //Compute acceleration
-            u[0] = nodesArlequinCoarse_[i] -> getVelocity(0);
-            u[1] = nodesArlequinCoarse_[i] -> getVelocity(1);
+        //     accel[0] = nodesArlequinCoarse_[i] -> getAcceleration(0);
+        //     accel[1] = nodesArlequinCoarse_[i] -> getAcceleration(1);
+            
+        //     nodesArlequinCoarse_[i] -> setPreviousAcceleration(accel);
 
-            nodesArlequinCoarse_[i] -> setPreviousVelocity(u);
+        //     accel[0] *= (gamma - 1.) / gamma;
+        //     accel[1] *= (gamma - 1.) / gamma;
             
-            accel[0] = nodesArlequinCoarse_[i] -> getAcceleration(0);
-            accel[1] = nodesArlequinCoarse_[i] -> getAcceleration(1);
-            
-            nodesArlequinCoarse_[i] -> setPreviousAcceleration(accel);
+        //     nodesArlequinCoarse_[i] -> setAcceleration(accel);
+        // };
 
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
+        // for (int i = 0; i < numNodesArlequinFine; i++){
+        //     VecDouble accel(DIM), u(DIM), uprev(DIM), lag(DIM);
             
-            nodesArlequinCoarse_[i] -> setAcceleration(accel);
-        };
+        //     //Compute acceleration
+        //     u[0] = nodesArlequinFine_[i] -> getVelocity(0);
+        //     u[1] = nodesArlequinFine_[i] -> getVelocity(1);
 
-        for (int i = 0; i < numNodesArlequinFine; i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM), lag(DIM);
+        //     nodesArlequinFine_[i] -> setPreviousVelocity(u);
             
-            //Compute acceleration
-            u[0] = nodesArlequinFine_[i] -> getVelocity(0);
-            u[1] = nodesArlequinFine_[i] -> getVelocity(1);
+        //     accel[0] = nodesArlequinFine_[i] -> getAcceleration(0);
+        //     accel[1] = nodesArlequinFine_[i] -> getAcceleration(1);
+            
+        //     nodesArlequinFine_[i] -> setPreviousAcceleration(accel);
 
-            nodesArlequinFine_[i] -> setPreviousVelocity(u);
+        //     accel[0] *= (gamma - 1.) / gamma;
+        //     accel[1] *= (gamma - 1.) / gamma;
             
-            accel[0] = nodesArlequinFine_[i] -> getAcceleration(0);
-            accel[1] = nodesArlequinFine_[i] -> getAcceleration(1);
-            
-            nodesArlequinFine_[i] -> setPreviousAcceleration(accel);
-
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
-            
-            nodesArlequinFine_[i] -> setAcceleration(accel);
-        };
+        //     nodesArlequinFine_[i] -> setAcceleration(accel);
+        // };
 
         // std::cout << "AQUI2 " << rank << std::endl;
         // MPI_Barrier(PETSC_COMM_WORLD);

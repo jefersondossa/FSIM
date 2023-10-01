@@ -282,8 +282,10 @@ void Arlequin::setNodalCorrespondenceFine() {
 
         int elCorr = 0;
         VecDouble xsiCorr(DIM);
-        searchNodeCorrespondence(x, fMeshVector[0],elCorr,xsiCorr,fMeshVector[2]->NodeVec()[inode]->getNodalElemCorrespondence());
-        fMeshVector[2]->NodeVec()[inode] -> setNodalCorrespondence(elCorr,xsiCorr);             
+        searchNodeCorrespondence(x, fMeshVector[0],elCorr,xsiCorr,fNodeLocalToElementGlobal[inode]);
+        fNodeLocalToElementGlobal[inode]=elCorr;
+        fNodeLocalToXsiGlobal[inode]=xsiCorr;
+        // fMeshVector[2]->NodeVec()[inode] -> setNodalCorrespondence(elCorr,xsiCorr);             
         // }
 
         // std::cout << "INODE " << nodesGlueZoneFine_[inode] << " " << elCorr << " " << xsiCorr[0] << " " << xsiCorr[1] << std::endl;
@@ -354,19 +356,13 @@ void Arlequin::setNodalCorrespondenceFine() {
 
 void Arlequin::setSignaledDistance(){
     
+    std::map<int64_t,VecDouble> NodalNormalVector;
+
     int DIM = fMeshVector[0]->Dimension();
     int DEG = fMeshVector[0]->GetDefaultOrder();
     int nBdNodes = fMeshVector[1]->NBdNodes();
     int bconnec[nBdNodes];
     double dist;
-
-    for (int inode = 0 ; inode < fMeshVector[1]->NNodes(); inode++){ 
-        fMeshVector[1]->NodeVec()[inode] -> clearInnerNormal();
-        fMeshVector[1]->NodeVec()[inode] -> setDistFunction(0.0);
-    };
-    for (int inode = 0 ; inode < fMeshVector[0]->NNodes(); inode++){ 
-        fMeshVector[0]->NodeVec()[inode] -> setDistFunction(0.0);
-    };
     //approximate normal calculation
 
     for (int i = 0; i < fMeshVector[1]->NBoundElements(); i++){
@@ -406,8 +402,10 @@ void Arlequin::setSignaledDistance(){
                 n[0] = (x2[1] - x1[1]) / sLength;
                 n[1] = (x1[0] - x2[0]) / sLength;
 
-                fMeshVector[1]->NodeVec()[no1] -> setInnerNormal(n);
-                fMeshVector[1]->NodeVec()[no2] -> setInnerNormal(n);
+                NodalNormalVector[no1] = n;
+                NodalNormalVector[no2] = n;
+                // fMeshVector[1]->NodeVec()[no1] -> setInnerNormal(n);
+                // fMeshVector[1]->NodeVec()[no2] -> setInnerNormal(n);
             }
         };
     };
@@ -463,7 +461,7 @@ void Arlequin::setSignaledDistance(){
                                      (x2[0] - x[0]) * (x2[0] - x[0]));
                         //find signal
                         //side normal vector
-                        VecDouble n = fMeshVector[1]->NodeVec()[no2] -> getInnerNormal();
+                        VecDouble n = NodalNormalVector[no2];
                         double test[2];
 
                         test[0] = x[0] - x2[0];
@@ -481,7 +479,7 @@ void Arlequin::setSignaledDistance(){
                                      (x[0] - x1[0]) * (x[0] - x1[0]));
                         //find signal
                         //side normal vector
-                        VecDouble n = fMeshVector[1]->NodeVec()[no1] -> getInnerNormal();
+                        VecDouble n = NodalNormalVector[no1];
                         double test[2];
 
                         test[0] = x[0] - x1[0];
@@ -500,7 +498,7 @@ void Arlequin::setSignaledDistance(){
         }; //
         if(dist < 0) dist = 0;
         dist = x[0] - 0.5;
-        fMeshVector[1]->NodeVec()[ino] -> setDistFunction(dist);
+        fLocalSignaledDistance[ino] = dist;
      };
 
     //Coarse mesh
@@ -550,7 +548,7 @@ void Arlequin::setSignaledDistance(){
                                      (x2[0] - x[0]) * (x2[0] - x[0]));
                         //find signal
                         //side normal vector
-                        VecDouble n = fMeshVector[1]->NodeVec()[no2] -> getInnerNormal();
+                        VecDouble n = NodalNormalVector[no2];
                         
                         double test[2];
                         test[0] = x[0] - x2[0];
@@ -568,7 +566,7 @@ void Arlequin::setSignaledDistance(){
                                      (x[0] - x1[0]) * (x[0] - x1[0]));
                         //find signal
                         //side normal vector
-                        VecDouble n = fMeshVector[1]->NodeVec()[no1] -> getInnerNormal();
+                        VecDouble n = NodalNormalVector[no1];
                         
                         double test[2];
                         test[0] = x[0] - x1[0];
@@ -586,11 +584,11 @@ void Arlequin::setSignaledDistance(){
             }; //if bf is the glue boundary
         }; //
     
-        if (fabs(fMeshVector[0]->NodeVec()[ino] -> getDistFunction()) < 1.e-2){
-            fMeshVector[0]->NodeVec()[ino] -> setDistFunction(dist); 
+        if (fabs(fGlobalSignaledDistance[ino]) < 1.e-2){
+            fGlobalSignaledDistance[ino] = dist;
         };
         dist = x[0] - 0.5;
-        fMeshVector[0]->NodeVec()[ino] -> setDistFunction(dist); 
+        fGlobalSignaledDistance[ino] = dist;
      };
 
 
@@ -622,7 +620,7 @@ void Arlequin::setCouplingZone(){
         int nElNodes = fMeshVector[1]->NElNodes();
         for (int ino = 0; ino < nElNodes; ino++){
             VecDouble x = fMeshVector[1]->NodeVec()[connec[ino]] -> getCoordinates();
-            double dist = fMeshVector[1]->NodeVec()[connec[ino]] -> getDistFunction();
+            double dist = fLocalSignaledDistance[connec[ino]];
             //  std::cout << "DIST " << dist << std::endl;
             if (dist <= fGlueZoneThickness + 0.001) flag++;
             
@@ -796,7 +794,7 @@ void Arlequin::setWeightFunction(double val){
  
     for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
         
-        double r = fMeshVector[0]->NodeVec()[i] -> getDistFunction();
+        double r = fGlobalSignaledDistance[i];
             
         if (r < 0){
             wFuncValue = 1.;
@@ -825,7 +823,7 @@ void Arlequin::setWeightFunction(double val){
 
     for (int i=0; i<fMeshVector[1]->NNodes(); i++){
 
-        double r = fMeshVector[1]->NodeVec()[i] -> getDistFunction();
+        double r = fLocalSignaledDistance[i];
         
         if (r >= lambda){
             wFuncValue = 1. - epsilon;
@@ -2645,207 +2643,207 @@ void Arlequin::assembleFineModel(){
 
 
 void Arlequin::assembleCouplingOperator(){
-    int DIM = fMeshVector[0]->Dimension();
-    int DEG = fMeshVector[0]->GetDefaultOrder();
-    //Lagrange Multipliers
-    for (int l=0; l< numElemGlueZoneFine; l++){
-        int jel = elementsGlueZoneFine_[l];
-        if (fMeshVector[1]->part_elem[jel] == rank) {
+    // int DIM = fMeshVector[0]->Dimension();
+    // int DEG = fMeshVector[0]->GetDefaultOrder();
+    // //Lagrange Multipliers
+    // for (int l=0; l< numElemGlueZoneFine; l++){
+    //     int jel = elementsGlueZoneFine_[l];
+    //     if (fMeshVector[1]->part_elem[jel] == rank) {
             
-            int nElNodes = fMeshVector[1]->NElNodes();
-            int dofMatrices = 0;
-            if (fProbType == EPoisson){
-                dofMatrices = nElNodes;
-            } else if (fProbType == EElastic) {
-                dofMatrices = nElNodes * DIM;
-            } else {
-                dofMatrices = nElNodes * (DIM+1);
-            }
+    //         int nElNodes = fMeshVector[1]->NElNodes();
+    //         int dofMatrices = 0;
+    //         if (fProbType == EPoisson){
+    //             dofMatrices = nElNodes;
+    //         } else if (fProbType == EElastic) {
+    //             dofMatrices = nElNodes * DIM;
+    //         } else {
+    //             dofMatrices = nElNodes * (DIM+1);
+    //         }
 
-            VecInt connecC;
-            VecInt connec = fMeshVector[1]->ElementVec()[jel] -> getConnectivity();
-            VecInt connecL = glueZoneFine_[l] -> getConnectivity();
+    //         VecInt connecC;
+    //         VecInt connec = fMeshVector[1]->ElementVec()[jel] -> getConnectivity();
+    //         VecInt connecL = glueZoneFine_[l] -> getConnectivity();
             
-            //FINE MESH
-            //Matrices
-            MatrixDouble matC0(dofMatrices,dofMatrices),matC1(dofMatrices,dofMatrices);
-            MatrixDouble matA0(dofMatrices,dofMatrices),matA1(dofMatrices,dofMatrices);
-            MatrixDouble localMV_mat(dofMatrices,dofMatrices);
-            MatrixDouble matE0(dofMatrices,dofMatrices),matE1(dofMatrices,dofMatrices);
-            matC1.setZero();
-            matA1.setZero();
-            localMV_mat.setZero();
-            matE1.setZero();
+    //         //FINE MESH
+    //         //Matrices
+    //         MatrixDouble matC0(dofMatrices,dofMatrices),matC1(dofMatrices,dofMatrices);
+    //         MatrixDouble matA0(dofMatrices,dofMatrices),matA1(dofMatrices,dofMatrices);
+    //         MatrixDouble localMV_mat(dofMatrices,dofMatrices);
+    //         MatrixDouble matE0(dofMatrices,dofMatrices),matE1(dofMatrices,dofMatrices);
+    //         matC1.setZero();
+    //         matA1.setZero();
+    //         localMV_mat.setZero();
+    //         matE1.setZero();
 
-            double tARLQ0_, tARLQ1_;
+    //         double tARLQ0_, tARLQ1_;
             
-            //Vectors
-            VecDouble vecC0(dofMatrices),vecC1(dofMatrices);
-            VecDouble vecU0(dofMatrices),vecU1(dofMatrices);
-            VecDouble RhsA0(dofMatrices),RhsA1(dofMatrices);
-            VecDouble localMV_vec(dofMatrices);
-            VecDouble vecE0(dofMatrices),vecE1(dofMatrices);
-            vecC1.setZero();
-            vecU1.setZero();
-            localMV_vec.setZero();
-            vecE1.setZero();
+    //         //Vectors
+    //         VecDouble vecC0(dofMatrices),vecC1(dofMatrices);
+    //         VecDouble vecU0(dofMatrices),vecU1(dofMatrices);
+    //         VecDouble RhsA0(dofMatrices),RhsA1(dofMatrices);
+    //         VecDouble localMV_vec(dofMatrices);
+    //         VecDouble vecE0(dofMatrices),vecE1(dofMatrices);
+    //         vecC1.setZero();
+    //         vecU1.setZero();
+    //         localMV_vec.setZero();
+    //         vecE1.setZero();
 
-            // FINE MESH
-            //Computes element matrix
-            fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersSameMesh(matC1, vecC1, vecU1);
+    //         // FINE MESH
+    //         //Computes element matrix
+    //         fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersSameMesh(matC1, vecC1, vecU1);
             
-            if (fArlequinStab != ArlequinStabType::ENoStab){
-                if (fProbType == ENavierStokes || fProbType == EStokes){
-                    //PSPG and SUPG stabilizations
-                    fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
-                }
-                //Arlequin Stabilization
-                fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersArlequinSameMesh(matE1, matA1, vecE1);
-            }
+    //         if (fArlequinStab != ArlequinStabType::ENoStab){
+    //             if (fProbType == ENavierStokes || fProbType == EStokes){
+    //                 //PSPG and SUPG stabilizations
+    //                 fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
+    //             }
+    //             //Arlequin Stabilization
+    //             fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersArlequinSameMesh(matE1, matA1, vecE1);
+    //         }
 
-            //COAESE MESH
-            //Counts number of coarse mesh intersecting the fine element
-            int numberIntPoints = fMeshVector[1]->ElementVec()[jel] -> 
-                getNumberOfIntegrationPoints();
-            int aux;
+    //         //COAESE MESH
+    //         //Counts number of coarse mesh intersecting the fine element
+    //         int numberIntPoints = fMeshVector[1]->ElementVec()[jel] -> 
+    //             getNumberOfIntegrationPoints();
+    //         int aux;
             
-            std::vector<int> ele, diffElem;
-            ele.clear();
-            diffElem.clear();
+    //         std::vector<int> ele, diffElem;
+    //         ele.clear();
+    //         diffElem.clear();
 
-            ele.reserve(3);
-            for (int i=0; i<numberIntPoints; i++){
-                aux = fMeshVector[1]->ElementVec()[jel] -> 
-                    getIntegPointCorrespondenceElement(i);
-                ele.push_back(aux);
-                //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
-            };
+    //         ele.reserve(3);
+    //         for (int i=0; i<numberIntPoints; i++){
+    //             aux = fMeshVector[1]->ElementVec()[jel] -> 
+    //                 getIntegPointCorrespondenceElement(i);
+    //             ele.push_back(aux);
+    //             //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
+    //         };
             
-            int numElemIntersect = 1;
-            int flag = 0;
-            diffElem.push_back(ele[0]);
+    //         int numElemIntersect = 1;
+    //         int flag = 0;
+    //         diffElem.push_back(ele[0]);
             
-            for (int i = 1; i<numberIntPoints; i++){
-                flag = 0;
-                for (int j = 0; j<numElemIntersect; j++){
-                    if (ele[i] == diffElem[j]) {
-                        break;
-                    }else{
-                        flag++;
-                    };
-                    if(flag == numElemIntersect){
-                        numElemIntersect++;
-                        diffElem.push_back(ele[i]);
-                    };
-                };
-            };
-            //Compute the Lagrange Multiplier element matrix
-            for (int ielem = 0; ielem < numElemIntersect; ielem++){
-                int nElNodes = fMeshVector[1]->NElNodes();
-                int iElemCoarse = diffElem[ielem];
-                double pspg = 0;//(*fMeshVector[0]->ElementVec()[iElemCoarse]) -> getPSPG();
-                VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes);
+    //         for (int i = 1; i<numberIntPoints; i++){
+    //             flag = 0;
+    //             for (int j = 0; j<numElemIntersect; j++){
+    //                 if (ele[i] == diffElem[j]) {
+    //                     break;
+    //                 }else{
+    //                     flag++;
+    //                 };
+    //                 if(flag == numElemIntersect){
+    //                     numElemIntersect++;
+    //                     diffElem.push_back(ele[i]);
+    //                 };
+    //             };
+    //         };
+    //         //Compute the Lagrange Multiplier element matrix
+    //         for (int ielem = 0; ielem < numElemIntersect; ielem++){
+    //             int nElNodes = fMeshVector[1]->NElNodes();
+    //             int iElemCoarse = diffElem[ielem];
+    //             double pspg = 0;//(*fMeshVector[0]->ElementVec()[iElemCoarse]) -> getPSPG();
+    //             VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes);
 
-                connecC = fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity();
+    //             connecC = fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity();
 
-                for (int k = 0; k < nElNodes; k++){
-                    press_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getPressure();
-                    velX_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getVelocity(0);
-                    velY_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getVelocity(1);
-                    velXPrev_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getPreviousVelocity(0);
-                    velYPrev_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getPreviousVelocity(1);
-                }
+    //             for (int k = 0; k < nElNodes; k++){
+    //                 press_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getPressure();
+    //                 velX_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getVelocity(0);
+    //                 velY_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getVelocity(1);
+    //                 velXPrev_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getPreviousVelocity(0);
+    //                 velYPrev_[k] = fMeshVector[0]->NodeVec()[connecC[k]] -> getPreviousVelocity(1);
+    //             }
                 
-                matC0.setZero();
-                localMV_mat.setZero();
-                matE0.setZero();
+    //             matC0.setZero();
+    //             localMV_mat.setZero();
+    //             matE0.setZero();
                 
-                //Vectors
-                vecC0.setZero();
-                vecU0.setZero();
-                localMV_vec.setZero();
-                vecE0.setZero();
-                matA0.setZero();
+    //             //Vectors
+    //             vecC0.setZero();
+    //             vecU0.setZero();
+    //             localMV_vec.setZero();
+    //             vecE0.setZero();
+    //             matA0.setZero();
                 
-                fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
+    //             fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,matC0,vecC0,vecU0);
 
-                if (fArlequinStab != ArlequinStabType::ENoStab){
-                    if (fProbType == ENavierStokes || fProbType == EStokes){
-                        fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
-                    }
+    //             if (fArlequinStab != ArlequinStabType::ENoStab){
+    //                 if (fProbType == ENavierStokes || fProbType == EStokes){
+    //                     fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
+    //                 }
 
-                    fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,matE0,matA0,vecE0);
-                }
-                MatrixDouble matE = matE1;
-                stabilizeArlequin(matA0,matA1,matC0,matC1,matE0,vecE0,vecE1,tARLQ0_,tARLQ1_);
+    //                 fMeshVector[1]->ElementVec()[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,matE0,matA0,vecE0);
+    //             }
+    //             MatrixDouble matE = matE1;
+    //             stabilizeArlequin(matA0,matA1,matC0,matC1,matE0,vecE0,vecE1,tARLQ0_,tARLQ1_);
 
-                matE0 *= tARLQ0_;
-                matA0 *= tARLQ0_;
-                vecE0 *= tARLQ0_;
+    //             matE0 *= tARLQ0_;
+    //             matA0 *= tARLQ0_;
+    //             vecE0 *= tARLQ0_;
                 
-                switch (fProbType)
-                {
-                case ENavierStokes:
-                case EStokes:
-                    setMatVecValuesLagMultFineCoarse(matC0, localMV_mat, matE0, matA0, 
-                                                 vecU0, vecC0, localMV_vec, vecE0,
-                                                 fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity(), 
-                                                 glueZoneFine_[l] -> getConnectivity());
-                    break;
-                case EPoisson:
-                    setMatVecValuesLagMultFineCoarsePoisson(matC0, localMV_mat, matE0, matA0, 
-                                                        vecU0, vecC0, localMV_vec, vecE0,
-                                                        fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity(), 
-                                                        glueZoneFine_[l] -> getConnectivity());
-                    break;
-                case EElastic:
-                    setMatVecValuesLagMultFineCoarseElasticity(matC0, localMV_mat, matE0, matA0, 
-                                                 vecU0, vecC0, localMV_vec, vecE0,
-                                                 fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity(), 
-                                                 glueZoneFine_[l] -> getConnectivity());
-                    break;
+    //             switch (fProbType)
+    //             {
+    //             case ENavierStokes:
+    //             case EStokes:
+    //                 setMatVecValuesLagMultFineCoarse(matC0, localMV_mat, matE0, matA0, 
+    //                                              vecU0, vecC0, localMV_vec, vecE0,
+    //                                              fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity(), 
+    //                                              glueZoneFine_[l] -> getConnectivity());
+    //                 break;
+    //             case EPoisson:
+    //                 setMatVecValuesLagMultFineCoarsePoisson(matC0, localMV_mat, matE0, matA0, 
+    //                                                     vecU0, vecC0, localMV_vec, vecE0,
+    //                                                     fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity(), 
+    //                                                     glueZoneFine_[l] -> getConnectivity());
+    //                 break;
+    //             case EElastic:
+    //                 setMatVecValuesLagMultFineCoarseElasticity(matC0, localMV_mat, matE0, matA0, 
+    //                                              vecU0, vecC0, localMV_vec, vecE0,
+    //                                              fMeshVector[0]->ElementVec()[iElemCoarse] -> getConnectivity(), 
+    //                                              glueZoneFine_[l] -> getConnectivity());
+    //                 break;
                 
-                default:
-                    PanicButton();
-                    break;
-                }
-            }; //Number of intersections
+    //             default:
+    //                 PanicButton();
+    //                 break;
+    //             }
+    //         }; //Number of intersections
 
-            matE1 *= tARLQ1_;
-            matA1 *= tARLQ1_;
-            vecE1 *= tARLQ1_;
+    //         matE1 *= tARLQ1_;
+    //         matA1 *= tARLQ1_;
+    //         vecE1 *= tARLQ1_;
 
-            switch (fProbType)
-            {
-            case ENavierStokes:
-            case EStokes:
-                setMatVecValuesLagMultFineFine(matC1,localMV_mat,matE1,matA1, 
-                                        vecU1,vecC1,localMV_vec,vecE1,
-                                        fMeshVector[1]->ElementVec()[jel] -> getConnectivity(),
-                                        glueZoneFine_[l] -> getConnectivity());
-                break;
-            case EPoisson:
-                setMatVecValuesLagMultFineFinePoisson(matC1,localMV_mat,matE1,matA1, 
-                                                      vecU1,vecC0,localMV_vec,vecE1,
-                                                      fMeshVector[1]->ElementVec()[jel] -> getConnectivity(),
-                                                      glueZoneFine_[l] -> getConnectivity());
-                break;
-            case EElastic:
-                setMatVecValuesLagMultFineFineElasticity(matC1,localMV_mat,matE1,matA1, 
-                                                      vecU1,vecC0,localMV_vec,vecE1,
-                                                      fMeshVector[1]->ElementVec()[jel] -> getConnectivity(),
-                                                      glueZoneFine_[l] -> getConnectivity());
-                break;
+    //         switch (fProbType)
+    //         {
+    //         case ENavierStokes:
+    //         case EStokes:
+    //             setMatVecValuesLagMultFineFine(matC1,localMV_mat,matE1,matA1, 
+    //                                     vecU1,vecC1,localMV_vec,vecE1,
+    //                                     fMeshVector[1]->ElementVec()[jel] -> getConnectivity(),
+    //                                     glueZoneFine_[l] -> getConnectivity());
+    //             break;
+    //         case EPoisson:
+    //             setMatVecValuesLagMultFineFinePoisson(matC1,localMV_mat,matE1,matA1, 
+    //                                                   vecU1,vecC0,localMV_vec,vecE1,
+    //                                                   fMeshVector[1]->ElementVec()[jel] -> getConnectivity(),
+    //                                                   glueZoneFine_[l] -> getConnectivity());
+    //             break;
+    //         case EElastic:
+    //             setMatVecValuesLagMultFineFineElasticity(matC1,localMV_mat,matE1,matA1, 
+    //                                                   vecU1,vecC0,localMV_vec,vecE1,
+    //                                                   fMeshVector[1]->ElementVec()[jel] -> getConnectivity(),
+    //                                                   glueZoneFine_[l] -> getConnectivity());
+    //             break;
             
-            default:
-                PanicButton();
-                break;
-            }
+    //         default:
+    //             PanicButton();
+    //             break;
+    //         }
 
             
            
-        }; // if element belongs to the glue zone
-    }; // Glue zone
+    //     }; // if element belongs to the glue zone
+    // }; // Glue zone
 }
 
 
@@ -2865,472 +2863,472 @@ int Arlequin::solveArlequinProblem(int iterNumber, double tolerance,
                                             int problem_type, int time_dependency){
 
 
-    std::ofstream dragLift;
-    int DIM = fMeshVector[0]->Dimension();
-    int DEG = fMeshVector[0]->GetDefaultOrder();
-    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
-    if (rank == 0) {
-        dragLift << "Time   Pressure Drag   Pressure Lift " 
-                 << "Friction Drag  Friction Lift Drag    Lift " 
-                 << std::endl;
-    };
+//     std::ofstream dragLift;
+//     int DIM = fMeshVector[0]->Dimension();
+//     int DEG = fMeshVector[0]->GetDefaultOrder();
+//     dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
+//     if (rank == 0) {
+//         dragLift << "Time   Pressure Drag   Pressure Lift " 
+//                  << "Friction Drag  Friction Lift Drag    Lift " 
+//                  << std::endl;
+//     };
 
-    if ((problem_type < 1) || (problem_type > 2)){
-        std::cout << "WRONG PROBLEM TYPE." << std::endl;
-        return 0;
-    };
+//     if ((problem_type < 1) || (problem_type > 2)){
+//         std::cout << "WRONG PROBLEM TYPE." << std::endl;
+//         return 0;
+//     };
 
-    if (time_dependency == 0) fMeshVector[1]->getProblemParameters().GetNTimeSteps() = 1;
+//     if (time_dependency == 0) fMeshVector[1]->getProblemParameters().GetNTimeSteps() = 1;
     
-    fMeshVector[1]->getProblemParameters().setTimeInstant(0);
+//     fMeshVector[1]->getProblemParameters().setTimeInstant(0);
    
-    // //Computes the Weight function for all the finite elements
-    setWeightFunction(16.);
+//     // //Computes the Weight function for all the finite elements
+//     setWeightFunction(16.);
 
-    //Computes the Nodal correspondence between fine nodes and coarse elements
-    setNodalCorrespondenceFine();
-    if (rank == 0) {
-        printResultsCoarse(100);
-        printResultsFine(100);
-    }
-    // Computes the system size
-    int sysSize;
-    if (fProbType == ProblemType::ENavierStokes || fProbType == ProblemType::EStokes){
-        sysSize = (DIM+1)*fMeshVector[0]->NNodes() + (DIM+1)*fMeshVector[1]->NNodes() + DIM*numNodesGlueZoneFine;
-    } else if (fProbType == ProblemType::EPoisson){
-        sysSize = fMeshVector[0]->NNodes() + fMeshVector[1]->NNodes() + numNodesGlueZoneFine;
-    } else if (fProbType == ProblemType::EElastic){
-        sysSize = (fMeshVector[0]->NNodes() + fMeshVector[1]->NNodes() + numNodesGlueZoneFine)*DIM;
-    }
-    double integScheme = fMeshVector[1]->getProblemParameters().GetSpectralRadius();
+//     //Computes the Nodal correspondence between fine nodes and coarse elements
+//     setNodalCorrespondenceFine();
+//     if (rank == 0) {
+//         printResultsCoarse(100);
+//         printResultsFine(100);
+//     }
+//     // Computes the system size
+//     int sysSize;
+//     if (fProbType == ProblemType::ENavierStokes || fProbType == ProblemType::EStokes){
+//         sysSize = (DIM+1)*fMeshVector[0]->NNodes() + (DIM+1)*fMeshVector[1]->NNodes() + DIM*numNodesGlueZoneFine;
+//     } else if (fProbType == ProblemType::EPoisson){
+//         sysSize = fMeshVector[0]->NNodes() + fMeshVector[1]->NNodes() + numNodesGlueZoneFine;
+//     } else if (fProbType == ProblemType::EElastic){
+//         sysSize = (fMeshVector[0]->NNodes() + fMeshVector[1]->NNodes() + numNodesGlueZoneFine)*DIM;
+//     }
+//     double integScheme = fMeshVector[1]->getProblemParameters().GetSpectralRadius();
 
-    double alpha_f = 1. / (1. + integScheme);
-    double alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
-    double gamma = 0.5 + alpha_m - alpha_f;
+//     double alpha_f = 1. / (1. + integScheme);
+//     double alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
+//     double gamma = 0.5 + alpha_m - alpha_f;
 
-    for (int iTimeStep = 0; iTimeStep < fMeshVector[1]->getProblemParameters().GetNTimeSteps(); iTimeStep++){
+//     for (int iTimeStep = 0; iTimeStep < fMeshVector[1]->getProblemParameters().GetNTimeSteps(); iTimeStep++){
         
-        fMeshVector[0]->getProblemParameters().setTimeInstant(iTimeStep);
-        fMeshVector[1]->getProblemParameters().setTimeInstant(iTimeStep);
+//         fMeshVector[0]->getProblemParameters().setTimeInstant(iTimeStep);
+//         fMeshVector[1]->getProblemParameters().setTimeInstant(iTimeStep);
 
-        if (rank == 0) {std::cout << "----------------------------" 
-                                  << " TIME STEP = "
-                                  << iTimeStep 
-                                  << " ---------------------------"
-                                  << std::endl;}
-        PetscMemoryGetCurrentUsage(&bytes);
-        PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
+//         if (rank == 0) {std::cout << "----------------------------" 
+//                                   << " TIME STEP = "
+//                                   << iTimeStep 
+//                                   << " ---------------------------"
+//                                   << std::endl;}
+//         PetscMemoryGetCurrentUsage(&bytes);
+//         PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
 
-        //Updates velocity and acceleration
-        for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM);
+//         //Updates velocity and acceleration
+//         for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
+//             VecDouble accel(DIM), u(DIM), uprev(DIM);
             
-            //Compute acceleration
-            u[0] = fMeshVector[0]->NodeVec()[i] -> getVelocity(0);
-            u[1] = fMeshVector[0]->NodeVec()[i] -> getVelocity(1);
+//             //Compute acceleration
+//             u[0] = fMeshVector[0]->NodeVec()[i] -> getVelocity(0);
+//             u[1] = fMeshVector[0]->NodeVec()[i] -> getVelocity(1);
 
-            fMeshVector[0]->NodeVec()[i] -> setPreviousVelocity(u);
+//             fMeshVector[0]->NodeVec()[i] -> setPreviousVelocity(u);
             
-            accel[0] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(0);
-            accel[1] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(1);
+//             accel[0] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(0);
+//             accel[1] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(1);
             
-            fMeshVector[0]->NodeVec()[i] -> setPreviousAcceleration(accel);
+//             fMeshVector[0]->NodeVec()[i] -> setPreviousAcceleration(accel);
 
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
+//             accel[0] *= (gamma - 1.) / gamma;
+//             accel[1] *= (gamma - 1.) / gamma;
             
-            fMeshVector[0]->NodeVec()[i] -> setAcceleration(accel);            
+//             fMeshVector[0]->NodeVec()[i] -> setAcceleration(accel);            
 
-        };
+//         };
 
-        for (int i = 0; i < fMeshVector[1]->NNodes(); i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM), lag(DIM);
+//         for (int i = 0; i < fMeshVector[1]->NNodes(); i++){
+//             VecDouble accel(DIM), u(DIM), uprev(DIM), lag(DIM);
             
-            //Compute acceleration
-            u[0] = fMeshVector[1]->NodeVec()[i] -> getVelocity(0);
-            u[1] = fMeshVector[1]->NodeVec()[i] -> getVelocity(1);
+//             //Compute acceleration
+//             u[0] = fMeshVector[1]->NodeVec()[i] -> getVelocity(0);
+//             u[1] = fMeshVector[1]->NodeVec()[i] -> getVelocity(1);
 
-            fMeshVector[1]->NodeVec()[i] -> setPreviousVelocity(u);
+//             fMeshVector[1]->NodeVec()[i] -> setPreviousVelocity(u);
             
-            accel[0] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(0);
-            accel[1] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(1);
+//             accel[0] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(0);
+//             accel[1] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(1);
             
-            fMeshVector[1]->NodeVec()[i] -> setPreviousAcceleration(accel);
+//             fMeshVector[1]->NodeVec()[i] -> setPreviousAcceleration(accel);
 
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
+//             accel[0] *= (gamma - 1.) / gamma;
+//             accel[1] *= (gamma - 1.) / gamma;
             
-            fMeshVector[1]->NodeVec()[i] -> setAcceleration(accel);
-        };
+//             fMeshVector[1]->NodeVec()[i] -> setAcceleration(accel);
+//         };
 
-        //STARTS NEWTON-RAPHSON
-        for (int inewton = 0; inewton < iterNumber; inewton++){
+//         //STARTS NEWTON-RAPHSON
+//         for (int inewton = 0; inewton < iterNumber; inewton++){
             
-            std::clock_t t1 = std::clock();
+//             std::clock_t t1 = std::clock();
             
-            // Preallocates the matrix
-            if (fMeshVector[1]->getProblemParameters().getSolverType() == SolverType::ESuiteSparse){
-                ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
-            } else {
-                ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize,400,NULL,600,NULL,&A); 
-            }
+//             // Preallocates the matrix
+//             if (fMeshVector[1]->getProblemParameters().getSolverType() == SolverType::ESuiteSparse){
+//                 ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
+//             } else {
+//                 ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+//                                 sysSize, sysSize,400,NULL,600,NULL,&A); 
+//             }
 
-            // for (int i=0; i<sysSize; i++){
-            //     double val = 1.e-10;
-            //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
-            // }  
-            CHKERRQ(ierr);
+//             // for (int i=0; i<sysSize; i++){
+//             //     double val = 1.e-10;
+//             //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
+//             // }  
+//             CHKERRQ(ierr);
             
-            // Divides the matrix between the processes
-            ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
+//             // Divides the matrix between the processes
+//             ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
             
-            //Create PETSc vectors
-            ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
-            ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
-            ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
-            ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
+//             //Create PETSc vectors
+//             ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
+//             ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
+//             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
+//             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
                         
-            for (int i=0; i<sysSize; i++){
-                double val = 1.e-20;
-                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
+//             for (int i=0; i<sysSize; i++){
+//                 double val = 1.e-20;
+//                 ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
                 
-            }
+//             }
             
 
-            std::clock_t t3 = std::clock();
-            assembleArlequinSystem();
-            // if (fProbType == ProblemType::ENavierStokes){
-            //     assembleArlequinSystem();
-            // } else if (fProbType == ProblemType::EPoisson){
-            //     assembleArlequinSystemPoisson();
-            // }
+//             std::clock_t t3 = std::clock();
+//             assembleArlequinSystem();
+//             // if (fProbType == ProblemType::ENavierStokes){
+//             //     assembleArlequinSystem();
+//             // } else if (fProbType == ProblemType::EPoisson){
+//             //     assembleArlequinSystemPoisson();
+//             // }
             
-            std::clock_t t4 = std::clock();
+//             std::clock_t t4 = std::clock();
 
-            //std::cout << "Enter PETSc " << rank << std::endl;
+//             //std::cout << "Enter PETSc " << rank << std::endl;
             
-            //Assemble matrices and vectors
-            ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//             //Assemble matrices and vectors
+//             ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//             ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
             
-            ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-            ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-            std::clock_t t5 = std::clock();
+//             ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
+//             ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+//             std::clock_t t5 = std::clock();
 
           
             
- // PetscViewer    viewer;
+//  // PetscViewer    viewer;
 
- // PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
- // PetscObjectSetName((PetscObject)viewer,"Line graph Plot");
- //  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//  // PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+//  // PetscObjectSetName((PetscObject)viewer,"Line graph Plot");
+//  //  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
 
-            // ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//             // ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//             // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
-            //Create KSP context to solve the linear system
-            ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+//             //Create KSP context to solve the linear system
+//             ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
             
-            ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+//             ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
 
 
-            switch (fMeshVector[1]->getProblemParameters().getSolverType())
-            {
-            case SolverType::ESuiteSparse:
-                KSPGetPC(ksp, &pc);
-                PCSetType(pc, PCLU);
-                PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
-                break;
-            case SolverType::EMumps:
-                KSPGetPC(ksp, &pc);
-                PCSetType(pc, PCLU);
-                PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
-                break;
+//             switch (fMeshVector[1]->getProblemParameters().getSolverType())
+//             {
+//             case SolverType::ESuiteSparse:
+//                 KSPGetPC(ksp, &pc);
+//                 PCSetType(pc, PCLU);
+//                 PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+//                 break;
+//             case SolverType::EMumps:
+//                 KSPGetPC(ksp, &pc);
+//                 PCSetType(pc, PCLU);
+//                 PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+//                 break;
 
-            case SolverType::EIterative:
-                KSPSetType(ksp,KSPFGMRES);
-                KSPGetPC(ksp, &pc);
-                PCSetType(pc,PCBJACOBI);
-                KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
-                break;
+//             case SolverType::EIterative:
+//                 KSPSetType(ksp,KSPFGMRES);
+//                 KSPGetPC(ksp, &pc);
+//                 PCSetType(pc,PCBJACOBI);
+//                 KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+//                 break;
 
-            default:
-                PanicButton();
-                break;
-            }
+//             default:
+//                 PanicButton();
+//                 break;
+//             }
 
 
             
-            ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+//             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
             
-            ierr = KSPGetTotalIterations(ksp, &iterations);
+//             ierr = KSPGetTotalIterations(ksp, &iterations);
 
-            std::clock_t t6 = std::clock();
+//             std::clock_t t6 = std::clock();
 
-            if (rank == 0) std::cout << "TIME " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << " " 
-                                                << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << " " 
-                                                << 1000.*(t6-t5)/CLOCKS_PER_SEC/1000. << std::endl;
-            //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
+//             if (rank == 0) std::cout << "TIME " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << " " 
+//                                                 << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << " " 
+//                                                 << 1000.*(t6-t5)/CLOCKS_PER_SEC/1000. << std::endl;
+//             //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
         
-            //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//             //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
-            //Gathers the solution vector to the master process
-            ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
+//             //Gathers the solution vector to the master process
+//             ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
             
-            ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-            CHKERRQ(ierr);
+//             ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//             CHKERRQ(ierr);
             
-            ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-            CHKERRQ(ierr);
+//             ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//             CHKERRQ(ierr);
             
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+//             ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
             
-            //Updates nodal values
-            double u_[DIM];
-            double normU = 0.;
-            double normP = 0.;
-            double normL = 0.;
-            double p_;
-            Ione = 1;
+//             //Updates nodal values
+//             double u_[DIM];
+//             double normU = 0.;
+//             double normP = 0.;
+//             double normL = 0.;
+//             double p_;
+//             Ione = 1;
 
-            if (fProbType == ENavierStokes || fProbType == EStokes){
-                for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-                    double w_ = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
-                    for (int k = 0; k < DIM; k++){
-                        Ii = (DIM+1) * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                        u_[k] = val;
-                        normU += val*w_*val*w_;
-                        fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                        fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-                    }
-                    Ii = (DIM+1) * i + DIM;
-                    ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                    p_ = val;
-                    normP += val*w_*val*w_;
-                    fMeshVector[0]->NodeVec()[i] -> incrementPressure(p_);
-                };
+//             if (fProbType == ENavierStokes || fProbType == EStokes){
+//                 for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//                     double w_ = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
+//                     for (int k = 0; k < DIM; k++){
+//                         Ii = (DIM+1) * i + k;
+//                         ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                         // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+//                         u_[k] = val;
+//                         normU += val*w_*val*w_;
+//                         fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                         fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//                     }
+//                     Ii = (DIM+1) * i + DIM;
+//                     ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//                     p_ = val;
+//                     normP += val*w_*val*w_;
+//                     fMeshVector[0]->NodeVec()[i] -> incrementPressure(p_);
+//                 };
                 
-                for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-                    double w_ = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
-                    for (int k = 0; k < DIM; k++){
-                        Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        u_[k] = val;
-                        normU += val*w_*val*w_;
-                        fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                        fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-                    }        
-                    Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + DIM;
-                    ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                    p_ = val;
-                    normP += val*w_*val*w_;
-                    fMeshVector[1]->NodeVec()[i] -> incrementPressure(p_);
-                };
+//                 for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//                     double w_ = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
+//                     for (int k = 0; k < DIM; k++){
+//                         Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + k;
+//                         ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                         u_[k] = val;
+//                         normU += val*w_*val*w_;
+//                         fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                         fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//                     }        
+//                     Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + DIM;
+//                     ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//                     p_ = val;
+//                     normP += val*w_*val*w_;
+//                     fMeshVector[1]->NodeVec()[i] -> incrementPressure(p_);
+//                 };
                 
-                for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                    for (int k = 0; k < DIM; k++){
-                        Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * fMeshVector[1]->NNodes() + DIM * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        u_[k] = val;
-                        fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
-                        normL += val*val;
-                    }
-                };
-            } else if (fProbType == EPoisson){
-                for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-                    double w_ = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
-                    Ii = i;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                    u_[0] = val;
-                    normU += val*w_*val*w_;
-                    fMeshVector[0]->NodeVec()[i] -> incrementVelocity(0,u_[0]);
-                };
+//                 for (int i = 0; i < numNodesGlueZoneFine; ++i){
+//                     for (int k = 0; k < DIM; k++){
+//                         Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * fMeshVector[1]->NNodes() + DIM * i + k;
+//                         ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                         u_[k] = val;
+//                         fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+//                         normL += val*val;
+//                     }
+//                 };
+//             } else if (fProbType == EPoisson){
+//                 for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//                     double w_ = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
+//                     Ii = i;
+//                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                     // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+//                     u_[0] = val;
+//                     normU += val*w_*val*w_;
+//                     fMeshVector[0]->NodeVec()[i] -> incrementVelocity(0,u_[0]);
+//                 };
                 
-                for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-                    double w_ = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
-                    Ii = fMeshVector[0]->NNodes() + i;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[0] = val;
-                    normU += val*w_*val*w_;
-                    fMeshVector[1]->NodeVec()[i] -> incrementVelocity(0,u_[0]);
-                };
+//                 for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//                     double w_ = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
+//                     Ii = fMeshVector[0]->NNodes() + i;
+//                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                     u_[0] = val;
+//                     normU += val*w_*val*w_;
+//                     fMeshVector[1]->NodeVec()[i] -> incrementVelocity(0,u_[0]);
+//                 };
                 
-                for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                    Ii = fMeshVector[0]->NNodes() + fMeshVector[1]->NNodes() + i;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[0] = val;
-                    fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
-                    normL += val*val;
+//                 for (int i = 0; i < numNodesGlueZoneFine; ++i){
+//                     Ii = fMeshVector[0]->NNodes() + fMeshVector[1]->NNodes() + i;
+//                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                     u_[0] = val;
+//                     fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
+//                     normL += val*val;
 
-                };
-            } else if (fProbType == EElastic){
-                for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-                    double w_ = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
-                    for (int k = 0; k < DIM; k++){
-                        Ii = DIM * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                        u_[k] = val;
-                        normU += val*w_*val*w_;
-                        fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                        fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-                    }
-                };
+//                 };
+//             } else if (fProbType == EElastic){
+//                 for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//                     double w_ = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
+//                     for (int k = 0; k < DIM; k++){
+//                         Ii = DIM * i + k;
+//                         ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                         // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+//                         u_[k] = val;
+//                         normU += val*w_*val*w_;
+//                         fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                         fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//                     }
+//                 };
                 
-                for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-                    double w_ = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
-                    for (int k = 0; k < DIM; k++){
-                        Ii = DIM * fMeshVector[0]->NNodes() + DIM * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        u_[k] = val;
-                        normU += val*w_*val*w_;
-                        fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                        fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-                    }        
-                };
+//                 for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//                     double w_ = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
+//                     for (int k = 0; k < DIM; k++){
+//                         Ii = DIM * fMeshVector[0]->NNodes() + DIM * i + k;
+//                         ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                         u_[k] = val;
+//                         normU += val*w_*val*w_;
+//                         fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                         fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//                     }        
+//                 };
                 
-                for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                    for (int k = 0; k < DIM; k++){
-                        Ii = DIM * fMeshVector[0]->NNodes() + DIM * fMeshVector[1]->NNodes() + DIM * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        u_[k] = val;
-                        fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
-                        normL += val*val;
-                    }
-                };
+//                 for (int i = 0; i < numNodesGlueZoneFine; ++i){
+//                     for (int k = 0; k < DIM; k++){
+//                         Ii = DIM * fMeshVector[0]->NNodes() + DIM * fMeshVector[1]->NNodes() + DIM * i + k;
+//                         ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                         u_[k] = val;
+//                         fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+//                         normL += val*val;
+//                     }
+//                 };
 
-            } else{
-                PanicButton();
-            }
+//             } else{
+//                 PanicButton();
+//             }
             
-            //Computes the solution vector norm
-            ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+//             //Computes the solution vector norm
+//             ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
             
-            std::clock_t t2 = std::clock();
+//             std::clock_t t2 = std::clock();
             
-            if(rank == 0){
-                std::cout<<"Iteration = " << inewton << " (" << iterations <<  
-                    ")  Du Norm = " << std::scientific << sqrt(normU) 
-                         << " " << sqrt(normP) 
-                         << " " << sqrt(normL) 
-                         << " " << val << 
-                    "  Time (s) = " << std::fixed << 
-                    1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
-            };
+//             if(rank == 0){
+//                 std::cout<<"Iteration = " << inewton << " (" << iterations <<  
+//                     ")  Du Norm = " << std::scientific << sqrt(normU) 
+//                          << " " << sqrt(normP) 
+//                          << " " << sqrt(normL) 
+//                          << " " << val << 
+//                     "  Time (s) = " << std::fixed << 
+//                     1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
+//             };
             
-            ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-            ierr = VecDestroy(&b); CHKERRQ(ierr);
-            ierr = VecDestroy(&u); CHKERRQ(ierr);
-            ierr = VecDestroy(&All); CHKERRQ(ierr);
-            ierr = MatDestroy(&A); CHKERRQ(ierr);
-           // ierr = MatDestroy(&F); CHKERRQ(ierr);
-            //ierr = MatDestroy(&C); CHKERRQ(ierr);
+//             ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
+//             ierr = VecDestroy(&b); CHKERRQ(ierr);
+//             ierr = VecDestroy(&u); CHKERRQ(ierr);
+//             ierr = VecDestroy(&All); CHKERRQ(ierr);
+//             ierr = MatDestroy(&A); CHKERRQ(ierr);
+//            // ierr = MatDestroy(&F); CHKERRQ(ierr);
+//             //ierr = MatDestroy(&C); CHKERRQ(ierr);
             
-            if(val <= tolerance){
-                break;            
-            }; 
-        };
+//             if(val <= tolerance){
+//                 break;            
+//             }; 
+//         };
         
-        if (rank == 0){
-            double normUUprev, normU;
-            normUUprev = 0.;
-            normU = 0.;
-            for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-                for (int k = 0; k < DIM; k++){
-                    double u, uPr, weight;
-                    weight = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
-                    u = fMeshVector[0]->NodeVec()[i] -> getVelocity(k) * weight;
-                    uPr = fMeshVector[0]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
-                    normUUprev += (u-uPr) * (u-uPr);
-                    normU += u*u;
-                }
-            }
-            for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-                for (int k = 0; k < DIM; k++){
-                    double u, uPr, weight;
-                    weight = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
-                    u = fMeshVector[1]->NodeVec()[i] -> getVelocity(k) * weight;
-                    uPr = fMeshVector[1]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
-                    normUUprev += (u-uPr) * (u-uPr);
-                    normU += u*u;
-                }
-            }
-            std::cout << "NORM U  " << std::scientific <<  sqrt(normUUprev/normU) << std::endl;
-        }
+//         if (rank == 0){
+//             double normUUprev, normU;
+//             normUUprev = 0.;
+//             normU = 0.;
+//             for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//                 for (int k = 0; k < DIM; k++){
+//                     double u, uPr, weight;
+//                     weight = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
+//                     u = fMeshVector[0]->NodeVec()[i] -> getVelocity(k) * weight;
+//                     uPr = fMeshVector[0]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
+//                     normUUprev += (u-uPr) * (u-uPr);
+//                     normU += u*u;
+//                 }
+//             }
+//             for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//                 for (int k = 0; k < DIM; k++){
+//                     double u, uPr, weight;
+//                     weight = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
+//                     u = fMeshVector[1]->NodeVec()[i] -> getVelocity(k) * weight;
+//                     uPr = fMeshVector[1]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
+//                     normUUprev += (u-uPr) * (u-uPr);
+//                     normU += u*u;
+//                 }
+//             }
+//             std::cout << "NORM U  " << std::scientific <<  sqrt(normUUprev/normU) << std::endl;
+//         }
 
-        //Compute real velocity
-        ShapeFunction shapeQuad(DIM,DEG);
-        int nElNodes = fMeshVector[1]->NElNodes(); 
-        VecDouble phi_(nElNodes);
+//         //Compute real velocity
+//         ShapeFunction shapeQuad(DIM,DEG);
+//         int nElNodes = fMeshVector[1]->NElNodes(); 
+//         VecDouble phi_(nElNodes);
         
-        for (int i = 0; i<fMeshVector[1]->NNodes(); i++){
-            for (int k = 0; k < DIM; k++) 
-                fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(k,fMeshVector[1]->NodeVec()[i] -> getVelocity(k));
-            fMeshVector[1]->NodeVec()[i] -> setPressureArlequin(fMeshVector[1]->NodeVec()[i] ->getPressure());
-        };
+//         for (int i = 0; i<fMeshVector[1]->NNodes(); i++){
+//             for (int k = 0; k < DIM; k++) 
+//                 fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(k,fMeshVector[1]->NodeVec()[i] -> getVelocity(k));
+//             fMeshVector[1]->NodeVec()[i] -> setPressureArlequin(fMeshVector[1]->NodeVec()[i] ->getPressure());
+//         };
         
-        for (int i = 0; i<numNodesGlueZoneFine; i++){
-            double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
+//         for (int i = 0; i<numNodesGlueZoneFine; i++){
+//             double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
             
-            double u = 0.;
-            double v = 0.;
-            double p = 0.;
+//             double u = 0.;
+//             double v = 0.;
+//             double p = 0.;
             
-            int elCoarse = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
-            VecDouble xsi = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
+//             int elCoarse = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
+//             VecDouble xsi = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
                         
-            VecInt connecCoarse = fMeshVector[0]->ElementVec()[elCoarse] -> getConnectivity();
+//             VecInt connecCoarse = fMeshVector[0]->ElementVec()[elCoarse] -> getConnectivity();
             
-            for (int j=0; j<nElNodes; j++){
-                u_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(0);
-                v_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(1);
-                p_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getPressure();
-            };
+//             for (int j=0; j<nElNodes; j++){
+//                 u_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(0);
+//                 v_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(1);
+//                 p_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getPressure();
+//             };
             
-            shapeQuad.evaluate(xsi,phi_);
+//             shapeQuad.evaluate(xsi,phi_);
             
-            for (int j=0; j<nElNodes; j++){
-                u += u_coarse[j] * phi_[j];
-                v += v_coarse[j] * phi_[j];
-                p += p_coarse[j] * phi_[j];
-            };
+//             for (int j=0; j<nElNodes; j++){
+//                 u += u_coarse[j] * phi_[j];
+//                 v += v_coarse[j] * phi_[j];
+//                 p += p_coarse[j] * phi_[j];
+//             };
             
-            double wFunc = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> 
-                getWeightFunction();
+//             double wFunc = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> 
+//                 getWeightFunction();
             
-            double u_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(0) * wFunc + u * (1. - wFunc);
-            double v_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(1) * wFunc + v * (1. - wFunc);
-            double p_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getPressure() * wFunc + p * (1. - wFunc);
+//             double u_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(0) * wFunc + u * (1. - wFunc);
+//             double v_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(1) * wFunc + v * (1. - wFunc);
+//             double p_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getPressure() * wFunc + p * (1. - wFunc);
             
-            fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
-            fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
-            fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
+//             fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
+//             fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+//             fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
             
-        };
+//         };
         
-        for (int i=0; i<fMeshVector[0]->NNodes(); i++){
-            fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[0]->NodeVec()[i] -> getVelocity(0));
-            fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[0]->NodeVec()[i] -> getVelocity(1));
-            fMeshVector[0]->NodeVec()[i] -> setPressureArlequin(fMeshVector[0]->NodeVec()[i] -> getPressure());
-        };
+//         for (int i=0; i<fMeshVector[0]->NNodes(); i++){
+//             fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[0]->NodeVec()[i] -> getVelocity(0));
+//             fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[0]->NodeVec()[i] -> getVelocity(1));
+//             fMeshVector[0]->NodeVec()[i] -> setPressureArlequin(fMeshVector[0]->NodeVec()[i] -> getPressure());
+//         };
 
-        if (fMeshVector[0]->getProblemParameters().getExactSolution() && fMeshVector[1]->getProblemParameters().getExactSolution()) computeErrorPoisson();
+//         if (fMeshVector[0]->getProblemParameters().getExactSolution() && fMeshVector[1]->getProblemParameters().getExactSolution()) computeErrorPoisson();
         
-        // Compute and print drag and lift coefficients
-        // if (fMeshVector[1]->getComputeDragAndLift()){
-        //     dragAndLiftCoefficients(dragLift);
-        // };
+//         // Compute and print drag and lift coefficients
+//         // if (fMeshVector[1]->getComputeDragAndLift()){
+//         //     dragAndLiftCoefficients(dragLift);
+//         // };
 
-        if (rank == 0) {
-            //Printing results
-            printResultsCoarse(iTimeStep);
-            printResultsFine(iTimeStep);
-        };        
-     };
+//         if (rank == 0) {
+//             //Printing results
+//             printResultsCoarse(iTimeStep);
+//             printResultsFine(iTimeStep);
+//         };        
+//      };
         
     return 0;
 };
@@ -3344,775 +3342,753 @@ int Arlequin::solveArlequinProblemMoving(int iterNumber, double tolerance,
                                                   int time_dependency){
 
                                                     
-    std::ofstream dragLift;
-    int DIM = fMeshVector[0]->Dimension();
-    int DEG = fMeshVector[0]->GetDefaultOrder();
-    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
-    if (rank == 0) {
-        dragLift << "Time   Pressure Drag   Pressure Lift " 
-                 << "Friction Drag  Friction Lift Drag    Lift " 
-                 << std::endl;
-    };   
+//     std::ofstream dragLift;
+//     int DIM = fMeshVector[0]->Dimension();
+//     int DEG = fMeshVector[0]->GetDefaultOrder();
+//     dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
+//     if (rank == 0) {
+//         dragLift << "Time   Pressure Drag   Pressure Lift " 
+//                  << "Friction Drag  Friction Lift Drag    Lift " 
+//                  << std::endl;
+//     };   
 
-    if ((problem_type < 1) || (problem_type > 2)){
-        std::cout << "WRONG PROBLEM TYPE." << std::endl;
-        return 0;
-    };
+//     if ((problem_type < 1) || (problem_type > 2)){
+//         std::cout << "WRONG PROBLEM TYPE." << std::endl;
+//         return 0;
+//     };
 
-    if (time_dependency == 0) fMeshVector[1]->getProblemParameters().GetNTimeSteps() = 1;
+//     if (time_dependency == 0) fMeshVector[1]->getProblemParameters().GetNTimeSteps() = 1;
     
-    fMeshVector[1]->getProblemParameters().setTimeInstant(0);
+//     fMeshVector[1]->getProblemParameters().setTimeInstant(0);
     
-    // //Construct the glue zone based on some defined criterion
-    // setCouplingZone();
+//     // //Construct the glue zone based on some defined criterion
+//     // setCouplingZone();
 
-    // //Computes the Weight function for all the finite elements
-    // setWeightFunction(16.);
+//     // //Computes the Weight function for all the finite elements
+//     // setWeightFunction(16.);
    
-    //Computes the Nodal correspondence between fine nodes and coarse elements
-    // setNodalCorrespondenceFine();
+//     //Computes the Nodal correspondence between fine nodes and coarse elements
+//     // setNodalCorrespondenceFine();
 
-    double integScheme = fMeshVector[1]->getProblemParameters().GetSpectralRadius();
+//     double integScheme = fMeshVector[1]->getProblemParameters().GetSpectralRadius();
 
-    double alpha_f = 1. / (1. + integScheme);
-    double alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
-    double gamma = 0.5 + alpha_m - alpha_f;
-    if (rank == 0) std::cout << "Time integ parameters: " << alpha_f << " " << alpha_m << " " << gamma << std::endl;
+//     double alpha_f = 1. / (1. + integScheme);
+//     double alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
+//     double gamma = 0.5 + alpha_m - alpha_f;
+//     if (rank == 0) std::cout << "Time integ parameters: " << alpha_f << " " << alpha_m << " " << gamma << std::endl;
 
-    // Computes the system size
-    int sysSize = 3 * fMeshVector[0]->NNodes() + 3 * fMeshVector[1]->NNodes() + 2 * numNodesGlueZoneFine;
+//     // Computes the system size
+//     int sysSize = 3 * fMeshVector[0]->NNodes() + 3 * fMeshVector[1]->NNodes() + 2 * numNodesGlueZoneFine;
     
-    fMeshVector[1]->getProblemParameters().SetNTimeSteps(2000);
+//     fMeshVector[1]->getProblemParameters().SetNTimeSteps(2000);
 
-    for (int iTimeStep = 0; iTimeStep < fMeshVector[1]->getProblemParameters().GetNTimeSteps(); iTimeStep++){
+//     for (int iTimeStep = 0; iTimeStep < fMeshVector[1]->getProblemParameters().GetNTimeSteps(); iTimeStep++){
         
-        if (rank == 0) {std::cout << "------------------------- TIME STEP = "
-                                  << iTimeStep << " -------------------------"
-                                  << std::endl;}
-        PetscMemoryGetCurrentUsage(&bytes);
-        PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
+//         if (rank == 0) {std::cout << "------------------------- TIME STEP = "
+//                                   << iTimeStep << " -------------------------"
+//                                   << std::endl;}
+//         PetscMemoryGetCurrentUsage(&bytes);
+//         PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
         
-        //Updates velocity and acceleration
-        for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM);
+//         //Updates velocity and acceleration
+//         for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
+//             VecDouble accel(DIM), u(DIM), uprev(DIM);
             
-            //Compute acceleration
-            u[0] = fMeshVector[0]->NodeVec()[i] -> getVelocity(0);
-            u[1] = fMeshVector[0]->NodeVec()[i] -> getVelocity(1);
+//             //Compute acceleration
+//             u[0] = fMeshVector[0]->NodeVec()[i] -> getVelocity(0);
+//             u[1] = fMeshVector[0]->NodeVec()[i] -> getVelocity(1);
 
-            fMeshVector[0]->NodeVec()[i] -> setPreviousVelocity(u);
+//             fMeshVector[0]->NodeVec()[i] -> setPreviousVelocity(u);
             
-            accel[0] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(0);
-            accel[1] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(1);
+//             accel[0] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(0);
+//             accel[1] = fMeshVector[0]->NodeVec()[i] -> getAcceleration(1);
             
-            fMeshVector[0]->NodeVec()[i] -> setPreviousAcceleration(accel);
+//             fMeshVector[0]->NodeVec()[i] -> setPreviousAcceleration(accel);
 
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
+//             accel[0] *= (gamma - 1.) / gamma;
+//             accel[1] *= (gamma - 1.) / gamma;
             
-            fMeshVector[0]->NodeVec()[i] -> setAcceleration(accel);            
+//             fMeshVector[0]->NodeVec()[i] -> setAcceleration(accel);            
 
-        };
+//         };
 
-        // double f = .35;
-        // double w = 2 * pi * f;
+//         // double f = .35;
+//         // double w = 2 * pi * f;
 
-        for (int i = 0; i < fMeshVector[1]->NNodes(); i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM);
+//         for (int i = 0; i < fMeshVector[1]->NNodes(); i++){
+//             VecDouble accel(DIM), u(DIM), uprev(DIM);
             
-            //Compute acceleration
-            u[0] = fMeshVector[1]->NodeVec()[i] -> getVelocity(0);
-            u[1] = fMeshVector[1]->NodeVec()[i] -> getVelocity(1);
+//             //Compute acceleration
+//             u[0] = fMeshVector[1]->NodeVec()[i] -> getVelocity(0);
+//             u[1] = fMeshVector[1]->NodeVec()[i] -> getVelocity(1);
 
-            fMeshVector[1]->NodeVec()[i] -> setPreviousVelocity(u);
+//             fMeshVector[1]->NodeVec()[i] -> setPreviousVelocity(u);
             
-            accel[0] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(0);
-            accel[1] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(1);
+//             accel[0] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(0);
+//             accel[1] = fMeshVector[1]->NodeVec()[i] -> getAcceleration(1);
             
-            fMeshVector[1]->NodeVec()[i] -> setPreviousAcceleration(accel);
+//             fMeshVector[1]->NodeVec()[i] -> setPreviousAcceleration(accel);
 
-            accel[0] *= (gamma - 1.) / gamma;
-            accel[1] *= (gamma - 1.) / gamma;
+//             accel[0] *= (gamma - 1.) / gamma;
+//             accel[1] *= (gamma - 1.) / gamma;
             
-            fMeshVector[1]->NodeVec()[i] -> setAcceleration(accel);
+//             fMeshVector[1]->NodeVec()[i] -> setAcceleration(accel);
 
 
 
-            VecDouble xn(DIM);
-            VecDouble xi = fMeshVector[1]->NodeVec()[i] -> getInitialCoordinates();       
-            VecDouble x = fMeshVector[1]->NodeVec()[i] -> getCoordinates();       
-            double pi = fMeshVector[0]->getProblemParameters().getPi();
-            double a = -20 * pi / 180 + 10 * pi / 180 * std::cos(2.*pi*iTimeStep*fMeshVector[1]->getProblemParameters().GetTimeStep());// + 10 * pi / 180;
+//             VecDouble xn(DIM);
+//             VecDouble xi = fMeshVector[1]->NodeVec()[i] -> getInitialCoordinates();       
+//             VecDouble x = fMeshVector[1]->NodeVec()[i] -> getCoordinates();       
+//             double pi = fMeshVector[0]->getProblemParameters().getPi();
+//             double a = -20 * pi / 180 + 10 * pi / 180 * std::cos(2.*pi*iTimeStep*fMeshVector[1]->getProblemParameters().GetTimeStep());// + 10 * pi / 180;
 
-            // std::cout << " AAA " << a << std::endl;
+//             // std::cout << " AAA " << a << std::endl;
 
-            xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
-            xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
+//             xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
+//             xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
 
-            u[0] = (xn[0] - x[0]) / fMeshVector[1]->getProblemParameters().GetTimeStep();
-            u[1] = (xn[1] - x[1]) / fMeshVector[1]->getProblemParameters().GetTimeStep();
+//             u[0] = (xn[0] - x[0]) / fMeshVector[1]->getProblemParameters().GetTimeStep();
+//             u[1] = (xn[1] - x[1]) / fMeshVector[1]->getProblemParameters().GetTimeStep();
 
 
-            fMeshVector[1]->NodeVec()[i] -> setMeshVelocity(u);
+//             fMeshVector[1]->NodeVec()[i] -> setMeshVelocity(u);
       
-            fMeshVector[1]->NodeVec()[i] -> setPreviousCoordinates(0,x[0]);
-            fMeshVector[1]->NodeVec()[i] -> setPreviousCoordinates(1,x[1]);
+//             fMeshVector[1]->NodeVec()[i] -> setPreviousCoordinates(0,x[0]);
+//             fMeshVector[1]->NodeVec()[i] -> setPreviousCoordinates(1,x[1]);
 
-            fMeshVector[1]->NodeVec()[i] -> setCoordinates(xn);
-        };
+//             fMeshVector[1]->NodeVec()[i] -> setCoordinates(xn);
+//         };
         
-        setNodalCorrespondenceFine();
-        setSignaledDistance();
-        setWeightFunction(1.);
+//         setNodalCorrespondenceFine();
+//         setSignaledDistance();
+//         setWeightFunction(1.);
         
-        //STARTS NEWTON-RAPHSON
-        for (int inewton = 0; inewton < iterNumber; inewton++){
+//         //STARTS NEWTON-RAPHSON
+//         for (int inewton = 0; inewton < iterNumber; inewton++){
             
-            std::clock_t t1 = std::clock();
+//             std::clock_t t1 = std::clock();
             
-            // Preallocates the matrix
-            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 400, NULL, 600, NULL, &A); 
+//             // Preallocates the matrix
+//             ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+//                                 sysSize, sysSize, 400, NULL, 600, NULL, &A); 
             
-            CHKERRQ(ierr);
+//             CHKERRQ(ierr);
             
-            // Divides the matrix between the processes
-            ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
+//             // Divides the matrix between the processes
+//             ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
             
-            //Create PETSc vectors
-            ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
-            ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
-            ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
-            ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
+//             //Create PETSc vectors
+//             ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
+//             ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
+//             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
+//             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
                         
-            assembleArlequinSystem();
+//             assembleArlequinSystem();
             
-            //Assemble matrices and vectors
-            ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//             //Assemble matrices and vectors
+//             ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//             ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
             
-            ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-            ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
+//             ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
+//             ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
             
-            //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//             //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+//             // ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
             
-            //Create KSP context to solve the linear system
-            ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
+//             //Create KSP context to solve the linear system
+//             ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
             
-            ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
+//             ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
             
 
 
 
-            // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
-            // ierr = MatSetNullSpace(A, nullsp);
-            // ierr = MatNullSpaceDestroy(&nullsp);
+//             // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
+//             // ierr = MatSetNullSpace(A, nullsp);
+//             // ierr = MatNullSpaceDestroy(&nullsp);
 
 
 
 
-            // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-            //                         1000);CHKERRQ(ierr);
+//             // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
+//             //                         1000);CHKERRQ(ierr);
             
-            // //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+//             // //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
             
-            // ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+//             // ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
             
-            // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
+//             // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
             
-            // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            // ierr = KSPSetType(ksp,KSPLSQR); CHKERRQ(ierr);
+//             // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
+//             // ierr = KSPSetType(ksp,KSPLSQR); CHKERRQ(ierr);
             
-            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+//             // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//             // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 
 
-#if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
-
-        ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-        PCFactorSetUpMatSolverType(pc);
-        PCFactorGetMatrix(pc,&F);
-
-        PetscInt ival,icntl;
-        icntl = 14; ival = 60;
-        MatMumpsSetIcntl(F,icntl,ival);
-        
-#endif
-        
-        
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
-        
-        
-#if defined(PETSC_HAVE_MUMPS)
-        PetscInt  info1,info2,icntl14;
-
-        MatMumpsGetInfo(F,1,&info1);
-        MatMumpsGetInfo(F,2,&info2);
-        MatMumpsGetIcntl(F,14,&icntl14);
-        if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-                                                      << " " << info2 << " " 
-                                                      << icntl14 << std::endl;
-#endif
-            
 // #if defined(PETSC_HAVE_MUMPS)
-//             ierr = KSPSetType(ksp,KSPPREONLY);
-//             ierr = KSPGetPC(ksp,&pc);
-//             ierr = PCSetType(pc, PCLU);
+//         ierr = KSPSetType(ksp,KSPPREONLY);
+//         ierr = KSPGetPC(ksp,&pc);
+//         ierr = PCSetType(pc, PCLU);
+
+//         ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+//         PCFactorSetUpMatSolverType(pc);
+//         PCFactorGetMatrix(pc,&F);
+
+//         PetscInt ival,icntl;
+//         icntl = 14; ival = 60;
+//         MatMumpsSetIcntl(F,icntl,ival);
+        
 // #endif
-            
-//             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-//             ierr = KSPSetUp(ksp);
-            
-
-
-
-
-           // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-
-            ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
-            
-            ierr = KSPGetTotalIterations(ksp, &iterations);
-            
-            //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
-            
-            //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            
-            //Gathers the solution vector to the master process
-            ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-            
-            ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-            CHKERRQ(ierr);
-            
-            ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-            CHKERRQ(ierr);
-            
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-            
-            //Updates nodal values
-            double u_[DIM];
-            double normU = 0.;
-            double normP = 0.;
-            double normL = 0.;
-            double normT = 0.;
-            double p_;
-            Ione = 1;
-
-            for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-                for (int k = 0; k < DIM; k++){
-                    Ii = (DIM+1) * i + k;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                    u_[k] = val;
-                    normU += val*val;
-                    fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                    fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-                }
-                Ii = (DIM+1) * i + DIM;
-                ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                p_ = val;
-                normP += val*val;
-                fMeshVector[0]->NodeVec()[i] -> incrementPressure(p_);
-            };
-            for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-                for (int k = 0; k < DIM; k++){
-                    Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + k;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[k] = val;
-                    normU += val*val;
-                    fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                    fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-                }        
-                Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + DIM;
-                ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                p_ = val;
-                normP += val*val;
-                fMeshVector[1]->NodeVec()[i] -> incrementPressure(p_);
-            };
-            for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                for (int k = 0; k < DIM; k++){
-                    Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * fMeshVector[1]->NNodes() + DIM * i + k;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[k] = val;
-                    fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
-                    normL += val*val;
-                }
-            };
-
-            //Computes the solution vector norm
-            ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-            
-            std::clock_t t2 = std::clock();
-            
-            if(rank == 0){                
-                std::cout<<"Iteration = " << inewton << " (" << iterations <<  
-                    ")  Du Norm = " << std::scientific << sqrt(normU) 
-                         << " " << sqrt(normP) 
-                         << " " << sqrt(normL) 
-                         << " " << val << 
-                    "  Time (s) = " << std::fixed << 
-                    1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
-            };
-            
-            ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-            ierr = VecDestroy(&b); CHKERRQ(ierr);
-            ierr = VecDestroy(&u); CHKERRQ(ierr);
-            ierr = VecDestroy(&All); CHKERRQ(ierr);
-            ierr = MatDestroy(&A); CHKERRQ(ierr);
-            
-            if(val <= tolerance){
-                break;            
-            };          
-
-            //Updates SUPG Parameter
-            // for (int i = 0; i < fMeshVector[1]->NElements(); i++){
-            //     (*fMeshVector[1]->ElementVec()[i]) -> getParameterSUPG();
-            // };   
-            // for (int i = 0; i < fMeshVector[0]->NElements(); i++){
-            //     (*fMeshVector[0]->ElementVec()[i]) -> getParameterSUPG();
-            // };
-
-        };
-
-        //Compute real velocity
         
-        ShapeFunction shapeQuad(DIM,DEG);
-        int nElNodes = fMeshVector[1]->NElNodes(); 
-        VecDouble phi_(nElNodes);
         
-        for (int i = 0; i<fMeshVector[1]->NNodes(); i++){
-            fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[1]->NodeVec()[i] -> getVelocity(0));
-            fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[1]->NodeVec()[i] -> getVelocity(1));
-            fMeshVector[1]->NodeVec()[i] -> setPressureArlequin(fMeshVector[1]->NodeVec()[i] ->getPressure());
-        };
+//         ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//         ierr = KSPSetUp(ksp);
         
-        for (int i = 0; i<numNodesGlueZoneFine; i++){
-            double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
-            
-            double u = 0.;
-            double v = 0.;
-            double p = 0.;
-            
-            int elCoarse = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
-            VecDouble xsi = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
-            
-            VecInt connecCoarse = fMeshVector[0]->ElementVec()[elCoarse] -> getConnectivity();
-            
-            for (int j = 0; j < nElNodes; j++){
-                u_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(0);
-                v_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(1);
-                p_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getPressure();
-            };
-            
-            shapeQuad.evaluate(xsi,phi_);
-            
-            for (int j = 0; j < nElNodes; j++){
-                u += u_coarse[j] * phi_[j];
-                v += v_coarse[j] * phi_[j];
-                p += p_coarse[j] * phi_[j];
-            };
-            
-            double wFunc = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> 
-                getWeightFunction();
-            
-            double u_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(0) * wFunc + u * (1. - wFunc);
-            double v_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(1) * wFunc + v * (1. - wFunc);
-            double p_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getPressure() * wFunc + p * (1. - wFunc);
-            
-            fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
-            fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
-            fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
-            
-        };
-        
-        for (int i=0; i<fMeshVector[0]->NNodes(); i++){
-            fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[0]->NodeVec()[i] -> getVelocity(0));
-            fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[0]->NodeVec()[i] -> getVelocity(1));
-            fMeshVector[0]->NodeVec()[i] -> setPressureArlequin(fMeshVector[0]->NodeVec()[i] -> getPressure());
-        };
-        
-        // // Compute and print drag and lift coefficients
-        // if (fMeshVector[1]->getComputeDragAndLift()){
-        //     dragAndLiftCoefficients(dragLift);
-        // };
-
-        if (rank == 0) {
-                       
-            //Printing results
-            printResultsCoarse(iTimeStep);
-            printResultsFine(iTimeStep);
-        };
-    };
-        
-    return 0;
-
-};
-
-
-
-//------------------------------------------------------------------------------
-//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
-//------------------------------------------------------------------------------
-
-int Arlequin::solveFSIArlequin(int iterNumber, double tolerance,
-                                        int problem_type, int iTimeStep){
-
-
-    std::ofstream dragLift;
-    int DIM = fMeshVector[0]->Dimension();
-    int DEG = fMeshVector[0]->GetDefaultOrder();
-    dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
-
-    if ((problem_type < 1) || (problem_type > 2)){
-        std::cout << "WRONG PROBLEM TYPE." << std::endl;
-        return 0;
-    };
-
-    // Computes the system size
-    int sysSize = 3 * fMeshVector[0]->NNodes() + 3 * fMeshVector[1]->NNodes() + 2 * numNodesGlueZoneFine;
-    
-    setNodalCorrespondenceFine();
-    setSignaledDistance();
-    setWeightFunction(1.);
-
-    double &alpha_f = fMeshVector[1]->getProblemParameters().getAlphaF();
-    double &alpha_m = fMeshVector[1]->getProblemParameters().getAlphaM();
-    double &gamma = fMeshVector[1]->getProblemParameters().getGamma();
-    
-    //STARTS NEWTON-RAPHSON
-    for (int inewton = 0; inewton < iterNumber; inewton++){
-        
-        std::clock_t t1 = std::clock();
-        
-        // Preallocates the matrix
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            sysSize, sysSize, 400, NULL, 600, NULL, &A); 
-        
-        CHKERRQ(ierr);
-        
-        // Divides the matrix between the processes
-        ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
-        
-        //Create PETSc vectors
-        ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
-        ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
-        ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
-        ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-                            
-        assembleArlequinSystem();
-        
-        //Assemble matrices and vectors
-        ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-        
-        ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-        ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-        
-        //Create KSP context to solve the linear system
-        ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-        
-        ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-        
-        // // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
-        // // ierr = MatSetNullSpace(A, nullsp);
-        // // ierr = MatNullSpaceDestroy(&nullsp);
-
-
-        // // if (iTimeStep > 5){
-
-        //     ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-        //                             15);CHKERRQ(ierr);
-            
-        //     //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-            
-        //     ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-            
-        //     ierr = PCSetType(pc,PCJACOBI);CHKERRQ(ierr);
-            
-        //     //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-        //     ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
-            
-        //     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        //     // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-        // // }else{
-       
-#if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
-        
-        // ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-        // PCFactorSetUpMatSolverType(pc);
-        // PCFactorGetMatrix(pc,&F);
-        
-        // PetscInt ival,icntl;
-        // icntl = 14; ival = 80;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 28; ival = 2;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 29; ival = 2;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 16; ival = 0;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 4; ival = 3;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 11; ival = 1;
-        // MatMumpsSetIcntl(F,11,1);
-
-        //MatMumpsSetIcntl(F,21,0);
-
-        
-#endif
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
         
 // #if defined(PETSC_HAVE_MUMPS)
 //         PetscInt  info1,info2,icntl14;
-        
+
 //         MatMumpsGetInfo(F,1,&info1);
 //         MatMumpsGetInfo(F,2,&info2);
-
-        // PetscReal info5,info6,info7,info8,info9,info10,info11;
-        // MatMumpsGetRinfog(F,5,&info5);
-        // MatMumpsGetRinfog(F,6,&info6);
-        // MatMumpsGetRinfog(F,7,&info7);
-        // MatMumpsGetRinfog(F,8,&info8);
-        // MatMumpsGetRinfog(F,9,&info9);
-        // MatMumpsGetRinfog(F,10,&info10);
-        // MatMumpsGetRinfog(F,11,&info11);
-
-        // PetscInt info21,info32;
-        // MatMumpsGetIcntl(F,32,&info32);
-        // MatMumpsGetIcntl(F,21,&info21);
-
-        
-        // if(rank==0) std::cout << "ICNTL = " << info21 << " " << info32 << std::endl;
-      
-        // // if(rank==0) std::cout << "INFOG = " << info5 << " " << info6 << " " << info7 << " " << info8 << " " << info9 << " " << info10 << " " << info11 << std::endl;
-        // MatMumpsGetIcntl(F,14,&icntl14);    
-        // if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-        //                                           << " " << info2 << " " 
-        //                                           << icntl14 << std::endl;
+//         MatMumpsGetIcntl(F,14,&icntl14);
+//         if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
+//                                                       << " " << info2 << " " 
+//                                                       << icntl14 << std::endl;
 // #endif
-        // }
-        // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+            
+// // #if defined(PETSC_HAVE_MUMPS)
+// //             ierr = KSPSetType(ksp,KSPPREONLY);
+// //             ierr = KSPGetPC(ksp,&pc);
+// //             ierr = PCSetType(pc, PCLU);
+// // #endif
+            
+// //             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+// //             ierr = KSPSetUp(ksp);
+            
+
+
+
+
+//            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+
+//             ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+            
+//             ierr = KSPGetTotalIterations(ksp, &iterations);
+            
+//             //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
+            
+//             //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+            
+//             //Gathers the solution vector to the master process
+//             ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
+            
+//             ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//             CHKERRQ(ierr);
+            
+//             ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//             CHKERRQ(ierr);
+            
+//             ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+            
+//             //Updates nodal values
+//             double u_[DIM];
+//             double normU = 0.;
+//             double normP = 0.;
+//             double normL = 0.;
+//             double normT = 0.;
+//             double p_;
+//             Ione = 1;
+
+//             for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//                 for (int k = 0; k < DIM; k++){
+//                     Ii = (DIM+1) * i + k;
+//                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                     // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+//                     u_[k] = val;
+//                     normU += val*val;
+//                     fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                     fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//                 }
+//                 Ii = (DIM+1) * i + DIM;
+//                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//                 p_ = val;
+//                 normP += val*val;
+//                 fMeshVector[0]->NodeVec()[i] -> incrementPressure(p_);
+//             };
+//             for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//                 for (int k = 0; k < DIM; k++){
+//                     Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + k;
+//                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                     u_[k] = val;
+//                     normU += val*val;
+//                     fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                     fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//                 }        
+//                 Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + DIM;
+//                 ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//                 p_ = val;
+//                 normP += val*val;
+//                 fMeshVector[1]->NodeVec()[i] -> incrementPressure(p_);
+//             };
+//             for (int i = 0; i < numNodesGlueZoneFine; ++i){
+//                 for (int k = 0; k < DIM; k++){
+//                     Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * fMeshVector[1]->NNodes() + DIM * i + k;
+//                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                     u_[k] = val;
+//                     fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+//                     normL += val*val;
+//                 }
+//             };
+
+//             //Computes the solution vector norm
+//             ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+            
+//             std::clock_t t2 = std::clock();
+            
+//             if(rank == 0){                
+//                 std::cout<<"Iteration = " << inewton << " (" << iterations <<  
+//                     ")  Du Norm = " << std::scientific << sqrt(normU) 
+//                          << " " << sqrt(normP) 
+//                          << " " << sqrt(normL) 
+//                          << " " << val << 
+//                     "  Time (s) = " << std::fixed << 
+//                     1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
+//             };
+            
+//             ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
+//             ierr = VecDestroy(&b); CHKERRQ(ierr);
+//             ierr = VecDestroy(&u); CHKERRQ(ierr);
+//             ierr = VecDestroy(&All); CHKERRQ(ierr);
+//             ierr = MatDestroy(&A); CHKERRQ(ierr);
+            
+//             if(val <= tolerance){
+//                 break;            
+//             };          
+
+//             //Updates SUPG Parameter
+//             // for (int i = 0; i < fMeshVector[1]->NElements(); i++){
+//             //     (*fMeshVector[1]->ElementVec()[i]) -> getParameterSUPG();
+//             // };   
+//             // for (int i = 0; i < fMeshVector[0]->NElements(); i++){
+//             //     (*fMeshVector[0]->ElementVec()[i]) -> getParameterSUPG();
+//             // };
+
+//         };
+
+//         //Compute real velocity
         
-        ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+//         ShapeFunction shapeQuad(DIM,DEG);
+//         int nElNodes = fMeshVector[1]->NElNodes(); 
+//         VecDouble phi_(nElNodes);
         
-        ierr = KSPGetTotalIterations(ksp, &iterations);
+//         for (int i = 0; i<fMeshVector[1]->NNodes(); i++){
+//             fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[1]->NodeVec()[i] -> getVelocity(0));
+//             fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[1]->NodeVec()[i] -> getVelocity(1));
+//             fMeshVector[1]->NodeVec()[i] -> setPressureArlequin(fMeshVector[1]->NodeVec()[i] ->getPressure());
+//         };
         
-        //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
+//         for (int i = 0; i<numNodesGlueZoneFine; i++){
+//             double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
+            
+//             double u = 0.;
+//             double v = 0.;
+//             double p = 0.;
+            
+//             int elCoarse = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
+//             VecDouble xsi = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
+            
+//             VecInt connecCoarse = fMeshVector[0]->ElementVec()[elCoarse] -> getConnectivity();
+            
+//             for (int j = 0; j < nElNodes; j++){
+//                 u_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(0);
+//                 v_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(1);
+//                 p_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getPressure();
+//             };
+            
+//             shapeQuad.evaluate(xsi,phi_);
+            
+//             for (int j = 0; j < nElNodes; j++){
+//                 u += u_coarse[j] * phi_[j];
+//                 v += v_coarse[j] * phi_[j];
+//                 p += p_coarse[j] * phi_[j];
+//             };
+            
+//             double wFunc = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> 
+//                 getWeightFunction();
+            
+//             double u_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(0) * wFunc + u * (1. - wFunc);
+//             double v_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(1) * wFunc + v * (1. - wFunc);
+//             double p_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getPressure() * wFunc + p * (1. - wFunc);
+            
+//             fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
+//             fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+//             fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
+            
+//         };
+        
+//         for (int i=0; i<fMeshVector[0]->NNodes(); i++){
+//             fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[0]->NodeVec()[i] -> getVelocity(0));
+//             fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[0]->NodeVec()[i] -> getVelocity(1));
+//             fMeshVector[0]->NodeVec()[i] -> setPressureArlequin(fMeshVector[0]->NodeVec()[i] -> getPressure());
+//         };
+        
+//         // // Compute and print drag and lift coefficients
+//         // if (fMeshVector[1]->getComputeDragAndLift()){
+//         //     dragAndLiftCoefficients(dragLift);
+//         // };
+
+//         if (rank == 0) {
+                       
+//             //Printing results
+//             printResultsCoarse(iTimeStep);
+//             printResultsFine(iTimeStep);
+//         };
+//     };
+        
+//     return 0;
+
+// };
+
+
+
+// //------------------------------------------------------------------------------
+// //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+// //------------------------------------------------------------------------------
+
+// int Arlequin::solveFSIArlequin(int iterNumber, double tolerance,
+//                                         int problem_type, int iTimeStep){
+
+
+//     std::ofstream dragLift;
+//     int DIM = fMeshVector[0]->Dimension();
+//     int DEG = fMeshVector[0]->GetDefaultOrder();
+//     dragLift.open("dragLift.dat", std::ofstream::out | std::ofstream::app);
+
+//     if ((problem_type < 1) || (problem_type > 2)){
+//         std::cout << "WRONG PROBLEM TYPE." << std::endl;
+//         return 0;
+//     };
+
+//     // Computes the system size
+//     int sysSize = 3 * fMeshVector[0]->NNodes() + 3 * fMeshVector[1]->NNodes() + 2 * numNodesGlueZoneFine;
     
-        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-        
-        //Gathers the solution vector to the master process
-        ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-        
-        ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-        CHKERRQ(ierr);
-        
-        ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-        CHKERRQ(ierr);
-        
-        ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-        
-        //Updates nodal values
-        double u_[DIM];
-        double normU = 0.;
-        double normP = 0.;
-        double normL = 0.;
-        double normT = 0.;
-        double p_;
-        Ione = 1;
+//     setNodalCorrespondenceFine();
+//     setSignaledDistance();
+//     setWeightFunction(1.);
 
-        for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-            for (int k = 0; k < DIM; k++){
-                Ii = (DIM+1) * i + k;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                u_[k] = val;
-                normU += val*val;
-                fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-            }
-            Ii = (DIM+1) * i + DIM;
-            ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-            p_ = val;
-            normP += val*val;
-            fMeshVector[0]->NodeVec()[i] -> incrementPressure(p_);
-        };
-        for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-            for (int k = 0; k < DIM; k++){
-                Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + k;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                u_[k] = val;
-                normU += val*val;
-                fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
-                fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
-            }        
-            Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + DIM;
-            ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-            p_ = val;
-            normP += val*val;
-            fMeshVector[1]->NodeVec()[i] -> incrementPressure(p_);
-        };
-        for (int i = 0; i < numNodesGlueZoneFine; ++i){
-            for (int k = 0; k < DIM; k++){
-                Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * fMeshVector[1]->NNodes() + DIM * i + k;
-                ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                u_[k] = val;
-                fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
-                normL += val*val;
-            }
-        };
-        
-        //Computes the solution vector norm
-        ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-        
-        std::clock_t t2 = std::clock();
-        
-        if(rank == 0){
-            std::cout<<"Iteration = " << inewton << " (" << iterations <<  
-                ")  Du Norm = " << std::scientific << sqrt(normU) 
-                     << " " << sqrt(normP) 
-                     << " " << sqrt(normL) 
-                     << " " << val << 
-                "  Time (s) = " << std::fixed << 
-                1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
-        };
-        
-        ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-        ierr = VecDestroy(&b); CHKERRQ(ierr);
-        ierr = VecDestroy(&u); CHKERRQ(ierr);
-        ierr = VecDestroy(&All); CHKERRQ(ierr);
-        ierr = MatDestroy(&A); CHKERRQ(ierr);
-        // ierr = MatDestroy(&F); CHKERRQ(ierr);
-        
-        
-        if(val <= tolerance){
-            break;            
-        };          
-        
-    };
-
-    if (rank == 0){
-        double normUUprev, normU;
-        normUUprev = 0.;
-        normU = 0.;
-        for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
-            for (int k = 0; k < DIM; k++){
-                double u, uPr, weight;
-                weight = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
-                u = fMeshVector[0]->NodeVec()[i] -> getVelocity(k) * weight;
-                uPr = fMeshVector[0]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
-                normUUprev += (u-uPr) * (u-uPr);
-                normU += u*u;
-            }
-        }
-        for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
-            for (int k = 0; k < DIM; k++){
-                double u, uPr, weight;
-                weight = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
-                u = fMeshVector[1]->NodeVec()[i] -> getVelocity(k) * weight;
-                uPr = fMeshVector[1]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
-                normUUprev += (u-uPr) * (u-uPr);
-                normU += u*u;
-            }
-        }
-        std::cout << "NORM U  " << std::scientific <<  sqrt(normUUprev / normU) << std::endl;
-    }
-
-
-    // std::cout << "AQUI1 " << rank << std::endl;
-
-
-    //Compute real velocity
-    ShapeFunction shapeQuad(DIM,DEG);
-    int nElNodes = fMeshVector[1]->NElNodes(); 
-    VecDouble phi_(nElNodes);
+//     double &alpha_f = fMeshVector[1]->getProblemParameters().getAlphaF();
+//     double &alpha_m = fMeshVector[1]->getProblemParameters().getAlphaM();
+//     double &gamma = fMeshVector[1]->getProblemParameters().getGamma();
     
-    for (int i = 0; i<fMeshVector[1]->NNodes(); i++){
-        fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[1]->NodeVec()[i] -> getVelocity(0));
-        fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[1]->NodeVec()[i] -> getVelocity(1));
-        fMeshVector[1]->NodeVec()[i] -> setPressureArlequin(fMeshVector[1]->NodeVec()[i] ->getPressure());
-    };
-    
-    for (int i = 0; i<numNodesGlueZoneFine; i++){
-        double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
+//     //STARTS NEWTON-RAPHSON
+//     for (int inewton = 0; inewton < iterNumber; inewton++){
         
-        double u = 0.;
-        double v = 0.;
-        double p = 0.;
+//         std::clock_t t1 = std::clock();
         
-        int elCoarse = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
-        VecDouble xsi = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
+//         // Preallocates the matrix
+//         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+//                             sysSize, sysSize, 400, NULL, 600, NULL, &A); 
         
-        VecInt connecCoarse = fMeshVector[0]->ElementVec()[elCoarse] -> getConnectivity();
+//         CHKERRQ(ierr);
         
-        for (int j=0; j<nElNodes; j++){
-            u_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(0);
-            v_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(1);
-            p_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getPressure();
-        };
+//         // Divides the matrix between the processes
+//         ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
         
-        shapeQuad.evaluate(xsi,phi_);
+//         //Create PETSc vectors
+//         ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
+//         ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
+//         ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
+//         ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
+                            
+//         assembleArlequinSystem();
         
-        for (int j=0; j<nElNodes; j++){
-            u += u_coarse[j] * phi_[j];
-            v += v_coarse[j] * phi_[j];
-            p += p_coarse[j] * phi_[j];
-        };
+//         //Assemble matrices and vectors
+//         ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
+//         ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
         
-        double wFunc = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> 
-            getWeightFunction();
+//         ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
+//         ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
         
-        double u_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(0) * wFunc + u * (1. - wFunc);
-        double v_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(1) * wFunc + v * (1. - wFunc);
-        double p_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getPressure() * wFunc + p * (1. - wFunc);
+//         //Create KSP context to solve the linear system
+//         ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
         
-        fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
-        fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
-        fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
+//         ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
         
-    };
-    // std::cout << "AQUI2 " << rank << std::endl;
+//         // // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
+//         // // ierr = MatSetNullSpace(A, nullsp);
+//         // // ierr = MatNullSpaceDestroy(&nullsp);
 
-    for (int i=0; i<fMeshVector[0]->NNodes(); i++){
-        fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[0]->NodeVec()[i] -> getVelocity(0));
-        fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[0]->NodeVec()[i] -> getVelocity(1));
-        fMeshVector[0]->NodeVec()[i] -> setPressureArlequin(fMeshVector[0]->NodeVec()[i] -> getPressure());
-    };
-    // std::cout << "AQUI3 " << rank << std::endl;
+
+//         // // if (iTimeStep > 5){
+
+//         //     ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
+//         //                             15);CHKERRQ(ierr);
+            
+//         //     //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
+            
+//         //     ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
+            
+//         //     ierr = PCSetType(pc,PCJACOBI);CHKERRQ(ierr);
+            
+//         //     //ierr = KSPSetPCSide(ksp, PC_RIGHT);
+//         //     ierr = KSPSetType(ksp,KSPGMRES); CHKERRQ(ierr);
+            
+//         //     ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//         //     // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+//         // // }else{
+       
+// #if defined(PETSC_HAVE_MUMPS)
+//         ierr = KSPSetType(ksp,KSPPREONLY);
+//         ierr = KSPGetPC(ksp,&pc);
+//         ierr = PCSetType(pc, PCLU);
+        
+//         // ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
+//         // PCFactorSetUpMatSolverType(pc);
+//         // PCFactorGetMatrix(pc,&F);
+        
+//         // PetscInt ival,icntl;
+//         // icntl = 14; ival = 80;
+//         // MatMumpsSetIcntl(F,icntl,ival);
+//         // icntl = 28; ival = 2;
+//         // MatMumpsSetIcntl(F,icntl,ival);
+//         // icntl = 29; ival = 2;
+//         // MatMumpsSetIcntl(F,icntl,ival);
+//         // icntl = 16; ival = 0;
+//         // MatMumpsSetIcntl(F,icntl,ival);
+//         // icntl = 4; ival = 3;
+//         // MatMumpsSetIcntl(F,icntl,ival);
+//         // icntl = 11; ival = 1;
+//         // MatMumpsSetIcntl(F,11,1);
+
+//         //MatMumpsSetIcntl(F,21,0);
+
+        
+// #endif
+//         ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+//         ierr = KSPSetUp(ksp);
+        
+// // #if defined(PETSC_HAVE_MUMPS)
+// //         PetscInt  info1,info2,icntl14;
+        
+// //         MatMumpsGetInfo(F,1,&info1);
+// //         MatMumpsGetInfo(F,2,&info2);
+
+//         // PetscReal info5,info6,info7,info8,info9,info10,info11;
+//         // MatMumpsGetRinfog(F,5,&info5);
+//         // MatMumpsGetRinfog(F,6,&info6);
+//         // MatMumpsGetRinfog(F,7,&info7);
+//         // MatMumpsGetRinfog(F,8,&info8);
+//         // MatMumpsGetRinfog(F,9,&info9);
+//         // MatMumpsGetRinfog(F,10,&info10);
+//         // MatMumpsGetRinfog(F,11,&info11);
+
+//         // PetscInt info21,info32;
+//         // MatMumpsGetIcntl(F,32,&info32);
+//         // MatMumpsGetIcntl(F,21,&info21);
+
+        
+//         // if(rank==0) std::cout << "ICNTL = " << info21 << " " << info32 << std::endl;
+      
+//         // // if(rank==0) std::cout << "INFOG = " << info5 << " " << info6 << " " << info7 << " " << info8 << " " << info9 << " " << info10 << " " << info11 << std::endl;
+//         // MatMumpsGetIcntl(F,14,&icntl14);    
+//         // if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
+//         //                                           << " " << info2 << " " 
+//         //                                           << icntl14 << std::endl;
+// // #endif
+//         // }
+//         // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+        
+//         ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
+        
+//         ierr = KSPGetTotalIterations(ksp, &iterations);
+        
+//         //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
     
-    return 0;
+//         //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        
+//         //Gathers the solution vector to the master process
+//         ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
+        
+//         ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//         CHKERRQ(ierr);
+        
+//         ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+//         CHKERRQ(ierr);
+        
+//         ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
+        
+//         //Updates nodal values
+//         double u_[DIM];
+//         double normU = 0.;
+//         double normP = 0.;
+//         double normL = 0.;
+//         double normT = 0.;
+//         double p_;
+//         Ione = 1;
+
+//         for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//             for (int k = 0; k < DIM; k++){
+//                 Ii = (DIM+1) * i + k;
+//                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                 // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+//                 u_[k] = val;
+//                 normU += val*val;
+//                 fMeshVector[0]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                 fMeshVector[0]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//             }
+//             Ii = (DIM+1) * i + DIM;
+//             ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//             p_ = val;
+//             normP += val*val;
+//             fMeshVector[0]->NodeVec()[i] -> incrementPressure(p_);
+//         };
+//         for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//             for (int k = 0; k < DIM; k++){
+//                 Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + k;
+//                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                 u_[k] = val;
+//                 normU += val*val;
+//                 fMeshVector[1]->NodeVec()[i] -> incrementAcceleration(k,u_[k]);
+//                 fMeshVector[1]->NodeVec()[i] -> incrementVelocity(k,u_[k]*gamma*fMeshVector[1]->getProblemParameters().GetTimeStep());
+//             }        
+//             Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * i + DIM;
+//             ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+//             p_ = val;
+//             normP += val*val;
+//             fMeshVector[1]->NodeVec()[i] -> incrementPressure(p_);
+//         };
+//         for (int i = 0; i < numNodesGlueZoneFine; ++i){
+//             for (int k = 0; k < DIM; k++){
+//                 Ii = (DIM+1) * fMeshVector[0]->NNodes() + (DIM+1) * fMeshVector[1]->NNodes() + DIM * i + k;
+//                 ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+//                 u_[k] = val;
+//                 fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+//                 normL += val*val;
+//             }
+//         };
+        
+//         //Computes the solution vector norm
+//         ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
+        
+//         std::clock_t t2 = std::clock();
+        
+//         if(rank == 0){
+//             std::cout<<"Iteration = " << inewton << " (" << iterations <<  
+//                 ")  Du Norm = " << std::scientific << sqrt(normU) 
+//                      << " " << sqrt(normP) 
+//                      << " " << sqrt(normL) 
+//                      << " " << val << 
+//                 "  Time (s) = " << std::fixed << 
+//                 1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
+//         };
+        
+//         ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
+//         ierr = VecDestroy(&b); CHKERRQ(ierr);
+//         ierr = VecDestroy(&u); CHKERRQ(ierr);
+//         ierr = VecDestroy(&All); CHKERRQ(ierr);
+//         ierr = MatDestroy(&A); CHKERRQ(ierr);
+//         // ierr = MatDestroy(&F); CHKERRQ(ierr);
+        
+        
+//         if(val <= tolerance){
+//             break;            
+//         };          
+        
+//     };
+
+//     if (rank == 0){
+//         double normUUprev, normU;
+//         normUUprev = 0.;
+//         normU = 0.;
+//         for (int i = 0; i < fMeshVector[0]->NNodes(); ++i){
+//             for (int k = 0; k < DIM; k++){
+//                 double u, uPr, weight;
+//                 weight = fMeshVector[0]->NodeVec()[i] -> getWeightFunction();
+//                 u = fMeshVector[0]->NodeVec()[i] -> getVelocity(k) * weight;
+//                 uPr = fMeshVector[0]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
+//                 normUUprev += (u-uPr) * (u-uPr);
+//                 normU += u*u;
+//             }
+//         }
+//         for (int i = 0; i < fMeshVector[1]->NNodes(); ++i){
+//             for (int k = 0; k < DIM; k++){
+//                 double u, uPr, weight;
+//                 weight = fMeshVector[1]->NodeVec()[i] -> getWeightFunction();
+//                 u = fMeshVector[1]->NodeVec()[i] -> getVelocity(k) * weight;
+//                 uPr = fMeshVector[1]->NodeVec()[i] -> getPreviousVelocity(k) * weight;
+//                 normUUprev += (u-uPr) * (u-uPr);
+//                 normU += u*u;
+//             }
+//         }
+//         std::cout << "NORM U  " << std::scientific <<  sqrt(normUUprev / normU) << std::endl;
+//     }
+
+
+//     // std::cout << "AQUI1 " << rank << std::endl;
+
+
+//     //Compute real velocity
+//     ShapeFunction shapeQuad(DIM,DEG);
+//     int nElNodes = fMeshVector[1]->NElNodes(); 
+//     VecDouble phi_(nElNodes);
+    
+//     for (int i = 0; i<fMeshVector[1]->NNodes(); i++){
+//         fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[1]->NodeVec()[i] -> getVelocity(0));
+//         fMeshVector[1]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[1]->NodeVec()[i] -> getVelocity(1));
+//         fMeshVector[1]->NodeVec()[i] -> setPressureArlequin(fMeshVector[1]->NodeVec()[i] ->getPressure());
+//     };
+    
+//     for (int i = 0; i<numNodesGlueZoneFine; i++){
+//         double u_coarse[nElNodes], v_coarse[nElNodes], p_coarse[nElNodes];
+        
+//         double u = 0.;
+//         double v = 0.;
+//         double p = 0.;
+        
+//         int elCoarse = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
+//         VecDouble xsi = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
+        
+//         VecInt connecCoarse = fMeshVector[0]->ElementVec()[elCoarse] -> getConnectivity();
+        
+//         for (int j=0; j<nElNodes; j++){
+//             u_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(0);
+//             v_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getVelocity(1);
+//             p_coarse[j] = fMeshVector[0]->NodeVec()[connecCoarse[j]] -> getPressure();
+//         };
+        
+//         shapeQuad.evaluate(xsi,phi_);
+        
+//         for (int j=0; j<nElNodes; j++){
+//             u += u_coarse[j] * phi_[j];
+//             v += v_coarse[j] * phi_[j];
+//             p += p_coarse[j] * phi_[j];
+//         };
+        
+//         double wFunc = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> 
+//             getWeightFunction();
+        
+//         double u_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(0) * wFunc + u * (1. - wFunc);
+//         double v_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getVelocity(1) * wFunc + v * (1. - wFunc);
+//         double p_int = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> getPressure() * wFunc + p * (1. - wFunc);
+        
+//         fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(0,u_int);
+//         fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setVelocityArlequin(1,v_int);
+//         fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[i]] -> setPressureArlequin(p_int);
+        
+//     };
+//     // std::cout << "AQUI2 " << rank << std::endl;
+
+//     for (int i=0; i<fMeshVector[0]->NNodes(); i++){
+//         fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(0,fMeshVector[0]->NodeVec()[i] -> getVelocity(0));
+//         fMeshVector[0]->NodeVec()[i] -> setVelocityArlequin(1,fMeshVector[0]->NodeVec()[i] -> getVelocity(1));
+//         fMeshVector[0]->NodeVec()[i] -> setPressureArlequin(fMeshVector[0]->NodeVec()[i] -> getPressure());
+//     };
+//     // std::cout << "AQUI3 " << rank << std::endl;
+    
+//     return 0;
 
 };
-
-
-void Arlequin::computeErrorPoisson() {
-
-    VecDouble errorFine(3),errorCoarse(3),errorTotal(3);
-
-    // fMeshVector[0]->computeError(errorCoarse);
-    // fMeshVector[1]->computeError(errorFine);
-
-    std::ofstream rprint("errorsArlequin.txt",std::ios::app);
-    errorTotal = errorFine + errorCoarse;
-
-    if (rank == 0){
-        std::cout << "\n\nERROR REPORT:\n" << std::scientific << std::setprecision(10)
-            << "L2 state var = " << sqrt(errorTotal[0]) << "\n" 
-            << "Semi H1 state var = " << sqrt(errorTotal[1]) << "\n" 
-            << "H1 state var = " << sqrt(errorTotal[2]) << "\n"; 
-        rprint << sqrt(errorTotal[0]) << " " << sqrt(errorTotal[1]) << " " << sqrt(errorTotal[2]) << std::endl;
-    }
-
-
-}
 
 
 void Arlequin::stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1, 
