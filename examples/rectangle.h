@@ -246,7 +246,9 @@ for (int k = 3; k < 4; k++)
     }
     fineModel->getProblemParameters().setSolver(SolverType::ESuiteSparse);
     fineModel->getProblemParameters().setSpectralRadius(1.);
+    fineModel->getProblemParameters().setArlequinOperatorConstants(1.,0.);
     coarseModel->getProblemParameters().setSpectralRadius(1.);
+    coarseModel->getProblemParameters().setArlequinOperatorConstants(1.,0.);
 
 
     std::vector<CompMesh *> meshvector(2);

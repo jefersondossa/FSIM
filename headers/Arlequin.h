@@ -17,7 +17,7 @@
 #include "Fluid.h"
 #include "Glue.h"
 #include "IntegrationQuadrature11.h"
-#include "ElCoupling.h"
+#include "ElCouplingLocal.h"
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 class Arlequin{
@@ -25,8 +25,8 @@ public:
     std::vector<Node *>     nodesLagrangeFine_;
     std::vector<Node *>     nodesLagrangeCoarse_;
 
-    std::vector<ElCoupling *>     glueZoneFine_;
-    std::vector<ElCoupling *>     glueZoneCoarse_;
+    std::vector<ElCouplingLocal *>     glueZoneFine_;
+    std::vector<ElCouplingLocal *>     glueZoneCoarse_;
 
     std::vector<int>         elementsGlueZoneFine_;
     std::vector<int>         nodesGlueZoneFine_;
@@ -133,9 +133,8 @@ public:
     /// @param vector<Nodes> vector of fluid model nodes
     /// @param vector<Elements> vector of fluid model elements
     /// @param int number of elements of the fluid model
-    void searchNodeCorrespondence(VecDouble &x, std::vector<Node *> nodes,
-                                  std::vector<Element *> elements,
-                                  int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
+    void searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh,
+                                  int &elCorr, VecDouble &xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesFineModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
@@ -194,13 +193,21 @@ public:
                            MatrixDouble &E, VecDouble &b0, 
                            VecDouble &b1, double &tArlq0, double &tArlq1);
 
+    void CreateGlobalCouplingElements();
+
     void SetUp(){
         SetElementBoxes();
         setSignaledDistance();
         //Construct the glue zone based on some defined criterion
         setCouplingZone();
         //Computes the Weight function for all the finite elements
-        setWeightFunction(16.); 
+        setWeightFunction(16.);
+
+        for (auto el:fMeshVector[2]->ElementVec()){
+            el->getIntegPointCoordinates();
+        }
+        setNodalCorrespondenceFine();
+        CreateGlobalCouplingElements();
     };
 
 };

@@ -231,11 +231,30 @@ void Element::setIntegPointWeightFunction() {
 //------------------COMPUTES THE INTEGRATION POINT COORDINATE-------------------
 //------------------------------------------------------------------------------
 void Element::getIntegPointCoordinates(){
+    DIM = fMesh->Dimension();
+    DEG = fMesh->GetDefaultOrder();
 
     IntegQuadratureSpecial sQuad(DIM,DEG);
+    intPointWeightFunctionSpecial.resize(sQuad.getNumberOfIntegrationPoints());
+    intPointWeightFunctionSpecialPrev.resize(sQuad.getNumberOfIntegrationPoints());
+    intPointDistGlueZone.resize(sQuad.getNumberOfIntegrationPoints());
+    intPointGlueZone.resize(sQuad.getNumberOfIntegrationPoints());
+    intPointCorrespElem.resize(sQuad.getNumberOfIntegrationPoints());
+    intPointCorrespElem.setZero();
+
+    intPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),2);
+    intPointCorrespXsi.resize(sQuad.getNumberOfIntegrationPoints(),2);
+    intPointCoordinates.setZero();
+    intPointCorrespXsi.setZero();
+    intPointDistGlueZone.setZero();
+    intPointWeightFunctionSpecial.fill(1.);
+    intPointWeightFunctionSpecialPrev.fill(1.);
+    intPointGlueZone.fill(false);
+    
     VecDouble xsi(DIM);
     ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phi_(fMesh->NElNodes());
+    intPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),DIM);
 
     for (int i = 0; i < sQuad.getNumberOfIntegrationPoints(); i++){
         double x[DIM] = {};
@@ -316,9 +335,6 @@ void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &dja
             xna_[j] = fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) ;
             // xna_[j] = alpha_f * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) + 
             //           (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousCoordinateValue(j);
-            if(std::isnan(xna_[j])){
-                fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j);
-            }
             for (int k = DIM; k--; ){
                 dx_dxsi(j,k) += xna_[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
@@ -328,9 +344,6 @@ void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &dja
 
     //Computing the jacobian determinant and Inverse
     djac_ = dx_dxsi.determinant();
-    if (fabs(djac_)<1.e-3){
-        PanicButton();
-    }
     ainv_ = dx_dxsi.inverse().transpose();
 
     return;
@@ -3217,6 +3230,8 @@ void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tP
 //------------------------------------------------------------------------------
 void Element::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
+    DIM = fMesh->Dimension();
+    DEG = fMesh->GetDefaultOrder();
     VecDouble xsi(DIM);
     MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
     MatrixDouble ainv_(DIM,DIM);

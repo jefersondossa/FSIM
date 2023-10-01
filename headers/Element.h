@@ -36,7 +36,7 @@ private:
     double        meshMovingParameter;
     std::vector<int> neighborElements;
     CompMesh *fMesh;
-
+public:
     VecDouble intPointWeightFunction;
     VecDouble intPointWeightFunctionPrev;
     VecDouble intPointWeightFunctionSpecial;

@@ -1,11 +1,38 @@
 #include "Arlequin.h"
 #include "hdf5.h"
-#include "ElCoupling.h"
-
+#include "ElCouplingLocal.h"
+#include "ElCouplingGlobal.h"
+#include <set>
 
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
+
+void Arlequin::CreateGlobalCouplingElements(){
+    //The main idea of this code is: for each integration point in the local model,
+    //we look for the interesected global element. Then, for each intersected global
+    // element we create an ElCouplingGlobal associated with the corresponding local element.
+    int numberIntPoints = fMeshVector[2]->ElementVec()[0] -> getNumberOfIntegrationPoints();
+    int64_t nEl = fMeshVector[2]->NElements();
+    int64_t index = nEl; 
+    for (int iel = 0; iel<nEl; iel++){
+        auto jel = fMeshVector[2]->ElementVec()[iel];
+        std::set<int64_t> elIntersected;
+        for (int i=0; i<numberIntPoints; i++){
+            elIntersected.insert(jel->getIntegPointCorrespondenceElement(i));
+        };
+        // int nElIntersected = elIntersected.size();
+        for (auto ielcoarse : elIntersected){
+            ElCouplingGlobal *el = new ElCouplingGlobal(index++,ielcoarse,fMeshVector);
+            fMeshVector[2]->ElementVec().push_back(el);
+            el->setConnectivity(fMeshVector[2]->ElementVec()[iel]->getConnectivity());
+            el->intPointCorrespElem = fMeshVector[2]->ElementVec()[iel]->intPointCorrespElem;
+            el->intPointCorrespXsi = fMeshVector[2]->ElementVec()[iel]->intPointCorrespXsi;
+        }
+    }
+    
+}
+
 
 
 //------------------------------------------------------------------------------
@@ -60,14 +87,13 @@ void Arlequin::SetElementBoxes() {
 //-------------------COMPUTE NODAL CORRESPONDECE WITH ELEMENTS------------------
 //------------------------------------------------------------------------------
 
-void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes, 
-                                           std::vector<Element *> elements, 
-                                           int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch){
+void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh, 
+                                        int &elCorr, VecDouble &xsiCorr, int elSearch){
     
-    int DIM = fMeshVector[0]->Dimension();
-    int DEG = fMeshVector[0]->GetDefaultOrder();
+    int DIM = cmesh->Dimension();
+    int DEG = cmesh->GetDefaultOrder();
     ShapeFunction shapeQuad(DIM,DEG);
-    int nElNodes = fMeshVector[1]->NElNodes();
+    int nElNodes = cmesh->NElNodes();
     VecDouble phi_(nElNodes);
 
     MatrixDouble ainv(DIM,DIM);
@@ -81,7 +107,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
     VecDouble deltaX(DIM);
     VecDouble deltaXsi(DIM);
     bool flg = true;
-    VecInt connec = elements[elSearch] -> getConnectivity();
+    VecInt connec = cmesh->ElementVec()[elSearch] -> getConnectivity();
     
     xsiCC.fill(1.e10);
     xsiCorr.fill(1.e50);
@@ -91,8 +117,10 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
     shapeQuad.evaluate(xsi,phi_);
 
     for (int i = 0; i < nElNodes; i++){
-        VecDouble xint = nodes[connec[i]] -> getCoordinates();
-        x_ += xint * phi_[i];
+        VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+        for (int k = 0; k < DIM; k++){
+            x_[k] += xint[k] * phi_[i];
+        }        
     };
 
     double error = 1.e6;
@@ -102,11 +130,11 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
         
         iterations++;
         
-        deltaX = x - x_;
+        for (int k = 0; k < DIM; k++) deltaX[k] = x[k] - x_[k];
         deltaXsi.setZero();
         
         double djac_ = 0.;
-        elements[elSearch] -> getJacobianMatrix(xsi,ainv,djac_,0);
+        cmesh->ElementVec()[elSearch] -> getJacobianMatrix(xsi,ainv,djac_,0);
 
         // for (int i = 0; i < DIM; i++)
         //     for (int j = 0; j < DIM; j++)
@@ -119,8 +147,8 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
         shapeQuad.evaluate(xsi,phi_);
         
         for (int i=0; i<nElNodes; i++){
-            VecDouble xint = nodes[connec[i]] -> getCoordinates();
-            x_ += xint * phi_[i];
+            VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+            for (int k = 0; k < DIM; k++)x_[k] += xint[k] * phi_[i];
         };
 
         error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
@@ -143,21 +171,21 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
 
         int nEl;
         if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
-            nEl = numElem;
+            nEl = cmesh->NElements();
         } else {
-            nEl = elements[elSearch] -> getNumberOfNeighborElements(); 
+            nEl = cmesh->ElementVec()[elSearch] -> getNumberOfNeighborElements(); 
         }   
 
         for (int jel = 0; jel < nEl; jel++){
 
             if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
-                connec = elements[jel] -> getConnectivity();
+                connec = cmesh->ElementVec()[jel] -> getConnectivity();
             } else {
-                connec = elements[elements[elSearch] -> getNeighborElement(jel)] -> getConnectivity();
+                connec = cmesh->ElementVec()[cmesh->ElementVec()[elSearch] -> getNeighborElement(jel)] -> getConnectivity();
             }   
 
             //get boxes information        
-            XK = elements[jel] -> getXIntersectionParameter();
+            XK = cmesh->ElementVec()[jel] -> getXIntersectionParameter();
 
             //Chech if the node is inside the element box
             if ((x[0] < XK.first[0]) || (x[0] > XK.second[0]) ||
@@ -174,7 +202,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
             shapeQuad.evaluate(xsi,phi_);
 
             for (int i = 0; i < nElNodes; i++){
-                VecDouble xint = nodes[connec[i]] -> getCoordinates();
+                VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
                 for (int k = DIM; k--; )
                     x_[k] += xint[k] * phi_[i];
             };
@@ -192,7 +220,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
                 }
                 
                 double djac_ = 0.;
-                elements[jel] -> getJacobianMatrix(xsi,ainv,djac_,0);
+                cmesh->ElementVec()[jel] -> getJacobianMatrix(xsi,ainv,djac_,0);
             
                 for (int i = 0; i < DIM; i++)
                     for (int j = 0; j < DIM; j++)
@@ -206,7 +234,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
                 shapeQuad.evaluate(xsi,phi_);
                 
                 for (int i=0; i<nElNodes; i++){
-                    VecDouble xint = nodes[connec[i]] -> getCoordinates();
+                    VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
                     for (int k = DIM; k--; ) x_[k] += xint[k] * phi_[i];
                 };
                         
@@ -230,9 +258,10 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,std::vector<Node *> nodes,
         }
     };
 
-    if (fabs(xsi[0]) > 2.) std::cout << "PROBEM SEARCHING NODE CORRESPONDENCE " 
-                                     << std::endl;
-
+    if (fabs(xsi[0]) > 2.) {
+        std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
+        PanicButton();
+    }
     return;
 };
 
@@ -247,26 +276,14 @@ void Arlequin::setNodalCorrespondenceFine() {
     //FINE MESH
     double &alpha_f = fMeshVector[0]->getProblemParameters().getAlphaF();
 
-    for (int inode = 0; inode < numNodesGlueZoneFine; inode++) {
+    for (int inode = 0; inode < fMeshVector[2]->NNodes(); inode++) {
         
-        VecDouble x = fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[inode]] -> getCoordinates();
+        VecDouble x = fMeshVector[2]->NodeVec()[inode] -> getCoordinates();
 
         int elCorr = 0;
         VecDouble xsiCorr(DIM);
-        // searchNodeCorrespondence(x, nodesCoarse_, fMeshVector[0]->ElementVec()[fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[inode]]->getNodalElemCorrespondence()], 
-        //                          1,elCorr,xsiCorr, );
-
-        // double t1 = -1.e-2;
-        // double t2 =  1. - t1;
-
-        // if ((xsiCorr[0] >= t1) && (xsiCorr[1] >= t1) && (1. - xsiCorr[0] - xsiCorr[1] >= t1) &&
-        //     (xsiCorr[0] <= t2) && (xsiCorr[1] <= t2) && (1. - xsiCorr[0] - xsiCorr[1] <= t2)){
-            
-        //     fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);
-        // } else {
-        searchNodeCorrespondence(x, fMeshVector[0]->NodeVec(), fMeshVector[0]->ElementVec(), 
-                                 fMeshVector[0]->NElements(),elCorr,xsiCorr,fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[inode]] -> getNodalElemCorrespondence());
-        fMeshVector[1]->NodeVec()[nodesGlueZoneFine_[inode]] -> setNodalCorrespondence(elCorr,xsiCorr);             
+        searchNodeCorrespondence(x, fMeshVector[0],elCorr,xsiCorr,fMeshVector[2]->NodeVec()[inode]->getNodalElemCorrespondence());
+        fMeshVector[2]->NodeVec()[inode] -> setNodalCorrespondence(elCorr,xsiCorr);             
         // }
 
         // std::cout << "INODE " << nodesGlueZoneFine_[inode] << " " << elCorr << " " << xsiCorr[0] << " " << xsiCorr[1] << std::endl;
@@ -293,23 +310,23 @@ void Arlequin::setNodalCorrespondenceFine() {
     //int numberIntPoints = fMeshVector[1]->ElementVec()[0] -> getNumberOfIntegrationPoints();
     //if (rank == 0) std::cout << "Int Points " << numberIntPoints << std::endl;
 
-    for (int ielem = 0; ielem < numElemGlueZoneFine; ielem++) {
-        int nElNodes = fMeshVector[1]->NElNodes();
-        VecDouble x1(nElNodes), x2(nElNodes);
-        VecInt connec = fMeshVector[1]->ElementVec()[elementsGlueZoneFine_[ielem]] -> getConnectivity();
+    for (int ielem = 0; ielem < fMeshVector[2]->NElements(); ielem++) {
+        int nElNodes = fMeshVector[2]->NElNodes();
+        VecDouble x1(nElNodes), x2(nElNodes), x3(nElNodes);
+        VecInt connec = fMeshVector[2]->ElementVec()[ielem] -> getConnectivity();
         
         for (int i = 0; i < nElNodes; i++){
-            VecDouble x = fMeshVector[1]->NodeVec()[connec[i]] -> getCoordinates();
-            VecDouble xp = fMeshVector[1]->NodeVec()[connec[i]] -> getPreviousCoordinates();
+            VecDouble x = fMeshVector[2]->NodeVec()[connec[i]] -> getCoordinates();
+            VecDouble xp = fMeshVector[2]->NodeVec()[connec[i]] -> getPreviousCoordinates();
             
             x1[i] = alpha_f * x[0] + (1. - alpha_f) * xp[0];
             x2[i] = alpha_f * x[1] + (1. - alpha_f) * xp[1];
+            if (DIM == 3) x3[i] = alpha_f * x[2] + (1. - alpha_f) * xp[2];
         };
 
         // std::cout << "XX1 " << x2 << " " << x22 << " " << x222 << std::endl;
 
-        int numberIntPoints = fMeshVector[1]->ElementVec()[elementsGlueZoneFine_[ielem]] -> 
-            getNumberOfIntegrationPoints();
+        int numberIntPoints = fMeshVector[2]->ElementVec()[ielem] -> getNumberOfIntegrationPoints();
 
         IntegQuadratureSpecial quad(DIM,DEG);
         for (int i = 0; i < numberIntPoints; i++){
@@ -322,11 +339,10 @@ void Arlequin::setNodalCorrespondenceFine() {
             int elCorr = 0;
             VecDouble xsiCorr(DIM);
         
-            searchNodeCorrespondence(x,fMeshVector[0]->NodeVec(),fMeshVector[0]->ElementVec(),
-                                     fMeshVector[0]->NElements(),elCorr,xsiCorr,fMeshVector[1]->ElementVec()[elementsGlueZoneFine_[ielem]] -> getIntegPointCorrespondenceElement(i));
+            searchNodeCorrespondence(x,fMeshVector[0],elCorr,xsiCorr,
+                                     fMeshVector[2]->ElementVec()[ielem]->getIntegPointCorrespondenceElement(i));
                 
-            fMeshVector[1]->ElementVec()[elementsGlueZoneFine_[ielem]] -> 
-                setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
+            fMeshVector[2]->ElementVec()[ielem] -> setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
         };
 
     };
@@ -616,7 +632,7 @@ void Arlequin::setCouplingZone(){
             // elementsGlueZoneFine_.push_back(jel);
             // fMeshVector[1]->ElementVec()[jel] -> setGlueZone();
 
-            ElCoupling *el = new ElCoupling(index++,jel,fMeshVector);
+            ElCouplingLocal *el = new ElCouplingLocal(index++,jel,fMeshVector);
             fMeshVector[2]->ElementVec().push_back(el);            
         };        
     };
@@ -624,8 +640,8 @@ void Arlequin::setCouplingZone(){
     //Defines which nodes are in the glue zone
     numElemGlueZoneFine = fMeshVector[2]->NElements();
     for (int i = 0; i < numElemGlueZoneFine; i++){
-        auto *elcoupling = dynamic_cast<ElCoupling *> (fMeshVector[2]->ElementVec()[i]);
-        auto locindex = elcoupling->GetLocalIndex();
+        auto *elcoup = dynamic_cast<ElCouplingLocal *> (fMeshVector[2]->ElementVec()[i]);
+        auto locindex = elcoup->GetLocalIndex();
         VecInt connec = fMeshVector[1]->ElementVec()[locindex] -> getConnectivity();
         int nElNodes = fMeshVector[1]->NElNodes();
         for (int ino = 0; ino < nElNodes; ino++) nodesCZ[connec[ino]]++;
@@ -655,8 +671,8 @@ void Arlequin::setCouplingZone(){
     for (int i = 0; i < fMeshVector[2]->NElements(); i++){
         int nElNodes = fMeshVector[1]->NElNodes();
         VecInt connecAux(nElNodes);
-        auto *elcoupling = dynamic_cast<ElCoupling *> (fMeshVector[2]->ElementVec()[i]);
-        auto locindex = elcoupling->GetLocalIndex();
+        auto *elcoup = dynamic_cast<ElCouplingLocal *> (fMeshVector[2]->ElementVec()[i]);
+        auto locindex = elcoup->GetLocalIndex();
 
         VecInt connec = fMeshVector[1]->ElementVec()[locindex] -> getConnectivity();
         

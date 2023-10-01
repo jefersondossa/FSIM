@@ -1,5 +1,6 @@
 #include "Assemble.h"
-#include "ElCoupling.h"
+#include "ElCouplingLocal.h"
+#include "ElCouplingGlobal.h"
 
 void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     std::cout << "Assembling..." << std::endl;
@@ -49,14 +50,89 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
+    int64_t GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int64_t LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
+
     //Lagrange Multipliers
-    for (int l=0; l< fAnalysis->MeshVector()[2]->NElements(); l++){
-        auto *elcoupling = dynamic_cast<ElCoupling *> (fAnalysis->MeshVector()[2]->ElementVec()[l]);
-        int jel = elcoupling->GetLocalIndex();
-        if (fAnalysis->MeshVector()[1]->part_elem[jel] == rank) {
+    for (int jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
+        auto *elclocal = dynamic_cast<ElCouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]);
+        auto *elcglobal = dynamic_cast<ElCouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]);
+        int64_t jelcoupled = 0;
+
+        //Determine if the coupling element is from global or local model
+        if (!elclocal && !elcglobal) PanicButton();
+        if(elclocal){
+            jelcoupled = elclocal->GetLocalIndex();
+        } else if (elcglobal){
+            jelcoupled = elcglobal->GetGlobalIndex();
+        } else {
+            PanicButton();
+        }
+        // if (fAnalysis->MeshVector()[1]->part_elem[jel] == rank) {
             
-            int nElNodes = fAnalysis->MeshVector()[2]->NElNodes();
-            int nLocDOF = fAnalysis->MeshVector()[2]->NLocDOF();
+        int nElNodes = fAnalysis->MeshVector()[2]->NElNodes();
+        int nLocDOF = fAnalysis->MeshVector()[2]->NLocDOF();
+
+        MatrixDouble matrix(nLocDOF,nLocDOF);
+        matrix.setZero();
+        VecDouble rhs(2*nLocDOF);
+        rhs.setZero();
+        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivity();
+        VecInt connec;
+        int64_t startDOF = 0;
+        //Gets the right connectivity
+        if(elclocal){
+            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivity();
+            startDOF = GloDOF;
+        } else if (elcglobal){
+            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivity();
+        } else {
+            PanicButton();
+        }
+    
+        fAnalysis->MeshVector()[2]->ElementVec()[jelc] -> ComputeElContribution(matrix,rhs);
+
+        //Disperse local contributions into the global matrix
+        for (int i = 0; i < nElNodes; i++){
+            for (int j = 0; j < nElNodes; j++){
+                //COUPLING OPERATOR
+                if (fabs(matrix(i,j)) >= 1.e-15){
+                    int d_i = GloDOF + LocDOF + connecL[i];
+                    int d_j = startDOF + connec[j];
+                    MatSetValues(fAnalysis->Stiffness(),1,&d_i,1,&d_j,&matrix(i,j),ADD_VALUES);
+                    MatSetValues(fAnalysis->Stiffness(),1,&d_j,1,&d_i,&matrix(i,j),ADD_VALUES);
+                };
+                // // ARLEQUIN STABILIZATION
+                // if (fabs(ArlequinA2(i,j)) >= 1.e-15){
+                //     int dof_i = GloDOF + LocDOF + connecL[i];
+                //     int dof_j = GloDOF + connec[j];
+                //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(i,j),ADD_VALUES);
+                // };
+                // if (fabs(ArlequinA1(i,j)) >= 1.e-15){
+                //     int dof_i = GloDOF + LocDOF + connecL[i];
+                //     int dof_j = GloDOF + LocDOF + connecL[j];
+                //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(i,j),ADD_VALUES);
+                // };                   
+            };
+            //RHS VECTOR
+            //COUPLING OPERATOR
+            int dof_i = startDOF + connec[i];
+            VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[i],ADD_VALUES);
+            
+            dof_i = GloDOF + LocDOF + connecL[i];
+            VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[nLocDOF+i],ADD_VALUES);
+
+            // dof_i = GloDOF + connec[i];
+            // VecSetValues(b,1,&dof_i,&rhsLagMult2[i],ADD_VALUES);
+
+            // //ARLEQUIN STABILIZATION
+            // dof_i = GloDOF + LocDOF + connecL[i];
+            // VecSetValues(b,1,&dof_i,&RhsArlequin2[i],ADD_VALUES);
+        };
+
+
+
+
 
             // VecInt connecC;
             // VecInt connec = fMeshVector[1]->ElementVec()[jel] -> getConnectivity();
@@ -240,7 +316,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
 
             
            
-        }; // if element belongs to the glue zone
+        // }; // if element belongs to the glue zone
     }; // Glue zone
 }
 

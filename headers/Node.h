@@ -251,7 +251,7 @@ public:
 
     /// Returns the node coordinate vector at the previous time step
     /// @return node coordinate vector at the previous time step
-    VecDouble &getPreviousCoordinates() {return previousCoord_;}
+    VecDouble &getPreviousCoordinates() {return fPrevCoord;}
 
     /// Returns the node updated coordinate vector
     /// @return node coordinate updated vector
