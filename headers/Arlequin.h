@@ -49,6 +49,9 @@ public:
     std::map<int64_t,int64_t> fNodeLocalToElementGlobal;
     std::map<int64_t,VecDouble> fNodeLocalToXsiGlobal;
 
+    std::map<int64_t,VecDouble> fLocalIntPointToGlobalElement;
+    std::map<int64_t,MatrixDouble> fLocalIntPointToGlobalXsi;
+
 private:
     double fGlueZoneThickness = 0.125;
     double fArlequinEpsilon = 1.e-3;

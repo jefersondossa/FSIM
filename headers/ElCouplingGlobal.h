@@ -8,6 +8,8 @@ class ElCouplingGlobal : public Element
 private:
     int64_t fGlobalIndex;
     std::vector<CompMesh *> fMeshVector;
+    MatrixDouble fGlobalXsi;
+    VecDouble fGlobalElemCorresp;
 
 public:
     ElCouplingGlobal(int index, int64_t globindex, std::vector<CompMesh*> &meshvec):Element(){
@@ -17,7 +19,15 @@ public:
         fMeshVector = meshvec;
     };
 
-    int64_t &GetGlobalIndex(){return fGlobalIndex;}
+    int64_t &GetGlobalIndex(){
+        return fGlobalIndex;
+    }
+    void SetGlobalXsi(MatrixDouble &globxsi){
+        fGlobalXsi = globxsi;
+    }
+    void SetGlobalElemCorresp(VecDouble &elemcorr){
+        fGlobalElemCorresp = elemcorr;
+    }
 
     void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness) override;
     

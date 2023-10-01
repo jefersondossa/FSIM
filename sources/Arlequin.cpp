@@ -19,15 +19,15 @@ void Arlequin::CreateGlobalCouplingElements(){
         auto jel = fMeshVector[2]->ElementVec()[iel];
         std::set<int64_t> elIntersected;
         for (int i=0; i<numberIntPoints; i++){
-            elIntersected.insert(jel->getIntegPointCorrespondenceElement(i));
+            elIntersected.insert(fLocalIntPointToGlobalElement[iel][i]);
         };
         // int nElIntersected = elIntersected.size();
         for (auto ielcoarse : elIntersected){
             ElCouplingGlobal *el = new ElCouplingGlobal(index++,ielcoarse,fMeshVector);
             fMeshVector[2]->ElementVec().push_back(el);
             el->setConnectivity(fMeshVector[2]->ElementVec()[iel]->getConnectivity());
-            el->intPointCorrespElem = fMeshVector[2]->ElementVec()[iel]->intPointCorrespElem;
-            el->intPointCorrespXsi = fMeshVector[2]->ElementVec()[iel]->intPointCorrespXsi;
+            el->SetGlobalXsi(fLocalIntPointToGlobalXsi[iel]);
+            el->SetGlobalElemCorresp(fLocalIntPointToGlobalElement[iel]);
         }
     }
     
@@ -340,14 +340,19 @@ void Arlequin::setNodalCorrespondenceFine() {
 
             int elCorr = 0;
             VecDouble xsiCorr(DIM);
-        
+
+            if (fLocalIntPointToGlobalElement[ielem].size()==0) fLocalIntPointToGlobalElement[ielem].resize(numberIntPoints);
+            if (fLocalIntPointToGlobalXsi[ielem].rows()==0) fLocalIntPointToGlobalXsi[ielem].resize(numberIntPoints,DIM);
             searchNodeCorrespondence(x,fMeshVector[0],elCorr,xsiCorr,
-                                     fMeshVector[2]->ElementVec()[ielem]->getIntegPointCorrespondenceElement(i));
-                
-            fMeshVector[2]->ElementVec()[ielem] -> setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
+                                     fLocalIntPointToGlobalElement[ielem][i]);
+                            
+            fLocalIntPointToGlobalElement[ielem][i] = elCorr;
+            fLocalIntPointToGlobalXsi[ielem](i,0)=xsiCorr[0];
+            fLocalIntPointToGlobalXsi[ielem](i,1)=xsiCorr[1];
+            if (DIM == 3)fLocalIntPointToGlobalXsi[ielem](i,2)=xsiCorr[2];
         };
 
-    };
+    }; 
 };
 
 //------------------------------------------------------------------------------

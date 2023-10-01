@@ -469,7 +469,8 @@ void FSInteraction<DIM,DEG>::preProcessFluid(){
     for (int i = 0; i < numElemFluid; i++){
         double v = elementsFluid_[i] -> getJacobian();
         double eta = 1 + (1. - vMin / vMax) / (v / vMax);
-        elementsFluid_[i] -> setMeshMovingParameter(eta);
+        PanicButton();
+        // elementsFluid_[i] -> setMeshMovingParameter(eta);
 
         // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
     };
@@ -558,7 +559,8 @@ void FSInteraction<DIM,DEG>::preProcessArlequin(){
     for (int i = 0; i < numElemArlequinFine; i++){
         double v = elementsArlequinFine_[i] -> getJacobian();
         double eta = 1 + (1. - vMin / vMax) / (v / vMax);
-        elementsArlequinFine_[i] -> setMeshMovingParameter(eta);
+        PanicButton();
+        // elementsArlequinFine_[i] -> setMeshMovingParameter(eta);
 
         // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
     };

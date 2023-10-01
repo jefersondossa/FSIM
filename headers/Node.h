@@ -35,13 +35,7 @@
 #include "DataTypes.h"
 
 /// Defines the node object and stores all nodal variables information
-
-// template<int spaceDim>
-
 class Node{
-public:
-    static const int spaceDim = 2;
-
 private:
     int fNStateVariables;
     VecDouble fSolution;
@@ -85,11 +79,11 @@ public:
         
         fInverseIncidence.clear();
 
-        fConstrainValue.resize(spaceDim);
-        fConstrainType.resize(spaceDim);
-        fMeshVelocity.resize(spaceDim);
+        fConstrainValue.resize(fDimension);
+        fConstrainType.resize(fDimension);
+        fMeshVelocity.resize(fDimension);
 
-        for (int i = 0; i < spaceDim; ++i){
+        for (int i = 0; i < fDimension; ++i){
             fMeshVelocity[i] = 0.;
             fConstrainType[i] = 0;
             fConstrainValue[i] = 0.;
@@ -135,7 +129,7 @@ public:
 
     /// Sets the node coordinate vector
     /// @param VecLocD Coordinate
-    void setCoordinates(VecDouble &coor){for (int i=0; i<spaceDim; i++) fCoord[i] = coor[i];};
+    void setCoordinates(VecDouble &coor){for (int i=0; i<fDimension; i++) fCoord[i] = coor[i];};
 
     /// Pushs back a term of the inverse incidence, i.e., an element which
     /// contains the node
@@ -158,7 +152,7 @@ public:
     /// Sets the node mesh velocity
     /// @param double* mesh velocity
     void setMeshVelocity(VecDouble &u){
-        for (int i=spaceDim; i--; ){
+        for (int i=fDimension; i--; ){
             fMeshVelocity[i] = u[i];          
         };
     };

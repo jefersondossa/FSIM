@@ -3,7 +3,7 @@
 
 void ElCouplingGlobal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
 
-    if ((intPointCorrespElem[index] != fGlobalIndex)) return;// This contribution belongs to another global element
+    if ((fGlobalElemCorresp[index] != fGlobalIndex)) return;// This contribution belongs to another global element
 
     int DIM = Mesh()->Dimension();
     int DEG = Mesh()->GetDefaultOrder();
@@ -16,7 +16,7 @@ void ElCouplingGlobal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, doubl
     VecDouble XsiGlobal(DIM);
     MatrixDouble ainvGlobal(DIM,DIM);
     MatrixDouble dphi_dxGlobal(Mesh()->NElNodes(),DIM);
-    for (int k = 0; k < DIM; k++) XsiGlobal[k] = intPointCorrespXsi(index,k);
+    for (int k = 0; k < DIM; k++) XsiGlobal[k] = fGlobalXsi(index,k);
     //Computes the coarse mesh shape functions
     ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phiGlobal(Mesh()->NElNodes());

@@ -26,7 +26,7 @@ void ElElasticityPositional2D::ComputeResidual(int &index, MatrixDouble &dphi_dx
 
     //Velocity Derivatives
     MatrixDouble du_dx(dim,dim), duprev_dx(dim,dim), duna_dx(dim,dim);
-    interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+    interpolateSolDerivatives(dphi_dx, du_dx);
     duna_dx = du_dx;
 
     double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);

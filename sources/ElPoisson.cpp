@@ -2,7 +2,7 @@
 
 void ElPoisson::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
 
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index) * fMeshMovingParameter;
 
     for (int i = Mesh()->NElNodes(); i-- ; ){       
         for (int j = Mesh()->NElNodes(); j-- ; ){            
@@ -27,7 +27,7 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
     MatrixDouble du_dx(dim,dim);
     interpolateSolDerivatives(dphi_dx, du_dx);
 
-    double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);
+    double WJ = weight_ * djac_  * getIntegPointWeightFunction(index) * fMeshMovingParameter;
 
     VecDouble forcingF(1);
     VecDouble x_ = getIntegPointCoordinatesValue(index);

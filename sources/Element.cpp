@@ -14,54 +14,54 @@ void Element::getBoundaryNodes(int *nodesb_){
         switch (fMesh->GetDefaultOrder())
         {
         case 1:
-            if(sideBoundary_ == 0){
-                nodesb_[0] = connect_[2]; 
-                nodesb_[1] = connect_[1]; 
+            if(fSideInBoundary == 0){
+                nodesb_[0] = fConnect[2]; 
+                nodesb_[1] = fConnect[1]; 
             }else{
-                if(sideBoundary_ == 1){
-                    nodesb_[0] = connect_[0]; 
-                    nodesb_[1] = connect_[2]; 
+                if(fSideInBoundary == 1){
+                    nodesb_[0] = fConnect[0]; 
+                    nodesb_[1] = fConnect[2]; 
                 }else{
-                    nodesb_[0] = connect_[1];
-                    nodesb_[1] = connect_[0];
+                    nodesb_[0] = fConnect[1];
+                    nodesb_[1] = fConnect[0];
                 };        
             };
             break;
         case 2:
             //!!!!!!!ATENÇÃO ESSAS CONECTIVIDADES FORAM ALTERADAS EM RELAÇÃO AO PROGRAMA Fluid.
-            if(sideBoundary_ == 0){
-                nodesb_[0] = connect_[1]; 
-                nodesb_[1] = connect_[2]; 
-                nodesb_[2] = connect_[4];         
+            if(fSideInBoundary == 0){
+                nodesb_[0] = fConnect[1]; 
+                nodesb_[1] = fConnect[2]; 
+                nodesb_[2] = fConnect[4];         
             }else{
-                if(sideBoundary_ == 1){
-                    nodesb_[0] = connect_[2]; 
-                    nodesb_[1] = connect_[0]; 
-                    nodesb_[2] = connect_[5]; 
+                if(fSideInBoundary == 1){
+                    nodesb_[0] = fConnect[2]; 
+                    nodesb_[1] = fConnect[0]; 
+                    nodesb_[2] = fConnect[5]; 
                 }else{
-                    nodesb_[0] = connect_[0];
-                    nodesb_[1] = connect_[1];
-                    nodesb_[2] = connect_[3];
+                    nodesb_[0] = fConnect[0];
+                    nodesb_[1] = fConnect[1];
+                    nodesb_[2] = fConnect[3];
                 };        
             };
             break;
         case 3:
-            if(sideBoundary_ == 0){
-                nodesb_[0] = connect_[1]; 
-                nodesb_[1] = connect_[2]; 
-                nodesb_[2] = connect_[5];         
-                nodesb_[3] = connect_[6];         
+            if(fSideInBoundary == 0){
+                nodesb_[0] = fConnect[1]; 
+                nodesb_[1] = fConnect[2]; 
+                nodesb_[2] = fConnect[5];         
+                nodesb_[3] = fConnect[6];         
             }else{
-                if(sideBoundary_ == 1){
-                    nodesb_[0] = connect_[2]; 
-                    nodesb_[1] = connect_[0]; 
-                    nodesb_[2] = connect_[7]; 
-                    nodesb_[3] = connect_[8]; 
+                if(fSideInBoundary == 1){
+                    nodesb_[0] = fConnect[2]; 
+                    nodesb_[1] = fConnect[0]; 
+                    nodesb_[2] = fConnect[7]; 
+                    nodesb_[3] = fConnect[8]; 
                 }else{
-                    nodesb_[0] = connect_[0];
-                    nodesb_[1] = connect_[1];
-                    nodesb_[2] = connect_[3];
-                    nodesb_[3] = connect_[4];
+                    nodesb_[0] = fConnect[0];
+                    nodesb_[1] = fConnect[1];
+                    nodesb_[2] = fConnect[3];
+                    nodesb_[3] = fConnect[4];
                 };        
             };
             break;
@@ -73,59 +73,59 @@ void Element::getBoundaryNodes(int *nodesb_){
         switch (fMesh->GetDefaultOrder())
         {
         case 1:
-            if(sideBoundary_ == 0){
-                nodesb_[0] = connect_[1]; 
-                nodesb_[1] = connect_[2]; 
-                nodesb_[2] = connect_[3];         
+            if(fSideInBoundary == 0){
+                nodesb_[0] = fConnect[1]; 
+                nodesb_[1] = fConnect[2]; 
+                nodesb_[2] = fConnect[3];         
             }else{
-                if(sideBoundary_ == 1){
-                    nodesb_[0] = connect_[0]; 
-                    nodesb_[1] = connect_[3]; 
-                    nodesb_[2] = connect_[2]; 
+                if(fSideInBoundary == 1){
+                    nodesb_[0] = fConnect[0]; 
+                    nodesb_[1] = fConnect[3]; 
+                    nodesb_[2] = fConnect[2]; 
                 }else{
-                    if(sideBoundary_ == 2){
-                        nodesb_[0] = connect_[0];
-                        nodesb_[1] = connect_[1];
-                        nodesb_[2] = connect_[3];
+                    if(fSideInBoundary == 2){
+                        nodesb_[0] = fConnect[0];
+                        nodesb_[1] = fConnect[1];
+                        nodesb_[2] = fConnect[3];
                     }else{
-                        nodesb_[0] = connect_[0];
-                        nodesb_[1] = connect_[2];
-                        nodesb_[2] = connect_[1];
+                        nodesb_[0] = fConnect[0];
+                        nodesb_[1] = fConnect[2];
+                        nodesb_[2] = fConnect[1];
                     }
                 };        
             };
             break;
         case 2:
-            if(sideBoundary_ == 0){
-                nodesb_[0] = connect_[2]; 
-                nodesb_[1] = connect_[3]; 
-                nodesb_[2] = connect_[1];
-                nodesb_[3] = connect_[9]; 
-                nodesb_[4] = connect_[8]; 
-                nodesb_[5] = connect_[5];
+            if(fSideInBoundary == 0){
+                nodesb_[0] = fConnect[2]; 
+                nodesb_[1] = fConnect[3]; 
+                nodesb_[2] = fConnect[1];
+                nodesb_[3] = fConnect[9]; 
+                nodesb_[4] = fConnect[8]; 
+                nodesb_[5] = fConnect[5];
             }else{
-                if(sideBoundary_ == 1){
-                    nodesb_[0] = connect_[0]; 
-                    nodesb_[1] = connect_[3]; 
-                    nodesb_[2] = connect_[2];
-                    nodesb_[3] = connect_[7]; 
-                    nodesb_[4] = connect_[9]; 
-                    nodesb_[5] = connect_[6];
+                if(fSideInBoundary == 1){
+                    nodesb_[0] = fConnect[0]; 
+                    nodesb_[1] = fConnect[3]; 
+                    nodesb_[2] = fConnect[2];
+                    nodesb_[3] = fConnect[7]; 
+                    nodesb_[4] = fConnect[9]; 
+                    nodesb_[5] = fConnect[6];
                 }else{
-                    if(sideBoundary_ == 2){
-                        nodesb_[0] = connect_[3]; 
-                        nodesb_[1] = connect_[0]; 
-                        nodesb_[2] = connect_[1];
-                        nodesb_[3] = connect_[7]; 
-                        nodesb_[4] = connect_[4]; 
-                        nodesb_[5] = connect_[8];
+                    if(fSideInBoundary == 2){
+                        nodesb_[0] = fConnect[3]; 
+                        nodesb_[1] = fConnect[0]; 
+                        nodesb_[2] = fConnect[1];
+                        nodesb_[3] = fConnect[7]; 
+                        nodesb_[4] = fConnect[4]; 
+                        nodesb_[5] = fConnect[8];
                     }else{
-                        nodesb_[0] = connect_[0]; 
-                        nodesb_[1] = connect_[2]; 
-                        nodesb_[2] = connect_[1];
-                        nodesb_[3] = connect_[6]; 
-                        nodesb_[4] = connect_[5]; 
-                        nodesb_[5] = connect_[4];
+                        nodesb_[0] = fConnect[0]; 
+                        nodesb_[1] = fConnect[2]; 
+                        nodesb_[2] = fConnect[1];
+                        nodesb_[3] = fConnect[6]; 
+                        nodesb_[4] = fConnect[5]; 
+                        nodesb_[5] = fConnect[4];
                     }
                 };        
             };
@@ -159,11 +159,6 @@ void Element::setIntegPointWeightFunction() {
         intPointWeightFunction[i] = 0.;
     }
 
-    for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
-        intPointWeightFunctionSpecialPrev[i] = intPointWeightFunctionSpecial[i];
-        intPointWeightFunctionSpecial[i] = 0.;
-    }
-
     int index=0;
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
@@ -175,56 +170,14 @@ void Element::setIntegPointWeightFunction() {
        shapeQuad.evaluate(xsi,phi_);
 
        for (int j=0; j<fMesh->NElNodes(); j++){
-           intPointWeightFunction[index] += phi_[j] * fMesh->NodeVec()[connect_[j]] -> getWeightFunction();
+           intPointWeightFunction[index] += phi_[j] * fMesh->NodeVec()[fConnect[j]] -> getWeightFunction();
        };
        // intPointWeightFunction(index) = 1.;
        index++;
     }; 
-
-    // if (index_ == 2117){
-    //     for (int i = 0; i < intPointWeightFunction.size(); ++i)
-    //     {
-    //         std::cout << "Int point " << i << " " << intPointWeightFunction(i) << " " << intPointWeightFunctionPrev(i) << std::endl;      
-    //     }
-    // } 
 
     index = 0;
-    IntegQuadratureSpecial sQuad(DIM,DEG);
-
-    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
-        
-       xsi[0] = sQuad.PointList(index,0);
-       xsi[1] = sQuad.PointList(index,1);
-            
-       //Computes the velocity shape functions
-       shapeQuad.evaluate(xsi,phi_);
-
-       for (int j=0; j<fMesh->NElNodes(); j++){
-           intPointWeightFunctionSpecial[index] += phi_[j] * fMesh->NodeVec()[connect_[j]] -> getWeightFunction();
-       };
-       // intPointWeightFunction(index) = 1.;
-       index++;
-    }; 
-
-    //     typename Nodes::VecLocD x;
-    // int cont = 0;
-    // if (model == false){
-    //     for (int i = 0; i < 6; i++){
-    //         x = fMesh->NodeVec()[connect_[i]] -> getCoordinates();
-    //         if((x(0) < 1.501) || (x(0) > 6.499)){            
-    //             cont++;
-    //         };  
-    //     };
-    //     if (cont == 6){
-    //         for (int i = 0; i < intPointWeightFunction.size(); i++){
-    //             intPointWeightFunction(i) = 1.;
-    //         };
-    //         std::cout << "aqui " << cont << " " << index_ << std::endl;
-    //     }
-    // };
-
-    // if (norm_2(intPointWeightFunction - intPointWeightFunctionPrev) > 1.e-8) std::cout << "AQUI " << index_ << std::endl
-    return;
+     return;
 };
 
 //------------------------------------------------------------------------------
@@ -234,27 +187,14 @@ void Element::getIntegPointCoordinates(){
     DIM = fMesh->Dimension();
     DEG = fMesh->GetDefaultOrder();
 
-    IntegQuadratureSpecial sQuad(DIM,DEG);
-    intPointWeightFunctionSpecial.resize(sQuad.getNumberOfIntegrationPoints());
-    intPointWeightFunctionSpecialPrev.resize(sQuad.getNumberOfIntegrationPoints());
-    intPointDistGlueZone.resize(sQuad.getNumberOfIntegrationPoints());
-    intPointGlueZone.resize(sQuad.getNumberOfIntegrationPoints());
-    intPointCorrespElem.resize(sQuad.getNumberOfIntegrationPoints());
-    intPointCorrespElem.setZero();
-
-    intPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),2);
-    intPointCorrespXsi.resize(sQuad.getNumberOfIntegrationPoints(),2);
-    intPointCoordinates.setZero();
-    intPointCorrespXsi.setZero();
-    intPointDistGlueZone.setZero();
-    intPointWeightFunctionSpecial.fill(1.);
-    intPointWeightFunctionSpecialPrev.fill(1.);
-    intPointGlueZone.fill(false);
+    IntegQuadrature sQuad(DIM,DEG);
+    fIntPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),2);
+    fIntPointCoordinates.setZero();
     
     VecDouble xsi(DIM);
     ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phi_(fMesh->NElNodes());
-    intPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),DIM);
+    fIntPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),DIM);
 
     for (int i = 0; i < sQuad.getNumberOfIntegrationPoints(); i++){
         double x[DIM] = {};
@@ -263,11 +203,11 @@ void Element::getIntegPointCoordinates(){
 
         shapeQuad.evaluate(xsi,phi_);
 
-        for (int k = DIM; k--; ) intPointCoordinates(i,k) = 0.;
+        for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
 
         for (int j = 0; j < fMesh->NElNodes(); j++)
             for (int k = DIM; k--; )
-                intPointCoordinates(i,k) += fMesh->NodeVec()[connect_[j]] -> getCoordinateValue(k) * phi_[j];
+                fIntPointCoordinates(i,k) += fMesh->NodeVec()[fConnect[j]] -> getCoordinateValue(k) * phi_[j];
         
     };
 
@@ -280,18 +220,13 @@ void Element::getIntegPointCoordinates(){
 //---------------------------CLEAR ELEMENT VARIABLES----------------------------
 //------------------------------------------------------------------------------
 void Element::clearVariables(){
-        
-    glueZone = false;
 
     IntegQuadratureSpecial sQuad(DIM,DEG);
 
     for (int i=0; i < sQuad.getNumberOfIntegrationPoints(); i++){
         intPointWeightFunction[i] = 1.;
-        intPointGlueZone[i] = false;
-        intPointCorrespElem[i] = 0;
         for (int j =0; j<DIM; j++) {
-            intPointCoordinates(i,j) = 0.;
-            intPointCorrespXsi(i,j) = 0.;
+            fIntPointCoordinates(i,j) = 0.;
         }
     };
     
@@ -332,9 +267,9 @@ void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &dja
     for (int i = fMesh->NElNodes(); i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            xna_[j] = fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) ;
-            // xna_[j] = alpha_f * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) + 
-            //           (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousCoordinateValue(j);
+            xna_[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) ;
+            // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
+            //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
             for (int k = DIM; k--; ){
                 dx_dxsi(j,k) += xna_[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
@@ -388,9 +323,9 @@ void Element::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
     
     //These derivatives are computed with basis in this reference:
     //https://scicomp.stackexchange.com/questions/25196/implementing-higher-order-derivatives-for-finite-element
-    MatrixDouble matAux;
+    MatrixDouble matAux,invSecDeriv;
     VecDouble HODerivatives, vecAux;
-    if (!isSecondDerivativeInverted){
+    // if (!isSecondDerivativeInverted){
         if (DIM == 2){
             matAux.resize(3,3); HODerivatives.resize(3); vecAux.resize(3); invSecDeriv.resize(3,3);
             matAux.setZero(); HODerivatives.setZero(); vecAux.setZero(); invSecDeriv.setZero();
@@ -415,7 +350,7 @@ void Element::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
         } else {
             PanicButton();
         }
-    }
+    // }
     
     //Shape functions spatial second derivatives
     double ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
@@ -426,8 +361,8 @@ void Element::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_
         xna_.setZero();
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            xna_[j] = alpha_f * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) + 
-                      (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousCoordinateValue(j);
+            xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
+                      (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
         }
         ddx_dxsi += xna_[0] * ddphi[i](0,0);
         ddx_deta += xna_[0] * ddphi[i](1,1);
@@ -469,99 +404,23 @@ void Element::interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &
     for (int i = fMesh->NElNodes(); i--; ){
         double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
         for (int j = DIM; j--; ){
-            umesh_[j] += fMesh->NodeVec()[connect_[i]] -> getMeshVelocity(j) * shapeFi;
+            umesh_[j] += fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(j) * shapeFi;
         }
     }
 
     return;
 }
-
-//------------------------------------------------------------------------------
-//--------------------------INTERPOLATES ACCELERATION---------------------------
-//------------------------------------------------------------------------------
-// void Element::interpolateAcceleration(int &index, VecDouble &a_, VecDouble &aPrev_) {
-
-//     a_.setZero();
-//     aPrev_.setZero();
-
-//     for (int i = fMesh->NElNodes(); i--; ){
-//         double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
-//         for (int j = DIM; j--; ){
-//             a_[j] += fMesh->NodeVec()[connect_[i]] -> getAcceleration(j) * shapeFi;
-//             aPrev_[j] += fMesh->NodeVec()[connect_[i]] -> getPreviousAcceleration(j) * shapeFi;
-//         }
-//     }
-
-//     return;
-// }
-
-//------------------------------------------------------------------------------
-//----------------------------INTERPOLATES VELOCITY-----------------------------
-//------------------------------------------------------------------------------
-void Element::interpolateCoordinates(int &index, VecDouble &x_, VecDouble &xPrev_) {
-
-    x_.setZero();
-    xPrev_.setZero();
-
-    for (int i = fMesh->NElNodes(); i--; ){
-        double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
-        for (int j = DIM; j--; ){
-            x_[j] += fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(j) * shapeFi;
-            xPrev_[j] += fMesh->NodeVec()[connect_[i]] -> getPreviousCoordinateValue(j) * shapeFi;
-        }
-    }
-    return;
-}
-
-
-//------------------------------------------------------------------------------
-//----------------------------INTERPOLATES VELOCITY-----------------------------
-//------------------------------------------------------------------------------
-// void Element::interpolateVelocity(int &index, VecDouble &u_, VecDouble &uPrev_) {
-
-//     u_.setZero();
-//     uPrev_.setZero();
-
-//     for (int i = fMesh->NElNodes(); i--; ){
-//         double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
-//         for (int j = DIM; j--; ){
-//             u_[j] += fMesh->NodeVec()[connect_[i]] -> getVelocity(j) * shapeFi;
-//             uPrev_[j] += fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(j) * shapeFi;
-//         }
-//     }
-//     return;
-// }
 
 void Element::interpolateSolution(int &index, VecDouble &u_) {
     u_.setZero();
     for (int i = fMesh->NElNodes(); i--; ){
         double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
-        int nstate = fMesh->NodeVec()[connect_[i]]->GetNStateVariables();
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            u_[j] += fMesh->NodeVec()[connect_[i]] -> GetSolution(j) * shapeFi;
+            u_[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
         }
     }
 }
-
-//------------------------------------------------------------------------------
-//----------------------------INTERPOLATES VELOCITY-----------------------------
-//------------------------------------------------------------------------------
-// void Element::interpolateVelDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx) {
-
-//     du_dx.setZero();
-//     duprev_dx.setZero();
-        
-//     for (int i = fMesh->NElNodes(); i--; ){
-//         for (int j = DIM; j--; ){
-//             for (int k = DIM; k--; ){
-//                 du_dx(k,j) += fMesh->NodeVec()[connect_[i]] -> getVelocity(k) * dphi_dx(i,j);
-//                 duprev_dx(k,j) += fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(k) * dphi_dx(i,j);
-//             }
-//         }
-//     }
-
-//     return;
-// }
 
 //------------------------------------------------------------------------------
 //----------------------------INTERPOLATES VELOCITY-----------------------------
@@ -569,10 +428,10 @@ void Element::interpolateSolution(int &index, VecDouble &u_) {
 void Element::interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx) {
     du_dx.setZero();    
     for (int i = fMesh->NElNodes(); i--; ){
-        int nstate = fMesh->NodeVec()[connect_[i]]->GetNStateVariables();
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
-                du_dx(k,j) += fMesh->NodeVec()[connect_[i]] -> GetSolution(k) * dphi_dx(i,j);
+                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * dphi_dx(i,j);
             }
         }
     }
@@ -633,37 +492,37 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     VecDouble xsiB(DIM-1);
     
     if (DEG == 2){
-        if(sideBoundary_ == 0){
-            nodesb_[0] = connect_[1]; 
-            nodesb_[1] = connect_[4]; 
-            nodesb_[2] = connect_[2];
+        if(fSideInBoundary == 0){
+            nodesb_[0] = fConnect[1]; 
+            nodesb_[1] = fConnect[4]; 
+            nodesb_[2] = fConnect[2];
             xsiB[0] = 2. * xsi[0] - 1.;
         }else{
-            if(sideBoundary_ == 1){
-                nodesb_[0] = connect_[2]; 
-                nodesb_[1] = connect_[5]; 
-                nodesb_[2] = connect_[0]; 
+            if(fSideInBoundary == 1){
+                nodesb_[0] = fConnect[2]; 
+                nodesb_[1] = fConnect[5]; 
+                nodesb_[2] = fConnect[0]; 
                 xsiB[0] = 2. * xsi[1] - 1.;
             }else{
-                nodesb_[0] = connect_[0];
-                nodesb_[1] = connect_[3];
-                nodesb_[2] = connect_[1];
+                nodesb_[0] = fConnect[0];
+                nodesb_[1] = fConnect[3];
+                nodesb_[2] = fConnect[1];
                 xsiB[0] = 1. - 2. * xsi[0];
             };        
         };
     } else {
-        if(sideBoundary_ == 0){
-            nodesb_[0] = connect_[2]; 
-            nodesb_[1] = connect_[1];
+        if(fSideInBoundary == 0){
+            nodesb_[0] = fConnect[2]; 
+            nodesb_[1] = fConnect[1];
             xsiB[0] = 2. * xsi[0] - 1.;
         }else{
-            if(sideBoundary_ == 1){
-                nodesb_[0] = connect_[0]; 
-                nodesb_[1] = connect_[2];
+            if(fSideInBoundary == 1){
+                nodesb_[0] = fConnect[0]; 
+                nodesb_[1] = fConnect[2];
                 xsiB[0] = 2. * xsi[1] - 1.;
             }else{
-                nodesb_[0] = connect_[1];
-                nodesb_[1] = connect_[0];
+                nodesb_[0] = fConnect[1];
+                nodesb_[1] = fConnect[0];
                 xsiB[0] = 1. - 2. * xsi[0];
             };        
         };
@@ -717,23 +576,23 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     
     // std::cout << "asdasd 9 " << std::endl;
     // std::cout << "dx_dxsiB " << dx_dxsiB[0][0] << " " << dx_dxsiB[1][0] << " " << dx_dxsiB[2][0] << std::endl;
-    // std::cout << "N vector " << xna_[0] << " " << xna_[1] << " " << n_vector[0] << " " << n_vector[1] << " " << djacb_<< " " << index_ << std::endl;
+    // std::cout << "N vector " << xna_[0] << " " << xna_[1] << " " << n_vector[0] << " " << n_vector[1] << " " << djacb_<< " " << fIndex << std::endl;
 
-    // if (sideBoundary_ == 1){
+    // if (fSideInBoundary == 1){
     //     for (int i = 0; i < 6; i++){
-    //         t_vector[0] -= dphi[1][i] * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(0);
-    //         t_vector[1] -= dphi[1][i] * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(1);
+    //         t_vector[0] -= dphi[1][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(0);
+    //         t_vector[1] -= dphi[1][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(1);
     //     };        
     // };
 
-    // if (sideBoundary_ == 2){
+    // if (fSideInBoundary == 2){
     //     for (int i = 0; i < 6; i++){
-    //         t_vector[0] += dphi[0][i] * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(0);
-    //         t_vector[1] += dphi[0][i] * fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(1);
+    //         t_vector[0] += dphi[0][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(0);
+    //         t_vector[1] += dphi[0][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(1);
     //     };        
     // };
 
-    // if (sideBoundary_ == 0){
+    // if (fSideInBoundary == 0){
     //     std::cout << "VERIFICAR VETOR NORMAL - getBoundaryLoad" << std::endl;
     // };
 
@@ -745,7 +604,7 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
             load[i] -= -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
     // load = -p_ * prod(ident,n_vector) + prod(shearStress,n_vector);
 
-    //std::cout << "N Vector " << sideBoundary_ << " " <<  n_vector(0) << " " << n_vector(1) << " " << load(0) << " " << load(1) << " " << p_ << std::endl;
+    //std::cout << "N Vector " << fSideInBoundary << " " <<  n_vector(0) << " " << n_vector(1) << " " << load(0) << " " << load(1) << " " << p_ << std::endl;
     
     // std::cout << "asdasd 10 " << std::endl;
 
@@ -764,33 +623,33 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 //     BoundShapeFunction<2,2> shapeBound;//Boundary shape function 
 
 //     int nodesb_[3]; 
-//     if(sideBoundary_ == 0){
-//         nodesb_[0] = connect_[1]; 
-//         nodesb_[1] = connect_[4]; 
-//         nodesb_[2] = connect_[2]; 
+//     if(fSideInBoundary == 0){
+//         nodesb_[0] = fConnect[1]; 
+//         nodesb_[1] = fConnect[4]; 
+//         nodesb_[2] = fConnect[2]; 
 //         for (int i=0; i<2; i++){
-//             localNodesBoundary_[0][i] = fMesh->NodeVec()[connect_[1]] -> getCoordinateValue(i);
-//             localNodesBoundary_[1][i] = fMesh->NodeVec()[connect_[4]] -> getCoordinateValue(i);
-//             localNodesBoundary_[2][i] = fMesh->NodeVec()[connect_[2]] -> getCoordinateValue(i);
+//             localNodesBoundary_[0][i] = fMesh->NodeVec()[fConnect[1]] -> getCoordinateValue(i);
+//             localNodesBoundary_[1][i] = fMesh->NodeVec()[fConnect[4]] -> getCoordinateValue(i);
+//             localNodesBoundary_[2][i] = fMesh->NodeVec()[fConnect[2]] -> getCoordinateValue(i);
 //         };
 //     }else{
-//         if(sideBoundary_ == 1){
-//             nodesb_[0] = connect_[2]; 
-//             nodesb_[1] = connect_[5]; 
-//             nodesb_[2] = connect_[0]; 
+//         if(fSideInBoundary == 1){
+//             nodesb_[0] = fConnect[2]; 
+//             nodesb_[1] = fConnect[5]; 
+//             nodesb_[2] = fConnect[0]; 
 //             for (int i=0; i<2; i++){
-//                 localNodesBoundary_[0][i] = fMesh->NodeVec()[connect_[2]] -> getCoordinateValue(i);
-//                 localNodesBoundary_[1][i] = fMesh->NodeVec()[connect_[5]] -> getCoordinateValue(i);
-//                 localNodesBoundary_[2][i] = fMesh->NodeVec()[connect_[0]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[0][i] = fMesh->NodeVec()[fConnect[2]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[1][i] = fMesh->NodeVec()[fConnect[5]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[2][i] = fMesh->NodeVec()[fConnect[0]] -> getCoordinateValue(i);
 //             };
 //         }else{
-//             nodesb_[0] = connect_[0];
-//             nodesb_[1] = connect_[3];
-//             nodesb_[2] = connect_[1];
+//             nodesb_[0] = fConnect[0];
+//             nodesb_[1] = fConnect[3];
+//             nodesb_[2] = fConnect[1];
 //             for (int i=0; i<2; i++){
-//                 localNodesBoundary_[0][i] = fMesh->NodeVec()[connect_[0]] -> getCoordinateValue(i);
-//                 localNodesBoundary_[1][i] = fMesh->NodeVec()[connect_[3]] -> getCoordinateValue(i);
-//                 localNodesBoundary_[2][i] = fMesh->NodeVec()[connect_[1]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[0][i] = fMesh->NodeVec()[fConnect[0]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[1][i] = fMesh->NodeVec()[fConnect[3]] -> getCoordinateValue(i);
+//                 localNodesBoundary_[2][i] = fMesh->NodeVec()[fConnect[1]] -> getCoordinateValue(i);
 //             };
 //         };        
 //     };
@@ -830,15 +689,15 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 //         double xsiB = gaussQuad.first[index];
 //         double weightB = gaussQuad.second[index];
 
-//         if(sideBoundary_ == 2){
+//         if(fSideInBoundary == 2){
 //             xsi[0] = (-xsiB + 1.) / 2.;
 //             xsi[1] = 0.;
 //         };
-//         if(sideBoundary_ == 1){
+//         if(fSideInBoundary == 1){
 //             xsi[1] = (xsiB + 1.) / 2.;
 //             xsi[0] = 0.;
 //         };
-//         if(sideBoundary_ == 0){
+//         if(fSideInBoundary == 0){
 //             xsi[0] = (xsiB + 1.) / 2.;
 //             xsi[1] = 1. - xsi[0];
 //         };
@@ -926,121 +785,6 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 //------------------------------------------------------------------------------
 //------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
 //------------------------------------------------------------------------------
-void Element::getParameterSUPG(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx) {
-
-    double tSUGN1_ = 0.;
-    double tSUGN2_ = 0.;
-    double tSUGN3_ = 0.;
-    double hRGN_ = 0.;
-    double r[DIM] = {};
-    double s[DIM] = {};
-    double hUGN_ = 0.;
-
-    tSUPG_ = 0.;  
-
-    double u__[DIM] = {};
-    double aux = 0.;
-    double aux2 = 0.;
-
-    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
-    double &visc_ = fMesh->getProblemParameters().GetViscosity();
-    double &dens_ = fMesh->getProblemParameters().GetDensity();
-    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
-
-    for (int i = fMesh->NElNodes(); i--; ){
-        double a1 = 0.;
-        for (int j = DIM; j--; ){
-            double ua =0.;// alpha_f * fMesh->NodeVec()[connect_[i]] -> getVelocity(j) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(j);
-            PanicButton();
-            double uma = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getMeshVelocity(j) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousMeshVelocity(j);
-
-            ua -= uma;
-            u__[j] += ua * fMesh->getNumericalIntegration()-> phi_(i,index);
-            a1 += ua*ua;
-        }
-
-        // a1 = std::sqrt(a1);
-        for (int j = DIM; j--; ) r[j] += std::sqrt(a1) * dphi_dx(i,j);
-    };
-
-
-    for (int j = DIM; j--; ) aux += u__[j]*u__[j];
-    double uNorm = std::sqrt(aux);
-
-    // for (int i = fMesh->NElNodes(); i--; ){
-    //     for (int j = DIM; j--; ){
-    //         r[j] += uNorm * dphi_dx[j][i];
-    //     }
-    // }
-
-    for (int j = DIM; j--; ) aux2 += r[j]*r[j];
-    double rNorm = std::sqrt(aux2);
-
-    if(uNorm > 1.e-10){
-        for (int j = DIM; j--; ) s[j] = u__[j] / uNorm;
-    }else{
-        for (int j = DIM; j--; ) s[j] = 1. / std::sqrt(2.);
-    };
-
-    if (rNorm >= 1.e-10){
-        for (int j = DIM; j--; ) r[j] /= rNorm;
-    }else{
-        for (int j = DIM; j--; ) r[j] = 1. / std::sqrt(2.);
-    };
-    
-    for (int i = fMesh->NElNodes(); i--; ){
-        for (int j = DIM; j--; ){
-            hRGN_ += r[j] * dphi_dx(i,j);
-            hUGN_ += s[j] * dphi_dx(i,j);
-        }
-    };
-    hRGN_ = std::fabs(hRGN_);
-    hUGN_ = std::fabs(hUGN_);
-
-    if (hRGN_ >= 1.e-10){
-        hRGN_ = 2. / hRGN_;
-    }else{
-        hRGN_ = 2. / 1.e-10;
-    };
-
-    if (hUGN_ >= 1.e-10){
-        hUGN_ = 2. / hUGN_;
-    }else{
-        hUGN_ = 2. / 1.e-10;
-    };    
-
-    if (uNorm >= 1.e-10){
-        tSUGN1_ = hUGN_ / (2. * uNorm);
-    }else{
-        tSUGN1_ = hUGN_ / 2.e-10;
-    };
-              
-    tSUGN2_ = dTime_ / 2.;
-
-    tSUGN3_ = hRGN_ * hRGN_ / (4. * visc_ / dens_);
-   
-    if (std::fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
-    if (std::fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
-
-    //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << std::endl;
-    //Computing tSUPG parameter
-    tSUPG_ = 1. / std::sqrt(1. / (tSUGN1_ * tSUGN1_) + 
-                       1. / (tSUGN2_ * tSUGN2_) + 
-                       1. / (tSUGN3_ * tSUGN3_));
-    //tSUPG_ = 0.;
-
-
-    tPSPG_ = 1*tSUPG_;
-
-    tLSIC_ = tSUPG_ * uNorm * uNorm;
-
-
-    return;
-};
-
-//------------------------------------------------------------------------------
-//------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
-//------------------------------------------------------------------------------
 void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx) {
 
     double        tSUGN1_;
@@ -1072,17 +816,17 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
     double &k1 = fMesh->getProblemParameters().getArlequinK1();
 
     for (int i = 0; i < fMesh->NElNodes(); i++){
-        double ua = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(0);
-        double va = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(1);
-        // double ua = fMesh->NodeVec()[connect_[i]] -> getVelocity(0);
-        // double va = fMesh->NodeVec()[connect_[i]] -> getVelocity(1);
+        double ua = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousVelocity(0);
+        double va = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousVelocity(1);
+        // double ua = fMesh->NodeVec()[fConnect[i]] -> getVelocity(0);
+        // double va = fMesh->NodeVec()[fConnect[i]] -> getVelocity(1);
         PanicButton();
-        double uma = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getMeshVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousMeshVelocity(0);
-        double vma = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getMeshVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousMeshVelocity(1);
+        double uma = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousMeshVelocity(0);
+        double vma = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousMeshVelocity(1);
         
         PanicButton();
-        double lxa = 0.;//fMesh->NodeVec()[connect_[i]] -> getLagrangeMultiplier(0);
-        double lya = 0.;//fMesh->NodeVec()[connect_[i]] -> getLagrangeMultiplier(1);
+        double lxa = 0.;//fMesh->NodeVec()[fConnect[i]] -> getLagrangeMultiplier(0);
+        double lya = 0.;//fMesh->NodeVec()[fConnect[i]] -> getLagrangeMultiplier(1);
             
         ua -= uma;
         va -= vma;
@@ -1114,17 +858,17 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 
 
     for (int i = 0; i < fMesh->NElNodes(); i++){
-        double ua = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(0);
-        double va = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(1);
-        // double ua = fMesh->NodeVec()[connect_[i]] -> getVelocity(0);
-        // double va = fMesh->NodeVec()[connect_[i]] -> getVelocity(1);
+        double ua = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousVelocity(0);
+        double va = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousVelocity(1);
+        // double ua = fMesh->NodeVec()[fConnect[i]] -> getVelocity(0);
+        // double va = fMesh->NodeVec()[fConnect[i]] -> getVelocity(1);
         PanicButton();
-        double uma = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getMeshVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousMeshVelocity(0);
-        double vma = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getMeshVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousMeshVelocity(1);
+        double uma = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(0) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousMeshVelocity(0);
+        double vma = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(1) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousMeshVelocity(1);
 
         PanicButton();
-        double lxa = 0.;//fMesh->NodeVec()[connect_[i]] -> getLagrangeMultiplier(0);
-        double lya = 0.;//fMesh->NodeVec()[connect_[i]] -> getLagrangeMultiplier(1);
+        double lxa = 0.;//fMesh->NodeVec()[fConnect[i]] -> getLagrangeMultiplier(0);
+        double lya = 0.;//fMesh->NodeVec()[fConnect[i]] -> getLagrangeMultiplier(1);
 
         ua -= uma;
         va -= vma;
@@ -1284,14 +1028,14 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
     // U_.clear(); DU_.clear(); UG_.clear();
 
     // for (int i=0; i<6; i++){
-    //     U_(2*i  ) = fMesh->NodeVec()[connect_[i]] -> getVelocity(0);
-    //     U_(2*i+1) = fMesh->NodeVec()[connect_[i]] -> getVelocity(1);
-    //     UG_(2*i  ) = fMesh->NodeVec()[connect_[i]] -> getVelocityGlobal(0);
-    //     UG_(2*i+1) = fMesh->NodeVec()[connect_[i]] -> getVelocityGlobal(1);
-    //     DU_(2*i  ) = fMesh->NodeVec()[connect_[i]] -> getAcceleration(0);
-    //     DU_(2*i+1) = fMesh->NodeVec()[connect_[i]] -> getAcceleration(1);
-    //     DUG_(2*i  ) = fMesh->NodeVec()[connect_[i]] -> getAccelerationGlobal(0);
-    //     DUG_(2*i+1) = fMesh->NodeVec()[connect_[i]] -> getAccelerationGlobal(1);
+    //     U_(2*i  ) = fMesh->NodeVec()[fConnect[i]] -> getVelocity(0);
+    //     U_(2*i+1) = fMesh->NodeVec()[fConnect[i]] -> getVelocity(1);
+    //     UG_(2*i  ) = fMesh->NodeVec()[fConnect[i]] -> getVelocityGlobal(0);
+    //     UG_(2*i+1) = fMesh->NodeVec()[fConnect[i]] -> getVelocityGlobal(1);
+    //     DU_(2*i  ) = fMesh->NodeVec()[fConnect[i]] -> getAcceleration(0);
+    //     DU_(2*i+1) = fMesh->NodeVec()[fConnect[i]] -> getAcceleration(1);
+    //     DUG_(2*i  ) = fMesh->NodeVec()[fConnect[i]] -> getAccelerationGlobal(0);
+    //     DUG_(2*i+1) = fMesh->NodeVec()[fConnect[i]] -> getAccelerationGlobal(1);
     // };
 
     // le = norm_2(prod(lambda,U_-UG_));
@@ -1299,8 +1043,8 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
     // li = norm_2(prod(inercia,DU_));
     // lv = norm_2(prod(visccc,U_));
 
-    // //std::cout << "asd " << index_ << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
-    //  // std::cout << "antes " << index_ << " " << tARLQ_ << std::endl;
+    // //std::cout << "asd " << fIndex << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
+    //  // std::cout << "antes " << fIndex << " " << tARLQ_ << std::endl;
 
     // double tp1 = std::fabs(le) / std::fabs(lc);
     // double tp2 = std::fabs(le) / std::fabs(li);
@@ -1315,7 +1059,7 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
     //                         1. / (tp2*tp2) +
     //                         1. / (tp3*tp3));
 
-    // std::cout << "depois " << index_ << " " << le << " " << lv << " " << tARLQ_ << std::endl;
+    // std::cout << "depois " << fIndex << " " << le << " " << lv << " " << tARLQ_ << std::endl;
 
 
 
@@ -1408,10 +1152,10 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 //     double DU_[18] = {};
 
 //     for (int i=0; i<6; i++){
-//         U_[2*i  ] = fMesh->NodeVec()[connect_[i]] -> getVelocity(0);
-//         U_[2*i+1] = fMesh->NodeVec()[connect_[i]] -> getVelocity(1);
-//         DU_[2*i  ] = fMesh->NodeVec()[connect_[i]] -> getAcceleration(0);
-//         DU_[2*i+1] = fMesh->NodeVec()[connect_[i]] -> getAcceleration(1);
+//         U_[2*i  ] = fMesh->NodeVec()[fConnect[i]] -> getVelocity(0);
+//         U_[2*i+1] = fMesh->NodeVec()[fConnect[i]] -> getVelocity(1);
+//         DU_[2*i  ] = fMesh->NodeVec()[fConnect[i]] -> getAcceleration(0);
+//         DU_[2*i+1] = fMesh->NodeVec()[fConnect[i]] -> getAcceleration(1);
 //     };
 
 //     double a1[18] = {};
@@ -1441,8 +1185,8 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 //     }
 
 
-//     // //std::cout << "asd " << index_ << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
-//     //  // std::cout << "antes " << index_ << " " << tARLQ_ << std::endl;
+//     // //std::cout << "asd " << fIndex << " " << le << " " << lc << " " << li << " " << tARLQ_ << std::endl;
+//     //  // std::cout << "antes " << fIndex << " " << tARLQ_ << std::endl;
 
 //     double tp1 = std::fabs(le) / std::fabs(lc);
 //     double tp2 = std::fabs(le) / std::fabs(li);
@@ -1457,7 +1201,7 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 //                             1. / (tp2*tp2) +
 //                             1. / (tp3*tp3));
 
-//     // std::cout << "depois " << index_ << " " << le << " " << lv << " " << tARLQ_ << std::endl;
+//     // std::cout << "depois " << fIndex << " " << le << " " << lv << " " << tARLQ_ << std::endl;
 
 //     for (int i = DIM; i--; ) delete [] dphi_dx[i];
 //     delete [] dphi_dx;
@@ -1585,8 +1329,8 @@ void Element::setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &r
 
     for (int i = fMesh->NElNodes(); i--; ){
         for (int k = DIM; k--; ){
-            if ((fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 1) ||
-                (fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 3))  {
+            if ((fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 1) ||
+                (fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 3))  {
                 for (int j = fMesh->NLocDOF(); j--; ){
                     jacobianNRMatrix(DIM*i+k,j) = 0.;
                     jacobianNRMatrix(j,DIM*i+k) = 0.;
@@ -1600,8 +1344,8 @@ void Element::setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &r
 
     // for (int i = fMesh->NElNodes(); i--; ){
         
-    //     if ((fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(0) > .99) &&
-    //         (fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(1) > .99))  {
+    //     if ((fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(0) > .99) &&
+    //         (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(1) > .99))  {
     //             for (int j = fMesh->NLocDOF(); j--; ){
     //                 jacobianNRMatrix(DIM*fMesh->NElNodes()+i,j) = 0.;
     //                 jacobianNRMatrix(j,DIM*fMesh->NElNodes()+i) = 0.;
@@ -1623,7 +1367,7 @@ void Element::setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatrix, VecDo
 
     // for (int i = fMesh->NElNodes(); i--; ){
     //     for (int k = DIM; k--; ){
-    //         if (fMesh->NodeVec()[connect_[i]] -> getConstrainsLaplace(k) == 1) {
+    //         if (fMesh->NodeVec()[fConnect[i]] -> getConstrainsLaplace(k) == 1) {
     //             for (int j = fMesh->NLocDOF(); j--; ){
     //                 jacobianNRMatrix(DIM*i+k,j) = 0.;
     //                 jacobianNRMatrix(j,DIM*i+k) = 0.;
@@ -1649,7 +1393,7 @@ void Element::setBoundaryConditionsLagrangeMultipliers(double** jacobianNRMatrix
     PanicButton();
     for (int i = 0; i < fMesh->NElNodes(); i++)
         for (int k = 0; k < DIM; k++)
-            U_[DIM*i+k] = 0.;//alpha_f * fMesh->NodeVec()[connect_[i]] -> getVelocity(k) + (1. - alpha_f) * fMesh->NodeVec()[connect_[i]] -> getPreviousVelocity(k);
+            U_[DIM*i+k] = 0.;//alpha_f * fMesh->NodeVec()[fConnect[i]] -> getVelocity(k) + (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousVelocity(k);
         
     for (int i = 0; i < fMesh->NLocDOF(); i++)
         for (int j = 0; j < fMesh->NLocDOF(); j++)
@@ -1658,7 +1402,7 @@ void Element::setBoundaryConditionsLagrangeMultipliers(double** jacobianNRMatrix
 
     for (int i = fMesh->NElNodes(); i--; ){
         for (int k = DIM; k--; ){
-            if (fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 1)  {
+            if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 1)  {
                 for (int j = fMesh->NLocDOF(); j--; ){
                     jacobianNRMatrix[j][DIM*i+k] = 0.;
                 };
@@ -1774,10 +1518,10 @@ void Element::getResidualVectorLaplace(VecDouble &rhsVector){
     // VecDouble U_(fMesh->NLocDOF());
 
     // for (int i = 0; i < fMesh->NElNodes(); i++){
-    //     VecDouble x_up = fMesh->NodeVec()[connect_[i]] -> getUpdatedCoordinates();        
+    //     VecDouble x_up = fMesh->NodeVec()[fConnect[i]] -> getUpdatedCoordinates();        
     //     for (int k = 0; k < DIM; k++)
-    //         if (fMesh->NodeVec()[connect_[i]] -> getConstrainsLaplace(k) == 1)
-    //             U_[DIM*i+k] = x_up[k] - fMesh->NodeVec()[connect_[i]] -> getCoordinateValue(k);
+    //         if (fMesh->NodeVec()[fConnect[i]] -> getConstrainsLaplace(k) == 1)
+    //             U_[DIM*i+k] = x_up[k] - fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(k);
             
     // };
 
@@ -1789,21 +1533,21 @@ void Element::getResidualVectorLaplace(VecDouble &rhsVector){
 //------------------------------------------------------------------------------
 void Element::getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix){
 
-    double WJM = weight_ * djac_ * meshMovingParameter;
-    for (int i = 0; i < fMesh->NElNodes(); i++){
-        for (int j = 0; j < fMesh->NElNodes(); j++){  
-            for (int k = DIM; k--; ){
-                for (int l = DIM; l--; ){
-                    //Stiffness matrix
-                    // double K = dphi_dx[l][i] * dphi_dx[k][j];
-                    double K = 0.;
-                    if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m);
+    // double WJM = weight_ * djac_ * meshMovingParameter;
+    // for (int i = 0; i < fMesh->NElNodes(); i++){
+    //     for (int j = 0; j < fMesh->NElNodes(); j++){  
+    //         for (int k = DIM; k--; ){
+    //             for (int l = DIM; l--; ){
+    //                 //Stiffness matrix
+    //                 // double K = dphi_dx[l][i] * dphi_dx[k][j];
+    //                 double K = 0.;
+    //                 if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m);
                     
-                    jacobianNRMatrix(DIM*i+k,DIM*j+l) += K * WJM;
-                }
-            }
-        }
-    }
+    //                 jacobianNRMatrix(DIM*i+k,DIM*j+l) += K * WJM;
+    //             }
+    //         }
+    //     }
+    // }
 
     return;
 };
@@ -1853,7 +1597,7 @@ void Element::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble
         getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
         //Compute Stabilization Parameters
-        getParameterSUPG(index, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+        // getParameterSUPG(index, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         //Computes the element diffusion/viscosity matrix
         getElemMatrix(index, dphi_dx, tSUPG_, tPSPG_, tLSIC_, weight_, djac_, jacobianNRMatrix);
@@ -1961,7 +1705,7 @@ void Element::getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVect
                 dx_dxsi[i][j] = 0.0;
 
         for (int i = 0; i < fMesh->NElNodes(); ++i){
-            VecDouble initialCoord = fMesh->NodeVec()[connect_[i]] -> getInitialCoordinates();
+            VecDouble initialCoord = fMesh->NodeVec()[fConnect[i]] -> getInitialCoordinates();
             for (int k = 0; k < DIM; k++)
                 for (int l = 0; l < DIM; l++)
                     dx_dxsi[k][l] += initialCoord[k] * dphi(i,l);
@@ -1993,7 +1737,7 @@ void Element::getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVect
                 dy_dxsi[i][j] = 0.0;
         
         for (int i = 0; i < fMesh->NElNodes(); i++){
-            VecDouble currentCoord = fMesh->NodeVec()[connect_[i]] -> getCoordinates();
+            VecDouble currentCoord = fMesh->NodeVec()[fConnect[i]] -> getCoordinates();
 
             for (int k = 0; k < DIM; k++)
                 for (int l = 0; l < DIM; l++)
@@ -2044,7 +1788,7 @@ void Element::getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVect
 
                 double vel = 0.0;
                 for (int i = 0; i < fMesh->NElNodes(); i++)
-                    vel += fMesh->getNumericalIntegration()-> phi_(i,index) * fMesh->NodeVec()[connect_[i]]->getMeshVelocity(k);
+                    vel += fMesh->getNumericalIntegration()-> phi_(i,index) * fMesh->NodeVec()[fConnect[i]]->getMeshVelocity(k);
 
                 double c =  fMesh->getNumericalIntegration()-> phi_(a,index) * vel*0;
 
@@ -2239,7 +1983,7 @@ void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDo
 
     if (fMesh->ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < fMesh->NElNodes(); i++){
-            if (fMesh->NodeVec()[connect_[i]] -> getConstrains(0) == 1) {
+            if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(0) == 1) {
                 for (int j = 0; j < fMesh->NElNodes(); j++){
                     lagrMultMatrix(i,j) = 0.;
                     lagrMultMatrix(j,i) = 0.;
@@ -2250,7 +1994,7 @@ void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDo
     } else {
         for (int i = 0; i < fMesh->NElNodes(); i++){
             for (int k = DIM; k--; ){
-                if (fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 1) {
+                if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 1) {
                     for (int j = 0; j < fMesh->NElNodes()*DIM; j++){
                         lagrMultMatrix(DIM*i+k,j) = 0.;
                         lagrMultMatrix(j,DIM*i+k) = 0.;
@@ -2400,7 +2144,7 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
         for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
         VecDouble xna_(DIM);
         VecDouble forcingF(1);
-        for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
+        for (int i = 0; i < DIM; i++) xna_[i] = fIntPointCoordinates(index,i);
         if (force) force(xna_,forcingF);
 
         //Returns the quadrature integration weight
@@ -2542,7 +2286,7 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
 
     if (fMesh->ProbType() == EPoisson){
         for (int i = 0; i < fMesh->NElNodes(); i++){
-            if (fMesh->NodeVec()[connect_[i]] -> getConstrains(0) == 1) {
+            if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(0) == 1) {
                 for (int j = 0; j < fMesh->NElNodes(); j++){
                     arlequinStab(i,j) = 0.;
                     arlequinStab(j,i) = 0.;
@@ -2553,7 +2297,7 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
     } else {
         for (int i = 0; i < fMesh->NElNodes(); i++){
             for (int k = DIM; k--; ){
-                if (fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 1) {
+                if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 1) {
                     for (int j = 0; j < fMesh->NLocDOF(); j++){
                         arlequinStab(DIM*i+k,j) = 0.;
                         arlequinStab(j,DIM*i+k) = 0.;
@@ -2574,186 +2318,186 @@ void Element::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, V
                                                      VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
                                                      MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector){
 
-    VecDouble xsi(DIM);
-    VecDouble xsi_intp(DIM);
-    ShapeFunction shapeQuad(DIM,DEG);
-    int index = 0;
-    IntegQuadratureSpecial sQuad(DIM,DEG);
+    // VecDouble xsi(DIM);
+    // VecDouble xsi_intp(DIM);
+    // ShapeFunction shapeQuad(DIM,DEG);
+    // int index = 0;
+    // IntegQuadratureSpecial sQuad(DIM,DEG);
 
-    //tARLQ_ = -tPSPG2_;
+    // //tARLQ_ = -tPSPG2_;
 
-    VecDouble phiLM_(fMesh->NElNodes());
-    VecDouble phi_(fMesh->NElNodes());
-    MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
-    MatrixDouble dphiL_dx(fMesh->NElNodes(),DIM);    
+    // VecDouble phiLM_(fMesh->NElNodes());
+    // VecDouble phi_(fMesh->NElNodes());
+    // MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
+    // MatrixDouble dphiL_dx(fMesh->NElNodes(),DIM);    
     
-    double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
-    double &visc_ = fMesh->getProblemParameters().GetViscosity();
-    double &dens_ = fMesh->getProblemParameters().GetDensity();
-    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
-    double &alpha_m = fMesh->getProblemParameters().getAlphaM();
-    double &gamma = fMesh->getProblemParameters().getGamma();
-    double &k1 = fMesh->getProblemParameters().getArlequinK1();
-    double &k2 = fMesh->getProblemParameters().getArlequinK2();
-    int &iTimeStep = fMesh->getProblemParameters().getTimeInstant();
+    // double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
+    // double &visc_ = fMesh->getProblemParameters().GetViscosity();
+    // double &dens_ = fMesh->getProblemParameters().GetDensity();
+    // double &alpha_f = fMesh->getProblemParameters().getAlphaF();
+    // double &alpha_m = fMesh->getProblemParameters().getAlphaM();
+    // double &gamma = fMesh->getProblemParameters().getGamma();
+    // double &k1 = fMesh->getProblemParameters().getArlequinK1();
+    // double &k2 = fMesh->getProblemParameters().getArlequinK2();
+    // int &iTimeStep = fMesh->getProblemParameters().getTimeInstant();
 
-    MatrixDouble ainv_(DIM,DIM);
+    // MatrixDouble ainv_(DIM,DIM);
 
-    // if (index_ == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
-    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+    // // if (fIndex == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
+    // for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
         
-        if ((intPointCorrespElem[index] == ielem)){
+    //     if ((intPointCorrespElem[index] == ielem)){
 
-            //Defines the integration points adimentional coordinates
-            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+    //         //Defines the integration points adimentional coordinates
+    //         for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
             
-            //Computes the velocity shape functions
-            shapeQuad.evaluate(xsi,phi_);
+    //         //Computes the velocity shape functions
+    //         shapeQuad.evaluate(xsi,phi_);
             
-            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+    //         for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
 
-            //Computes the coarse mesh shape functions
-            shapeQuad.evaluate(xsi_intp,phiLM_);
+    //         //Computes the coarse mesh shape functions
+    //         shapeQuad.evaluate(xsi_intp,phiLM_);
             
-            //Returns the quadrature integration weight
-            double weight_ = sQuad.WeightList(index);
+    //         //Returns the quadrature integration weight
+    //         double weight_ = sQuad.WeightList(index);
             
-            double djac_ = 0.;
-            //Computes the jacobian matrix
-            getJacobianMatrix(xsi_intp, ainv_, djac_, index);
+    //         double djac_ = 0.;
+    //         //Computes the jacobian matrix
+    //         getJacobianMatrix(xsi_intp, ainv_, djac_, index);
                         
-            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+    //         getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
 
-            dphiL_dx = dphi_dx;
+    //         dphiL_dx = dphi_dx;
 
-            djac_ = 0.;
-            getJacobianMatrix(xsi, ainv_, djac_, index);
-            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+    //         djac_ = 0.;
+    //         getJacobianMatrix(xsi, ainv_, djac_, index);
+    //         getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-            //Lagrange Multiplier
-            VecDouble lagM_(DIM), una_(DIM);
-            MatrixDouble duna_dx(DIM,DIM);
-            // interpolateLagMultiplier(index, lagM_);
+    //         //Lagrange Multiplier
+    //         VecDouble lagM_(DIM), una_(DIM);
+    //         MatrixDouble duna_dx(DIM,DIM);
+    //         // interpolateLagMultiplier(index, lagM_);
 
-            //Lagrange Multiplier Derivatives
-            MatrixDouble dL_dx(DIM,DIM);
-            // interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+    //         //Lagrange Multiplier Derivatives
+    //         MatrixDouble dL_dx(DIM,DIM);
+    //         // interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
 
-            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+    //         double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
 
-            double dalpha_dx = 0.;
-            double dalpha_dy = 0.;
-            double WJ = weight_ * djac_;
+    //         double dalpha_dx = 0.;
+    //         double dalpha_dy = 0.;
+    //         double WJ = weight_ * djac_;
 
-            if (fMesh->ProbType() == EPoisson){
-                for (int i = 0; i < fMesh->NElNodes(); ++i){                
-                    una_[0] += velx[i] * phiLM_[i];
-                    una_[1] += vely[i] * phiLM_[i];
-                }
-                for (int i = 0; i < fMesh->NElNodes(); i++){
-                    for (int j = 0; j < fMesh->NElNodes(); j++){
-                        double l2 = phi_[i] * phiLM_[j] * WJ * k1;
-                        // L2 COUPLING OPERATOR
-                        lagrMultMatrix(i,j) += l2;
-                        for (int l = 0; l < DIM; l++){
-                            //H1 COUPLING OPERATOR
-                            double K = dphi_dx(i,l) * dphiL_dx(j,l);
+    //         if (fMesh->ProbType() == EPoisson){
+    //             for (int i = 0; i < fMesh->NElNodes(); ++i){                
+    //                 una_[0] += velx[i] * phiLM_[i];
+    //                 una_[1] += vely[i] * phiLM_[i];
+    //             }
+    //             for (int i = 0; i < fMesh->NElNodes(); i++){
+    //                 for (int j = 0; j < fMesh->NElNodes(); j++){
+    //                     double l2 = phi_[i] * phiLM_[j] * WJ * k1;
+    //                     // L2 COUPLING OPERATOR
+    //                     lagrMultMatrix(i,j) += l2;
+    //                     for (int l = 0; l < DIM; l++){
+    //                         //H1 COUPLING OPERATOR
+    //                         double K = dphi_dx(i,l) * dphiL_dx(j,l);
             
-                            lagrMultMatrix(i,j) += K * WJ * k2;
-                        };
-                    };
-                    // Lagrange multipliers residual
-                    double L2 = lagM_[0] * phiLM_[i] * k1;
+    //                         lagrMultMatrix(i,j) += K * WJ * k2;
+    //                     };
+    //                 };
+    //                 // Lagrange multipliers residual
+    //                 double L2 = lagM_[0] * phiLM_[i] * k1;
 
-                    double H1 = 0.;
-                    for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(0,l) * k2;
+    //                 double H1 = 0.;
+    //                 for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(0,l) * k2;
 
-                    rhsVectorLM[i] -= (L2 + H1) * WJ;
+    //                 rhsVectorLM[i] -= (L2 + H1) * WJ;
 
-                    double L2u = una_[0] * phi_[i] * k1;
+    //                 double L2u = una_[0] * phi_[i] * k1;
 
-                    double H1u = 0.;
-                    for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(0,l) * k2;
+    //                 double H1u = 0.;
+    //                 for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(0,l) * k2;
 
-                    rhsVector[i] -= (L2u + H1u) * WJ;
-                };
+    //                 rhsVector[i] -= (L2u + H1u) * WJ;
+    //             };
 
-            } else {
-                for (int i = 0; i < fMesh->NElNodes(); ++i){
-                    // dalpha_dx += (fMesh->NodeVec()[connect_[i]] -> getWeightFunction()) * dphi_dx[0][i];
-                    // dalpha_dy += (fMesh->NodeVec()[connect_[i]] -> getWeightFunction()) * dphi_dx[1][i];
+    //         } else {
+    //             for (int i = 0; i < fMesh->NElNodes(); ++i){
+    //                 // dalpha_dx += (fMesh->NodeVec()[fConnect[i]] -> getWeightFunction()) * dphi_dx[0][i];
+    //                 // dalpha_dy += (fMesh->NodeVec()[fConnect[i]] -> getWeightFunction()) * dphi_dx[1][i];
                     
-                    una_[0] += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
-                    una_[1] += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
-                }
-                for (int i = 0; i < fMesh->NElNodes(); i++){
-                    for (int j = 0; j < fMesh->NElNodes(); j++){
-                        double l2 = phi_[i] * phiLM_[j] * WJ * k1;
-                        for (int k = 0; k < DIM; k++){
-                            // L2 COUPLING OPERATOR
-                            lagrMultMatrix(DIM*i+k,DIM*j+k) += l2;
-                            for (int l = 0; l < DIM; l++){
-                                //H1 COUPLING OPERATOR
-                                double K = dphi_dx(i,l) * dphiL_dx(j,k);
-                                if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphiL_dx(j,m);
+    //                 una_[0] += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
+    //                 una_[1] += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
+    //             }
+    //             for (int i = 0; i < fMesh->NElNodes(); i++){
+    //                 for (int j = 0; j < fMesh->NElNodes(); j++){
+    //                     double l2 = phi_[i] * phiLM_[j] * WJ * k1;
+    //                     for (int k = 0; k < DIM; k++){
+    //                         // L2 COUPLING OPERATOR
+    //                         lagrMultMatrix(DIM*i+k,DIM*j+k) += l2;
+    //                         for (int l = 0; l < DIM; l++){
+    //                             //H1 COUPLING OPERATOR
+    //                             double K = dphi_dx(i,l) * dphiL_dx(j,k);
+    //                             if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphiL_dx(j,m);
 
-                                lagrMultMatrix(DIM*i+k,DIM*j+l) += K * WJ * k2;
-                            };
-                        };
-                    };
-                    // Lagrange multipliers residual
-                    for (int k = 0; k < DIM; k++){
-                        double L2 = lagM_[k] * phiLM_[i] * k1;
+    //                             lagrMultMatrix(DIM*i+k,DIM*j+l) += K * WJ * k2;
+    //                         };
+    //                     };
+    //                 };
+    //                 // Lagrange multipliers residual
+    //                 for (int k = 0; k < DIM; k++){
+    //                     double L2 = lagM_[k] * phiLM_[i] * k1;
 
-                        double H1 = 0.;
-                        for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(k,l) * k2;
-                        for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(l,k) * k2;
+    //                     double H1 = 0.;
+    //                     for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(k,l) * k2;
+    //                     for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(l,k) * k2;
 
-                        rhsVectorLM[DIM*i+k] -= (L2 + H1) * WJ;
+    //                     rhsVectorLM[DIM*i+k] -= (L2 + H1) * WJ;
 
-                        double L2u = una_[k] * phi_[i] * k1;
+    //                     double L2u = una_[k] * phi_[i] * k1;
 
-                        double H1u = 0.;
-                        for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(k,l) * k2;
-                        for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(l,k) * k2;
+    //                     double H1u = 0.;
+    //                     for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(k,l) * k2;
+    //                     for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(l,k) * k2;
 
-                        rhsVector[DIM*i+k] -= (L2u + H1u) * WJ;
-                    };
-                };
-            }
+    //                     rhsVector[DIM*i+k] -= (L2u + H1u) * WJ;
+    //                 };
+    //             };
+    //         }
 
             
-        };
-        index++;        
-    };  
+    //     };
+    //     index++;        
+    // };  
 
-    if (fMesh->ProbType() == EPoisson){
-        for (int i = 0; i < fMesh->NElNodes(); i++){
-            if (fMesh->NodeVec()[connect_[i]] -> getConstrains(0) == 1) {
-                for (int j = 0; j < fMesh->NElNodes(); j++){
-                    lagrMultMatrix(i,j) = 0.;
-                    lagrMultMatrix(j,i) = 0.;
-                };
-                //lagrMultMatrix(12+i,12+i) = 1.;
-                rhsVectorLM[i] = 0.0;
-                // std::cout << "AQUI2 elem different mesh" << std::endl;
-            };
-        };
-    } else {
-        for (int i = 0; i < fMesh->NElNodes(); i++){
-            for (int k = DIM; k--; ){
-                if (fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 1) {
-                    for (int j = 0; j < fMesh->NElNodes()*DIM; j++){
-                        lagrMultMatrix(DIM*i+k,j) = 0.;
-                        lagrMultMatrix(j,DIM*i+k) = 0.;
-                    };
-                    //lagrMultMatrix(12+i,12+i) = 1.;
-                    rhsVectorLM[DIM*i+k] = 0.0;
-                    // std::cout << "AQUI2 elem different mesh" << std::endl;
-                };
-            }
-        };
-    }
+    // if (fMesh->ProbType() == EPoisson){
+    //     for (int i = 0; i < fMesh->NElNodes(); i++){
+    //         if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(0) == 1) {
+    //             for (int j = 0; j < fMesh->NElNodes(); j++){
+    //                 lagrMultMatrix(i,j) = 0.;
+    //                 lagrMultMatrix(j,i) = 0.;
+    //             };
+    //             //lagrMultMatrix(12+i,12+i) = 1.;
+    //             rhsVectorLM[i] = 0.0;
+    //             // std::cout << "AQUI2 elem different mesh" << std::endl;
+    //         };
+    //     };
+    // } else {
+    //     for (int i = 0; i < fMesh->NElNodes(); i++){
+    //         for (int k = DIM; k--; ){
+    //             if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 1) {
+    //                 for (int j = 0; j < fMesh->NElNodes()*DIM; j++){
+    //                     lagrMultMatrix(DIM*i+k,j) = 0.;
+    //                     lagrMultMatrix(j,DIM*i+k) = 0.;
+    //                 };
+    //                 //lagrMultMatrix(12+i,12+i) = 1.;
+    //                 rhsVectorLM[DIM*i+k] = 0.0;
+    //                 // std::cout << "AQUI2 elem different mesh" << std::endl;
+    //             };
+    //         }
+    //     };
+    // }
     
 
     return;
@@ -2931,252 +2675,252 @@ void Element::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &
 void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
                                                              MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
 
-    VecDouble xsi(DIM);
-    VecDouble xsi_intp(DIM);
-    ShapeFunction shapeQuad(DIM,DEG);
-    int index = 0;
-    IntegQuadratureSpecial sQuad(DIM,DEG);
+    // VecDouble xsi(DIM);
+    // VecDouble xsi_intp(DIM);
+    // ShapeFunction shapeQuad(DIM,DEG);
+    // int index = 0;
+    // IntegQuadratureSpecial sQuad(DIM,DEG);
 
-    //tARLQ_ = -tPSPG2_;
+    // //tARLQ_ = -tPSPG2_;
 
-    VecDouble phi_(fMesh->NElNodes());
-    VecDouble phiLM_(fMesh->NElNodes());
-    MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
-    MatrixDouble dphiL_dx(fMesh->NElNodes(),DIM);   
-    int dimddphi = DIM == 2 ? 3 : 6;
-    MatrixDouble ddphi_dx(fMesh->NElNodes(),dimddphi);
+    // VecDouble phi_(fMesh->NElNodes());
+    // VecDouble phiLM_(fMesh->NElNodes());
+    // MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
+    // MatrixDouble dphiL_dx(fMesh->NElNodes(),DIM);   
+    // int dimddphi = DIM == 2 ? 3 : 6;
+    // MatrixDouble ddphi_dx(fMesh->NElNodes(),dimddphi);
     
-    double &dens_ = fMesh->getProblemParameters().GetDensity();
-    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
-    double &k1 = fMesh->getProblemParameters().getArlequinK1();
-    double &k2 = fMesh->getProblemParameters().getArlequinK2();
+    // double &dens_ = fMesh->getProblemParameters().GetDensity();
+    // double &alpha_f = fMesh->getProblemParameters().getAlphaF();
+    // double &k1 = fMesh->getProblemParameters().getArlequinK1();
+    // double &k2 = fMesh->getProblemParameters().getArlequinK2();
 
-    // arlequinStab.clear();
-    // arlequinStabVector.clear();
-    // laplMatrix.clear();
-    auto force = fMesh->getProblemParameters().getForcingFunction();
+    // // arlequinStab.clear();
+    // // arlequinStabVector.clear();
+    // // laplMatrix.clear();
+    // auto force = fMesh->getProblemParameters().getForcingFunction();
 
-    MatrixDouble ainv_(DIM,DIM);
+    // MatrixDouble ainv_(DIM,DIM);
 
-    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+    // double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
 
-    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+    // for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
         
-        if ((intPointCorrespElem[index] == ielem)){
+    //     if ((intPointCorrespElem[index] == ielem)){
 
-            VecDouble xna_(DIM);
-            VecDouble forcingF(1);
-            for (int i = 0; i < DIM; i++) xna_[i] = intPointCoordinates(index,i);
-            if (force) force(xna_,forcingF);
+    //         VecDouble xna_(DIM);
+    //         VecDouble forcingF(1);
+    //         for (int i = 0; i < DIM; i++) xna_[i] = fIntPointCoordinates(index,i);
+    //         if (force) force(xna_,forcingF);
 
-            //Defines the integration points adimentional coordinates
-            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+    //         //Defines the integration points adimentional coordinates
+    //         for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
             
-            //Computes the velocity shape functions
-            shapeQuad.evaluate(xsi,phi_);
+    //         //Computes the velocity shape functions
+    //         shapeQuad.evaluate(xsi,phi_);
             
-            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+    //         for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
 
-            //Computes the coarse mesh shape functions
-            shapeQuad.evaluate(xsi_intp,phiLM_);
+    //         //Computes the coarse mesh shape functions
+    //         shapeQuad.evaluate(xsi_intp,phiLM_);
             
-            //Returns the quadrature integration weight
-            double weight_ = sQuad.WeightList(index);
+    //         //Returns the quadrature integration weight
+    //         double weight_ = sQuad.WeightList(index);
             
-            double djac_ = 0.;
-            //Computes the jacobian matrix
-            getJacobianMatrix(xsi_intp, ainv_, djac_, index);
+    //         double djac_ = 0.;
+    //         //Computes the jacobian matrix
+    //         getJacobianMatrix(xsi_intp, ainv_, djac_, index);
                         
-            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+    //         getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
 
-            dphiL_dx = dphi_dx;
+    //         dphiL_dx = dphi_dx;
 
-            djac_ = 0.;
-            getJacobianMatrix(xsi, ainv_, djac_, index);
-            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+    //         djac_ = 0.;
+    //         getJacobianMatrix(xsi, ainv_, djac_, index);
+    //         getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-            getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
-
-
-            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
-            getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
-            // u_ = 0.;
-            // v_ = 0.;
-
-            // du_dx = 0.;
-            // du_dy = 0.;
-            // dv_dx = 0.;
-            // dv_dy = 0.;
-
-            // //Interpolates the velocity components and its spatial derivatives
-            // for (int i = 0; i < 6; i++){
-            //     u_ += velx[i] * phiLM_[i];
-            //     v_ += vely[i] * phiLM_[i];
-
-            //     du_dx += velx[i] * dphiL_dx[0][i];
-            //     du_dy += velx[i] * dphiL_dx[1][i];
-            //     dv_dx += vely[i] * dphiL_dx[0][i];
-            //     dv_dy += vely[i] * dphiL_dx[1][i];
-            // };  
-
-            //Lagrange Multiplier Derivatives
-            MatrixDouble dL_dx(DIM,DIM);
-            // interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
-
-            if (fMesh->ProbType() == EPoisson){
-                for (int i = 0; i < fMesh->NElNodes(); i++){
-                    for (int j = 0; j < fMesh->NElNodes(); j++){     
-                        double LL = 0.;
-
-                        for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphiL_dx(j,m);
-
-                        arlequinStab(i,j) += LL * weight_ * djac_;
-
-                        //High order derivative
-                        double LH = 0.;
-                        for (int m = DIM; m--; ) LH += dphiL_dx(i,m) * (ddphi_dx(i,0) + ddphi_dx(i,1));
-
-                        laplMatrix(i,j) += LH * wna_ * weight_ * djac_; 
-                    };
-
-                    //ARLEQUIN STABILIZATION TERMS
-                    double LLx = 0.;
-                    double LF = 0.;
-                    for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m);
-                    for (int m = DIM; m--; ) LF +=  dphiL_dx(i,m) * wna_ * forcingF[0];
-
-                    arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
-                };
-
-            } else {
-                for (int i = 0; i < fMesh->NElNodes(); i++){
-                    for (int j = 0; j < fMesh->NElNodes(); j++){     
-                        double AM = 0.;
-                        double Lpx = 0.; double Lpy = 0.;
-                        double LC = 0.; double LL = 0.;
-
-                        // AM = -phiLM_(i) * phi_[j] * 
-                        // intPointWeightFunction(index) * tARLQ_;
-
-                        // LL = phiLM_(i) * phi_[j] * tARLQ_ / dens_;
-
-                        for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_ / dens_;
-
-                        for (int k = DIM; k--; )
-                            arlequinStab(DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
+    //         getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
 
-                        // LL = (dphi_dx[0][i] * dphi_dx[0][j] + dphi_dx[1][i] * dphi_dx[1][j]) * tARLQ_ / dens_;
+    //         double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+    //         getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
+    //         // u_ = 0.;
+    //         // v_ = 0.;
 
-                        // Lpx = phi_[i] * dphi_dx[0][i] * intPointWeightFunction(index)
-                        //     * tARLQ_ / dens_;
-                        // Lpy = phi_[i] * dphi_dx[1][i] * intPointWeightFunction(index)
-                        //     * tARLQ_ / dens_;
+    //         // du_dx = 0.;
+    //         // du_dy = 0.;
+    //         // dv_dx = 0.;
+    //         // dv_dy = 0.;
 
-                        // LC = -phi_[j] * ((una_ - umesh_) * dphi_dx[0][j] + (vna_ - vmesh_) * dphi_dx[1][j]) * phiLM_(i) * tARLQ_ * intPointWeightFunction(index);
+    //         // //Interpolates the velocity components and its spatial derivatives
+    //         // for (int i = 0; i < 6; i++){
+    //         //     u_ += velx[i] * phiLM_[i];
+    //         //     v_ += vely[i] * phiLM_[i];
 
-                        // arlequinStab[2*j  ][2*i  ] += LL * weight_ * djac_;
-                        // arlequinStab[2*j+1][2*i+1] += LL * weight_ * djac_;
-                        // arlequinStab(12+i,12+j) += 0 * weight_ * djac_;
+    //         //     du_dx += velx[i] * dphiL_dx[0][i];
+    //         //     du_dy += velx[i] * dphiL_dx[1][i];
+    //         //     dv_dx += vely[i] * dphiL_dx[0][i];
+    //         //     dv_dy += vely[i] * dphiL_dx[1][i];
+    //         // };  
 
-                        // LC = (dphi_dx[0][i]*(du_dx*dphiL_dx(0,j) + dv_dx*dphiL_dx(1,j)) +
-                        //       dphi_dx[1][i]*(du_dy*dphiL_dx(0,j) + dv_dy*dphiL_dx(1,j)) + 
-                        //       dphi_dx[0][i]*(u_*ddphiL_dx(0,0)(j) + v_*ddphiL_dx(0,1)(j)) + 
-                        //       dphi_dx[1][i]*(u_*ddphiL_dx(1,0)(j) + v_*ddphiL_dx(1,1)(j))) * tARLQ_ * (1-intPointWeightFunction(index));
+    //         //Lagrange Multiplier Derivatives
+    //         MatrixDouble dL_dx(DIM,DIM);
+    //         // interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
 
-                        // laplMatrix(2*i  ,2*j  ) += LC * weight_ * djac_;
-                        // laplMatrix(2*i+1,2*j+1) += LC * weight_ * djac_;
+    //         if (fMesh->ProbType() == EPoisson){
+    //             for (int i = 0; i < fMesh->NElNodes(); i++){
+    //                 for (int j = 0; j < fMesh->NElNodes(); j++){     
+    //                     double LL = 0.;
 
-                        Lpx = 0.; Lpy = 0.;
+    //                     for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphiL_dx(j,m);
 
-                        // Lpx = (dphi_dx[0][i] * ddphi_dx(0,0)(j) + 
-                        //        dphi_dx[1][i] * ddphi_dx(0,1)(j)) * tARLQ_ * intPointWeightFunction(index);
-                        // Lpy = (dphi_dx[0][i] * ddphi_dx(1,0)(j) + 
-                        //        dphi_dx[1][i] * ddphi_dx(1,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+    //                     arlequinStab(i,j) += LL * weight_ * djac_;
 
-                        // laplMatrix[2*j  ][2*i  ] += LC * weight_ * djac_;
-                        // laplMatrix[2*j+1][2*i+1] += LC * weight_ * djac_;
+    //                     //High order derivative
+    //                     double LH = 0.;
+    //                     for (int m = DIM; m--; ) LH += dphiL_dx(i,m) * (ddphi_dx(i,0) + ddphi_dx(i,1));
 
-                        // laplMatrix[2*j  ][12+i] += Lpx * weight_ * djac_;
-                        // laplMatrix[2*j+1][12+i] += Lpy * weight_ * djac_;
-                        // laplMatrix[12+i][2*j  ] += Lpx * weight_ * djac_;
-                        // laplMatrix[12+i][2*j+1] += Lpy * weight_ * djac_;
+    //                     laplMatrix(i,j) += LH * wna_ * weight_ * djac_; 
+    //                 };
 
-                    };
+    //                 //ARLEQUIN STABILIZATION TERMS
+    //                 double LLx = 0.;
+    //                 double LF = 0.;
+    //                 for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(0,m);
+    //                 for (int m = DIM; m--; ) LF +=  dphiL_dx(i,m) * wna_ * forcingF[0];
 
-                    //ARLEQUIN STABILIZATION TERMS
-                    double Amx = 0.; double Amy = 0.;
-                    double LCx = 0.; double LCy = 0.;
-                    double LPx = 0.; double LPy = 0.;
-                    double LLy = 0.;
+    //                 arlequinStabVector[i] += (LLx + LF) * weight_ * djac_;
+    //             };
+
+    //         } else {
+    //             for (int i = 0; i < fMesh->NElNodes(); i++){
+    //                 for (int j = 0; j < fMesh->NElNodes(); j++){     
+    //                     double AM = 0.;
+    //                     double Lpx = 0.; double Lpy = 0.;
+    //                     double LC = 0.; double LL = 0.;
+
+    //                     // AM = -phiLM_(i) * phi_[j] * 
+    //                     // intPointWeightFunction(index) * tARLQ_;
+
+    //                     // LL = phiLM_(i) * phi_[j] * tARLQ_ / dens_;
+
+    //                     for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_ / dens_;
+
+    //                     for (int k = DIM; k--; )
+    //                         arlequinStab(DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
+
+
+    //                     // LL = (dphi_dx[0][i] * dphi_dx[0][j] + dphi_dx[1][i] * dphi_dx[1][j]) * tARLQ_ / dens_;
+
+    //                     // Lpx = phi_[i] * dphi_dx[0][i] * intPointWeightFunction(index)
+    //                     //     * tARLQ_ / dens_;
+    //                     // Lpy = phi_[i] * dphi_dx[1][i] * intPointWeightFunction(index)
+    //                     //     * tARLQ_ / dens_;
+
+    //                     // LC = -phi_[j] * ((una_ - umesh_) * dphi_dx[0][j] + (vna_ - vmesh_) * dphi_dx[1][j]) * phiLM_(i) * tARLQ_ * intPointWeightFunction(index);
+
+    //                     // arlequinStab[2*j  ][2*i  ] += LL * weight_ * djac_;
+    //                     // arlequinStab[2*j+1][2*i+1] += LL * weight_ * djac_;
+    //                     // arlequinStab(12+i,12+j) += 0 * weight_ * djac_;
+
+    //                     // LC = (dphi_dx[0][i]*(du_dx*dphiL_dx(0,j) + dv_dx*dphiL_dx(1,j)) +
+    //                     //       dphi_dx[1][i]*(du_dy*dphiL_dx(0,j) + dv_dy*dphiL_dx(1,j)) + 
+    //                     //       dphi_dx[0][i]*(u_*ddphiL_dx(0,0)(j) + v_*ddphiL_dx(0,1)(j)) + 
+    //                     //       dphi_dx[1][i]*(u_*ddphiL_dx(1,0)(j) + v_*ddphiL_dx(1,1)(j))) * tARLQ_ * (1-intPointWeightFunction(index));
+
+    //                     // laplMatrix(2*i  ,2*j  ) += LC * weight_ * djac_;
+    //                     // laplMatrix(2*i+1,2*j+1) += LC * weight_ * djac_;
+
+    //                     Lpx = 0.; Lpy = 0.;
+
+    //                     // Lpx = (dphi_dx[0][i] * ddphi_dx(0,0)(j) + 
+    //                     //        dphi_dx[1][i] * ddphi_dx(0,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+    //                     // Lpy = (dphi_dx[0][i] * ddphi_dx(1,0)(j) + 
+    //                     //        dphi_dx[1][i] * ddphi_dx(1,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+
+    //                     // laplMatrix[2*j  ][2*i  ] += LC * weight_ * djac_;
+    //                     // laplMatrix[2*j+1][2*i+1] += LC * weight_ * djac_;
+
+    //                     // laplMatrix[2*j  ][12+i] += Lpx * weight_ * djac_;
+    //                     // laplMatrix[2*j+1][12+i] += Lpy * weight_ * djac_;
+    //                     // laplMatrix[12+i][2*j  ] += Lpx * weight_ * djac_;
+    //                     // laplMatrix[12+i][2*j+1] += Lpy * weight_ * djac_;
+
+    //                 };
+
+    //                 //ARLEQUIN STABILIZATION TERMS
+    //                 double Amx = 0.; double Amy = 0.;
+    //                 double LCx = 0.; double LCy = 0.;
+    //                 double LPx = 0.; double LPy = 0.;
+    //                 double LLy = 0.;
                     
 
-                    for (int k = DIM; k--; ){
-                        double LLx = 0.;
-                        for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
+    //                 for (int k = DIM; k--; ){
+    //                     double LLx = 0.;
+    //                     for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
 
-                        arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
-                    }
+    //                     arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
+    //                 }
 
 
-                    // if (iTimeStep > 5){
-                    //     Amx = -phi_[i] * axm_ * intPointWeightFunctionSpecial(index) * tARLQ_;
-                    //     Amy = -phi_[i] * aym_ * intPointWeightFunctionSpecial(index) * tARLQ_;
-                    // }
-                    //if (iTimeStep < 10){
-                        // LLx = -(dphi_dx[0][i] * dLx_dx/(1-wna_) + dphi_dx[1][i] * dLx_dy/(1-wna_)) * tARLQ_;
-                        // LLy = -(dphi_dx[0][i] * dLy_dx/(1-wna_) + dphi_dx[1][i] * dLy_dy/(1-wna_)) * tARLQ_;
-                    //}else{
-                        // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + duna_dx*duna_dx + dvna_dx*duna_dy) + 
-                        //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + duna_dy*duna_dx + dvna_dy*duna_dy)) * tARLQ_ / dens_;
-                        // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + duna_dx*dvna_dx + dvna_dx*dvna_dy) + 
-                        //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + duna_dy*dvna_dx + dvna_dy*dvna_dy)) * tARLQ_ / dens_;
-                        // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + dp_dxx) + 
-                        //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + dp_dxy)) * tARLQ_ / dens_;
-                        // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + dp_dxy) + 
-                        //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + dp_dyy)) * tARLQ_ / dens_;
-                    //};
+    //                 // if (iTimeStep > 5){
+    //                 //     Amx = -phi_[i] * axm_ * intPointWeightFunctionSpecial(index) * tARLQ_;
+    //                 //     Amy = -phi_[i] * aym_ * intPointWeightFunctionSpecial(index) * tARLQ_;
+    //                 // }
+    //                 //if (iTimeStep < 10){
+    //                     // LLx = -(dphi_dx[0][i] * dLx_dx/(1-wna_) + dphi_dx[1][i] * dLx_dy/(1-wna_)) * tARLQ_;
+    //                     // LLy = -(dphi_dx[0][i] * dLy_dx/(1-wna_) + dphi_dx[1][i] * dLy_dy/(1-wna_)) * tARLQ_;
+    //                 //}else{
+    //                     // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + duna_dx*duna_dx + dvna_dx*duna_dy) + 
+    //                     //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + duna_dy*duna_dx + dvna_dy*duna_dy)) * tARLQ_ / dens_;
+    //                     // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + duna_dx*dvna_dx + dvna_dx*dvna_dy) + 
+    //                     //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + duna_dy*dvna_dx + dvna_dy*dvna_dy)) * tARLQ_ / dens_;
+    //                     // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + dp_dxx) + 
+    //                     //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + dp_dxy)) * tARLQ_ / dens_;
+    //                     // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + dp_dxy) + 
+    //                     //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + dp_dyy)) * tARLQ_ / dens_;
+    //                 //};
         
-                    // if (iTimeStep > 5){
-                    //     LLx +=  (dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;
-                    //     LLx +=  (dphi_dx[0][i]*day_dx + dphi_dx[1][i]*day_dy) * tARLQ_ ;
-                    // };
+    //                 // if (iTimeStep > 5){
+    //                 //     LLx +=  (dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;
+    //                 //     LLx +=  (dphi_dx[0][i]*day_dx + dphi_dx[1][i]*day_dy) * tARLQ_ ;
+    //                 // };
 
 
 
-                    // arlequinStabVector[2*i  ] += (Amx + LLx) * weight_ * djac_ * (1-wna_) *0;
-                    // arlequinStabVector[2*i+1] += (Amy + LLy) * weight_ * djac_ * (1-wna_) *0;
-                };
-            }
+    //                 // arlequinStabVector[2*i  ] += (Amx + LLx) * weight_ * djac_ * (1-wna_) *0;
+    //                 // arlequinStabVector[2*i+1] += (Amy + LLy) * weight_ * djac_ * (1-wna_) *0;
+    //             };
+    //         }
 
             
-        };
-        index++;        
-    };  
+    //     };
+    //     index++;        
+    // };  
     
 
-    if (fMesh->ProbType() == EPoisson){
+    // if (fMesh->ProbType() == EPoisson){
 
 
 
-    } else {
-        for (int i = 0; i < fMesh->NElNodes(); i++){
-            for (int k = DIM; k--; ){
-                if (fMesh->NodeVec()[connect_[i]] -> getConstrains(k) == 1) {
-                    for (int j = 0; j < fMesh->NLocDOF(); j++){
-                        arlequinStab(DIM*i+k,j) = 0.;
-                        arlequinStab(j,DIM*i+k) = 0.;
-                    };
-                    //lagrMultMatrix(12+i,12+i) = 1.;
-                    arlequinStabVector[DIM*i+k] = 0.0;
-                    // std::cout << "AQUI2 elem different mesh" << std::endl;
-                };
-            }
-        };
-    }
+    // } else {
+    //     for (int i = 0; i < fMesh->NElNodes(); i++){
+    //         for (int k = DIM; k--; ){
+    //             if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(k) == 1) {
+    //                 for (int j = 0; j < fMesh->NLocDOF(); j++){
+    //                     arlequinStab(DIM*i+k,j) = 0.;
+    //                     arlequinStab(j,DIM*i+k) = 0.;
+    //                 };
+    //                 //lagrMultMatrix(12+i,12+i) = 1.;
+    //                 arlequinStabVector[DIM*i+k] = 0.0;
+    //                 // std::cout << "AQUI2 elem different mesh" << std::endl;
+    //             };
+    //         }
+    //     };
+    // }
     
 
-    return;
+    // return;
 };
 
 
