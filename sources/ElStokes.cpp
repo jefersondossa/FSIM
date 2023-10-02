@@ -230,7 +230,7 @@ void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
                 Stiffness(nstate*i+istate,nstate*i+istate) = 1.;
-                Rhs[nstate*i+istate] = Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(istate);
+                Rhs[nstate*i+istate] = 0.;
             }
         }
 

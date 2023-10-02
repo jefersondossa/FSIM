@@ -32,13 +32,18 @@ public:
         fMeshVector[0] = cmesh;
         fSolverType = stype;
         AllocateMonomodel();
+        // fNumEquations = fMeshVector[0]->NGlobalDOF();
     };
 
     Analysis(std::vector<CompMesh *> &meshvec, SolverType stype){
         fMeshVector = meshvec;
         fSolverType = stype;
         AllocateArlequin();
+        // fNumEquations = fMeshVector[0]->NGlobalDOF() + fMeshVector[1]->NGlobalDOF() + fMeshVector[2]->NGlobalDOF();
+        
     };
+
+    int64_t NEquations();
 
     Mat &Stiffness(){return fGlobalStiffness;}
     Vec &Rhs(){return fGlobalRhs;}

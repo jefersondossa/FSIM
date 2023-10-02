@@ -91,17 +91,24 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         }
     
         fAnalysis->MeshVector()[2]->ElementVec()[jelc] -> ComputeElContribution(matrix,rhs);
+        int nState = fAnalysis->MeshVector()[0]->NState(); 
+        // if (fAnalysis->MeshVector()[0]->ProbType() == EPoisson) nState = 1;
 
         //Disperse local contributions into the global matrix
         for (int i = 0; i < nElNodes; i++){
             for (int j = 0; j < nElNodes; j++){
                 //COUPLING OPERATOR
-                if (fabs(matrix(i,j)) >= 1.e-15){
-                    int d_i = GloDOF + LocDOF + connecL[i];
-                    int d_j = startDOF + connec[j];
-                    MatSetValues(fAnalysis->Stiffness(),1,&d_i,1,&d_j,&matrix(i,j),ADD_VALUES);
-                    MatSetValues(fAnalysis->Stiffness(),1,&d_j,1,&d_i,&matrix(i,j),ADD_VALUES);
-                };
+                for (int istate = 0; istate < nState; istate++){
+                    for (int jstate = 0; jstate < nState; jstate++){
+                        if (fabs(matrix(nState*i+istate,nState*j+jstate)) >= 1.e-15){
+                            int d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                            int d_j = startDOF + nState*connec[j] + jstate;
+                            MatSetValues(fAnalysis->Stiffness(),1,&d_i,1,&d_j,&matrix(nState*i+istate,nState*j+jstate),ADD_VALUES);
+                            MatSetValues(fAnalysis->Stiffness(),1,&d_j,1,&d_i,&matrix(nState*i+istate,nState*j+jstate),ADD_VALUES);
+                        };
+                    }
+                }
+                
                 // // ARLEQUIN STABILIZATION
                 // if (fabs(ArlequinA2(i,j)) >= 1.e-15){
                 //     int dof_i = GloDOF + LocDOF + connecL[i];
@@ -116,12 +123,13 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
             };
             //RHS VECTOR
             //COUPLING OPERATOR
-            int dof_i = startDOF + connec[i];
-            VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[i],ADD_VALUES);
-            
-            dof_i = GloDOF + LocDOF + connecL[i];
-            VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[nLocDOF+i],ADD_VALUES);
-
+            for (int istate = 0; istate < nState; istate++){
+                int dof_i = startDOF + nState*connec[i]+istate;
+                VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[nState*i+istate],ADD_VALUES);
+                
+                dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
+                VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[nLocDOF+nState*i+istate],ADD_VALUES);
+            }
             // dof_i = GloDOF + connec[i];
             // VecSetValues(b,1,&dof_i,&rhsLagMult2[i],ADD_VALUES);
 
@@ -330,7 +338,7 @@ void Assemble::Arlequin(Analysis *fAnalysis){
     Monomodel(fAnalysis,1,numDOFGlobal);
 
     // MatView(fAnalysis->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
-    // // MatView(fAnalysis->Stiffness(),PETSC_VIEWER_DRAW_WORLD);
+    // MatView(fAnalysis->Stiffness(),PETSC_VIEWER_DRAW_WORLD);
     // VecView(fAnalysis->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
 
     std::cout << "Assembling Coupling operator..." << std::endl;

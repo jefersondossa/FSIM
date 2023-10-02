@@ -68,20 +68,20 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
 
     //In this case, we need the global solution
     //Velocity
-    VecDouble u_(DIM);
+    VecDouble u_(Mesh()->NState());
     elglobal->interpolateSolution(index, u_);
 
     //Velocity Derivatives
-    MatrixDouble du_dx(DIM,DIM);
+    MatrixDouble du_dx(Mesh()->NState(),DIM);
     elglobal->interpolateSolDerivatives(dphi_dx, du_dx);
 
     //The lagrange multiplier is the solution of meshvector[2]
     //Lagrange Multiplier
-    VecDouble lagM_(DIM);
+    VecDouble lagM_(Mesh()->NState());
     interpolateSolution(index, lagM_);
 
     //Lagrange Multiplier Derivatives
-    MatrixDouble dL_dx(DIM,DIM);
+    MatrixDouble dL_dx(Mesh()->NState(),DIM);
     interpolateSolDerivatives(dphi_dx, dL_dx);
 
     double k1 = fMeshVector[1]->getProblemParameters().getArlequinK1();
@@ -94,14 +94,14 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
             //Solution residual
             double L2u = u_[0] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
             double H1u = 0.;
-            for (int l=DIM; l--; ) H1u -= dphi_dx(i,l) * du_dx(0,l) * k2;
-            Rhs[i] -= (L2u + H1u) * WJ;
+            for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(0,l) * k2;
+            Rhs[Mesh()->NLocDOF()+i] -= (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
             double L2 = lagM_[0] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
             double H1 = 0.;
             for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(0,l) * k2;
-            Rhs[Mesh()->NLocDOF()+i] -= (L2 + H1) * WJ;
+            Rhs[i] -= (L2 + H1) * WJ;
         };
     } else {
         for (int i = 0; i < Mesh()->NElNodes(); i++){
@@ -111,14 +111,14 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
                 double H1u = 0.;
                 for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(k,l) * k2;
                 for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(l,k) * k2;
-                Rhs[DIM*i+k] -= (L2u + H1u) * WJ;
+                Rhs[Mesh()->NLocDOF()+DIM*i+k] -= (L2u + H1u) * WJ;
                 
                 //Lagrange multipliers residual
                 double L2 = lagM_[k] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
                 double H1 = 0.;
                 for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(k,l) * k2;
                 for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(l,k) * k2;
-                Rhs[Mesh()->NLocDOF()+DIM*i+k] -= (L2 + H1) * WJ;
+                Rhs[DIM*i+k] -= (L2 + H1) * WJ;
             };
         };
     }
@@ -126,7 +126,7 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
 
 
 void ElCouplingGlobal::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
-
+    // return;
     int DIM = Mesh()->Dimension();
 
     if (Mesh()->ProbType() == ProblemType::EPoisson){
@@ -135,10 +135,10 @@ void ElCouplingGlobal::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
             if (fMeshVector[0]->NodeVec()[connectlocal[i]] -> getConstrains(0) == 1) {
                 for (int j = 0; j < Mesh()->NElNodes(); j++){
                     Stiffness(i,j) = 0.;
-                    // Stiffness(j,i) = 0.;
+                    Stiffness(j,i) = 0.;
                 };
                 Rhs[i] = 0.0;
-                // Rhs[Mesh()->NLocDOF() + i] = 0.0;
+                Rhs[Mesh()->NLocDOF() + i] = 0.0;
             };
         };
     } else {

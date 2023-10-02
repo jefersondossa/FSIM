@@ -54,7 +54,7 @@ public:
 
 private:
     double fGlueZoneThickness = 0.125;
-    double fArlequinEpsilon = 1.e-3;
+    double fArlequinEpsilon = 1.e-1;
 
     int numElemGlueZoneFine;
     int numElemGlueZoneCoarse;

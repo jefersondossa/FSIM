@@ -106,6 +106,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     VecDouble x_(DIM);
     VecDouble deltaX(DIM);
     VecDouble deltaXsi(DIM);
+    xsi.setZero(); x_.setZero(); deltaX.setZero(); deltaXsi.setZero();
     bool flg = true;
     VecInt connec = cmesh->ElementVec()[elSearch] -> getConnectivity();
     

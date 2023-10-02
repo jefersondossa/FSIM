@@ -39,6 +39,14 @@ public:
         fPoisson = poisson;
     }
 
+    double GetPoissonRatio(){
+        return fPoisson;
+    }
+
+    double GetYoungModulus(){
+        return fYoung;
+    }
+
     /// Sets the time step size
     /// @param double time step size
     void setTimeStep(double dt){timeStepSize = dt;}
@@ -124,22 +132,22 @@ public:
     }
 
 private:
-    double fViscosity;
-    double fDensity;
-    double fYoung;
-    double fPoisson;
-    double timeStepSize;
-    double spectralRadius;
-    double alpha_m;
-    double alpha_f;
-    double gamma;
+    double fViscosity = 0.;
+    double fDensity = 0.;
+    double fYoung = 0.;
+    double fPoisson = 0.;
+    double timeStepSize = 0.;
+    double spectralRadius = 0.;
+    double alpha_m = 0.;
+    double alpha_f = 0.;
+    double gamma = 0.;
     VecDouble fFieldForce;
-    double k1, k2;
+    double k1, k2 = 0.;
     double pi = M_PI;
     VecDouble fInitialSol;
 
-    int fNTimeSteps;
-    int timeInstant;
+    int fNTimeSteps = 0;
+    int timeInstant = 0;
     SolverType sType = SolverType::ESuiteSparse;
     
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exactSolution = 0; 

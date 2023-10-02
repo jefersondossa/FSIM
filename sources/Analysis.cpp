@@ -12,6 +12,15 @@ Analysis::~Analysis()
     MatDestroy(&fGlobalStiffness); 
 }
 
+int64_t Analysis::NEquations(){
+    int64_t fNumEquations = 0;
+    for (auto mesh:fMeshVector){
+        fNumEquations += mesh->NGlobalDOF();
+    }
+    
+    return fNumEquations;
+}
+
 void Analysis::Solve(){
     std::cout << "Solving..." << std::endl;
     PetscErrorCode    ierr;

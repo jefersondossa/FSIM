@@ -20,23 +20,23 @@ auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDoubl
     const auto &x=coord[0];
     const auto &y=coord[1];
     auto pi = M_PI;
-    u[0]=1.;
-    // u[0] = cos(pi*x)*sin(2.*pi*y);
-    // u[1] = cos(pi*y)*sin(pi*x);
-    // gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
-    // gradU(0,1) = pi*cos(pi*x)*cos(pi*y);
-    // gradU(1,0) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
-    // gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
+    // u[0]=1.;
+    u[0] = cos(pi*x)*sin(2.*pi*y);
+    u[1] = cos(pi*y)*sin(pi*x);
+    gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
+    gradU(0,1) = pi*cos(pi*x)*cos(pi*y);
+    gradU(1,0) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
+    gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
 };
 
 auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     double E=1.;
-    double poisson=0.0;
+    double poisson=0.;
     auto pi = M_PI;
-    // force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
-    // force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
+    force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
+    force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
 };
 
 auto exactSolStokes = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
@@ -151,8 +151,8 @@ for (int k = 3; k < 4; k++)
 
         //Transfinite lines 
         int corn = 20; int side = 7;
-        double h2 = pow(2,k+1)/2+1;
-        double v2 = pow(2,k+1)+1;
+        double h2 = pow(2,k)/2+1;
+        double v2 = pow(2,k)+1;
         //corners
         fluid2 -> transfiniteLine({ l10 }, h2);
         fluid2 -> transfiniteLine({ l11 }, v2);
@@ -199,8 +199,8 @@ for (int k = 3; k < 4; k++)
 
 	MPI_Barrier(PETSC_COMM_WORLD);   
     
-    CompMesh* coarseModel = new CompMesh(ProblemType::EPoisson,dimension,degree);
-    CompMesh* fineModel = new CompMesh(ProblemType::EPoisson,dimension,degree);  
+    CompMesh* coarseModel = new CompMesh(ProblemType::EStokes,dimension,degree);
+    CompMesh* fineModel = new CompMesh(ProblemType::EStokes,dimension,degree);  
 
     GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
     GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
@@ -216,15 +216,17 @@ for (int k = 3; k < 4; k++)
         coarseModel->getProblemParameters().setForcingFunction(forcingFunctionPoisson);
         coarseModel->getProblemParameters().setExactSolution(exactSolPoisson);
     } else if (coarseModel->ProbType() == EElastic){
-        coarseModel->getProblemParameters().SetElasticity(1000.,0.3);
+        coarseModel->getProblemParameters().SetElasticity(1.,0.0);
         coarseModel->getProblemParameters().setForcingFunction(forcingFunctionElasticity2D);
         coarseModel->getProblemParameters().setExactSolution(exactSolElasticity2D);
     } else if (coarseModel->ProbType() == EStokes){
-        coarseModel->getProblemParameters().SetIncompressibleFluid(1.,1.);
+        coarseModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
+        coarseModel->getProblemParameters().setTimeStep(1.);
         coarseModel->getProblemParameters().setForcingFunction(forcingFunctionStokes);
         coarseModel->getProblemParameters().setExactSolution(exactSolStokes);
     } else if (coarseModel->ProbType() == ENavierStokes){
-        coarseModel->getProblemParameters().SetIncompressibleFluid(1.,1.);
+        coarseModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
+        coarseModel->getProblemParameters().setTimeStep(1.);
         coarseModel->getProblemParameters().setForcingFunction(forcingFunctionNavierStokes);
         coarseModel->getProblemParameters().setExactSolution(exactSolStokes);
     }
@@ -235,12 +237,17 @@ for (int k = 3; k < 4; k++)
         fineModel->getProblemParameters().setForcingFunction(forcingFunctionPoisson);
         fineModel->getProblemParameters().setExactSolution(exactSolPoisson);
     } else if (fineModel->ProbType() == EElastic){
+        fineModel->getProblemParameters().SetElasticity(1.,0.0);
         fineModel->getProblemParameters().setForcingFunction(forcingFunctionElasticity2D);
         fineModel->getProblemParameters().setExactSolution(exactSolElasticity2D);
     } else if (fineModel->ProbType() == EStokes){
+        fineModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
+        fineModel->getProblemParameters().setTimeStep(1.);
         fineModel->getProblemParameters().setForcingFunction(forcingFunctionStokes);
         fineModel->getProblemParameters().setExactSolution(exactSolStokes);
     } else if (fineModel->ProbType() == ENavierStokes){
+        fineModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
+        fineModel->getProblemParameters().setTimeStep(1.);
         fineModel->getProblemParameters().setForcingFunction(forcingFunctionNavierStokes);
         fineModel->getProblemParameters().setExactSolution(exactSolStokes);
     }
@@ -249,7 +256,8 @@ for (int k = 3; k < 4; k++)
     fineModel->getProblemParameters().setArlequinOperatorConstants(1.,0.00);
     coarseModel->getProblemParameters().setSpectralRadius(1.);
     coarseModel->getProblemParameters().setArlequinOperatorConstants(1.,0.00);
-
+    GmshTools::BoundaryConstrains(coarseModel);
+    GmshTools::BoundaryConstrains(fineModel);
 
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
@@ -259,15 +267,16 @@ for (int k = 3; k < 4; k++)
 
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
-    LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
+    // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
     // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
+    NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse");
-    VTUGenerator::PrintResults(fineModel,"resultFine");
-    VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
+    // VTUGenerator::PrintResults(fineModel,"resultFine");
+    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
-    // VecDouble errors;
-    // an.PostProcessError(errors);
+    VecDouble errors;
+    an.PostProcessError(errors);
 
 }           

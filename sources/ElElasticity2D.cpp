@@ -10,8 +10,8 @@ void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
     MatrixDouble Hooke(3,3);
     Hooke.setZero();
     // For EPT
-    double elastic_ = 1.;
-    double poisson_ = 0.3;
+    double elastic_ = Mesh()->getProblemParameters().GetYoungModulus();
+    double poisson_ = Mesh()->getProblemParameters().GetPoissonRatio();
     double k = elastic_ / (1. - poisson_ * poisson_);
     Hooke(0,0) = k;
     Hooke(0,1) = k * poisson_;
@@ -49,8 +49,8 @@ void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
     MatrixDouble Hooke(3,3);
     Hooke.setZero();
     // For EPT
-    double elastic_ = 1.;
-    double poisson_ = 0.3;
+    double elastic_ = Mesh()->getProblemParameters().GetYoungModulus();
+    double poisson_ = Mesh()->getProblemParameters().GetPoissonRatio();
     double k = elastic_ / (1. - poisson_ * poisson_);
     Hooke(0,0) = k;
     Hooke(0,1) = k * poisson_;
@@ -145,7 +145,7 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
                       * weight_ * djac_ ;
         
 
-        std::cout << "Stress and Energy norms not implemented yet\n";
+        // std::cout << "Stress and Energy norms not implemented yet\n";
         // //Semi H1 state variable
         // for (int m = DIM; m--; ){
         //     errors[1] += (gradU[m]-du_dxMEF(0,m))* (gradU[m]-du_dxMEF(0,m)) * weight_ * djac_;
@@ -170,7 +170,7 @@ void ElElasticity2D::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
                 Stiffness(nstate*i+istate,nstate*i+istate) = 1.;
-                Rhs[nstate*i+istate] = Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(istate);
+                Rhs[nstate*i+istate] = 0.;
             }
         }
     }
