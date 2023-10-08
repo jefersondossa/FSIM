@@ -17,15 +17,19 @@
 #include <math.h>
 #include "DataTypes.h"
 
+enum ProblemType {ENavierStokes, EPoisson, EStokes, EElastic, ESolidPositional};
+enum ArlequinStabType{ENoStab, EOption1, EOption2, EOption3, EOption4, EOption5};
+
 enum SolverType{EMumps, ESuiteSparse, EIterative};
 
 /// Defines the fluid boundary shape functions
-
 class ProblemParameters {
 public:
     ProblemParameters(){
         fFieldForce.resize(3);
         fFieldForce.setZero();
+        fInitialSol.resize(3);
+        fInitialSol.setZero();
     }
 
     /// Sets the element viscosity
@@ -125,11 +129,19 @@ public:
     }
 
     void setSolver(SolverType st){
-        sType = st;
+        fSolverType = st;
     }
-    SolverType &getSolverType(){
-        return sType;
+    SolverType &Solver(){
+        return fSolverType;
     }
+    ProblemType &ProbType(){
+        return fProbType;
+    }
+    ArlequinStabType &ArlequinStab(){
+        return fArlequinType;
+    }
+    
+
 
 private:
     double fViscosity = 0.;
@@ -148,7 +160,9 @@ private:
 
     int fNTimeSteps = 0;
     int timeInstant = 0;
-    SolverType sType = SolverType::ESuiteSparse;
+    SolverType fSolverType = SolverType::ESuiteSparse;
+    ProblemType fProbType = ProblemType::EPoisson;
+    ArlequinStabType fArlequinType = ArlequinStabType::ENoStab;
     
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exactSolution = 0; 
     std::function<void (const VecDouble &coord, VecDouble &force)> forceFunction = 0; 

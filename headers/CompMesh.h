@@ -24,8 +24,6 @@ private:
     int nLocDOF = 0;
     int numDOF = 0;
 
-    ProblemType fProbType = ProblemType::ENavierStokes;
-
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
 
@@ -37,20 +35,20 @@ private:
 
 public:
     CompMesh() = default;
-    CompMesh(ProblemType ptype, int DIM, int order){
+    CompMesh(ProblemParameters &pparam, int DIM, int order){
         fDimension = DIM;
-        fProbType = ptype;
+        fProbParameters = pparam;
         fOrder = order;
         nElNodes = (3+(DIM-2)*fOrder)*(2+3*fOrder+fOrder*fOrder)/6;
         nBdNodes = 3*(1-fOrder)+DIM*(2*fOrder-1);
         numIntegration = new DomainIntegration(DIM,order);
-        if (fProbType == ProblemType::ENavierStokes || fProbType == ProblemType::EStokes){
+        if (fProbParameters.ProbType() == ProblemType::ENavierStokes || fProbParameters.ProbType() == ProblemType::EStokes){
             fNState = (DIM+1);
             nLocDOF = nElNodes*(DIM+1);
-        } else if (fProbType == ProblemType::EPoisson) {
+        } else if (fProbParameters.ProbType() == ProblemType::EPoisson) {
             fNState = 1;
             nLocDOF = nElNodes;
-        } else if (fProbType == ProblemType::EElastic){
+        } else if (fProbParameters.ProbType() == ProblemType::EElastic){
             fNState = DIM;
             nLocDOF = nElNodes*DIM;
         } else {
@@ -68,6 +66,10 @@ public:
     ProblemParameters fProbParameters;
     DomainIntegration* numIntegration; //Numerical integration
     
+    void SetNLocDOF(int nlocdof){
+        nLocDOF = nlocdof;
+    }
+
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model nodes information
@@ -101,8 +103,6 @@ public:
     void SetNStateVariables(int nstate){
         fNState = nstate;
     }
-
-    ProblemType &ProbType(){return fProbType;}
 
     int &Dimension() {return fDimension;}
     int &GetDefaultOrder() {return fOrder;}

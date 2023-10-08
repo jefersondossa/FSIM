@@ -68,8 +68,8 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     const auto &y=coord[1];
     double visc = 0.01;
 
-    force[0] = (sin(x)*(cos(x - 2.*y) + cos(x + 2.*y) - 2.*(1. + 2.*visc)*sin(y)))/2.;
-    force[1] = cos(y)*(cos(x) - 2.*visc*cos(x) + cos(x)*cos(x)*sin(y) - sin(x)*sin(x)*sin(y));
+    force[0] = -(sin(x)*(cos(x - 2.*y) + cos(x + 2.*y) - 2.*(1. + 2.*visc)*sin(y)))/2.;
+    force[1] = -cos(y)*(cos(x) - 2.*visc*cos(x) + cos(x)*cos(x)*sin(y) - sin(x)*sin(x)*sin(y));
 };
 
 
@@ -198,9 +198,34 @@ for (int k = 3; k < 4; k++)
 //==========================================================================
 
 	MPI_Barrier(PETSC_COMM_WORLD);   
-    
-    CompMesh* coarseModel = new CompMesh(ProblemType::EStokes,dimension,degree);
-    CompMesh* fineModel = new CompMesh(ProblemType::EStokes,dimension,degree);  
+    ProblemParameters pParameters;
+    pParameters.ProbType() = EElastic;
+    if (pParameters.ProbType() == EPoisson){
+        pParameters.setForcingFunction(forcingFunctionPoisson);
+        pParameters.setExactSolution(exactSolPoisson);
+    } else if (pParameters.ProbType() == EElastic){
+        pParameters.SetElasticity(1.,0.);
+        pParameters.setForcingFunction(forcingFunctionElasticity2D);
+        pParameters.setExactSolution(exactSolElasticity2D);
+    } else if (pParameters.ProbType() == EStokes){
+        pParameters.SetIncompressibleFluid(0.01,1.);
+        pParameters.setTimeStep(1.);//Needed for stabilization parameter
+        pParameters.setForcingFunction(forcingFunctionStokes);
+        pParameters.setExactSolution(exactSolStokes);
+    } else if (pParameters.ProbType() == ENavierStokes){
+        pParameters.SetIncompressibleFluid(0.01,1.);
+        pParameters.setTimeStep(1.);//Needed for stabilization parameter
+        pParameters.setForcingFunction(forcingFunctionNavierStokes);
+        pParameters.setExactSolution(exactSolStokes);
+    }
+    pParameters.Solver() = SolverType::ESuiteSparse;
+    // pParameters.ArlequinStab() = ArlequinStabType::ENoStab;
+    pParameters.ArlequinStab() = ArlequinStabType::EOption1;
+    pParameters.setSpectralRadius(1.);
+    pParameters.setArlequinOperatorConstants(1.,0.00);
+
+    CompMesh* coarseModel = new CompMesh(pParameters,dimension,degree);
+    CompMesh* fineModel = new CompMesh(pParameters,dimension,degree);  
 
     GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
     GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
@@ -209,72 +234,25 @@ for (int k = 3; k < 4; k++)
     // fineModel->meshReading(fluid2,"problem_data.txt","fine.msh","mirror_fine.txt",0);
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
-
-
-
-    if (coarseModel->ProbType() == EPoisson){
-        coarseModel->getProblemParameters().setForcingFunction(forcingFunctionPoisson);
-        coarseModel->getProblemParameters().setExactSolution(exactSolPoisson);
-    } else if (coarseModel->ProbType() == EElastic){
-        coarseModel->getProblemParameters().SetElasticity(1.,0.0);
-        coarseModel->getProblemParameters().setForcingFunction(forcingFunctionElasticity2D);
-        coarseModel->getProblemParameters().setExactSolution(exactSolElasticity2D);
-    } else if (coarseModel->ProbType() == EStokes){
-        coarseModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
-        coarseModel->getProblemParameters().setTimeStep(1.);
-        coarseModel->getProblemParameters().setForcingFunction(forcingFunctionStokes);
-        coarseModel->getProblemParameters().setExactSolution(exactSolStokes);
-    } else if (coarseModel->ProbType() == ENavierStokes){
-        coarseModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
-        coarseModel->getProblemParameters().setTimeStep(1.);
-        coarseModel->getProblemParameters().setForcingFunction(forcingFunctionNavierStokes);
-        coarseModel->getProblemParameters().setExactSolution(exactSolStokes);
-    }
-    coarseModel->getProblemParameters().setSolver(SolverType::ESuiteSparse);
-
-
-    if (fineModel->ProbType() == EPoisson){
-        fineModel->getProblemParameters().setForcingFunction(forcingFunctionPoisson);
-        fineModel->getProblemParameters().setExactSolution(exactSolPoisson);
-    } else if (fineModel->ProbType() == EElastic){
-        fineModel->getProblemParameters().SetElasticity(1.,0.0);
-        fineModel->getProblemParameters().setForcingFunction(forcingFunctionElasticity2D);
-        fineModel->getProblemParameters().setExactSolution(exactSolElasticity2D);
-    } else if (fineModel->ProbType() == EStokes){
-        fineModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
-        fineModel->getProblemParameters().setTimeStep(1.);
-        fineModel->getProblemParameters().setForcingFunction(forcingFunctionStokes);
-        fineModel->getProblemParameters().setExactSolution(exactSolStokes);
-    } else if (fineModel->ProbType() == ENavierStokes){
-        fineModel->getProblemParameters().SetIncompressibleFluid(0.01,1.);
-        fineModel->getProblemParameters().setTimeStep(1.);
-        fineModel->getProblemParameters().setForcingFunction(forcingFunctionNavierStokes);
-        fineModel->getProblemParameters().setExactSolution(exactSolStokes);
-    }
-    fineModel->getProblemParameters().setSolver(SolverType::ESuiteSparse);
-    fineModel->getProblemParameters().setSpectralRadius(1.);
-    fineModel->getProblemParameters().setArlequinOperatorConstants(1.,0.00);
-    coarseModel->getProblemParameters().setSpectralRadius(1.);
-    coarseModel->getProblemParameters().setArlequinOperatorConstants(1.,0.00);
     GmshTools::BoundaryConstrains(coarseModel);
     GmshTools::BoundaryConstrains(fineModel);
 
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
-    Arlequin arl(meshvector,ArlequinStabType::ENoStab);
+    Arlequin arl(meshvector);
     arl.SetUp();
 
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
+    // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse");
-    // VTUGenerator::PrintResults(fineModel,"resultFine");
-    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
+    VTUGenerator::PrintResults(fineModel,"resultFine");
+    VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
     VecDouble errors;
     an.PostProcessError(errors);

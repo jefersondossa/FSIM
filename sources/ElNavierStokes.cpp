@@ -7,6 +7,8 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
 
     this->GetStabilizationParameter(index, this->tSUPG_, this->tPSPG_, this->tLSIC_, dphi_dx);
     double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    this->tSUPG_ = 0.;
+    this->tLSIC_ = 0.;
 
     VecDouble u_(DIM+1);
     interpolateSolution(index, u_);
@@ -28,7 +30,7 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
             for (int m=DIM; m--; ) wSUPGj += u_[m] * dphi_dx(j,m);
             
             //Convection matrix
-            double C = (wSUPGj * shapeFi + wSUPGi * wSUPGj * tSUPG_) * dens_;
+            double C = (wSUPGj * shapeFi + wSUPGi * wSUPGj * tSUPG_) * dens_ * 0.;
 
             double aux1 = tSUPG_ * wSUPGi * shapeFj;
             double aux2 = tSUPG_ * shapeFj;
@@ -47,7 +49,7 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
                     //Convection derivatives
                     double Cuu = (shapeFij * du_dx(k,l) + 
                                   aux1 * du_dx(k,l) +
-                                  aux2 * conv * dphi_dx(i,l)) * dens_*0.;
+                                  aux2 * conv * dphi_dx(i,l)) * dens_;
 
                     //LSIC
                     double KLS = dphi_dx(i,k) * dphi_dx(j,l) * tLSIC_ * dens_;
@@ -65,9 +67,40 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
                 //PSPG stabilization
                 double G = dphi_dx(i,k) * wSUPGj * tPSPG_;
                 double Guu = 0.;
-                for (int m = DIM; m--; ) Guu += dphi_dx(i,m) * du_dx(m,k) * shapeFj * tPSPG_*0.;
+                for (int m = DIM; m--; ) Guu += dphi_dx(i,m) * du_dx(m,k) * shapeFj * tPSPG_;
 
                 Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += (G + Guu) * WJ;
+            }
+            //PSPG stabilization
+            double Q = 0.;
+            for (int m = DIM; m--; ) Q += dphi_dx(i,m) * dphi_dx(j,m) * tPSPG_ / dens_;
+            Stiffness((DIM+1)*j+DIM,(DIM+1)*i+DIM) += Q * WJ;
+        };
+    };
+
+
+
+    for (int i = Mesh()->NElNodes(); i-- ; ){        
+        double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
+        for (int j = Mesh()->NElNodes(); j-- ; ){
+            
+            double shapeFj = Mesh()->getNumericalIntegration()-> phi_(j,index);
+
+            for (int k = DIM; k--;  ){
+                for (int l = DIM; l--; ){
+
+                    //Diffusion matrix
+                    double K = dphi_dx(i,l) * dphi_dx(j,k) * visc_;
+                    if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m)* visc_;
+
+                    Stiffness((DIM+1)*i+k,(DIM+1)*j+l) += K * WJ;
+                }
+                //Gradient operator
+                //Divergent operator
+                double Q = dphi_dx(i,k) * shapeFj;
+
+                Stiffness((DIM+1)*i+k,(DIM+1)*j+DIM) += -Q * WJ;
+                Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += Q * WJ;
             }
             //PSPG stabilization
             double Q = 0.;
@@ -120,7 +153,7 @@ void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
             for (int l=DIM; l--; ) C += du_dx(k,l) * u_[l] * shapeFi * dens_;
             double conv = 0.;
             for (int l=DIM; l--; ) conv += u_[l] * dphi_dx(i,l);
-            for (int l=DIM; l--; ) C += conv * u_[l] * du_dx(k,l) * tSUPG_ * dens_*0.;
+            for (int l=DIM; l--; ) C += conv * u_[l] * du_dx(k,l) * tSUPG_ * dens_;
 
             //Pressure + SUPG
             double P = - (dphi_dx(i,k) * u_[DIM]);
@@ -137,7 +170,7 @@ void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
                                   + dphi_dx(i,l) * (fieldForce[l] + forcingF[l]/dens_) * tPSPG_;
         for (int k=DIM; k--; )
             for (int l=DIM; l--; )
-                Q += dphi_dx(i,k) * u_[l] * du_dx(k,l) * tPSPG_*0.;
+                Q += dphi_dx(i,k) * u_[l] * du_dx(k,l) * tPSPG_;
 
         Rhs[(DIM+1)*i+DIM] += -Q * WJ;
                             

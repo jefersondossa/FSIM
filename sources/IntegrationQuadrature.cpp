@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 //-----------------------QUADRATURE POINTS - COORDINATES------------------------
 //------------------------------------------------------------------------------
-
 void IntegQuadrature::setQuadrature(){
 
     if (pointCoord.cols() == 2){
@@ -299,4 +298,6 @@ void IntegQuadrature::setQuadrature(){
 
     return;
 }
+
+
 

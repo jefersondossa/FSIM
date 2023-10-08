@@ -27,7 +27,7 @@ void NonLinearAnalysis::UpdateSolution(){
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
         for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
-            int nstate = this->MeshVector()[imesh]->NodeVec()[i]->GetNStateVariables();
+            int nstate = this->MeshVector()[imesh]->NState();
             for (int k = 0; k<nstate; k++){
                 if(this->MeshVector()[imesh]->NodeVec()[i]->getConstrains(k) == 1 ||
                    this->MeshVector()[imesh]->NodeVec()[i]->getConstrains(k) == 3) continue;
@@ -52,12 +52,14 @@ void NonLinearAnalysis::Run(){
     while (NRL2norm > NRtolerance)
     {   
         Compute();
+        // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
         Solve();
         VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
+        // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
         UpdateSolution();
         VecNorm(this->Solution(),NORM_2,&NRL2norm);
         std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
-        if (iteration == 5) break;
+        if (iteration == 2) break;
         MatZeroEntries(this->Stiffness());
         VecZeroEntries(this->Rhs());
         VecZeroEntries(this->Solution());

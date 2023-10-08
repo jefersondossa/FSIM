@@ -54,7 +54,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
     int64_t LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
 
     //Lagrange Multipliers
-    for (int jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
+    for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
         auto *elclocal = dynamic_cast<ElCouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]);
         auto *elcglobal = dynamic_cast<ElCouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]);
         int64_t jelcoupled = 0;
@@ -73,10 +73,23 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         int nElNodes = fAnalysis->MeshVector()[2]->NElNodes();
         int nLocDOF = fAnalysis->MeshVector()[2]->NLocDOF();
 
-        MatrixDouble matrix(nLocDOF,nLocDOF);
-        matrix.setZero();
-        VecDouble rhs(2*nLocDOF);
-        rhs.setZero();
+        int nstiffness = 1;
+        auto probltype = fAnalysis->MeshVector()[0]->getProblemParameters().ProbType();
+        if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab){
+            if (probltype == EPoisson || probltype == EElastic){
+                nstiffness = 3;
+            } else if (probltype == EStokes || probltype == ENavierStokes){
+                nstiffness = 4;
+            }
+        }
+        std::vector<MatrixDouble> matrix(nstiffness);
+        for (int i = 0; i < nstiffness; i++){
+            matrix[i].resize(nLocDOF,nLocDOF);
+            matrix[i].setZero();
+        }        
+        std::vector<VecDouble> rhs(2);
+        rhs[0].resize(2*nLocDOF); rhs[1].resize(2*nLocDOF);
+        rhs[0].setZero(); rhs[1].setZero();
         auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivity();
         VecInt connec;
         int64_t startDOF = 0;
@@ -91,44 +104,65 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         }
     
         fAnalysis->MeshVector()[2]->ElementVec()[jelc] -> ComputeElContribution(matrix,rhs);
-        int nState = fAnalysis->MeshVector()[0]->NState(); 
-        // if (fAnalysis->MeshVector()[0]->ProbType() == EPoisson) nState = 1;
-
+        int nState = fAnalysis->MeshVector()[2]->NState(); 
+        int nStateMonomodel = nState;
+        if(fAnalysis->MeshVector()[2]->getProblemParameters().ProbType() == EStokes || fAnalysis->MeshVector()[2]->getProblemParameters().ProbType() == ENavierStokes) nStateMonomodel++;
+        if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab) stabilizeArlequin(fAnalysis,matrix,rhs,jelc);
+        
         //Disperse local contributions into the global matrix
         for (int i = 0; i < nElNodes; i++){
             for (int j = 0; j < nElNodes; j++){
-                //COUPLING OPERATOR
+                //The COUPLING OPERATOR
                 for (int istate = 0; istate < nState; istate++){
                     for (int jstate = 0; jstate < nState; jstate++){
-                        if (fabs(matrix(nState*i+istate,nState*j+jstate)) >= 1.e-15){
+                        if (fabs(matrix[0](nState*i+istate,nState*j+jstate)) >= 1.e-15){
                             int d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                            int d_j = startDOF + nState*connec[j] + jstate;
-                            MatSetValues(fAnalysis->Stiffness(),1,&d_i,1,&d_j,&matrix(nState*i+istate,nState*j+jstate),ADD_VALUES);
-                            MatSetValues(fAnalysis->Stiffness(),1,&d_j,1,&d_i,&matrix(nState*i+istate,nState*j+jstate),ADD_VALUES);
+                            int d_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                            MatSetValues(fAnalysis->Stiffness(),1,&d_i,1,&d_j,&matrix[0](nState*i+istate,nState*j+jstate),ADD_VALUES);
+                            MatSetValues(fAnalysis->Stiffness(),1,&d_j,1,&d_i,&matrix[0](nState*i+istate,nState*j+jstate),ADD_VALUES);
                         };
                     }
                 }
-                
-                // // ARLEQUIN STABILIZATION
-                // if (fabs(ArlequinA2(i,j)) >= 1.e-15){
-                //     int dof_i = GloDOF + LocDOF + connecL[i];
-                //     int dof_j = GloDOF + connec[j];
-                //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(i,j),ADD_VALUES);
-                // };
-                // if (fabs(ArlequinA1(i,j)) >= 1.e-15){
-                //     int dof_i = GloDOF + LocDOF + connecL[i];
-                //     int dof_j = GloDOF + LocDOF + connecL[j];
-                //     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(i,j),ADD_VALUES);
-                // };                   
+                //Arlequin Stabilization
+                if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab){
+                    for (int istate = 0; istate < nState; istate++){
+                        for (int jstate = 0; jstate < nState; jstate++){
+                            //Diagonal term
+                            if (fabs(matrix[1](nState*i+istate,nState*j+jstate)) >= 1.e-15){
+                                int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                int dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
+                                MatSetValues(fAnalysis->Stiffness(),1,&dof_i,1,&dof_j,&matrix[1](nState*i+istate,nState*j+jstate),ADD_VALUES);
+                            };
+                            //Non Diagonal term
+                            for (int iarl = 2; iarl < matrix.size(); iarl++){
+                                if (fabs(matrix[iarl](nState*i+istate,nState*j+jstate)) >= 1.e-15){
+                                    int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                    int dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                                    MatSetValues(fAnalysis->Stiffness(),1,&dof_i,1,&dof_j,&matrix[iarl](nState*i+istate,nState*j+jstate),ADD_VALUES);
+                                };
+                            }
+                        }
+                    }
+                }           
             };
             //RHS VECTOR
             //COUPLING OPERATOR
             for (int istate = 0; istate < nState; istate++){
-                int dof_i = startDOF + nState*connec[i]+istate;
-                VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[nState*i+istate],ADD_VALUES);
+                int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[0][nState*i+istate],ADD_VALUES);
                 
                 dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
-                VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[nLocDOF+nState*i+istate],ADD_VALUES);
+                VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[0][nLocDOF+nState*i+istate],ADD_VALUES);
+            }
+            //Arlequin Stabilization
+            if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab){
+                for (int istate = 0; istate < nState; istate++){
+                    int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                    VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[1][nState*i+istate],ADD_VALUES);
+                    
+                    dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
+                    VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[1][nLocDOF+nState*i+istate],ADD_VALUES);
+                }
             }
             // dof_i = GloDOF + connec[i];
             // VecSetValues(b,1,&dof_i,&rhsLagMult2[i],ADD_VALUES);
@@ -343,4 +377,115 @@ void Assemble::Arlequin(Analysis *fAnalysis){
 
     std::cout << "Assembling Coupling operator..." << std::endl;
     Coupling(fAnalysis,numDOFGlobal+numDOFLocal);
+}
+
+
+void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs, int64_t &element){
+    
+    //There are in general three main options for taking the norm of a matrix: the L2, L2 and Linfty norms.
+    //In eigen they can be simply obtained by:
+    // normL2 = mat.norm(); 
+    // normL1 = mat.lpNorm<1>(); 
+    // normInfty = mat.lpNorm<Infinity>();
+    if (fAnalysis->MeshVector()[0]->getProblemParameters().ProbType() != EPoisson){
+        // PanicButton();
+    }
+    auto fArlequinStab = fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab();
+
+    switch (fArlequinStab)
+    {
+    case ArlequinStabType::ENoStab:
+        {
+            break;
+        }
+    
+    case ArlequinStabType::EOption1:
+        {
+            double normC = Stiffness[0].norm();
+            double normE = Stiffness[1].norm();
+            double normA = Stiffness[2].norm();
+            double normB = Rhs[1].norm();
+            if (normB == 0) normB = 1.e-10;
+            if (normA == 0) normA = 1.e-10;
+            if (normE == 0) normE = 1.e-10;
+            if (normC == 0) PanicButton();
+            double tArlq = std::min({normC/normA, normC/normE, normC/normB});
+            Stiffness[1] *= tArlq;
+            Stiffness[2] *= tArlq;
+            Rhs[1] *= tArlq;
+            break;
+        }
+
+    case ArlequinStabType::EOption2:
+        {
+            PanicButton();
+            // double normC0 = C0.norm();
+            // double normC1 = C1.norm();
+            // double normA0 = A0.norm();
+            // double normA1 = A1.norm();
+            // double normB0 = b0.norm();
+            // double normB1 = b1.norm();
+            // double normE = E.norm();
+            // double aux1 = std::min({normC0/normA0, normC0/normE, normC0/normB0, normC1/normA1, normC1/normE, normC1/normB1});
+            // double tArlq0 = aux1;
+            // double tArlq1 = aux1;
+            break;
+        }
+    
+    case ArlequinStabType::EOption3:
+        {
+            PanicButton();
+            // double normC0 = C0.norm();
+            // double normC1 = C1.norm();
+            // double normA0 = A0.norm();
+            // double normA1 = A1.norm();
+            // double normE = E.norm();
+            // double normB0 = b0.norm();
+            // double normB1 = b1.norm();
+            
+            // tArlq0 = std::min({normC0/normA0, normC0/normE, normC0/normB0});
+            // tArlq1 = std::min({normC1/normA1, normC1/normE, normC1/normB1});
+
+            // double normC = std::min(normC0,normC1);
+            // tArlq0 *= normC/normC0;
+            // tArlq1 *= normC/normC1;
+            break;
+        }
+
+    case ArlequinStabType::EOption4:
+        {
+            ElCouplingGlobal *elglobal = dynamic_cast<ElCouplingGlobal*> (fAnalysis->MeshVector()[2]->ElementVec()[element]);
+            if (elglobal) return;
+            double normC = Stiffness[0].norm();
+            double normE = Stiffness[1].norm();
+            double normA = Stiffness[2].norm();
+            double normB = Rhs[1].norm();
+            if (normB == 0) normB = 1.e-10;
+            if (normA == 0) normA = 1.e-10;
+            if (normE == 0) normE = 1.e-10;
+            if (normC == 0) PanicButton();
+            double tArlq = std::min({normC/normA, normC/normE, normC/normB});
+            Stiffness[1] *= tArlq;
+            Stiffness[2] *= tArlq;
+            Rhs[1] *= tArlq;
+            break;
+        }
+
+    case ArlequinStabType::EOption5:
+        {
+            // double normC0 = C0.norm();
+            // double normC1 = C1.norm();
+            // double normA1 = A1.norm();
+            // double normE = E.norm();
+            // double normB1 = b1.norm();
+            // double normC = std::min(normC0,normC1);
+            // tArlq0 = 0.;
+            // tArlq1 = std::min({normC/normA1, normC/normE, normC/normB1});
+            break;
+        }
+    default:
+        PanicButton();
+        break;
+    }
+
 }

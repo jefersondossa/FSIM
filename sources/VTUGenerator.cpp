@@ -73,14 +73,14 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
 
     //WRITE NODAL RESULTS
     output_v << "    <PointData>" << std::endl;
-    if (cmesh->ProbType()==EPoisson){
+    if (cmesh->getProblemParameters().ProbType()==EPoisson){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
             << "Name=\"Solution\" format=\"ascii\">" << std::endl;
         for (int i=0; i<cmesh->NNodes(); i++){
             output_v << cmesh->NodeVec()[i] -> GetSolution(0) << std::endl;
         }
         output_v << "      </DataArray> " << std::endl;
-    } else if (cmesh->ProbType()==EElastic || cmesh->ProbType() == ESolidPositional){
+    } else if (cmesh->getProblemParameters().ProbType()==EElastic || cmesh->getProblemParameters().ProbType() == ESolidPositional){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
         for (int i=0; i<cmesh->NNodes(); i++){           
@@ -93,7 +93,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
             }
         }
         output_v << "      </DataArray> " << std::endl;
-    } else if (cmesh->ProbType()==EStokes || cmesh->ProbType()==ENavierStokes){
+    } else if (cmesh->getProblemParameters().ProbType()==EStokes || cmesh->getProblemParameters().ProbType()==ENavierStokes){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
         for (int i=0; i<cmesh->NNodes(); i++){

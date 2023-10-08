@@ -24,6 +24,7 @@ void Arlequin::CreateGlobalCouplingElements(){
         // int nElIntersected = elIntersected.size();
         for (auto ielcoarse : elIntersected){
             ElCouplingGlobal *el = new ElCouplingGlobal(index++,ielcoarse,fMeshVector);
+            fGlobalElToLocalEl[ielcoarse].insert(index-1);
             fMeshVector[2]->ElementVec().push_back(el);
             el->setConnectivity(fMeshVector[2]->ElementVec()[iel]->getConnectivity());
             el->SetGlobalXsi(fLocalIntPointToGlobalXsi[iel]);
@@ -31,6 +32,8 @@ void Arlequin::CreateGlobalCouplingElements(){
         }
     }
     
+    std::cout <<" Testsd " << std::endl;
+
 }
 
 
@@ -4186,6 +4189,101 @@ void Arlequin::stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1,
             double normC = std::min(normC0,normC1);
             tArlq0 = 0.;
             tArlq1 = std::min({normC/normA1, normC/normE, normC/normB1});
+            break;
+        }
+    default:
+        PanicButton();
+        break;
+    }
+
+}
+
+
+void Arlequin::stabilizeArlequin(std::vector<MatrixDouble> &Stiffness, int64_t &element){
+    
+    //There are in general three main options for taking the norm of a matrix: the L2, L2 and Linfty norms.
+    //In eigen they can be simply obtained by:
+    // normL2 = mat.norm(); 
+    // normL1 = mat.lpNorm<1>(); 
+    // normInfty = mat.lpNorm<Infinity>();
+    if (fMeshVector[0]->getProblemParameters().ProbType() != EPoisson){
+        PanicButton();
+    }
+
+    switch (fArlequinStab)
+    {
+    case ArlequinStabType::ENoStab:
+        {
+            break;
+        }
+    
+    case ArlequinStabType::EOption1:
+        {
+            double normC = Stiffness[0].norm();
+            double normE = Stiffness[1].norm();
+            double normA = Stiffness[2].norm();
+            double tArlq = std::min({normC/normA, normC/normE});
+            Stiffness[1] *= tArlq;
+            Stiffness[2] *= tArlq;
+            // tArlq1 = std::min({normC1/normA1, normC1/normE, normC1/normB1});
+            break;
+        }
+
+    case ArlequinStabType::EOption2:
+        {
+            // double normC0 = C0.norm();
+            // double normC1 = C1.norm();
+            // double normA0 = A0.norm();
+            // double normA1 = A1.norm();
+            // double normB0 = b0.norm();
+            // double normB1 = b1.norm();
+            // double normE = E.norm();
+            // double aux1 = std::min({normC0/normA0, normC0/normE, normC0/normB0, normC1/normA1, normC1/normE, normC1/normB1});
+            // double tArlq0 = aux1;
+            // double tArlq1 = aux1;
+            break;
+        }
+    
+    case ArlequinStabType::EOption3:
+        {
+            // double normC0 = C0.norm();
+            // double normC1 = C1.norm();
+            // double normA0 = A0.norm();
+            // double normA1 = A1.norm();
+            // double normE = E.norm();
+            // double normB0 = b0.norm();
+            // double normB1 = b1.norm();
+            
+            // tArlq0 = std::min({normC0/normA0, normC0/normE, normC0/normB0});
+            // tArlq1 = std::min({normC1/normA1, normC1/normE, normC1/normB1});
+
+            // double normC = std::min(normC0,normC1);
+            // tArlq0 *= normC/normC0;
+            // tArlq1 *= normC/normC1;
+            break;
+        }
+
+    case ArlequinStabType::EOption4:
+        {
+            // double normC1 = C1.norm();
+            // double normA1 = A1.norm();
+            // double normE = E.norm();
+            // double normB1 = b1.norm();
+            // tArlq0 = 0.;
+            // tArlq1 = std::min({normC1/normA1, normC1/normE, normC1/normB1});
+            break;
+        }
+
+    case ArlequinStabType::EOption5:
+        {
+            // double normC0 = C0.norm();
+            // double normC1 = C1.norm();
+            // double normA1 = A1.norm();
+            // double normE = E.norm();
+            // double normB1 = b1.norm();
+            // double normC = std::min(normC0,normC1);
+            // tArlq0 = 0.;
+            // tArlq1 = std::min({normC/normA1, normC/normE, normC/normB1});
             break;
         }
     default:

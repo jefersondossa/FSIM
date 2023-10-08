@@ -19,6 +19,7 @@
 #include "IntegrationQuadrature11.h"
 #include "ElCouplingLocal.h"
 #include <map>
+#include <set>
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 class Arlequin{
@@ -52,6 +53,8 @@ public:
     std::map<int64_t,VecDouble> fLocalIntPointToGlobalElement;
     std::map<int64_t,MatrixDouble> fLocalIntPointToGlobalXsi;
 
+    std::map<int64_t,std::set<int64_t>> fGlobalElToLocalEl;
+
 private:
     double fGlueZoneThickness = 0.125;
     double fArlequinEpsilon = 1.e-1;
@@ -72,11 +75,14 @@ private:
 public:
     Arlequin() = default;
 
-    Arlequin(std::vector<CompMesh *> &meshvec, ArlequinStabType stab){
+    Arlequin(std::vector<CompMesh *> &meshvec){
         fMeshVector = meshvec;
         fMeshVector.resize(3);
-        fArlequinStab = stab;
-        fMeshVector[2] = new CompMesh(fMeshVector[0]->ProbType(), fMeshVector[0]->Dimension(), fMeshVector[0]->GetDefaultOrder());
+        fMeshVector[2] = new CompMesh(fMeshVector[0]->getProblemParameters(), fMeshVector[0]->Dimension(), fMeshVector[0]->GetDefaultOrder());
+        if (fMeshVector[2]->getProblemParameters().ProbType() == ProblemType::ENavierStokes || fMeshVector[2]->getProblemParameters().ProbType() == ProblemType::EStokes){
+            fMeshVector[2]->SetNStateVariables(fMeshVector[2]->Dimension());
+            fMeshVector[2]->SetNLocDOF(fMeshVector[2]->NElNodes() * fMeshVector[2]->Dimension());
+        }
     }
 
     std::vector<CompMesh *> &MeshVec(){return fMeshVector;}
@@ -196,13 +202,13 @@ public:
     /// @param int time step
     void printResultsCoarse(int step);
     void printResultsFine(int step);
-
-    void computeErrorPoisson();
-
+    
     void stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1, 
                            MatrixDouble &C0, MatrixDouble &C1,
                            MatrixDouble &E, VecDouble &b0, 
                            VecDouble &b1, double &tArlq0, double &tArlq1);
+
+    void stabilizeArlequin(std::vector<MatrixDouble> &Stiffness, int64_t &element);
 
     void CreateGlobalCouplingElements();
 

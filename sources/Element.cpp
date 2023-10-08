@@ -422,6 +422,17 @@ void Element::interpolateSolution(int &index, VecDouble &u_) {
     }
 }
 
+void Element::interpolateSolution(VecDouble &phi, VecDouble &u_) {
+    u_.setZero();
+    for (int i = fMesh->NElNodes(); i--; ){
+        double shapeFi = phi(i);
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        for (int j = 0; j < nstate; j++ ){
+            u_[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+        }
+    }
+}
+
 //------------------------------------------------------------------------------
 //----------------------------INTERPOLATES VELOCITY-----------------------------
 //------------------------------------------------------------------------------
@@ -1914,7 +1925,7 @@ void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDo
         
         double WJ = weight_ * djac_;
 
-        if (fMesh->ProbType() == ProblemType::EPoisson){
+        if (fMesh->getProblemParameters().ProbType() == ProblemType::EPoisson){
             for (int i = 0; i < fMesh->NElNodes(); i++){
                 for (int j = 0; j < fMesh->NElNodes(); j++){
                     double l2 = fMesh->getNumericalIntegration()-> phi_(i,index) * fMesh->getNumericalIntegration()-> phi_(j,index) * WJ * k1;
@@ -1981,7 +1992,7 @@ void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDo
         index++; 
     }; 
 
-    if (fMesh->ProbType() == ProblemType::EPoisson){
+    if (fMesh->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < fMesh->NElNodes(); i++){
             if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(0) == 1) {
                 for (int j = 0; j < fMesh->NElNodes(); j++){
@@ -2169,7 +2180,7 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
         // interpolateAcceleration(index, a_, aPrev_);
         am_ = alpha_m * a_ + (1. - alpha_m) * aPrev_;
 
-        if (fMesh->ProbType() == EPoisson){
+        if (fMesh->getProblemParameters().ProbType() == EPoisson){
             for (int i = 0; i < fMesh->NElNodes(); i++){
                 for (int j = 0; j < fMesh->NElNodes(); j++){        
 
@@ -2284,7 +2295,7 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
     };  
 
 
-    if (fMesh->ProbType() == EPoisson){
+    if (fMesh->getProblemParameters().ProbType() == EPoisson){
         for (int i = 0; i < fMesh->NElNodes(); i++){
             if (fMesh->NodeVec()[fConnect[i]] -> getConstrains(0) == 1) {
                 for (int j = 0; j < fMesh->NElNodes(); j++){
@@ -2928,6 +2939,52 @@ void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tP
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
 void Element::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+
+    DIM = fMesh->Dimension();
+    DEG = fMesh->GetDefaultOrder();
+    VecDouble xsi(DIM);
+    MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeFunction shapeQuad(DIM,DEG);
+    int index = 0;
+    IntegQuadrature nQuad(DIM,DEG);
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_, index);
+
+        //Computes spatial derivatives
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        //Computes the element diffusion/viscosity matrix
+        ComputeStiffness(index, dphi_dx, weight_, djac_, jacobianNRMatrix);
+
+        //Computes the RHS vector
+        ComputeResidual(index, dphi_dx, weight_, djac_, rhsVector); 
+
+        index++;        
+    };  
+    
+    //Apply boundary conditions
+    ApplyBC(jacobianNRMatrix, rhsVector);
+
+    return;
+};
+
+
+//------------------------------------------------------------------------------
+//-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
+//------------------------------------------------------------------------------
+void Element::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
 
     DIM = fMesh->Dimension();
     DEG = fMesh->GetDefaultOrder();

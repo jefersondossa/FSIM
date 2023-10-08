@@ -99,6 +99,7 @@ public:
     void getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx);
 
     void interpolateSolution(int &index, VecDouble &u_);
+    void interpolateSolution(VecDouble &phi, VecDouble &u_);
     void interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &umeshPrev_);
     void interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx);
 
@@ -298,9 +299,13 @@ public:
 
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs);
+    void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs);
     virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
+    virtual void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs){};
     virtual void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){};
+    virtual void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness){};
     virtual void ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){};
+    virtual void ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs){};
     virtual void ComputeError(VecDouble &errors){};
     
 

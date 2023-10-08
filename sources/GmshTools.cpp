@@ -107,11 +107,11 @@ void GmshTools::ReadNodes(std::ifstream &file, CompMesh *cmesh){
     
 
     int DIM = cmesh->Dimension();
-    if (cmesh->ProbType() == ProblemType::ENavierStokes || cmesh->ProbType() == ProblemType::EStokes){
+    if (cmesh->getProblemParameters().ProbType() == ProblemType::ENavierStokes || cmesh->getProblemParameters().ProbType() == ProblemType::EStokes){
         cmesh->NGlobalDOF() = (DIM+1) * cmesh->NNodes();
-    } else if (cmesh->ProbType() == ProblemType::EPoisson) {
+    } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EPoisson) {
         cmesh->NGlobalDOF() = cmesh->NNodes();
-    } else if (cmesh->ProbType() == ProblemType::EElastic){
+    } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EElastic){
         cmesh->NGlobalDOF() = cmesh->NNodes() * DIM;
     } else {
         PanicButton();
@@ -192,7 +192,7 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                 } else {
                     for (int k = 0; k < nElNodes; k++) connect[k] = elementNodes[k];
                 }
-                switch (cmesh->ProbType())
+                switch (cmesh->getProblemParameters().ProbType())
                 {
                 case EPoisson:
                     {
@@ -352,7 +352,7 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                     VecInt connect(nElNodes);
                     for (int j = 0 ; j < nElNodes; j++) connect[j] = elementNodes[j];
 
-                    switch (cmesh->ProbType())
+                    switch (cmesh->getProblemParameters().ProbType())
                     {
                     case EPoisson:
                         {
@@ -620,7 +620,7 @@ void GmshTools::BoundaryConstrains(CompMesh * cmesh){
     for (int ibound = 0; ibound < cmesh->NBoundElements(); ibound++){
         
         VecInt connectB = cmesh->BoundaryVec()[ibound] -> getBoundaryConnectivity();
-        
+
         for (int j = 0; j < cmesh->NBdNodes(); j++){
             int nstate = cmesh->NodeVec()[connectB[j]]->GetNStateVariables();
             for (int istate = 0; istate < nstate; istate++){
