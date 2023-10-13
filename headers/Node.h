@@ -44,7 +44,8 @@ private:
     VecDouble fPrevCoord;
     VecDouble fInitialCoord;
     VecDouble fDTimeSolution;
-    int fIndex, fDimension;
+    int64_t fIndex;
+    int fDimension;
     
     //variables
     VecInt           fConstrainType;        //Constrain direction
@@ -57,7 +58,7 @@ private:
     std::vector<int> fInverseIncidence;
     
 public:
-    Node(VecDouble &coor, int index, int nState){
+    Node(VecDouble &coor, int64_t index, int nState){
         fNStateVariables = nState;
         fIndex = index;
         fDimension = coor.size();
@@ -101,6 +102,8 @@ public:
     double GetSolution(int istate){
         return fSolution[istate];
     }
+
+    int64_t &Index(){return fIndex;}
 
     /// Returns the node coordinate vector
     /// @return node coordinate vector

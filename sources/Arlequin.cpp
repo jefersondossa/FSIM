@@ -192,8 +192,8 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
             XK = cmesh->ElementVec()[jel] -> getXIntersectionParameter();
 
             //Chech if the node is inside the element box
-            if ((x[0] < XK.first[0]) || (x[0] > XK.second[0]) ||
-                (x[1] < XK.first[1]) || (x[1] > XK.second[1])) continue;
+            if ((x[0] < XK.first[0]*0.95) || (x[0] > XK.second[0]*1.05) ||
+                (x[1] < XK.first[1]*0.95) || (x[1] > XK.second[1]*1.05)) continue;
             
             //Compute nodal correspondence
             for (int i = DIM+1; i--; ) xsiCC[i] = 1.e10;
@@ -600,6 +600,25 @@ void Arlequin::setSignaledDistance(){
         fGlobalSignaledDistance[ino] = dist;
      };
 
+    for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
+        auto connect = fMeshVector[0]->ElementVec()[jel]->getConnectivity();
+        VecDouble distfunction(connect.size());
+        for (int i = 0; i < connect.size(); i++){
+            distfunction[i] = fGlobalSignaledDistance[connect[i]];
+        }
+        fMeshVector[0]->ElementVec()[jel] -> ComputeIntPointDistFunction(distfunction);        
+    };
+    for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
+        auto connect = fMeshVector[1]->ElementVec()[jel]->getConnectivity();
+        VecDouble distfunction(connect.size());
+        for (int i = 0; i < connect.size(); i++){
+            distfunction[i] = fLocalSignaledDistance[connect[i]];
+        }
+        fMeshVector[1]->ElementVec()[jel] -> ComputeIntPointDistFunction(distfunction);        
+    };
+    // for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
+    //     fMeshVector[1]->ElementVec()[jel] -> ComputeIntPointDistFunction();        
+    // };
 
 };
 
@@ -793,71 +812,148 @@ void Arlequin::setCouplingZone(){
 //------------------------------------------------------------------------------
 //---------------------------SETS THE WEIGHT FUNCTION---------------------------
 //------------------------------------------------------------------------------
+double Arlequin::GlobalWeightFunction(double dist){
+
+    if (dist < 0){
+        return 1.;
+        //if (fabs(r) < 1.e-5) wFuncValue = 0.5;
+    } else {
+        if (dist >= fGlueZoneThickness*1.01){
+            return fArlequinEpsilon;
+        } else {
+            // wFuncValue = 1. - (1. - epsilon) / lambda * r;
+            double wFuncValue = 0.5;
+            //wFuncValue = epsilon;
+            // wFuncValue = 1+3.*(epsilon-1.)/(lambda*lambda) * r * r
+            //     -2.*(epsilon-1.)/(lambda*lambda*lambda) * r * r * r;
+            
+            if (wFuncValue < fArlequinEpsilon) wFuncValue = fArlequinEpsilon;
+            return wFuncValue;
+        };
+    };
+
+
+}
+
+double Arlequin::LocalWeightFunction(double dist){
+    if (dist >= fGlueZoneThickness*1.01){
+        return 1. - fArlequinEpsilon;
+    } else {
+        // wFuncValue = (1. - epsilon) / lambda * r;
+        double wFuncValue = 0.5;
+        //wFuncValue = 1. - epsilon;
+        // wFuncValue = -3.*(epsilon-1.)/(lambda*lambda) * r * r
+        //         +2.*(epsilon-1.)/(lambda*lambda*lambda) * r * r * r;
+
+        if (wFuncValue > (1. - fArlequinEpsilon)) wFuncValue = 1. - fArlequinEpsilon;
+        return wFuncValue;
+    };  
+}
+
 
 void Arlequin::setWeightFunction(double val){
     
-    double wFuncValue;
-
     double epsilon = fArlequinEpsilon;
     double lambda = fGlueZoneThickness*1.01;
  
     for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
         
         double r = fGlobalSignaledDistance[i];
-            
-        if (r < 0){
-            wFuncValue = 1.;
-            //if (fabs(r) < 1.e-5) wFuncValue = 0.5;
-        } else {
-            if (r >= lambda){
-                wFuncValue = epsilon;
-            } else {
-                wFuncValue = 1. - (1. - epsilon) / lambda * r;
-                //wFuncValue = 0.5;
-                //wFuncValue = epsilon;
-                // wFuncValue = 1+3.*(epsilon-1.)/(lambda*lambda) * r * r
-                //     -2.*(epsilon-1.)/(lambda*lambda*lambda) * r * r * r;
-                
-                if (wFuncValue < epsilon) wFuncValue = epsilon;
-            };
-        };  
-              
+        double wFuncValue = GlobalWeightFunction(r);
         fMeshVector[0]->NodeVec()[i] -> setWeightFunction(wFuncValue);
     };         
 
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
-        fMeshVector[0]->ElementVec()[jel] -> setIntegPointWeightFunction();        
+        for (int i = 0; i < fMeshVector[0]->ElementVec()[jel]->getNumberOfIntegrationPoints(); i++){
+            double dist = fMeshVector[0]->ElementVec()[jel]->GetIntPointDistFunction(i);
+            double wFuncValue = GlobalWeightFunction(dist);
+            fMeshVector[0]->ElementVec()[jel] -> setIntegPointWeightFunction(i,wFuncValue); 
+        }
     };
 
 
     for (int i=0; i<fMeshVector[1]->NNodes(); i++){
-
         double r = fLocalSignaledDistance[i];
-        
-        if (r >= lambda){
-            wFuncValue = 1. - epsilon;
-        } else {
-            wFuncValue = (1. - epsilon) / lambda * r;
-            //wFuncValue = 0.5;
-            //wFuncValue = 1. - epsilon;
-            // wFuncValue = -3.*(epsilon-1.)/(lambda*lambda) * r * r
-            //         +2.*(epsilon-1.)/(lambda*lambda*lambda) * r * r * r;
-
-            if (wFuncValue > (1. - epsilon)) wFuncValue = 1. - epsilon;
-
-        };  
-        
-        // wFuncValue = weightFunctionFineValue(r,epsilon);
-
+        double wFuncValue = LocalWeightFunction(r);
         fMeshVector[1]->NodeVec()[i] -> setWeightFunction(wFuncValue);
     };
+    
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
-        fMeshVector[1]->ElementVec()[jel] -> setIntegPointWeightFunction();        
-    };  
-     
+        for (int i = 0; i < fMeshVector[1]->ElementVec()[jel]->getNumberOfIntegrationPoints(); i++){
+            double dist = fMeshVector[1]->ElementVec()[jel]->GetIntPointDistFunction(i);
+            double wFuncValue = LocalWeightFunction(dist);
+            fMeshVector[1]->ElementVec()[jel] -> setIntegPointWeightFunction(i,wFuncValue);    
+        }
+            
+    };
+
     return;
 };
 
+
+void Arlequin::DeleteCoarseEls(){
+
+    std::set<int64_t> KeptNodes;
+    std::set<int64_t> deletedElements;
+    int64_t nElements = fMeshVector[0]->NElements();
+    for (auto it=fMeshVector[0]->ElementVec().begin(); it!=fMeshVector[0]->ElementVec().end();){
+        // auto elem = fMeshVector[0]->ElementVec()[iel];
+        
+        int counter = 0;
+        for (int iintPoint = 0; iintPoint < (*it)->getNumberOfIntegrationPoints(); iintPoint++){
+            if ((*it)->getIntegPointWeightFunction(iintPoint) > fArlequinEpsilon*1.1) continue;
+            counter++;
+        }
+
+        if (counter == (*it)->getNumberOfIntegrationPoints()){
+            //These are the elements to be deleted
+            // delete fMeshVector[0]->ElementVec()[iel];
+            deletedElements.insert((*it)->Index());
+            fMeshVector[0]->ElementVec().erase(it);
+        } else {
+            //These are the elements to be kept, so store the nodes that will not be deleted.
+            auto connec = (*it)->getConnectivity(); 
+            for (int i = 0; i < connec.size(); i++) KeptNodes.insert(connec[i]);
+            ++it;
+        }
+        
+    }
+    
+    //Now delete the nodes;
+    int64_t nNodes = fMeshVector[0]->NNodes();
+    // for (int64_t inode = 0; inode < nNodes; inode++){
+    int count = 0;
+    std::set<int64_t> deletedNodes;
+    for (auto it=fMeshVector[0]->NodeVec().begin(); it!=fMeshVector[0]->NodeVec().end();){
+        // std::cout << "Node index " << count << " " << (*it)->Index() << std::endl;
+        // count++;
+        if (KeptNodes.find((*it)->Index()) == KeptNodes.end()) {
+            deletedNodes.insert((*it)->Index());
+            fMeshVector[0]->NodeVec().erase(it);
+        } else {
+            ++it;
+        }
+    }   
+
+    fMeshVector[0]->ElementVec().shrink_to_fit();
+    fMeshVector[0]->NodeVec().shrink_to_fit();
+    //Finally, update the connects
+    std::map<int64_t,int64_t> prevToNewNodeIndex;
+    
+    nNodes = fMeshVector[0]->NNodes();
+    for (int64_t inode = 0; inode < nNodes; inode++){
+        prevToNewNodeIndex[fMeshVector[0]->NodeVec()[inode]->Index()]=inode;
+        fMeshVector[0]->NodeVec()[inode]->Index()=inode;
+    }
+    
+    nElements = fMeshVector[0]->NElements();
+    for (int64_t iel = 0; iel < nElements; iel++){
+        auto connec = fMeshVector[0]->ElementVec()[iel]->getConnectivity();
+        for (int i = 0; i < connec.size(); i++) connec[i]=prevToNewNodeIndex[connec[i]];
+        fMeshVector[0]->ElementVec()[iel]->setConnectivity(connec);
+    }
+    
+}
 
 //------------------------------------------------------------------------------
 //-----------------------------PRINT COARSE RESULTS-----------------------------

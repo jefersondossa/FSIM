@@ -40,11 +40,10 @@ public:
 
     /// Constructor of the domain integration quadrature
     IntegQuadratureSpecial(int dim, int deg){
-        int numIntegPoints = (deg*deg*(3-dim)-12*(dim-2)+deg*(15*dim-25))/2;
         fOrder = deg;
-        pointWeight.resize(numIntegPoints);
-        pointCoord.resize(numIntegPoints,dim);
+        fDimension = dim;
         setQuadrature();
+        int numIntegPoints = pointWeight.size();
     }
   
     //Interpolate variables
@@ -52,6 +51,7 @@ public:
 
 private:
     int fOrder = 0;
+    int fDimension = 0;
 
     ///List of integration points coordinates
     MatrixDouble pointCoord;

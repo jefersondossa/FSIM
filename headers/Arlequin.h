@@ -56,8 +56,8 @@ public:
     std::map<int64_t,std::set<int64_t>> fGlobalElToLocalEl;
 
 private:
-    double fGlueZoneThickness = 0.125;
-    double fArlequinEpsilon = 1.e-1;
+    double fGlueZoneThickness = 0.5;
+    double fArlequinEpsilon = 0.e-3;
 
     int numElemGlueZoneFine;
     int numElemGlueZoneCoarse;
@@ -225,8 +225,13 @@ public:
         }
         setNodalCorrespondenceFine();
         CreateGlobalCouplingElements();
+        // DeleteCoarseEls();
     };
 
+    void DeleteCoarseEls();
+
+    double GlobalWeightFunction(double dist);
+    double LocalWeightFunction(double dist);
 };
 
 

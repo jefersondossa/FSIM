@@ -381,7 +381,7 @@ void Assemble::Arlequin(Analysis *fAnalysis){
 
 
 void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs, int64_t &element){
-    
+    // return;
     //There are in general three main options for taking the norm of a matrix: the L2, L2 and Linfty norms.
     //In eigen they can be simply obtained by:
     // normL2 = mat.norm(); 
@@ -409,7 +409,7 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
             if (normA == 0) normA = 1.e-10;
             if (normE == 0) normE = 1.e-10;
             if (normC == 0) PanicButton();
-            double tArlq = std::min({normC/normA, normC/normE, normC/normB});
+            double tArlq = 1.e-0;//std::min({normC/normA, normC/normE, normC/normB});
             Stiffness[1] *= tArlq;
             Stiffness[2] *= tArlq;
             Rhs[1] *= tArlq;

@@ -38,6 +38,7 @@ private:
     
 public:
     VecDouble intPointWeightFunction;
+    VecDouble fIntPointDistFunction;
     VecDouble intPointWeightFunctionPrev;
 
     MatrixDouble fIntPointCoordinates;
@@ -65,6 +66,7 @@ public:
 
         IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
         intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
+        fIntPointDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
         intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
 
         intPointWeightFunction.fill(1.);
@@ -106,6 +108,8 @@ public:
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
 
+
+    void ComputeIntPointDistFunction(VecDouble &nodalval);
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
     double getJacobian(){
@@ -144,6 +148,10 @@ public:
     /// @param int element
     void pushNeighborElement(int el) {
         fNeighborElements.push_back(el);
+    }
+
+    double &GetIntPointDistFunction(int index){
+        return fIntPointDistFunction[index];
     }
 
     /// Gets the number of elements which contains the node
@@ -219,6 +227,9 @@ public:
     /// @param int integration point index 
     /// @param double energy weight function value
     void setIntegPointWeightFunction();
+    void setIntegPointWeightFunction(int index, double val){
+        intPointWeightFunction[index] = val;
+    };
 
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value

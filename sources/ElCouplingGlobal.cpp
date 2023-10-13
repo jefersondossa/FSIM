@@ -201,6 +201,20 @@ void ElCouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, 
     int DIM = Mesh()->Dimension();
     int DEG = Mesh()->GetDefaultOrder();
     VecDouble xsi(DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dxGlobal(Mesh()->NElNodes(),dimddphi);
+
+    IntegQuadrature nQuad(DIM,DEG);
+    auto force = Mesh()->getProblemParameters().getForcingFunction();
+
+    //Defines the integration points adimentional coordinates
+    for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+    //Computes the jacobian matrix
+    double djacG_;
+    MatrixDouble ainvG_(DIM,DIM);
+    getJacobianMatrix(xsi, ainvG_, djacG_, index);
+    getHighOrderSpatialDerivatives(xsi, ainvG_, dphi_dxGlobal, ddphi_dxGlobal);
 
     double WJ = djac_ * weight_ * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index); 
 
@@ -210,9 +224,9 @@ void ElCouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, 
 
                 //ARLEQUIN STABILIZATION TERMS
                 double LL = 0.;
-                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dxGlobal(j,m);
+                // for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dxGlobal(j,m);
 
-                Stiffness[1](i,j) += (LL) * weight_ * djac_;
+                // Stiffness[1](i,j) += (LL) * weight_ * djac_;
                 
                 //High order derivative
                 double LH = 0.;
@@ -385,9 +399,12 @@ void ElCouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, V
             //ARLEQUIN STABILIZATION TERMS
             double LLx = 0.;
             double LF = 0.;
-            for (int m = DIM; m--; ) LLx -= dphi_dxGlobal(i,m) * dL_dx(0,m);
-            for (int m = DIM; m--; ) LF +=  dphi_dxGlobal(i,m) * forcingF[0] * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index);
-            
+            double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
+            // for (int m = DIM; m--; ) LLx -= dphi_dxGlobal(i,m) * dL_dx(0,m);
+            // for (int m = DIM; m--; ) LF +=  dphi_dxGlobal(i,m) * forcingF[0] * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index);
+            // double LF2 = xna_[0]*xna_[0]*elglobal->getIntegPointWeightFunction(index)*shapeFi;
+
+            // Rhs[1][i] += (LF2) * weight_ * djac_;
             Rhs[1][Mesh()->NElNodes()+i] += (LLx + LF) * weight_ * djac_;
         };    
     } else if (Mesh()->getProblemParameters().ProbType() == EElastic) {

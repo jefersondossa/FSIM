@@ -148,7 +148,7 @@ void Element::getBoundaryNodes(int *nodesb_){
 //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
 //------------------------------------------------------------------------------
 void Element::setIntegPointWeightFunction() {
-    
+    PanicButton(); //It produces wrong results for constant weight functions
     VecDouble xsi(DIM);
     ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phi_(fMesh->NElNodes());
@@ -171,6 +171,39 @@ void Element::setIntegPointWeightFunction() {
 
        for (int j=0; j<fMesh->NElNodes(); j++){
            intPointWeightFunction[index] += phi_[j] * fMesh->NodeVec()[fConnect[j]] -> getWeightFunction();
+       };
+       // intPointWeightFunction(index) = 1.;
+       index++;
+    }; 
+
+    index = 0;
+     return;
+};
+
+void Element::ComputeIntPointDistFunction(VecDouble &nodalval) {
+    
+    VecDouble xsi(DIM);
+    // ShapeFunction shapeQuad(DIM,DEG);
+    // VecDouble phi_(fMesh->NElNodes());
+    
+    IntegQuadrature nQuad(DIM,DEG);
+    // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
+    //     intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
+    //     intPointWeightFunction[i] = 0.;
+    // }
+
+    int index=0;
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        
+       xsi[0] = nQuad.PointList(index,0);
+       xsi[1] = nQuad.PointList(index,1);
+            
+    //    //Computes the velocity shape functions
+    //    shapeQuad.evaluate(xsi,phi_);
+
+       for (int j=0; j<fMesh->NElNodes(); j++){
+           fIntPointDistFunction[index] +=  fMesh->getNumericalIntegration()->phi_(j,index) * nodalval[j];
        };
        // intPointWeightFunction(index) = 1.;
        index++;
@@ -2973,7 +3006,8 @@ void Element::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &r
 
         index++;        
     };  
-    
+    std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix;
+    std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector;
     //Apply boundary conditions
     ApplyBC(jacobianNRMatrix, rhsVector);
 
@@ -3019,7 +3053,8 @@ void Element::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix,
 
         index++;        
     };  
-    
+    // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix[1];
+    // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector[1];
     //Apply boundary conditions
     ApplyBC(jacobianNRMatrix, rhsVector);
 

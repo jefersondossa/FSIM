@@ -195,13 +195,15 @@ void ElCouplingLocal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, d
 
     if (Mesh()->getProblemParameters().ProbType() == EPoisson){
         for (int i = 0; i < Mesh()->NElNodes(); i++){
+            double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
             for (int j = 0; j < Mesh()->NElNodes(); j++){        
-
+                double shapeFj = Mesh()->getNumericalIntegration()-> phi_(j,index);
                 //ARLEQUIN STABILIZATION TERMS
                 double LL = 0.;
                 for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
+                // LL = shapeFi * shapeFj;
 
-                Stiffness[1](i,j) += (LL) * weight_ * djac_;
+                Stiffness[1](i,j) -= 2. * (LL) * weight_ * djac_;
                 
                 //High order derivative
                 double LH = 0.;
@@ -348,7 +350,8 @@ void ElCouplingLocal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, do
     for (int i = 0; i < DIM; i++) xna_[i] = fIntPointCoordinates(index,i);
     if (force) force(xna_,forcingF);
 
-    double WJ = djac_ * weight_ * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index); 
+    auto ellocal = fMeshVector[1]->ElementVec()[fLocalIndex];
+    double WJ = djac_ * weight_ * ellocal->getIntegPointWeightFunction(index); 
 
     //Lagrange Multiplier
     VecDouble lagM_(Mesh()->NState()+1);
@@ -364,9 +367,13 @@ void ElCouplingLocal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, do
             //ARLEQUIN STABILIZATION TERMS
             double LLx = 0.;
             double LF = 0.;
-            for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(0,m);
-            for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * forcingF[0] * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index);
-            
+            double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
+            for (int m = DIM; m--; ) LLx -= 2.*dphi_dx(i,m) * dL_dx(0,m);
+            // double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
+            // for (int m = DIM; m--; ) LLx += 2*shapeFi* lagM_[0];
+            // for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * forcingF[0] * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index);
+            // double LF2 = -xna_[0]*xna_[0]*ellocal->getIntegPointWeightFunction(index)*shapeFi;
+            // Rhs[1][i] += (LF2) * weight_ * djac_;
             Rhs[1][Mesh()->NElNodes()+i] += (LLx + LF) * weight_ * djac_;
         };    
     } else if (Mesh()->getProblemParameters().ProbType() == EElastic){
