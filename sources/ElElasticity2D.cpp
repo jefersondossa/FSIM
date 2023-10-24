@@ -1,8 +1,8 @@
 #include "ElElasticity2D.h"
 
-void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
+void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
     MatrixDouble matD(3,2*Mesh()->NElNodes());
     matD.setZero();
     int DIM = Mesh()->Dimension();
@@ -20,10 +20,10 @@ void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
     Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
     for (int j = 0; j < Mesh()->NElNodes(); j++){
-        matD(0,DIM*j  ) = dphi_dx(j,0);
-        matD(1,DIM*j+1) = dphi_dx(j,1);
-        matD(2,DIM*j  ) = dphi_dx(j,1);
-        matD(2,DIM*j+1) = dphi_dx(j,0);
+        matD(0,DIM*j  ) = fIntegData.fDPhiX0(j,0);
+        matD(1,DIM*j+1) = fIntegData.fDPhiX0(j,1);
+        matD(2,DIM*j  ) = fIntegData.fDPhiX0(j,1);
+        matD(2,DIM*j+1) = fIntegData.fDPhiX0(j,0);
     }
     
     Stiffness += matD.transpose() * Hooke * matD * WJ;
@@ -32,7 +32,7 @@ void ElElasticity2D::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
 
-void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
+void ElElasticity2D::ComputeResidual(int &index, VecDouble &Rhs){
 
     VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
     auto force = Mesh()->getProblemParameters().getForcingFunction();
@@ -40,9 +40,9 @@ void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
 
     //Velocity Derivatives
     MatrixDouble du_dx(DIM,DIM);
-    interpolateSolDerivatives(dphi_dx, du_dx);
+    interpolateSolDerivatives(du_dx);
 
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
     MatrixDouble matD(3,2*Mesh()->NElNodes());
     matD.setZero();
 
@@ -59,10 +59,10 @@ void ElElasticity2D::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
     Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
     for (int j = 0; j < Mesh()->NElNodes(); j++){
-        matD(0,DIM*j  ) = dphi_dx(j,0);
-        matD(1,DIM*j+1) = dphi_dx(j,1);
-        matD(2,DIM*j  ) = dphi_dx(j,1);
-        matD(2,DIM*j+1) = dphi_dx(j,0);
+        matD(0,DIM*j  ) = fIntegData.fDPhiX0(j,0);
+        matD(1,DIM*j+1) = fIntegData.fDPhiX0(j,1);
+        matD(2,DIM*j  ) = fIntegData.fDPhiX0(j,1);
+        matD(2,DIM*j+1) = fIntegData.fDPhiX0(j,0);
     }
     
     VecDouble strain(3);
@@ -102,7 +102,6 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
     MatrixDouble dphi_dx(Mesh()->NElNodes(),DIM);
     MatrixDouble ainv_(DIM,DIM);
     VecDouble xsi(DIM);
-    double weight_;
 
     auto exactSol = Mesh()->getProblemParameters().getExactSolution();
     if (!exactSol) PanicButton();
@@ -113,19 +112,17 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
         for (int i = DIM; i--; ) xsi[i] = nQuad.PointList(index,i);
 
         //Returns the quadrature integration weight
-        weight_ = nQuad.WeightList(index);
+        fIntegData.fWeight = nQuad.WeightList(index);
 
         //Computes the jacobian matrix
-        double djac_ = 0.;
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
                     
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
         
         VecDouble uMEF_(DIM);
         interpolateSolution(index, uMEF_);
         MatrixDouble du_dxMEF(DIM,DIM);
-        interpolateSolDerivatives(dphi_dx, du_dxMEF);
+        interpolateSolDerivatives(du_dxMEF);
         
         VecDouble u_(DIM);
         MatrixDouble gradU(DIM,DIM);
@@ -142,7 +139,7 @@ void ElElasticity2D::ComputeError(VecDouble &errors){
 
         //L2 displacement
         errors[0] += ((u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) + (u_[1]-uMEF_[1])*(u_[1]-uMEF_[1]))
-                      * weight_ * djac_ ;
+                      * fIntegData.fWeight * fIntegData.fJacA0 ;
         
 
         // std::cout << "Stress and Energy norms not implemented yet\n";

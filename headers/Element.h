@@ -24,17 +24,19 @@
 #include "IntegrationQuadrature.h"
 #include "IntegrationQuadrature11.h"
 #include "DomainIntegration.h"
+#include "IntPointData.h"
 // #include "PartitionedQuadrature.hpp"
 
 /// Defines the fluid element object and all the element information
 class Element{
-private:
+protected:
     VecInt        fConnect; //Velocity mesh connectivity 
     int64_t       fIndex;             //Element index
     CompMesh *fMesh;
     VecDouble     xK, XK;
     int           fSideInBoundary;
     std::vector<int64_t> fNeighborElements;
+    IntPointData  fIntegData;
     
 public:
     VecDouble intPointWeightFunction;
@@ -93,46 +95,37 @@ public:
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    void getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &djac_, int index);
+    void ComputeJacobian(int index);
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
-    void getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx);
+    void ComputeSpatialDerivatives();
     void getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx);
 
     void interpolateSolution(int &index, VecDouble &u_);
     void interpolateSolution(VecDouble &phi, VecDouble &u_);
     void interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &umeshPrev_);
-    void interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx);
+    void interpolateSolDerivatives(MatrixDouble &du_dx);
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
 
+    IntPointData IntegrationData(){return fIntegData;}
 
     void ComputeIntPointDistFunction(VecDouble &nodalval);
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
     double getJacobian(){
-        VecDouble xsi(fMesh->Dimension());
-        MatrixDouble ainv_(fMesh->Dimension(),fMesh->Dimension());
-        MatrixDouble dphi_dx(fMesh->NElNodes(),fMesh->Dimension());
-        
-        ShapeFunction  shapeQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
-
-        xsi[0] = 0.5;
-        xsi[1] = 0.5;
-        
         // std::cout << "AAA 1 "<< std::endl;
-
-        double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, 0);
+        int index = 0;
+        ComputeJacobian(index);
         // std::cout << "AAA 2 "<< std::endl;        
         //Computes spatial derivatives
-        // getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        // ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
         // std::cout << "AAA 3 "<< std::endl;
 
-        return djac_;
+        return fIntegData.fJacA0;
     };
 
     /// Compute and store the drag and lift forces at the element boundary
@@ -313,10 +306,10 @@ public:
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs);
     virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
     virtual void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs){};
-    virtual void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){};
-    virtual void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness){};
-    virtual void ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){};
-    virtual void ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs){};
+    virtual void ComputeStiffness(int &index, MatrixDouble &Stiffness){};
+    virtual void ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness){};
+    virtual void ComputeResidual(int &index, VecDouble &Rhs){};
+    virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
     virtual void ComputeError(VecDouble &errors){};
     
 

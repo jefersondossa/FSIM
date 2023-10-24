@@ -8,6 +8,7 @@ find_package (MPI REQUIRED)
 find_package (PETSc REQUIRED)   
 find_package (METIS REQUIRED)
 find_package (HDF5 REQUIRED)
+# find_package (Gmsh REQUIRED)
 
 # Essential: include our directories first otherwise we can get internal headers from some installed path
 include_directories(include ${MPI_INCLUDE_PATH} ${PETSC_INCLUDES})
@@ -43,6 +44,7 @@ include(cmake-modules/EnableEigen.cmake)
 enable_eigen()
 
 # add_subdirectory(mesh_interface)
+add_subdirectory(triangle)
 add_subdirectory(headers)
 add_subdirectory(sources)
 add_subdirectory(mesh_interface)
@@ -54,6 +56,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/mesh_interface"
 	"${PROJECT_SOURCE_DIR}/headers"
 	"${PROJECT_SOURCE_DIR}/sources"
+	"${PROJECT_SOURCE_DIR}/triangle"
 )
 
 file(GLOB MY_MESH_FILES
@@ -70,6 +73,6 @@ target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
 
 add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
 

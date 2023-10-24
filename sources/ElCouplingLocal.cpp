@@ -1,7 +1,7 @@
 #include "ElCouplingLocal.h"
 
 
-void ElCouplingLocal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness){
+void ElCouplingLocal::ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness){
 
     //Stiffness[0] is always the L2-H1 contribution;
     //Stiffness[1] is always the diagonal contribution to the global stiffness matrix
@@ -15,7 +15,7 @@ void ElCouplingLocal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double
     double k1 = fMeshVector[1]->getProblemParameters().getArlequinK1();
     double k2 = fMeshVector[1]->getProblemParameters().getArlequinK2();
         
-    double WJ = weight_ * djac_;
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0;
 
     if (Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < Mesh()->NElNodes(); i++){
@@ -25,7 +25,7 @@ void ElCouplingLocal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double
                 Stiffness[0](i,j) -= l2;
                 for (int l = 0; l < DIM; l++){
                     //H1 COUPLING OPERATOR
-                    double K = dphi_dx(i,l) * dphi_dx(j,l);
+                    double K = fIntegData.fDPhiX0(i,l) * fIntegData.fDPhiX0(j,l);
                     Stiffness[0](i,j) -= K * WJ * k2;
                 };
             };
@@ -39,8 +39,8 @@ void ElCouplingLocal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double
                     Stiffness[0](DIM*i+k,DIM*j+k) -= l2;
                     for (int l = 0; l < DIM; l++){
                         //H1 COUPLING OPERATOR
-                        double K = dphi_dx(i,l) * dphi_dx(j,k);
-                        if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m);
+                        double K = fIntegData.fDPhiX0(i,l) * fIntegData.fDPhiX0(j,k);
+                        if (k==l) for (int m = DIM; m--; ) K += fIntegData.fDPhiX0(i,m) * fIntegData.fDPhiX0(j,m);
 
                         Stiffness[0](DIM*i+k,DIM*j+l) -= K * WJ * k2;
                     };//l
@@ -50,13 +50,13 @@ void ElCouplingLocal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double
     };//if Poisson
 
     if (Mesh()->getProblemParameters().ArlequinStab() != ENoStab){
-        ArlequinStabStiffness(index, dphi_dx, weight_, djac_, Stiffness);
+        ArlequinStabStiffness(index, fIntegData.fDPhiX0, fIntegData.fWeight, fIntegData.fJacA0, Stiffness);
     }
 
 };
 
 
-void ElCouplingLocal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs){
+void ElCouplingLocal::ComputeResidual(int &index, std::vector<VecDouble> &Rhs){
 
     int DIM = Mesh()->Dimension();
     int DEG = Mesh()->GetDefaultOrder();
@@ -69,7 +69,7 @@ void ElCouplingLocal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double 
 
     //Velocity Derivatives
     MatrixDouble du_dx(Mesh()->NState()+1,DIM);
-    ellocal->interpolateSolDerivatives(dphi_dx, du_dx);
+    ellocal->interpolateSolDerivatives(du_dx);
 
     //The lagrange multiplier is the solution of meshvector[2]
     //Lagrange Multiplier
@@ -78,25 +78,25 @@ void ElCouplingLocal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double 
 
     //Lagrange Multiplier Derivatives
     MatrixDouble dL_dx(Mesh()->NState()+1,DIM);
-    interpolateSolDerivatives(dphi_dx, dL_dx);
+    interpolateSolDerivatives(dL_dx);
 
     double k1 = fMeshVector[1]->getProblemParameters().getArlequinK1();
     double k2 = fMeshVector[1]->getProblemParameters().getArlequinK2();
         
-    double WJ = weight_ * djac_;
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0;
 
     if (Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < Mesh()->NElNodes(); i++){
             //Solution residual
             double L2u = u_[0] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
             double H1u = 0.;
-            for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(0,l) * k2;
+            for (int l=DIM; l--; ) H1u += fIntegData.fDPhiX0(i,l) * du_dx(0,l) * k2;
             Rhs[0][Mesh()->NLocDOF()+i] += (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
             double L2 = lagM_[0] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
             double H1 = 0.;
-            for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(0,l) * k2;
+            for (int l=DIM; l--; ) H1 += fIntegData.fDPhiX0(i,l) * dL_dx(0,l) * k2;
             Rhs[0][i] += (L2 + H1) * WJ;
         };
     } else {
@@ -105,21 +105,21 @@ void ElCouplingLocal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double 
                 //Solution residual
                 double L2u = u_[k] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
                 double H1u = 0.;
-                for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(k,l) * k2;
-                for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(l,k) * k2;
+                for (int l=DIM; l--; ) H1u += fIntegData.fDPhiX0(i,l) * du_dx(k,l) * k2;
+                for (int l=DIM; l--; ) H1u += fIntegData.fDPhiX0(i,l) * du_dx(l,k) * k2;
                 Rhs[0][Mesh()->NLocDOF()+DIM*i+k] += (L2u + H1u) * WJ;
                 
                 //Lagrange multipliers residual
                 double L2 = lagM_[k] * Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
                 double H1 = 0.;
-                for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(k,l) * k2;
-                for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(l,k) * k2;
+                for (int l=DIM; l--; ) H1 += fIntegData.fDPhiX0(i,l) * dL_dx(k,l) * k2;
+                for (int l=DIM; l--; ) H1 += fIntegData.fDPhiX0(i,l) * dL_dx(l,k) * k2;
                 Rhs[0][DIM*i+k] += (L2 + H1) * WJ;
             };
         };
     }
     if (Mesh()->getProblemParameters().ArlequinStab() != ENoStab){
-        ArlequinStabResidual(index, dphi_dx, weight_, djac_, Rhs);
+        ArlequinStabResidual(index, fIntegData.fDPhiX0, fIntegData.fWeight, fIntegData.fJacA0, Rhs);
     }
 }
 
@@ -188,7 +188,8 @@ void ElCouplingLocal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, d
 
     //Computes the jacobian matrix
     MatrixDouble ainv_(DIM,DIM);
-    getJacobianMatrix(xsi, ainv_, djac_, index);
+    // ComputeJacobian(xsi, ainv_, djac_, index);
+    PanicButton();//Update it to compute in integPointData.
     getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
 
     double WJ = djac_ * weight_ * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index); 
@@ -359,7 +360,7 @@ void ElCouplingLocal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, do
 
     //Lagrange Multiplier Derivatives
     MatrixDouble dL_dx(Mesh()->NState()+1,DIM);
-    interpolateSolDerivatives(dphi_dx, dL_dx);
+    interpolateSolDerivatives(dL_dx);
 
 
     if (Mesh()->getProblemParameters().ProbType() == EPoisson){

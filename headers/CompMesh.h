@@ -1,6 +1,8 @@
 #ifndef CompMesh_H
 #define CompMesh_H
 
+
+#include "CompMeshTools.h"
 #include "DataTypes.h"
 #include "Element.h"
 #include "Boundary.h"

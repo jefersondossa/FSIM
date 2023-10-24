@@ -20,9 +20,9 @@ public:
 
     int64_t &GetLocalIndex(){return fLocalIndex;}
 
-    void ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness) override;
+    void ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness) override;
     
-    void ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs) override;
+    void ComputeResidual(int &index, std::vector<VecDouble> &Rhs) override;
     
     void ComputeError(VecDouble &errors) override{};
     

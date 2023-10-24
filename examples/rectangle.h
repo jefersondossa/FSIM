@@ -126,7 +126,7 @@ for (int k = 3; k < 4; k++)
         
         fluid1 -> addBoundaryCondition("NEUMANN", l0, {0.0}, {0.0}, {},  "GLOBAL");
         fluid1 -> addBoundaryCondition("NEUMANN", l1, {0.0}, {0.0}, {},  "GLOBAL");
-        fluid1 -> addBoundaryCondition("NEUMANN", l2, {0.0}, {0.0}, {},  "GLOBAL");
+        fluid1 -> addBoundaryCondition("DIRICHLET", l2, {1.0}, {0.0}, {},  "GLOBAL");
         fluid1 -> addBoundaryCondition("DIRICHLET", l3, {0.0}, {0.0}, {},  "GLOBAL");
         
 
@@ -230,8 +230,8 @@ for (int k = 3; k < 4; k++)
         pParameters.setExactSolution(exactSolStokes);
     }
     pParameters.Solver() = SolverType::ESuiteSparse;
-    // pParameters.ArlequinStab() = ArlequinStabType::ENoStab;
-    pParameters.ArlequinStab() = ArlequinStabType::EOption1;
+    pParameters.ArlequinStab() = ArlequinStabType::ENoStab;
+    // pParameters.ArlequinStab() = ArlequinStabType::EOption1;
     pParameters.setSpectralRadius(1.);
     pParameters.setArlequinOperatorConstants(1.,0.0);
 
@@ -241,6 +241,8 @@ for (int k = 3; k < 4; k++)
     GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
     GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
 
+    CompMeshTools::InitialSolution(coarseModel);
+
     // coarseModel->meshReading(fluid1,"problem_data.txt","coarse.msh","mirror.txt",0);
     // fineModel->meshReading(fluid2,"problem_data.txt","fine.msh","mirror_fine.txt",0);
    // } 
@@ -249,21 +251,21 @@ for (int k = 3; k < 4; k++)
     GmshTools::BoundaryConstrains(fineModel);
 
     std::vector<CompMesh *> meshvector(2);
-    meshvector[0] = coarseModel;
-    meshvector[1] = fineModel;
-    Arlequin arl(meshvector);
-    arl.SetUp();
+    // meshvector[0] = coarseModel;
+    // meshvector[1] = fineModel;
+    // Arlequin arl(meshvector);
+    // arl.SetUp();
 
-    // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
+    // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
     // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse");
-    VTUGenerator::PrintResults(fineModel,"resultFine");
-    VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
+    // VTUGenerator::PrintResults(fineModel,"resultFine");
+    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
     VecDouble errors;
     an.PostProcessError(errors);

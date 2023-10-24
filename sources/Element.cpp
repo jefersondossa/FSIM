@@ -283,36 +283,33 @@ void Element::setIntersectionParameters(VecDouble &x, VecDouble &X) {
 //------------------------------------------------------------------------------
 //-------------------------SPATIAL TRANSFORM - JACOBIAN-------------------------
 //------------------------------------------------------------------------------
-void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &djac_, int index) {
+void Element::ComputeJacobian(int index) {
 
-    //Computes the spatial Jacobian matrix and its inverse
-    // MatrixDouble dphi(fMesh->NElNodes(),DIM);
-    MatrixDouble dx_dxsi(DIM,DIM);
-    VecDouble xna_(DIM);
-    xna_.setZero();
-
-    // ShapeFunction<DIM,DEG> shapeQuad;
-    // shapeQuad.evaluateGradient(xsi,dphi);
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fA0.resize(DIM,DIM);
+    fIntegData.fA0.setZero();
+    fIntegData.fX.resize(DIM);
+    fIntegData.fX.setZero();
 
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
 
-    dx_dxsi.setZero();
+    fIntegData.fA0.setZero();
     for (int i = fMesh->NElNodes(); i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            xna_[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) ;
+            fIntegData.fX[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) ;
             // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
             //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
             for (int k = DIM; k--; ){
-                dx_dxsi(j,k) += xna_[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
+                fIntegData.fA0(j,k) += fIntegData.fX[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
     };
 
     //Computing the jacobian determinant and Inverse
-    djac_ = dx_dxsi.determinant();
-    ainv_ = dx_dxsi.inverse().transpose();
+    fIntegData.fJacA0 = fIntegData.fA0.determinant();
+    fIntegData.fA0Inv = fIntegData.fA0.inverse().transpose();
 
     return;
 };
@@ -320,7 +317,7 @@ void Element::getJacobianMatrix(VecDouble &xsi, MatrixDouble &ainv_, double &dja
 //------------------------------------------------------------------------------
 //-----------------------------SPATIAL DERIVATIVES------------------------------
 //------------------------------------------------------------------------------
-void Element::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx) {
+void Element::ComputeSpatialDerivatives() {
     
     // typename QuadShapeFunction<2,2>::ValueDDeriv ddphi;
     
@@ -328,13 +325,13 @@ void Element::getSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixD
     
     ShapeFunction shapeQuad(DIM,DEG);
     
-    shapeQuad.evaluateGradient(xsi,dphi);
+    shapeQuad.evaluateGradient(fIntegData.fAdimCoord,dphi);
     // shapeQuad.evaluateHessian(xsi,ddphi);
     
-    dphi_dx.setZero();
+    fIntegData.fDPhiX0.setZero();
 
     //Shape functions spatial first derivatives
-    dphi_dx = dphi * ainv_.transpose();
+    fIntegData.fDPhiX0 = dphi * fIntegData.fA0Inv.transpose();
 
     return;
 };
@@ -469,13 +466,13 @@ void Element::interpolateSolution(VecDouble &phi, VecDouble &u_) {
 //------------------------------------------------------------------------------
 //----------------------------INTERPOLATES VELOCITY-----------------------------
 //------------------------------------------------------------------------------
-void Element::interpolateSolDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx) {
+void Element::interpolateSolDerivatives(MatrixDouble &du_dx) {
     du_dx.setZero();    
     for (int i = fMesh->NElNodes(); i--; ){
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
-                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * dphi_dx(i,j);
+                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(i,j);
             }
         }
     }
@@ -504,16 +501,15 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     ShapeFunction shapeQuad(DIM,DEG);
     
     // std::cout << "asdasd 1 " << std::endl;
-
+    fIntegData.fAdimCoord = xsi;
     //Computes the shape functions        
     shapeQuad.evaluate(xsi,phi_);
     double djac_ = 0.;
     //Computes the jacobian matrix
-    getJacobianMatrix(xsi, ainv_, djac_, 0);
-    // std::cout << "asdasd 2 " << std::endl;
+    ComputeJacobian(0);
     //Computes spatial derivatives
-    getSpatialDerivatives(xsi, ainv_, dphi_dx);
-    // std::cout << "asdasd 3 " << std::endl;
+    ComputeSpatialDerivatives();
+
     shapeQuad.evaluateGradient(xsi, dphi); 
 
     //Velocity Derivatives
@@ -750,10 +746,10 @@ void Element::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 //         shapeQuad.evaluate(xsi,phi_);
 //         double djac_ = 0.;
 //         //Computes the jacobian matrix
-//         getJacobianMatrix(xsi, ainv_, djac_);
+//         ComputeJacobian(xsi, ainv_, djac_);
 
 //         //Computes spatial derivatives
-//         getSpatialDerivatives(xsi, ainv_, dphi_dx);
+//         ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
 
 //         //Velocity Derivatives
 //         double du_dx[DIM][DIM], duprev_dx[DIM][DIM], duna_dx[DIM][DIM];
@@ -1161,9 +1157,9 @@ void Element::getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, d
 //         double weight_ = nQuad.WeightList(index);
 
 //         //Computes the jacobian matrix
-//         getJacobianMatrix(xsi, ainv_);
+//         ComputeJacobian(xsi, ainv_);
 
-//         getSpatialDerivatives(xsi, ainv_, dphi_dx);
+//         ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
         
 //         getVelAndDerivatives(phi_, dphi_dx);
 
@@ -1613,7 +1609,6 @@ void Element::getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dp
 //------------------------------------------------------------------------------
 void Element::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
-    VecDouble xsi(DIM);
     MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
     MatrixDouble ainv_(DIM,DIM);
 
@@ -1626,19 +1621,19 @@ void Element::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble
     double tLSIC_;  
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
-
+        fIntegData.fAdimCoord.resize(DIM);
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
 
         //Returns the quadrature integration weight
         double weight_ = nQuad.WeightList(index);
 
         double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
 
         //Computes spatial derivatives
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
 
         //Compute Stabilization Parameters
         // getParameterSUPG(index, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
@@ -1663,7 +1658,6 @@ void Element::getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble
 //------------------------------------------------------------------------------
 void Element::getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
-    VecDouble xsi(DIM);
     ShapeFunction shapeQuad(DIM,DEG);
     
     MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
@@ -1689,19 +1683,19 @@ void Element::getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVec
 
     
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
-        
+        fIntegData.fAdimCoord.resize(DIM);
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
 
         //Returns the quadrature integration weight
         double weight_ = nQuad.WeightList(index);
 
         double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
 
         //Computes spatial derivatives
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
 
         getElemLaplMatrix(weight_, djac_, dphi_dx, jacobianNRMatrix);
 
@@ -1906,8 +1900,6 @@ void Element::getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVect
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector){
-
-    VecDouble xsi(DIM);
     
     MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
 
@@ -1924,19 +1916,19 @@ void Element::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDo
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     double &gamma = fMesh->getProblemParameters().getGamma();
     double &dTime_ = fMesh->getProblemParameters().GetTimeStep();
-    
+    fIntegData.fAdimCoord.resize(DIM);
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
 
         //Returns the quadrature integration weight
         double weight_ = nQuad.WeightList(index);
         double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
 
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
 
         //Velocity
         VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
@@ -2091,9 +2083,9 @@ void Element::getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRM
     //     double weight_ = nQuad.WeightList(index);
 
     //     //Computes the jacobian matrix
-    //     getJacobianMatrix(xsi, ainv_);
+    //     ComputeJacobian(xsi, ainv_);
 
-    //     getSpatialDerivatives(xsi, ainv_, dphi_dx);
+    //     ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
         
     //     getVelAndDerivatives(phi_, dphi_dx);
 
@@ -2164,7 +2156,6 @@ void Element::getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRM
 //------------------------------------------------------------------------------
 void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector){
 
-    VecDouble xsi(DIM);    
     MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
     int dimddphi = DIM == 2 ? 3 : 6;
     MatrixDouble ddphi_dx(fMesh->NElNodes(),dimddphi);
@@ -2182,10 +2173,10 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
     double &k1 = fMesh->getProblemParameters().getArlequinK1();
 
     auto force = fMesh->getProblemParameters().getForcingFunction();
-
+    fIntegData.fAdimCoord.resize(DIM);
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
         VecDouble xna_(DIM);
         VecDouble forcingF(1);
         for (int i = 0; i < DIM; i++) xna_[i] = fIntPointCoordinates(index,i);
@@ -2196,10 +2187,10 @@ void Element::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab,
 
         double djac_ = 0.; 
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
 
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
-        getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
+        ComputeSpatialDerivatives();
+        getHighOrderSpatialDerivatives(fIntegData.fAdimCoord, ainv_, dphi_dx, ddphi_dx);
         getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
@@ -2408,15 +2399,15 @@ void Element::getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_, V
             
     //         double djac_ = 0.;
     //         //Computes the jacobian matrix
-    //         getJacobianMatrix(xsi_intp, ainv_, djac_, index);
+    //         ComputeJacobian(xsi_intp, ainv_, djac_, index);
                         
-    //         getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+    //         ComputeSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
 
     //         dphiL_dx = dphi_dx;
 
     //         djac_ = 0.;
-    //         getJacobianMatrix(xsi, ainv_, djac_, index);
-    //         getSpatialDerivatives(xsi, ainv_, dphi_dx);
+    //         ComputeJacobian(xsi, ainv_, djac_, index);
+    //         ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
 
     //         //Lagrange Multiplier
     //         VecDouble lagM_(DIM), una_(DIM);
@@ -2609,9 +2600,9 @@ void Element::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &
     //         double weight_ = sQuad.WeightList(index);
             
     //         //Computes the jacobian matrix
-    //         getJacobianMatrix(xsi_intp, ainv_);
+    //         ComputeJacobian(xsi_intp, ainv_);
                         
-    //         getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+    //         ComputeSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
 
     //         for (int i = 0; i < 2; ++i)
     //             for (int j = 0; j < 6; ++j)
@@ -2619,8 +2610,8 @@ void Element::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &
     //         // dphiL_dx = dphi_dx;
     //         // ddphiL_dx = ddphi_dx;
 
-    //         getJacobianMatrix(xsi, ainv_);
-    //         getSpatialDerivatives(xsi, ainv_, dphi_dx);
+    //         ComputeJacobian(xsi, ainv_);
+    //         ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
 
     //         getParameterSUPG(tSUPG_, tPSPG_, tLSIC_, phi_, dphi_dx);
 
@@ -2773,15 +2764,15 @@ void Element::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tP
             
     //         double djac_ = 0.;
     //         //Computes the jacobian matrix
-    //         getJacobianMatrix(xsi_intp, ainv_, djac_, index);
+    //         ComputeJacobian(xsi_intp, ainv_, djac_, index);
                         
-    //         getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+    //         ComputeSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
 
     //         dphiL_dx = dphi_dx;
 
     //         djac_ = 0.;
-    //         getJacobianMatrix(xsi, ainv_, djac_, index);
-    //         getSpatialDerivatives(xsi, ainv_, dphi_dx);
+    //         ComputeJacobian(xsi, ainv_, djac_, index);
+    //         ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
 
     //         getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
@@ -2975,34 +2966,30 @@ void Element::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &r
 
     DIM = fMesh->Dimension();
     DEG = fMesh->GetDefaultOrder();
-    VecDouble xsi(DIM);
-    MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
-    MatrixDouble ainv_(DIM,DIM);
-
+    
     ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
     IntegQuadrature nQuad(DIM,DEG);
-
+    fIntegData.fAdimCoord.resize(DIM);
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
 
         //Returns the quadrature integration weight
-        double weight_ = nQuad.WeightList(index);
+        fIntegData.fWeight = nQuad.WeightList(index);
 
-        double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
 
         //Computes spatial derivatives
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
 
         //Computes the element diffusion/viscosity matrix
-        ComputeStiffness(index, dphi_dx, weight_, djac_, jacobianNRMatrix);
+        ComputeStiffness(index, jacobianNRMatrix);
 
         //Computes the RHS vector
-        ComputeResidual(index, dphi_dx, weight_, djac_, rhsVector); 
+        ComputeResidual(index, rhsVector); 
 
         index++;        
     };  
@@ -3022,9 +3009,8 @@ void Element::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix,
 
     DIM = fMesh->Dimension();
     DEG = fMesh->GetDefaultOrder();
-    VecDouble xsi(DIM);
-    MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
-    MatrixDouble ainv_(DIM,DIM);
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fAdimCoord.resize(DIM);
 
     ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
@@ -3033,23 +3019,22 @@ void Element::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix,
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
 
         //Returns the quadrature integration weight
-        double weight_ = nQuad.WeightList(index);
+        fIntegData.fWeight = nQuad.WeightList(index);
 
-        double djac_ = 0.;
         //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
 
         //Computes spatial derivatives
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
 
         //Computes the element diffusion/viscosity matrix
-        ComputeStiffness(index, dphi_dx, weight_, djac_, jacobianNRMatrix);
+        ComputeStiffness(index, jacobianNRMatrix);
 
         //Computes the RHS vector
-        ComputeResidual(index, dphi_dx, weight_, djac_, rhsVector); 
+        ComputeResidual(index, rhsVector); 
 
         index++;        
     };  

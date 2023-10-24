@@ -115,16 +115,16 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
 
 
 
-void ElStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
+void ElStokes::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
     double &visc_ = Mesh()->getProblemParameters().GetViscosity();
     double &dens_ = Mesh()->getProblemParameters().GetDensity();
     int DIM = Mesh()->Dimension();
-
+    auto dphi_dx = fIntegData.fDPhiX0;
     GetStabilizationParameter(index, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
     // Trust me, it improves performance!
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
 
     for (int i = Mesh()->NElNodes(); i-- ; ){        
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
@@ -157,7 +157,7 @@ void ElStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weigh
     
 }
 
-void ElStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
+void ElStokes::ComputeResidual(int &index, VecDouble &Rhs){
 
     VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
     auto force = Mesh()->getProblemParameters().getForcingFunction();
@@ -172,12 +172,13 @@ void ElStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight
 
     //Solution Derivatives
     MatrixDouble du_dx(DIM+1,DIM);
-    interpolateSolDerivatives(dphi_dx, du_dx);
+    interpolateSolDerivatives(du_dx);
 
     VecDouble u_(DIM+1);
     interpolateSolution(index, u_);
 
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
+    auto dphi_dx = fIntegData.fDPhiX0;
 
     double divrU = 0.;
     for (int l=DIM; l--; ) divrU += du_dx(l,l);

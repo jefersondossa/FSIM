@@ -1,14 +1,14 @@
 #include "ElPoisson.h"
 
-void ElPoisson::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
+void ElPoisson::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
 
     for (int i = Mesh()->NElNodes(); i-- ; ){       
         for (int j = Mesh()->NElNodes(); j-- ; ){            
             for (int k = Mesh()->Dimension(); k--;  ){
                 //Diffusion matrix
-                double K = dphi_dx(i,k) * dphi_dx(j,k);
+                double K = fIntegData.fDPhiX0(i,k) * fIntegData.fDPhiX0(j,k);
                 Stiffness(i,j) += K * WJ;
             }
         };
@@ -17,7 +17,7 @@ void ElPoisson::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weig
 
 }
 
-void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
+void ElPoisson::ComputeResidual(int &index, VecDouble &Rhs){
 
     VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
     auto force = Mesh()->getProblemParameters().getForcingFunction();
@@ -25,9 +25,9 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
 
     //Velocity Derivatives
     MatrixDouble du_dx(dim,dim);
-    interpolateSolDerivatives(dphi_dx, du_dx);
+    interpolateSolDerivatives(du_dx);
 
-    double WJ = weight_ * djac_  * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0  * getIntegPointWeightFunction(index);
 
     VecDouble forcingF(1);
     VecDouble x_ = getIntegPointCoordinatesValue(index);
@@ -38,7 +38,7 @@ void ElPoisson::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weigh
 
         //Viscosity
         double K = 0.;
-        for (int l=dim; l--; ) K += dphi_dx(i,l) * du_dx(0,l);
+        for (int l=dim; l--; ) K += fIntegData.fDPhiX0(i,l) * du_dx(0,l);
 
         //External force
         double F = (fieldForce[0] + forcingF[0]) * shapeFi;
@@ -63,33 +63,26 @@ void ElPoisson::ComputeError(VecDouble &errors){
     IntegQuadrature nQuad(DIM,DEG);
     ShapeFunction shapeQuad(DIM,DEG);
 
-    MatrixDouble dphi_dx(Mesh()->NElNodes(),DIM);
-    MatrixDouble ainv_(DIM,DIM);
-    VecDouble xsi(DIM);
-    double weight_;
-
     auto exactSol = Mesh()->getProblemParameters().getExactSolution();
     if (!exactSol) PanicButton();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int i = DIM; i--; ) xsi[i] = nQuad.PointList(index,i);
+        for (int i = DIM; i--; ) fIntegData.fAdimCoord[i] = nQuad.PointList(index,i);
 
         //Returns the quadrature integration weight
-        weight_ = nQuad.WeightList(index);
+        fIntegData.fWeight = nQuad.WeightList(index);
 
         //Computes the jacobian matrix
-        double djac_ = 0.;
-        //Computes the jacobian matrix
-        getJacobianMatrix(xsi, ainv_, djac_, index);
+        ComputeJacobian(index);
                     
-        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+        ComputeSpatialDerivatives();
         
         VecDouble uMEF_(1);
         interpolateSolution(index, uMEF_);
         MatrixDouble du_dxMEF(1,DIM);
-        interpolateSolDerivatives(dphi_dx, du_dxMEF);
+        interpolateSolDerivatives(du_dxMEF);
         
         VecDouble u_(1);
         MatrixDouble gradU(DIM,1);
@@ -106,11 +99,11 @@ void ElPoisson::ComputeError(VecDouble &errors){
         du_dxMEF *= getIntegPointWeightFunction(index);
 
         //L2 state variable
-        errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * weight_ * djac_ ;
+        errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * fIntegData.fWeight * fIntegData.fJacA0 ;
         
         //Semi H1 state variable
         for (int m = DIM; m--; ){
-            errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * weight_ * djac_;
+            errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * fIntegData.fWeight * fIntegData.fJacA0;
         }
 
         index++;        

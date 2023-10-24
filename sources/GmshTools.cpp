@@ -4,6 +4,7 @@
 #include "ElElasticity2D.h"
 #include "ElStokes.h"
 #include "ElNavierStokes.h"
+#include "ElElasticityPositional2D.h"
 
 #include<cstdlib>
 #include<fstream>
@@ -203,6 +204,12 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                 case EElastic:
                     {
                         ElElasticity2D *el = new ElElasticity2D(index++,connect,cmesh);
+                        cmesh->ElementVec().push_back(el);
+                    }
+                    break;
+                case ESolidPositional:
+                    {
+                        ElElasticityPositional2D *el = new ElElasticityPositional2D(index++,connect,cmesh);
                         cmesh->ElementVec().push_back(el);
                     }
                     break;

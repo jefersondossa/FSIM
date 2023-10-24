@@ -16,9 +16,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
         ShapeFunction shapeQuad(DIM,DEG);
         int nElNodes = fluidModel->NElNodes();
         VecDouble phi_(nElNodes);
-        
-        MatrixDouble ainv(DIM,DIM);
-
+    
         double xsiCC[3];
         // std::pair<double*,double*> XK;
         int elemC;
@@ -77,11 +75,10 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
                     deltaX = x - x_;                    
                     deltaXsi.setZero();
                     
-                    double djac_ = 0.;
-                    elementsFluid_[jel] -> getJacobianMatrix(xsi,ainv,djac_,0);
+                    elementsFluid_[jel] -> ComputeJacobian(0);
                     
                     // noalias(deltaXsi) = prod(trans(ainv),deltaX);
-
+                    auto ainv = elementsFluid_[jel]->IntegrationData().fA0Inv;
                     for (int i = 0; i < DIM; i++)
                         for (int j = 0; j < DIM; j++)
                             deltaXsi[i] += ainv(j,i) * deltaX[j];
@@ -139,9 +136,7 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
         VecInt connec;
         ShapeFunction shapeQuad(DIM,DEG);
         VecDouble phi_(nElNodes);
-        
-        MatrixDouble ainv(DIM,DIM);
-
+    
         double xsiCC[3];
         // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
         int elemC;
@@ -202,11 +197,10 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface
                         deltaXsi[k] = 0.;
                     }
                     
-                    double djac_ = 0.;
-                    elementsArlequinFine_[jel] -> getJacobianMatrix(xsi,ainv,djac_,0);
-                    
+                    elementsArlequinFine_[jel] -> ComputeJacobian(0);
+                    auto ainv=elementsArlequinFine_[jel]->IntegrationData().fA0Inv;
                     // noalias(deltaXsi) = prod(trans(ainv),deltaX);
-
+                    
                     for (int i = 0; i < DIM; i++)
                         for (int j = 0; j < DIM; j++)
                             deltaXsi[i] += ainv(j,i) * deltaX[j];

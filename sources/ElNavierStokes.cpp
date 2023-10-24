@@ -1,12 +1,12 @@
 #include "ElNavierStokes.h"
 
-void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, MatrixDouble &Stiffness){
+void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &Stiffness){
     double &visc_ = Mesh()->getProblemParameters().GetViscosity();
     double &dens_ = Mesh()->getProblemParameters().GetDensity();
     int DIM = Mesh()->Dimension();
 
-    this->GetStabilizationParameter(index, this->tSUPG_, this->tPSPG_, this->tLSIC_, dphi_dx);
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    this->GetStabilizationParameter(index, this->tSUPG_, this->tPSPG_, this->tLSIC_, fIntegData.fDPhiX0);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
     this->tSUPG_ = 0.;
     this->tLSIC_ = 0.;
 
@@ -15,7 +15,8 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
 
     //Solution Derivatives
     MatrixDouble du_dx(DIM+1,DIM);
-    interpolateSolDerivatives(dphi_dx, du_dx);
+    interpolateSolDerivatives(du_dx);
+    auto dphi_dx = fIntegData.fDPhiX0;
 
     for (int i = Mesh()->NElNodes(); i-- ; ){        
         double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
@@ -43,37 +44,37 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
                 for (int l = DIM; l--; ){
 
                     //Diffusion matrix
-                    double K = dphi_dx(i,l) * dphi_dx(j,k) * visc_;
-                    if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m)* visc_;
+                    double K = fIntegData.fDPhiX0(i,l) * fIntegData.fDPhiX0(j,k) * visc_;
+                    if (k==l) for (int m = DIM; m--; ) K += fIntegData.fDPhiX0(i,m) * fIntegData.fDPhiX0(j,m)* visc_;
 
                     //Convection derivatives
                     double Cuu = (shapeFij * du_dx(k,l) + 
                                   aux1 * du_dx(k,l) +
-                                  aux2 * conv * dphi_dx(i,l)) * dens_;
+                                  aux2 * conv * fIntegData.fDPhiX0(i,l)) * dens_;
 
                     //LSIC
-                    double KLS = dphi_dx(i,k) * dphi_dx(j,l) * tLSIC_ * dens_;
+                    double KLS = fIntegData.fDPhiX0(i,k) * fIntegData.fDPhiX0(j,l) * tLSIC_ * dens_;
 
                     Stiffness((DIM+1)*i+k,(DIM+1)*j+l) += (K + KLS + Cuu) * WJ;
                 }
                 //Gradient operator
-                double Q_SUPG = - dphi_dx(i,k) * shapeFj + wSUPGi * dphi_dx(j,k) * tSUPG_;
+                double Q_SUPG = - fIntegData.fDPhiX0(i,k) * shapeFj + wSUPGi * fIntegData.fDPhiX0(j,k) * tSUPG_;
                 //Divergent operator
-                double Q = dphi_dx(i,k) * shapeFj;
+                double Q = fIntegData.fDPhiX0(i,k) * shapeFj;
 
                 Stiffness((DIM+1)*i+k,(DIM+1)*j+DIM) += Q_SUPG * WJ;
                 Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += Q * WJ;
 
                 //PSPG stabilization
-                double G = dphi_dx(i,k) * wSUPGj * tPSPG_;
+                double G = fIntegData.fDPhiX0(i,k) * wSUPGj * tPSPG_;
                 double Guu = 0.;
-                for (int m = DIM; m--; ) Guu += dphi_dx(i,m) * du_dx(m,k) * shapeFj * tPSPG_;
+                for (int m = DIM; m--; ) Guu += fIntegData.fDPhiX0(i,m) * du_dx(m,k) * shapeFj * tPSPG_;
 
                 Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += (G + Guu) * WJ;
             }
             //PSPG stabilization
             double Q = 0.;
-            for (int m = DIM; m--; ) Q += dphi_dx(i,m) * dphi_dx(j,m) * tPSPG_ / dens_;
+            for (int m = DIM; m--; ) Q += fIntegData.fDPhiX0(i,m) * fIntegData.fDPhiX0(j,m) * tPSPG_ / dens_;
             Stiffness((DIM+1)*j+DIM,(DIM+1)*i+DIM) += Q * WJ;
         };
     };
@@ -90,28 +91,28 @@ void ElNavierStokes::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double 
                 for (int l = DIM; l--; ){
 
                     //Diffusion matrix
-                    double K = dphi_dx(i,l) * dphi_dx(j,k) * visc_;
-                    if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m)* visc_;
+                    double K = fIntegData.fDPhiX0(i,l) * fIntegData.fDPhiX0(j,k) * visc_;
+                    if (k==l) for (int m = DIM; m--; ) K += fIntegData.fDPhiX0(i,m) * fIntegData.fDPhiX0(j,m)* visc_;
 
                     Stiffness((DIM+1)*i+k,(DIM+1)*j+l) += K * WJ;
                 }
                 //Gradient operator
                 //Divergent operator
-                double Q = dphi_dx(i,k) * shapeFj;
+                double Q = fIntegData.fDPhiX0(i,k) * shapeFj;
 
                 Stiffness((DIM+1)*i+k,(DIM+1)*j+DIM) += -Q * WJ;
                 Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += Q * WJ;
             }
             //PSPG stabilization
             double Q = 0.;
-            for (int m = DIM; m--; ) Q += dphi_dx(i,m) * dphi_dx(j,m) * tPSPG_ / dens_;
+            for (int m = DIM; m--; ) Q += fIntegData.fDPhiX0(i,m) * fIntegData.fDPhiX0(j,m) * tPSPG_ / dens_;
             Stiffness((DIM+1)*j+DIM,(DIM+1)*i+DIM) += Q * WJ;
         };
     };
 
 }
 
-void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &Rhs){
+void ElNavierStokes::ComputeResidual(int &index, VecDouble &Rhs){
     VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
     auto force = Mesh()->getProblemParameters().getForcingFunction();
     int DIM = Mesh()->Dimension();
@@ -125,12 +126,12 @@ void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
 
     //Solution Derivatives
     MatrixDouble du_dx(DIM+1,DIM);
-    interpolateSolDerivatives(dphi_dx, du_dx);
+    interpolateSolDerivatives(du_dx);
 
     VecDouble u_(DIM+1);
     interpolateSolution(index, u_);
 
-    double WJ = weight_ * djac_ * getIntegPointWeightFunction(index);
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
 
     double divrU = 0.;
     for (int l=DIM; l--; ) divrU += du_dx(l,l);
@@ -142,22 +143,22 @@ void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
         for (int k = DIM; k--; ){
             //Viscosity
             double K = 0.;
-            for (int l=DIM; l--; ) K += dphi_dx(i,l) * du_dx(k,l) * visc_;
-            for (int l=DIM; l--; ) K += dphi_dx(i,l) * du_dx(l,k) * visc_;
+            for (int l=DIM; l--; ) K += fIntegData.fDPhiX0(i,l) * du_dx(k,l) * visc_;
+            for (int l=DIM; l--; ) K += fIntegData.fDPhiX0(i,l) * du_dx(l,k) * visc_;
 
             //LSIC
-            double KLS = dphi_dx(i,k) * divrU * tLSIC_ * dens_;
+            double KLS = fIntegData.fDPhiX0(i,k) * divrU * tLSIC_ * dens_;
 
             //Convection + SUPG
             double C = 0.;
             for (int l=DIM; l--; ) C += du_dx(k,l) * u_[l] * shapeFi * dens_;
             double conv = 0.;
-            for (int l=DIM; l--; ) conv += u_[l] * dphi_dx(i,l);
+            for (int l=DIM; l--; ) conv += u_[l] * fIntegData.fDPhiX0(i,l);
             for (int l=DIM; l--; ) C += conv * u_[l] * du_dx(k,l) * tSUPG_ * dens_;
 
             //Pressure + SUPG
-            double P = - (dphi_dx(i,k) * u_[DIM]);
-            for (int l=DIM; l--; ) P += dphi_dx(i,l) * u_[l] * du_dx(DIM,k) * tSUPG_;
+            double P = - (fIntegData.fDPhiX0(i,k) * u_[DIM]);
+            for (int l=DIM; l--; ) P += fIntegData.fDPhiX0(i,l) * u_[l] * du_dx(DIM,k) * tSUPG_;
 
             //External force
             double F = (fieldForce[k]*dens_ + forcingF[k]) * shapeFi;
@@ -166,11 +167,11 @@ void ElNavierStokes::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &
         }
 
         double Q = divrU * shapeFi;
-        for (int l=DIM; l--; ) Q += dphi_dx(i,l) * du_dx(DIM,l) * tPSPG_ / dens_
-                                  + dphi_dx(i,l) * (fieldForce[l] + forcingF[l]/dens_) * tPSPG_;
+        for (int l=DIM; l--; ) Q += fIntegData.fDPhiX0(i,l) * du_dx(DIM,l) * tPSPG_ / dens_
+                                  + fIntegData.fDPhiX0(i,l) * (fieldForce[l] + forcingF[l]/dens_) * tPSPG_;
         for (int k=DIM; k--; )
             for (int l=DIM; l--; )
-                Q += dphi_dx(i,k) * u_[l] * du_dx(k,l) * tPSPG_;
+                Q += fIntegData.fDPhiX0(i,k) * u_[l] * du_dx(k,l) * tPSPG_;
 
         Rhs[(DIM+1)*i+DIM] += -Q * WJ;
                             

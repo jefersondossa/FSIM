@@ -232,6 +232,9 @@ public:
 
     double GlobalWeightFunction(double dist);
     double LocalWeightFunction(double dist);
+
+    void ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIntersected);
+
 };
 
 

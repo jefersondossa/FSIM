@@ -4,9 +4,218 @@
 #include "ElCouplingGlobal.h"
 #include <set>
 
+#define  REAL double
+
+// External includes
+#ifndef TRILIBRARY
+#define TRILIBRARY
+#endif
+
+#include "triangle.h"
+
+extern "C"
+{
+	void triangulate(char *, struct triangulateio *, struct triangulateio *,struct triangulateio *);
+	void trifree(void *);
+}
+
+struct PointTriangle {
+    double x, y;
+    PointTriangle()=default;
+    PointTriangle(double x, double y) : x(x), y(y) {}
+    PointTriangle(VecDouble &coord) : x(coord[0]), y(coord[1]) {}
+};
+
+struct LineTriangle {
+    PointTriangle start, end;
+
+    LineTriangle(const PointTriangle& start, const PointTriangle& end) : start(start), end(end) {}
+};
+
+// Helper function to calculate the cross product of two vectors.
+double CrossProduct(const PointTriangle& v1, const PointTriangle& v2) {
+    return v1.x * v2.y - v1.y * v2.x;
+}
+
+PointTriangle Sum(const PointTriangle& a, const PointTriangle& b){
+    PointTriangle res;
+    res.x = a.x + b.x;
+    res.y = a.y + b.y;
+    return res;
+}
+
+PointTriangle SumScalar(const PointTriangle& a, const PointTriangle& b, double scal){
+    PointTriangle res;
+    res.x = a.x + scal*b.x;
+    res.y = a.y + scal*b.y;
+    return res;
+}
+
+PointTriangle Dif(const PointTriangle& a, const PointTriangle& b){
+    PointTriangle res;
+    res.x = a.x - b.x;
+    res.y = a.y - b.y;
+    return res;
+}
+
+// Check if point p is inside the triangle defined by a, b, and c.
+bool IsPointInsideTriangle(const PointTriangle& p, const PointTriangle& a, const PointTriangle& b, const PointTriangle& c) {
+    PointTriangle v0 = Dif(c,a);
+    PointTriangle v1 = Dif(b,a);
+    PointTriangle v2 = Dif(p,a);
+
+    double dot00 = v0.x * v0.x + v0.y * v0.y;
+    double dot01 = v0.x * v1.x + v0.y * v1.y;
+    double dot02 = v0.x * v2.x + v0.y * v2.y;
+    double dot11 = v1.x * v1.x + v1.y * v1.y;
+    double dot12 = v1.x * v2.x + v1.y * v2.y;
+
+    // Compute barycentric coordinates
+    double invDenom = 1. / (dot00 * dot11 - dot01 * dot01);
+    double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+    double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+    // Check if the point is inside the triangle
+    return (u >= 0) && (v >= 0) && (u + v <= 1);
+}
+
+// Calculate the intersection point of two line segments.
+PointTriangle LineIntersectionPoint(const LineTriangle& line1, const LineTriangle& line2) {
+    PointTriangle dir1 = Dif(line1.end,line1.start);
+    PointTriangle dir2 = Dif(line2.end,line2.start);
+    PointTriangle start1_to_start2 = Dif(line2.start,line1.start);
+
+    double denominator = CrossProduct(dir1, dir2);
+
+    if (denominator == 0) {
+        return PointTriangle(0, 0); // Lines are parallel or collinear, no intersection.
+    }
+
+    double t1 = CrossProduct(start1_to_start2, dir2) / denominator;
+    double t2 = CrossProduct(start1_to_start2, dir1) / denominator;
+
+    if (t1 >= 0.0 && t1 <= 1.0 && t2 >= 0.0 && t2 <= 1.0) {
+        return SumScalar(line1.start,dir1,t1);
+    }
+
+    return PointTriangle(0, 0); // No intersection.
+}
+
+// Check if all nodes of one triangle are inside the other triangle.
+bool AreTriangleNodesInside(const std::vector<PointTriangle>& triangle1, const std::vector<PointTriangle>& triangle2) {
+    for (const PointTriangle& node : triangle1) {
+        if (!IsPointInsideTriangle(node, triangle2[0], triangle2[1], triangle2[2])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Find nodes of one triangle that are inside the other triangle.
+std::vector<PointTriangle> NodesInsideTriangle(const std::vector<PointTriangle>& triangle1, const std::vector<PointTriangle>& triangle2) {
+    std::vector<PointTriangle> nodesInside;
+
+    for (const PointTriangle& node : triangle1) {
+        if (IsPointInsideTriangle(node, triangle2[0], triangle2[1], triangle2[2])) {
+            nodesInside.push_back(node);
+        }
+    }
+
+    return nodesInside;
+}
+
+std::vector<PointTriangle> TriangleIntersectionPoints(const std::vector<PointTriangle>& triangle1, const std::vector<PointTriangle>& triangle2) {
+    std::vector<PointTriangle> intersectionPoints;
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            LineTriangle edge1(triangle1[i], triangle1[(i + 1) % 3]);
+            LineTriangle edge2(triangle2[j], triangle2[(j + 1) % 3]);
+            PointTriangle intersection = LineIntersectionPoint(edge1, edge2);
+
+            if (intersection.x != 0 || intersection.y != 0) {
+                if (IsPointInsideTriangle(intersection, triangle1[0], triangle1[1], triangle1[2]) &&
+                    IsPointInsideTriangle(intersection, triangle2[0], triangle2[1], triangle2[2])) {
+                    intersectionPoints.push_back(intersection);
+                }
+            }
+        }
+    }
+    return intersectionPoints;
+}
+
+
+
+
+
+
+
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
+void Arlequin::ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIntersected){
+    auto refElement = fMeshVector[2]->ElementVec()[iEl];
+    auto connectref = fMeshVector[0]->ElementVec()[iEl]->getConnectivity();
+    std::set<int> pointsInsideRefElement;
+    
+    for (auto interCoarse : elIntersected){
+        auto intElement = fMeshVector[0]->ElementVec()[interCoarse];
+        auto connectint=intElement->getConnectivity();
+
+        PointTriangle ref1(fMeshVector[2]->NodeVec()[connectref[0]]->getCoordinates());
+        PointTriangle ref2(fMeshVector[2]->NodeVec()[connectref[1]]->getCoordinates());
+        PointTriangle ref3(fMeshVector[2]->NodeVec()[connectref[2]]->getCoordinates());
+        PointTriangle int1(fMeshVector[2]->NodeVec()[connectint[0]]->getCoordinates());
+        PointTriangle int2(fMeshVector[2]->NodeVec()[connectint[1]]->getCoordinates());
+        PointTriangle int3(fMeshVector[2]->NodeVec()[connectint[2]]->getCoordinates());
+
+        std::vector<PointTriangle> reftriangle = {ref1,ref2,ref3};
+        std::vector<PointTriangle> inttriangle = {int1,int2,int3};
+
+        // Find intersection points.
+        std::vector<PointTriangle> intersectionPoints = TriangleIntersectionPoints(reftriangle, inttriangle);
+
+        // Find nodes of Triangle 1 that are inside Triangle 2.
+        std::vector<PointTriangle> nodesIn = NodesInsideTriangle(reftriangle, inttriangle);
+
+        // if (nodesIn.size()>1) {
+        //     std::cout << "The case of more than one point inside other element is\n";
+        //     PanicButton();
+        // }
+        //Creating the containers for the input and output
+        struct triangulateio in;
+        struct triangulateio out;
+        // clearTrianglesList(out);
+
+        // buildInput(nodes, param, in);
+
+        // int triangle_error = generateTesselation(in, out);
+        
+        std::string triflags = "znQP";
+        char *triswitches = new char[triflags.size()+1];
+        std::strcpy(triswitches, triflags.c_str());
+
+        int triangle_error = 0;
+
+        // try
+        // {
+        //     triangulate(triswitches, &in, &out, (struct triangulateio *)NULL);
+        // }
+
+
+
+        // setToContainer(out);
+
+        // executePostMeshingProcesses(nodes, elements, param);
+
+        // deleteInContainer(in);
+        // deleteOutContainer(out);
+
+    }
+}
+
+
+
 
 void Arlequin::CreateGlobalCouplingElements(){
     //The main idea of this code is: for each integration point in the local model,
@@ -22,6 +231,9 @@ void Arlequin::CreateGlobalCouplingElements(){
             elIntersected.insert(fLocalIntPointToGlobalElement[iel][i]);
         };
         // int nElIntersected = elIntersected.size();
+        if (elIntersected.size() > 1){
+            ComputeTriangleIntersections(iel, elIntersected);
+        } else {
         for (auto ielcoarse : elIntersected){
             ElCouplingGlobal *el = new ElCouplingGlobal(index++,ielcoarse,fMeshVector);
             fGlobalElToLocalEl[ielcoarse].insert(index-1);
@@ -29,6 +241,7 @@ void Arlequin::CreateGlobalCouplingElements(){
             el->setConnectivity(fMeshVector[2]->ElementVec()[iel]->getConnectivity());
             el->SetGlobalXsi(fLocalIntPointToGlobalXsi[iel]);
             el->SetGlobalElemCorresp(fLocalIntPointToGlobalElement[iel]);
+        }
         }
     }
     
@@ -97,10 +310,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     int DEG = cmesh->GetDefaultOrder();
     ShapeFunction shapeQuad(DIM,DEG);
     int nElNodes = cmesh->NElNodes();
-    VecDouble phi_(nElNodes);
-
-    MatrixDouble ainv(DIM,DIM);
-    
+    VecDouble phi_(nElNodes);    
     VecDouble xsiCC(3);
     std::pair<VecDouble,VecDouble> XK;
 
@@ -137,13 +347,12 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
         for (int k = 0; k < DIM; k++) deltaX[k] = x[k] - x_[k];
         deltaXsi.setZero();
         
-        double djac_ = 0.;
-        cmesh->ElementVec()[elSearch] -> getJacobianMatrix(xsi,ainv,djac_,0);
+        cmesh->ElementVec()[elSearch] -> ComputeJacobian(0);
 
         // for (int i = 0; i < DIM; i++)
         //     for (int j = 0; j < DIM; j++)
         //         deltaXsi[i] += ainv(j,i) * deltaX[j];
-        deltaXsi = ainv.transpose()*deltaX;    
+        deltaXsi = cmesh->ElementVec()[elSearch]->IntegrationData().fA0Inv.transpose()*deltaX;    
 
         xsi += deltaXsi;
         x_.setZero();
@@ -223,9 +432,8 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
                     deltaXsi[k] = 0.;
                 }
                 
-                double djac_ = 0.;
-                cmesh->ElementVec()[jel] -> getJacobianMatrix(xsi,ainv,djac_,0);
-            
+                cmesh->ElementVec()[jel] -> ComputeJacobian(0);
+                auto ainv = cmesh->ElementVec()[jel]->IntegrationData().fA0Inv;
                 for (int i = 0; i < DIM; i++)
                     for (int j = 0; j < DIM; j++)
                         deltaXsi[i] += ainv(j,i) * deltaX[j];

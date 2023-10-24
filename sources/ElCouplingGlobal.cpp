@@ -1,7 +1,7 @@
 #include "ElCouplingGlobal.h"
 
 
-void ElCouplingGlobal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness){
+void ElCouplingGlobal::ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness){
     
     //Stiffness[0] is always the L2-H1 contribution;
     //Stiffness[1] is always the diagonal contribution to the global stiffness matrix
@@ -16,19 +16,25 @@ void ElCouplingGlobal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, doubl
     double k1 = fMeshVector[1]->getProblemParameters().getArlequinK1();
     double k2 = fMeshVector[1]->getProblemParameters().getArlequinK2();
         
-    double WJ = weight_ * djac_;
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0;
     
     VecDouble XsiGlobal(DIM);
-    MatrixDouble ainvGlobal(DIM,DIM);
-    MatrixDouble dphi_dxGlobal(Mesh()->NElNodes(),DIM);
+    // MatrixDouble ainvGlobal(DIM,DIM);
+    // MatrixDouble dphi_dxGlobal(Mesh()->NElNodes(),DIM);
     for (int k = 0; k < DIM; k++) XsiGlobal[k] = fGlobalXsi(index,k);
     //Computes the coarse mesh shape functions
     ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phiGlobal(Mesh()->NElNodes());
     shapeQuad.evaluate(XsiGlobal,phiGlobal);
     //Computes coarse mesh derivatives
-    getJacobianMatrix(XsiGlobal, ainvGlobal, djac_, index);
-    getSpatialDerivatives(XsiGlobal, ainvGlobal, dphi_dxGlobal);
+    fMeshVector[0]->ElementVec()[fGlobalIndex]->ComputeJacobian(index);
+    fMeshVector[0]->ElementVec()[fGlobalIndex]->ComputeSpatialDerivatives();
+
+    auto dphi_dx = fIntegData.fDPhiX0;
+    auto dphi_dxGlobal = fMeshVector[0]->ElementVec()[fGlobalIndex]->IntegrationData().fDPhiX0;
+    // PanicButton();
+    // ComputeJacobian(XsiGlobal, ainvGlobal, djac_, index);
+    // ComputeSpatialDerivatives(XsiGlobal, ainvGlobal, dphi_dxGlobal);
 
     if (Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < Mesh()->NElNodes(); i++){
@@ -63,13 +69,13 @@ void ElCouplingGlobal::ComputeStiffness(int &index, MatrixDouble &dphi_dx, doubl
     };//if Poisson
 
     if (Mesh()->getProblemParameters().ArlequinStab() != ENoStab){
-        ArlequinStabStiffness(index, dphi_dx, phiGlobal, dphi_dxGlobal,weight_, djac_, Stiffness);
+        ArlequinStabStiffness(index, dphi_dx, phiGlobal, dphi_dxGlobal, fIntegData.fWeight, fIntegData.fJacA0, Stiffness);
     }
 
 };
 
 
-void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs){
+void ElCouplingGlobal::ComputeResidual(int &index, std::vector<VecDouble> &Rhs){
 
     int DIM = Mesh()->Dimension();
     int DEG = Mesh()->GetDefaultOrder();
@@ -78,16 +84,12 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
 
     VecDouble XsiGlobal(DIM);
     MatrixDouble ainvGlobal(DIM,DIM);
-    MatrixDouble dphi_dxGlobal(Mesh()->NElNodes(),DIM);
+    // MatrixDouble dphi_dxGlobal(Mesh()->NElNodes(),DIM);
     for (int k = 0; k < DIM; k++) XsiGlobal[k] = fGlobalXsi(index,k);
     //Computes the coarse mesh shape functions
     ShapeFunction shapeQuad(DIM,DEG);
     VecDouble phiGlobal(Mesh()->NElNodes());
     shapeQuad.evaluate(XsiGlobal,phiGlobal);
-    //Computes coarse mesh derivatives
-    getJacobianMatrix(XsiGlobal, ainvGlobal, djac_, index);
-    getSpatialDerivatives(XsiGlobal, ainvGlobal, dphi_dxGlobal);
-
 
     //In this case, we need the global solution
     //Velocity
@@ -96,7 +98,7 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
 
     //Velocity Derivatives
     MatrixDouble du_dx(Mesh()->NState()+1,DIM);
-    elglobal->interpolateSolDerivatives(dphi_dxGlobal, du_dx);
+    elglobal->interpolateSolDerivatives(du_dx);
 
     //The lagrange multiplier is the solution of meshvector[2]
     //Lagrange Multiplier
@@ -105,12 +107,15 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
 
     //Lagrange Multiplier Derivatives
     MatrixDouble dL_dx(Mesh()->NState()+1,DIM);
-    interpolateSolDerivatives(dphi_dx, dL_dx);
+    interpolateSolDerivatives(dL_dx);
+
+    auto dphi_dxGlobal = fMeshVector[0]->ElementVec()[fGlobalIndex]->IntegrationData().fDPhiX0;
 
     double k1 = fMeshVector[1]->getProblemParameters().getArlequinK1();
     double k2 = fMeshVector[1]->getProblemParameters().getArlequinK2();
         
-    double WJ = weight_ * djac_;
+    double WJ = fIntegData.fWeight * fIntegData.fJacA0;
+    auto dphi_dx = fIntegData.fDPhiX0;
 
     if (Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < Mesh()->NElNodes(); i++){
@@ -146,7 +151,7 @@ void ElCouplingGlobal::ComputeResidual(int &index, MatrixDouble &dphi_dx, double
         };
     }
     if (Mesh()->getProblemParameters().ArlequinStab() != ENoStab){
-        ArlequinStabResidual(index, dphi_dx, phiGlobal, dphi_dxGlobal, weight_, djac_, Rhs);
+        ArlequinStabResidual(index, dphi_dx, phiGlobal, dphi_dxGlobal, fIntegData.fWeight, fIntegData.fJacA0, Rhs);
     }
 }
 
@@ -213,8 +218,8 @@ void ElCouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, 
     //Computes the jacobian matrix
     double djacG_;
     MatrixDouble ainvG_(DIM,DIM);
-    getJacobianMatrix(xsi, ainvG_, djacG_, index);
-    getHighOrderSpatialDerivatives(xsi, ainvG_, dphi_dxGlobal, ddphi_dxGlobal);
+    // ComputeJacobian(xsi, ainvG_, djacG_, index);
+    // getHighOrderSpatialDerivatives(xsi, ainvG_, dphi_dxGlobal, ddphi_dxGlobal);
 
     double WJ = djac_ * weight_ * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index); 
 
@@ -392,7 +397,7 @@ void ElCouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, V
 
     //Lagrange Multiplier Derivatives
     MatrixDouble dL_dx(Mesh()->NState()+1,DIM);
-    interpolateSolDerivatives(dphi_dx, dL_dx);
+    interpolateSolDerivatives(dL_dx);
 
     if (Mesh()->getProblemParameters().ProbType() == EPoisson){
         for (int i = 0; i < Mesh()->NElNodes(); i++){
