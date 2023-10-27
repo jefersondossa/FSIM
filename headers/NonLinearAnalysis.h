@@ -5,14 +5,14 @@
 
 class NonLinearAnalysis : public LinearAnalysis
 {
-private:
-    /* data */
+protected:
+    int fMaxIterations;
+    double fTolerance;
+
 public:
     NonLinearAnalysis() : LinearAnalysis(){};
-    NonLinearAnalysis(CompMesh *cmesh, SolverType stype) : LinearAnalysis(cmesh,stype){};
-    NonLinearAnalysis(std::vector<CompMesh *> &meshvector, SolverType stype) : LinearAnalysis(meshvector,stype){};
-
-    // void Compute() override;
+    NonLinearAnalysis(CompMesh *cmesh, SolverType stype, double tol = 1.e-6, int maxIter = 10) : LinearAnalysis(cmesh,stype), fMaxIterations(maxIter), fTolerance(tol) {};
+    NonLinearAnalysis(std::vector<CompMesh *> &meshvector, SolverType stype, double tol = 1.e-6, int maxIter = 10) : LinearAnalysis(meshvector,stype), fMaxIterations(maxIter), fTolerance(tol) {};
 
     void UpdateSolution() override;
 

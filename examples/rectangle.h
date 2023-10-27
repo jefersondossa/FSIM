@@ -116,7 +116,7 @@ for (int k = 3; k < 4; k++)
         PlaneSurface* s20 = fluid1 -> addPlaneSurface({ll0});
         
         // double h1 = pow(2,k)+1; double v1 = pow(2,k)+1;
-        double h1 = 100; double v1 = 100;
+        double h1 = 3; double v1 = 2;
         fluid1 -> transfiniteLine({ l0 }, h1);
         fluid1 -> transfiniteLine({ l2 }, v1);
         fluid1 -> transfiniteLine({ l1 }, h1);
@@ -210,8 +210,8 @@ for (int k = 3; k < 4; k++)
 
 	MPI_Barrier(PETSC_COMM_WORLD);   
     ProblemParameters pParameters;
-    pParameters.ProbType() = EPoisson;
-    // pParameters.ProbType() = EElastic;
+    // pParameters.ProbType() = ESolidPositional;
+    pParameters.ProbType() = EElastic;
     if (pParameters.ProbType() == EPoisson){
         pParameters.setForcingFunction(forcingFunctionPoisson);
         pParameters.setExactSolution(exactSolPoisson);

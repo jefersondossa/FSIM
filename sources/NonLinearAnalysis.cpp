@@ -46,20 +46,18 @@ void NonLinearAnalysis::UpdateSolution(){
 void NonLinearAnalysis::Run(){
     
     double NRL2norm = 1000.;
-    double NRtolerance = 1.e-6;
     int iteration = 0;
 
-    while (NRL2norm > NRtolerance)
+    while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
         Compute();
-        VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
+        // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
         Solve();
-        VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
-        MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
+        // VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
+        // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD); 
         UpdateSolution();
         VecNorm(this->Solution(),NORM_2,&NRL2norm);
         std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
-        // if (iteration == 10) break;
         MatZeroEntries(this->Stiffness());
         VecZeroEntries(this->Rhs());
         VecZeroEntries(this->Solution());
