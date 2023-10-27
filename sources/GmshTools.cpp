@@ -112,7 +112,7 @@ void GmshTools::ReadNodes(std::ifstream &file, CompMesh *cmesh){
         cmesh->NGlobalDOF() = (DIM+1) * cmesh->NNodes();
     } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EPoisson) {
         cmesh->NGlobalDOF() = cmesh->NNodes();
-    } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EElastic){
+    } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EElastic || cmesh->getProblemParameters().ProbType() == ProblemType::ESolidPositional){
         cmesh->NGlobalDOF() = cmesh->NNodes() * DIM;
     } else {
         PanicButton();
@@ -370,6 +370,12 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                     case EElastic:
                         {
                             ElElasticity2D *el = new ElElasticity2D(index++,connect,cmesh);
+                            cmesh->ElementVec().push_back(el);
+                        }
+                        break;
+                    case ESolidPositional:
+                        {
+                            ElElasticityPositional2D *el = new ElElasticityPositional2D(index++,connect,cmesh);
                             cmesh->ElementVec().push_back(el);
                         }
                         break;

@@ -59,7 +59,7 @@ void NonLinearAnalysis::Run(){
         UpdateSolution();
         VecNorm(this->Solution(),NORM_2,&NRL2norm);
         std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
-        if (iteration == 1) break;
+        // if (iteration == 10) break;
         MatZeroEntries(this->Stiffness());
         VecZeroEntries(this->Rhs());
         VecZeroEntries(this->Solution());

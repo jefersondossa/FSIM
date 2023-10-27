@@ -116,7 +116,7 @@ for (int k = 3; k < 4; k++)
         PlaneSurface* s20 = fluid1 -> addPlaneSurface({ll0});
         
         // double h1 = pow(2,k)+1; double v1 = pow(2,k)+1;
-        double h1 = 3; double v1 = 2;
+        double h1 = 100; double v1 = 100;
         fluid1 -> transfiniteLine({ l0 }, h1);
         fluid1 -> transfiniteLine({ l2 }, v1);
         fluid1 -> transfiniteLine({ l1 }, h1);
@@ -126,7 +126,7 @@ for (int k = 3; k < 4; k++)
         
         fluid1 -> addBoundaryCondition("NEUMANN", l0, {0.0}, {0.0}, {},  "GLOBAL");
         fluid1 -> addBoundaryCondition("NEUMANN", l1, {0.0}, {0.0}, {},  "GLOBAL");
-        fluid1 -> addBoundaryCondition("DIRICHLET", l2, {1.0}, {0.0}, {},  "GLOBAL");
+        fluid1 -> addBoundaryCondition("DIRICHLET", l2, {0.1}, {0.0}, {},  "GLOBAL");
         fluid1 -> addBoundaryCondition("DIRICHLET", l3, {0.0}, {0.0}, {},  "GLOBAL");
         
 
@@ -211,13 +211,14 @@ for (int k = 3; k < 4; k++)
 	MPI_Barrier(PETSC_COMM_WORLD);   
     ProblemParameters pParameters;
     pParameters.ProbType() = EPoisson;
+    // pParameters.ProbType() = EElastic;
     if (pParameters.ProbType() == EPoisson){
         pParameters.setForcingFunction(forcingFunctionPoisson);
         pParameters.setExactSolution(exactSolPoisson);
-    } else if (pParameters.ProbType() == EElastic){
+    } else if (pParameters.ProbType() == EElastic || pParameters.ProbType() == ESolidPositional){
         pParameters.SetElasticity(1.,0.);
         // pParameters.setForcingFunction(forcingFunctionElasticity2D);
-        pParameters.setExactSolution(exactSolElasticity2D);
+        // pParameters.setExactSolution(exactSolElasticity2D);
     } else if (pParameters.ProbType() == EStokes){
         pParameters.SetIncompressibleFluid(0.01,1.);
         pParameters.setTimeStep(1.);//Needed for stabilization parameter
@@ -241,7 +242,7 @@ for (int k = 3; k < 4; k++)
     GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
     GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
 
-    CompMeshTools::InitialSolution(coarseModel);
+    // CompMeshTools::InitialSolution(coarseModel);
 
     // coarseModel->meshReading(fluid1,"problem_data.txt","coarse.msh","mirror.txt",0);
     // fineModel->meshReading(fluid2,"problem_data.txt","fine.msh","mirror_fine.txt",0);
@@ -256,11 +257,11 @@ for (int k = 3; k < 4; k++)
     // Arlequin arl(meshvector);
     // arl.SetUp();
 
-    LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
     // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse");

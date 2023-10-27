@@ -10,7 +10,7 @@ void CompMeshTools::InitialSolution(CompMesh *cmesh){
     for (int64_t ino = 0; ino<cmesh->NNodes(); ino++){
         auto coord = cmesh->NodeVec()[ino]->getCoordinates();
         
-        for (int j=0; j<coord.size(); j++) cmesh->NodeVec()[ino]->SetSolution(j,coord[j]);
+        for (int j=0; j<cmesh->Dimension(); j++) cmesh->NodeVec()[ino]->SetSolution(j,coord[j]);
     }
     
 

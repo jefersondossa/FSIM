@@ -96,10 +96,12 @@ public:
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
     void ComputeJacobian(int index);
+    void ComputeCurrentJacobian(int index);
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
     void ComputeSpatialDerivatives();
+    void ComputeCurrentSpatialDerivatives();
     void getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx);
 
     void interpolateSolution(int &index, VecDouble &u_);

@@ -22,10 +22,19 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << "      <DataArray type=\"Float64\" "
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<cmesh->NNodes(); i++){
-        auto x = cmesh->NodeVec()[i]->getCoordinates();
-        output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
-    };
+    if (cmesh->getProblemParameters().ProbType() == ESolidPositional){
+        for (int i=0; i<cmesh->NNodes(); i++){
+            auto x = cmesh->NodeVec()[i]->getCoordinates();
+            auto solx = cmesh->NodeVec()[i]->GetSolution(0);
+            auto soly = cmesh->NodeVec()[i]->GetSolution(1);
+            output_v << x[0]+solx << " " << x[1]+soly << " " << x[2] << std::endl;        
+        };
+    } else {
+        for (int i=0; i<cmesh->NNodes(); i++){
+            auto x = cmesh->NodeVec()[i]->getCoordinates();
+            output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
+        };
+    }
     output_v << "      </DataArray>" << std::endl
              << "    </Points>" << std::endl;
     
@@ -86,7 +95,26 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
             output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
         }
         output_v << "      </DataArray> " << std::endl;
-    } else if (cmesh->getProblemParameters().ProbType()==EElastic || cmesh->getProblemParameters().ProbType() == ESolidPositional){
+    } else if (cmesh->getProblemParameters().ProbType()==EElastic){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+            << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<cmesh->NNodes(); i++){           
+            output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
+                    << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
+            if (DIM == 2) {
+                output_v <<  0. << std::endl;
+            } else {
+                output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
+            }
+        }
+        output_v << "      </DataArray> " << std::endl;
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+            << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<cmesh->NNodes(); i++){
+            output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
+        }
+        output_v << "      </DataArray> " << std::endl;
+    } else if(cmesh->getProblemParameters().ProbType() == ESolidPositional){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
         for (int i=0; i<cmesh->NNodes(); i++){           

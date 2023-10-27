@@ -314,6 +314,35 @@ void Element::ComputeJacobian(int index) {
     return;
 };
 
+void Element::ComputeCurrentJacobian(int index) {
+
+    fIntegData.fA1.resize(DIM,DIM);
+    fIntegData.fA1.setZero();
+    fIntegData.fX.resize(DIM);
+    fIntegData.fX.setZero();
+
+    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
+
+    fIntegData.fA1.setZero();
+    for (int i = fMesh->NElNodes(); i--; ){
+        for (int j = DIM; j--; ){
+            // Approximate the integration space
+            fIntegData.fX[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) ;
+            // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
+            //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
+            for (int k = DIM; k--; ){
+                fIntegData.fA1(j,k) += fIntegData.fX[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
+                // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
+            };
+        };
+    };
+
+    //Computing the jacobian determinant and Inverse
+    fIntegData.fJacA1 = fIntegData.fA1.determinant();
+
+    return;
+};
+
 //------------------------------------------------------------------------------
 //-----------------------------SPATIAL DERIVATIVES------------------------------
 //------------------------------------------------------------------------------
@@ -332,6 +361,25 @@ void Element::ComputeSpatialDerivatives() {
 
     //Shape functions spatial first derivatives
     fIntegData.fDPhiX0 = dphi * fIntegData.fA0Inv.transpose();
+
+    return;
+};
+
+void Element::ComputeCurrentSpatialDerivatives() {
+    
+    // typename QuadShapeFunction<2,2>::ValueDDeriv ddphi;
+    
+    MatrixDouble dphi(fMesh->NElNodes(),DIM);
+    
+    ShapeFunction shapeQuad(DIM,DEG);
+    
+    shapeQuad.evaluateGradient(fIntegData.fAdimCoord,dphi);
+    // shapeQuad.evaluateHessian(xsi,ddphi);
+    
+    fIntegData.fDPhiX1.setZero();
+
+    //Shape functions spatial first derivatives
+    fIntegData.fDPhiX1 = dphi * fIntegData.fA1.inverse().transpose();
 
     return;
 };
@@ -2993,8 +3041,8 @@ void Element::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &r
 
         index++;        
     };  
-    std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix;
-    std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector;
+    // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix;
+    // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector;
     //Apply boundary conditions
     ApplyBC(jacobianNRMatrix, rhsVector);
 

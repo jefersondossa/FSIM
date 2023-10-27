@@ -50,7 +50,7 @@ public:
         } else if (fProbParameters.ProbType() == ProblemType::EPoisson) {
             fNState = 1;
             nLocDOF = nElNodes;
-        } else if (fProbParameters.ProbType() == ProblemType::EElastic){
+        } else if (fProbParameters.ProbType() == ProblemType::EElastic || fProbParameters.ProbType() == ProblemType::ESolidPositional){
             fNState = DIM;
             nLocDOF = nElNodes*DIM;
         } else {
