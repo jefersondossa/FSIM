@@ -1,89 +1,77 @@
+#ifndef ELEMENT
+#define ELEMENT
 
-// 
-//                   Jeferson W D Fernandes and Rodolfo A K Sanches
-//                             University of Sao Paulo
-//                           (C) 2017 All Rights Reserved
-//
-// <LicenseText>
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-//-----------------------------------ELEMENT------------------------------------
-//------------------------------------------------------------------------------
-
-#ifndef ELEMENT_H
-#define ELEMENT_H
-
-#include "Node.h"
-#include "BoundaryIntegrationQuadrature.h"
-#include "ProblemParameters.h"
-#include "PanicButton.h"
-
-#include "Boundary.h"
+#include "DataTypes.h"
 #include "CompMesh.h"
-#include "IntegrationQuadrature.h"
-#include "IntegrationQuadrature11.h"
-#include "DomainIntegration.h"
 #include "IntPointData.h"
-// #include "PartitionedQuadrature.hpp"
 
-/// Defines the fluid element object and all the element information
+class CompMesh;
+
 class Element{
 protected:
+    CompMesh *fMesh;
     VecInt        fConnect; //Velocity mesh connectivity 
     int64_t       fIndex;             //Element index
-    CompMesh *fMesh;
-    VecDouble     xK, XK;
+
     int           fSideInBoundary;
-    std::vector<int64_t> fNeighborElements;
-    IntPointData  fIntegData;
-    
-public:
+
     VecDouble intPointWeightFunction;
     VecDouble fIntPointDistFunction;
     VecDouble intPointWeightFunctionPrev;
 
     MatrixDouble fIntPointCoordinates;
+    int DEG;
 
-    bool          FSIInterface;    
-    int DIM, DEG;
+    VecDouble     xK, XK;
+    
+    
+
+    std::vector<int64_t> fNeighborElements;
+
+public:
+
+    bool          FSIInterface;  
+
 public:
     Element() = default;
 
-    /// fluid element constructor
-    /// @param int element index @param Connectivity element connectivity
-    /// @param vector<Nodes> 
     Element(int64_t index, VecInt &connect, CompMesh* mesh){
         
-        fMesh = mesh;
-        fConnect.resize(fMesh->NElNodes());
-        fIndex = index;
-        for (int i = fMesh->NElNodes(); i--; ) fConnect[i] = connect[i];
-        DIM = fMesh->Dimension();
-        DEG = fMesh->GetDefaultOrder();
+        // fMesh = mesh;
+        // fConnect.resize(fMesh->NElNodes());
+        // fIndex = index;
+        // for (int i = fMesh->NElNodes(); i--; ) fConnect[i] = connect[i];
+        // DEG = fMesh->GetDefaultOrder();
 
-        FSIInterface = false;
-        fSideInBoundary = -1;
-        fNeighborElements.clear();
+        // FSIInterface = false;
+        // fSideInBoundary = -1;
+        // fNeighborElements.clear();
 
-        IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
-        intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        fIntPointDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
+        // IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
+        // intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
+        // fIntPointDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
+        // intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
 
-        intPointWeightFunction.fill(1.);
-        intPointWeightFunctionPrev.fill(1.);
+        // intPointWeightFunction.fill(1.);
+        // intPointWeightFunctionPrev.fill(1.);
     
-        getIntegPointCoordinates();
+        // getIntegPointCoordinates();
 
     };
 
-    CompMesh* Mesh() {return fMesh;}
-    void SetMesh(CompMesh* mesh){fMesh = mesh;}
+    ~Element() = default;
 
-    //........................Element basic information.........................
-    /// Clear all element variables
-    void clearVariables();
+    
+    virtual void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
+    virtual void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) = 0;
+    virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
+    virtual void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs){};
+    virtual void ComputeStiffness(int &index, MatrixDouble &Stiffness){};
+    virtual void ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness){};
+    virtual void ComputeResidual(int &index, VecDouble &Rhs){};
+    virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
+    virtual void ComputeError(VecDouble &errors){};
+    
 
     /// Sets the element connectivity
     /// @param int* element connectivity
@@ -92,122 +80,28 @@ public:
     /// Gets the element connectivity
     /// @return element connectivity
     VecInt &getConnectivity(){return fConnect;};
-
-    /// Compute and store the spatial jacobian matrix
-    /// @param bounded_vector integration point adimensional coordinates
-    void ComputeJacobian(int index);
-    void ComputeCurrentJacobian(int index);
-
-    /// Compute and store the shape function spatial derivatives
-    /// @param bounded_vector integration point adimensional coordinates
-    void ComputeSpatialDerivatives();
-    void ComputeCurrentSpatialDerivatives();
-    void getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx);
-
-    void interpolateSolution(int &index, VecDouble &u_);
-    void interpolateSolution(VecDouble &phi, VecDouble &u_);
-    void interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &umeshPrev_);
-    void interpolateSolDerivatives(MatrixDouble &du_dx);
-
-    /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
-    void getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
-
-    IntPointData IntegrationData(){return fIntegData;}
-
-    void ComputeIntPointDistFunction(VecDouble &nodalval);
-    /// Gets the element jacobian determinant
-    /// @return element jacobinan determinant
-    double getJacobian(){
-        // std::cout << "AAA 1 "<< std::endl;
-        //Computes the jacobian matrix
-        int index = 0;
-        ComputeJacobian(index);
-        // std::cout << "AAA 2 "<< std::endl;        
-        //Computes spatial derivatives
-        // ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
-        // std::cout << "AAA 3 "<< std::endl;
-
-        return fIntegData.fJacA0;
-    };
-
-    /// Compute and store the drag and lift forces at the element boundary
-    void computeDragAndLiftForces(double &pressureDragForce, double &pressureLiftForce, double &frictionDragForce,
-                                  double &frictionLiftForce, double &dragForce, double &liftForce,
-                                  double &pitchingMoment, double & perimeter);
-
-    /// Compute and store the boundary forces
-    void getBoundaryLoad(VecDouble &xsi, VecDouble &load);
-
-    /// Pushs back a term of the inverse incidence, i.e., an element which
-    /// contains the node
-    /// @param int element
-    void pushNeighborElement(int el) {
-        fNeighborElements.push_back(el);
-    }
-
-    double &GetIntPointDistFunction(int index){
-        return fIntPointDistFunction[index];
-    }
-
-    /// Gets the number of elements which contains the node
-    /// @return int number of elements which contains the node
-    int getNumberOfNeighborElements(){
-        return fNeighborElements.size();
-    }
-
-    /// Gets an specific member of the inverse incidence
-    /// @param int index @return int element of the inverse incidence
-    int64_t &getNeighborElement(int i){
-        return fNeighborElements[i];
-    }
-
-    void clearInverseIncidence(){
-        fNeighborElements.clear();
-        fNeighborElements.shrink_to_fit();
-    }
+    
+    CompMesh* Mesh() {return fMesh;}
+    
+    void SetMesh(CompMesh* mesh){fMesh = mesh;}
 
     int64_t &Index(){return fIndex;}
 
-    void sortEraseNeighborElements(){
-        std::sort(fNeighborElements.begin(), fNeighborElements.end());
-        fNeighborElements.erase(std::unique(fNeighborElements.begin(),fNeighborElements.end()), fNeighborElements.end());
-    }
+    /// Compute and store the spatial jacobian matrix
+    /// @param bounded_vector integration point adimensional coordinates
+    virtual void ComputeJacobian(int index) = 0;
+    virtual void ComputeCurrentJacobian(int index) = 0;
 
-    /// Sets the element side in boundary
-    /// @param int side in boundary
-    void setElemSideInBoundary(int side){fSideInBoundary = side;};
+    /// Compute and store the shape function spatial derivatives
+    /// @param bounded_vector integration point adimensional coordinates
+    virtual void ComputeSpatialDerivatives() = 0;
+    virtual void ComputeCurrentSpatialDerivatives() = 0;
 
-    /// Gets the element side in boundary
-    /// @return side in boundary
-    int &getElemSideInBoundary(){return fSideInBoundary;};
+    virtual void interpolateSolution(int &index, VecDouble &u_) = 0;
+    virtual void interpolateSolution(VecDouble &phi, VecDouble &u_) = 0;
+    virtual void interpolateSolDerivatives(MatrixDouble &du_dx) = 0;
+    
 
-    /// Gets the boundary connectivity for boundary integration
-    /// @param int* boundary connectivity
-    void getBoundaryNodes(int *nodesb_);
-
-    //.................Element intersection and correspondence..................
-    /// Gets the element intersection parameters 
-    /// @param minimum coordinates @param maximum coordinates 
-    /// @param minimum inner product @param maximum inner product
-    /// @param side lenght
-    void setIntersectionParameters(VecDouble &x, VecDouble &X);
-
-    /// Gets the coordinates intersection parameters
-    /// @return minimum and maximum coordinates
-    std::pair<VecDouble,VecDouble> getXIntersectionParameter() {return std::make_pair(xK,XK);};
-
-    //.............................Model functions..............................
-    /// Sets if the element belongs to the fluid structure interface
-    void setFSIInterface(){FSIInterface = true;};
-    bool &getFSIInterface(){return FSIInterface;};
-
-    //......................Integration Points Information......................
-    /// Gets the number of integration points of the special quadrature rule
-    /// @retunr number of integration point of the special quadrature rule
-    int getNumberOfIntegrationPoints(){IntegQuadrature sQuad(fMesh->Dimension(),fMesh->GetDefaultOrder()); return sQuad.getNumberOfIntegrationPoints();};
-
-    /// Compute and store the integration points global coordinates
-    void getIntegPointCoordinates();
 
     /// Gets the integration point global coordinates
     /// @param int integration point index @return integration point coordinates
@@ -228,96 +122,58 @@ public:
 
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
-    double &getIntegPointWeightFunction(int index)
-    {return intPointWeightFunction[index];};
+    double &getIntegPointWeightFunction(int index) {return intPointWeightFunction[index];};
+    virtual int getBoundaryGroup() = 0;
+    virtual int getElement() = 0;
+    virtual int getConstrain(int dir) = 0;
+    virtual int getElementSide() = 0;
+    virtual double getConstrainValue(int dir) = 0;
+    virtual void setElement(int el) = 0;
+    virtual void setElementSide(int el) = 0;
+    virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
+    void setFSIInterface(){FSIInterface = true;};
 
-    //.......................Element vectors and matrices.......................
-    /// Compute and store the element matrix for the incompressible flow problem
-    /// @param int integration point index
-    void getElemMatrix(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, MatrixDouble &jacobianNRMatrix);
+    /// Sets the element side in boundary
+    /// @param int side in boundary
+    void setElemSideInBoundary(int side){fSideInBoundary = side;};
 
-    /// Compute and store the element matrix for the Laplace/Poisson problem
-    void getElemLaplMatrix(double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
-    void getElemElasticity2DMatrix(int &index, double &weight_, double &djac_, MatrixDouble &dphi_dx, MatrixDouble &jacobianNRMatrix);
+    /// Gets the element side in boundary
+    /// @return side in boundary
+    int &getElemSideInBoundary(){return fSideInBoundary;};
 
-    /// Sets the boundary conditions for the incompressible flow problem
-    void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    virtual double getJacobian() = 0;
 
-    /// Sets the boundary conditions for the Laplace/Poisson problem
-    void setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    /// Pushs back a term of the inverse incidence, i.e., an element which
+    /// contains the node
+    /// @param int element
+    void pushNeighborElement(int el) {
+        fNeighborElements.push_back(el);
+    }
 
-    ///Compute and store the residual vector for the incompressible flow problem
-    /// @param int integration point index
-    void getResidualVector(int &index, MatrixDouble &dphi_dx, double &tSUPG_, double &tPSPG_, double &tLSIC_, double &weight_, double &djac_, VecDouble &rhsVector);
-    void getResidualVectorElasticity2D(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, VecDouble &rhsVector);
+    /// Gets the number of elements which contains the node
+    /// @return int number of elements which contains the node
+    int getNumberOfNeighborElements(){
+        return fNeighborElements.size();
+    }
 
-    /// Compute and store the residual vector for the Laplace/Poisson problem
-    void getResidualVectorLaplace(VecDouble &rhsVector);
+    /// Gets an specific member of the inverse incidence
+    /// @param int index @return int element of the inverse incidence
+    int64_t &getNeighborElement(int i){
+        return fNeighborElements[i];
+    }
 
-    /// Apply the boundary conditions and returns the matrix and residual vector
-    /// for the Lagrange multiplier operator matrix, used when computing the 
-    /// operator term from different meshes
-    /// @param LocalMatrix Lagrange multiplier operator matrix
-    /// @return residual vector and Lagrange multiplier operator matrix with
-    /// boundary conditions applied
-    void getRhsVectorAndBoundaryConditions(double** Ajac, double* rhsVector){
-        setBoundaryConditionsLagrangeMultipliers(Ajac, rhsVector);       
-        return;
-    };
-
-    /// Sets the boundary conditions to the Lagrange multiplier operator
-    void setBoundaryConditionsLagrangeMultipliers(double** jacobianNRMatrix, double* rhsVector);
-
-    /// Compute and store the Lagrange multiplier operator when integrating 
-    /// the same mesh portion
-    void getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
-    void getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
-
-    /// Compute and store the Lagrange multiplier operator when integrationg
-    /// the different mesh portion
-    /// @param int element of the coarse mesh (used to verify which integration
-    /// point belongs to the coarse mesh element)
-    void getLagrangeMultipliersDifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
-                                             VecDouble &velxPrev, VecDouble &velyPrev, MatrixDouble &lagrMultMatrix, VecDouble &rhsVectorLM, VecDouble &rhsVector);
-    void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &ely,
-                                                       MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
-                                                     MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
-
-    //...............................Problem type...............................
-    /// Compute the Transient Navier-Stokes problem matrices and vectors
-    void getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    
-    /// Compute the Transient Navier-Stokes problem matrices and vectors
-    void getPoisson(MatrixDouble &matrix, VecDouble &rhsVector);
-
-    /// Compute the Steady Laplace problem matrices and vectors 
-    /// (usually for the mesh moving step)
-    void getSteadyLaplace(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void getSolidProblem(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void getElasticity2D(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-
-    void computeErrorPoisson(VecDouble &errors);
+    void clearInverseIncidence(){
+        fNeighborElements.clear();
+        fNeighborElements.shrink_to_fit();
+    }
 
 
+    void sortEraseNeighborElements(){
+        std::sort(fNeighborElements.begin(), fNeighborElements.end());
+        fNeighborElements.erase(std::unique(fNeighborElements.begin(),fNeighborElements.end()), fNeighborElements.end());
+    }
 
-
-
-    void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs);
-    void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs);
-    virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
-    virtual void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs){};
-    virtual void ComputeStiffness(int &index, MatrixDouble &Stiffness){};
-    virtual void ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness){};
-    virtual void ComputeResidual(int &index, VecDouble &Rhs){};
-    virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
-    virtual void ComputeError(VecDouble &errors){};
-    
-
-
+    virtual void setBoundaryGroup(int gr) = 0;
 };
 
-
 #endif
-

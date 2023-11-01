@@ -2027,7 +2027,7 @@ PERLMOD_MAKEVAR_PREFIX =
 # Configuration options related to the preprocessor
 #---------------------------------------------------------------------------
 
-# If the ENABLE_PREPROCESSING tag is set to YES, doxygen will evaluate all
+# If the ENABLE_PREPROCESSING tag is set to YES, doxygen will Shape all
 # C-preprocessor directives found in the sources and include files.
 # The default value is: YES.
 

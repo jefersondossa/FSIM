@@ -35,11 +35,11 @@ public:
     typedef ublas::bounded_matrix<double, DIM, numIntpNodes>      ValueDeriv;
 
 public:
-    //Evaluates the shape function value
-    void evaluate(const Coords& xi, Values& phi) const;
+    //Shapes the shape function value
+    void Shape(const Coords& xi, Values& phi) const;
 
-    //Evaluates the values of the shape funtion derivatives    
-    void evaluateGradient(const Coords& xi, ValueDeriv& dphi) const;   
+    //Shapes the values of the shape funtion derivatives    
+    void ShapeGradient(const Coords& xi, ValueDeriv& dphi) const;   
 
 };
 
@@ -53,7 +53,7 @@ public:
 // Defines linear shape functions and its derivatives 
 // for triangles and tetrahedrons
 template<>
-void LinShapeFunction<2>::evaluate(const Coords& xi, Values& phi) const {    
+void LinShapeFunction<2>::Shape(const Coords& xi, Values& phi) const {    
 
     const double xsi1 = xi(0);
     const double xsi2 = xi(1);
@@ -71,7 +71,7 @@ void LinShapeFunction<2>::evaluate(const Coords& xi, Values& phi) const {
 }
 
 template<>
-void LinShapeFunction<3>::evaluate(const Coords& xi, Values& phi) const {
+void LinShapeFunction<3>::Shape(const Coords& xi, Values& phi) const {
 
     const double xsi1 = xi(0);
     const double xsi2 = xi(1);
@@ -97,7 +97,7 @@ void LinShapeFunction<3>::evaluate(const Coords& xi, Values& phi) const {
 //-------------------COMPUTE SHAPE FUNCTION DERIVATIVE VALUE--------------------
 //------------------------------------------------------------------------------
 template<>
-void LinShapeFunction<2>::evaluateGradient(const Coords& xi, \
+void LinShapeFunction<2>::ShapeGradient(const Coords& xi, \
                                            ValueDeriv& dphi) const {
     // const double xsi1 = xi(0);
     // const double xsi2 = xi(1);
@@ -120,7 +120,7 @@ void LinShapeFunction<2>::evaluateGradient(const Coords& xi, \
 }
 
 template<>
-void LinShapeFunction<3>::evaluateGradient(const Coords& xi, \
+void LinShapeFunction<3>::ShapeGradient(const Coords& xi, \
                                            ValueDeriv& dphi) const {
 
     // const double xsi1 = xi(0);

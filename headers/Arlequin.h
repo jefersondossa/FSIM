@@ -27,8 +27,8 @@ public:
     std::vector<Node *>     nodesLagrangeFine_;
     std::vector<Node *>     nodesLagrangeCoarse_;
 
-    std::vector<ElCouplingLocal *>     glueZoneFine_;
-    std::vector<ElCouplingLocal *>     glueZoneCoarse_;
+    std::vector<Element *>     glueZoneFine_;
+    std::vector<Element *>     glueZoneCoarse_;
 
     std::vector<int>         elementsGlueZoneFine_;
     std::vector<int>         nodesGlueZoneFine_;
@@ -219,10 +219,10 @@ public:
         setCouplingZone();
         //Computes the Weight function for all the finite elements
         setWeightFunction(16.);
-
-        for (auto el:fMeshVector[2]->ElementVec()){
-            el->getIntegPointCoordinates();
-        }
+        PanicButton();
+        // for (auto el:fMeshVector[2]->ElementVec()){
+        //     el->getIntegPointCoordinates();
+        // }
         setNodalCorrespondenceFine();
         CreateGlobalCouplingElements();
         // DeleteCoarseEls();

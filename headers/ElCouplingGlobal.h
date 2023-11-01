@@ -1,9 +1,10 @@
 #ifndef ElCouplingGlobal_H
 #define ElCouplingGlobal_H
 
-#include "Element.h"
+#include "ElementT.h"
 
-class ElCouplingGlobal : public Element
+template <class tshape>
+class ElCouplingGlobal : public ElementT<tshape>
 {
 private:
     int64_t fGlobalIndex;
@@ -12,9 +13,9 @@ private:
     VecDouble fGlobalElemCorresp;
 
 public:
-    ElCouplingGlobal(int index, int64_t globindex, std::vector<CompMesh*> &meshvec):Element(){
+    ElCouplingGlobal(int index, int64_t globindex, std::vector<CompMesh*> &meshvec):ElementT<tshape>(){
         this->Index()= index;
-        SetMesh(meshvec[2]);
+        this->fMesh = meshvec[2];
         fGlobalIndex = globindex;
         fMeshVector = meshvec;
     };

@@ -1,8 +1,6 @@
 #ifndef ANALYSIS_H
 #define ANALYSIS_H
 
-#include "Element.h"
-#include "Boundary.h"
 #include "CompMesh.h"
 #include <petscksp.h> 
 

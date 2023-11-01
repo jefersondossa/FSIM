@@ -335,7 +335,7 @@ double IntegQuadratureSpecial::interpolateQuadraticVariable(VecDouble &nValues, 
 
     for (int i=0; i<DIM; i++) xsi[i] = PointList(point,i);
     ShapeFunction shapeQuad(DIM,fOrder);
-    shapeQuad.evaluate(xsi,phi_);
+    shapeQuad.Shape(xsi,phi_);
     
     for (int i = 0; i < nValues.size(); i++) int_value += nValues[i] * phi_[i];
 

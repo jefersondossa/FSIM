@@ -3,8 +3,9 @@
 //------------------------------------------------------------------------------
 //------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
 //------------------------------------------------------------------------------
-void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx) {
-    int DIM = Mesh()->Dimension();
+template <class tshape>
+void ElStokes<tshape>::GetStabilizationParameter(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx) {
+    int DIM = this->Mesh()->Dimension();
 
     double tSUGN1_ = 0.;
     double tSUGN2_ = 0.;
@@ -20,18 +21,18 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
     double aux = 0.;
     double aux2 = 0.;
 
-    double &alpha_f = Mesh()->getProblemParameters().getAlphaF();
-    double &visc_ = Mesh()->getProblemParameters().GetViscosity();
-    double &dens_ = Mesh()->getProblemParameters().GetDensity();
-    double &dTime_ = Mesh()->getProblemParameters().GetTimeStep();
+    double &alpha_f = this->Mesh()->getProblemParameters().getAlphaF();
+    double &visc_ = this->Mesh()->getProblemParameters().GetViscosity();
+    double &dens_ = this->Mesh()->getProblemParameters().GetDensity();
+    double &dTime_ = this->Mesh()->getProblemParameters().GetTimeStep();
 
-    for (int i = Mesh()->NElNodes(); i--; ){
+    for (int i = this->Mesh()->NElNodes(); i--; ){
         double a1 = 0.;
         for (int j = DIM; j--; ){
-            double ua =Mesh()->NodeVec()[getConnectivity()[i]] -> GetSolution(j);
+            double ua = this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> GetSolution(j);
             double uma = 0.;
             ua -= uma;
-            u__[j] += ua * Mesh()->getNumericalIntegration()-> phi_(i,index);
+            u__[j] += ua * this->Mesh()->getNumericalIntegration()-> phi_(i,index);
             a1 += ua*ua;
         }
 
@@ -64,7 +65,7 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
         for (int j = DIM; j--; ) r[j] = 1. / std::sqrt(2.);
     };
     
-    for (int i = Mesh()->NElNodes(); i--; ){
+    for (int i = this->Mesh()->NElNodes(); i--; ){
         for (int j = DIM; j--; ){
             hRGN_ += r[j] * dphi_dx(i,j);
             hUGN_ += s[j] * dphi_dx(i,j);
@@ -113,24 +114,23 @@ void ElStokes::GetStabilizationParameter(int &index, double &tSUPG_, double &tPS
     return;
 };
 
+template <class tshape>
+void ElStokes<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
-
-void ElStokes::ComputeStiffness(int &index, MatrixDouble &Stiffness){
-
-    double &visc_ = Mesh()->getProblemParameters().GetViscosity();
-    double &dens_ = Mesh()->getProblemParameters().GetDensity();
-    int DIM = Mesh()->Dimension();
-    auto dphi_dx = fIntegData.fDPhiX0;
+    double &visc_ = this->Mesh()->getProblemParameters().GetViscosity();
+    double &dens_ = this->Mesh()->getProblemParameters().GetDensity();
+    int DIM = this->Mesh()->Dimension();
+    auto dphi_dx = this->fIntegData.fDPhiX0;
     GetStabilizationParameter(index, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
     // Trust me, it improves performance!
-    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
+    double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0 * this->getIntegPointWeightFunction(index);
 
-    for (int i = Mesh()->NElNodes(); i-- ; ){        
-        double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
-        for (int j = Mesh()->NElNodes(); j-- ; ){
+    for (int i = this->Mesh()->NElNodes(); i-- ; ){        
+        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+        for (int j = this->Mesh()->NElNodes(); j-- ; ){
             
-            double shapeFj = Mesh()->getNumericalIntegration()-> phi_(j,index);
+            double shapeFj = this->Mesh()->getNumericalIntegration()-> phi_(j,index);
 
             for (int k = DIM; k--;  ){
                 for (int l = DIM; l--; ){
@@ -157,35 +157,36 @@ void ElStokes::ComputeStiffness(int &index, MatrixDouble &Stiffness){
     
 }
 
-void ElStokes::ComputeResidual(int &index, VecDouble &Rhs){
+template <class tshape>
+void ElStokes<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
 
-    VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
-    auto force = Mesh()->getProblemParameters().getForcingFunction();
-    int DIM = Mesh()->Dimension();
-    double &visc_ = Mesh()->getProblemParameters().GetViscosity();
-    double &dens_ = Mesh()->getProblemParameters().GetDensity();
+    VecDouble fieldForce = this->Mesh()->getProblemParameters().GetFieldForce();
+    auto force = this->Mesh()->getProblemParameters().getForcingFunction();
+    int DIM = this->Mesh()->Dimension();
+    double &visc_ = this->Mesh()->getProblemParameters().GetViscosity();
+    double &dens_ = this->Mesh()->getProblemParameters().GetDensity();
 
     VecDouble forcingF(DIM);
     forcingF.setZero();
-    VecDouble x_ = getIntegPointCoordinatesValue(index);
+    VecDouble x_ = this->getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
     //Solution Derivatives
     MatrixDouble du_dx(DIM+1,DIM);
-    interpolateSolDerivatives(du_dx);
+    this->interpolateSolDerivatives(du_dx);
 
     VecDouble u_(DIM+1);
-    interpolateSolution(index, u_);
+    this->interpolateSolution(index, u_);
 
-    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
-    auto dphi_dx = fIntegData.fDPhiX0;
+    double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0 * this->getIntegPointWeightFunction(index);
+    auto dphi_dx = this->fIntegData.fDPhiX0;
 
     double divrU = 0.;
     for (int l=DIM; l--; ) divrU += du_dx(l,l);
 
-    for (int i = Mesh()->NElNodes(); i--; ){
-        // std::cout << "Sol = " << Mesh()->NodeVec()[getConnectivity()[i]]->GetSolution(0) << std::endl;
-        double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
+    for (int i = this->Mesh()->NElNodes(); i--; ){
+        // std::cout << "Sol = " << this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetSolution(0) << std::endl;
+        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
 
         for (int k = DIM; k--; ){
             //Viscosity
@@ -212,21 +213,23 @@ void ElStokes::ComputeResidual(int &index, VecDouble &Rhs){
 
 };
 
-void ElStokes::ComputeError(VecDouble &errors){
+template <class tshape>
+void ElStokes<tshape>::ComputeError(VecDouble &errors){
     std::cout << "Not implemented yet\n";
     
     // PanicButton();
 }
 
-void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
-    int DIM = Mesh()->Dimension();
+template <class tshape>
+void ElStokes<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
+    int DIM = this->Mesh()->Dimension();
     // std::cout << "Stiffness antes = \n" << Stiffness<< std::endl;
-    for (int i = Mesh()->NElNodes(); i--; ){
-        int nstate = Mesh()->NodeVec()[getConnectivity()[i]]->GetNStateVariables();
+    for (int i = this->Mesh()->NElNodes(); i--; ){
+        int nstate = this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetNStateVariables();
         for (int istate = 0; istate < nstate-1; istate++){
-            if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 1) ||
-                (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(istate) == 3))  {
-                for (int j = Mesh()->NElNodes()*nstate; j--; ){
+            if ((this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(istate) == 1) ||
+                (this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(istate) == 3))  {
+                for (int j = this->Mesh()->NElNodes()*nstate; j--; ){
                     Stiffness(nstate*i+istate,j) = 0.;
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
@@ -235,9 +238,9 @@ void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
             }
         }
 
-        if (Mesh()->NodeVec()[getConnectivity()[i]]->getCoordinateValue(0) < 0.0001 &&
-            Mesh()->NodeVec()[getConnectivity()[i]]->getCoordinateValue(1) < 0.0001){
-            for (int j = Mesh()->NElNodes()*nstate; j--; ){
+        if (this->Mesh()->NodeVec()[this->getConnectivity()[i]]->getCoordinateValue(0) < 0.0001 &&
+            this->Mesh()->NodeVec()[this->getConnectivity()[i]]->getCoordinateValue(1) < 0.0001){
+            for (int j = this->Mesh()->NElNodes()*nstate; j--; ){
                 Stiffness(nstate*i+DIM,j) = 0.;
                 Stiffness(j,nstate*i+DIM) = 0.;
             };
@@ -250,3 +253,16 @@ void ElStokes::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 }
 
 
+#include "ShapeHexahedron.h"
+#include "ShapeOneD.h"
+#include "ShapeQuadrilateral.h"
+#include "ShapePoint.h"
+#include "ShapeTetrahedron.h"
+#include "ShapeTriangle.h"
+
+template class ElStokes<ShapePoint>;
+template class ElStokes<ShapeOneD>;
+template class ElStokes<ShapeTriangle>;
+template class ElStokes<ShapeQuadrilateral>;
+template class ElStokes<ShapeTetrahedron>;
+template class ElStokes<ShapeHexahedron>;

@@ -57,14 +57,14 @@ private:
     //    std::vector<Nodes *>     nodesSolid_;
     std::vector<std::vector<Node *> > nodesSolid_;
     std::vector<Element *>  elementsFluid_;
-    std::vector<Boundary *>  boundaryFluid_;
+    std::vector<Element *>  boundaryFluid_;
 
     std::vector<Node *>     nodesArlequinCoarse_;
     std::vector<Node *>     nodesArlequinFine_;
     std::vector<Element *>  elementsArlequinCoarse_;
     std::vector<Element *>  elementsArlequinFine_;
-    std::vector<Boundary *>  boundaryArlequinCoarse_;
-    std::vector<Boundary *>  boundaryArlequinFine_;
+    std::vector<Element *>  boundaryArlequinCoarse_;
+    std::vector<Element *>  boundaryArlequinFine_;
 
     //Fluid variables
     int numElemFluid;

@@ -240,6 +240,7 @@ for (int k = 3; k < 4; k++)
     CompMesh* fineModel = new CompMesh(pParameters,dimension,degree);  
 
     GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
+    // GmshTools::Read(*coarseModel,"../coarse_test.msh");
     GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
 
     // CompMeshTools::InitialSolution(coarseModel);

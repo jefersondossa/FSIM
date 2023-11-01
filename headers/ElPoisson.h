@@ -1,14 +1,15 @@
 #ifndef ELEMENTPOISSON_H
 #define ELEMENTPOISSON_H
 
-#include "Element.h"
+#include "ElementT.h"
 
-class ElPoisson : public Element{
+template <class tshape>
+class ElPoisson : public ElementT<tshape>{
 private:
     double  fMeshMovingParameter = 1.;
 
 public:
-    ElPoisson(int index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){};
+    ElPoisson(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){};
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     

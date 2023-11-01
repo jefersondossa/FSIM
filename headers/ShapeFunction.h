@@ -16,37 +16,42 @@
 
 #include "DataTypes.h"
 #include <vector>
-/// Defines the quadratic shape functions and its derivatives
+/// Defines the shape functions and its derivatives
 
-// template<int DIM, int DEG>
 class ShapeFunction{
 public:
     //Constructor
     ShapeFunction(int dim, int deg){
-        fDimension = dim;
         fOrder = deg;
     }
 
-    /// Evaluates the shape function value
+    /// Shapes the shape function value
     /// @param double* Non-dimensional coordinates 
     /// @param double* Shape function values
-    void evaluate(VecDouble &xi, VecDouble &phi) const;
+    virtual void Shape(VecDouble &xi, VecDouble &phi) const{
+        PanicButton();
+    };
     
-    /// Evaluates the values of the shape funtion derivatives
+    /// Shapes the values of the shape funtion derivatives
     /// @param double* Non-dimensional coordinates 
     /// @param double** Shape function derivatives values
-    void evaluateGradient(VecDouble &xi, MatrixDouble &dphi) const;   
+    virtual void ShapeGradient(VecDouble &xi, MatrixDouble &dphi) const{
+        PanicButton();
+    };   
 
-    /// Evaluates the values of the shape funtion second derivatives    
+    /// Shapes the values of the shape funtion second derivatives    
     /// @param double** Shape function second derivatives values
-    void evaluateHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const;     
+    virtual void ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const{
+        PanicButton();
+    };     
 
     /// Gets the element nodal coordinates
     /// @param double** Non-dimensional coordinate
-    void getCoordinates(MatrixDouble &coord) const;
+    virtual void getCoordinates(MatrixDouble &coord) const {
+        PanicButton();
+    };
 
-private:
-    int fDimension;
+protected:
     int fOrder;
 };
 

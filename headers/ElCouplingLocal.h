@@ -1,9 +1,10 @@
 #ifndef ElCouplingLocal_H
 #define ElCouplingLocal_H
 
-#include "Element.h"
+#include "ElementT.h"
 
-class ElCouplingLocal : public Element
+template <class tshape>
+class ElCouplingLocal : public ElementT<tshape>
 {
 private:
     int64_t fLocalIndex;
@@ -11,9 +12,9 @@ private:
     double tARLQ_ = 0.;
 
 public:
-    ElCouplingLocal(int index, int64_t fineindex, std::vector<CompMesh*> &meshvec):Element(){
+    ElCouplingLocal(int index, int64_t fineindex, std::vector<CompMesh*> &meshvec):ElementT<tshape>(){
         this->Index()= index;
-        SetMesh(meshvec[2]);
+        this->fMesh = meshvec[2];
         fLocalIndex = fineindex;
         fMeshVector = meshvec;
     };

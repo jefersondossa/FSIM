@@ -278,7 +278,7 @@ double PartQuadrature<2>::interpolateQuadraticVariable(
     xsi(0) = PointList(point,0);
     xsi(1) = PointList(point,1);
     
-    shapeQuad.evaluate(xsi,phi_);
+    shapeQuad.Shape(xsi,phi_);
     
     for (int i = 0; i < 6; i++){
         int_value += nValues(i) * phi_(i);
@@ -300,7 +300,7 @@ double PartQuadrature<3>::interpolateQuadraticVariable(
     xsi(1) = PointList(point,1);
     xsi(2) = PointList(point,2);
     
-    shapeQuad.evaluate(xsi,phi_);
+    shapeQuad.Shape(xsi,phi_);
     
     for (int i = 0; i < 10; i++){
         int_value += nValues(i) * phi_(i);
@@ -324,7 +324,7 @@ double PartQuadrature<2>::interpolateLinearVariable(
     xsi(0) = PointList(point,0);
     xsi(1) = PointList(point,1);
     
-    shapeLin.evaluate(xsi,phip_);
+    shapeLin.Shape(xsi,phip_);
     
     for (int i = 0; i < 3; i++){
         int_value += nValues(i) * phip_(i);

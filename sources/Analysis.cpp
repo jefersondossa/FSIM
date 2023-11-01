@@ -1,7 +1,4 @@
 #include "Analysis.h"
-#include "Element.h"
-#include "Boundary.h"
-#include "CompMesh.h"
 #include "Assemble.h"
 
 Analysis::~Analysis()

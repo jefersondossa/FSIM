@@ -1,11 +1,12 @@
 #ifndef ELEMENTELASTICITY2D_H
 #define ELEMENTELASTICITY2D_H
 
-#include "Element.h"
+#include "ElementT.h"
 
-class ElElasticity2D : public Element{
+template <class tshape>
+class ElElasticity2D : public ElementT<tshape>{
 public:
-    ElElasticity2D(int index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){};
+    ElElasticity2D(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){};
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     

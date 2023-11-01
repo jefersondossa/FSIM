@@ -3,9 +3,10 @@
 
 #include "ElStokes.h"
 
-class ElNavierStokes : public ElStokes{
+template <class tshape>
+class ElNavierStokes : public ElStokes<tshape>{
 public:
-    ElNavierStokes(int index, VecInt &connect, CompMesh* mesh) : ElStokes(index,connect,mesh){};
+    ElNavierStokes(int index, VecInt &connect, CompMesh* mesh) : ElStokes<tshape>(index,connect,mesh){};
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     

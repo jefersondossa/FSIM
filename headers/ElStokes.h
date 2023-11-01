@@ -1,11 +1,12 @@
 #ifndef ELEMENTSTOKES_H
 #define ELEMENTSTOKES_H
 
-#include "Element.h"
+#include "ElementT.h"
 
-class ElStokes : public Element{
+template <class tshape>
+class ElStokes : public ElementT<tshape>{
 public:
-    ElStokes(int index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){};
+    ElStokes(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){};
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     
@@ -15,10 +16,10 @@ public:
     
     void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs) override;
 
-// private:
+protected:
     void GetStabilizationParameter(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
+    
     double tPSPG_, tSUPG_, tLSIC_; 
-
 };
 
 

@@ -6,69 +6,69 @@
 //------------------------------------------------------------------------------
 void Fluid::dragAndLiftCoefficients(std::ofstream& dragLift){
 
-    double dragCoefficient = 0.;
-    double liftCoefficient = 0.;
-    double pressureDragCoefficient = 0.;
-    double pressureLiftCoefficient = 0.;
-    double frictionDragCoefficient = 0.;
-    double frictionLiftCoefficient = 0.;
+    // double dragCoefficient = 0.;
+    // double liftCoefficient = 0.;
+    // double pressureDragCoefficient = 0.;
+    // double pressureLiftCoefficient = 0.;
+    // double frictionDragCoefficient = 0.;
+    // double frictionLiftCoefficient = 0.;
     
-    for (int jel = 0; jel < NBoundElements(); jel++){   
+    // for (int jel = 0; jel < NBoundElements(); jel++){   
         
-        double rhoInf = 1.0;
-        double velocityInf[2];
-        velocityInf[0] = -1.;
-        velocityInf[1] = 0.;
+    //     double rhoInf = 1.0;
+    //     double velocityInf[2];
+    //     velocityInf[0] = -1.;
+    //     velocityInf[1] = 0.;
         
-        double dForce = 0.;
-        double lForce = 0.;
-        double pDForce = 0.;
-        double pLForce = 0.;
-        double fDForce = 0.;
-        double fLForce = 0.;
-        double aux_Mom = 0.;
-        double aux_Per = 0.;
+    //     double dForce = 0.;
+    //     double lForce = 0.;
+    //     double pDForce = 0.;
+    //     double pLForce = 0.;
+    //     double fDForce = 0.;
+    //     double fLForce = 0.;
+    //     double aux_Mom = 0.;
+    //     double aux_Per = 0.;
         
-       for (int i=0; i<numberOfLines; i++){
-            //std::cout << "Bound group " << BoundaryVec()[jel] -> getBoundaryGroup() << std::endl;
-            if (BoundaryVec()[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
-                //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
-                int iel = BoundaryVec()[jel] -> getElement();
-                // ElementVec()[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
-                // ElementVec()[iel] -> computeSeparationAngle();
-            };
-        };
+    //    for (int i=0; i<numberOfLines; i++){
+    //         //std::cout << "Bound group " << BoundaryVec()[jel] -> getBoundaryGroup() << std::endl;
+    //         if (BoundaryVec()[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
+    //             //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
+    //             int iel = BoundaryVec()[jel] -> getElement();
+    //             // ElementVec()[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
+    //             // ElementVec()[iel] -> computeSeparationAngle();
+    //         };
+    //     };
         
-        pressureDragCoefficient += pDForce ;/// 
-            //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        pressureLiftCoefficient += pLForce;// / 
-            //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+    //     pressureDragCoefficient += pDForce ;/// 
+    //         //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+    //     pressureLiftCoefficient += pLForce;// / 
+    //         //(0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
         
-        frictionDragCoefficient += fDForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        frictionLiftCoefficient += fLForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+    //     frictionDragCoefficient += fDForce / 
+    //         (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+    //     frictionLiftCoefficient += fLForce / 
+    //         (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
         
-        dragCoefficient += dForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
-        liftCoefficient += lForce / 
-            (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+    //     dragCoefficient += dForce / 
+    //         (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
+    //     liftCoefficient += lForce / 
+    //         (0.5 * rhoInf * velocityInf[0] * velocityInf[0]);
         
-    };
-    // std::cout << "vazao " << pressureDragCoefficient << " " << pressureLiftCoefficient << std::endl;
-    if (rank == 0) {
-        const int timeWidth = 11;
-        const int numWidth = 11;
-        dragLift << std::setprecision(3) << std::scientific;
-        dragLift << std::left << std::setw(timeWidth) ;
-        dragLift << std::setw(numWidth) << pressureDragCoefficient;
-        dragLift << std::setw(numWidth) << pressureLiftCoefficient;
-        dragLift << std::setw(numWidth) << frictionDragCoefficient;
-        dragLift << std::setw(numWidth) << frictionLiftCoefficient;
-        dragLift << std::setw(numWidth) << dragCoefficient;
-        dragLift << std::setw(numWidth) << liftCoefficient;
-        dragLift << std::endl;
-    }
+    // };
+    // // std::cout << "vazao " << pressureDragCoefficient << " " << pressureLiftCoefficient << std::endl;
+    // if (rank == 0) {
+    //     const int timeWidth = 11;
+    //     const int numWidth = 11;
+    //     dragLift << std::setprecision(3) << std::scientific;
+    //     dragLift << std::left << std::setw(timeWidth) ;
+    //     dragLift << std::setw(numWidth) << pressureDragCoefficient;
+    //     dragLift << std::setw(numWidth) << pressureLiftCoefficient;
+    //     dragLift << std::setw(numWidth) << frictionDragCoefficient;
+    //     dragLift << std::setw(numWidth) << frictionLiftCoefficient;
+    //     dragLift << std::setw(numWidth) << dragCoefficient;
+    //     dragLift << std::setw(numWidth) << liftCoefficient;
+    //     dragLift << std::endl;
+    // }
 }
 
 // //------------------------------------------------------------------------------

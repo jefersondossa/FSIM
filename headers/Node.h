@@ -58,7 +58,7 @@ private:
     std::vector<int> fInverseIncidence;
     
 public:
-    Node(VecDouble &coor, int64_t index, int nState){
+    Node(VecDouble &coor, int64_t index, int nState = 1){
         fNStateVariables = nState;
         fIndex = index;
         fDimension = coor.size();
@@ -89,6 +89,13 @@ public:
             fConstrainType[i] = 0;
             fConstrainValue[i] = 0.;
         }
+    }
+
+    void SetNStateVariables(int nstate){
+        fNStateVariables = nstate;
+        fSolution.resize(fNStateVariables);
+        fDTimeSolution.resize(fNStateVariables);
+        fPrevSolution.resize(fNStateVariables);
     }
 
     int &GetNStateVariables() {return fNStateVariables;}

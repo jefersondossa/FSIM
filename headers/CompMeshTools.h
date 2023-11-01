@@ -3,7 +3,6 @@
 
 #include "Geometry.h"
 #include "Element.h"
-#include "Boundary.h"
 #include "CompMesh.h"
 class CompMesh;
 

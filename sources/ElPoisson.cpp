@@ -1,44 +1,44 @@
 #include "ElPoisson.h"
 
-void ElPoisson::ComputeStiffness(int &index, MatrixDouble &Stiffness){
+template <class tshape>
+void ElPoisson<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
-    double WJ = fIntegData.fWeight * fIntegData.fJacA0 * getIntegPointWeightFunction(index);
+    double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0 * this->getIntegPointWeightFunction(index);
 
-    for (int i = Mesh()->NElNodes(); i-- ; ){       
-        for (int j = Mesh()->NElNodes(); j-- ; ){            
-            for (int k = Mesh()->Dimension(); k--;  ){
+    for (int i = this->Mesh()->NElNodes(); i-- ; ){       
+        for (int j = this->Mesh()->NElNodes(); j-- ; ){            
+            for (int k = this->Mesh()->Dimension(); k--;  ){
                 //Diffusion matrix
-                double K = fIntegData.fDPhiX0(i,k) * fIntegData.fDPhiX0(j,k);
+                double K = this->fIntegData.fDPhiX0(i,k) * this->fIntegData.fDPhiX0(j,k);
                 Stiffness(i,j) += K * WJ;
             }
         };
     };
-    
-
 }
 
-void ElPoisson::ComputeResidual(int &index, VecDouble &Rhs){
+template <class tshape>
+void ElPoisson<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
 
-    VecDouble fieldForce = Mesh()->getProblemParameters().GetFieldForce();
-    auto force = Mesh()->getProblemParameters().getForcingFunction();
-    int dim = Mesh()->Dimension();
+    VecDouble fieldForce = this->Mesh()->getProblemParameters().GetFieldForce();
+    auto force = this->Mesh()->getProblemParameters().getForcingFunction();
+    int dim = this->Mesh()->Dimension();
 
     //Velocity Derivatives
     MatrixDouble du_dx(dim,dim);
-    interpolateSolDerivatives(du_dx);
+    this->interpolateSolDerivatives(du_dx);
 
-    double WJ = fIntegData.fWeight * fIntegData.fJacA0  * getIntegPointWeightFunction(index);
+    double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0  * this->getIntegPointWeightFunction(index);
 
     VecDouble forcingF(1);
-    VecDouble x_ = getIntegPointCoordinatesValue(index);
+    VecDouble x_ = this->getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
-    for (int i = Mesh()->NElNodes(); i--; ){
-        double shapeFi = Mesh()->getNumericalIntegration()-> phi_(i,index);
+    for (int i = this->Mesh()->NElNodes(); i--; ){
+        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
 
         //Viscosity
         double K = 0.;
-        for (int l=dim; l--; ) K += fIntegData.fDPhiX0(i,l) * du_dx(0,l);
+        for (int l=dim; l--; ) K += this->fIntegData.fDPhiX0(i,l) * du_dx(0,l);
 
         //External force
         double F = (fieldForce[0] + forcingF[0]) * shapeFi;
@@ -53,57 +53,58 @@ void ElPoisson::ComputeResidual(int &index, VecDouble &Rhs){
     };
 };
 
-void ElPoisson::ComputeError(VecDouble &errors){
+template <class tshape>
+void ElPoisson<tshape>::ComputeError(VecDouble &errors){
     int index = 0;
     errors.resize(3);
     errors.setZero();
-    int DIM = Mesh()->Dimension();
-    int DEG = Mesh()->GetDefaultOrder();
+    int DIM = this->Mesh()->Dimension();
+    int DEG = this->Mesh()->GetDefaultOrder();
 
     IntegQuadrature nQuad(DIM,DEG);
     ShapeFunction shapeQuad(DIM,DEG);
 
-    auto exactSol = Mesh()->getProblemParameters().getExactSolution();
+    auto exactSol = this->Mesh()->getProblemParameters().getExactSolution();
     if (!exactSol) PanicButton();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int i = DIM; i--; ) fIntegData.fAdimCoord[i] = nQuad.PointList(index,i);
+        for (int i = DIM; i--; ) this->fIntegData.fAdimCoord[i] = nQuad.PointList(index,i);
 
         //Returns the quadrature integration weight
-        fIntegData.fWeight = nQuad.WeightList(index);
+        this->fIntegData.fWeight = nQuad.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian(index);
+        this->ComputeJacobian(index);
                     
-        ComputeSpatialDerivatives();
+        this->ComputeSpatialDerivatives();
         
         VecDouble uMEF_(1);
-        interpolateSolution(index, uMEF_);
+        this->interpolateSolution(index, uMEF_);
         MatrixDouble du_dxMEF(1,DIM);
-        interpolateSolDerivatives(du_dxMEF);
+        this->interpolateSolDerivatives(du_dxMEF);
         
         VecDouble u_(1);
         MatrixDouble gradU(DIM,1);
 
-        VecDouble xna_ = getIntegPointCoordinatesValue(index);
+        VecDouble xna_ = this->getIntegPointCoordinatesValue(index);
         
         exactSol(xna_,u_,gradU);
 
 
         //Consider Arlequin weight function
-        u_ *= getIntegPointWeightFunction(index);
-        gradU *= getIntegPointWeightFunction(index);
-        uMEF_ *= getIntegPointWeightFunction(index);
-        du_dxMEF *= getIntegPointWeightFunction(index);
+        u_ *= this->getIntegPointWeightFunction(index);
+        gradU *= this->getIntegPointWeightFunction(index);
+        uMEF_ *= this->getIntegPointWeightFunction(index);
+        du_dxMEF *= this->getIntegPointWeightFunction(index);
 
         //L2 state variable
-        errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * fIntegData.fWeight * fIntegData.fJacA0 ;
+        errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * this->fIntegData.fWeight * this->fIntegData.fJacA0 ;
         
         //Semi H1 state variable
         for (int m = DIM; m--; ){
-            errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * fIntegData.fWeight * fIntegData.fJacA0;
+            errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * this->fIntegData.fWeight * this->fIntegData.fJacA0;
         }
 
         index++;        
@@ -113,12 +114,13 @@ void ElPoisson::ComputeError(VecDouble &errors){
     errors[2] = errors[0]+errors[1];
 }
 
-void ElPoisson::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
+template <class tshape>
+void ElPoisson<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = Mesh()->NElNodes(); i--; ){
-        if ((Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 1) ||
-            (Mesh()->NodeVec()[getConnectivity()[i]] -> getConstrains(0) == 3))  {
-            for (int j = Mesh()->NElNodes(); j--; ){
+    for (int i = this->Mesh()->NElNodes(); i--; ){
+        if ((this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(0) == 1) ||
+            (this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(0) == 3))  {
+            for (int j = this->Mesh()->NElNodes(); j--; ){
                 Stiffness(i,j) = 0.;
                 Stiffness(j,i) = 0.;
             };
@@ -129,3 +131,18 @@ void ElPoisson::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
     // std::cout<<"Rhs -" << Rhs<<std::endl;
 
 }
+
+
+#include "ShapeHexahedron.h"
+#include "ShapeOneD.h"
+#include "ShapeQuadrilateral.h"
+#include "ShapePoint.h"
+#include "ShapeTetrahedron.h"
+#include "ShapeTriangle.h"
+
+template class ElPoisson<ShapePoint>;
+template class ElPoisson<ShapeOneD>;
+template class ElPoisson<ShapeTriangle>;
+template class ElPoisson<ShapeQuadrilateral>;
+template class ElPoisson<ShapeTetrahedron>;
+template class ElPoisson<ShapeHexahedron>;

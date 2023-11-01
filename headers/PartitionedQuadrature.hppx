@@ -188,7 +188,7 @@ double IntegQuadratureSpecial<2,2>::interpolateQuadraticVariable(double nValues[
 
     double phi_[6] = {};
     
-    shapeQuad.evaluate(xsi,phi_);
+    shapeQuad.Shape(xsi,phi_);
     
     for (int i = 0; i < 6; i++){
         int_value += nValues[i] * phi_[i];

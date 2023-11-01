@@ -60,10 +60,10 @@ public:
             //Defines the integration points adimentional coordinates
             for (int i = 0; i < DIM; i++) xsi[i] = quad.PointList(index,i);       
             //Shape functions
-            shapeFunction.evaluate(xsi,phiAux_);
+            shapeFunction.Shape(xsi,phiAux_);
             for (int i = 0; i < nElNodes; i++) phi_(i,index) = phiAux_[i];
             //Derivatives
-            shapeFunction.evaluateGradient(xsi,dphiAux);
+            shapeFunction.ShapeGradient(xsi,dphiAux);
             for (int i = 0; i < nElNodes; i++)
                 for (int j = 0; j < DIM; j++)
                     dphi_[i](j,index) = dphiAux(i,j);
@@ -75,10 +75,10 @@ public:
             //Defines the integration points adimentional coordinates
             for (int i = 0; i < DIM; i++) xsi[i] = Squad.PointList(index,i);       
             //Shape functions
-            shapeFunction.evaluate(xsi,phiAux_);
+            shapeFunction.Shape(xsi,phiAux_);
             for (int i = 0; i < nElNodes; i++) phiS_(i,index) = phiAux_[i];
             //Derivatives
-            shapeFunction.evaluateGradient(xsi,dphiAux);
+            shapeFunction.ShapeGradient(xsi,dphiAux);
             for (int i = 0; i < nElNodes; i++)
                 for (int j = 0; j < DIM; j++)
                     dphiS_[i][j][index] = dphiAux(i,j);

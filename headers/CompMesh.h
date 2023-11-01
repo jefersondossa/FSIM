@@ -5,14 +5,12 @@
 #include "CompMeshTools.h"
 #include "DataTypes.h"
 #include "Element.h"
-#include "Boundary.h"
 #include "ProblemParameters.h"
 #include "DomainIntegration.h"
 #include "Analysis.h"
 #include "GmshTools.h"
 
 class Element;
-class Boundary;
 class Analysis;
 // namespace GmshTools{};
 
@@ -30,10 +28,12 @@ private:
     std::vector<Node *>       fNodeVector;
 
     /// Defines the vector of fluid boundaries mesh nodes
-    std::vector<Boundary *>   fBoundaryVector;
+    std::vector<Element *>    fBoundaryVector;
 
     /// Defines the vector of fluid elements
     std::vector<Element *>    fElementVector;
+
+   
 
 public:
     CompMesh() = default;
@@ -77,17 +77,19 @@ public:
     /// @return fluid model nodes information
     std::vector<Node *> &NodeVec(){return fNodeVector;}
     int64_t NNodes(){return fNodeVector.size();}
+    void SetNumNodes(int64_t nnodes){fNodeVector.resize(nnodes);}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
     std::vector<Element *> &ElementVec(){return fElementVector;}
     int64_t NElements(){return fElementVector.size();}
+    void SetNumElements(int64_t nelements){fElementVector.resize(nelements);}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
-    std::vector<Boundary *> &BoundaryVec(){return fBoundaryVector;}
+    std::vector<Element *> &BoundaryVec(){return fBoundaryVector;}
     int64_t NBoundElements(){return fBoundaryVector.size();}
 
     ProblemParameters &getProblemParameters(){
