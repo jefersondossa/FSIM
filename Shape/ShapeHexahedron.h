@@ -2,9 +2,12 @@
 #define SHAPEHEXAHEDRON
 
 #include "DataTypes.h"
-
+#include "IntRuleHexahedron.h"
 class ShapeHexahedron{
 public:
+    // Type definition for integration rule 1D
+    typedef IntRuleHexahedron LocIntRule;
+
     const static int Dimension = 3;
     const static int Order = 1;
     const static int NElNodes = 4;

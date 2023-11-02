@@ -29,8 +29,9 @@
 template<class tshape>
 class ElementT : public Element{
 protected:
+    // Integration rule object
+    typename tshape::LocIntRule fIntRule;
     
-    IntPointData  fIntegData;
 
 public:
     ElementT() : Element(){};
@@ -38,7 +39,7 @@ public:
     /// fluid element constructor
     /// @param int element index @param Connectivity element connectivity
     /// @param vector<Nodes> 
-    ElementT(int64_t index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){
+    ElementT(int64_t index, VecInt &connect, CompMesh* mesh) : Element(){
         
         fMesh = mesh;
         fConnect.resize(tshape::NElNodes);
@@ -50,17 +51,45 @@ public:
         fSideInBoundary = -1;
         fNeighborElements.clear();
 
-        IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
-        intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        fIntPointDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
+        fIntRule.SetOrder(tshape::Order);
+        fIntegData.fWeightFunction.resize(fIntRule.NPoints());
+        fIntegData.fDistFunction.resize(fIntRule.NPoints());
+        fIntegData.fPrevWeightFunction.resize(fIntRule.NPoints());
 
-        intPointWeightFunction.fill(1.);
-        intPointWeightFunctionPrev.fill(1.);
+        fIntegData.fWeightFunction.fill(1.);
+        fIntegData.fPrevWeightFunction.fill(1.);
     
         getIntegPointCoordinates();
 
     };
+
+    ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : Element(){
+        
+        fMesh = mesh;
+        fConnect.resize(tshape::NElNodes);
+        fIndex = index;
+        for (int i = tshape::NElNodes; i--; ) fConnect[i] = connect[i];
+        DEG = fMesh->GetDefaultOrder();
+        fWeakForm = wf;
+        if (fWeakForm) nLocDOF = tshape::NElNodes * fWeakForm->NState(); 
+
+        FSIInterface = false;
+        fSideInBoundary = -1;
+        fNeighborElements.clear();
+        fIntRule.SetOrder(tshape::Order+tshape::Order);
+
+        IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
+        fIntegData.fWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
+        fIntegData.fDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
+        fIntegData.fPrevWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
+
+        fIntegData.fWeightFunction.fill(1.);
+        fIntegData.fPrevWeightFunction.fill(1.);
+    
+        getIntegPointCoordinates();
+
+    };
+
 
     
     void getIntegPointCoordinates();
@@ -82,8 +111,10 @@ public:
 
     void interpolateSolution(int &index, VecDouble &u_) override;
     void interpolateSolution(VecDouble &phi, VecDouble &u_) override;
+    void interpolateSolution();
     void interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &umeshPrev_);
     void interpolateSolDerivatives(MatrixDouble &du_dx) override;
+    void interpolateSolDerivatives();
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
@@ -115,7 +146,7 @@ public:
     
 
     double &GetIntPointDistFunction(int index){
-        return fIntPointDistFunction[index];
+        return  fIntegData.fDistFunction[index];
     }
 
     IntPointData IntegrationData() {return fIntegData;}    
@@ -164,6 +195,7 @@ public:
     // virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
     // virtual void ComputeError(VecDouble &errors){};
     
+    void setIntegPointWeightFunction() override;
 
     int getBoundaryGroup()override{return 0;};
     int getElement()override{return 0;};

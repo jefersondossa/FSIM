@@ -2,9 +2,13 @@
 #define SHAPETETRAHEDRONLIN
 
 #include "DataTypes.h"
+#include "IntRuleTetrahedron.h"
 
 class ShapeTetrahedronLin{
 public:
+    // Type definition of integration rule for quadrilateral elements
+    typedef IntRuleTetrahedron LocIntRule;
+    
     const static int Dimension = 3;
     const static int Order = 1;
     const static int NElNodes = 4;

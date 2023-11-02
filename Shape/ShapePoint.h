@@ -2,9 +2,13 @@
 #define SHAPEPOINT
 
 #include "DataTypes.h"
+#include "IntRule0d.h"
 
 class ShapePoint{
 public:
+    // Type definition for integration rule 1D
+    typedef IntRule0d LocIntRule;
+    
     const static int Dimension = 0; 
     const static int Order = 1;
     const static int NElNodes = 1;

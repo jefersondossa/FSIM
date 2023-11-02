@@ -14,6 +14,10 @@ file(GLOB weakform
     ElStokes.cpp
     ElPoisson.h
     ElPoisson.cpp
+    WeakForm.h
+    WeakForm.cpp
+    Poisson.h
+    Poisson.cpp
 )
 
 set(WEAKFORM ${weakform} PARENT_SCOPE)

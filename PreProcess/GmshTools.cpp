@@ -119,15 +119,15 @@ void GmshTools::ReadNodes(std::ifstream &file, CompMesh *cmesh){
     
 
     int DIM = cmesh->Dimension();
-    if (cmesh->getProblemParameters().ProbType() == ProblemType::ENavierStokes || cmesh->getProblemParameters().ProbType() == ProblemType::EStokes){
-        cmesh->NGlobalDOF() = (DIM+1) * cmesh->NNodes();
-    } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EPoisson) {
-        cmesh->NGlobalDOF() = cmesh->NNodes();
-    } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EElastic || cmesh->getProblemParameters().ProbType() == ProblemType::ESolidPositional){
-        cmesh->NGlobalDOF() = cmesh->NNodes() * DIM;
-    } else {
-        PanicButton();
-    }
+    // if (cmesh->getProblemParameters().ProbType() == ProblemType::ENavierStokes || cmesh->getProblemParameters().ProbType() == ProblemType::EStokes){
+    //     cmesh->NGlobalDOF() = (DIM+1) * cmesh->NNodes();
+    // } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EPoisson) {
+    //     cmesh->NGlobalDOF() = cmesh->NNodes();
+    // } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EElastic || cmesh->getProblemParameters().ProbType() == ProblemType::ESolidPositional){
+    //     cmesh->NGlobalDOF() = cmesh->NNodes() * DIM;
+    // } else {
+    //     PanicButton();
+    // }
     
 
     return;
@@ -374,7 +374,8 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                     {
                     case EPoisson:
                         {
-                            ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
+                            // ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
+                            ElementT<ShapeTriangleLin> *el = new ElementT<ShapeTriangleLin>(index++,connect,cmesh,cmesh->Material(1));
                             cmesh->ElementVec().push_back(el);
                         }
                         break;
@@ -523,7 +524,8 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
 
         for (int j = 0; j < cmesh->NodeVec()[iNode] -> getNumberOfElements(); j++){
             int elem = cmesh->NodeVec()[iNode] -> getInverseIncidenceElement(j);
-            VecInt connec = cmesh->ElementVec()[elem-1] -> getConnectivity();
+            if (!cmesh->ElementVec()[elem]) continue;
+            VecInt connec = cmesh->ElementVec()[elem] -> getConnectivity();
 
             // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
             bool flag = false;
@@ -580,6 +582,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
 
     // Update connectivity
     for (int i = 0; i < cmesh->NElements(); i++){
+        if (!cmesh->ElementVec()[i]) continue;
         VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
 
         //Reorder connectivity
@@ -597,6 +600,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     for (int i = 0; i < cmesh->NNodes(); i++) cmesh->NodeVec()[i] -> clearInverseIncidence();
 
     for (int i = 0; i < cmesh->NElements(); i++){
+        if (!cmesh->ElementVec()[i]) continue;
         VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
 
         for (int k = 0; k < connect.size(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
@@ -733,10 +737,9 @@ void GmshTools::BoundarySides(CompMesh * cmesh){
 
 static void InsertElement(CompMesh &gmesh, int elindex, std::ifstream & line);
 static std::string GetFileVersion(const std::string& file_name);
-template<class tshape> ElementT<tshape>* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_type, int  el_identifier, std::vector<int> & node_identifiers);
+Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_type, int  el_identifier, VecInt & node_identifiers);
 
 int GetNumberofNodes(int & el_type){
-    
     int n_nodes;
     switch (el_type) {
         case 1:
@@ -772,12 +775,16 @@ int GetNumberofNodes(int & el_type){
         {
             // Prism
             n_nodes = 6;
+            std::cout << "Element not implemented\n";
+            PanicButton();
         }
             break;
         case 7:
         {
             // Pyramid
             n_nodes = 5;
+            std::cout << "Element not implemented\n";
+            PanicButton();
         }
             break;
         case 8:
@@ -815,6 +822,8 @@ int GetNumberofNodes(int & el_type){
         {
             // Quadratic Prism
             n_nodes = 15;
+            std::cout << "Element not implemented\n";
+            PanicButton();
         }
             break;
         case 15:{
@@ -1269,12 +1278,12 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                         int el_identifier, n_el_nodes;
                         n_el_nodes = GetNumberofNodes(entity_el_type);
                         read >> el_identifier;
-                        std::vector<int> node_identifiers(n_el_nodes);
+                        VecInt node_identifiers(n_el_nodes);
                         for (int i_node = 0; i_node < n_el_nodes; i_node++) {
                             read >> node_identifiers[i_node];
                         }
                         /// Internally the nodes index and element index is converted to zero based indexation
-                        InsertElement<ShapeTriangleLin>(&gmesh, gmsh_physical_identifier, entity_el_type, elcount, node_identifiers);
+                        gmesh.ElementVec()[elcount] = InsertElement(&gmesh, gmsh_physical_identifier, entity_el_type, elcount, node_identifiers);
                         elcount++;
                         
                     }else{
@@ -1282,7 +1291,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                         int el_identifier, n_el_nodes;
                         n_el_nodes = GetNumberofNodes(entity_el_type);
                         read >> el_identifier;
-                        std::vector<int> node_identifiers(n_el_nodes);
+                        VecInt node_identifiers(n_el_nodes);
                         for (int i_node = 0; i_node < n_el_nodes; i_node++) {
                             read >> node_identifiers[i_node];
                         }
@@ -1678,177 +1687,200 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
                       << "GmshTools:: Gmsh can probably export meshes in different legacy versions. Check their documentation for an up-to-date tutorial." << std::endl;
             PanicButton();
     }
+
+    //Delete all null pointers, i.e., elements without a material
+    gmesh.ElementVec().erase(
+        std::remove(gmesh.ElementVec().begin(), gmesh.ElementVec().end(), nullptr),
+        gmesh.ElementVec().end()
+    );
+    gmesh.ElementVec().shrink_to_fit();
+
+    // RenumberConnectivity(&gmesh);
+
+    BoundaryConstrains(&gmesh);
+
+    BoundarySides(&gmesh);
+    gmesh.part_elem= new int[gmesh.NElements()]();
 }
 
 
 
-// Element* GmshTools::CreateElement(CompMesh *cmesh, int64_t index, VecInt &connect){
-//     for (int k = 0; k < cmesh->NElNodes(); k++){
-//         cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(index);
-//     };
+Element* GmshTools::CreateElement(CompMesh *cmesh, int64_t index, VecInt &connect){
+    for (int k = 0; k < connect.size(); k++){
+        cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(index);
+    };
 
-//     switch (cmesh->getProblemParameters().ProbType())
-//     {
-//     case EPoisson:
-//         {
-//             ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
-//             cmesh->ElementVec()[index]=el;
-//             return el;
-//         }
-//         break;
-//     case EElastic:
-//         {
-//             ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
-//             cmesh->ElementVec()[index]=el;
-//             return el;
-//         }
-//         break;
-//     case ESolidPositional:
-//         {
-//             ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
-//             cmesh->ElementVec()[index]=el;
-//             return el;
-//         }
-//         break;
-//     case EStokes:
-//         {
-//             ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
-//             cmesh->ElementVec()[index]=el;
-//             return el;
-//         }
-//         break;
-//     case ENavierStokes:
-//         {
-//             ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
-//             cmesh->ElementVec()[index]=el;
-//             return el;
-//         }
-//         break;
+    switch (cmesh->getProblemParameters().ProbType())
+    {
+    case EPoisson:
+        {
+            ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
+            cmesh->ElementVec()[index]=el;
+            return el;
+        }
+        break;
+    case EElastic:
+        {
+            ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
+            cmesh->ElementVec()[index]=el;
+            return el;
+        }
+        break;
+    case ESolidPositional:
+        {
+            ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
+            cmesh->ElementVec()[index]=el;
+            return el;
+        }
+        break;
+    case EStokes:
+        {
+            ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
+            cmesh->ElementVec()[index]=el;
+            return el;
+        }
+        break;
+    case ENavierStokes:
+        {
+            ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
+            cmesh->ElementVec()[index]=el;
+            return el;
+        }
+        break;
     
-//     default:
-//         PanicButton();
-//         return 0;
-//         break;
-//     }
+    default:
+        PanicButton();
+        return 0;
+        break;
+    }
 
     
-// };
+};
 
 
 
-template<class tshape>
-ElementT<tshape>* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_type, int  el_identifier, std::vector<int> & node_identifiers){
+Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_type, int  el_identifier, VecInt & node_identifiers){
     
-//     VecInt Topology;
-//     int n_nodes = node_identifiers.size();
-//     Topology.resize(n_nodes);
-//     Topology.setConstant(-1);
-//     for (int k_node = 0; k_node<n_nodes; k_node++) {
-//         Topology[k_node] = node_identifiers[k_node]-GMSH_SHIFT;
-//     }
-//     Element* gel = nullptr;
-// //    el_identifier -= GMSH_SHIFT;
-    
-//     switch (el_type) {
-//         // case 1:
-//         // {   // Line
-//         //     gel = new GeoElementTemplate<Geom1d>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         case 2:
+    VecInt Topology;
+    int n_nodes = node_identifiers.size();
+    Topology.resize(n_nodes);
+    Topology.setConstant(-1);
+    for (int k_node = 0; k_node<n_nodes; k_node++) {
+        Topology[k_node] = node_identifiers[k_node]-GMSH_SHIFT;
+    }
+    Element* gel = nullptr;
+//    el_identifier -= GMSH_SHIFT;
+
+    for (int k = 0; k < node_identifiers.size(); k++){
+        gmesh->NodeVec()[Topology[k]] -> pushInverseIncidence(el_identifier);
+    };
+
+    //The element should be ignored if there is no material inserted with its physical identifier
+    if (!gmesh->Material(physical_identifier)) return gel;
+
+    switch (el_type) {
+        case 1:
+        {   // Ligelne
+        
+            gel = new ElementT<ShapeOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            // gel = new GeoElementTemplate<Geom1d>(Topology, physical_identifier, gmesh, el_identifier);
+        }
+            break;
+        case 2:
+        {
+            gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            // gel = GmshTools::CreateElement(gmesh,el_identifier,Topology);
+            // Triangle
+            // gel = new GeoElementTemplate<GeomTriangle>(Topology, physical_identifier, gmesh, el_identifier);
+            break;
+        }
+//             break;
+//         case 3:
 //         {
-//             gel = GmshTools::CreateElement(gmesh,el_identifier,Topology);
-//             // Triangle
-//             // gel = new GeoElementTemplate<GeomTriangle>(Topology, physical_identifier, gmesh, el_identifier);
+//             // Quadrilateral
+//             gel = new GeoElementTemplate<GeomQuad>(Topology, physical_identifier, gmesh, el_identifier);
             
-//         }
-// //             break;
-// //         case 3:
-// //         {
-// //             // Quadrilateral
-// //             gel = new GeoElementTemplate<GeomQuad>(Topology, physical_identifier, gmesh, el_identifier);
-            
-// //         }
-// //             break;
-// //         case 4:
-// //         {
-// //             // Tetrahedron
-// //             gel = new GeoElementTemplate<GeomTetrahedron>(Topology, physical_identifier, gmesh, el_identifier);
-            
-// //         }
-// //             break;
-// //         // case 5:
-// //         // {
-// //         //     // Hexahedra
-// //         //     gel = new GeoElementTemplate<GeomCube>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 6:
-// //         // {
-// //         //     // Prism
-// //         //     gel = new GeoElementTemplate<GeomPrism>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 7:
-// //         // {
-// //         //     // Pyramid
-// //         //     gel = new GeoElementTemplate<GeomPyramid>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 8:
-// //         // {
-// //         //     // Quadratic Line
-// //         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticLine>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 9:
-// //         // {
-// //         //     // Triangle
-// //         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticTrig>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 10:
-// //         // {
-// //         //     std::vector <int64_t,15> Topology_c(n_nodes-1);
-// //         //     for (int k_node = 0; k_node < n_nodes-1; k_node++) { /// Gmsh representation Quadrangle8 and Quadrangle9, but by default Quadrangle9 is always generated. (?_?).
-// //         //         Topology_c[k_node] = Topology[k_node];
-// //         //     }
-// //         //     // Quadrilateral
-// //         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticQuad>(Topology_c, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 11:
-// //         // {
-// //         //     // Tetrahedron
-// //         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticTetra>(Topology, physical_identifier, gmesh, el_identifier);
-            
-// //         // }
-// //         //     break;
-// //         // case 12:
-// //         // {
-// //         //     // Hexahedra
-// //         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticCube>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         // case 13:
-// //         // {
-// //         //     // Prism
-// //         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticPrism>(Topology, physical_identifier, gmesh, el_identifier);
-// //         // }
-// //         //     break;
-// //         case 15:{
-// //             // Point
-// //             gel = new GeoElementTemplate<Geom0d>(Topology, physical_identifier, gmesh, el_identifier);
-// //         }
-// //             break;
-//         default:
-//         {
-//             std::cout << "Element not implemented." << std::endl;
-//             PanicButton();
 //         }
 //             break;
-//     }
-    ElementT<tshape> *gel = new ElementT<tshape>();
-//     gmesh->SetElement(el_identifier, gel);
+//         case 4:
+//         {
+//             // Tetrahedron
+//             gel = new GeoElementTemplate<GeomTetrahedron>(Topology, physical_identifier, gmesh, el_identifier);
+            
+//         }
+//             break;
+//         // case 5:
+//         // {
+//         //     // Hexahedra
+//         //     gel = new GeoElementTemplate<GeomCube>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 6:
+//         // {
+//         //     // Prism
+//         //     gel = new GeoElementTemplate<GeomPrism>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 7:
+//         // {
+//         //     // Pyramid
+//         //     gel = new GeoElementTemplate<GeomPyramid>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 8:
+//         // {
+//         //     // Quadratic Line
+//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticLine>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 9:
+//         // {
+//         //     // Triangle
+//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticTrig>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 10:
+//         // {
+//         //     std::vector <int64_t,15> Topology_c(n_nodes-1);
+//         //     for (int k_node = 0; k_node < n_nodes-1; k_node++) { /// Gmsh representation Quadrangle8 and Quadrangle9, but by default Quadrangle9 is always generated. (?_?).
+//         //         Topology_c[k_node] = Topology[k_node];
+//         //     }
+//         //     // Quadrilateral
+//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticQuad>(Topology_c, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 11:
+//         // {
+//         //     // Tetrahedron
+//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticTetra>(Topology, physical_identifier, gmesh, el_identifier);
+            
+//         // }
+//         //     break;
+//         // case 12:
+//         // {
+//         //     // Hexahedra
+//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticCube>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         // case 13:
+//         // {
+//         //     // Prism
+//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticPrism>(Topology, physical_identifier, gmesh, el_identifier);
+//         // }
+//         //     break;
+//         case 15:{
+//             // Point
+//             gel = new GeoElementTemplate<Geom0d>(Topology, physical_identifier, gmesh, el_identifier);
+//         }
+//             break;
+        default:
+        {
+            std::cout << "Element not implemented." << std::endl;
+            PanicButton();
+        }
+            break;
+    }
+    // ElementT<tshape> *gel = new ElementT<tshape>();
+    // gmesh->SetElement(el_identifier, gel);
     return gel;
 };

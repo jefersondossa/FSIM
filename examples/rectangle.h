@@ -207,11 +207,11 @@ for (int k = 3; k < 4; k++)
 //==========================================================================
 //==============================PROBLEM MESHES==============================
 //==========================================================================
-
+   
 	MPI_Barrier(PETSC_COMM_WORLD);   
     ProblemParameters pParameters;
     // pParameters.ProbType() = ESolidPositional;
-    pParameters.ProbType() = EElastic;
+    pParameters.ProbType() = EPoisson;
     if (pParameters.ProbType() == EPoisson){
         pParameters.setForcingFunction(forcingFunctionPoisson);
         pParameters.setExactSolution(exactSolPoisson);
@@ -239,9 +239,18 @@ for (int k = 3; k < 4; k++)
     CompMesh* coarseModel = new CompMesh(pParameters,dimension,degree);
     CompMesh* fineModel = new CompMesh(pParameters,dimension,degree);  
 
-    GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
-    // GmshTools::Read(*coarseModel,"../coarse_test.msh");
-    GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
+    Poisson * matpoisson = new Poisson(8,2);
+    coarseModel->InsertMaterial(matpoisson);
+    fineModel->InsertMaterial(matpoisson);
+
+    // GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);
+    std::map<int, ProblemParameters > materials;
+    materials[1] = pParameters;
+
+    
+
+    GmshTools::Read(*coarseModel,"../coarse_test.msh");
+    // GmshTools::MeshReading(fluid2,"fine.msh",fineModel);
 
     // CompMeshTools::InitialSolution(coarseModel);
 
@@ -250,7 +259,7 @@ for (int k = 3; k < 4; k++)
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
     GmshTools::BoundaryConstrains(coarseModel);
-    GmshTools::BoundaryConstrains(fineModel);
+    // GmshTools::BoundaryConstrains(fineModel);
 
     std::vector<CompMesh *> meshvector(2);
     // meshvector[0] = coarseModel;

@@ -145,6 +145,35 @@ void ElementT<tshape>::getBoundaryNodes(int *nodesb_){
 
     return;
 }
+
+template<class tshape>
+void ElementT<tshape>::setIntegPointWeightFunction() {
+    //It produces wrong results for constant weight functions
+    VecDouble xsi(tshape::Dimension);    
+
+    for(int i = 0; i < fIntRule.NPoints(); i++) {
+        fIntegData.fPrevWeightFunction[i] = fIntegData.fWeightFunction[i];
+        fIntegData.fWeightFunction[i] = 0.;
+    }
+
+    int index=0;
+
+    for(int it = 0; it < fIntRule.NPoints(); it++){
+        
+       xsi[0] = fIntRule.PointList(index,0);
+       xsi[1] = fIntRule.PointList(index,1);
+
+       for (int j=0; j<tshape::NElNodes; j++){
+           fIntegData.fWeightFunction[index] += fIntegData.fPhi[j] * fMesh->NodeVec()[fConnect[j]] -> getWeightFunction();
+       };
+       // fIntegData.fWeightFunction(index) = 1.;
+       index++;
+    }; 
+
+    // index = 0;
+     return;
+};
+
 //------------------------------------------------------------------------------
 //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
 //------------------------------------------------------------------------------
@@ -158,7 +187,6 @@ void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
     // ShapeFunction shapeQuad(DIM,DEG);
     // VecDouble phi_(tshape::NElNodes);
     
-    IntegQuadrature nQuad(DIM,DEG);
     // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
     //     intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
     //     intPointWeightFunction[i] = 0.;
@@ -166,16 +194,16 @@ void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
 
     int index=0;
 
-    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+    for(int it = 0; it < fIntRule.NPoints(); it++){
         
-       xsi[0] = nQuad.PointList(index,0);
-       xsi[1] = nQuad.PointList(index,1);
+       xsi[0] = fIntRule.PointList(index,0);
+       xsi[1] = fIntRule.PointList(index,1);
             
     //    //Computes the velocity shape functions
     //    shapeQuad.Shape(xsi,phi_);
 
        for (int j=0; j<tshape::NElNodes; j++){
-           fIntPointDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
+            fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
        };
        // intPointWeightFunction(index) = 1.;
        index++;
@@ -193,18 +221,17 @@ void ElementT<tshape>::getIntegPointCoordinates(){
     int DIM = tshape::Dimension;
     DEG = fMesh->GetDefaultOrder();
 
-    IntegQuadrature sQuad(DIM,DEG);
-    fIntPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),2);
+    fIntPointCoordinates.resize(fIntRule.NPoints(),2);
     fIntPointCoordinates.setZero();
     
     VecDouble xsi(DIM);
     VecDouble phi_(tshape::NElNodes);
-    fIntPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),DIM);
+    fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
-    for (int i = 0; i < sQuad.getNumberOfIntegrationPoints(); i++){
+    for (int i = 0; i < fIntRule.NPoints(); i++){
         double x[DIM] = {};
 
-        for (int k = DIM; k--; ) xsi[k] = sQuad.PointList(i,k);
+        for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
         tshape::Shape(xsi,phi_);
 
@@ -228,10 +255,9 @@ template<class tshape>
 void ElementT<tshape>::clearVariables(){
 
     int DIM = tshape::Dimension;
-    IntegQuadratureSpecial sQuad(DIM,DEG);
 
-    for (int i=0; i < sQuad.getNumberOfIntegrationPoints(); i++){
-        intPointWeightFunction[i] = 1.;
+    for (int i=0; i < fIntRule.NPoints(); i++){
+        fIntegData.fWeightFunction[i] = 1.;
         for (int j =0; j<DIM; j++) {
             fIntPointCoordinates(i,j) = 0.;
         }
@@ -486,6 +512,19 @@ void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_) {
     }
 }
 
+
+template<class tshape>
+void ElementT<tshape>::interpolateSolution() {
+    fIntegData.fSol.setZero();
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = fIntegData.fPhi[i];
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        for (int j = 0; j < nstate; j++ ){
+            fIntegData.fSol[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+        }
+    }
+}
+
 template<class tshape>
 void ElementT<tshape>::interpolateSolution(VecDouble &phi, VecDouble &u_) {
     u_.setZero();
@@ -515,6 +554,19 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
     }
 }
 
+template<class tshape>
+void ElementT<tshape>::interpolateSolDerivatives() {
+    fIntegData.fDSolDx.setZero();    
+    int DIM = tshape::Dimension;
+    for (int i = tshape::NElNodes; i--; ){
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        for (int j = DIM; j--; ){
+            for (int k = nstate; k--; ){
+                fIntegData.fDSolDx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(i,j);
+            }
+        }
+    }
+}
 //------------------------------------------------------------------------------
 //-------------INTERPOLATES VELOCITY, PRESSURE AND ITS DERIVATIVES--------------
 //------------------------------------------------------------------------------
@@ -708,19 +760,20 @@ void ElementT<tshape>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 template<class tshape>
 void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
+    if (!fWeakForm) return;
+
     int DIM = tshape::Dimension;
     DEG = fMesh->GetDefaultOrder();
     
     int index = 0;
-    IntegQuadrature nQuad(DIM,DEG);
     fIntegData.fAdimCoord.resize(DIM);
-    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+    for(int it = 0; it < fIntRule.NPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
 
         //Returns the quadrature integration weight
-        fIntegData.fWeight = nQuad.WeightList(index);
+        fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
         ComputeJacobian(index);
@@ -729,17 +782,20 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         ComputeSpatialDerivatives();
 
         //Computes the element diffusion/viscosity matrix
-        ComputeStiffness(index, jacobianNRMatrix);
+        fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
+        
+        if (fIntegData.fNeedsSol) interpolateSolution();
+        if (fIntegData.fNeedsDSol) interpolateSolDerivatives();
 
         //Computes the RHS vector
-        ComputeResidual(index, rhsVector); 
+        fWeakForm->ComputeResidual(index, fIntegData, rhsVector); 
 
         index++;        
     };  
     // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix;
     // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector;
     //Apply boundary conditions
-    ApplyBC(jacobianNRMatrix, rhsVector);
+    fWeakForm->ApplyBC(Mesh()->NodeVec(), this->getConnectivity(), jacobianNRMatrix, rhsVector);
 
     return;
 };
@@ -751,21 +807,22 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 template<class tshape>
 void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
 
+    if (!fWeakForm) return;
+
     int DIM = tshape::Dimension;
     DEG = fMesh->GetDefaultOrder();
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fAdimCoord.resize(DIM);
 
     int index = 0;
-    IntegQuadrature nQuad(DIM,DEG);
 
-    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+    for(int it = 0; it < fIntRule.NPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = nQuad.PointList(index,k);
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
 
         //Returns the quadrature integration weight
-        fIntegData.fWeight = nQuad.WeightList(index);
+        fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
         ComputeJacobian(index);
@@ -775,6 +832,9 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 
         //Computes the element diffusion/viscosity matrix
         ComputeStiffness(index, jacobianNRMatrix);
+
+        if (fIntegData.fNeedsSol) interpolateSolution();
+        if (fIntegData.fNeedsDSol) interpolateSolDerivatives();
 
         //Computes the RHS vector
         ComputeResidual(index, rhsVector); 

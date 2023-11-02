@@ -2,9 +2,13 @@
 #define SHAPETRIANGLECUB
 
 #include "DataTypes.h"
+#include "IntRuleTriangle.h"
 
 class ShapeTriangleCub{
 public:
+    // Type definition of integration rule for quadrilateral elements
+    typedef IntRuleTriangle LocIntRule;
+
     const static int Dimension = 2;
     const static int Order = 3;
     const static int NElNodes = 10;

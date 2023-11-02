@@ -9,6 +9,8 @@
 #include "DomainIntegration.h"
 #include "Analysis.h"
 #include "GmshTools.h"
+#include "WeakForm.h"
+#include <vector>
 
 class Element;
 class Analysis;
@@ -19,9 +21,7 @@ private:
     int fNState = 0;
     int fOrder = 1;
     int nBdNodes = 0;
-    // int nElNodes = 0;
-    int numDOF = 0;
-
+    
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
 
@@ -30,6 +30,8 @@ private:
 
     /// Defines the vector of fluid elements
     std::vector<Element *>    fElementVector;
+
+    std::map<int,WeakForm *> fMaterialVector;
 
 public:
     CompMesh() = default;
@@ -52,8 +54,20 @@ public:
     int* part_elem;      //Fluid Domain Decomposition - Elements
     int* part_nodes;     //Fluid Domain Decomposition - Nodes
     
-
+    
     ProblemParameters fProbParameters;
+
+    void InsertMaterial(WeakForm *wf){
+        fMaterialVector[wf->Id()] = wf;
+        if (fNState == 0){
+            fNState = wf->NState();
+        } else if (fNState != wf->NState()){
+            PanicButton(); //We don't know how solve a problem with two materials with different state variables in the same mesh
+        }
+    }
+    WeakForm* Material(int matid){
+        return fMaterialVector[matid];
+    }
     
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
@@ -94,7 +108,7 @@ public:
     int &NState(){return fNState;}
     // int &NElNodes() {return nElNodes;}
     int &NBdNodes() {return nBdNodes;}
-    int &NGlobalDOF() {return numDOF;}
+    int64_t NGlobalDOF() {return fNodeVector.size()*fNState;}
 };
 
 #endif

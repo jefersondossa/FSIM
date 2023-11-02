@@ -300,12 +300,12 @@ void ElCouplingGlobal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &d
         //         // LL = -2 * phi_[i] * phi_[j] * tARLQ_ / dens_;
         //         for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_ / dens_;
 
-        //         // Lpx = -(dphi_dx[0][i] * dp_dxx + dphi_dx[1][i] * dp_dxy) * intPointWeightFunction(index)
+        //         // Lpx = -(dphi_dx[0][i] * dp_dxx + dphi_dx[1][i] * dp_dxy) * this->fIntegData.fWeightFunction(index)
         //         //      * tARLQ_ / dens_;
-        //         // Lpy = -(dphi_dx[0][i] * dp_dxy + dphi_dx[1][i] * dp_dyy) * intPointWeightFunction(index)
+        //         // Lpy = -(dphi_dx[0][i] * dp_dxy + dphi_dx[1][i] * dp_dyy) * this->fIntegData.fWeightFunction(index)
         //         //      * tARLQ_ / dens_;
 
-        //         // LC = phi_[i] * ((una_ - umesh_) * dphi_dx[0][i] + (vna_ - vmesh_) * dphi_dx[1][i]) * phi_[j] * tARLQ_ * intPointWeightFunction(index);
+        //         // LC = phi_[i] * ((una_ - umesh_) * dphi_dx[0][i] + (vna_ - vmesh_) * dphi_dx[1][i]) * phi_[j] * tARLQ_ * this->fIntegData.fWeightFunction(index);
 
         //         for (int k = DIM; k--; )
         //             arlequinStab(DIM*i+k,DIM*j+k) += (AM + LL) * weight_ * djac_;
@@ -314,14 +314,14 @@ void ElCouplingGlobal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &d
         //         // LC = -(dphi_dx[0][i]*(du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) +
         //         //        dphi_dx[1][i]*(du_dy*dphi_dx[0][j] + dv_dy*dphi_dx[1][j]) + 
         //         //        dphi_dx[0][i]*(u_*ddphi_dx(0,0)(j) + v_*ddphi_dx(0,1)(j)) + 
-        //         //        dphi_dx[1][i]*(u_*ddphi_dx(1,0)(j) + v_*ddphi_dx(1,1)(j))) * tARLQ_ * intPointWeightFunction(index);
+        //         //        dphi_dx[1][i]*(u_*ddphi_dx(1,0)(j) + v_*ddphi_dx(1,1)(j))) * tARLQ_ * this->fIntegData.fWeightFunction(index);
 
         //         // Lpx = 0.; Lpy = 0.;
 
         //         // Lpx = (dphi_dx[0][i] * ddphi_dx(0,0)(j) + 
-        //         //        dphi_dx[1][i] * ddphi_dx(0,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+        //         //        dphi_dx[1][i] * ddphi_dx(0,1)(j)) * tARLQ_ * this->fIntegData.fWeightFunction(index);
         //         // Lpy = (dphi_dx[0][i] * ddphi_dx(1,0)(j) + 
-        //         //        dphi_dx[1][i] * ddphi_dx(1,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+        //         //        dphi_dx[1][i] * ddphi_dx(1,1)(j)) * tARLQ_ * this->fIntegData.fWeightFunction(index);
 
 
 
@@ -350,14 +350,14 @@ void ElCouplingGlobal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &d
         //         // LLx = -(dphi_dx[0][i] * (dLx_dx/wna_) + dphi_dx[1][i] * (dLx_dy/wna_)) * tARLQ_ / dens_;
         //         // LLy = -(dphi_dx[0][i] * (dLy_dx/wna_) + dphi_dx[1][i] * (dLy_dy/wna_)) * tARLQ_ / dens_;
         // //}else{
-        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/intPointWeightFunction(index) - duna_dx*duna_dx - dvna_dx*duna_dy) + 
-        //         //         dphi_dx[1][i] * (dLx_dy/intPointWeightFunction(index) - duna_dy*duna_dx - dvna_dy*duna_dy)) * tARLQ_ / dens_;
-        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/intPointWeightFunction(index) - duna_dx*dvna_dx - dvna_dx*dvna_dy) + 
-        //         //         dphi_dx[1][i] * (dLy_dy/intPointWeightFunction(index) - duna_dy*dvna_dx - dvna_dy*dvna_dy)) * tARLQ_ / dens_;  
-        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/intPointWeightFunction(index) - dp_dxx) + 
-        //         //         dphi_dx[1][i] * (dLx_dy/intPointWeightFunction(index) - dp_dxy)) * tARLQ_ / dens_;
-        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/intPointWeightFunction(index) - dp_dxy) + 
-        //         //         dphi_dx[1][i] * (dLy_dy/intPointWeightFunction(index) - dp_dyy)) * tARLQ_ / dens_;  
+        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/this->fIntegData.fWeightFunction(index) - duna_dx*duna_dx - dvna_dx*duna_dy) + 
+        //         //         dphi_dx[1][i] * (dLx_dy/this->fIntegData.fWeightFunction(index) - duna_dy*duna_dx - dvna_dy*duna_dy)) * tARLQ_ / dens_;
+        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/this->fIntegData.fWeightFunction(index) - duna_dx*dvna_dx - dvna_dx*dvna_dy) + 
+        //         //         dphi_dx[1][i] * (dLy_dy/this->fIntegData.fWeightFunction(index) - duna_dy*dvna_dx - dvna_dy*dvna_dy)) * tARLQ_ / dens_;  
+        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/this->fIntegData.fWeightFunction(index) - dp_dxx) + 
+        //         //         dphi_dx[1][i] * (dLx_dy/this->fIntegData.fWeightFunction(index) - dp_dxy)) * tARLQ_ / dens_;
+        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/this->fIntegData.fWeightFunction(index) - dp_dxy) + 
+        //         //         dphi_dx[1][i] * (dLy_dy/this->fIntegData.fWeightFunction(index) - dp_dyy)) * tARLQ_ / dens_;  
 
         //         // if (iTimeStep > 10){
         //         //     LLx +=  -(dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;

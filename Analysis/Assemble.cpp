@@ -13,6 +13,8 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             int nLocDOF = el->NLocDOF(); 
             int nElNodes = el->NElNodes(); 
 
+            if (nLocDOF == 0) continue;
+
             MatrixDouble matrix(nLocDOF,nLocDOF);
             matrix.setZero();
             VecDouble rhs(nLocDOF);

@@ -2,9 +2,13 @@
 #define SHAPETRIANGLEQUA
 
 #include "DataTypes.h"
+#include "IntRuleTriangle.h"
 
 class ShapeTriangleQua{
 public:
+    // Type definition of integration rule for quadrilateral elements
+    typedef IntRuleTriangle LocIntRule;
+
     const static int Dimension = 2;
     const static int Order = 2;
     const static int NElNodes = 6;

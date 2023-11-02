@@ -39,6 +39,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "GmshTools.h"
 #include "VTUGenerator.h"
 #include "XDMFGenerator.h"
+#include "Poisson.h"
 
 int main(int argc, char **args) {
 

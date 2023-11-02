@@ -26,6 +26,17 @@ public:
 
     VecDouble    fPhi;
     MatrixDouble fDPhi;
+
+    VecDouble fWeightFunction;
+    VecDouble fPrevWeightFunction;
+    VecDouble fDistFunction;
+
+    VecDouble fSol;
+    MatrixDouble fDSolDx;
+
+    bool fNeedsSol = false;
+    bool fNeedsDSol = false;
+
 };
 
 

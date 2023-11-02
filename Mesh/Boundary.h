@@ -99,6 +99,7 @@ public:
     const int &NElNodes() override{int a=0;return a;}
     void setIntersectionParameters(VecDouble &x, VecDouble &X)  override{};
     double getJacobian()  override{ return 0;};
+    void setIntegPointWeightFunction() override{};
 protected:
     
     VecInt       constrainType;     //Element type of constrain

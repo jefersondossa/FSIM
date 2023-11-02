@@ -39,7 +39,7 @@ namespace GmshTools{
     */
     void Read4(CompMesh &gmesh, const std::string &file_name);
 
-    // Element* CreateElement(CompMesh *cmesh, int64_t index, VecInt &connect);
+    Element* CreateElement(CompMesh *cmesh, int64_t index, VecInt &connect);
 };
 
 

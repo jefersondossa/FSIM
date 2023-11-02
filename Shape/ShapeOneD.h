@@ -2,9 +2,13 @@
 #define SHAPEONED
 
 #include "DataTypes.h"
+#include "IntRule1d.h"
 
 class ShapeOneD{
 public:
+    // Type definition for integration rule 1D
+    typedef IntRule1d LocIntRule;
+
     const static int Dimension = 1;
     const static int Order = 1;
     const static int NElNodes = 2;

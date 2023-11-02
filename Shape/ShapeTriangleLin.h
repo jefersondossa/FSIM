@@ -2,9 +2,13 @@
 #define SHAPETRIANGLELIN
 
 #include "DataTypes.h"
+#include "IntRuleTriangle.h"
 
 class ShapeTriangleLin{
 public:
+    // Type definition of integration rule for quadrilateral elements
+    typedef IntRuleTriangle LocIntRule;
+
     const static int Dimension = 2;
     const static int Order = 1;
     const static int NElNodes = 3;

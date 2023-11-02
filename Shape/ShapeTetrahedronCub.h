@@ -2,9 +2,13 @@
 #define SHAPETETRAHEDRONCUB
 
 #include "DataTypes.h"
+#include "IntRuleTetrahedron.h"
 
 class ShapeTetrahedronCub{
 public:
+    // Type definition of integration rule for quadrilateral elements
+    typedef IntRuleTetrahedron LocIntRule;
+
     const static int Dimension = 3;
     const static int Order = 3;
     const static int NElNodes = 20;

@@ -4,6 +4,7 @@
 #include "DataTypes.h"
 #include "CompMesh.h"
 #include "IntPointData.h"
+#include "WeakForm.h"
 
 class CompMesh;
 
@@ -16,19 +17,15 @@ protected:
     int           fSideInBoundary;
     int nLocDOF = 0;
 
-
-    VecDouble intPointWeightFunction;
-    VecDouble fIntPointDistFunction;
-    VecDouble intPointWeightFunctionPrev;
-
     MatrixDouble fIntPointCoordinates;
     int DEG;
 
     VecDouble     xK, XK;
-    
 
     std::vector<int64_t> fNeighborElements;
-
+    /// The weak form associated with the element
+    WeakForm *fWeakForm;
+    IntPointData  fIntegData;
 public:
 
     bool          FSIInterface;  
@@ -36,29 +33,14 @@ public:
 public:
     Element() = default;
 
-    Element(int64_t index, VecInt &connect, CompMesh* mesh){
+    // Element(int64_t index, VecInt &connect, CompMesh* mesh){
         
-        // fMesh = mesh;
-        // fConnect.resize(fMesh->NElNodes());
-        // fIndex = index;
-        // for (int i = fMesh->NElNodes(); i--; ) fConnect[i] = connect[i];
-        // DEG = fMesh->GetDefaultOrder();
+    //     fMesh = mesh;
+    //     fConnect.resize(connect.size());
+    //     fIndex = index;
+    //     for (int i = connect.size(); i--; ) fConnect[i] = connect[i];
 
-        // FSIInterface = false;
-        // fSideInBoundary = -1;
-        // fNeighborElements.clear();
-
-        // IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
-        // intPointWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        // fIntPointDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        // intPointWeightFunctionPrev.resize(nQuad.getNumberOfIntegrationPoints());
-
-        // intPointWeightFunction.fill(1.);
-        // intPointWeightFunctionPrev.fill(1.);
-    
-        // getIntegPointCoordinates();
-
-    };
+    // };
 
     ~Element() = default;
     int &NLocDOF() {return nLocDOF;}
@@ -117,14 +99,14 @@ public:
     /// Sets the integration point energy weight function
     /// @param int integration point index 
     /// @param double energy weight function value
-    void setIntegPointWeightFunction();
+    virtual void setIntegPointWeightFunction() = 0;
     void setIntegPointWeightFunction(int index, double val){
-        intPointWeightFunction[index] = val;
+        fIntegData.fWeightFunction[index] = val;
     };
 
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
-    double &getIntegPointWeightFunction(int index) {return intPointWeightFunction[index];};
+    double &getIntegPointWeightFunction(int index) {return fIntegData.fWeightFunction[index];};
     virtual int getBoundaryGroup() = 0;
     virtual int getElement() = 0;
     virtual int getConstrain(int dir) = 0;

@@ -2,9 +2,13 @@
 #define SHAPEQUADRILATERALLIN
 
 #include "DataTypes.h"
+#include "IntRuleQuad.h"
 
 class ShapeQuadrilateralLin{
 public:
+    // Type definition of integration rule for quadrilateral elements
+    typedef IntRuleQuad LocIntRule;
+
     const static int Dimension = 2;
     const static int Order = 1;
     const static int NElNodes = 4;
