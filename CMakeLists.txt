@@ -45,8 +45,14 @@ enable_eigen()
 
 # add_subdirectory(mesh_interface)
 add_subdirectory(triangle)
-add_subdirectory(headers)
-add_subdirectory(sources)
+add_subdirectory(Util)
+add_subdirectory(Analysis)
+add_subdirectory(Integral)
+add_subdirectory(Mesh)
+add_subdirectory(PostProcess)
+add_subdirectory(PreProcess)
+add_subdirectory(Shape)
+add_subdirectory(WeakForm)
 add_subdirectory(mesh_interface)
 # add_subdirectory(examples)
 # add_subdirectory(main)
@@ -54,8 +60,14 @@ add_subdirectory(mesh_interface)
 #Specify where the headers files must be found
 include_directories(
     "${PROJECT_SOURCE_DIR}/mesh_interface"
-	"${PROJECT_SOURCE_DIR}/headers"
-	"${PROJECT_SOURCE_DIR}/sources"
+	"${PROJECT_SOURCE_DIR}/Analysis"
+	"${PROJECT_SOURCE_DIR}/Integral"
+	"${PROJECT_SOURCE_DIR}/Mesh"
+	"${PROJECT_SOURCE_DIR}/PostProcess"
+	"${PROJECT_SOURCE_DIR}/PreProcess"
+	"${PROJECT_SOURCE_DIR}/Shape"
+	"${PROJECT_SOURCE_DIR}/WeakForm"
+	"${PROJECT_SOURCE_DIR}/Util"
 	"${PROJECT_SOURCE_DIR}/triangle"
 )
 
@@ -67,7 +79,7 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${HEADERS} ${SOURCES} ${MESH_INT} ${MESH_INT_SRC})
+add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM} ${MESH_INT} ${MESH_INT_SRC})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
 
