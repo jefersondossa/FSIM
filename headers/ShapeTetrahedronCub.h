@@ -1,13 +1,13 @@
-#ifndef SHAPEONED
-#define SHAPEONED
+#ifndef SHAPETETRAHEDRONCUB
+#define SHAPETETRAHEDRONCUB
 
 #include "DataTypes.h"
 
-class ShapeOneD{
+class ShapeTetrahedronCub{
 public:
-    const static int Dimension = 1;
-    const static int Order = 1;
-    const static int NElNodes = 2;
+    const static int Dimension = 3;
+    const static int Order = 3;
+    const static int NElNodes = 20;
 
     /// Shapes the shape function value
     /// @param double* Non-dimensional coordinates 

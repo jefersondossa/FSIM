@@ -96,7 +96,7 @@ public:
     void interpolateSolution(int &index, VecDouble &u_) override{};
     void interpolateSolution(VecDouble &phi, VecDouble &u_) override{};
     void interpolateSolDerivatives(MatrixDouble &du_dx) override{};
-
+    const int &NElNodes() override{int a=0;return a;}
     void setIntersectionParameters(VecDouble &x, VecDouble &X)  override{};
     double getJacobian()  override{ return 0;};
 protected:

@@ -6,7 +6,9 @@
 template <class tshape>
 class ElNavierStokes : public ElStokes<tshape>{
 public:
-    ElNavierStokes(int index, VecInt &connect, CompMesh* mesh) : ElStokes<tshape>(index,connect,mesh){};
+    ElNavierStokes(int index, VecInt &connect, CompMesh* mesh) : ElStokes<tshape>(index,connect,mesh){
+        Element::nLocDOF = tshape::NElNodes * (tshape::Dimension + 1);
+    };
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     

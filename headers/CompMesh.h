@@ -12,7 +12,6 @@
 
 class Element;
 class Analysis;
-// namespace GmshTools{};
 
 class CompMesh{
 private:
@@ -20,8 +19,7 @@ private:
     int fNState = 0;
     int fOrder = 1;
     int nBdNodes = 0;
-    int nElNodes = 0;
-    int nLocDOF = 0;
+    // int nElNodes = 0;
     int numDOF = 0;
 
     /// Defines the vector of fluid nodes
@@ -33,32 +31,22 @@ private:
     /// Defines the vector of fluid elements
     std::vector<Element *>    fElementVector;
 
-   
-
 public:
     CompMesh() = default;
     CompMesh(ProblemParameters &pparam, int DIM, int order){
         fDimension = DIM;
         fProbParameters = pparam;
         fOrder = order;
-        nElNodes = (3+(DIM-2)*fOrder)*(2+3*fOrder+fOrder*fOrder)/6;
         nBdNodes = 3*(1-fOrder)+DIM*(2*fOrder-1);
-        numIntegration = new DomainIntegration(DIM,order);
         if (fProbParameters.ProbType() == ProblemType::ENavierStokes || fProbParameters.ProbType() == ProblemType::EStokes){
             fNState = (DIM+1);
-            nLocDOF = nElNodes*(DIM+1);
         } else if (fProbParameters.ProbType() == ProblemType::EPoisson) {
             fNState = 1;
-            nLocDOF = nElNodes;
         } else if (fProbParameters.ProbType() == ProblemType::EElastic || fProbParameters.ProbType() == ProblemType::ESolidPositional){
             fNState = DIM;
-            nLocDOF = nElNodes*DIM;
         } else {
             PanicButton();
         }
-
-        
-        
     };
     
     int* part_elem;      //Fluid Domain Decomposition - Elements
@@ -66,12 +54,7 @@ public:
     
 
     ProblemParameters fProbParameters;
-    DomainIntegration* numIntegration; //Numerical integration
     
-    void SetNLocDOF(int nlocdof){
-        nLocDOF = nlocdof;
-    }
-
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model nodes information
@@ -96,8 +79,6 @@ public:
         return fProbParameters;
     }
 
-    DomainIntegration* getNumericalIntegration(){return numIntegration;}
-
     void SetDefaultOrder(int order){
         fOrder = order;
     }
@@ -111,9 +92,8 @@ public:
     int &Dimension() {return fDimension;}
     int &GetDefaultOrder() {return fOrder;}
     int &NState(){return fNState;}
-    int &NElNodes() {return nElNodes;}
+    // int &NElNodes() {return nElNodes;}
     int &NBdNodes() {return nBdNodes;}
-    int &NLocDOF() {return nLocDOF;}
     int &NGlobalDOF() {return numDOF;}
 };
 

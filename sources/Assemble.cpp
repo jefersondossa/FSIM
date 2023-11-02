@@ -4,12 +4,14 @@
 
 void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     std::cout << "Assembling..." << std::endl;
-    int nLocDOF = fAnalysis->MeshVector()[mesh]->NLocDOF(); 
-    int nElNodes = fAnalysis->MeshVector()[mesh]->NElNodes(); 
+    
     for (int jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
-            VecInt connec = fAnalysis->MeshVector()[mesh]->ElementVec()[jel] -> getConnectivity();
+            Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
+            VecInt connec = el -> getConnectivity();
+            int nLocDOF = el->NLocDOF(); 
+            int nElNodes = el->NElNodes(); 
 
             MatrixDouble matrix(nLocDOF,nLocDOF);
             matrix.setZero();

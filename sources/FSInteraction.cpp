@@ -10,118 +10,120 @@
 template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iSol){
     
-    for (int isolid = 0; isolid < numNodesSolid; isolid++){
+    //Need refactor
+    PanicButton();
+    // for (int isolid = 0; isolid < numNodesSolid; isolid++){
 
-        VecInt connec;
-        ShapeFunction shapeQuad(DIM,DEG);
-        int nElNodes = fluidModel->NElNodes();
-        VecDouble phi_(nElNodes);
+    //     VecInt connec;
+    //     ShapeFunction shapeQuad(DIM,DEG);
+    //     int nElNodes = fluidModel->NElNodes();
+    //     VecDouble phi_(nElNodes);
     
-        double xsiCC[3];
-        // std::pair<double*,double*> XK;
-        int elemC;
+    //     double xsiCC[3];
+    //     // std::pair<double*,double*> XK;
+    //     int elemC;
 
-        VecDouble x = nodesSolid_[iSol][isolid] -> getCoordinates();
+    //     VecDouble x = nodesSolid_[iSol][isolid] -> getCoordinates();
         
-        elemC = 150000;
-        VecDouble xsiC(DIM);
-        for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
-        VecDouble xsi(DIM);
-        VecDouble x_(DIM);
-        VecDouble deltaX(DIM);
-        VecDouble deltaXsi(DIM);
+    //     elemC = 150000;
+    //     VecDouble xsiC(DIM);
+    //     for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
+    //     VecDouble xsi(DIM);
+    //     VecDouble x_(DIM);
+    //     VecDouble deltaX(DIM);
+    //     VecDouble deltaXsi(DIM);
 
-        PanicButton();
-        //Create a nodal correspondence structure such as in arlequin. With a std::map
-        // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+    //     PanicButton();
+    //     //Create a nodal correspondence structure such as in arlequin. With a std::map
+    //     // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
-        for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
+    //     for (int ibound = 0; ibound < numElemFluidBoundary; ibound++){
             
-            if (boundaryFluid_[ibound] -> getBoundaryGroup() == interface){
+    //         if (boundaryFluid_[ibound] -> getBoundaryGroup() == interface){
                 
-                int jel = boundaryFluid_[ibound] -> getElement();
+    //             int jel = boundaryFluid_[ibound] -> getElement();
                 
-                connec = elementsFluid_[jel] -> getConnectivity();
+    //             connec = elementsFluid_[jel] -> getConnectivity();
                 
-                //get boxes information        
-                // XK = elementsFluid_[jel] -> getXIntersectionParameter();
+    //             //get boxes information        
+    //             // XK = elementsFluid_[jel] -> getXIntersectionParameter();
                 
-                //Chech if the node is inside the element box
-                // if ((x(0) < XK.first(0)) || (x(0) > XK.second(0)) ||
-                //     (x(1) < XK.first(1)) || (x(1) > XK.second(1))) continue;
+    //             //Chech if the node is inside the element box
+    //             // if ((x(0) < XK.first(0)) || (x(0) > XK.second(0)) ||
+    //             //     (x(1) < XK.first(1)) || (x(1) > XK.second(1))) continue;
                 
-                //Compute nodal correspondence
-                xsiCC[0] = 1.e10;
-                xsiCC[1] = 1.e10;
-                xsiCC[2] = 1.e10;
+    //             //Compute nodal correspondence
+    //             xsiCC[0] = 1.e10;
+    //             xsiCC[1] = 1.e10;
+    //             xsiCC[2] = 1.e10;
                 
-                x_.setZero();
-                xsi.fill(1./3.);
+    //             x_.setZero();
+    //             xsi.fill(1./3.);
                 
-                shapeQuad.Shape(xsi,phi_);
+    //             shapeQuad.Shape(xsi,phi_);
                 
-                for (int i = 0; i < nElNodes; i++){
-                    VecDouble xint = nodesFluid_[connec[i]] -> getCoordinates();
-                    x_ += xint * phi_[i];
-                };
+    //             for (int i = 0; i < nElNodes; i++){
+    //                 VecDouble xint = nodesFluid_[connec[i]] -> getCoordinates();
+    //                 x_ += xint * phi_[i];
+    //             };
                 
-                double error = 1.e6;                
-                int iterations = 0;
+    //             double error = 1.e6;                
+    //             int iterations = 0;
                 
-                while ((error > 1.e-8) && (iterations < 4)) {
+    //             while ((error > 1.e-8) && (iterations < 4)) {
                     
-                    iterations++;
+    //                 iterations++;
                 
-                    deltaX = x - x_;                    
-                    deltaXsi.setZero();
+    //                 deltaX = x - x_;                    
+    //                 deltaXsi.setZero();
                     
-                    elementsFluid_[jel] -> ComputeJacobian(0);
+    //                 elementsFluid_[jel] -> ComputeJacobian(0);
                     
-                    // noalias(deltaXsi) = prod(trans(ainv),deltaX);
-                    PanicButton();
-                    MatrixDouble ainv(2,2);
-                    // auto ainv = elementsFluid_[jel]->IntegrationData().fA0Inv;
-                    for (int i = 0; i < DIM; i++)
-                        for (int j = 0; j < DIM; j++)
-                            deltaXsi[i] += ainv(j,i) * deltaX[j];
+    //                 // noalias(deltaXsi) = prod(trans(ainv),deltaX);
+    //                 PanicButton();
+    //                 MatrixDouble ainv(2,2);
+    //                 // auto ainv = elementsFluid_[jel]->IntegrationData().fA0Inv;
+    //                 for (int i = 0; i < DIM; i++)
+    //                     for (int j = 0; j < DIM; j++)
+    //                         deltaXsi[i] += ainv(j,i) * deltaX[j];
 
-                    xsi += deltaXsi;
-                    x_.setZero();
+    //                 xsi += deltaXsi;
+    //                 x_.setZero();
                     
-                    shapeQuad.Shape(xsi,phi_);
+    //                 shapeQuad.Shape(xsi,phi_);
                     
-                    for (int i=0; i<nElNodes; i++){
-                        VecDouble xint = nodesFluid_[connec[i]] -> getCoordinates();
-                        x_ += xint * phi_[i];  
-                    }; 
+    //                 for (int i=0; i<nElNodes; i++){
+    //                     VecDouble xint = nodesFluid_[connec[i]] -> getCoordinates();
+    //                     x_ += xint * phi_[i];  
+    //                 }; 
 
-                    error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
-                };
+    //                 error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+    //             };
                 
-                double t1 = -1.e-1;
-                double t2 =  1. - t1;
+    //             double t1 = -1.e-1;
+    //             double t2 =  1. - t1;
                 
-                xsiCC[0] = xsi[0];
-                xsiCC[1] = xsi[1];       
-                xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
+    //             xsiCC[0] = xsi[0];
+    //             xsiCC[1] = xsi[1];       
+    //             xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
                 
-                if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-                    (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+    //             if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
+    //                 (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
                     
-                    xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
-                    elemC = jel;
-                    // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
-                    break;
-                };           
-            };
-        };
+    //                 xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
+    //                 elemC = jel;
+    //                 // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+    //                 break;
+    //             };           
+    //         };
+    //     };
 
-        // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+    //     // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
-        // std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
+    //     // std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
 
 
-    };
+    // };
 
     return;
 
@@ -132,118 +134,118 @@ void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondence(int interface, int iS
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::searchSolidNodeCorrespondenceArlequin(int interface, int iSol){
+    PanicButton();//Need refactor
+    // for (int isolid = 0; isolid < numNodesSolid; isolid++){
+    //     int nElNodes = arlequinModel->MeshVec()[1]->NElNodes();
+    //     VecInt connec;
+    //     ShapeFunction shapeQuad(DIM,DEG);
+    //     VecDouble phi_(nElNodes);
     
-    for (int isolid = 0; isolid < numNodesSolid; isolid++){
-        int nElNodes = arlequinModel->MeshVec()[1]->NElNodes();
-        VecInt connec;
-        ShapeFunction shapeQuad(DIM,DEG);
-        VecDouble phi_(nElNodes);
-    
-        double xsiCC[3];
-        // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
-        int elemC;
+    //     double xsiCC[3];
+    //     // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
+    //     int elemC;
 
-        VecDouble x = nodesSolid_[iSol][isolid] -> getCoordinates();
+    //     VecDouble x = nodesSolid_[iSol][isolid] -> getCoordinates();
         
-        elemC = 150000;
-        VecDouble xsiC(DIM);
-        for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
-        VecDouble xsi(DIM);
-        double x_[DIM];
-        double deltaX[DIM];
-        double deltaXsi[DIM];
-        // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+    //     elemC = 150000;
+    //     VecDouble xsiC(DIM);
+    //     for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
+    //     VecDouble xsi(DIM);
+    //     double x_[DIM];
+    //     double deltaX[DIM];
+    //     double deltaXsi[DIM];
+    //     // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
-        for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
+    //     for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
             
-            if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interface){
+    //         if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interface){
                 
-                int jel = boundaryArlequinFine_[ibound] -> getElement();
+    //             int jel = boundaryArlequinFine_[ibound] -> getElement();
                 
-                connec = elementsArlequinFine_[jel] -> getConnectivity();
+    //             connec = elementsArlequinFine_[jel] -> getConnectivity();
                 
-                //get boxes information        
-                // XK = elementsArlequinFine_[jel] -> getXIntersectionParameter();
+    //             //get boxes information        
+    //             // XK = elementsArlequinFine_[jel] -> getXIntersectionParameter();
                 
-                //Chech if the node is inside the element box
-                // if ((x(0) < XK.first(0)) || (x(0) > XK.second(0)) ||
-                //     (x(1) < XK.first(1)) || (x(1) > XK.second(1))) continue;
+    //             //Chech if the node is inside the element box
+    //             // if ((x(0) < XK.first(0)) || (x(0) > XK.second(0)) ||
+    //             //     (x(1) < XK.first(1)) || (x(1) > XK.second(1))) continue;
                 
-                //Compute nodal correspondence
-                xsiCC[0] = 1.e10;
-                xsiCC[1] = 1.e10;
-                xsiCC[2] = 1.e10;
+    //             //Compute nodal correspondence
+    //             xsiCC[0] = 1.e10;
+    //             xsiCC[1] = 1.e10;
+    //             xsiCC[2] = 1.e10;
                 
-                for (int k = 0; k<DIM; k++){
-                    xsi[k] = 1. / 3.;
-                    x_[k] = 0.;
-                }
+    //             for (int k = 0; k<DIM; k++){
+    //                 xsi[k] = 1. / 3.;
+    //                 x_[k] = 0.;
+    //             }
                 
-                shapeQuad.Shape(xsi,phi_);
+    //             shapeQuad.Shape(xsi,phi_);
                                 
-                for (int i = 0; i < nElNodes; i++){
-                    VecDouble xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
-                    for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];                
-                };
+    //             for (int i = 0; i < nElNodes; i++){
+    //                 VecDouble xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
+    //                 for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];                
+    //             };
                 
-                double error = 1.e6;
+    //             double error = 1.e6;
                 
-                int iterations = 0;
+    //             int iterations = 0;
                 
-                while ((error > 1.e-8) && (iterations < 4)) {
+    //             while ((error > 1.e-8) && (iterations < 4)) {
                     
-                    iterations++;
+    //                 iterations++;
                     
-                    for (int k = 0; k<DIM; k++){
-                        deltaX[k] = x[k] - x_[k];
-                        deltaXsi[k] = 0.;
-                    }
+    //                 for (int k = 0; k<DIM; k++){
+    //                     deltaX[k] = x[k] - x_[k];
+    //                     deltaXsi[k] = 0.;
+    //                 }
                     
-                    elementsArlequinFine_[jel] -> ComputeJacobian(0);
-                    PanicButton();
-                    MatrixDouble ainv (2,2);
-                    // auto ainv=elementsArlequinFine_[jel]->IntegrationData().fA0Inv;
-                    // noalias(deltaXsi) = prod(trans(ainv),deltaX);
+    //                 elementsArlequinFine_[jel] -> ComputeJacobian(0);
+    //                 PanicButton();
+    //                 MatrixDouble ainv (2,2);
+    //                 // auto ainv=elementsArlequinFine_[jel]->IntegrationData().fA0Inv;
+    //                 // noalias(deltaXsi) = prod(trans(ainv),deltaX);
                     
-                    for (int i = 0; i < DIM; i++)
-                        for (int j = 0; j < DIM; j++)
-                            deltaXsi[i] += ainv(j,i) * deltaX[j];
+    //                 for (int i = 0; i < DIM; i++)
+    //                     for (int j = 0; j < DIM; j++)
+    //                         deltaXsi[i] += ainv(j,i) * deltaX[j];
                     
-                    for (int k = 0; k<DIM; k++){
-                        xsi[k] += deltaXsi[k];
-                        x_[k] = 0.;
-                    }
+    //                 for (int k = 0; k<DIM; k++){
+    //                     xsi[k] += deltaXsi[k];
+    //                     x_[k] = 0.;
+    //                 }
                     
-                    shapeQuad.Shape(xsi,phi_);
+    //                 shapeQuad.Shape(xsi,phi_);
                     
-                    for (int i=0; i<nElNodes; i++){
-                        VecDouble xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
-                        for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];
-                    };                   
+    //                 for (int i=0; i<nElNodes; i++){
+    //                     VecDouble xint = nodesArlequinFine_[connec[i]] -> getCoordinates();
+    //                     for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];
+    //                 };                   
 
-                    error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
-                };
+    //                 error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+    //             };
                 
-                double t1 = -1.e-1;
-                double t2 =  1. - t1;
+    //             double t1 = -1.e-1;
+    //             double t2 =  1. - t1;
                 
-                xsiCC[0] = xsi[0];
-                xsiCC[1] = xsi[1];       
-                xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
+    //             xsiCC[0] = xsi[0];
+    //             xsiCC[1] = xsi[1];       
+    //             xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
                 
-                if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-                    (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+    //             if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
+    //                 (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
                     
-                    xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
-                    elemC = jel;
-                    // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
-                    break;
-                };           
-            };
-        };
+    //                 xsiC[0] = xsi[0]; xsiC[1] = xsi[1];
+    //                 elemC = jel;
+    //                 // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
+    //                 break;
+    //             };           
+    //         };
+    //     };
 
-        // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
-    };
+    //     // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
+    // };
 };
 
 //------------------------------------------------------------------------------
@@ -346,134 +348,135 @@ void FSInteraction<DIM,DEG>::setElementBoxes() {
 template<int DIM, int DEG>
 void FSInteraction<DIM,DEG>::preProcessFluid(){
     
+    //Need refactor
+    PanicButton();
+    // numInterfaces = fluidModel->getNumberofFSIInterfaces();
     
-    numInterfaces = fluidModel->getNumberofFSIInterfaces();
-    
-    if(rank==0) std::cout << "Number of interfaces " 
-                          << numInterfaces << std::endl;
+    // if(rank==0) std::cout << "Number of interfaces " 
+    //                       << numInterfaces << std::endl;
 
-    groupInterfaces.reserve(numInterfaces);
-    nodesSolid_.reserve(numInterfaces);
-    //    int groupInterfaces2[numInterfaces];
+    // groupInterfaces.reserve(numInterfaces);
+    // nodesSolid_.reserve(numInterfaces);
+    // //    int groupInterfaces2[numInterfaces];
 
-    int fl=0;
-    //Sets fluid elements and sides on interface boundaries
-    for (int i=0; i<numElemFluidBoundary; i++){
-        if ((boundaryFluid_[i] -> getConstrain(0) == 3) ||
-            (boundaryFluid_[i] -> getConstrain(1) == 3)) {
+    // int fl=0;
+    // //Sets fluid elements and sides on interface boundaries
+    // for (int i=0; i<numElemFluidBoundary; i++){
+    //     if ((boundaryFluid_[i] -> getConstrain(0) == 3) ||
+    //         (boundaryFluid_[i] -> getConstrain(1) == 3)) {
 
-            VecInt connectB = boundaryFluid_[i] -> getConnectivity();
+    //         VecInt connectB = boundaryFluid_[i] -> getConnectivity();
 
-            for (int j=0; j<numElemFluid; j++){
-                VecInt connect = elementsFluid_[j] -> getConnectivity();
-                int nBdNodes = fluidModel->NBdNodes();
-                int flag = 0;
-                int side[nBdNodes];
-                int nElNodes = fluidModel->NElNodes();
-                for (int k=0; k<nElNodes; k++){
-                    if ((connectB[0] == connect[k]) || 
-                        (connectB[1] == connect[k]) ||
-                        (connectB[2] == connect[k])){
-                        side[flag] = k;
-                        flag++;
-                    };
-                };
+    //         for (int j=0; j<numElemFluid; j++){
+    //             VecInt connect = elementsFluid_[j] -> getConnectivity();
+    //             int nBdNodes = fluidModel->NBdNodes();
+    //             int flag = 0;
+    //             int side[nBdNodes];
+    //             int nElNodes = fluidModel->NElNodes();
+    //             for (int k=0; k<nElNodes; k++){
+    //                 if ((connectB[0] == connect[k]) || 
+    //                     (connectB[1] == connect[k]) ||
+    //                     (connectB[2] == connect[k])){
+    //                     side[flag] = k;
+    //                     flag++;
+    //                 };
+    //             };
                 
-                if (flag == nBdNodes){
-                    boundaryFluid_[i] -> setElement(j);
-                    elementsFluid_[j] -> setFSIInterface();
-                    // Counts number of interfaces
-                    if (fl == 0){
-                        int aux = boundaryFluid_[i] -> getBoundaryGroup();
-                        groupInterfaces.push_back(aux);
-                        fl++;
-                    }else{
-                        int fl2 = 0;
-                        for (int m=0; m<fl; m++){
-                            if (boundaryFluid_[i] -> getBoundaryGroup() == groupInterfaces[m]) fl2++;
-                        };
-                        if (fl2 == 0){
-                            int aux = boundaryFluid_[i] -> getBoundaryGroup();
-                            groupInterfaces.push_back(aux);
-                            fl++;
-                        };
-                    };
+    //             if (flag == nBdNodes){
+    //                 boundaryFluid_[i] -> setElement(j);
+    //                 elementsFluid_[j] -> setFSIInterface();
+    //                 // Counts number of interfaces
+    //                 if (fl == 0){
+    //                     int aux = boundaryFluid_[i] -> getBoundaryGroup();
+    //                     groupInterfaces.push_back(aux);
+    //                     fl++;
+    //                 }else{
+    //                     int fl2 = 0;
+    //                     for (int m=0; m<fl; m++){
+    //                         if (boundaryFluid_[i] -> getBoundaryGroup() == groupInterfaces[m]) fl2++;
+    //                     };
+    //                     if (fl2 == 0){
+    //                         int aux = boundaryFluid_[i] -> getBoundaryGroup();
+    //                         groupInterfaces.push_back(aux);
+    //                         fl++;
+    //                     };
+    //                 };
 
-                    //Sets element index and side
-                    if ((side[0]==4) || (side[1]==4) || (side[2]==4)){
-                        boundaryFluid_[i] -> setElementSide(0);
-                        elementsFluid_[boundaryFluid_[i]->getElement()] -> 
-                            setElemSideInBoundary(0);
-                    };
-                    if ((side[0]==5) || (side[1]==5) || (side[2]==5)){
-                        boundaryFluid_[i] -> setElementSide(1);
-                        elementsFluid_[boundaryFluid_[i]->getElement()] -> 
-                            setElemSideInBoundary(1);
-                    };
-                    if ((side[0]==3) || (side[1]==3) || (side[2]==3)){
-                        boundaryFluid_[i] -> setElementSide(2);
-                        elementsFluid_[boundaryFluid_[i]->getElement()] -> 
-                            setElemSideInBoundary(2);
-                    };
-                };
-            };
-        };
-    };   
+    //                 //Sets element index and side
+    //                 if ((side[0]==4) || (side[1]==4) || (side[2]==4)){
+    //                     boundaryFluid_[i] -> setElementSide(0);
+    //                     elementsFluid_[boundaryFluid_[i]->getElement()] -> 
+    //                         setElemSideInBoundary(0);
+    //                 };
+    //                 if ((side[0]==5) || (side[1]==5) || (side[2]==5)){
+    //                     boundaryFluid_[i] -> setElementSide(1);
+    //                     elementsFluid_[boundaryFluid_[i]->getElement()] -> 
+    //                         setElemSideInBoundary(1);
+    //                 };
+    //                 if ((side[0]==3) || (side[1]==3) || (side[2]==3)){
+    //                     boundaryFluid_[i] -> setElementSide(2);
+    //                     elementsFluid_[boundaryFluid_[i]->getElement()] -> 
+    //                         setElemSideInBoundary(2);
+    //                 };
+    //             };
+    //         };
+    //     };
+    // };   
     
-    //Get Solid nodal Positions
-    // for (int k=0; k<numInterfaces; k++){
+    // //Get Solid nodal Positions
+    // // for (int k=0; k<numInterfaces; k++){
 
+    // // };
+
+    // for (int k=0; k<numInterfaces; k++){    
+    //     std::vector<Node *> j;
+
+    //     nodesSolid_.push_back(j);
+    
+    //     nodesSolid_[k].reserve(numNodesSolid);
+    //     int index = 0;
+        
+    //     for (int i=0; i<numNodesSolid; i++){
+    //         VecDouble x(DIM);
+    //         int inode = i+1;
+    //         getsolidposition_(&inode,&x[0],&x[1]);
+            
+    //         Node *node = new Node(x,index++,DIM);
+    //         nodesSolid_[k].push_back(node);
+    //     };
     // };
 
-    for (int k=0; k<numInterfaces; k++){    
-        std::vector<Node *> j;
-
-        nodesSolid_.push_back(j);
+    // setElementBoxes();
     
-        nodesSolid_[k].reserve(numNodesSolid);
-        int index = 0;
-        
-        for (int i=0; i<numNodesSolid; i++){
-            VecDouble x(DIM);
-            int inode = i+1;
-            getsolidposition_(&inode,&x[0],&x[1]);
-            
-            Node *node = new Node(x,index++,DIM);
-            nodesSolid_[k].push_back(node);
-        };
-    };
+    // // Search solid node correspondence into fluid elements
+    // for (int i = 0; i < numInterfaces; i++){
+    //     int interf = groupInterfaces[i];
+    //     searchSolidNodeCorrespondence(interf,i);
+    // };
 
-    setElementBoxes();
+    // // Search fluid node correspondences into solid elements
+    // for (int i = 0; i < numInterfaces; i++){
+    //     int interf = groupInterfaces[i];       
+    //     searchFluidNodeCorrespondence(interf);
+    // };
     
-    // Search solid node correspondence into fluid elements
-    for (int i = 0; i < numInterfaces; i++){
-        int interf = groupInterfaces[i];
-        searchSolidNodeCorrespondence(interf,i);
-    };
+    // // Set element mesh moving parameters
+    // double vMax = 0., vMin = 1.e10;
+    // for (int i = 0; i < numElemFluid; i++){
+    //     double v = elementsFluid_[i] -> getJacobian();
+    //     if (v > vMax) vMax = v;
+    //     if (v < vMin) vMin = v;
+    // };
+    // for (int i = 0; i < numElemFluid; i++){
+    //     double v = elementsFluid_[i] -> getJacobian();
+    //     double eta = 1 + (1. - vMin / vMax) / (v / vMax);
+    //     PanicButton();
+    //     // elementsFluid_[i] -> setMeshMovingParameter(eta);
 
-    // Search fluid node correspondences into solid elements
-    for (int i = 0; i < numInterfaces; i++){
-        int interf = groupInterfaces[i];       
-        searchFluidNodeCorrespondence(interf);
-    };
-    
-    // Set element mesh moving parameters
-    double vMax = 0., vMin = 1.e10;
-    for (int i = 0; i < numElemFluid; i++){
-        double v = elementsFluid_[i] -> getJacobian();
-        if (v > vMax) vMax = v;
-        if (v < vMin) vMin = v;
-    };
-    for (int i = 0; i < numElemFluid; i++){
-        double v = elementsFluid_[i] -> getJacobian();
-        double eta = 1 + (1. - vMin / vMax) / (v / vMax);
-        PanicButton();
-        // elementsFluid_[i] -> setMeshMovingParameter(eta);
-
-        // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
-    };
+    //     // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
+    // };
        
-    domDecompFluid = fluidModel->getDomainDecomposition();
+    // domDecompFluid = fluidModel->getDomainDecomposition();
 
 };
 

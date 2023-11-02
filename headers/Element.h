@@ -14,6 +14,8 @@ protected:
     int64_t       fIndex;             //Element index
 
     int           fSideInBoundary;
+    int nLocDOF = 0;
+
 
     VecDouble intPointWeightFunction;
     VecDouble fIntPointDistFunction;
@@ -23,7 +25,6 @@ protected:
     int DEG;
 
     VecDouble     xK, XK;
-    
     
 
     std::vector<int64_t> fNeighborElements;
@@ -60,7 +61,8 @@ public:
     };
 
     ~Element() = default;
-
+    int &NLocDOF() {return nLocDOF;}
+    virtual const int &NElNodes() = 0;
     
     virtual void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
     virtual void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) = 0;

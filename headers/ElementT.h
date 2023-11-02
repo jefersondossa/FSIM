@@ -41,9 +41,9 @@ public:
     ElementT(int64_t index, VecInt &connect, CompMesh* mesh) : Element(index,connect,mesh){
         
         fMesh = mesh;
-        fConnect.resize(fMesh->NElNodes());
+        fConnect.resize(tshape::NElNodes);
         fIndex = index;
-        for (int i = fMesh->NElNodes(); i--; ) fConnect[i] = connect[i];
+        for (int i = tshape::NElNodes; i--; ) fConnect[i] = connect[i];
         DEG = fMesh->GetDefaultOrder();
 
         FSIInterface = false;
@@ -152,7 +152,7 @@ public:
     }
 
     
-
+    const int &NElNodes() override {return tshape::NElNodes;}
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) override;

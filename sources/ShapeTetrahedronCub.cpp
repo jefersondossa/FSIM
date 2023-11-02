@@ -1,0 +1,329 @@
+#include "ShapeTetrahedronCub.h"
+
+const int ShapeTetrahedronCub::Dimension;
+const int ShapeTetrahedronCub::Order;
+const int ShapeTetrahedronCub::NElNodes;
+
+
+void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi) {
+
+    double xsi1 = xi[0];
+    double xsi2 = xi[1];
+    double xsi3 = xi[2];
+    double xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
+
+    phi[0] = (1.0 / 2.0) * (3.0 * xsi4 - 1.0) * (3.0 * xsi4 - 2.0) * xsi4;
+    phi[1] = (1.0 / 2.0) * (3.0 * xsi1 - 1.0) * (3.0 * xsi1 - 2.0) * xsi1;
+    phi[2] = (1.0 / 2.0) * (3.0 * xsi2 - 1.0) * (3.0 * xsi2 - 2.0) * xsi2;
+    phi[3] = (1.0 / 2.0) * (3.0 * xsi3 - 1.0) * (3.0 * xsi3 - 2.0) * xsi3;
+    phi[4] = (9.0 / 2.0) * (3.0 * xsi4 - 1.0) * xsi1 * xsi4;
+    phi[5] = (9.0 / 2.0) * (3.0 * xsi1 - 1.0) * xsi1 * xsi4;
+    phi[6] = (9.0 / 2.0) * (3.0 * xsi1 - 1.0) * xsi1 * xsi2;
+    phi[7] = (9.0 / 2.0) * (3.0 * xsi2 - 1.0) * xsi1 * xsi2;
+    phi[8] = (9.0 / 2.0) * (3.0 * xsi2 - 1.0) * xsi2 * xsi4;
+    phi[9] = (9.0 / 2.0) * (3.0 * xsi4 - 1.0) * xsi2 * xsi4;
+    phi[10] = (9.0 / 2.0) * (3.0 * xsi3 - 1.0) * xsi3 * xsi4;
+    phi[11] = (9.0 / 2.0) * (3.0 * xsi4 - 1.0) * xsi3 * xsi4;
+    phi[12] = (9.0 / 2.0) * (3.0 * xsi3 - 1.0) * xsi2 * xsi3;
+    phi[13] = (9.0 / 2.0) * (3.0 * xsi2 - 1.0) * xsi2 * xsi3;
+    phi[14] = (9.0 / 2.0) * (3.0 * xsi3 - 1.0) * xsi1 * xsi3;
+    phi[15] = (9.0 / 2.0) * (3.0 * xsi1 - 1.0) * xsi1 * xsi3;
+    phi[16] = 27.0 * xsi1 * xsi2 * xsi4;
+    phi[17] = 27.0 * xsi1 * xsi3 * xsi4;
+    phi[18] = 27.0 * xsi2 * xsi3 * xsi4;
+    phi[19] = 27.0 * xsi1 * xsi2 * xsi3;
+    // element conectivity
+    //layer 1
+    //     3
+    //     8 9
+    //     2 7 1
+    //layer 2
+    //     6
+    //     54
+    //layer 3
+    //     0
+
+}
+
+void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+    
+    const double xsi1 = xi[0];
+    const double xsi2 = xi[1];
+    const double xsi3 = xi[2];
+
+    dphi(0,0) = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
+    dphi(1,0) = 0.50 * (2.0 - 18.0 * xsi1 + 27.0 * xsi1 * xsi1);
+    dphi(2,0) = 0.0;
+    dphi(3,0) = 0.0;
+    dphi(4,0) = 9.0 / 2.0 * (2.0 - 10.0 * xsi1 + 9.0 * xsi1 * xsi1 - 5.0 * xsi2 + 12.0 * xsi1 * xsi2 + 3.0 * xsi2 * xsi2 - 5.0 * xsi3 + 12.0 * xsi1 * xsi3 + 6.0 * xsi2 * xsi3 + 3.0 * xsi3 * xsi3);
+    dphi(5,0) = -9.0 / 2.0 * (1.0 - 8.0 * xsi1 + 9.0 * xsi1 * xsi1 - xsi2 + 6.0 * xsi1 * xsi2 - xsi3 + 6.0 * xsi1 * xsi3);
+    dphi(6,0) = 9.0 / 2.0 * (-1.0 + 6.0 * xsi1) * xsi2;
+    dphi(7,0) = 9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+    dphi(8,0) = -9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+    dphi(9,0) = 9.0 / 2.0 * xsi2 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+    dphi(10,0) = -9.0 / 2.0 * xsi3 * (-1.0 + 3.0 * xsi3);
+    dphi(11,0) = 9.0 / 2.0 * xsi3 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+    dphi(12,0) = 0.0;
+    dphi(13,0) = 0.0;
+    dphi(14,0) = 9.0 / 2.0 * xsi3 * (-1.0 + 3.0 * xsi3);
+    dphi(15,0) = 9.0 / 2.0 * (-1.0 + 6.0 * xsi1) * xsi3;
+    dphi(16,0) = -27.0 * xsi2 * (-1.0 + 2.0 * xsi1 + xsi2 + xsi3);
+    dphi(17,0) = -27.0 * xsi3 * (-1.0 + 2.0 * xsi1 + xsi2 + xsi3);
+    dphi(18,0) = -27.0 * xsi2 * xsi3;
+    dphi(19,0) = 27.0 * xsi2 * xsi3;
+    dphi(0,1) = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
+    dphi(1,1) = 0.0;
+    dphi(2,1) = 0.50 * (2.0 - 18.0 * xsi2 + 27.0 * xsi2 * xsi2);
+    dphi(3,1) = 0.0;
+    dphi(4,1) = 9.0 / 2.0 * xsi1 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+    dphi(5,1) = -9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+    dphi(6,1) = 9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+    dphi(7,1) = 9.0 / 2.0 * xsi1 * (-1.0 + 6.0 * xsi2);
+    dphi(8,1) = -9.0 / 2.0 * (1.0 - xsi1 - 8.0 * xsi2 - xsi3 + 6.0 * xsi1 * xsi2 + 6.0 * xsi2 * xsi3 + 9.0 * xsi2 * xsi2);
+    dphi(9,1) = 9.0 / 2.0 * (2.0 - 5.0 * xsi1 + 3.0 * xsi1 * xsi1 - 10.0 * xsi2 + 12.0 * xsi1 * xsi2 + 9.0 * xsi2 * xsi2 - 5.0 * xsi3 + 6.0 * xsi1 * xsi3 + 12.0 * xsi2 * xsi3 + 3.0 * xsi3 * xsi3);
+    dphi(10,1) = -9.0 / 2.0 * xsi3 * (-1.0 + 3.0 * xsi3);
+    dphi(11,1) = 9.0 / 2.0 * xsi3 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+    dphi(12,1) = 9.0 / 2.0 * (-1.0 + 3.0 * xsi3) * xsi3;
+    dphi(13,1) = 9.0 / 2.0 * (-1.0 + 6.0 * xsi2) * xsi3;
+    dphi(14,1) = 0.0;
+    dphi(15,1) = 0.0;
+    dphi(16,1) = -27.0 * xsi1 * (-1.0 + xsi1 + 2.0 * xsi2 + xsi3);
+    dphi(17,1) = -27.0 * xsi1 * xsi3;
+    dphi(18,1) = -27.0 * xsi3 * (-1.0 + xsi1 + 2.0 * xsi2 + xsi3);
+    dphi(19,1) = 27.0 * xsi1 * xsi3;
+    dphi(0,2) = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
+    dphi(1,2) = 0.0;
+    dphi(2,2) = 0.0;
+    dphi(3,2) = 0.50 * (2.0 - 18.0 * xsi3 + 27.0 * xsi3 * xsi3);
+    dphi(4,2) = 9.0 / 2.0 * xsi1 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+    dphi(5,2) = -9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+    dphi(6,2) = 0.0;
+    dphi(7,2) = 0.0;
+    dphi(8,2) = -9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+    dphi(9,2) = 9.0 / 2.0 * xsi2 * (-5.0 + 6.0 * xsi1 + 6.0 * xsi2 + 6.0 * xsi3);
+    dphi(10,2) = -9.0 / 2.0 * (1.0 - xsi1 - xsi2 - 8.0 * xsi3 + 6.0 * xsi1 * xsi3 + 6.0 * xsi2 * xsi3 + 9.0 * xsi3 * xsi3);
+    dphi(11,2) = 9.0 / 2.0 * (2.0 - 5.0 * xsi1 + 3.0 * xsi1 * xsi1 - 5.0 * xsi2 + 6.0 * xsi1 * xsi2 + 3.0 * xsi2 * xsi2 - 10.0 * xsi3 + 12.0 * xsi1 * xsi3 + 12.0 * xsi2 * xsi3 + 9.0 * xsi3 * xsi3);
+    dphi(12,2) = 9.0 / 2.0 * xsi2 * (-1.0 + 6.0 * xsi3);
+    dphi(13,2) = 9.0 / 2.0 * xsi2 * (-1.0 + 3.0 * xsi2);
+    dphi(14,2) = 9.0 / 2.0 * xsi1 * (-1.0 + 6.0 * xsi3);
+    dphi(15,2) = 9.0 / 2.0 * xsi1 * (-1.0 + 3.0 * xsi1);
+    dphi(16,2) = -27.0 * xsi1 * xsi2;
+    dphi(17,2) = -27.0 * xsi1 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
+    dphi(18,2) = -27.0 * xsi2 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
+    dphi(19,2) = 27.0 * xsi1 * xsi2;
+
+}
+
+void ShapeTetrahedronCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
+    const double xsi1 = xi[0];
+    const double xsi2 = xi[1];
+    const double xsi3 = xi[2];
+
+    ddphi[0](0,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](0,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](0,2) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](1,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](1,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](1,2) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](2,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](2,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    ddphi[0](2,2) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
+    
+    ddphi[1](0,0) = -9. + 27. * xsi1;
+    ddphi[1](0,1) = 0.;
+    ddphi[1](0,2) = 0.;
+    ddphi[1](1,0) = 0.;
+    ddphi[1](1,1) = 0.;
+    ddphi[1](1,2) = 0.;
+    ddphi[1](2,0) = 0.;
+    ddphi[1](2,1) = 0.;
+    ddphi[1](2,2) = 0.;
+
+    ddphi[2](0,0) = 0.;
+    ddphi[2](0,1) = 0.;
+    ddphi[2](0,2) = 0.;
+    ddphi[2](1,0) = 0.;
+    ddphi[2](1,1) = -9. + 27. * xsi2;
+    ddphi[2](1,2) = 0.;
+    ddphi[2](2,0) = 0.;
+    ddphi[2](2,1) = 0.;
+    ddphi[2](2,2) = 0.;
+
+    ddphi[3](0,0) = 0.;
+    ddphi[3](0,1) = 0.;
+    ddphi[3](0,2) = 0.;
+    ddphi[3](1,0) = 0.;
+    ddphi[3](1,1) = 0.;
+    ddphi[3](1,2) = 0.;
+    ddphi[3](2,0) = 0.;
+    ddphi[3](2,1) = 0.;
+    ddphi[3](2,2) = -9. + 27. * xsi3;
+
+    ddphi[4](0,0) = -45. + 81.* xsi1 + 54. * xsi2 + 54. * xsi3;
+    ddphi[4](0,1) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](0,2) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](1,0) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](1,1) = 27. * xsi1;
+    ddphi[4](1,2) = 27. * xsi1;
+    ddphi[4](2,0) = -22.5 + 54. * xsi1 + 27. * xsi2 + 27. * xsi3;
+    ddphi[4](2,1) = 27. * xsi1;
+    ddphi[4](2,2) = 27. * xsi1;
+
+    ddphi[5](0,0) = 36. - 81. * xsi1 - 27. * xsi2 - 27. * xsi3;
+    ddphi[5](0,1) = 4.5 - 27. * xsi1;
+    ddphi[5](0,2) = 4.5 - 27. * xsi1;
+    ddphi[5](1,0) = 4.5 - 27. * xsi1;
+    ddphi[5](1,1) = 0.;
+    ddphi[5](1,2) = 0.;
+    ddphi[5](2,0) = 4.5 - 27. * xsi1;
+    ddphi[5](2,1) = 0.;
+    ddphi[5](2,2) = 0.;
+
+    ddphi[6](0,0) = 27. * xsi2;
+    ddphi[6](0,1) = -4.5 + 27. * xsi1;
+    ddphi[6](0,2) = 0.;
+    ddphi[6](1,0) = -4.5 + 27. * xsi1;
+    ddphi[6](1,1) = 0.;
+    ddphi[6](1,2) = 0.;
+    ddphi[6](2,0) = 0.;
+    ddphi[6](2,1) = 0.;
+    ddphi[6](2,2) = 0.;
+
+    ddphi[7](0,0) = 0.;
+    ddphi[7](0,1) = -4.5 + 27. * xsi2;
+    ddphi[7](0,2) = 0.;
+    ddphi[7](1,0) = -4.5 + 27. * xsi2;
+    ddphi[7](1,1) = 27. * xsi1;
+    ddphi[7](1,2) = 0.;
+    ddphi[7](2,0) = 0.;
+    ddphi[7](2,1) = 0.;
+    ddphi[7](2,2) = 0.;
+
+    ddphi[8](0,0) = 0.;
+    ddphi[8](0,1) = 4.5 - 27. * xsi2;
+    ddphi[8](0,2) = 0.;
+    ddphi[8](1,0) = 4.5 - 27. * xsi2;
+    ddphi[8](1,1) = -27. * xsi1 - 81. * xsi2 -27.* xsi3;
+    ddphi[8](1,2) = 4.5 - 27. * xsi2;
+    ddphi[8](2,0) = 0.;
+    ddphi[8](2,1) = 4.5 - 27. * xsi2;
+    ddphi[8](2,2) = 0.;
+
+    ddphi[9](0,0) = 27. * xsi2;
+    ddphi[9](0,1) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](0,2) = 27. * xsi2;
+    ddphi[9](1,0) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](1,1) = -45. + 54. * xsi1 + 81. * xsi2 + 54. * xsi3;
+    ddphi[9](1,2) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](2,0) = 27. * xsi2;
+    ddphi[9](2,1) = -22.5 + 27. * xsi1 + 54. * xsi2 + 27. * xsi3;
+    ddphi[9](2,2) = 27. * xsi2;
+
+    ddphi[10](0,0) = 0.;
+    ddphi[10](0,1) = 0.;
+    ddphi[10](0,2) = 4.5 - 27. * xsi3;
+    ddphi[10](1,0) = 0.;
+    ddphi[10](1,1) = 0.;
+    ddphi[10](1,2) = 4.5 - 27. * xsi3;
+    ddphi[10](2,0) = 4.5 - 27. * xsi3;
+    ddphi[10](2,1) = 4.5 - 27. * xsi3;
+    ddphi[10](2,2) = 36. - 27. * xsi1 - 27. * xsi2 - 81. * xsi3;
+
+    ddphi[11](0,0) = 27. * xsi3;
+    ddphi[11](0,1) = 27. * xsi3;
+    ddphi[11](0,2) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](1,0) = 27. * xsi3;
+    ddphi[11](1,1) = 27. * xsi3;
+    ddphi[11](1,2) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](2,0) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](2,1) = -22.5 + 27. * xsi1 + 27. * xsi2 + 54. * xsi3;
+    ddphi[11](2,2) = -45. + 54. * xsi1 + 54. * xsi2 + 81. * xsi3;
+
+    ddphi[12](0,0) = 0.;
+    ddphi[12](0,1) = 0.;
+    ddphi[12](0,2) = 0.;
+    ddphi[12](1,0) = 0.;
+    ddphi[12](1,1) = 0.;
+    ddphi[12](1,2) = -4.5 + 27. * xsi3;
+    ddphi[12](2,0) = 0.;
+    ddphi[12](2,1) = -4.5 + 27. * xsi3;
+    ddphi[12](2,2) = 27. * xsi2;
+
+    ddphi[13](0,0) = 0.;
+    ddphi[13](0,1) = 0.;
+    ddphi[13](0,2) = 0.;
+    ddphi[13](1,0) = 0.;
+    ddphi[13](1,1) = 27. * xsi3;
+    ddphi[13](1,2) = -4.5 + 27. * xsi2;
+    ddphi[13](2,0) = 0.;
+    ddphi[13](2,1) = -4.5 + 27. * xsi2;
+    ddphi[13](2,2) = 0.;
+
+    ddphi[14](0,0) = 0.;
+    ddphi[14](0,1) = 0.;
+    ddphi[14](0,2) = -4.5 + 27. * xsi3;
+    ddphi[14](1,0) = 0.;
+    ddphi[14](1,1) = 0.;
+    ddphi[14](1,2) = 0.;
+    ddphi[14](2,0) = -4.5 + 27. * xsi3;
+    ddphi[14](2,1) = 0.;
+    ddphi[14](2,2) = 27. * xsi1;
+
+    ddphi[15](0,0) = 27. * xsi3;
+    ddphi[15](0,1) = 0.;
+    ddphi[15](0,2) = -4.5 + 27. * xsi1;
+    ddphi[15](1,0) = 0.;
+    ddphi[15](1,1) = 0.;
+    ddphi[15](1,2) = 0.;
+    ddphi[15](2,0) = -4.5 + 27. * xsi1;
+    ddphi[15](2,1) = 0.;
+    ddphi[15](2,2) = 0.;
+
+    ddphi[16](0,0) = -54. * xsi2;
+    ddphi[16](0,1) = 27. - 54. * xsi1 - 54. * xsi2 - 27. * xsi3;
+    ddphi[16](0,2) = -27. * xsi2;
+    ddphi[16](1,0) = 27. - 54. * xsi1 - 54. * xsi2 - 27. * xsi3;
+    ddphi[16](1,1) = -54. * xsi1;
+    ddphi[16](1,2) = -27. * xsi1;
+    ddphi[16](2,0) = -27. * xsi2;
+    ddphi[16](2,1) = -27. * xsi1;
+    ddphi[16](2,2) = 0.;
+
+    ddphi[17](0,0) = -54. * xsi3;
+    ddphi[17](0,1) = -27. * xsi3;
+    ddphi[17](0,2) = 27. - 54. * xsi1 - 27. * xsi2 - 54. * xsi3;
+    ddphi[17](1,0) = -27. * xsi3;
+    ddphi[17](1,1) = 0.;
+    ddphi[17](1,2) = -27. * xsi1;
+    ddphi[17](2,0) = 27. - 54. * xsi1 - 27. * xsi2 - 54. * xsi3;
+    ddphi[17](2,1) = -27. * xsi1;
+    ddphi[17](2,2) = -54. * xsi1;
+
+    ddphi[18](0,0) = 0.;
+    ddphi[18](0,1) = -27. * xsi3;
+    ddphi[18](0,2) = -27. * xsi2;
+    ddphi[18](1,0) = -27. * xsi3;
+    ddphi[18](1,1) = -54. * xsi3;
+    ddphi[18](1,2) = 27. - 27. * xsi1 - 54. * xsi2 - 54. * xsi3;
+    ddphi[18](2,0) = -27. * xsi2;
+    ddphi[18](2,1) = 27. - 27. * xsi1 - 54. * xsi2 - 54. * xsi3;
+    ddphi[18](2,2) = -54. * xsi2;
+
+    ddphi[19](0,0) = 0.;
+    ddphi[19](0,1) = 27. * xsi3;
+    ddphi[19](0,2) = 27. * xsi2;
+    ddphi[19](1,0) = 27. * xsi3;
+    ddphi[19](1,1) = 0.;
+    ddphi[19](1,2) = 27. * xsi1;
+    ddphi[19](2,0) = 27. * xsi2;
+    ddphi[19](2,1) = 27. * xsi1;
+    ddphi[19](2,2) = 0.;
+           
+}
+
+void ShapeTetrahedronCub::getCoordinates(MatrixDouble &coord) {
+
+    std::cout << "Not implemented\n";
+    PanicButton();
+
+}

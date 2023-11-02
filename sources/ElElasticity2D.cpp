@@ -4,7 +4,7 @@ template<class tshape>
 void ElElasticity2D<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
     double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0 * this->getIntegPointWeightFunction(index);
-    MatrixDouble matD(3,2*this->Mesh()->NElNodes());
+    MatrixDouble matD(3,2*tshape::NElNodes);
     matD.setZero();
     int DIM = this->Mesh()->Dimension();
 
@@ -20,7 +20,7 @@ void ElElasticity2D<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffnes
     Hooke(1,1) = k;
     Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
-    for (int j = 0; j < this->Mesh()->NElNodes(); j++){
+    for (int j = 0; j < tshape::NElNodes; j++){
         matD(0,DIM*j  ) = this->fIntegData.fDPhiX0(j,0);
         matD(1,DIM*j+1) = this->fIntegData.fDPhiX0(j,1);
         matD(2,DIM*j  ) = this->fIntegData.fDPhiX0(j,1);
@@ -45,7 +45,7 @@ void ElElasticity2D<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
     this->interpolateSolDerivatives(du_dx);
 
     double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0 * this->getIntegPointWeightFunction(index);
-    MatrixDouble matD(3,2*this->Mesh()->NElNodes());
+    MatrixDouble matD(3,2*tshape::NElNodes);
     matD.setZero();
 
     MatrixDouble Hooke(3,3);
@@ -60,7 +60,7 @@ void ElElasticity2D<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
     Hooke(1,1) = k;
     Hooke(2,2) = k * (1. - poisson_) * 0.5;
 
-    for (int j = 0; j < this->Mesh()->NElNodes(); j++){
+    for (int j = 0; j < tshape::NElNodes; j++){
         matD(0,DIM*j  ) = this->fIntegData.fDPhiX0(j,0);
         matD(1,DIM*j+1) = this->fIntegData.fDPhiX0(j,1);
         matD(2,DIM*j  ) = this->fIntegData.fDPhiX0(j,1);
@@ -79,8 +79,8 @@ void ElElasticity2D<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
     VecDouble x_ = this->getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
-    for (int i = this->Mesh()->NElNodes(); i--; ){
-        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = this->fIntegData.fPhi[i];
         //External force
         double Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
         double Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
@@ -99,9 +99,8 @@ void ElElasticity2D<tshape>::ComputeError(VecDouble &errors){
     int DEG = this->Mesh()->GetDefaultOrder();
 
     IntegQuadrature nQuad(DIM,DEG);
-    ShapeFunction shapeQuad(DIM,DEG);
 
-    MatrixDouble dphi_dx(this->Mesh()->NElNodes(),DIM);
+    MatrixDouble dphi_dx(tshape::NElNodes,DIM);
     MatrixDouble ainv_(DIM,DIM);
     VecDouble xsi(DIM);
 
@@ -160,12 +159,12 @@ void ElElasticity2D<tshape>::ComputeError(VecDouble &errors){
 template<class tshape>
 void ElElasticity2D<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = this->Mesh()->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         int nstate = this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetNStateVariables();
         for (int istate = 0; istate < nstate; istate++){
             if ((this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(istate) == 1) ||
                 (this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(istate) == 3))  {
-                for (int j = this->Mesh()->NElNodes()*nstate; j--; ){
+                for (int j = tshape::NElNodes*nstate; j--; ){
                     Stiffness(nstate*i+istate,j) = 0.;
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
@@ -181,14 +180,22 @@ void ElElasticity2D<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 template class ElElasticity2D<ShapePoint>;
 template class ElElasticity2D<ShapeOneD>;
-template class ElElasticity2D<ShapeTriangle>;
-template class ElElasticity2D<ShapeQuadrilateral>;
-template class ElElasticity2D<ShapeTetrahedron>;
+template class ElElasticity2D<ShapeTriangleLin>;
+template class ElElasticity2D<ShapeTriangleQua>;
+template class ElElasticity2D<ShapeTriangleCub>;
+template class ElElasticity2D<ShapeQuadrilateralLin>;
+template class ElElasticity2D<ShapeTetrahedronLin>;
+template class ElElasticity2D<ShapeTetrahedronQua>;
+template class ElElasticity2D<ShapeTetrahedronCub>;
 template class ElElasticity2D<ShapeHexahedron>;

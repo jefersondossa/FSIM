@@ -19,14 +19,14 @@ void ElNavierStokes<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffnes
     this->interpolateSolDerivatives(du_dx);
     auto dphi_dx = this->fIntegData.fDPhiX0;
 
-    for (int i = this->Mesh()->NElNodes(); i-- ; ){        
-        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+    for (int i = tshape::NElNodes; i-- ; ){        
+        double shapeFi = this->fIntegData.fPhi[i];
         double wSUPGi = 0.;
         for (int m=DIM; m--; ) wSUPGi += u_[m] * dphi_dx(i,m);
  
-        for (int j = this->Mesh()->NElNodes(); j-- ; ){           
+        for (int j = tshape::NElNodes; j-- ; ){           
 
-            double shapeFj = this->Mesh()->getNumericalIntegration()-> phi_(j,index);
+            double shapeFj = this->fIntegData.fPhi[j];
             double shapeFij = shapeFi * shapeFj;
             double wSUPGj = 0.;
             for (int m=DIM; m--; ) wSUPGj += u_[m] * dphi_dx(j,m);
@@ -82,11 +82,11 @@ void ElNavierStokes<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffnes
 
 
 
-    for (int i = this->Mesh()->NElNodes(); i-- ; ){        
-        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
-        for (int j = this->Mesh()->NElNodes(); j-- ; ){
+    for (int i = tshape::NElNodes; i-- ; ){        
+        double shapeFi = this->fIntegData.fPhi[i];
+        for (int j = tshape::NElNodes; j-- ; ){
             
-            double shapeFj = this->Mesh()->getNumericalIntegration()-> phi_(j,index);
+            double shapeFj = this->fIntegData.fPhi[j];
 
             for (int k = DIM; k--;  ){
                 for (int l = DIM; l--; ){
@@ -138,9 +138,9 @@ void ElNavierStokes<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
     double divrU = 0.;
     for (int l=DIM; l--; ) divrU += du_dx(l,l);
 
-    for (int i = this->Mesh()->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         // std::cout << "Sol = " << this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetSolution(0) << std::endl;
-        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+        double shapeFi = this->fIntegData.fPhi[i];
 
         for (int k = DIM; k--; ){
             //Viscosity
@@ -190,14 +190,22 @@ void ElNavierStokes<tshape>::ComputeError(VecDouble &errors){
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 template class ElNavierStokes<ShapePoint>;
 template class ElNavierStokes<ShapeOneD>;
-template class ElNavierStokes<ShapeTriangle>;
-template class ElNavierStokes<ShapeQuadrilateral>;
-template class ElNavierStokes<ShapeTetrahedron>;
+template class ElNavierStokes<ShapeTriangleLin>;
+template class ElNavierStokes<ShapeTriangleQua>;
+template class ElNavierStokes<ShapeTriangleCub>;
+template class ElNavierStokes<ShapeQuadrilateralLin>;
+template class ElNavierStokes<ShapeTetrahedronLin>;
+template class ElNavierStokes<ShapeTetrahedronQua>;
+template class ElNavierStokes<ShapeTetrahedronCub>;
 template class ElNavierStokes<ShapeHexahedron>;

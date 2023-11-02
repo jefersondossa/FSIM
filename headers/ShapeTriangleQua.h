@@ -1,13 +1,13 @@
-#ifndef SHAPEONED
-#define SHAPEONED
+#ifndef SHAPETRIANGLEQUA
+#define SHAPETRIANGLEQUA
 
 #include "DataTypes.h"
 
-class ShapeOneD{
+class ShapeTriangleQua{
 public:
-    const static int Dimension = 1;
-    const static int Order = 1;
-    const static int NElNodes = 2;
+    const static int Dimension = 2;
+    const static int Order = 2;
+    const static int NElNodes = 6;
 
     /// Shapes the shape function value
     /// @param double* Non-dimensional coordinates 

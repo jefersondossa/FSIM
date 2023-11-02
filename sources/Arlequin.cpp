@@ -5,10 +5,14 @@
 #include <set>
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 #define  REAL double
 

@@ -22,69 +22,71 @@
 class DomainIntegration{
 public:
     DomainIntegration(int DIM, int DEG){
-        IntegQuadrature quad(DIM,DEG);
-        ShapeFunction shapeFunction(DIM,DEG);
-        IntegQuadratureSpecial Squad(DIM,DEG);
+        std::cout << "This method is deprecated." << std::endl;
+        PanicButton();
+        // IntegQuadrature quad(DIM,DEG);
+        // ShapeFunction shapeFunction(DIM,DEG);
+        // IntegQuadratureSpecial Squad(DIM,DEG);
 
-        int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
+        // int nElNodes = (3+(DIM-2)*DEG)*(2+3*DEG+DEG*DEG)/6;
         
-        int nIntegPointsNormal = quad.getNumberOfIntegrationPoints();
-        int nIntegPointsSpecial = Squad.getNumberOfIntegrationPoints();
+        // int nIntegPointsNormal = quad.getNumberOfIntegrationPoints();
+        // int nIntegPointsSpecial = Squad.getNumberOfIntegrationPoints();
 
-        phi_.resize(nElNodes,nIntegPointsNormal);
-        dphi_.resize(nElNodes);
-        // dphi_ = new double**[nElNodes];
-        for (int i = 0; i < nElNodes; i++){ 
-            dphi_[i].resize(DIM,nIntegPointsNormal);
-            dphi_[i].setZero();
-            // dphi_[i] = new double*[DIM];
-            // for (int j = 0; j < DIM; j++) dphi_[i][j] = new double[nIntegPointsNormal];
-        }
+        // phi_.resize(nElNodes,nIntegPointsNormal);
+        // dphi_.resize(nElNodes);
+        // // dphi_ = new double**[nElNodes];
+        // for (int i = 0; i < nElNodes; i++){ 
+        //     dphi_[i].resize(DIM,nIntegPointsNormal);
+        //     dphi_[i].setZero();
+        //     // dphi_[i] = new double*[DIM];
+        //     // for (int j = 0; j < DIM; j++) dphi_[i][j] = new double[nIntegPointsNormal];
+        // }
 
-        phiS_.resize(nElNodes,nIntegPointsSpecial);
+        // phiS_.resize(nElNodes,nIntegPointsSpecial);
 
-        dphiS_ = new double**[nElNodes];
-        for (int i = 0; i < nElNodes; i++){ 
-            dphiS_[i] = new double*[DIM];
-            for (int j = 0; j < DIM; j++) dphiS_[i][j] = new double[nIntegPointsSpecial];
-        }
+        // dphiS_ = new double**[nElNodes];
+        // for (int i = 0; i < nElNodes; i++){ 
+        //     dphiS_[i] = new double*[DIM];
+        //     for (int j = 0; j < DIM; j++) dphiS_[i][j] = new double[nIntegPointsSpecial];
+        // }
 
-        VecDouble xsi(DIM);
-        int index = 0;
+        // VecDouble xsi(DIM);
+        // int index = 0;
         
-        VecDouble phiAux_(nElNodes);
+        // VecDouble phiAux_(nElNodes);
 
-        MatrixDouble dphiAux(nElNodes,DIM);
+        // MatrixDouble dphiAux(nElNodes,DIM);
         
-        for(int it = 0; it < quad.getNumberOfIntegrationPoints(); it++){
-            //Defines the integration points adimentional coordinates
-            for (int i = 0; i < DIM; i++) xsi[i] = quad.PointList(index,i);       
-            //Shape functions
-            shapeFunction.Shape(xsi,phiAux_);
-            for (int i = 0; i < nElNodes; i++) phi_(i,index) = phiAux_[i];
-            //Derivatives
-            shapeFunction.ShapeGradient(xsi,dphiAux);
-            for (int i = 0; i < nElNodes; i++)
-                for (int j = 0; j < DIM; j++)
-                    dphi_[i](j,index) = dphiAux(i,j);
+        // for(int it = 0; it < quad.getNumberOfIntegrationPoints(); it++){
+        //     //Defines the integration points adimentional coordinates
+        //     for (int i = 0; i < DIM; i++) xsi[i] = quad.PointList(index,i);       
+        //     //Shape functions
+        //     shapeFunction.Shape(xsi,phiAux_);
+        //     for (int i = 0; i < nElNodes; i++) phi_(i,index) = phiAux_[i];
+        //     //Derivatives
+        //     shapeFunction.ShapeGradient(xsi,dphiAux);
+        //     for (int i = 0; i < nElNodes; i++)
+        //         for (int j = 0; j < DIM; j++)
+        //             dphi_[i](j,index) = dphiAux(i,j);
 
-            index++;
-        }
-        index = 0;
-        for(int it = 0; it < Squad.getNumberOfIntegrationPoints(); it++){
-            //Defines the integration points adimentional coordinates
-            for (int i = 0; i < DIM; i++) xsi[i] = Squad.PointList(index,i);       
-            //Shape functions
-            shapeFunction.Shape(xsi,phiAux_);
-            for (int i = 0; i < nElNodes; i++) phiS_(i,index) = phiAux_[i];
-            //Derivatives
-            shapeFunction.ShapeGradient(xsi,dphiAux);
-            for (int i = 0; i < nElNodes; i++)
-                for (int j = 0; j < DIM; j++)
-                    dphiS_[i][j][index] = dphiAux(i,j);
+        //     index++;
+        // }
+        // index = 0;
+        // for(int it = 0; it < Squad.getNumberOfIntegrationPoints(); it++){
+        //     //Defines the integration points adimentional coordinates
+        //     for (int i = 0; i < DIM; i++) xsi[i] = Squad.PointList(index,i);       
+        //     //Shape functions
+        //     shapeFunction.Shape(xsi,phiAux_);
+        //     for (int i = 0; i < nElNodes; i++) phiS_(i,index) = phiAux_[i];
+        //     //Derivatives
+        //     shapeFunction.ShapeGradient(xsi,dphiAux);
+        //     for (int i = 0; i < nElNodes; i++)
+        //         for (int j = 0; j < DIM; j++)
+        //             dphiS_[i][j][index] = dphiAux(i,j);
 
-            index++;
-        }
+        //     index++;
+        // }
 
     }
 

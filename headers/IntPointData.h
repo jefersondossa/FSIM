@@ -23,6 +23,9 @@ public:
 
     MatrixDouble fDPhiX0;
     MatrixDouble fDPhiX1;
+
+    VecDouble    fPhi;
+    MatrixDouble fDPhi;
 };
 
 

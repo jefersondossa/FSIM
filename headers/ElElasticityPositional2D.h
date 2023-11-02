@@ -6,7 +6,9 @@
 template <class tshape>
 class ElElasticityPositional2D : public ElementT<tshape>{
 public:
-    ElElasticityPositional2D(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){};
+    ElElasticityPositional2D(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){
+        Element::nLocDOF = tshape::NElNodes * tshape::Dimension;
+    };
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     

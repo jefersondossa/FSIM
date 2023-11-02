@@ -18,6 +18,7 @@ public:
         this->fMesh = meshvec[2];
         fGlobalIndex = globindex;
         fMeshVector = meshvec;
+        Element::nLocDOF = tshape::NElNodes * tshape::Dimension;
     };
 
     int64_t &GetGlobalIndex(){

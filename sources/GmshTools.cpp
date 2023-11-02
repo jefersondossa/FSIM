@@ -7,10 +7,14 @@
 #include "ElElasticityPositional2D.h"
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 #include "Boundary.h"
 
 #include<cstdlib>
@@ -159,8 +163,8 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
     FSinterface = geometry_->getBoundaryCondition("FSINTERFACE");
 
     numFSIInterfaces = FSinterface.size();
-
-    int nElNodes = cmesh->NElNodes();
+    // PanicButton();
+    int nElNodes = 3;//cmesh->NElNodes();
     int nBdNodes = cmesh->NBdNodes();
     int DEG = cmesh->GetDefaultOrder();
     int DIM = cmesh->Dimension();
@@ -204,31 +208,31 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                 {
                 case EPoisson:
                     {
-                        ElPoisson<ShapeTriangle> *el = new ElPoisson<ShapeTriangle>(index++,connect,cmesh);
+                        ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
                         cmesh->ElementVec().push_back(el);
                     }
                     break;
                 case EElastic:
                     {
-                        ElElasticity2D<ShapeTriangle> *el = new ElElasticity2D<ShapeTriangle>(index++,connect,cmesh);
+                        ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
                         cmesh->ElementVec().push_back(el);
                     }
                     break;
                 case ESolidPositional:
                     {
-                        ElElasticityPositional2D<ShapeTriangle> *el = new ElElasticityPositional2D<ShapeTriangle>(index++,connect,cmesh);
+                        ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
                         cmesh->ElementVec().push_back(el);
                     }
                     break;
                 case EStokes:
                     {
-                        ElStokes<ShapeTriangle> *el = new ElStokes<ShapeTriangle>(index++,connect,cmesh);
+                        ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
                         cmesh->ElementVec().push_back(el);
                     }
                     break;
                 case ENavierStokes:
                     {
-                        ElNavierStokes<ShapeTriangle> *el = new ElNavierStokes<ShapeTriangle>(index++,connect,cmesh);
+                        ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
                         cmesh->ElementVec().push_back(el);
                     }
                     break;
@@ -370,31 +374,31 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                     {
                     case EPoisson:
                         {
-                            ElPoisson<ShapeTriangle> *el = new ElPoisson<ShapeTriangle>(index++,connect,cmesh);
+                            ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
                             cmesh->ElementVec().push_back(el);
                         }
                         break;
                     case EElastic:
                         {
-                            ElElasticity2D<ShapeTriangle> *el = new ElElasticity2D<ShapeTriangle>(index++,connect,cmesh);
+                            ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
                             cmesh->ElementVec().push_back(el);
                         }
                         break;
                     case ESolidPositional:
                         {
-                            ElElasticityPositional2D<ShapeTriangle> *el = new ElElasticityPositional2D<ShapeTriangle>(index++,connect,cmesh);
+                            ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
                             cmesh->ElementVec().push_back(el);
                         }
                         break;
                     case EStokes:
                         {
-                            ElStokes<ShapeTriangle> *el = new ElStokes<ShapeTriangle>(index++,connect,cmesh);
+                            ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
                             cmesh->ElementVec().push_back(el);
                         }
                         break;
                     case ENavierStokes:
                         {
-                            ElNavierStokes<ShapeTriangle> *el = new ElNavierStokes<ShapeTriangle>(index++,connect,cmesh);
+                            ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
                             cmesh->ElementVec().push_back(el);
                         }
                         break;
@@ -523,7 +527,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
 
             // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
             bool flag = false;
-            for (int i = 0; i < cmesh->NElNodes(); i++){
+            for (int i = 0; i < connec.size(); i++){
                 for (int iNeig = 0; iNeig < neighborNodes.size(); iNeig++){
                     if (connec[i] == neighborNodes[iNeig]){
                         flag = true;
@@ -579,7 +583,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
         VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
 
         //Reorder connectivity
-        for (int k = 0; k < cmesh->NElNodes(); k++) connect[k] = iperm[connect[k]];
+        for (int k = 0; k < connect.size(); k++) connect[k] = iperm[connect[k]];
         cmesh->ElementVec()[i] -> setConnectivity(connect);
     }
     // Update boundary connectivity
@@ -595,7 +599,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     for (int i = 0; i < cmesh->NElements(); i++){
         VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
 
-        for (int k = 0; k < cmesh->NElNodes(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
+        for (int k = 0; k < connect.size(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
     }
 
     PetscLogDouble bytes = 0;
@@ -687,7 +691,8 @@ void GmshTools::BoundarySides(CompMesh * cmesh){
                 int flag = 0;
             
                 int side[nBdNodes];
-                for (int k=0; k<cmesh->NElNodes(); k++){
+                std::cout << "This function need refactor \n";
+                for (int k=0; k<3; k++){
                     for (int l = 0; l<nBdNodes; l++){
                         if (connectB[l] == connect[k]){
                             side[flag] = k;
@@ -1269,7 +1274,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                             read >> node_identifiers[i_node];
                         }
                         /// Internally the nodes index and element index is converted to zero based indexation
-                        InsertElement<ShapeTriangle>(&gmesh, gmsh_physical_identifier, entity_el_type, elcount, node_identifiers);
+                        InsertElement<ShapeTriangleLin>(&gmesh, gmsh_physical_identifier, entity_el_type, elcount, node_identifiers);
                         elcount++;
                         
                     }else{
@@ -1686,35 +1691,35 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
 //     {
 //     case EPoisson:
 //         {
-//             ElPoisson<ShapeTriangle> *el = new ElPoisson<ShapeTriangle>(index++,connect,cmesh);
+//             ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
 //             cmesh->ElementVec()[index]=el;
 //             return el;
 //         }
 //         break;
 //     case EElastic:
 //         {
-//             ElElasticity2D<ShapeTriangle> *el = new ElElasticity2D<ShapeTriangle>(index++,connect,cmesh);
+//             ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
 //             cmesh->ElementVec()[index]=el;
 //             return el;
 //         }
 //         break;
 //     case ESolidPositional:
 //         {
-//             ElElasticityPositional2D<ShapeTriangle> *el = new ElElasticityPositional2D<ShapeTriangle>(index++,connect,cmesh);
+//             ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
 //             cmesh->ElementVec()[index]=el;
 //             return el;
 //         }
 //         break;
 //     case EStokes:
 //         {
-//             ElStokes<ShapeTriangle> *el = new ElStokes<ShapeTriangle>(index++,connect,cmesh);
+//             ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
 //             cmesh->ElementVec()[index]=el;
 //             return el;
 //         }
 //         break;
 //     case ENavierStokes:
 //         {
-//             ElNavierStokes<ShapeTriangle> *el = new ElNavierStokes<ShapeTriangle>(index++,connect,cmesh);
+//             ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
 //             cmesh->ElementVec()[index]=el;
 //             return el;
 //         }

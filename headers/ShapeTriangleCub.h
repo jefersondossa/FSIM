@@ -1,29 +1,31 @@
-#ifndef SHAPETRIANGLE
-#define SHAPETRIANGLE
+#ifndef SHAPETRIANGLECUB
+#define SHAPETRIANGLECUB
 
-#include "ShapeFunction.h"
+#include "DataTypes.h"
 
-class ShapeTriangle : public ShapeFunction{
+class ShapeTriangleCub{
 public:
     const static int Dimension = 2;
+    const static int Order = 3;
+    const static int NElNodes = 10;
 
     /// Shapes the shape function value
     /// @param double* Non-dimensional coordinates 
     /// @param double* Shape function values
-    void Shape(VecDouble &xi, VecDouble &phi) const override;
+    static void Shape(VecDouble &xi, VecDouble &phi);
     
     /// Shapes the values of the shape funtion derivatives
     /// @param double* Non-dimensional coordinates 
     /// @param double** Shape function derivatives values
-    void ShapeGradient(VecDouble &xi, MatrixDouble &dphi) const override;
+    static void ShapeGradient(VecDouble &xi, MatrixDouble &dphi);
 
     /// Shapes the values of the shape funtion second derivatives    
     /// @param double** Shape function second derivatives values
-    void ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) const override;
+    static void ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi);
 
     /// Gets the element nodal coordinates
     /// @param double** Non-dimensional coordinate
-    void getCoordinates(MatrixDouble &coord) const override;
+    static void getCoordinates(MatrixDouble &coord);
    
 };
 

@@ -44,7 +44,7 @@ void ElElasticityPositional2D<tshape>::ComputeStiffness(int &index, MatrixDouble
 
 
     //element rhs vector
-    for (int a = 0; a < this->Mesh()->NElNodes(); a++){
+    for (int a = 0; a < tshape::NElNodes; a++){
         for (int k = 0; k < DIM; k++){
             MatrixDouble dE_dyak(DIM,DIM);
             dE_dyak.setZero();
@@ -61,7 +61,7 @@ void ElElasticityPositional2D<tshape>::ComputeStiffness(int &index, MatrixDouble
             // rhsVector[2 * a + k] -= f * this->fIntegData.fWeight * j0;
 
             //element tangent matrix
-            for (int b = 0; b < this->Mesh()->NElNodes(); b++){
+            for (int b = 0; b < tshape::NElNodes; b++){
                 for (int l = 0; l < DIM; l++){
                     MatrixDouble dE_dybl(DIM,DIM);
                     dE_dybl.setZero();
@@ -95,7 +95,7 @@ void ElElasticityPositional2D<tshape>::ComputeStiffness(int &index, MatrixDouble
 
                     //mass matrix
                     double m = 0.;
-                    // (k==l)? m = (1.0 / (0.25 * dTime_)) *0* fMesh->getNumericalIntegration()-> phi_(a,index) * fMesh->getNumericalIntegration()-> phi_(b,index) : m = 0.0;
+                    // (k==l)? m = (1.0 / (0.25 * dTime_)) *0* this->fIntegData.fPhi[a] * this->fIntegData.fPhi[b] : m = 0.0;
 
                     Stiffness(2 * a + k,2 * b + l) += (e+m) * j0 * this->fIntegData.fWeight;
                 }
@@ -143,7 +143,7 @@ void ElElasticityPositional2D<tshape>::ComputeResidual(int &index, VecDouble &Rh
 
 
     //element rhs vector
-    for (int a = 0; a < this->Mesh()->NElNodes(); a++){
+    for (int a = 0; a < tshape::NElNodes; a++){
         for (int k = 0; k < DIM; k++){
             MatrixDouble dE_dyak(DIM,DIM);
             dE_dyak.setZero();
@@ -170,12 +170,12 @@ void ElElasticityPositional2D<tshape>::ComputeError(VecDouble &errors){
 template<class tshape>
 void ElElasticityPositional2D<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = this->Mesh()->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         int nstate = this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetNStateVariables();
         for (int istate = 0; istate < nstate; istate++){
             if ((this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(istate) == 1) ||
                 (this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(istate) == 3))  {
-                for (int j = this->Mesh()->NElNodes()*nstate; j--; ){
+                for (int j = tshape::NElNodes*nstate; j--; ){
                     Stiffness(nstate*i+istate,j) = 0.;
                     Stiffness(j,nstate*i+istate) = 0.;
                 };
@@ -190,14 +190,22 @@ void ElElasticityPositional2D<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDoubl
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 template class ElElasticityPositional2D<ShapePoint>;
 template class ElElasticityPositional2D<ShapeOneD>;
-template class ElElasticityPositional2D<ShapeTriangle>;
-template class ElElasticityPositional2D<ShapeQuadrilateral>;
-template class ElElasticityPositional2D<ShapeTetrahedron>;
+template class ElElasticityPositional2D<ShapeTriangleLin>;
+template class ElElasticityPositional2D<ShapeTriangleQua>;
+template class ElElasticityPositional2D<ShapeTriangleCub>;
+template class ElElasticityPositional2D<ShapeQuadrilateralLin>;
+template class ElElasticityPositional2D<ShapeTetrahedronLin>;
+template class ElElasticityPositional2D<ShapeTetrahedronQua>;
+template class ElElasticityPositional2D<ShapeTetrahedronCub>;
 template class ElElasticityPositional2D<ShapeHexahedron>;

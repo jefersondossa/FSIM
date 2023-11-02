@@ -18,9 +18,9 @@ void ElCouplingLocal<tshape>::ComputeStiffness(int &index, std::vector<MatrixDou
     double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0;
 
     if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
-            for (int j = 0; j < this->Mesh()->NElNodes(); j++){
-                double l2 = this->Mesh()->getNumericalIntegration()-> phi_(i,index) * this->Mesh()->getNumericalIntegration()-> phi_(j,index) * WJ * k1;
+        for (int i = 0; i < tshape::NElNodes; i++){
+            for (int j = 0; j < tshape::NElNodes; j++){
+                double l2 = this->fIntegData.fPhi[i] * this->fIntegData.fPhi[j] * WJ * k1;
                 // L2 COUPLING OPERATOR
                 Stiffness[0](i,j) -= l2;
                 for (int l = 0; l < DIM; l++){
@@ -31,9 +31,9 @@ void ElCouplingLocal<tshape>::ComputeStiffness(int &index, std::vector<MatrixDou
             };
         };
     } else {
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
-            for (int j = 0; j < this->Mesh()->NElNodes(); j++){
-                double l2 = this->Mesh()->getNumericalIntegration()-> phi_(i,index) * this->Mesh()->getNumericalIntegration()-> phi_(j,index) * WJ * k1;
+        for (int i = 0; i < tshape::NElNodes; i++){
+            for (int j = 0; j < tshape::NElNodes; j++){
+                double l2 = this->fIntegData.fPhi[i] * this->fIntegData.fPhi[j] * WJ * k1;
                 for (int k = 0; k < DIM; k++){
                     // L2 COUPLING OPERATOR
                     Stiffness[0](DIM*i+k,DIM*j+k) -= l2;
@@ -86,31 +86,31 @@ void ElCouplingLocal<tshape>::ComputeResidual(int &index, std::vector<VecDouble>
     double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0;
 
     if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
+        for (int i = 0; i < tshape::NElNodes; i++){
             //Solution residual
-            double L2u = u_[0] * this->Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
+            double L2u = u_[0] * this->fIntegData.fPhi[i] * k1;
             double H1u = 0.;
             for (int l=DIM; l--; ) H1u += this->fIntegData.fDPhiX0(i,l) * du_dx(0,l) * k2;
-            Rhs[0][this->Mesh()->NLocDOF()+i] += (L2u + H1u) * WJ;
+            Rhs[0][Element::NLocDOF()+i] += (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
-            double L2 = lagM_[0] * this->Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
+            double L2 = lagM_[0] * this->fIntegData.fPhi[i] * k1;
             double H1 = 0.;
             for (int l=DIM; l--; ) H1 += this->fIntegData.fDPhiX0(i,l) * dL_dx(0,l) * k2;
             Rhs[0][i] += (L2 + H1) * WJ;
         };
     } else {
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
+        for (int i = 0; i < tshape::NElNodes; i++){
             for (int k = 0; k < DIM; k++){
                 //Solution residual
-                double L2u = u_[k] * this->Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
+                double L2u = u_[k] * this->fIntegData.fPhi[i] * k1;
                 double H1u = 0.;
                 for (int l=DIM; l--; ) H1u += this->fIntegData.fDPhiX0(i,l) * du_dx(k,l) * k2;
                 for (int l=DIM; l--; ) H1u += this->fIntegData.fDPhiX0(i,l) * du_dx(l,k) * k2;
-                Rhs[0][this->Mesh()->NLocDOF()+DIM*i+k] += (L2u + H1u) * WJ;
+                Rhs[0][Element::NLocDOF()+DIM*i+k] += (L2u + H1u) * WJ;
                 
                 //Lagrange multipliers residual
-                double L2 = lagM_[k] * this->Mesh()->getNumericalIntegration()-> phi_(i,index) * k1;
+                double L2 = lagM_[k] * this->fIntegData.fPhi[i] * k1;
                 double H1 = 0.;
                 for (int l=DIM; l--; ) H1 += this->fIntegData.fDPhiX0(i,l) * dL_dx(k,l) * k2;
                 for (int l=DIM; l--; ) H1 += this->fIntegData.fDPhiX0(i,l) * dL_dx(l,k) * k2;
@@ -129,36 +129,36 @@ void ElCouplingLocal<tshape>::ApplyBC(std::vector<MatrixDouble> &Stiffness, std:
     int DIM = tshape::Dimension;
 
     if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
+        for (int i = 0; i < tshape::NElNodes; i++){
             auto connectlocal = fMeshVector[1]->ElementVec()[fLocalIndex]->getConnectivity();
             if (fMeshVector[1]->NodeVec()[connectlocal[i]] -> getConstrains(0) == 1) {
                 // for (int istiff = 0; istiff < Stiffness.size(); istiff++){
-                //     for (int j = 0; j < this->Mesh()->NElNodes(); j++){
+                //     for (int j = 0; j < tshape::NElNodes; j++){
                 //         Stiffness[istiff](i,j) = 0.;
                 //         Stiffness[istiff](j,i) = 0.;
                 //     };
                 // };
                 Rhs[0][i] = 0.0;
-                // Rhs[0][this->Mesh()->NLocDOF() + i] = 0.0;
+                // Rhs[0][Element::NLocDOF() + i] = 0.0;
                 Rhs[1][i] = 0.0;
-                // Rhs[1][this->Mesh()->NLocDOF() + i] = 0.0;
+                // Rhs[1][Element::NLocDOF() + i] = 0.0;
             };
         };
     } else {
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
+        for (int i = 0; i < tshape::NElNodes; i++){
             auto connectlocal = fMeshVector[1]->ElementVec()[fLocalIndex]->getConnectivity();
             for (int k = DIM; k--; ){
                 if (fMeshVector[1]->NodeVec()[connectlocal[i]] -> getConstrains(k) == 1) {
                     // for (int istiff = 0; istiff < Stiffness.size(); istiff++){
-                    //     for (int j = 0; j < this->Mesh()->NElNodes()*DIM; j++){
+                    //     for (int j = 0; j < tshape::NElNodes*DIM; j++){
                     //         Stiffness[istiff](DIM*i+k,j) = 0.;
                     //         Stiffness[istiff](j,DIM*i+k) = 0.;
                     //     };
                     // };
                     Rhs[0][i] = 0.0;
-                    // Rhs[0][this->Mesh()->NLocDOF() + i] = 0.0;
+                    // Rhs[0][Element::NLocDOF() + i] = 0.0;
                     Rhs[1][i] = 0.0;
-                    // Rhs[1][this->Mesh()->NLocDOF() + i] = 0.0;
+                    // Rhs[1][Element::NLocDOF() + i] = 0.0;
                 }
             };
         };
@@ -173,7 +173,7 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
     VecDouble xsi(DIM);
 
     int dimddphi = DIM == 2 ? 3 : 6;
-    MatrixDouble ddphi_dx(this->Mesh()->NElNodes(),dimddphi);
+    MatrixDouble ddphi_dx(tshape::NElNodes,dimddphi);
 
     IntegQuadrature nQuad(DIM,DEG);
     auto force = this->Mesh()->getProblemParameters().getForcingFunction();
@@ -195,10 +195,10 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
     double WJ = djac_ * weight_ * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index); 
 
     if (this->Mesh()->getProblemParameters().ProbType() == EPoisson){
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
-            double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
-            for (int j = 0; j < this->Mesh()->NElNodes(); j++){        
-                double shapeFj = this->Mesh()->getNumericalIntegration()-> phi_(j,index);
+        for (int i = 0; i < tshape::NElNodes; i++){
+            double shapeFi = this->fIntegData.fPhi[i];
+            for (int j = 0; j < tshape::NElNodes; j++){        
+                double shapeFj = this->fIntegData.fPhi[j];
                 //ARLEQUIN STABILIZATION TERMS
                 double LL = 0.;
                 for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
@@ -214,7 +214,7 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
         };    
     } else if (this->Mesh()->getProblemParameters().ProbType() == EElastic) {
         
-        MatrixDouble matD(3,2*this->Mesh()->NElNodes());
+        MatrixDouble matD(3,2*tshape::NElNodes);
         matD.setZero();
         MatrixDouble Hooke(3,3);
         Hooke.setZero();
@@ -228,7 +228,7 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
         Hooke(1,1) = k;
         Hooke(2,2) = k * (1. - poisson_) * 0.5;
         // Hooke.setIdentity();
-        for (int j = 0; j < this->Mesh()->NElNodes(); j++){
+        for (int j = 0; j < tshape::NElNodes; j++){
             matD(0,DIM*j  ) = dphi_dx(j,0);
             matD(1,DIM*j+1) = dphi_dx(j,1);
             matD(2,DIM*j  ) = dphi_dx(j,1);
@@ -238,8 +238,8 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
         Stiffness[1] -= matD.transpose() * Hooke * matD * WJ;
     } else {
         PanicButton();
-        // for (int i = 0; i < this->Mesh()->NElNodes(); i++){
-        //     for (int j = 0; j < this->Mesh()->NElNodes(); j++){ 
+        // for (int i = 0; i < tshape::NElNodes; i++){
+        //     for (int j = 0; j < tshape::NElNodes; j++){ 
         //         //ARLEQUIN STABILIZATION TERMS
         //         double LL = 0.;
         //         for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
@@ -260,7 +260,7 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
         //         double Lpx = 0.; double Lpy = 0.;
         //         double LC = 0.; double LL = 0.;
 
-        //         AM = this->Mesh()->getNumericalIntegration()->phi_(i,index) * this->Mesh()->getNumericalIntegration()->phi_(j,index) * tARLQ_ * wna_* alpha_m;
+        //         AM = this->fIntegData.fPhi[i] * this->fIntegData.fPhi[j] * tARLQ_ * wna_* alpha_m;
 
         //         // LL = -2 * phi_[i] * phi_[j] * tARLQ_ / dens_;
         //         for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_ / dens_;
@@ -308,7 +308,7 @@ void ElCouplingLocal<tshape>::ArlequinStabStiffness(int &index, MatrixDouble &dp
         //     for (int k = DIM; k--; ){
         //         double LLx = 0.;
         //         for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
-        //         double Amx = - this->Mesh()->getNumericalIntegration()->phi_(i,index) * am_[k] * tARLQ_;
+        //         double Amx = - this->fIntegData.fPhi[i] * am_[k] * tARLQ_;
         //         arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
         //     }
 
@@ -365,22 +365,22 @@ void ElCouplingLocal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dph
 
 
     if (this->Mesh()->getProblemParameters().ProbType() == EPoisson){
-        for (int i = 0; i < this->Mesh()->NElNodes(); i++){
+        for (int i = 0; i < tshape::NElNodes; i++){
             //ARLEQUIN STABILIZATION TERMS
             double LLx = 0.;
             double LF = 0.;
-            double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+            double shapeFi = this->fIntegData.fPhi[i];
             for (int m = DIM; m--; ) LLx -= 2.*dphi_dx(i,m) * dL_dx(0,m);
-            // double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+            // double shapeFi = this->fIntegData.fPhi[i];
             // for (int m = DIM; m--; ) LLx += 2*shapeFi* lagM_[0];
             // for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * forcingF[0] * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index);
             // double LF2 = -xna_[0]*xna_[0]*ellocal->getIntegPointWeightFunction(index)*shapeFi;
             // Rhs[1][i] += (LF2) * weight_ * djac_;
-            Rhs[1][this->Mesh()->NElNodes()+i] += (LLx + LF) * weight_ * djac_;
+            Rhs[1][tshape::NElNodes+i] += (LLx + LF) * weight_ * djac_;
         };    
     } else if (this->Mesh()->getProblemParameters().ProbType() == EElastic){
         VecDouble fieldForce = this->Mesh()->getProblemParameters().GetFieldForce();
-        MatrixDouble matD(3,2*this->Mesh()->NElNodes());
+        MatrixDouble matD(3,2*tshape::NElNodes);
         matD.setZero();
         MatrixDouble Hooke(3,3);
         Hooke.setZero();
@@ -394,7 +394,7 @@ void ElCouplingLocal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dph
         Hooke(1,1) = k;
         Hooke(2,2) = k * (1. - poisson_) * 0.5;
         // Hooke.setIdentity();
-        for (int j = 0; j < this->Mesh()->NElNodes(); j++){
+        for (int j = 0; j < tshape::NElNodes; j++){
             matD(0,DIM*j  ) = dphi_dx(j,0);
             matD(1,DIM*j+1) = dphi_dx(j,1);
             matD(2,DIM*j  ) = dphi_dx(j,1);
@@ -412,15 +412,15 @@ void ElCouplingLocal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dph
         VecDouble x_ = this->getIntegPointCoordinatesValue(index);
         if (force) force(x_,forcingF);
 
-        for (int i = this->Mesh()->NElNodes(); i--; ){
-            Rhs[1][2*this->Mesh()->NElNodes()+2*i  ] += aux[2*i];
-            Rhs[1][2*this->Mesh()->NElNodes()+2*i+1] += aux[2*i+1];
-            double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+        for (int i = tshape::NElNodes; i--; ){
+            Rhs[1][2*tshape::NElNodes+2*i  ] += aux[2*i];
+            Rhs[1][2*tshape::NElNodes+2*i+1] += aux[2*i+1];
+            double shapeFi = this->fIntegData.fPhi[i];
             //External force
             double Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
             double Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
-            Rhs[1][2*this->Mesh()->NElNodes()+2*i  ] += Fx * WJ;
-            Rhs[1][2*this->Mesh()->NElNodes()+2*i+1] += Fy * WJ;
+            Rhs[1][2*tshape::NElNodes+2*i  ] += Fx * WJ;
+            Rhs[1][2*tshape::NElNodes+2*i+1] += Fy * WJ;
         };
 
     } else {
@@ -433,14 +433,22 @@ void ElCouplingLocal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dph
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 template class ElCouplingLocal<ShapePoint>;
 template class ElCouplingLocal<ShapeOneD>;
-template class ElCouplingLocal<ShapeTriangle>;
-template class ElCouplingLocal<ShapeQuadrilateral>;
-template class ElCouplingLocal<ShapeTetrahedron>;
+template class ElCouplingLocal<ShapeTriangleLin>;
+template class ElCouplingLocal<ShapeTriangleQua>;
+template class ElCouplingLocal<ShapeTriangleCub>;
+template class ElCouplingLocal<ShapeQuadrilateralLin>;
+template class ElCouplingLocal<ShapeTetrahedronLin>;
+template class ElCouplingLocal<ShapeTetrahedronQua>;
+template class ElCouplingLocal<ShapeTetrahedronCub>;
 template class ElCouplingLocal<ShapeHexahedron>;

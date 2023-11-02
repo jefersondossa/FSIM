@@ -1,7 +1,6 @@
 #include "IntegrationQuadrature11.h"
 
 
-
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
@@ -331,13 +330,14 @@ double IntegQuadratureSpecial::interpolateQuadraticVariable(VecDouble &nValues, 
     
     VecDouble xsi(DIM);
     double int_value = 0.;
-    VecDouble phi_(nValues.size());
+    PanicButton();
+    // VecDouble phi_(nValues.size());
 
-    for (int i=0; i<DIM; i++) xsi[i] = PointList(point,i);
-    ShapeFunction shapeQuad(DIM,fOrder);
-    shapeQuad.Shape(xsi,phi_);
+    // for (int i=0; i<DIM; i++) xsi[i] = PointList(point,i);
+    // ShapeFunction shapeQuad(DIM,fOrder);
+    // shapeQuad.Shape(xsi,phi_);
     
-    for (int i = 0; i < nValues.size(); i++) int_value += nValues[i] * phi_[i];
+    // for (int i = 0; i < nValues.size(); i++) int_value += nValues[i] * phi_[i];
 
     return int_value;
 };

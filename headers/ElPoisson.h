@@ -9,7 +9,9 @@ private:
     double  fMeshMovingParameter = 1.;
 
 public:
-    ElPoisson(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){};
+    ElPoisson(int index, VecInt &connect, CompMesh* mesh) : ElementT<tshape>(index,connect,mesh){
+        Element::nLocDOF = tshape::NElNodes;
+    };
 
     void ComputeStiffness(int &index, MatrixDouble &Stiffness) override;
     

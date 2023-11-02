@@ -5,8 +5,8 @@ void ElPoisson<tshape>::ComputeStiffness(int &index, MatrixDouble &Stiffness){
 
     double WJ = this->fIntegData.fWeight * this->fIntegData.fJacA0 * this->getIntegPointWeightFunction(index);
 
-    for (int i = this->Mesh()->NElNodes(); i-- ; ){       
-        for (int j = this->Mesh()->NElNodes(); j-- ; ){            
+    for (int i = tshape::NElNodes; i-- ; ){       
+        for (int j = tshape::NElNodes; j-- ; ){            
             for (int k = this->Mesh()->Dimension(); k--;  ){
                 //Diffusion matrix
                 double K = this->fIntegData.fDPhiX0(i,k) * this->fIntegData.fDPhiX0(j,k);
@@ -33,8 +33,8 @@ void ElPoisson<tshape>::ComputeResidual(int &index, VecDouble &Rhs){
     VecDouble x_ = this->getIntegPointCoordinatesValue(index);
     if (force) force(x_,forcingF);
 
-    for (int i = this->Mesh()->NElNodes(); i--; ){
-        double shapeFi = this->Mesh()->getNumericalIntegration()-> phi_(i,index);
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = this->fIntegData.fPhi[i];
 
         //Viscosity
         double K = 0.;
@@ -62,7 +62,6 @@ void ElPoisson<tshape>::ComputeError(VecDouble &errors){
     int DEG = this->Mesh()->GetDefaultOrder();
 
     IntegQuadrature nQuad(DIM,DEG);
-    ShapeFunction shapeQuad(DIM,DEG);
 
     auto exactSol = this->Mesh()->getProblemParameters().getExactSolution();
     if (!exactSol) PanicButton();
@@ -117,10 +116,10 @@ void ElPoisson<tshape>::ComputeError(VecDouble &errors){
 template <class tshape>
 void ElPoisson<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    for (int i = this->Mesh()->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         if ((this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(0) == 1) ||
             (this->Mesh()->NodeVec()[this->getConnectivity()[i]] -> getConstrains(0) == 3))  {
-            for (int j = this->Mesh()->NElNodes(); j--; ){
+            for (int j = tshape::NElNodes; j--; ){
                 Stiffness(i,j) = 0.;
                 Stiffness(j,i) = 0.;
             };
@@ -135,14 +134,22 @@ void ElPoisson<tshape>::ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 template class ElPoisson<ShapePoint>;
 template class ElPoisson<ShapeOneD>;
-template class ElPoisson<ShapeTriangle>;
-template class ElPoisson<ShapeQuadrilateral>;
-template class ElPoisson<ShapeTetrahedron>;
+template class ElPoisson<ShapeTriangleLin>;
+template class ElPoisson<ShapeTriangleQua>;
+template class ElPoisson<ShapeTriangleCub>;
+template class ElPoisson<ShapeQuadrilateralLin>;
+template class ElPoisson<ShapeTetrahedronLin>;
+template class ElPoisson<ShapeTetrahedronQua>;
+template class ElPoisson<ShapeTetrahedronCub>;
 template class ElPoisson<ShapeHexahedron>;

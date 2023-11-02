@@ -17,6 +17,7 @@ public:
         this->fMesh = meshvec[2];
         fLocalIndex = fineindex;
         fMeshVector = meshvec;
+        Element::nLocDOF = tshape::NElNodes * tshape::Dimension;
     };
 
     int64_t &GetLocalIndex(){return fLocalIndex;}

@@ -14,9 +14,10 @@
 #ifndef INTEG_QUADRATURE11_H
 #define INTEG_QUADRATURE11_H
 
-#include "ShapeFunction.h"
 #include <math.h>
 #include <iterator>
+#include "DataTypes.h"
+
 
 /// Defines a special quadrature rule (equal to the normal quadradure rule) used for the integration of problems with coincident meshes
 

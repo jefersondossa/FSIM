@@ -156,7 +156,7 @@ void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
     int DIM = tshape::Dimension;
     VecDouble xsi(DIM);
     // ShapeFunction shapeQuad(DIM,DEG);
-    // VecDouble phi_(fMesh->NElNodes());
+    // VecDouble phi_(tshape::NElNodes);
     
     IntegQuadrature nQuad(DIM,DEG);
     // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
@@ -174,8 +174,8 @@ void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
     //    //Computes the velocity shape functions
     //    shapeQuad.Shape(xsi,phi_);
 
-       for (int j=0; j<fMesh->NElNodes(); j++){
-           fIntPointDistFunction[index] +=  fMesh->getNumericalIntegration()->phi_(j,index) * nodalval[j];
+       for (int j=0; j<tshape::NElNodes; j++){
+           fIntPointDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
        };
        // intPointWeightFunction(index) = 1.;
        index++;
@@ -198,8 +198,7 @@ void ElementT<tshape>::getIntegPointCoordinates(){
     fIntPointCoordinates.setZero();
     
     VecDouble xsi(DIM);
-    ShapeFunction shapeQuad(DIM,DEG);
-    VecDouble phi_(fMesh->NElNodes());
+    VecDouble phi_(tshape::NElNodes);
     fIntPointCoordinates.resize(sQuad.getNumberOfIntegrationPoints(),DIM);
 
     for (int i = 0; i < sQuad.getNumberOfIntegrationPoints(); i++){
@@ -207,11 +206,11 @@ void ElementT<tshape>::getIntegPointCoordinates(){
 
         for (int k = DIM; k--; ) xsi[k] = sQuad.PointList(i,k);
 
-        shapeQuad.Shape(xsi,phi_);
+        tshape::Shape(xsi,phi_);
 
         for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
 
-        for (int j = 0; j < fMesh->NElNodes(); j++)
+        for (int j = 0; j < tshape::NElNodes; j++)
             for (int k = DIM; k--; )
                 fIntPointCoordinates(i,k) += fMesh->NodeVec()[fConnect[j]] -> getCoordinateValue(k) * phi_[j];
         
@@ -269,17 +268,26 @@ void ElementT<tshape>::ComputeJacobian(int index) {
     fIntegData.fX.resize(DIM);
     fIntegData.fX.setZero();
 
+    fIntegData.fPhi.resize(tshape::NElNodes);
+    fIntegData.fPhi.setZero();
+
+    fIntegData.fDPhi.resize(tshape::NElNodes,tshape::Dimension);
+    fIntegData.fDPhi.setZero();
+
+    tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
+    tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
+    
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
 
     fIntegData.fA0.setZero();
-    for (int i = fMesh->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
             fIntegData.fX[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) ;
             // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
             //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
             for (int k = DIM; k--; ){
-                fIntegData.fA0(j,k) += fIntegData.fX[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
+                fIntegData.fA0(j,k) += fIntegData.fX[j] * fIntegData.fDPhi(i,k);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
@@ -304,14 +312,14 @@ void ElementT<tshape>::ComputeCurrentJacobian(int index) {
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
 
     fIntegData.fA1.setZero();
-    for (int i = fMesh->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
             fIntegData.fX[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) ;
             // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
             //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
             for (int k = DIM; k--; ){
-                fIntegData.fA1(j,k) += fIntegData.fX[j] * fMesh->getNumericalIntegration()->dphi_[i](k,index);
+                fIntegData.fA1(j,k) += fIntegData.fX[j] * fIntegData.fDPhi(i,k);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
@@ -329,19 +337,15 @@ void ElementT<tshape>::ComputeCurrentJacobian(int index) {
 template<class tshape>
 void ElementT<tshape>::ComputeSpatialDerivatives() {
     
-    // typename QuadShapeFunction<2,2>::ValueDDeriv ddphi;
-    int DIM = tshape::Dimension;
-    MatrixDouble dphi(fMesh->NElNodes(),DIM);
     
-    ShapeFunction shapeQuad(DIM,DEG);
-    
-    shapeQuad.ShapeGradient(fIntegData.fAdimCoord,dphi);
+        
+    tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
     // shapeQuad.ShapeHessian(xsi,ddphi);
     
     fIntegData.fDPhiX0.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX0 = dphi * fIntegData.fA0Inv.transpose();
+    fIntegData.fDPhiX0 = fIntegData.fDPhi * fIntegData.fA0Inv.transpose();
 
     return;
 };
@@ -349,19 +353,16 @@ void ElementT<tshape>::ComputeSpatialDerivatives() {
 template<class tshape>
 void ElementT<tshape>::ComputeCurrentSpatialDerivatives() {
     
-    // typename QuadShapeFunction<2,2>::ValueDDeriv ddphi;
-    int DIM = tshape::Dimension;
-    MatrixDouble dphi(fMesh->NElNodes(),DIM);
+    fIntegData.fDPhi.resize(tshape::NElNodes,tshape::Dimension);
+    fIntegData.fDPhi.setZero();
     
-    ShapeFunction shapeQuad(DIM,DEG);
-    
-    shapeQuad.ShapeGradient(fIntegData.fAdimCoord,dphi);
+    tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
     // shapeQuad.ShapeHessian(xsi,ddphi);
     
     fIntegData.fDPhiX1.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX1 = dphi * fIntegData.fA1.inverse().transpose();
+    fIntegData.fDPhiX1 = fIntegData.fDPhi * fIntegData.fA1.inverse().transpose();
 
     return;
 };
@@ -373,15 +374,13 @@ void ElementT<tshape>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDoub
     
     int DIM = tshape::Dimension;
     dDphi_dx.setZero();
-    std::vector<MatrixDouble> ddphi(fMesh->NElNodes(),MatrixDouble(DIM,DIM));
-    for (int i = 0; i < fMesh->NElNodes(); i++)
+    std::vector<MatrixDouble> ddphi(tshape::NElNodes,MatrixDouble(DIM,DIM));
+    for (int i = 0; i < tshape::NElNodes; i++)
     {
         ddphi[i].setZero();
     }
     
-
-    ShapeFunction shapeQuad(DIM,DEG);
-    shapeQuad.ShapeHessian(xsi,ddphi);
+    tshape::ShapeHessian(xsi,ddphi);
     
     //These derivatives are computed with basis in this reference:
     //https://scicomp.stackexchange.com/questions/25196/implementing-higher-order-derivatives-for-finite-element
@@ -419,7 +418,7 @@ void ElementT<tshape>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDoub
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     VecDouble xna_(DIM);
 
-    for (int i = fMesh->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         xna_.setZero();
         for (int j = DIM; j--; ){
             // Approximate the integration space
@@ -436,7 +435,7 @@ void ElementT<tshape>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDoub
 
     if (DIM == 2){
         VecDouble vecAux2(3);
-        for (int i = fMesh->NElNodes(); i--; ){
+        for (int i = tshape::NElNodes; i--; ){
             vecAux[0] = ddphi[i](0,0) - dphi_dx(i,0)*ddx_dxsi - dphi_dx(i,1)*ddy_dxsi;
             vecAux[1] = ddphi[i](1,1) - dphi_dx(i,0)*ddx_deta - dphi_dx(i,1)*ddy_deta;
             vecAux[2] = ddphi[i](0,1) - dphi_dx(i,0)*ddx_dxsideta - dphi_dx(i,1)*ddy_dxsideta;
@@ -465,8 +464,8 @@ void ElementT<tshape>::interpolateMeshVelocity(int &index, VecDouble &umesh_, Ve
     umesh_.setZero();
     umeshPrev_.setZero();
     
-    for (int i = fMesh->NElNodes(); i--; ){
-        double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = fIntegData.fPhi[i];
         for (int j = DIM; j--; ){
             umesh_[j] += fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(j) * shapeFi;
         }
@@ -478,8 +477,8 @@ void ElementT<tshape>::interpolateMeshVelocity(int &index, VecDouble &umesh_, Ve
 template<class tshape>
 void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_) {
     u_.setZero();
-    for (int i = fMesh->NElNodes(); i--; ){
-        double shapeFi = fMesh->getNumericalIntegration()-> phi_(i,index);
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
             u_[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
@@ -490,7 +489,7 @@ void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_) {
 template<class tshape>
 void ElementT<tshape>::interpolateSolution(VecDouble &phi, VecDouble &u_) {
     u_.setZero();
-    for (int i = fMesh->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         double shapeFi = phi(i);
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
@@ -506,7 +505,7 @@ template<class tshape>
 void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
     du_dx.setZero();    
     int DIM = tshape::Dimension;
-    for (int i = fMesh->NElNodes(); i--; ){
+    for (int i = tshape::NElNodes; i--; ){
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
@@ -527,13 +526,13 @@ void ElementT<tshape>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
     // double &visc_ = fMesh->getProblemParameters().GetViscosity();
     // double &alpha_f = fMesh->getProblemParameters().getAlphaF();
 
-    // VecDouble phi_(fMesh->NElNodes());
+    // VecDouble phi_(tshape::NElNodes);
 
-    // MatrixDouble dphi_dx(fMesh->NElNodes(),DIM);
+    // MatrixDouble dphi_dx(tshape::NElNodes,DIM);
 
     // double shearStress[DIM][DIM] = {};
     
-    // MatrixDouble dphi(fMesh->NElNodes(),DIM);
+    // MatrixDouble dphi(tshape::NElNodes,DIM);
     // MatrixDouble ainv_(DIM,DIM);
 
     // double ident[DIM][DIM] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
@@ -712,7 +711,6 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     int DIM = tshape::Dimension;
     DEG = fMesh->GetDefaultOrder();
     
-    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
     IntegQuadrature nQuad(DIM,DEG);
     fIntegData.fAdimCoord.resize(DIM);
@@ -758,7 +756,6 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fAdimCoord.resize(DIM);
 
-    ShapeFunction shapeQuad(DIM,DEG);
     int index = 0;
     IntegQuadrature nQuad(DIM,DEG);
 
@@ -794,14 +791,22 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneD.h"
-#include "ShapeQuadrilateral.h"
+#include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
-#include "ShapeTetrahedron.h"
-#include "ShapeTriangle.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
 
 template class ElementT<ShapePoint>;
 template class ElementT<ShapeOneD>;
-template class ElementT<ShapeTriangle>;
-template class ElementT<ShapeQuadrilateral>;
-template class ElementT<ShapeTetrahedron>;
+template class ElementT<ShapeTriangleLin>;
+template class ElementT<ShapeTriangleQua>;
+template class ElementT<ShapeTriangleCub>;
+template class ElementT<ShapeQuadrilateralLin>;
+template class ElementT<ShapeTetrahedronLin>;
+template class ElementT<ShapeTetrahedronQua>;
+template class ElementT<ShapeTetrahedronCub>;
 template class ElementT<ShapeHexahedron>;

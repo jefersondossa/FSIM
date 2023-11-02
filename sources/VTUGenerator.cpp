@@ -59,8 +59,8 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     
     int aux = 0;
     for (int i=0; i<cmesh->NElements(); i++){
-        output_v << aux +cmesh-> NElNodes() << std::endl;
-        aux += cmesh->NElNodes();
+        output_v << aux +cmesh->ElementVec()[i]->NElNodes() << std::endl;
+        aux += cmesh->ElementVec()[i]->NElNodes();
     };
     output_v << "      </DataArray>" << std::endl;
   
