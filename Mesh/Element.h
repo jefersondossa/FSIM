@@ -26,6 +26,8 @@ protected:
     /// The weak form associated with the element
     WeakForm *fWeakForm;
     IntPointData  fIntegData;
+
+    int fPrintType;
 public:
 
     bool          FSIInterface;  
@@ -45,6 +47,8 @@ public:
     ~Element() = default;
     int &NLocDOF() {return nLocDOF;}
     virtual const int &NElNodes() = 0;
+
+    int &PrintType() {return fPrintType;}
     
     virtual void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
     virtual void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) = 0;

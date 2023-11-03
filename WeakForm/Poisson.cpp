@@ -102,22 +102,4 @@ void Poisson::ComputeError(IntPointData &data, VecDouble &errors){
     // errors[2] = errors[0]+errors[1];
 }
 
-void Poisson::ApplyBC(std::vector<Node*> nodevec, VecInt &connect, MatrixDouble &Stiffness, VecDouble &Rhs){
-    int nphi = Rhs.size()/fNState;
-
-    for (int i = nphi; i--; ){
-        if ((nodevec[connect[i]] -> getConstrains(0) == 1) ||
-            (nodevec[connect[i]] -> getConstrains(0) == 3))  {
-            for (int j = nphi; j--; ){
-                Stiffness(i,j) = 0.;
-                Stiffness(j,i) = 0.;
-            };
-            Stiffness(i,i) = 1.;
-            Rhs[i] = 0.;
-        }
-    }
-    // std::cout<<"Rhs -" << Rhs<<std::endl;
-
-}
-
 

@@ -10,6 +10,7 @@ class WeakForm
 protected:
     int fMatId;
     int fNState = 1;
+    static double fBigNumber;
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> fExactSol = 0; 
     std::function<void (const VecDouble &coord, VecDouble &force)> fForceFunction = 0; 
 
@@ -24,8 +25,6 @@ public:
     
     virtual void ComputeError(IntPointData &data, VecDouble &errors) = 0;
     
-    virtual void ApplyBC(std::vector<Node*> nodevec, VecInt &connect, MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
-
     void SetExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exSol){
         fExactSol = exSol;
     }

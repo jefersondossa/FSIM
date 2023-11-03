@@ -20,8 +20,6 @@ public:
     
     void ComputeError(IntPointData &data, VecDouble &errors) override;
     
-    void ApplyBC(std::vector<Node*> nodevec, VecInt &connect, MatrixDouble &Stiffness, VecDouble &Rhs) override;
-
     /// Sets the mesh moving weighting parameter for solving the Laplace problem
     /// @param double parameter value
     void SetScale(double &value) {fScale = value;};

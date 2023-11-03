@@ -291,7 +291,7 @@ void ElementT<tshape>::ComputeJacobian(int index) {
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fA0.resize(DIM,DIM);
     fIntegData.fA0.setZero();
-    fIntegData.fX.resize(DIM);
+    fIntegData.fX.resize(3);
     fIntegData.fX.setZero();
 
     fIntegData.fPhi.resize(tshape::NElNodes);
@@ -304,24 +304,162 @@ void ElementT<tshape>::ComputeJacobian(int index) {
     tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
     
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
-
+    MatrixDouble gradx(3,DIM);
+    gradx.setZero();
     fIntegData.fA0.setZero();
+    VecDouble xna(3);
     for (int i = tshape::NElNodes; i--; ){
-        for (int j = DIM; j--; ){
+        for (int j = 3; j--; ){
             // Approximate the integration space
-            fIntegData.fX[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) ;
+            fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
+            xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
             // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
             //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
             for (int k = DIM; k--; ){
-                fIntegData.fA0(j,k) += fIntegData.fX[j] * fIntegData.fDPhi(i,k);
+                gradx(j,k) += xna[j] * fIntegData.fDPhi(i,k);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
     };
 
-    //Computing the jacobian determinant and Inverse
-    fIntegData.fJacA0 = fIntegData.fA0.determinant();
-    fIntegData.fA0Inv = fIntegData.fA0.inverse().transpose();
+    int nrows = 3;
+    int ncols = DIM;
+    int dim = DIM;
+
+    switch (DIM) {
+        case 0:
+            fIntegData.fJacA0 = 1.;
+            break;
+        case 1:
+        {
+            // axes.resize(dim, 3);
+            VecDouble v_1(3);
+            v_1.setZero();
+
+            for (int i = 0; i < nrows; i++) {
+                v_1[i] = gradx(i, 0);
+            }
+
+            double norm_v_1 = 0.;
+            for (int i = 0; i < nrows; i++) {
+                norm_v_1 += v_1[i] * v_1[i];
+            }
+
+            norm_v_1 = sqrt(norm_v_1);
+            fIntegData.fA0(0, 0) = norm_v_1;
+            fIntegData.fJacA0 = norm_v_1;
+            fIntegData.fA0Inv(0, 0) = 1.0 / fIntegData.fJacA0;
+
+            fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
+
+            // for (int i = 0; i < 3; i++) {
+            //     axes(0, i) = v_1[i] / norm_v_1;
+            // }
+        }
+            break;
+        case 2:
+        {
+            VecDouble v_1(3), v_2(3);
+            VecDouble v_1_til(3), v_2_til(3);
+            v_1.setZero();
+            v_2.setZero();
+            v_1_til.setZero();
+            v_2_til.setZero();
+
+            for (int i = 0; i < nrows; i++) {
+                v_1[i] = gradx(i, 0);
+                v_2[i] = gradx(i, 1);
+            }
+
+            double norm_v_1_til = 0.0;
+            double norm_v_2_til = 0.0;
+            double v_1_dot_v_2 = 0.0;
+
+            for (int i = 0; i < 3; i++) {
+                norm_v_1_til += v_1[i] * v_1[i];
+                v_1_dot_v_2 += v_1[i] * v_2[i];
+            }
+            norm_v_1_til = sqrt(norm_v_1_til);
+
+            for (int i = 0; i < 3; i++) {
+                v_1_til[i] = v_1[i] / norm_v_1_til;
+                v_2_til[i] = v_2[i] - v_1_dot_v_2 * v_1_til[i] / norm_v_1_til;
+                norm_v_2_til += v_2_til[i] * v_2_til[i];
+            }
+            norm_v_2_til = sqrt(norm_v_2_til);
+
+
+            fIntegData.fA0(0, 0) = norm_v_1_til;
+            fIntegData.fA0(0, 1) = v_1_dot_v_2 / norm_v_1_til;
+            fIntegData.fA0(1, 1) = norm_v_2_til;
+
+            fIntegData.fJacA0 = fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1) - fIntegData.fA0(1, 0) * fIntegData.fA0(0, 1);
+
+            fIntegData.fA0Inv(0, 0) = +fIntegData.fA0(1, 1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1, 1) = +fIntegData.fA0(0, 0) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(0, 1) = -fIntegData.fA0(0, 1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1, 0) = -fIntegData.fA0(1, 0) / fIntegData.fJacA0;
+
+            fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
+
+            // for (int i = 0; i < 3; i++) {
+            //     v_2_til[i] /= norm_v_2_til;
+            //     axes(0, i) = v_1_til[i];
+            //     axes(1, i) = v_2_til[i];
+            // }
+        }
+            break;
+        case 3:
+        {
+            // axes.resize(dim, 3);
+
+            for (int i = 0; i < nrows; i++) {
+                fIntegData.fA0(i, 0) = gradx(i, 0);
+                fIntegData.fA0(i, 1) = gradx(i, 1);
+                fIntegData.fA0(i, 2) = gradx(i, 2);
+            }
+
+            fIntegData.fJacA0 -= fIntegData.fA0(0, 2) * fIntegData.fA0(1, 1) * fIntegData.fA0(2, 0); //- a02 a11 a20
+            fIntegData.fJacA0 += fIntegData.fA0(0, 1) * fIntegData.fA0(1, 2) * fIntegData.fA0(2, 0); //+ a01 a12 a20
+            fIntegData.fJacA0 += fIntegData.fA0(0, 2) * fIntegData.fA0(1, 0) * fIntegData.fA0(2, 1); //+ a02 a10 a21
+            fIntegData.fJacA0 -= fIntegData.fA0(0, 0) * fIntegData.fA0(1, 2) * fIntegData.fA0(2, 1); //- a00 a12 a21
+            fIntegData.fJacA0 -= fIntegData.fA0(0, 1) * fIntegData.fA0(1, 0) * fIntegData.fA0(2, 2); //- a01 a10 a22
+            fIntegData.fJacA0 += fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1) * fIntegData.fA0(2, 2); //+ a00 a11 a22
+
+            fIntegData.fA0Inv(0, 0) = (-fIntegData.fA0(1, 2) * fIntegData.fA0(2, 1) + fIntegData.fA0(1, 1) * fIntegData.fA0(2, 2)) / fIntegData.fJacA0; //-a12 a21 + a11 a22
+            fIntegData.fA0Inv(0, 1) = (fIntegData.fA0(0, 2) * fIntegData.fA0(2, 1) - fIntegData.fA0(0, 1) * fIntegData.fA0(2, 2)) / fIntegData.fJacA0; //a02 a21 - a01 a22
+            fIntegData.fA0Inv(0, 2) = (-fIntegData.fA0(0, 2) * fIntegData.fA0(1, 1) + fIntegData.fA0(0, 1) * fIntegData.fA0(1, 2)) / fIntegData.fJacA0; //-a02 a11 + a01 a12
+            fIntegData.fA0Inv(1, 0) = (fIntegData.fA0(1, 2) * fIntegData.fA0(2, 0) - fIntegData.fA0(1, 0) * fIntegData.fA0(2, 2)) / fIntegData.fJacA0; //a12 a20 - a10 a22
+            fIntegData.fA0Inv(1, 1) = (-fIntegData.fA0(0, 2) * fIntegData.fA0(2, 0) + fIntegData.fA0(0, 0) * fIntegData.fA0(2, 2)) / fIntegData.fJacA0; //-a02 a20 + a00 a22
+            fIntegData.fA0Inv(1, 2) = (fIntegData.fA0(0, 2) * fIntegData.fA0(1, 0) - fIntegData.fA0(0, 0) * fIntegData.fA0(1, 2)) / fIntegData.fJacA0; //a02 a10 - a00 a12
+            fIntegData.fA0Inv(2, 0) = (-fIntegData.fA0(1, 1) * fIntegData.fA0(2, 0) + fIntegData.fA0(1, 0) * fIntegData.fA0(2, 1)) / fIntegData.fJacA0; //-a11 a20 + a10 a21
+            fIntegData.fA0Inv(2, 1) = (fIntegData.fA0(0, 1) * fIntegData.fA0(2, 0) - fIntegData.fA0(0, 0) * fIntegData.fA0(2, 1)) / fIntegData.fJacA0; //a01 a20 - a00 a21
+            fIntegData.fA0Inv(2, 2) = (-fIntegData.fA0(0, 1) * fIntegData.fA0(1, 0) + fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1)) / fIntegData.fJacA0; //-a01 a10 + a00 a11
+
+            fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
+
+            // axes.setZero();
+            // axes(0, 0) = 1.0;
+            // axes(1, 1) = 1.0;
+            // axes(2, 2) = 1.0;
+        }
+            break;
+    }
+
+
+
+
+
+
+    // auto mataux = fIntegData.fA0.transpose() * fIntegData.fA0 ;
+    // auto mat2 = mataux.inverse();
+    // auto mat3= mat2 * fIntegData.fA0.transpose(); 
+    // std::cout << "Mataux \n" <<  mataux << std::endl;
+    // std::cout << "mat2 \n" <<  mat2 << std::endl;
+    // std::cout << "mat3 \n" <<  mat3 << std::endl;
+    // //Computing the jacobian determinant and Inverse
+    // fIntegData.fJacA0 = fIntegData.fA0.determinant();
+    // fIntegData.fA0Inv = fIntegData.fA0.inverse().transpose();
 
     return;
 };
@@ -792,10 +930,6 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 
         index++;        
     };  
-    // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix;
-    // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector;
-    //Apply boundary conditions
-    fWeakForm->ApplyBC(Mesh()->NodeVec(), this->getConnectivity(), jacobianNRMatrix, rhsVector);
 
     return;
 };

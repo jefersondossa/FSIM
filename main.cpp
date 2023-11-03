@@ -40,6 +40,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "VTUGenerator.h"
 #include "XDMFGenerator.h"
 #include "Poisson.h"
+#include "L2Projection.h"
 
 int main(int argc, char **args) {
 

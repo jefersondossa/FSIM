@@ -34,7 +34,6 @@ void IntRule1d::SetOrder(int order) {
     {
         fPoints(i,0) = coordAux[i];
     }
-    
     // std::cout << "fPoints = " << fPoints << std::endl;
     // std::cout << "fWeights = " << fWeights << std::endl;
 }

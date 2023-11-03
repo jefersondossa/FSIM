@@ -241,6 +241,28 @@ for (int k = 3; k < 4; k++)
 
     Poisson * matpoisson = new Poisson(8,2);
     coarseModel->InsertMaterial(matpoisson);
+    matpoisson->SetForcingFunction(forcingFunctionPoisson);
+    matpoisson->SetExactSolution(exactSolPoisson);
+    //BC
+    MatrixDouble val1(1,1);
+    val1.setZero();
+    VecDouble val2(1);
+    val2[0] = 0.;
+    L2Projection * matbc3 = new L2Projection(6,2,0,val1,val2);
+    val2[0]=0.;
+    L2Projection * matbc1 = new L2Projection(5,2,0,val1,val2);
+    L2Projection * matbc2 = new L2Projection(7,2,0,val1,val2);
+    matbc1->SetForcingFunction(forcingFunctionPoisson);
+    matbc1->SetExactSolution(exactSolPoisson);
+    matbc2->SetForcingFunction(forcingFunctionPoisson);
+    matbc2->SetExactSolution(exactSolPoisson);
+    matbc3->SetForcingFunction(forcingFunctionPoisson);
+    matbc3->SetExactSolution(exactSolPoisson);
+    
+    coarseModel->InsertMaterial(matbc1);
+    coarseModel->InsertMaterial(matbc2);
+    coarseModel->InsertMaterial(matbc3);
+
     fineModel->InsertMaterial(matpoisson);
 
     // GmshTools::MeshReading(fluid1,"coarse.msh",coarseModel);

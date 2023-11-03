@@ -67,14 +67,9 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     //WRITE ELEMENT TYPES
     output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
              << "format=\"ascii\">" << std::endl;
-    
-    int val = 0;
-    if (DEG == 1)val = 5;
-    if (DEG == 2)val = 22;
-    if (DEG == 3)val = 69;
 
     for (int i=0; i<cmesh->NElements(); i++){
-        output_v << val << std::endl;
+        output_v << cmesh->ElementVec()[i]->PrintType() << std::endl;
     };
 
     output_v << "      </DataArray>" << std::endl

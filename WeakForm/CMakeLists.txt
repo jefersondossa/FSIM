@@ -12,12 +12,12 @@ file(GLOB weakform
     ElNavierStokes.cpp
     ElStokes.h
     ElStokes.cpp
-    ElPoisson.h
-    ElPoisson.cpp
     WeakForm.h
     WeakForm.cpp
     Poisson.h
     Poisson.cpp
+    L2Projection.h 
+    L2Projection.cpp
 )
 
 set(WEAKFORM ${weakform} PARENT_SCOPE)

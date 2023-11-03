@@ -1,6 +1,5 @@
 #include "GmshTools.h"
 #include "fluidDomain.h"
-#include "ElPoisson.h"
 #include "ElElasticity2D.h"
 #include "ElStokes.h"
 #include "ElNavierStokes.h"
@@ -208,8 +207,8 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                 {
                 case EPoisson:
                     {
-                        ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
-                        cmesh->ElementVec().push_back(el);
+                        // ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
+                        // cmesh->ElementVec().push_back(el);
                     }
                     break;
                 case EElastic:
@@ -374,7 +373,6 @@ void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::uno
                     {
                     case EPoisson:
                         {
-                            // ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
                             ElementT<ShapeTriangleLin> *el = new ElementT<ShapeTriangleLin>(index++,connect,cmesh,cmesh->Material(1));
                             cmesh->ElementVec().push_back(el);
                         }
@@ -1714,9 +1712,9 @@ Element* GmshTools::CreateElement(CompMesh *cmesh, int64_t index, VecInt &connec
     {
     case EPoisson:
         {
-            ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
-            cmesh->ElementVec()[index]=el;
-            return el;
+            // ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
+            // cmesh->ElementVec()[index]=el;
+            // return el;
         }
         break;
     case EElastic:
@@ -1783,12 +1781,14 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         {   // Ligelne
         
             gel = new ElementT<ShapeOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 3;
             // gel = new GeoElementTemplate<Geom1d>(Topology, physical_identifier, gmesh, el_identifier);
         }
             break;
         case 2:
         {
             gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 5;
             // gel = GmshTools::CreateElement(gmesh,el_identifier,Topology);
             // Triangle
             // gel = new GeoElementTemplate<GeomTriangle>(Topology, physical_identifier, gmesh, el_identifier);

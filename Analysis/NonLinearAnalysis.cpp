@@ -65,7 +65,6 @@ void NonLinearAnalysis::Run(){
             double val = 1.e-20;
             MatSetValues(this->Stiffness(),1,&i,1,&i,&val,ADD_VALUES);
         }
-
     }
     
     
