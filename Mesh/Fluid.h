@@ -16,7 +16,6 @@
 
 #include "Element.h"
 #include "Boundary.h"
-#include "fluidDomain.h"
 #include "IntegrationQuadrature11.h"
 #include "Node.h"
 #include "GmshTools.h"

@@ -47,14 +47,14 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     result -= data.fSol;
     switch (BCType)
     {
-    case 0: // Dirichlet
+    case 0: // Dirichlet in all state variables
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
                 Rhs(fNState*i+istate) +=  WeakForm::fBigNumber * WJ * data.fPhi[i] * result[istate];
             }
         }
         break;
-    case 1: // Neumann
+    case 1: // Neumann in all state variables
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
                 Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];

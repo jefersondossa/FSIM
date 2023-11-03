@@ -43,7 +43,6 @@ set(CMAKE_CXX_STANDARD 17)
 include(cmake-modules/EnableEigen.cmake)
 enable_eigen()
 
-# add_subdirectory(mesh_interface)
 add_subdirectory(triangle)
 add_subdirectory(Util)
 add_subdirectory(Analysis)
@@ -53,13 +52,11 @@ add_subdirectory(PostProcess)
 add_subdirectory(PreProcess)
 add_subdirectory(Shape)
 add_subdirectory(WeakForm)
-add_subdirectory(mesh_interface)
 # add_subdirectory(examples)
 # add_subdirectory(main)
 
 #Specify where the headers files must be found
 include_directories(
-    "${PROJECT_SOURCE_DIR}/mesh_interface"
 	"${PROJECT_SOURCE_DIR}/Analysis"
 	"${PROJECT_SOURCE_DIR}/Integral"
 	"${PROJECT_SOURCE_DIR}/Mesh"
@@ -79,7 +76,7 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM} ${MESH_INT} ${MESH_INT_SRC})
+add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
 
