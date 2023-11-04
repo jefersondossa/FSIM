@@ -21,7 +21,7 @@ private:
     int fNState = 0;
     int fOrder = 1;
     int nBdNodes = 0;
-    
+
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
 
@@ -35,20 +35,9 @@ private:
 
 public:
     CompMesh() = default;
-    CompMesh(ProblemParameters &pparam, int DIM, int order){
-        fDimension = DIM;
+    CompMesh(ProblemParameters &pparam){
         fProbParameters = pparam;
-        fOrder = order;
-        nBdNodes = 3*(1-fOrder)+DIM*(2*fOrder-1);
-        if (fProbParameters.ProbType() == ProblemType::ENavierStokes || fProbParameters.ProbType() == ProblemType::EStokes){
-            fNState = (DIM+1);
-        } else if (fProbParameters.ProbType() == ProblemType::EPoisson) {
-            fNState = 1;
-        } else if (fProbParameters.ProbType() == ProblemType::EElastic || fProbParameters.ProbType() == ProblemType::ESolidPositional){
-            fNState = DIM;
-        } else {
-            PanicButton();
-        }
+        // nBdNodes = 3*(1-fOrder)+DIM*(2*fOrder-1);
     };
     
     int* part_elem;      //Fluid Domain Decomposition - Elements
@@ -60,7 +49,7 @@ public:
     void InsertMaterial(WeakForm *wf){
         fMaterialVector[wf->Id()] = wf;
         if (fNState == 0){
-            fNState = wf->NState();
+            fNState = wf->NState();            
         } else if (fNState != wf->NState()){
             PanicButton(); //We don't know how solve a problem with two materials with different state variables in the same mesh
         }

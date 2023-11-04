@@ -76,12 +76,14 @@ public:
         FSIInterface = false;
         fSideInBoundary = -1;
         fNeighborElements.clear();
-        fIntRule.SetOrder(tshape::Order+tshape::Order);
+        int increase = 0;
+        if(wf->GetExactSolution()) increase = 2;
 
-        IntegQuadrature nQuad(fMesh->Dimension(),fMesh->GetDefaultOrder());
-        fIntegData.fWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        fIntegData.fDistFunction.resize(nQuad.getNumberOfIntegrationPoints());
-        fIntegData.fPrevWeightFunction.resize(nQuad.getNumberOfIntegrationPoints());
+        fIntRule.SetOrder(tshape::Order+tshape::Order+increase);
+
+        fIntegData.fWeightFunction.resize(fIntRule.NPoints());
+        fIntegData.fDistFunction.resize(fIntRule.NPoints());
+        fIntegData.fPrevWeightFunction.resize(fIntRule.NPoints());
 
         fIntegData.fWeightFunction.fill(1.);
         fIntegData.fPrevWeightFunction.fill(1.);
@@ -116,8 +118,6 @@ public:
     void interpolateSolDerivatives(MatrixDouble &du_dx) override;
     void interpolateSolDerivatives();
 
-    /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
-    void getParameterArlequin(int &index, double &tARLQ_, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
 
     void ComputeIntPointDistFunction(VecDouble &nodalval);
     /// Gets the element jacobian determinant

@@ -4,14 +4,14 @@ file(GLOB weakform
     ElCouplingGlobal.cpp
     ElCouplingLocal.h
     ElCouplingLocal.cpp
-    ElElasticity2D.h
-    ElElasticity2D.cpp
-    ElElasticityPositional2D.h
-    ElElasticityPositional2D.cpp
-    ElNavierStokes.h
-    ElNavierStokes.cpp
-    ElStokes.h
-    ElStokes.cpp
+    Elasticity2D.h
+    Elasticity2D.cpp
+    ElasticityPositional2D.h
+    ElasticityPositional2D.cpp
+    NavierStokes.h
+    NavierStokes.cpp
+    Stokes.h
+    Stokes.cpp
     WeakForm.h
     WeakForm.cpp
     Poisson.h

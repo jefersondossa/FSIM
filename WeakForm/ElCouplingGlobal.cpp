@@ -469,7 +469,7 @@ void ElCouplingGlobal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dp
 
 
 #include "ShapeHexahedron.h"
-#include "ShapeOneD.h"
+// #include "ShapeOneD.h"
 #include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
@@ -480,7 +480,7 @@ void ElCouplingGlobal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dp
 #include "ShapeTriangleCub.h"
 
 template class ElCouplingGlobal<ShapePoint>;
-template class ElCouplingGlobal<ShapeOneD>;
+// template class ElCouplingGlobal<ShapeOneD>;
 template class ElCouplingGlobal<ShapeTriangleLin>;
 template class ElCouplingGlobal<ShapeTriangleQua>;
 template class ElCouplingGlobal<ShapeTriangleCub>;

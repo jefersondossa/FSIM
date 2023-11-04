@@ -2,8 +2,12 @@
 file(GLOB shape 
     ShapeHexahedron.h
     ShapeHexahedron.cpp
-    ShapeOneD.h
-    ShapeOneD.cpp
+    ShapeOneDLin.h
+    ShapeOneDLin.cpp
+    ShapeOneDQua.h
+    ShapeOneDQua.cpp
+    ShapeOneDCub.h
+    ShapeOneDCub.cpp
     ShapePoint.h
     ShapePoint.cpp
     ShapeQuadrilateralLin.h

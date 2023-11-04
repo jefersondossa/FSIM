@@ -27,7 +27,7 @@ class IntRuleTriangle : public IntRule
     // Return the maximum polynomial order that can be integrated exactly
     static int gMaxOrder()
     {
-        return 5;
+        return 10;
     }
 
     // Return the maximum polynomial order that can be integrated exactly

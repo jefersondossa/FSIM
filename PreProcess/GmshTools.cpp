@@ -1,10 +1,8 @@
 #include "GmshTools.h"
-#include "ElElasticity2D.h"
-#include "ElStokes.h"
-#include "ElNavierStokes.h"
-#include "ElElasticityPositional2D.h"
 #include "ShapeHexahedron.h"
-#include "ShapeOneD.h"
+#include "ShapeOneDLin.h"
+#include "ShapeOneDQua.h"
+#include "ShapeOneDCub.h"
 #include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
@@ -18,492 +16,8 @@
 #include<cstdlib>
 #include<fstream>
 #include<iostream>
+#include "ElementT.h"
 #include <vector>
-
-// void GmshTools::MeshReading(Geometry* &geometry_, const std::string& mshfile,CompMesh *cmesh){
-
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     //+++++++++++++++++++++++++++++OPPENING FILES+++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-//     //opening the .msh file
-//     std::ifstream file(mshfile);
-//     std::string line;
-//     std::getline(file, line); std::getline(file, line); std::getline(file, line); std::getline(file, line);
-  
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++READIN MESH+++++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     //+++++++++++++++++++++++++++PHYSICAL ENTITIES++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     int number_physical_entities;
-//     file >> number_physical_entities;
-//     std::getline(file, line);
-//     std::unordered_map<int, std::string> physicalEntities;
-//     physicalEntities.reserve(number_physical_entities);
-
-//     for (int i = 0; i < number_physical_entities; i++)
-//     {
-//         std::getline(file, line);
-//         std::vector<std::string> tokens = SplitLine(line, " ");
-//         int index;
-//         std::istringstream(tokens[1]) >> index;
-//         physicalEntities[index] = tokens[2].substr(1, tokens[2].size() - 2);
-//     }
-//     std::getline(file, line); std::getline(file, line);
-
-//     ReadNodes(file,cmesh);
-//     ReadElements(geometry_,file,physicalEntities,cmesh);
-
-    
-//     RenumberConnectivity(cmesh);
-
-//     BoundaryConstrains(cmesh);
-
-//     BoundarySides(cmesh);
-//     // // if (rank == 0) std::cout << "Number of elements " << number_elements << " " 
-//     //                          // << numElem << " " << numBoundElems << std::endl;
-//     // std::cout << std::endl << "Element Connectivity" << std::endl;        
-    
-//     // for (int jel = 0; jel < cmesh->NElements(); jel++){
-//     //     VecInt connec = cmesh->ElementVec()[jel] -> getConnectivity();       
-//     //     for (int i=0; i < cmesh->NElNodes(); i++){
-//     //         std::cout << connec[i] << " ";
-//     //     };
-//     //     std::cout << std::endl;
-//     // };
-
-// }
-
-
-// std::vector<std::string> GmshTools::SplitLine(std::string str, std::string delim)
-// {
-// 	std::istringstream is(str);
-// 	std::vector<std::string> values;
-// 	std::string token;
-// 	while (getline(is, token, ' '))
-// 		values.push_back(token);
-// 	return values;
-// }
-
-
-// void GmshTools::ReadNodes(std::ifstream &file, CompMesh *cmesh){
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     //+++++++++++++++++++++++++++++++++NODES++++++++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     int64_t numNodes;
-//     std::string line;
-//     file >> numNodes;
-//     cmesh->NodeVec().resize(numNodes);
-//     std::getline(file, line);
-//     int64_t index = 0;
-
-//     std::cout << "Number of Nodes " << " " << numNodes << std::endl;
-//     for (int i = 0; i < numNodes; i++){
-//         VecDouble x(3);
-//         std::getline(file, line);
-//         std::vector<std::string> tokens = SplitLine(line, " ");
-        
-//         for (int j = 0; j < 3; j++) std::istringstream(tokens[j+1]) >> x[j];
-
-//         int nstate = cmesh->NState();        
-
-//         Node *node = new Node(x,index,nstate);
-//         cmesh->NodeVec()[index] = node;
-//         index++;
-//     }
-//     std::getline(file, line); std::getline(file, line);
-    
-
-//     int DIM = cmesh->Dimension();
-//     // if (cmesh->getProblemParameters().ProbType() == ProblemType::ENavierStokes || cmesh->getProblemParameters().ProbType() == ProblemType::EStokes){
-//     //     cmesh->NGlobalDOF() = (DIM+1) * cmesh->NNodes();
-//     // } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EPoisson) {
-//     //     cmesh->NGlobalDOF() = cmesh->NNodes();
-//     // } else if (cmesh->getProblemParameters().ProbType() == ProblemType::EElastic || cmesh->getProblemParameters().ProbType() == ProblemType::ESolidPositional){
-//     //     cmesh->NGlobalDOF() = cmesh->NNodes() * DIM;
-//     // } else {
-//     //     PanicButton();
-//     // }
-    
-
-//     return;
-// }
-
-
-// void GmshTools::ReadElements(Geometry* &geometry_, std::ifstream &file, std::unordered_map<int, std::string> &physicalEntities, CompMesh *cmesh){
-//     //defyning the maps that are used to store the elements information
-//     std::unordered_map<int, std::string> gmshElement = { {1, "line"}, {2, "triangle"}, {3, "quadrilateral"}, {8, "line3"}, {9, "triangle6"}, {10, "quadrilateral9"}, {15, "vertex"}, {16, "quadrilateral8"}, {20, "triangle9"}, {21, "triangle10"}, {26, "line4"}, {36, "quadrilateral16"}, {39, "quadrilateral12"} };
-//     std::unordered_map<std::string, int> numNodes2 = { {"vertex", 1}, {"line", 2}, {"triangle", 3}, {"quadrilateral", 4}, {"line3", 3}, {"triangle6", 6}, {"quadrilateral8", 8}, {"quadrilateral9", 9}, {"line4", 4}, {"triangle", 9}, {"triangle10", 10}, {"quadrilateral12", 12}, {"quadrilateral16", 16}};
-//     std::unordered_map<std::string, std::string> supportedElements = { {"triangle", "T3"}, {"triangle6", "T6"}, {"triangle10", "T10"}, {"quadrilateral", "Q4"}, {"quadrilateral8", "Q8"}, {"quadrilateral9", "Q9"}, {"quadrilateral12", "Q12"}, {"quadrilateral16", "Q16"}, {"tetrahedron4", "TET4"}, {"tetrahedron10", "TET10"}, {"tetrahedron20", "TET20"} };
-//     std::unordered_map<Line*, std::vector< std::vector<int> >> lineElements;
-//     std::string line;
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++ELEMENTS++++++++++++++++++++++++++++++++
-//     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//     int number_elements;
-//     file >> number_elements;
-//     cmesh->ElementVec().reserve(number_elements);
-//     cmesh->BoundaryVec().reserve(number_elements/10);
-//     int index = 0;
-//     std::getline(file, line);
-//     int cont = 0;
-
-//     int numBoundElems = 0;
-//     // numElem = 0;
-//     int numFSIInterfaces = 0;
-
-//     std::vector<BoundaryCondition*> dirichlet, neumann, glue, FSinterface;
-//     dirichlet = geometry_->getBoundaryCondition("DIRICHLET"); 
-//     neumann = geometry_->getBoundaryCondition("NEUMANN"); 
-//     glue = geometry_->getBoundaryCondition("GLUE");
-//     FSinterface = geometry_->getBoundaryCondition("FSINTERFACE");
-
-//     numFSIInterfaces = FSinterface.size();
-//     // PanicButton();
-//     int nElNodes = 3;//cmesh->NElNodes();
-//     int nBdNodes = cmesh->NBdNodes();
-//     int DEG = cmesh->GetDefaultOrder();
-//     int DIM = cmesh->Dimension();
-//     for (int i = 0; i < number_elements; i++)
-//     {
-//         std::getline(file, line);
-//         std::vector<std::string> tokens = SplitLine(line, " ");
-//         std::vector<int> values(tokens.size(), 0);
-//         for (size_t j = 0; j < tokens.size(); j++)
-//             std::istringstream(tokens[j]) >> values[j];
-//         std::string elementType = gmshElement[values[1]];
-//         int number_nodes_per_element = numNodes2[elementType];
-//         std::vector<int> elementNodes;
-//         elementNodes.reserve(number_nodes_per_element);
-
-//         for (size_t j = 5 ; j < values.size(); j++)
-//             elementNodes.push_back(values[j]-1);
- 
-//         std::string name = physicalEntities[values[3]];
-//         //Adding domain elements
-//         if (name[0] == 'v'){
-//             // if(rank == 0){
-//                 Volume* object = geometry_ -> getVolume(name);
-//                 VecInt connect(nElNodes);
-
-//                 if (DEG == 2){
-//                     connect[2] = elementNodes[2];
-//                     connect[1] = elementNodes[1];
-//                     connect[3] = elementNodes[3];
-//                     connect[0] = elementNodes[0];
-//                     connect[5] = elementNodes[5];
-//                     connect[9] = elementNodes[8];
-//                     connect[6] = elementNodes[6];
-//                     connect[7] = elementNodes[7];
-//                     connect[4] = elementNodes[4];
-//                     connect[8] = elementNodes[9];
-//                 } else {
-//                     for (int k = 0; k < nElNodes; k++) connect[k] = elementNodes[k];
-//                 }
-//                 switch (cmesh->getProblemParameters().ProbType())
-//                 {
-//                 case EPoisson:
-//                     {
-//                         // ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
-//                         // cmesh->ElementVec().push_back(el);
-//                     }
-//                     break;
-//                 case EElastic:
-//                     {
-//                         ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
-//                         cmesh->ElementVec().push_back(el);
-//                     }
-//                     break;
-//                 case ESolidPositional:
-//                     {
-//                         ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
-//                         cmesh->ElementVec().push_back(el);
-//                     }
-//                     break;
-//                 case EStokes:
-//                     {
-//                         ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
-//                         cmesh->ElementVec().push_back(el);
-//                     }
-//                     break;
-//                 case ENavierStokes:
-//                     {
-//                         ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
-//                         cmesh->ElementVec().push_back(el);
-//                     }
-//                     break;
-                
-//                 default:
-//                     PanicButton();
-//                     break;
-//                 }
-
-//                 for (int k = 0; k < nElNodes; k++){
-//                     cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(index);
-//                 };
-//             // }
-//         }
-//         else if (name[0] == 's') {
-//             if (DIM == 3){
-//                 VecInt connectB(nBdNodes);
-
-//                 for (int i = 0; i < nBdNodes; i++) connectB[i] = elementNodes[i];
-
-//                 int ibound;
-
-//                 std::string::size_type sz;   // alias of size_t
-//                 ibound = std::stoi (&name[1],nullptr,10);
-
-//                 VecInt constrain(3);
-//                 VecDouble value(3);
-
-//                 for (int i = 0; i < dirichlet.size(); i++){
-//                     if (name == dirichlet[i] -> getLineName()){
-//                         if ((dirichlet[i] -> getComponentX()).size() == 0){
-//                             constrain[0] = 0; value[0] = 0;
-//                         }else{
-//                             std::vector<double> c = dirichlet[i] -> getComponentX();
-//                             constrain[0] = 1;
-//                             value[0] = c[0];
-//                         }
-//                         if ((dirichlet[i] -> getComponentY()).size() == 0){
-//                             constrain[1] = 0; value[1] = 0;
-//                         }else{
-//                             std::vector<double> c = dirichlet[i] -> getComponentY();
-//                             constrain[1] = 1;
-//                             value[1] = c[0];
-//                         }
-//                         if ((dirichlet[i] -> getComponentZ()).size() == 0){
-//                             constrain[2] = 0; value[2] = 0;
-//                         }else{
-//                             std::vector<double> c = dirichlet[i] -> getComponentZ();
-//                             constrain[2] = 1;
-//                             value[2] = c[0];
-//                         }
-//                     }
-//                 }
-//                 for (int i = 0; i < neumann.size(); i++){
-//                     if (name == neumann[i] -> getLineName()){
-//                         if ((neumann[i] -> getComponentX()).size() == 0){
-//                             constrain[0] = 0; value[0] = 0;
-//                         }else{
-//                             std::vector<double> c = neumann[i] -> getComponentX();
-//                             constrain[0] = 0;
-//                             value[0] = c[0];
-//                         }
-//                         if ((neumann[i] -> getComponentY()).size() == 0){
-//                             constrain[1] = 0; value[1] = 0;
-//                         }else{
-//                             std::vector<double> c = neumann[i] -> getComponentY();
-//                             constrain[1] = 0;
-//                             value[1] = c[0];
-//                         }
-//                         if ((neumann[i] -> getComponentZ()).size() == 0){
-//                             constrain[2] = 0; value[2] = 0;
-//                         }else{
-//                             std::vector<double> c = neumann[i] -> getComponentZ();
-//                             constrain[2] = 0;
-//                             value[2] = c[0];
-//                         }
-//                     }
-//                 }  
-//                 for (int i = 0; i < glue.size(); i++){
-//                     if (name == glue[i] -> getLineName()){
-//                         if ((glue[i] -> getComponentX()).size() == 0){
-//                             constrain[0] = 2; value[0] = 0;
-//                         }else{
-//                             std::vector<double> c = glue[i] -> getComponentX();
-//                             constrain[0] = 2;
-//                             value[0] = c[0];
-//                         }
-//                         if ((glue[i] -> getComponentY()).size() == 0){
-//                             constrain[1] = 2; value[1] = 0;
-//                         }else{
-//                             std::vector<double> c = glue[i] -> getComponentY();
-//                             constrain[1] = 2;
-//                             value[1] = c[0];
-//                         }
-//                         if ((glue[i] -> getComponentZ()).size() == 0){
-//                             constrain[2] = 2; value[2] = 0;
-//                         }else{
-//                             std::vector<double> c = glue[i] -> getComponentZ();
-//                             constrain[2] = 2;
-//                             value[2] = c[0];
-//                         }
-//                     }
-//                 }              
-//                 for (int i = 0; i < FSinterface.size(); i++){
-//                     if (name == FSinterface[i] -> getLineName()){
-//                         if ((FSinterface[i] -> getComponentX()).size() == 0){
-//                             constrain[0] = 3; value[0] = 0;
-//                         }else{
-//                             std::vector<double> c = FSinterface[i] -> getComponentX();
-//                             constrain[0] = 3;
-//                             value[0] = c[0];
-//                         }
-//                         if ((FSinterface[i] -> getComponentY()).size() == 0){
-//                             constrain[1] = 3; value[1] = 0;
-//                         }else{
-//                             std::vector<double> c = FSinterface[i] -> getComponentY();
-//                             constrain[1] = 3;
-//                             value[1] = c[0];
-//                         }
-//                         if ((FSinterface[i] -> getComponentZ()).size() == 0){
-//                             constrain[2] = 3; value[2] = 0;
-//                         }else{
-//                             std::vector<double> c = FSinterface[i] -> getComponentZ();
-//                             constrain[2] = 3;
-//                             value[2] = c[0];
-//                         }
-//                     }
-//                 }  
-//                 Boundary * bound = new Boundary(connectB, numBoundElems++, constrain, value, ibound, cmesh);
-//                 // std::cout << "asdasd " << rank << " " << ibound << std::endl;
-//                 cmesh->BoundaryVec().push_back(bound);
-//             } else {
-//                 // if(rank == 0){
-//                     Surface* object = geometry_ -> getSurface(name);
-//                     VecInt connect(nElNodes);
-//                     for (int j = 0 ; j < nElNodes; j++) connect[j] = elementNodes[j];
-
-//                     switch (cmesh->getProblemParameters().ProbType())
-//                     {
-//                     case EPoisson:
-//                         {
-//                             ElementT<ShapeTriangleLin> *el = new ElementT<ShapeTriangleLin>(index++,connect,cmesh,cmesh->Material(1));
-//                             cmesh->ElementVec().push_back(el);
-//                         }
-//                         break;
-//                     case EElastic:
-//                         {
-//                             ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
-//                             cmesh->ElementVec().push_back(el);
-//                         }
-//                         break;
-//                     case ESolidPositional:
-//                         {
-//                             ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
-//                             cmesh->ElementVec().push_back(el);
-//                         }
-//                         break;
-//                     case EStokes:
-//                         {
-//                             ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
-//                             cmesh->ElementVec().push_back(el);
-//                         }
-//                         break;
-//                     case ENavierStokes:
-//                         {
-//                             ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
-//                             cmesh->ElementVec().push_back(el);
-//                         }
-//                         break;
-                    
-//                     default:
-//                         PanicButton();
-//                         break;
-//                     }
-
-//                     for (int k = 0; k < nElNodes; k++){
-//                         cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(index);
-//                     };
-//                 // }
-//             }
-//         } else if ((name[0] == 'l') && (DIM == 2)) {
-//             VecInt connectB(nBdNodes);
-
-//             for (int i = 0; i < nBdNodes; i++) connectB[i] = elementNodes[i];
-            
-//             int ibound;
-
-//             std::string::size_type sz;   // alias of size_t
-//             ibound = std::stoi (&name[1],nullptr,10);
-
-//             VecInt constrain(3);
-//             VecDouble value(3);
-
-//             for (int i = 0; i < dirichlet.size(); i++){
-//                 if (name == dirichlet[i] -> getLineName()){
-//                     if ((dirichlet[i] -> getComponentX()).size() == 0){
-//                         constrain[0] = 0; value[0] = 0;
-//                     }else{
-//                         std::vector<double> c = dirichlet[i] -> getComponentX();
-//                         constrain[0] = 1;
-//                         value[0] = c[0];
-//                     }
-//                     if ((dirichlet[i] -> getComponentY()).size() == 0){
-//                         constrain[1] = 0; value[1] = 0;
-//                     }else{
-//                         std::vector<double> c = dirichlet[i] -> getComponentY();
-//                         constrain[1] = 1;
-//                         value[1] = c[0];
-//                     }
-//                 }
-//             }
-//             for (int i = 0; i < neumann.size(); i++){
-//                 if (name == neumann[i] -> getLineName()){
-//                     if ((neumann[i] -> getComponentX()).size() == 0){
-//                         constrain[0] = 0; value[0] = 0;
-//                     }else{
-//                         std::vector<double> c = neumann[i] -> getComponentX();
-//                         constrain[0] = 0;
-//                         value[0] = c[0];
-//                     }
-//                     if ((neumann[i] -> getComponentY()).size() == 0){
-//                         constrain[1] = 0; value[1] = 0;
-//                     }else{
-//                         std::vector<double> c = neumann[i] -> getComponentY();
-//                         constrain[1] = 0;
-//                         value[1] = c[0];
-//                     }
-//                 }
-//             }  
-//             for (int i = 0; i < glue.size(); i++){
-//                 if (name == glue[i] -> getLineName()){
-//                     if ((glue[i] -> getComponentX()).size() == 0){
-//                         constrain[0] = 2; value[0] = 0;
-//                     }else{
-//                         std::vector<double> c = glue[i] -> getComponentX();
-//                         constrain[0] = 2;
-//                         value[0] = c[0];
-//                     }
-//                     if ((glue[i] -> getComponentY()).size() == 0){
-//                         constrain[1] = 2; value[1] = 0;
-//                     }else{
-//                         std::vector<double> c = glue[i] -> getComponentY();
-//                         constrain[1] = 2;
-//                         value[1] = c[0];
-//                     }//std::cout <<"aqui " << std::endl;
-//                 }
-//             }              
-//             for (int i = 0; i < FSinterface.size(); i++){
-//                 if (name == FSinterface[i] -> getLineName()){
-//                     if ((FSinterface[i] -> getComponentX()).size() == 0){
-//                         constrain[0] = 3; value[0] = 0;
-//                     }else{
-//                         std::vector<double> c = FSinterface[i] -> getComponentX();
-//                         constrain[0] = 3;
-//                         value[0] = c[0];
-//                     }
-//                     if ((FSinterface[i] -> getComponentY()).size() == 0){
-//                         constrain[1] = 3; value[1] = 0;
-//                     }else{
-//                         std::vector<double> c = FSinterface[i] -> getComponentY();
-//                         constrain[1] = 3;
-//                         value[1] = c[0];
-//                     }
-//                 }
-//             }
-//             Boundary * bound = new Boundary(connectB, numBoundElems++, constrain, value, ibound, cmesh);
-//             // std::cout << "asdasd " << rank << " " << ibound << std::endl;
-//             cmesh->BoundaryVec().push_back(bound);
-//         }   
-//     }
-//     cmesh->part_elem= new int[cmesh->NElements()]();
-// }
-
 
 void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     // Renumber nodes - start
@@ -826,6 +340,16 @@ int GetNumberofNodes(int & el_type){
         case 15:{
             // Point
             n_nodes = 1;
+        }
+            break;
+        case 21:{
+            // Cubic Triangle
+            n_nodes = 10;
+        }
+            break;
+        case 26:{
+            // Cubic Line
+            n_nodes = 4;  
         }
             break;
         default:
@@ -1206,7 +730,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                     read >> coord[1];
                     read >> coord[2];
                     
-                    Node *node = new Node(coord,nodeids[inode]-GMSH_SHIFT);
+                    Node *node = new Node(coord,nodeids[inode]-GMSH_SHIFT,gmesh.NState());
                     gmesh.NodeVec()[nodeids[inode]-GMSH_SHIFT] = node;
                     // gmesh.Node(nodeids[inode] - GMSH_SHIFT).SetCo(coord);                    
                 }
@@ -1702,58 +1226,6 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
 
 
 
-Element* GmshTools::CreateElement(CompMesh *cmesh, int64_t index, VecInt &connect){
-    for (int k = 0; k < connect.size(); k++){
-        cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(index);
-    };
-
-    switch (cmesh->getProblemParameters().ProbType())
-    {
-    case EPoisson:
-        {
-            // ElPoisson<ShapeTriangleLin> *el = new ElPoisson<ShapeTriangleLin>(index++,connect,cmesh);
-            // cmesh->ElementVec()[index]=el;
-            // return el;
-        }
-        break;
-    case EElastic:
-        {
-            ElElasticity2D<ShapeTriangleLin> *el = new ElElasticity2D<ShapeTriangleLin>(index++,connect,cmesh);
-            cmesh->ElementVec()[index]=el;
-            return el;
-        }
-        break;
-    case ESolidPositional:
-        {
-            ElElasticityPositional2D<ShapeTriangleLin> *el = new ElElasticityPositional2D<ShapeTriangleLin>(index++,connect,cmesh);
-            cmesh->ElementVec()[index]=el;
-            return el;
-        }
-        break;
-    case EStokes:
-        {
-            ElStokes<ShapeTriangleLin> *el = new ElStokes<ShapeTriangleLin>(index++,connect,cmesh);
-            cmesh->ElementVec()[index]=el;
-            return el;
-        }
-        break;
-    case ENavierStokes:
-        {
-            ElNavierStokes<ShapeTriangleLin> *el = new ElNavierStokes<ShapeTriangleLin>(index++,connect,cmesh);
-            cmesh->ElementVec()[index]=el;
-            return el;
-        }
-        break;
-    
-    default:
-        PanicButton();
-        return 0;
-        break;
-    }
-
-    
-};
-
 
 
 Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_type, int  el_identifier, VecInt & node_identifiers){
@@ -1779,99 +1251,46 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         case 1:
         {   // Ligelne
         
-            gel = new ElementT<ShapeOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel = new ElementT<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             gel->PrintType() = 3;
-            // gel = new GeoElementTemplate<Geom1d>(Topology, physical_identifier, gmesh, el_identifier);
         }
             break;
         case 2:
         {
+            // Linear Triangle
             gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
-            gel->PrintType() = 5;
-            // gel = GmshTools::CreateElement(gmesh,el_identifier,Topology);
-            // Triangle
-            // gel = new GeoElementTemplate<GeomTriangle>(Topology, physical_identifier, gmesh, el_identifier);
+            gel->PrintType() = 5;           
             break;
         }
-//             break;
-//         case 3:
-//         {
-//             // Quadrilateral
-//             gel = new GeoElementTemplate<GeomQuad>(Topology, physical_identifier, gmesh, el_identifier);
-            
-//         }
-//             break;
-//         case 4:
-//         {
-//             // Tetrahedron
-//             gel = new GeoElementTemplate<GeomTetrahedron>(Topology, physical_identifier, gmesh, el_identifier);
-            
-//         }
-//             break;
-//         // case 5:
-//         // {
-//         //     // Hexahedra
-//         //     gel = new GeoElementTemplate<GeomCube>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 6:
-//         // {
-//         //     // Prism
-//         //     gel = new GeoElementTemplate<GeomPrism>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 7:
-//         // {
-//         //     // Pyramid
-//         //     gel = new GeoElementTemplate<GeomPyramid>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 8:
-//         // {
-//         //     // Quadratic Line
-//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticLine>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 9:
-//         // {
-//         //     // Triangle
-//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticTrig>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 10:
-//         // {
-//         //     std::vector <int64_t,15> Topology_c(n_nodes-1);
-//         //     for (int k_node = 0; k_node < n_nodes-1; k_node++) { /// Gmsh representation Quadrangle8 and Quadrangle9, but by default Quadrangle9 is always generated. (?_?).
-//         //         Topology_c[k_node] = Topology[k_node];
-//         //     }
-//         //     // Quadrilateral
-//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticQuad>(Topology_c, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 11:
-//         // {
-//         //     // Tetrahedron
-//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticTetra>(Topology, physical_identifier, gmesh, el_identifier);
-            
-//         // }
-//         //     break;
-//         // case 12:
-//         // {
-//         //     // Hexahedra
-//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticCube>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         // case 13:
-//         // {
-//         //     // Prism
-//         //     gel = new GeoElementTemplate<pzgeom::TPZQuadraticPrism>(Topology, physical_identifier, gmesh, el_identifier);
-//         // }
-//         //     break;
-//         case 15:{
-//             // Point
-//             gel = new GeoElementTemplate<Geom0d>(Topology, physical_identifier, gmesh, el_identifier);
-//         }
-//             break;
+        case 8:
+        {
+            // Quadratic Line
+            gel = new ElementT<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 21;           
+            break;
+        }
+        case 9:
+        {
+            // Quadratic Triangle
+            gel = new ElementT<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 22;           
+            break;
+        }
+        case 21:
+        {
+            // Cubic Triangle
+            gel = new ElementT<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 69;           
+            break;
+        }
+        case 26:
+        {
+            // Cubic Line
+            gel = new ElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 35;           
+            break;
+        }
+        
         default:
         {
             std::cout << "Element not implemented." << std::endl;

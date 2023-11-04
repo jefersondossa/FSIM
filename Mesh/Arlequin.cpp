@@ -4,7 +4,9 @@
 #include "ElCouplingGlobal.h"
 #include <set>
 #include "ShapeHexahedron.h"
-#include "ShapeOneD.h"
+#include "ShapeOneDLin.h"
+#include "ShapeOneDQua.h"
+#include "ShapeOneDCub.h"
 #include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"

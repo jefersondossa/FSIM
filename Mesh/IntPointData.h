@@ -19,6 +19,7 @@ public:
     double fWeight;
 
     VecDouble fX;
+    VecDouble fX1;
     VecDouble fAdimCoord;
 
     MatrixDouble fDPhiX0;

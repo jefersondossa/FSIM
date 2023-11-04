@@ -332,7 +332,6 @@ void ElementT<tshape>::ComputeJacobian(int index) {
             break;
         case 1:
         {
-            // axes.resize(dim, 3);
             VecDouble v_1(3);
             v_1.setZero();
 
@@ -352,61 +351,22 @@ void ElementT<tshape>::ComputeJacobian(int index) {
 
             fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
 
-            // for (int i = 0; i < 3; i++) {
-            //     axes(0, i) = v_1[i] / norm_v_1;
-            // }
         }
             break;
         case 2:
         {
-            VecDouble v_1(3), v_2(3);
-            VecDouble v_1_til(3), v_2_til(3);
-            v_1.setZero();
-            v_2.setZero();
-            v_1_til.setZero();
-            v_2_til.setZero();
+            //     //Computing the jacobian determinant and Inverse
+            fIntegData.fA0(0,0) = gradx(0,0);
+            fIntegData.fA0(0,1) = gradx(0,1);
+            fIntegData.fA0(1,0) = gradx(1,0);
+            fIntegData.fA0(1,1) = gradx(1,1);
+            fIntegData.fJacA0 = fIntegData.fA0(0,0) * fIntegData.fA0(1,1) - fIntegData.fA0(0,1) * fIntegData.fA0(1,0);
 
-            for (int i = 0; i < nrows; i++) {
-                v_1[i] = gradx(i, 0);
-                v_2[i] = gradx(i, 1);
-            }
-
-            double norm_v_1_til = 0.0;
-            double norm_v_2_til = 0.0;
-            double v_1_dot_v_2 = 0.0;
-
-            for (int i = 0; i < 3; i++) {
-                norm_v_1_til += v_1[i] * v_1[i];
-                v_1_dot_v_2 += v_1[i] * v_2[i];
-            }
-            norm_v_1_til = sqrt(norm_v_1_til);
-
-            for (int i = 0; i < 3; i++) {
-                v_1_til[i] = v_1[i] / norm_v_1_til;
-                v_2_til[i] = v_2[i] - v_1_dot_v_2 * v_1_til[i] / norm_v_1_til;
-                norm_v_2_til += v_2_til[i] * v_2_til[i];
-            }
-            norm_v_2_til = sqrt(norm_v_2_til);
-
-
-            fIntegData.fA0(0, 0) = norm_v_1_til;
-            fIntegData.fA0(0, 1) = v_1_dot_v_2 / norm_v_1_til;
-            fIntegData.fA0(1, 1) = norm_v_2_til;
-
-            fIntegData.fJacA0 = fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1) - fIntegData.fA0(1, 0) * fIntegData.fA0(0, 1);
-
-            fIntegData.fA0Inv(0, 0) = +fIntegData.fA0(1, 1) / fIntegData.fJacA0;
-            fIntegData.fA0Inv(1, 1) = +fIntegData.fA0(0, 0) / fIntegData.fJacA0;
-            fIntegData.fA0Inv(0, 1) = -fIntegData.fA0(0, 1) / fIntegData.fJacA0;
-            fIntegData.fA0Inv(1, 0) = -fIntegData.fA0(1, 0) / fIntegData.fJacA0;
-
+            fIntegData.fA0Inv(0,0) = fIntegData.fA0(1,1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1,1) = fIntegData.fA0(0,0) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
             fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
-
-            // for (int i = 0; i < 3; i++) {
-            //     v_2_til[i] /= norm_v_2_til;
-            //     axes(0, i) = v_1_til[i];
-            //     axes(1, i) = v_2_til[i];
-            // }
         }
             break;
         case 3:
@@ -446,21 +406,6 @@ void ElementT<tshape>::ComputeJacobian(int index) {
             break;
     }
 
-
-
-
-
-
-    // auto mataux = fIntegData.fA0.transpose() * fIntegData.fA0 ;
-    // auto mat2 = mataux.inverse();
-    // auto mat3= mat2 * fIntegData.fA0.transpose(); 
-    // std::cout << "Mataux \n" <<  mataux << std::endl;
-    // std::cout << "mat2 \n" <<  mat2 << std::endl;
-    // std::cout << "mat3 \n" <<  mat3 << std::endl;
-    // //Computing the jacobian determinant and Inverse
-    // fIntegData.fJacA0 = fIntegData.fA0.determinant();
-    // fIntegData.fA0Inv = fIntegData.fA0.inverse().transpose();
-
     return;
 };
 
@@ -470,28 +415,68 @@ void ElementT<tshape>::ComputeCurrentJacobian(int index) {
     int DIM = tshape::Dimension;
     fIntegData.fA1.resize(DIM,DIM);
     fIntegData.fA1.setZero();
-    fIntegData.fX.resize(DIM);
-    fIntegData.fX.setZero();
+    fIntegData.fX1.resize(DIM);
+    fIntegData.fX1.setZero();
 
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
-
+    MatrixDouble grady(3,tshape::Dimension);
+    grady.setZero();
+    VecDouble yna(3);
+    
     fIntegData.fA1.setZero();
     for (int i = tshape::NElNodes; i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            fIntegData.fX[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) ;
+            // Approximate the integration space
+            fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
+            yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j);
             // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
             //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
             for (int k = DIM; k--; ){
-                fIntegData.fA1(j,k) += fIntegData.fX[j] * fIntegData.fDPhi(i,k);
+                grady(j,k) += yna[j] * fIntegData.fDPhi(i,k);
                 // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
     };
 
-    //Computing the jacobian determinant and Inverse
-    fIntegData.fJacA1 = fIntegData.fA1.determinant();
+    switch (tshape::Dimension)
+    {
+    case 1:
+    {
+        VecDouble v_1(3);
+        v_1.setZero();
 
+        for (int i = 0; i < 3; i++) {
+            v_1[i] = grady(i, 0);
+        }
+
+        double norm_v_1 = 0.;
+        for (int i = 0; i < 3; i++) {
+            norm_v_1 += v_1[i] * v_1[i];
+        }
+        norm_v_1 = sqrt(norm_v_1);
+        fIntegData.fA1(0, 0) = norm_v_1;
+        fIntegData.fJacA1 = norm_v_1;
+        fIntegData.fJacA1 = fabs(fIntegData.fJacA1);
+    }
+        break;
+    case 2:
+    {
+        //Computing the jacobian determinant and Inverse
+        fIntegData.fA1(0,0) = grady(0,0);
+        fIntegData.fA1(0,1) = grady(0,1);
+        fIntegData.fA1(1,0) = grady(1,0);
+        fIntegData.fA1(1,1) = grady(1,1);
+        fIntegData.fJacA1 = fIntegData.fA1(0,0) * fIntegData.fA1(1,1) - fIntegData.fA1(0,1) * fIntegData.fA1(1,0);
+        fIntegData.fJacA1 = fabs(fIntegData.fJacA1);
+    }
+        break;
+    
+    default:
+        std::cout << "Please implement me";
+        PanicButton();
+        break;
+    }
     return;
 };
 
@@ -509,7 +494,7 @@ void ElementT<tshape>::ComputeSpatialDerivatives() {
     fIntegData.fDPhiX0.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX0 = fIntegData.fDPhi * fIntegData.fA0Inv.transpose();
+    fIntegData.fDPhiX0 = fIntegData.fDPhi * fIntegData.fA0Inv;
 
     return;
 };
@@ -919,6 +904,11 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
 
+        if (fWeakForm->IsPositionalFEM()){
+            ComputeCurrentJacobian(index);
+            ComputeCurrentSpatialDerivatives();
+        }
+
         //Computes the element diffusion/viscosity matrix
         fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
         
@@ -930,6 +920,8 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 
         index++;        
     };  
+
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
 
     return;
 };
@@ -984,7 +976,9 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 };
 
 #include "ShapeHexahedron.h"
-#include "ShapeOneD.h"
+#include "ShapeOneDLin.h"
+#include "ShapeOneDQua.h"
+#include "ShapeOneDCub.h"
 #include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
@@ -995,7 +989,9 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 #include "ShapeTriangleCub.h"
 
 template class ElementT<ShapePoint>;
-template class ElementT<ShapeOneD>;
+template class ElementT<ShapeOneDLin>;
+template class ElementT<ShapeOneDQua>;
+template class ElementT<ShapeOneDCub>;
 template class ElementT<ShapeTriangleLin>;
 template class ElementT<ShapeTriangleQua>;
 template class ElementT<ShapeTriangleCub>;

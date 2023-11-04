@@ -12,9 +12,7 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         for (int i = 0; i < nphi; i++){
             for (int j = 0; j < nphi; j++){
                 for (int istate = 0; istate < fNState; istate++){
-                    for (int jstate = 0; jstate < fNState; jstate++){
-                        Stiffness(fNState*i+istate,fNState*j+jstate) +=  WJ * data.fPhi[i] * data.fPhi[j];
-                    }
+                    Stiffness(fNState*i+istate,fNState*j+istate) +=  WJ * data.fPhi[i] * data.fPhi[j];
                 }
             }
         }
@@ -55,11 +53,13 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         }
         break;
     case 1: // Neumann in all state variables
+    {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
                 Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];
             }
         }
+    }
         break;
     
     default:

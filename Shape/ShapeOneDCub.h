@@ -1,17 +1,17 @@
-#ifndef SHAPEONED
-#define SHAPEONED
+#ifndef ShapeOneDCub_H
+#define ShapeOneDCub_H
 
 #include "DataTypes.h"
 #include "IntRule1d.h"
 
-class ShapeOneD{
+class ShapeOneDCub{
 public:
     // Type definition for integration rule 1D
     typedef IntRule1d LocIntRule;
 
     const static int Dimension = 1;
-    const static int Order = 1;
-    const static int NElNodes = 2;
+    const static int Order = 3;
+    const static int NElNodes = 4;
 
     /// Shapes the shape function value
     /// @param double* Non-dimensional coordinates 

@@ -126,6 +126,7 @@ void IntRuleTriangle::SetOrder(int order) {
         fWeights[10]  =  0.414255378091867875967767282102212e-1;
         fWeights[11]  =  0.414255378091867875967767282102212e-1;
         }
+        break;
     default:
         PanicButton();
         break;

@@ -6,11 +6,11 @@
 class Poisson : public WeakForm{
 private:
     double  fScale = 1.;
-    int     fDimension = 0;
 
 public:
-    Poisson(int matid, int dim, int nState = 1) : WeakForm(), fDimension(dim) {
+    Poisson(int matid, int dim, int nState = 1) : WeakForm() {
         this->fMatId = matid;
+        this->fDimension = dim;
         fNState = nState;
     };
 

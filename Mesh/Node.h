@@ -106,6 +106,8 @@ public:
     void IncrementSolution(int istate, double sol){
         fSolution[istate] += sol;
     }
+    VecDouble &Solution() {return fSolution;}
+    VecDouble &PrevSolution() {return fPrevSolution;}
     double GetSolution(int istate){
         return fSolution[istate];
     }

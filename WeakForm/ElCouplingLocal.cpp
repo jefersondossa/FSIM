@@ -432,7 +432,7 @@ void ElCouplingLocal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dph
 
 
 #include "ShapeHexahedron.h"
-#include "ShapeOneD.h"
+// #include "ShapeOneD.h"
 #include "ShapeQuadrilateralLin.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
@@ -443,7 +443,7 @@ void ElCouplingLocal<tshape>::ArlequinStabResidual(int &index, MatrixDouble &dph
 #include "ShapeTriangleCub.h"
 
 template class ElCouplingLocal<ShapePoint>;
-template class ElCouplingLocal<ShapeOneD>;
+// template class ElCouplingLocal<ShapeOneD>;
 template class ElCouplingLocal<ShapeTriangleLin>;
 template class ElCouplingLocal<ShapeTriangleQua>;
 template class ElCouplingLocal<ShapeTriangleCub>;

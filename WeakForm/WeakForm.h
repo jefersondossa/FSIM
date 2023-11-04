@@ -10,9 +10,11 @@ class WeakForm
 protected:
     int fMatId;
     int fNState = 1;
+    int fDimension = 0;
     static double fBigNumber;
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> fExactSol = 0; 
     std::function<void (const VecDouble &coord, VecDouble &force)> fForceFunction = 0; 
+    bool fPositionalFEM = false;
 
 public:
     WeakForm() = default;
@@ -44,6 +46,8 @@ public:
     int &Id() {return fMatId;}
 
     int &NState() {return fNState; }
+
+    bool &IsPositionalFEM() {return fPositionalFEM;}
 };
 
 

@@ -41,6 +41,8 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "XDMFGenerator.h"
 #include "Poisson.h"
 #include "L2Projection.h"
+#include "Elasticity2D.h"
+#include "ElasticityPositional2D.h"
 
 int main(int argc, char **args) {
 

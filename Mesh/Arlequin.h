@@ -78,7 +78,7 @@ public:
     Arlequin(std::vector<CompMesh *> &meshvec){
         fMeshVector = meshvec;
         fMeshVector.resize(3);
-        fMeshVector[2] = new CompMesh(fMeshVector[0]->getProblemParameters(), fMeshVector[0]->Dimension(), fMeshVector[0]->GetDefaultOrder());
+        fMeshVector[2] = new CompMesh(fMeshVector[0]->getProblemParameters());
         if (fMeshVector[2]->getProblemParameters().ProbType() == ProblemType::ENavierStokes || fMeshVector[2]->getProblemParameters().ProbType() == ProblemType::EStokes){
             fMeshVector[2]->SetNStateVariables(fMeshVector[2]->Dimension());
         }

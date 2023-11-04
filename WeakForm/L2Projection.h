@@ -17,9 +17,9 @@ private:
     VecDouble    BCVal2;
 
 public:
-    L2Projection(int matid, int dim, int bctype, MatrixDouble &val1, VecDouble &val2 ,int nState = 1) : WeakForm(), fDimension(dim) {
+    L2Projection(int matid, int dim, int bctype, MatrixDouble &val1, VecDouble &val2) : WeakForm(), fDimension(dim) {
         this->fMatId = matid;
-        fNState = nState;
+        fNState = val2.size();
         BCType = bctype;
         BCVal1 = val1;
         BCVal2 = val2;
