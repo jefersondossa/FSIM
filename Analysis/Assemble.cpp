@@ -1,7 +1,7 @@
 #include "Assemble.h"
 #include "CouplingLocal.h"
 #include "CouplingGlobal.h"
-#include "ShapeTriangleLin.h"
+#include "Arlequin.h"
 
 void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     std::cout << "Assembling..." << std::endl;
@@ -79,20 +79,9 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         int nElNodes = connecL.size();
         int nLocDOF = nElNodes*fAnalysis->MeshVector()[2]->NState();
 
-        int nstiffness = 1;
-        auto probltype = fAnalysis->MeshVector()[0]->getProblemParameters().ProbType();
-        if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab){
-            if (probltype == EPoisson || probltype == EElastic){
-                nstiffness = 3;
-            } else if (probltype == EStokes || probltype == ENavierStokes){
-                nstiffness = 4;
-            }
-        }
-        std::vector<MatrixDouble> matrix(nstiffness);
-        for (int i = 0; i < nstiffness; i++){
-            matrix[i].resize(nLocDOF,nLocDOF);
-            matrix[i].setZero();
-        }        
+        std::vector<MatrixDouble> matrix(1);
+        matrix[0].resize(nLocDOF,nLocDOF);
+        matrix[0].setZero();
         std::vector<VecDouble> rhs(2);
         rhs[0].resize(2*nLocDOF); rhs[1].resize(2*nLocDOF);
         rhs[0].setZero(); rhs[1].setZero();
@@ -111,8 +100,8 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         fAnalysis->MeshVector()[2]->ElementVec()[jelc] -> ComputeElContribution(matrix,rhs);
         int nState = fAnalysis->MeshVector()[2]->NState(); 
         int nStateMonomodel = nState;
-        if(fAnalysis->MeshVector()[2]->getProblemParameters().ProbType() == EStokes || fAnalysis->MeshVector()[2]->getProblemParameters().ProbType() == ENavierStokes) nStateMonomodel++;
-        if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab) stabilizeArlequin(fAnalysis,matrix,rhs,jelc);
+        // if(fAnalysis->MeshVector()[2]->getProblemParameters().ProbType() == EStokes || fAnalysis->MeshVector()[2]->getProblemParameters().ProbType() == ENavierStokes) nStateMonomodel++;
+        if (fAnalysis->ArlequinModel()->getArlequinStabilization() != ENoStab) stabilizeArlequin(fAnalysis,matrix,rhs,jelc);
         
         //Disperse local contributions into the global matrix
         for (int i = 0; i < nElNodes; i++){
@@ -129,7 +118,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
                     }
                 }
                 //Arlequin Stabilization
-                if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab){
+                if (fAnalysis->ArlequinModel()->getArlequinStabilization() != ENoStab){
                     for (int istate = 0; istate < nState; istate++){
                         for (int jstate = 0; jstate < nState; jstate++){
                             //Diagonal term
@@ -160,7 +149,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
                 VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[0][nLocDOF+nState*i+istate],ADD_VALUES);
             }
             //Arlequin Stabilization
-            if (fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab() != ENoStab){
+            if (fAnalysis->ArlequinModel()->getArlequinStabilization() != ENoStab){
                 for (int istate = 0; istate < nState; istate++){
                     int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                     VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[1][nState*i+istate],ADD_VALUES);
@@ -205,12 +194,12 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
     // normL2 = mat.norm(); 
     // normL1 = mat.lpNorm<1>(); 
     // normInfty = mat.lpNorm<Infinity>();
-    if (fAnalysis->MeshVector()[0]->getProblemParameters().ProbType() != EPoisson){
-        // PanicButton();
-    }
-    auto fArlequinStab = fAnalysis->MeshVector()[0]->getProblemParameters().ArlequinStab();
+    // if (fAnalysis->MeshVector()[0]->getProblemParameters().ProbType() != EPoisson){
+    //     // PanicButton();
+    // }
 
-    switch (fArlequinStab)
+
+    switch (fAnalysis->ArlequinModel()->getArlequinStabilization())
     {
     case ArlequinStabType::ENoStab:
         {

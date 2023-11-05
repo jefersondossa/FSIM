@@ -302,8 +302,6 @@ void ElementT<tshape>::ComputeJacobian() {
     tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
     tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
    
-    
-    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     MatrixDouble gradx(3,DIM);
     gradx.setZero();
     fIntegData.fA0.setZero();
@@ -313,11 +311,9 @@ void ElementT<tshape>::ComputeJacobian() {
             // Approximate the integration space
             fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
             xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
-            // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
-            //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
+            
             for (int k = DIM; k--; ){
                 gradx(j,k) += xna[j] * fIntegData.fDPhi(i,k);
-                // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
     };
@@ -418,7 +414,6 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     fIntegData.fX1.resize(DIM);
     fIntegData.fX1.setZero();
 
-    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     MatrixDouble grady(3,tshape::Dimension);
     grady.setZero();
     VecDouble yna(3);
@@ -427,14 +422,11 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     for (int i = tshape::NElNodes; i--; ){
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            // Approximate the integration space
             fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
             yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j);
-            // xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
-            //           (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
+
             for (int k = DIM; k--; ){
                 grady(j,k) += yna[j] * fIntegData.fDPhi(i,k);
-                // dx_dxsi(j,k) += xna_[j] * dphi(i,k);
             };
         };
     };
@@ -564,15 +556,13 @@ void ElementT<tshape>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDoub
     
     //Shape functions spatial second derivatives
     double ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
-    double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     VecDouble xna_(DIM);
 
     for (int i = tshape::NElNodes; i--; ){
         xna_.setZero();
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            xna_[j] = alpha_f * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + 
-                      (1. - alpha_f) * fMesh->NodeVec()[fConnect[i]] -> getPreviousCoordinateValue(j);
+            xna_[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
         }
         ddx_dxsi += xna_[0] * ddphi[i](0,0);
         ddx_deta += xna_[0] * ddphi[i](1,1);

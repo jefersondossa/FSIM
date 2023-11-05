@@ -4,7 +4,7 @@ file(GLOB preprocess
     CompMeshTools.cpp
     GmshTools.h
     GmshTools.cpp
-    ProblemParameters.h
+    # ProblemParameters.h
 )
 
 set(PREPROCESS ${preprocess} PARENT_SCOPE)

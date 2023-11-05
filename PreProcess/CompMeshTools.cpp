@@ -1,20 +1,6 @@
 #include "CompMeshTools.h"
 #include "fstream"
-#include "metis.h"
-
-
-void CompMeshTools::InitialSolution(CompMesh *cmesh){
-
-    if (cmesh->getProblemParameters().ProbType() != ESolidPositional) return;
-
-    for (int64_t ino = 0; ino<cmesh->NNodes(); ino++){
-        auto coord = cmesh->NodeVec()[ino]->getCoordinates();
-        
-        for (int j=0; j<cmesh->Dimension(); j++) cmesh->NodeVec()[ino]->SetSolution(j,coord[j]);
-    }
-    
-
-}
+#include <metis.h>
 
 void CompMeshTools::DomainDecompositionMETIS(CompMesh *cmesh){
 

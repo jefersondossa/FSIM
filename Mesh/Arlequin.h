@@ -14,11 +14,18 @@
 #ifndef ARLEQUIN_H
 #define ARLEQUIN_H
 
-#include "Fluid.h"
-#include "Glue.h"
 #include "IntegrationQuadrature11.h"
 #include <map>
 #include <set>
+#include "Analysis.h"
+#include "CompMesh.h"
+#include "Element.h"
+
+class Analysis;
+class Element;
+class CompMesh;
+
+enum ArlequinStabType{ENoStab, EOption1, EOption2, EOption3, EOption4, EOption5};
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 class Arlequin{
@@ -33,18 +40,6 @@ public:
     std::vector<int>         nodesGlueZoneFine_;
     std::vector<int>         elementsGlueZoneCoarse_;
     std::vector<int>         nodesGlueZoneCoarse_;
-
-    ProblemType fProbType;
-
-    Mat               A, F;
-    Vec               b, u, All;
-    PetscErrorCode    ierr;
-    PetscInt          Istart, Iend, Ii, Ione, iterations;
-    KSP               ksp; 
-    PC                pc;
-    VecScatter        ctx;
-    PetscScalar       val;
-    PetscLogDouble bytes = 0;
 
     std::map<int64_t,int64_t> fNodeLocalToElementGlobal;
     std::map<int64_t,VecDouble> fNodeLocalToXsiGlobal;
@@ -63,23 +58,21 @@ private:
     int numNodesGlueZoneFine;
     int numNodesGlueZoneCoarse;
     int rank;
+    bool fFirstSearch = true;
 
     std::map<int64_t,double> fLocalSignaledDistance;
     std::map<int64_t,double> fGlobalSignaledDistance;
     
-
+    
     ArlequinStabType fArlequinStab = ArlequinStabType::ENoStab;
     std::vector<CompMesh *> fMeshVector;
 
+    double fK0;
+    double fK1;
 public:
     Arlequin() = default;
 
-    Arlequin(std::vector<CompMesh *> &meshvec){
-        fMeshVector = meshvec;
-        fMeshVector.resize(3);
-        fMeshVector[2] = new CompMesh(fMeshVector[0]->getProblemParameters());
-        fMeshVector[2]->SetNStateVariables(1);
-    }
+    Arlequin(std::vector<CompMesh *> &meshvec, double k0, double k1, ArlequinStabType stab = ArlequinStabType::ENoStab);
 
     void SetGlueIds(std::set<int> &glue){
         fGlueMatID = glue;

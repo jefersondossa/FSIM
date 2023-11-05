@@ -30,7 +30,7 @@
 #include <ctime>
 #include <numeric>
 #include <iostream>
-
+#include<fstream>
 
 #include "DataTypes.h"
 

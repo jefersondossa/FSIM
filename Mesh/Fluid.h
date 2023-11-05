@@ -86,7 +86,7 @@ public:
         PanicButton();
     }
 
-    Fluid(ProblemParameters ptype, int dim, int order) :CompMesh(ptype){
+    Fluid(int dim, int order) :CompMesh(){
 
     }
     

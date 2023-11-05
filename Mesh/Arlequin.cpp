@@ -31,6 +31,17 @@ extern "C"
 	void trifree(void *);
 }
 
+Arlequin::Arlequin(std::vector<CompMesh *> &meshvec, double k0, double k1, ArlequinStabType stab){
+    fMeshVector = meshvec;
+    fMeshVector.resize(3);
+    fMeshVector[2] = new CompMesh();
+    fMeshVector[2]->SetNStateVariables(1);
+    fArlequinStab = stab;
+    fK0 = k0;
+    fK1 = k1;
+}
+
+
 struct PointTriangle {
     double x, y;
     PointTriangle()=default;
@@ -248,7 +259,7 @@ void Arlequin::CreateGlobalCouplingElements(){
         } else {
             for (auto ielcoarse : elIntersected){
                 if (fMeshVector[0]->ElementVec()[ielcoarse]->Dimension() != fMeshVector[0]->Dimension()) continue;
-                CouplingGlobal *cglobal = new CouplingGlobal(fMeshVector[0]->Dimension(),ielcoarse,fMeshVector[0],fMeshVector[0]->getProblemParameters().getArlequinK1(),fMeshVector[0]->getProblemParameters().getArlequinK2());
+                CouplingGlobal *cglobal = new CouplingGlobal(fMeshVector[0]->Dimension(),ielcoarse,fMeshVector[0],fK0,fK1);
                 cglobal->SetGlobalXsi(fLocalIntPointToGlobalXsi[iel]);
                 cglobal->SetGlobalElemCorresp(fLocalIntPointToGlobalElement[iel]);
                 fGlobalElToLocalEl[ielcoarse].insert(index-1);
@@ -420,7 +431,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     } else {
 
         int nEl;
-        if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
+        if (fFirstSearch){
             nEl = cmesh->NElements();
         } else {
             nEl = elemsearch -> getNumberOfNeighborElements(); 
@@ -428,7 +439,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
 
         for (int jel = 0; jel < nEl; jel++){
             if (cmesh->ElementVec()[jel]->Dimension()!= cmesh->Dimension()) continue;
-            if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
+            if (fFirstSearch){
                 connec = cmesh->ElementVec()[jel] -> getConnectivity();
             } else {
                 connec = cmesh->ElementVec()[elemsearch -> getNeighborElement(jel)] -> getConnectivity();
@@ -525,8 +536,6 @@ void Arlequin::setNodalCorrespondenceFine() {
     int DIM = fMeshVector[0]->Dimension();
     int DEG = fMeshVector[0]->GetDefaultOrder();
     //FINE MESH
-    double &alpha_f = fMeshVector[0]->getProblemParameters().getAlphaF();
-
     for (int inode = 0; inode < fMeshVector[2]->NNodes(); inode++) {
         
         VecDouble x = fMeshVector[2]->NodeVec()[inode] -> getCoordinates();
@@ -572,11 +581,11 @@ void Arlequin::setNodalCorrespondenceFine() {
         
         for (int i = 0; i < nElNodes; i++){
             VecDouble x = fMeshVector[2]->NodeVec()[connec[i]] -> getCoordinates();
-            VecDouble xp = fMeshVector[2]->NodeVec()[connec[i]] -> getPreviousCoordinates();
+            // VecDouble xp = fMeshVector[2]->NodeVec()[connec[i]] -> getPreviousCoordinates();
             
-            x1[i] = alpha_f * x[0] + (1. - alpha_f) * xp[0];
-            x2[i] = alpha_f * x[1] + (1. - alpha_f) * xp[1];
-            if (DIM == 3) x3[i] = alpha_f * x[2] + (1. - alpha_f) * xp[2];
+            x1[i] = x[0];//alpha_f * x[0] + (1. - alpha_f) * xp[0];
+            x2[i] = x[1];//alpha_f * x[1] + (1. - alpha_f) * xp[1];
+            if (DIM == 3) x3[i] = x[2];//alpha_f * x[2] + (1. - alpha_f) * xp[2];
         };
 
         // std::cout << "XX1 " << x2 << " " << x22 << " " << x222 << std::endl;
@@ -610,6 +619,8 @@ void Arlequin::setNodalCorrespondenceFine() {
         };
 
     }; 
+    fFirstSearch = false;
+
 };
 
 //------------------------------------------------------------------------------
@@ -901,7 +912,7 @@ void Arlequin::setCouplingZone(){
         };
 
         if (flag == nElNodes) {
-            CouplingLocal *clocal = new CouplingLocal(fMeshVector[0]->Dimension(),jel,fMeshVector[1],fMeshVector[0]->getProblemParameters().getArlequinK1(),fMeshVector[0]->getProblemParameters().getArlequinK2());
+            CouplingLocal *clocal = new CouplingLocal(fMeshVector[0]->Dimension(),jel,fMeshVector[1],fK0,fK1);
             auto *el = fMeshVector[1]->ElementVec()[jel]->Clone();
             el->SetMesh(fMeshVector[2]);
             el->SetWeakForm(clocal);

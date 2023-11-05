@@ -8,7 +8,6 @@ class CompMesh;
 
 namespace CompMeshTools{
     void DomainDecompositionMETIS(CompMesh* cmesh); 
-    void InitialSolution(CompMesh* cmesh);
 }
 
 

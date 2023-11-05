@@ -1,11 +1,16 @@
 #ifndef ANALYSIS_H
 #define ANALYSIS_H
 
+#include "Element.h"
 #include "CompMesh.h"
+#include "Arlequin.h"
 #include <petscksp.h> 
 
 // class Assemble;
 class CompMesh;
+class Arlequin;
+
+enum SolverType{EMumps, ESuiteSparse, EIterative};
 
 class Analysis
 {
@@ -13,6 +18,7 @@ private:
     
     std::vector<CompMesh *> fMeshVector;
     SolverType fSolverType;
+    Arlequin* fArlequin;
 
     //PetscVariable
     Mat               fGlobalStiffness;
@@ -30,17 +36,10 @@ public:
         fMeshVector[0] = cmesh;
         fSolverType = stype;
         AllocateMonomodel();
-        // fNumEquations = fMeshVector[0]->NGlobalDOF();
     };
 
-    Analysis(std::vector<CompMesh *> &meshvec, SolverType stype){
-        fMeshVector = meshvec;
-        fSolverType = stype;
-        AllocateArlequin();
-        // fNumEquations = fMeshVector[0]->NGlobalDOF() + fMeshVector[1]->NGlobalDOF() + fMeshVector[2]->NGlobalDOF();
-        
-    };
-
+    Analysis(Arlequin *arl, SolverType stype);
+    
     int64_t NEquations();
 
     Mat &Stiffness(){return fGlobalStiffness;}
@@ -50,6 +49,7 @@ public:
 
     virtual void Compute() = 0;
     virtual void UpdateSolution() = 0;
+    Arlequin *ArlequinModel(){return fArlequin;}
 
     void Solve();
     void AllocateMonomodel();

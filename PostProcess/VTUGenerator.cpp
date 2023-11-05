@@ -22,7 +22,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << "      <DataArray type=\"Float64\" "
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    if (cmesh->getProblemParameters().ProbType() == ESolidPositional){
+    if (cmesh->ElementVec().back()->GetWeakForm()->IsPositionalFEM()){
         for (int i=0; i<cmesh->NNodes(); i++){
             auto x = cmesh->NodeVec()[i]->getCoordinates();
             auto solx = cmesh->NodeVec()[i]->GetSolution(0);
@@ -77,78 +77,78 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
 
     //WRITE NODAL RESULTS
     output_v << "    <PointData>" << std::endl;
-    if (cmesh->getProblemParameters().ProbType()==EPoisson){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"Solution\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
-            output_v << cmesh->NodeVec()[i] -> GetSolution(0) << std::endl;
-        }
-        output_v << "      </DataArray> " << std::endl;
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
-            output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
-        }
-        output_v << "      </DataArray> " << std::endl;
-    } else if (cmesh->getProblemParameters().ProbType()==EElastic){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-            << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){           
-            output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
-                    << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
-            if (DIM == 2) {
-                output_v <<  0. << std::endl;
-            } else {
-                output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
-            }
-        }
-        output_v << "      </DataArray> " << std::endl;
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
-            output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
-        }
-        output_v << "      </DataArray> " << std::endl;
-    } else if(cmesh->getProblemParameters().ProbType() == ESolidPositional){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-            << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){           
-            output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
-                    << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
-            if (DIM == 2) {
-                output_v <<  0. << std::endl;
-            } else {
-                output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
-            }
-        }
-        output_v << "      </DataArray> " << std::endl;
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
-            output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
-        }
-        output_v << "      </DataArray> " << std::endl;
-    } else if (cmesh->getProblemParameters().ProbType()==EStokes || cmesh->getProblemParameters().ProbType()==ENavierStokes){
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-            << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
-            // std::cout << "Solution - " << NodeVec()[i] -> GetSolution(0) << " " << NodeVec()[i] -> GetSolution(0) << std::endl;
-            output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
-                    << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
-            if (DIM == 2) {
-                output_v <<  0. << std::endl;
-            } else {
-                output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
-            }
-        }
-        output_v << "      </DataArray> " << std::endl;
-        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
-            output_v << cmesh->NodeVec()[i] -> GetSolution(DIM) << std::endl;
-        }
-        output_v << "      </DataArray> " << std::endl;
-    }
+    // if (cmesh->getProblemParameters().ProbType()==EPoisson){
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //         << "Name=\"Solution\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){
+    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << std::endl;
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //         << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){
+    //         output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    // } else if (cmesh->getProblemParameters().ProbType()==EElastic){
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+    //         << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){           
+    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
+    //                 << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
+    //         if (DIM == 2) {
+    //             output_v <<  0. << std::endl;
+    //         } else {
+    //             output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
+    //         }
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //         << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){
+    //         output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    // } else if(cmesh->getProblemParameters().ProbType() == ESolidPositional){
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+    //         << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){           
+    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
+    //                 << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
+    //         if (DIM == 2) {
+    //             output_v <<  0. << std::endl;
+    //         } else {
+    //             output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
+    //         }
+    //     }
+        // output_v << "      </DataArray> " << std::endl;
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //         << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){
+    //         output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    // } else if (cmesh->getProblemParameters().ProbType()==EStokes || cmesh->getProblemParameters().ProbType()==ENavierStokes){
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+    //         << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){
+    //         // std::cout << "Solution - " << NodeVec()[i] -> GetSolution(0) << " " << NodeVec()[i] -> GetSolution(0) << std::endl;
+    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
+    //                 << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
+    //         if (DIM == 2) {
+    //             output_v <<  0. << std::endl;
+    //         } else {
+    //             output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
+    //         }
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+    //         << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
+    //     for (int i=0; i<cmesh->NNodes(); i++){
+    //         output_v << cmesh->NodeVec()[i] -> GetSolution(DIM) << std::endl;
+    //     }
+    //     output_v << "      </DataArray> " << std::endl;
+    // }
 
     output_v << "    </PointData>" << std::endl; 
 

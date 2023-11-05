@@ -97,35 +97,35 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 //==========================================================================
    
 	MPI_Barrier(PETSC_COMM_WORLD);   
-    ProblemParameters pParameters;
-    // pParameters.ProbType() = ESolidPositional;
-    pParameters.ProbType() = EPoisson;
-    if (pParameters.ProbType() == EPoisson){
-        pParameters.setForcingFunction(forcingFunctionPoisson);
-        pParameters.setExactSolution(exactSolPoisson);
-    } else if (pParameters.ProbType() == EElastic || pParameters.ProbType() == ESolidPositional){
-        pParameters.SetElasticity(1.,0.);
-        // pParameters.setForcingFunction(forcingFunctionElasticity2D);
-        // pParameters.setExactSolution(exactSolElasticity2D);
-    } else if (pParameters.ProbType() == EStokes){
-        pParameters.SetIncompressibleFluid(0.01,1.);
-        pParameters.setTimeStep(1.);//Needed for stabilization parameter
-        pParameters.setForcingFunction(forcingFunctionStokes);
-        pParameters.setExactSolution(exactSolStokes);
-    } else if (pParameters.ProbType() == ENavierStokes){
-        pParameters.SetIncompressibleFluid(0.01,1.);
-        pParameters.setTimeStep(1.);//Needed for stabilization parameter
-        pParameters.setForcingFunction(forcingFunctionNavierStokes);
-        pParameters.setExactSolution(exactSolStokes);
-    }
-    pParameters.Solver() = SolverType::ESuiteSparse;
-    pParameters.ArlequinStab() = ArlequinStabType::ENoStab;
-    // pParameters.ArlequinStab() = ArlequinStabType::EOption1;
-    pParameters.setSpectralRadius(1.);
-    pParameters.setArlequinOperatorConstants(1.,0.0);
+    // ProblemParameters pParameters;
+    // // pParameters.ProbType() = ESolidPositional;
+    // pParameters.ProbType() = EPoisson;
+    // if (pParameters.ProbType() == EPoisson){
+    //     pParameters.setForcingFunction(forcingFunctionPoisson);
+    //     pParameters.setExactSolution(exactSolPoisson);
+    // } else if (pParameters.ProbType() == EElastic || pParameters.ProbType() == ESolidPositional){
+    //     pParameters.SetElasticity(1.,0.);
+    //     // pParameters.setForcingFunction(forcingFunctionElasticity2D);
+    //     // pParameters.setExactSolution(exactSolElasticity2D);
+    // } else if (pParameters.ProbType() == EStokes){
+    //     pParameters.SetIncompressibleFluid(0.01,1.);
+    //     pParameters.setTimeStep(1.);//Needed for stabilization parameter
+    //     pParameters.setForcingFunction(forcingFunctionStokes);
+    //     pParameters.setExactSolution(exactSolStokes);
+    // } else if (pParameters.ProbType() == ENavierStokes){
+    //     pParameters.SetIncompressibleFluid(0.01,1.);
+    //     pParameters.setTimeStep(1.);//Needed for stabilization parameter
+    //     pParameters.setForcingFunction(forcingFunctionNavierStokes);
+    //     pParameters.setExactSolution(exactSolStokes);
+    // }
+    // pParameters.Solver() = SolverType::ESuiteSparse;
+    // pParameters.ArlequinStab() = ArlequinStabType::ENoStab;
+    // // pParameters.ArlequinStab() = ArlequinStabType::EOption1;
+    // pParameters.setSpectralRadius(1.);
+    // pParameters.setArlequinOperatorConstants(1.,0.0);
 
-    CompMesh* coarseModel = new CompMesh(pParameters);
-    CompMesh* fineModel = new CompMesh(pParameters);  
+    CompMesh* coarseModel = new CompMesh();
+    CompMesh* fineModel = new CompMesh();  
 
     Poisson * matpoisson = new Poisson(8,2);
     coarseModel->InsertMaterial(matpoisson);
@@ -178,14 +178,14 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
-    Arlequin arl(meshvector);
+    Arlequin arl(meshvector,1.,0.);
     arl.SetGlueIds(gluematids);
     arl.SetUp();
 
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse,1.e-6,2);
+    NonLinearAnalysis an(&arl,SolverType::ESuiteSparse,1.e-6,2);
     // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 

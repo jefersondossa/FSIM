@@ -8,7 +8,7 @@ class LinearAnalysis : public Analysis {
 public:
     LinearAnalysis() : Analysis(){};
     LinearAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
-    LinearAnalysis(std::vector<CompMesh *> &meshvector, SolverType stype) : Analysis(meshvector,stype){};
+    LinearAnalysis(Arlequin* arl, SolverType stype) : Analysis(arl,stype){};
 
     void Compute() override;
 

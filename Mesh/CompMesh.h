@@ -5,7 +5,6 @@
 #include "CompMeshTools.h"
 #include "DataTypes.h"
 #include "Element.h"
-#include "ProblemParameters.h"
 #include "DomainIntegration.h"
 #include "Analysis.h"
 #include "GmshTools.h"
@@ -32,16 +31,9 @@ private:
 
 public:
     CompMesh() = default;
-    CompMesh(ProblemParameters &pparam){
-        fProbParameters = pparam;
-        // nBdNodes = 3*(1-fOrder)+DIM*(2*fOrder-1);
-    };
     
     int* part_elem;      //Fluid Domain Decomposition - Elements
     int* part_nodes;     //Fluid Domain Decomposition - Nodes
-    
-    
-    ProblemParameters fProbParameters;
 
     void InsertMaterial(WeakForm *wf){
         fMaterialVector[wf->Id()] = wf;
@@ -68,13 +60,6 @@ public:
     std::vector<Element *> &ElementVec(){return fElementVector;}
     int64_t NElements(){return fElementVector.size();}
     void SetNumElements(int64_t nelements){fElementVector.resize(nelements);}
-
-    /// Gets the fluid model elements and export for solving the overlapping
-    /// mesh problem with the Arlequin method
-    /// @return fluid model elements information
-    ProblemParameters &getProblemParameters(){
-        return fProbParameters;
-    }
 
     void SetDefaultOrder(int order){
         fOrder = order;

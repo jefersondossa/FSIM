@@ -16,7 +16,6 @@
 
 #include "Element.h"
 #include "Node.h"
-#include "ProblemParameters.h"
 #include "PanicButton.h"
 #include "IntegrationQuadrature.h"
 #include "IntegrationQuadrature11.h"

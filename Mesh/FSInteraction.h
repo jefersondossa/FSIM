@@ -15,9 +15,9 @@
 #define FSINTERACTION_H
 #include "hdf5.h"
 #include "Arlequin.h"
+#include <metis.h>
 
 class Arlequin;
-class Fluid;
 
 //Solid extern functions (from porticomb.for)
 extern "C" {void preprocessing_(char *solid_reading);};
