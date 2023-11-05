@@ -6,7 +6,7 @@
 class Poisson : public WeakForm{
 private:
     double  fScale = 1.;
-
+    enum SolutionVariables{ESolution, EDerivative};
 public:
     Poisson(int matid, int dim, int nState = 1) : WeakForm() {
         this->fMatId = matid;

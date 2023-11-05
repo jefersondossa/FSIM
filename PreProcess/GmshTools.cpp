@@ -1172,6 +1172,13 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             gel->PrintType() = 22;           
             break;
         }
+        case 15:
+        {
+            // Point
+            gel = new ElementT<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            gel->PrintType() = 1;           
+            break;
+        }
         case 21:
         {
             // Cubic Triangle

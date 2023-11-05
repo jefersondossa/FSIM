@@ -21,7 +21,6 @@ void ShapeOneDLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi
 
 
 void ShapeOneDLin::getCoordinates(MatrixDouble &coord) {
-
-    std::cout << "Not implemented\n";
-    PanicButton();
+    coord(0,0) = -1.0;
+    coord(0,1) =  1.0;
 }

@@ -11,7 +11,6 @@ public:
     MatrixDouble fA0Inv;
 
     MatrixDouble fA1;
-    MatrixDouble fA1Inv;
 
     double fJacA0;
     double fJacA1;

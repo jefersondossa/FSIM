@@ -18,14 +18,14 @@ void ShapeOneDQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
 }
 
 void ShapeOneDQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    std::cout << "Please implement me\n";
-    PanicButton();
-    return;
+    ddphi[0](0,0) = 1.;
+    ddphi[1](0,0) = 1.;
+    ddphi[2](0,0) =-2.;
 }
 
 
 void ShapeOneDQua::getCoordinates(MatrixDouble &coord) {
-
-    std::cout << "Not implemented\n";
-    PanicButton();
+    coord(0,0) = -1.0;
+    coord(0,1) =  1.0;
+    coord(0,2) =  0.0;
 }

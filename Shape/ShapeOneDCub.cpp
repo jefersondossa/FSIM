@@ -20,12 +20,16 @@ void ShapeOneDCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
 }
 
 void ShapeOneDCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    return;
+    ddphi[0](0,0) = (18.-54.*xi[0])/16.;
+    ddphi[1](0,0) = (18.+54.*xi[0])/16.;
+    ddphi[2](0,0) = (-2.+18.*xi[0])*9/16.;
+    ddphi[3](0,0) = (+2.+18.*xi[0])*9/16.;
 }
 
 
 void ShapeOneDCub::getCoordinates(MatrixDouble &coord) {
-
-    std::cout << "Not implemented\n";
-    PanicButton();
+    coord(0,0) = -1.0;
+    coord(0,1) =  1.0;
+    coord(0,2) = -1./3.;
+    coord(0,3) =  1./3.;
 }
