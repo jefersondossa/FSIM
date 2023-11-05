@@ -11,7 +11,6 @@
 #include "ShapeTriangleLin.h"
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
-#include "Boundary.h"
 #include <metis.h>
 #include<cstdlib>
 #include<fstream>
@@ -100,13 +99,6 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
         for (int k = 0; k < connect.size(); k++) connect[k] = iperm[connect[k]];
         cmesh->ElementVec()[i] -> setConnectivity(connect);
     }
-    // Update boundary connectivity
-    for (int ibound = 0; ibound < cmesh->NBoundElements(); ibound++){
-        VecInt connectB = cmesh->BoundaryVec()[ibound] -> getConnectivity();
-
-        for (int k = 0; k < cmesh->NBdNodes(); k++) connectB[k] = iperm[connectB[k]];
-        cmesh->BoundaryVec()[ibound] -> setConnectivity(connectB);
-    }
     
     for (int i = 0; i < cmesh->NNodes(); i++) cmesh->NodeVec()[i] -> clearInverseIncidence();
 
@@ -152,99 +144,6 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     // Renumber nodes - end
 
 }
-
-void GmshTools::BoundaryConstrains(CompMesh * cmesh){
-    // if (rank == 0) std::cout << "8/9 Setting boundary conditions..." << std::endl;
-
-    for (int ibound = 0; ibound < cmesh->NBoundElements(); ibound++){
-        
-        VecInt connectB = cmesh->BoundaryVec()[ibound] -> getConnectivity();
-
-        for (int j = 0; j < cmesh->NBdNodes(); j++){
-            int nstate = cmesh->NodeVec()[connectB[j]]->GetNStateVariables();
-            for (int istate = 0; istate < nstate; istate++){
-                if ((cmesh->BoundaryVec()[ibound] -> getConstrain(istate) == 1) || (cmesh->BoundaryVec()[ibound] -> getConstrain(istate) == 3)){
-                    // for (int j = 0; j < nBdNodes; j++) 
-                    //     NodeVec()[connectB[j]] -> setConstrains(k,BoundaryVec()[ibound] -> getConstrain(k),
-                    //                                         BoundaryVec()[ibound] -> getConstrainValue(k));
-            
-                    VecDouble exactSol(nstate);
-                    MatrixDouble gradExactSol(cmesh->Dimension(),nstate);
-                    auto exact = cmesh->getProblemParameters().getExactSolution();
-                    if (exact){
-                        VecDouble x = cmesh->NodeVec()[connectB[j]]->getCoordinates();
-                        exact(x,exactSol,gradExactSol);
-                        
-                        cmesh->NodeVec()[connectB[j]] -> SetBoundaryCondition(istate,cmesh->BoundaryVec()[ibound] -> getConstrain(istate),
-                                                                exactSol[istate]);
-                    } else {
-                        cmesh->NodeVec()[connectB[j]] -> SetBoundaryCondition(istate,cmesh->BoundaryVec()[ibound] -> getConstrain(istate),
-                                                                              cmesh->BoundaryVec()[ibound] -> getConstrainValue(istate));
-                    }
-                }
-            };
-        }
-    };
-}
-
-void GmshTools::BoundarySides(CompMesh * cmesh){
-    // if (rank == 0) std::cout << "9/9 Setting boundary sides..." << std::endl;
-    int nBdNodes = cmesh->NBdNodes();
-    int DIM = cmesh->Dimension();
-    //Sets fluid elements and sides on interface boundaries
-    for (int i=0; i<cmesh->NBoundElements(); i++){
-
-        int group = cmesh->BoundaryVec()[i] -> getBoundaryGroup();
-
-       if ((cmesh->BoundaryVec()[i] -> getConstrain(0) > 0) || (cmesh->BoundaryVec()[i] -> getConstrain(1) > 0)) {
-            
-            VecInt connectB = cmesh->BoundaryVec()[i] -> getConnectivity();
-
-            for (int j=0; j<cmesh->NElements(); j++){
-                VecInt connect = cmesh->ElementVec()[j] -> getConnectivity();
-
-                int flag = 0;
-            
-                int side[nBdNodes];
-                std::cout << "This function need refactor \n";
-                for (int k=0; k<3; k++){
-                    for (int l = 0; l<nBdNodes; l++){
-                        if (connectB[l] == connect[k]){
-                            side[flag] = k;
-                            flag++;
-                        }
-                    };
-                };
-                if (flag == nBdNodes){
-                    cmesh->BoundaryVec()[i] -> setElement(j);
-                    //Sets element index and side
-                    // for (int k=0; k<nBdNodes; k++) std::cout << "BD NODES " << i << " " << j << " " << k << " " << side[k] << std::endl;
-                    
-                    for (int k=0; k<DIM+1; k++){
-                        // std::cout << "DDDDD " << k << std::endl;
-
-                        int* end = side + nBdNodes;
-                        int* foo = std::find(side, end, k);
-
-                        if ((foo == end) && (cmesh->ElementVec()[j] -> getElemSideInBoundary() < 0)){
-                            int aux = cmesh->BoundaryVec()[i] -> getBoundaryGroup();
-                            cmesh->BoundaryVec()[i] -> setBoundaryGroup(aux);
-                            cmesh->BoundaryVec()[i] -> setElementSide(k);
-                            cmesh->BoundaryVec()[i] -> setElement(j);
-                            cmesh->ElementVec()[j] -> setElemSideInBoundary(k);
-                            if (cmesh->BoundaryVec()[i] -> getConstrain(0) == 3) cmesh->ElementVec()[j] -> setFSIInterface();
-                        }
-                    }
-                };
-            };
-        }
-    };
-
-}
-
-
-
-
 
 static void InsertElement(CompMesh &gmesh, int elindex, std::ifstream & line);
 static std::string GetFileVersion(const std::string& file_name);
@@ -1210,17 +1109,14 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
     }
 
     //Delete all null pointers, i.e., elements without a material
-    gmesh.ElementVec().erase(
-        std::remove(gmesh.ElementVec().begin(), gmesh.ElementVec().end(), nullptr),
-        gmesh.ElementVec().end()
-    );
-    gmesh.ElementVec().shrink_to_fit();
+    // gmesh.ElementVec().erase(
+    //     std::remove(gmesh.ElementVec().begin(), gmesh.ElementVec().end(), nullptr),
+    //     gmesh.ElementVec().end()
+    // );
+    // gmesh.ElementVec().shrink_to_fit();
 
-    // RenumberConnectivity(&gmesh);
+    RenumberConnectivity(&gmesh);
 
-    BoundaryConstrains(&gmesh);
-
-    BoundarySides(&gmesh);
     gmesh.part_elem= new int[gmesh.NElements()]();
 }
 

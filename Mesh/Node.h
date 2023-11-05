@@ -46,13 +46,7 @@ private:
     VecDouble fDTimeSolution;
     int64_t fIndex;
     int fDimension;
-    
-    //variables
-    VecInt           fConstrainType;        //Constrain direction
-    VecDouble        fConstrainValue;       //Nodal prescribed velocity
-
     VecDouble        fMeshVelocity;           //Nodal mesh velocity
-
     double           fWeightFunction;         //Nodal Energy Weight Function
     double           fPrevWeightFunction;
     std::vector<int> fInverseIncidence;
@@ -79,16 +73,8 @@ public:
         fWeightFunction = 0.;   fPrevWeightFunction = 0.;
         
         fInverseIncidence.clear();
-
-        fConstrainValue.resize(fDimension);
-        fConstrainType.resize(fDimension);
         fMeshVelocity.resize(fDimension);
-
-        for (int i = 0; i < fDimension; ++i){
-            fMeshVelocity[i] = 0.;
-            fConstrainType[i] = 0;
-            fConstrainValue[i] = 0.;
-        }
+        fMeshVelocity.setZero();
     }
 
     void SetNStateVariables(int nstate){
@@ -173,37 +159,7 @@ public:
     /// Gets the node mesh velocity
     /// @param int direction @return mesh velocity component
     double getMeshVelocity(int dir) const {return fMeshVelocity[dir];}
-
-
-    //...........................Constrains functions...........................
-
-    /// Sets all node constrains     
-    /// @param int direction 
-    /// @param int type: 0 - free, 1 - constrained, 2 - glue zone, 
-    /// 3 - fluid-structure interface @param double constrain value
-    void setConstrains(int dir, int type, double value){
-        fConstrainType[dir] = type;
-        fConstrainValue[dir] = value;
-        fSolution[dir] = value;
-    };
-    void SetBoundaryCondition(int dir, int type, double value){
-        fConstrainType[dir] = type;
-        fConstrainValue[dir] = value;
-        fSolution[dir] = value;
-    };
-
-    void setConstrainValue(int dir, double value){
-        fConstrainValue[dir] = value;
-    }
-
-    /// Gets node constrain type
-    /// @return constrain type
-    int getConstrains(int dir) const {return fConstrainType[dir];}
-
-    /// Gets node constrain value
-    /// @return constrain value
-    double getConstrainValue(int dir) const {return fConstrainValue[dir];}
-
+   
     //............................Arlequin functions............................
     /// Sets the nodal energy weight function value
     /// @param double weight function value

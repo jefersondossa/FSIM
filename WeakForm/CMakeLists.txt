@@ -1,9 +1,9 @@
 
 file(GLOB weakform 
-    ElCouplingGlobal.h
-    ElCouplingGlobal.cpp
-    ElCouplingLocal.h
-    ElCouplingLocal.cpp
+    CouplingGlobal.h
+    CouplingGlobal.cpp
+    CouplingLocal.h
+    CouplingLocal.cpp
     Elasticity2D.h
     Elasticity2D.cpp
     ElasticityPositional2D.h

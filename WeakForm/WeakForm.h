@@ -21,11 +21,11 @@ public:
 
     ~WeakForm() = default;
 
-    virtual void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) = 0;
+    virtual void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) {};
     
-    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) = 0;
+    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) {};
     
-    virtual void ComputeError(IntPointData &data, VecDouble &errors) = 0;
+    virtual void ComputeError(IntPointData &data, VecDouble &errors) {};
     
     void SetExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exSol){
         fExactSol = exSol;
@@ -48,6 +48,10 @@ public:
     int &NState() {return fNState; }
 
     bool &IsPositionalFEM() {return fPositionalFEM;}
+
+    virtual void ComputeStiffness(int &index, IntPointData &data, std::vector<MatrixDouble> &Stiffness) {};
+    
+    virtual void ComputeResidual(int &index, IntPointData &data, std::vector<VecDouble> &Rhs) {};
 };
 
 

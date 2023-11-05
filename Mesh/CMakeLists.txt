@@ -2,7 +2,6 @@
 file(GLOB mesh 
     Arlequin.h
     Arlequin.cpp
-    Boundary.h
     CompMesh.h
     ElBoundary.cpp
     Element.h

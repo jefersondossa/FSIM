@@ -3,6 +3,7 @@
 const int ShapeTetrahedronQua::Dimension;
 const int ShapeTetrahedronQua::Order;
 const int ShapeTetrahedronQua::NElNodes;
+const int ShapeTetrahedronQua::NCornerNodes;
 
 void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi) {
 

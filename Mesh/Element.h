@@ -14,7 +14,6 @@ protected:
     VecInt        fConnect; //Velocity mesh connectivity 
     int64_t       fIndex;             //Element index
 
-    int           fSideInBoundary;
     int nLocDOF = 0;
 
     MatrixDouble fIntPointCoordinates;
@@ -60,6 +59,13 @@ public:
     virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
     virtual void ComputeError(VecDouble &errors){};
     
+    virtual double InterpolateVariable(VecDouble &nValues, int point) = 0;
+
+    WeakForm *GetWeakForm(){return fWeakForm;}
+    void SetWeakForm(WeakForm *weak){fWeakForm=weak;}
+
+    virtual void ComputeIntPointDistFunction(VecDouble &nodalval) = 0;
+    virtual int getNumberOfIntegrationPoints() = 0;
 
     /// Sets the element connectivity
     /// @param int* element connectivity
@@ -77,8 +83,8 @@ public:
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    virtual void ComputeJacobian(int index) = 0;
-    virtual void ComputeCurrentJacobian(int index) = 0;
+    virtual void ComputeJacobian() = 0;
+    virtual void ComputeCurrentJacobian() = 0;
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
@@ -111,23 +117,12 @@ public:
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
     double &getIntegPointWeightFunction(int index) {return fIntegData.fWeightFunction[index];};
-    virtual int getBoundaryGroup() = 0;
     virtual int getElement() = 0;
-    virtual int getConstrain(int dir) = 0;
     virtual int getElementSide() = 0;
-    virtual double getConstrainValue(int dir) = 0;
     virtual void setElement(int el) = 0;
     virtual void setElementSide(int el) = 0;
     virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
     void setFSIInterface(){FSIInterface = true;};
-
-    /// Sets the element side in boundary
-    /// @param int side in boundary
-    void setElemSideInBoundary(int side){fSideInBoundary = side;};
-
-    /// Gets the element side in boundary
-    /// @return side in boundary
-    int &getElemSideInBoundary(){return fSideInBoundary;};
 
     virtual double getJacobian() = 0;
 
@@ -161,7 +156,19 @@ public:
         fNeighborElements.erase(std::unique(fNeighborElements.begin(),fNeighborElements.end()), fNeighborElements.end());
     }
 
-    virtual void setBoundaryGroup(int gr) = 0;
+    virtual int NCornerNodes() = 0;
+
+    double &GetIntPointDistFunction(int index){
+        return  fIntegData.fDistFunction[index];
+    }
+
+    IntPointData IntegrationData() {return fIntegData;}
+
+    virtual int Dimension() = 0;
+
+    // Method for creating a copy of the element
+    virtual Element *Clone() const = 0;
 };
+
 
 #endif

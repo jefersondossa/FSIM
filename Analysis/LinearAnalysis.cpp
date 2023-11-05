@@ -51,8 +51,6 @@ void LinearAnalysis::UpdateSolution(){
         for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
             int nstate = this->MeshVector()[imesh]->NodeVec()[i]->GetNStateVariables();
             for (int k = 0; k<nstate; k++){
-                if(this->MeshVector()[imesh]->NodeVec()[i]->getConstrains(k) == 1 ||
-                   this->MeshVector()[imesh]->NodeVec()[i]->getConstrains(k) == 3) continue;
                 Ii = nstartDOF + nstate*i+k;
                 ierr = VecGetValues(All, Ione, &Ii, &val);
                 this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);

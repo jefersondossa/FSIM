@@ -3,6 +3,7 @@
 const int ShapeTriangleCub::Dimension;
 const int ShapeTriangleCub::Order;
 const int ShapeTriangleCub::NElNodes;
+const int ShapeTriangleCub::NCornerNodes;
 
 void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi) {
 

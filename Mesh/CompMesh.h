@@ -25,9 +25,6 @@ private:
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
 
-    /// Defines the vector of fluid boundaries mesh nodes
-    std::vector<Element *>    fBoundaryVector;
-
     /// Defines the vector of fluid elements
     std::vector<Element *>    fElementVector;
 
@@ -75,9 +72,6 @@ public:
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
-    std::vector<Element *> &BoundaryVec(){return fBoundaryVector;}
-    int64_t NBoundElements(){return fBoundaryVector.size();}
-
     ProblemParameters &getProblemParameters(){
         return fProbParameters;
     }

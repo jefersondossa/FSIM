@@ -11,8 +11,6 @@ class Element;
 namespace GmshTools{
 
     void RenumberConnectivity(CompMesh * cmesh);
-    void BoundaryConstrains(CompMesh * cmesh);
-    void BoundarySides(CompMesh * cmesh);
     /** @brief Reads geometric mesh file from GMsh (.msh)
      * @param gmesh [output] Reference to a geometric mesh to be filled with elements from msh file
      * @param file_name Relative path to the .msh file you want to read

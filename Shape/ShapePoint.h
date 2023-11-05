@@ -12,6 +12,7 @@ public:
     const static int Dimension = 0; 
     const static int Order = 1;
     const static int NElNodes = 1;
+    const static int NCornerNodes = 1;
 
     /// Shapes the shape function value
     /// @param double* Non-dimensional coordinates 

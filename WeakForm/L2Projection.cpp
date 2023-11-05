@@ -56,7 +56,7 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
-                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];
+                // Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];
             }
         }
     }
@@ -70,62 +70,7 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 };
 
 void L2Projection::ComputeError(IntPointData &data, VecDouble &errors){
-    // int index = 0;
-    // errors.resize(3);
-    // errors.setZero();
-    // int DIM = this->Mesh()->Dimension();
-    // int DEG = this->Mesh()->GetDefaultOrder();
 
-    // IntegQuadrature nQuad(DIM,DEG);
-
-    // auto exactSol = this->Mesh()->getProblemParameters().getExactSolution();
-    // if (!exactSol) PanicButton();
-
-    // for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
-
-    //     //Defines the integration points adimentional coordinates
-    //     for (int i = DIM; i--; ) data.fAdimCoord[i] = nQuad.PointList(index,i);
-
-    //     //Returns the quadrature integration weight
-    //     data.fWeight = nQuad.WeightList(index);
-
-    //     //Computes the jacobian matrix
-    //     this->ComputeJacobian(index);
-                    
-    //     this->ComputeSpatialDerivatives();
-        
-    //     VecDouble uMEF_(1);
-    //     this->interpolateSolution(index, uMEF_);
-    //     MatrixDouble du_dxMEF(1,DIM);
-    //     this->interpolateSolDerivatives(du_dxMEF);
-        
-    //     VecDouble u_(1);
-    //     MatrixDouble gradU(DIM,1);
-
-    //     VecDouble xna_ = this->getIntegPointCoordinatesValue(index);
-        
-    //     exactSol(xna_,u_,gradU);
-
-
-    //     //Consider Arlequin weight function
-    //     u_ *= data.fWeightFunction[index];
-    //     gradU *= data.fWeightFunction[index];
-    //     uMEF_ *= data.fWeightFunction[index];
-    //     du_dxMEF *= data.fWeightFunction[index];
-
-    //     //L2 state variable
-    //     errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * data.fWeight * data.fJacA0 ;
-        
-    //     //Semi H1 state variable
-    //     for (int m = DIM; m--; ){
-    //         errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * data.fWeight * data.fJacA0;
-    //     }
-
-    //     index++;        
-    // }; 
-
-    // //H1 state variable
-    // errors[2] = errors[0]+errors[1];
 }
 
 

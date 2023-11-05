@@ -2,6 +2,7 @@
 const int ShapeHexahedron::Dimension;
 const int ShapeHexahedron::Order;
 const int ShapeHexahedron::NElNodes;
+const int ShapeHexahedron::NCornerNodes;
 
 
 void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi) {

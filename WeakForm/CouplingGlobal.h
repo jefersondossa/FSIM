@@ -1,24 +1,27 @@
-#ifndef ElCouplingGlobal_H
-#define ElCouplingGlobal_H
+#ifndef CouplingGlobal_H
+#define CouplingGlobal_H
 
-#include "ElementT.h"
+#include "WeakForm.h"
+#include "CompMesh.h"
 
-template <class tshape>
-class ElCouplingGlobal : public ElementT<tshape>
+class CouplingGlobal : public WeakForm
 {
 private:
     int64_t fGlobalIndex;
-    std::vector<CompMesh *> fMeshVector;
+    CompMesh * fGlobalMesh;
     MatrixDouble fGlobalXsi;
     VecDouble fGlobalElemCorresp;
+    double fK0;
+    double fK1;
 
 public:
-    ElCouplingGlobal(int index, int64_t globindex, std::vector<CompMesh*> &meshvec):ElementT<tshape>(){
-        this->Index()= index;
-        this->fMesh = meshvec[2];
+    CouplingGlobal(int dim, int64_t globindex, CompMesh* meshlocal, double k0, double k1):WeakForm(){
+        fGlobalMesh = meshlocal;
+        fDimension = dim;
+        fK0 = k0;
+        fK1 = k1;
         fGlobalIndex = globindex;
-        fMeshVector = meshvec;
-        Element::nLocDOF = tshape::NElNodes * tshape::Dimension;
+        
     };
 
     int64_t &GetGlobalIndex(){
@@ -31,14 +34,12 @@ public:
         fGlobalElemCorresp = elemcorr;
     }
 
-    void ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness) override;
+    void ComputeStiffness(int &index, IntPointData &data, std::vector<MatrixDouble> &Stiffness) override;
     
-    void ComputeResidual(int &index, std::vector<VecDouble> &Rhs) override;
+    void ComputeResidual(int &index, IntPointData &data, std::vector<VecDouble> &Rhs) override;
     
-    void ComputeError(VecDouble &errors) override{};
+    void ComputeError(IntPointData &data, VecDouble &errors) override{};
     
-    void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) override;
-
     void ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness);
     void ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, double &weight_, double &djac_, std::vector<VecDouble> &Rhs);
 };

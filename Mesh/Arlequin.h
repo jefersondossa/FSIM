@@ -17,7 +17,6 @@
 #include "Fluid.h"
 #include "Glue.h"
 #include "IntegrationQuadrature11.h"
-#include "ElCouplingLocal.h"
 #include <map>
 #include <set>
 
@@ -54,7 +53,7 @@ public:
     std::map<int64_t,MatrixDouble> fLocalIntPointToGlobalXsi;
 
     std::map<int64_t,std::set<int64_t>> fGlobalElToLocalEl;
-
+    std::set<int> fGlueMatID;
 private:
     double fGlueZoneThickness = 0.5;
     double fArlequinEpsilon = 0.e-3;
@@ -79,9 +78,11 @@ public:
         fMeshVector = meshvec;
         fMeshVector.resize(3);
         fMeshVector[2] = new CompMesh(fMeshVector[0]->getProblemParameters());
-        if (fMeshVector[2]->getProblemParameters().ProbType() == ProblemType::ENavierStokes || fMeshVector[2]->getProblemParameters().ProbType() == ProblemType::EStokes){
-            fMeshVector[2]->SetNStateVariables(fMeshVector[2]->Dimension());
-        }
+        fMeshVector[2]->SetNStateVariables(1);
+    }
+
+    void SetGlueIds(std::set<int> &glue){
+        fGlueMatID = glue;
     }
 
     std::vector<CompMesh *> &MeshVec(){return fMeshVector;}
@@ -218,7 +219,7 @@ public:
         setCouplingZone();
         //Computes the Weight function for all the finite elements
         setWeightFunction(16.);
-        PanicButton();
+        // PanicButton();
         // for (auto el:fMeshVector[2]->ElementVec()){
         //     el->getIntegPointCoordinates();
         // }

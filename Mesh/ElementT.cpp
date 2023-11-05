@@ -11,136 +11,136 @@
 //------------------------------------------------------------------------------
 template<class tshape>
 void ElementT<tshape>::getBoundaryNodes(int *nodesb_){
-    if (fMesh->Dimension() == 2){
-        switch (fMesh->GetDefaultOrder())
-        {
-        case 1:
-            if(fSideInBoundary == 0){
-                nodesb_[0] = fConnect[2]; 
-                nodesb_[1] = fConnect[1]; 
-            }else{
-                if(fSideInBoundary == 1){
-                    nodesb_[0] = fConnect[0]; 
-                    nodesb_[1] = fConnect[2]; 
-                }else{
-                    nodesb_[0] = fConnect[1];
-                    nodesb_[1] = fConnect[0];
-                };        
-            };
-            break;
-        case 2:
-            //!!!!!!!ATENÇÃO ESSAS CONECTIVIDADES FORAM ALTERADAS EM RELAÇÃO AO PROGRAMA Fluid.
-            if(fSideInBoundary == 0){
-                nodesb_[0] = fConnect[1]; 
-                nodesb_[1] = fConnect[2]; 
-                nodesb_[2] = fConnect[4];         
-            }else{
-                if(fSideInBoundary == 1){
-                    nodesb_[0] = fConnect[2]; 
-                    nodesb_[1] = fConnect[0]; 
-                    nodesb_[2] = fConnect[5]; 
-                }else{
-                    nodesb_[0] = fConnect[0];
-                    nodesb_[1] = fConnect[1];
-                    nodesb_[2] = fConnect[3];
-                };        
-            };
-            break;
-        case 3:
-            if(fSideInBoundary == 0){
-                nodesb_[0] = fConnect[1]; 
-                nodesb_[1] = fConnect[2]; 
-                nodesb_[2] = fConnect[5];         
-                nodesb_[3] = fConnect[6];         
-            }else{
-                if(fSideInBoundary == 1){
-                    nodesb_[0] = fConnect[2]; 
-                    nodesb_[1] = fConnect[0]; 
-                    nodesb_[2] = fConnect[7]; 
-                    nodesb_[3] = fConnect[8]; 
-                }else{
-                    nodesb_[0] = fConnect[0];
-                    nodesb_[1] = fConnect[1];
-                    nodesb_[2] = fConnect[3];
-                    nodesb_[3] = fConnect[4];
-                };        
-            };
-            break;
-        default:
-            PanicButton();
-            break;
-        }
-    } else if (fMesh->Dimension() == 3){
-        switch (fMesh->GetDefaultOrder())
-        {
-        case 1:
-            if(fSideInBoundary == 0){
-                nodesb_[0] = fConnect[1]; 
-                nodesb_[1] = fConnect[2]; 
-                nodesb_[2] = fConnect[3];         
-            }else{
-                if(fSideInBoundary == 1){
-                    nodesb_[0] = fConnect[0]; 
-                    nodesb_[1] = fConnect[3]; 
-                    nodesb_[2] = fConnect[2]; 
-                }else{
-                    if(fSideInBoundary == 2){
-                        nodesb_[0] = fConnect[0];
-                        nodesb_[1] = fConnect[1];
-                        nodesb_[2] = fConnect[3];
-                    }else{
-                        nodesb_[0] = fConnect[0];
-                        nodesb_[1] = fConnect[2];
-                        nodesb_[2] = fConnect[1];
-                    }
-                };        
-            };
-            break;
-        case 2:
-            if(fSideInBoundary == 0){
-                nodesb_[0] = fConnect[2]; 
-                nodesb_[1] = fConnect[3]; 
-                nodesb_[2] = fConnect[1];
-                nodesb_[3] = fConnect[9]; 
-                nodesb_[4] = fConnect[8]; 
-                nodesb_[5] = fConnect[5];
-            }else{
-                if(fSideInBoundary == 1){
-                    nodesb_[0] = fConnect[0]; 
-                    nodesb_[1] = fConnect[3]; 
-                    nodesb_[2] = fConnect[2];
-                    nodesb_[3] = fConnect[7]; 
-                    nodesb_[4] = fConnect[9]; 
-                    nodesb_[5] = fConnect[6];
-                }else{
-                    if(fSideInBoundary == 2){
-                        nodesb_[0] = fConnect[3]; 
-                        nodesb_[1] = fConnect[0]; 
-                        nodesb_[2] = fConnect[1];
-                        nodesb_[3] = fConnect[7]; 
-                        nodesb_[4] = fConnect[4]; 
-                        nodesb_[5] = fConnect[8];
-                    }else{
-                        nodesb_[0] = fConnect[0]; 
-                        nodesb_[1] = fConnect[2]; 
-                        nodesb_[2] = fConnect[1];
-                        nodesb_[3] = fConnect[6]; 
-                        nodesb_[4] = fConnect[5]; 
-                        nodesb_[5] = fConnect[4];
-                    }
-                };        
-            };
-            break;
-        case 3:
-            PanicButton();
-            break;
-        default:
-            PanicButton();
-            break;
-        }
-    } else {
-        PanicButton();
-    }
+    // if (fMesh->Dimension() == 2){
+    //     switch (fMesh->GetDefaultOrder())
+    //     {
+    //     case 1:
+    //         if(fSideInBoundary == 0){
+    //             nodesb_[0] = fConnect[2]; 
+    //             nodesb_[1] = fConnect[1]; 
+    //         }else{
+    //             if(fSideInBoundary == 1){
+    //                 nodesb_[0] = fConnect[0]; 
+    //                 nodesb_[1] = fConnect[2]; 
+    //             }else{
+    //                 nodesb_[0] = fConnect[1];
+    //                 nodesb_[1] = fConnect[0];
+    //             };        
+    //         };
+    //         break;
+    //     case 2:
+    //         //!!!!!!!ATENÇÃO ESSAS CONECTIVIDADES FORAM ALTERADAS EM RELAÇÃO AO PROGRAMA Fluid.
+    //         if(fSideInBoundary == 0){
+    //             nodesb_[0] = fConnect[1]; 
+    //             nodesb_[1] = fConnect[2]; 
+    //             nodesb_[2] = fConnect[4];         
+    //         }else{
+    //             if(fSideInBoundary == 1){
+    //                 nodesb_[0] = fConnect[2]; 
+    //                 nodesb_[1] = fConnect[0]; 
+    //                 nodesb_[2] = fConnect[5]; 
+    //             }else{
+    //                 nodesb_[0] = fConnect[0];
+    //                 nodesb_[1] = fConnect[1];
+    //                 nodesb_[2] = fConnect[3];
+    //             };        
+    //         };
+    //         break;
+    //     case 3:
+    //         if(fSideInBoundary == 0){
+    //             nodesb_[0] = fConnect[1]; 
+    //             nodesb_[1] = fConnect[2]; 
+    //             nodesb_[2] = fConnect[5];         
+    //             nodesb_[3] = fConnect[6];         
+    //         }else{
+    //             if(fSideInBoundary == 1){
+    //                 nodesb_[0] = fConnect[2]; 
+    //                 nodesb_[1] = fConnect[0]; 
+    //                 nodesb_[2] = fConnect[7]; 
+    //                 nodesb_[3] = fConnect[8]; 
+    //             }else{
+    //                 nodesb_[0] = fConnect[0];
+    //                 nodesb_[1] = fConnect[1];
+    //                 nodesb_[2] = fConnect[3];
+    //                 nodesb_[3] = fConnect[4];
+    //             };        
+    //         };
+    //         break;
+    //     default:
+    //         PanicButton();
+    //         break;
+    //     }
+    // } else if (fMesh->Dimension() == 3){
+    //     switch (fMesh->GetDefaultOrder())
+    //     {
+    //     case 1:
+    //         if(fSideInBoundary == 0){
+    //             nodesb_[0] = fConnect[1]; 
+    //             nodesb_[1] = fConnect[2]; 
+    //             nodesb_[2] = fConnect[3];         
+    //         }else{
+    //             if(fSideInBoundary == 1){
+    //                 nodesb_[0] = fConnect[0]; 
+    //                 nodesb_[1] = fConnect[3]; 
+    //                 nodesb_[2] = fConnect[2]; 
+    //             }else{
+    //                 if(fSideInBoundary == 2){
+    //                     nodesb_[0] = fConnect[0];
+    //                     nodesb_[1] = fConnect[1];
+    //                     nodesb_[2] = fConnect[3];
+    //                 }else{
+    //                     nodesb_[0] = fConnect[0];
+    //                     nodesb_[1] = fConnect[2];
+    //                     nodesb_[2] = fConnect[1];
+    //                 }
+    //             };        
+    //         };
+    //         break;
+    //     case 2:
+    //         if(fSideInBoundary == 0){
+    //             nodesb_[0] = fConnect[2]; 
+    //             nodesb_[1] = fConnect[3]; 
+    //             nodesb_[2] = fConnect[1];
+    //             nodesb_[3] = fConnect[9]; 
+    //             nodesb_[4] = fConnect[8]; 
+    //             nodesb_[5] = fConnect[5];
+    //         }else{
+    //             if(fSideInBoundary == 1){
+    //                 nodesb_[0] = fConnect[0]; 
+    //                 nodesb_[1] = fConnect[3]; 
+    //                 nodesb_[2] = fConnect[2];
+    //                 nodesb_[3] = fConnect[7]; 
+    //                 nodesb_[4] = fConnect[9]; 
+    //                 nodesb_[5] = fConnect[6];
+    //             }else{
+    //                 if(fSideInBoundary == 2){
+    //                     nodesb_[0] = fConnect[3]; 
+    //                     nodesb_[1] = fConnect[0]; 
+    //                     nodesb_[2] = fConnect[1];
+    //                     nodesb_[3] = fConnect[7]; 
+    //                     nodesb_[4] = fConnect[4]; 
+    //                     nodesb_[5] = fConnect[8];
+    //                 }else{
+    //                     nodesb_[0] = fConnect[0]; 
+    //                     nodesb_[1] = fConnect[2]; 
+    //                     nodesb_[2] = fConnect[1];
+    //                     nodesb_[3] = fConnect[6]; 
+    //                     nodesb_[4] = fConnect[5]; 
+    //                     nodesb_[5] = fConnect[4];
+    //                 }
+    //             };        
+    //         };
+    //         break;
+    //     case 3:
+    //         PanicButton();
+    //         break;
+    //     default:
+    //         PanicButton();
+    //         break;
+    //     }
+    // } else {
+    //     PanicButton();
+    // }
     
 
     return;
@@ -183,9 +183,8 @@ template<class tshape>
 void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
     
     int DIM = tshape::Dimension;
-    VecDouble xsi(DIM);
-    // ShapeFunction shapeQuad(DIM,DEG);
-    // VecDouble phi_(tshape::NElNodes);
+    fIntegData.fAdimCoord.resize(DIM);
+    fIntegData.fPhi.resize(tshape::NElNodes);
     
     // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
     //     intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
@@ -196,21 +195,20 @@ void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
 
     for(int it = 0; it < fIntRule.NPoints(); it++){
         
-       xsi[0] = fIntRule.PointList(index,0);
-       xsi[1] = fIntRule.PointList(index,1);
-            
-    //    //Computes the velocity shape functions
-    //    shapeQuad.Shape(xsi,phi_);
+        for (int i=0; i<DIM; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(index,i);
+           
+        tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
 
-       for (int j=0; j<tshape::NElNodes; j++){
-            fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
-       };
-       // intPointWeightFunction(index) = 1.;
-       index++;
+        for (int j=0; j<tshape::NElNodes; j++){
+                fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
+        };
+
+        // intPointWeightFunction(index) = 1.;
+        index++;
     }; 
 
     index = 0;
-     return;
+    return;
 };
 
 //------------------------------------------------------------------------------
@@ -285,7 +283,7 @@ void ElementT<tshape>::setIntersectionParameters(VecDouble &x, VecDouble &X) {
 //-------------------------SPATIAL TRANSFORM - JACOBIAN-------------------------
 //------------------------------------------------------------------------------
 template<class tshape>
-void ElementT<tshape>::ComputeJacobian(int index) {
+void ElementT<tshape>::ComputeJacobian() {
 
     int DIM = tshape::Dimension;
     fIntegData.fA0Inv.resize(DIM,DIM);
@@ -301,7 +299,8 @@ void ElementT<tshape>::ComputeJacobian(int index) {
     fIntegData.fDPhi.setZero();
 
     tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
-    tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
+    tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
+   
     
     double &alpha_f = fMesh->getProblemParameters().getAlphaF();
     MatrixDouble gradx(3,DIM);
@@ -410,7 +409,7 @@ void ElementT<tshape>::ComputeJacobian(int index) {
 };
 
 template<class tshape>
-void ElementT<tshape>::ComputeCurrentJacobian(int index) {
+void ElementT<tshape>::ComputeCurrentJacobian() {
 
     int DIM = tshape::Dimension;
     fIntegData.fA1.resize(DIM,DIM);
@@ -632,6 +631,19 @@ void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_) {
         for (int j = 0; j < nstate; j++ ){
             u_[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
         }
+    }
+}
+template<class tshape>
+double ElementT<tshape>::InterpolateVariable(VecDouble &nValues, int point) {
+    double val = 0.;
+    fIntegData.fPhi.resize(tshape::NElNodes);
+    fIntegData.fPhi.setZero();
+    fIntegData.fAdimCoord.resize(tshape::Dimension);
+    for (int i=0; i<tshape::Dimension; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(point,i);
+    tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = fIntegData.fPhi[i];
+        val += nValues[i] * shapeFi;
     }
 }
 
@@ -874,7 +886,7 @@ void ElementT<tshape>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------- -----
 
 
 //------------------------------------------------------------------------------
@@ -899,13 +911,13 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian(index);
+        ComputeJacobian();
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
 
         if (fWeakForm->IsPositionalFEM()){
-            ComputeCurrentJacobian(index);
+            ComputeCurrentJacobian();
             ComputeCurrentSpatialDerivatives();
         }
 
@@ -951,29 +963,36 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian(index);
+        ComputeJacobian();
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
 
         //Computes the element diffusion/viscosity matrix
-        ComputeStiffness(index, jacobianNRMatrix);
+        fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
 
         if (fIntegData.fNeedsSol) interpolateSolution();
         if (fIntegData.fNeedsDSol) interpolateSolDerivatives();
 
         //Computes the RHS vector
-        ComputeResidual(index, rhsVector); 
+        fWeakForm->ComputeResidual(index, fIntegData, rhsVector); 
 
         index++;        
     };  
-    // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix[1];
-    // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector[1];
-    //Apply boundary conditions
-    ApplyBC(jacobianNRMatrix, rhsVector);
+    // // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix[1];
+    // // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector[1];
+    // //Apply boundary conditions
+    // ApplyBC(jacobianNRMatrix, rhsVector);
 
     return;
 };
+
+
+
+template<class tshape >
+Element * ElementT<tshape>::Clone() const {
+    return new ElementT(*this);
+}
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneDLin.h"

@@ -3,6 +3,7 @@
 const int ShapeTriangleLin::Dimension;
 const int ShapeTriangleLin::Order;
 const int ShapeTriangleLin::NElNodes;
+const int ShapeTriangleLin::NCornerNodes;
 
 void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi) {
 

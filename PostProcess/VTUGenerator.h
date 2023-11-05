@@ -5,7 +5,6 @@
 #include<iostream>
 #include<string>
 #include "Element.h"
-#include "Boundary.h"
 #include "CompMesh.h"
 
 namespace VTUGenerator{

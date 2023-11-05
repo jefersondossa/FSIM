@@ -14,8 +14,6 @@
 #ifndef FLUID_H
 #define FLUID_H
 
-#include "Element.h"
-#include "Boundary.h"
 #include "IntegrationQuadrature11.h"
 #include "Node.h"
 #include "GmshTools.h"

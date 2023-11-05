@@ -3,6 +3,7 @@
 const int ShapeQuadrilateralLin::Dimension;
 const int ShapeQuadrilateralLin::Order;
 const int ShapeQuadrilateralLin::NElNodes;
+const int ShapeQuadrilateralLin::NCornerNodes;
 
 void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi) {
     PanicButton();

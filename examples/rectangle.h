@@ -145,53 +145,53 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     VecDouble val3(1);
     val2.setZero();val3.setZero();
     val2[0] = 1.5;
-    L2Projection * matbc3 = new L2Projection(6,1,0,val1,val2);
+    L2Projection * matbc3 = new L2Projection(6,1,1,val1,val2);
     val2.setZero();
     L2Projection * matbc1 = new L2Projection(5,1,0,val1,val2);
-    // L2Projection * matbc2 = new L2Projection(7,1,1,val1,val3);
+    L2Projection * matbc2 = new L2Projection(7,1,1,val1,val3);
     // matbc1->SetForcingFunction(forcingFunctionElasticity2D);
     // matbc1->SetExactSolution(exactSolElasticity2D);
     // matbc2->SetForcingFunction(forcingFunctionElasticity2D);
     // matbc2->SetExactSolution(exactSolElasticity2D);
     // matbc3->SetForcingFunction(forcingFunctionElasticity2D);
     // matbc3->SetExactSolution(exactSolElasticity2D);
-    
+
     coarseModel->InsertMaterial(matbc1);
-    // coarseModel->InsertMaterial(matbc2);
+    coarseModel->InsertMaterial(matbc2);
     coarseModel->InsertMaterial(matbc3);
 
     fineModel->InsertMaterial(matpoisson);
-
-    
+    val2[0] = 1.5; 
+    L2Projection * matbc4 = new L2Projection(6,1,0,val1,val2);
+    val2.setZero();
+    L2Projection * matbc5 = new L2Projection(5,1,1,val1,val2);
+    L2Projection * matbc6 = new L2Projection(7,1,1,val1,val3);    
+    fineModel->InsertMaterial(matbc4);
+    fineModel->InsertMaterial(matbc5);
+    fineModel->InsertMaterial(matbc6);
 
     GmshTools::Read(*coarseModel,"../coarse_test.msh");
-    // GmshTools::Read(*fineModel,"../fine_test.msh");
+    GmshTools::Read(*fineModel,"../fine_test.msh");
 
     // CompMeshTools::InitialSolution(coarseModel);
-
-    // coarseModel->meshReading(fluid1,"problem_data.txt","coarse.msh","mirror.txt",0);
-    // fineModel->meshReading(fluid2,"problem_data.txt","fine.msh","mirror_fine.txt",0);
-   // } 
-	MPI_Barrier(PETSC_COMM_WORLD);
-    // GmshTools::BoundaryConstrains(coarseModel);
-    // GmshTools::BoundaryConstrains(fineModel);
-
+    std::set<int> gluematids={5};
     std::vector<CompMesh *> meshvector(2);
-    // meshvector[0] = coarseModel;
-    // meshvector[1] = fineModel;
-    // Arlequin arl(meshvector);
-    // arl.SetUp();
+    meshvector[0] = coarseModel;
+    meshvector[1] = fineModel;
+    Arlequin arl(meshvector);
+    arl.SetGlueIds(gluematids);
+    arl.SetUp();
 
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
+    // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse");
-    // VTUGenerator::PrintResults(fineModel,"resultFine");
-    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
+    VTUGenerator::PrintResults(fineModel,"resultFine");
+    VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
     VecDouble errors;
     an.PostProcessError(errors);

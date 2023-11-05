@@ -31,10 +31,11 @@ class ElementT : public Element{
 protected:
     // Integration rule object
     typename tshape::LocIntRule fIntRule;
-    
 
 public:
-    ElementT() : Element(){};
+    ElementT() : Element(){
+        fIntRule.SetOrder(tshape::Order+tshape::Order);
+    };
 
     /// fluid element constructor
     /// @param int element index @param Connectivity element connectivity
@@ -48,10 +49,9 @@ public:
         DEG = fMesh->GetDefaultOrder();
 
         FSIInterface = false;
-        fSideInBoundary = -1;
         fNeighborElements.clear();
 
-        fIntRule.SetOrder(tshape::Order);
+        fIntRule.SetOrder(tshape::Order+tshape::Order);
         fIntegData.fWeightFunction.resize(fIntRule.NPoints());
         fIntegData.fDistFunction.resize(fIntRule.NPoints());
         fIntegData.fPrevWeightFunction.resize(fIntRule.NPoints());
@@ -74,7 +74,6 @@ public:
         if (fWeakForm) nLocDOF = tshape::NElNodes * fWeakForm->NState(); 
 
         FSIInterface = false;
-        fSideInBoundary = -1;
         fNeighborElements.clear();
         int increase = 0;
         if(wf->GetExactSolution()) increase = 2;
@@ -93,7 +92,7 @@ public:
     };
 
 
-    
+    double InterpolateVariable(VecDouble &nValues, int point) override;
     void getIntegPointCoordinates();
     //........................Element basic information.........................
     /// Clear all element variables
@@ -101,8 +100,8 @@ public:
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    void ComputeJacobian(int index) override;
-    void ComputeCurrentJacobian(int index) override;
+    void ComputeJacobian() override;
+    void ComputeCurrentJacobian() override;
 
     
     /// Compute and store the shape function spatial derivatives
@@ -119,14 +118,14 @@ public:
     void interpolateSolDerivatives();
 
 
-    void ComputeIntPointDistFunction(VecDouble &nodalval);
+    void ComputeIntPointDistFunction(VecDouble &nodalval) override;
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
     double getJacobian() override {
         // std::cout << "AAA 1 "<< std::endl;
         //Computes the jacobian matrix
         int index = 0;
-        ComputeJacobian(index);
+        ComputeJacobian();
         // std::cout << "AAA 2 "<< std::endl;        
         //Computes spatial derivatives
         // ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
@@ -145,11 +144,7 @@ public:
 
     
 
-    double &GetIntPointDistFunction(int index){
-        return  fIntegData.fDistFunction[index];
-    }
-
-    IntPointData IntegrationData() {return fIntegData;}    
+    int Dimension() override {return tshape::Dimension;}  
 
     
 
@@ -176,7 +171,7 @@ public:
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
-    int getNumberOfIntegrationPoints(){IntegQuadrature sQuad(fMesh->Dimension(),fMesh->GetDefaultOrder()); return sQuad.getNumberOfIntegrationPoints();};
+    int getNumberOfIntegrationPoints(){return fIntRule.NPoints();};
 
     int Dimension() const{
         return tshape::Dimension;
@@ -187,24 +182,18 @@ public:
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) override;
-    // virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
-    // virtual void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs){};
-    // virtual void ComputeStiffness(int &index, MatrixDouble &Stiffness){};
-    // virtual void ComputeStiffness(int &index, std::vector<MatrixDouble> &Stiffness){};
-    // virtual void ComputeResidual(int &index, VecDouble &Rhs){};
-    // virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
-    // virtual void ComputeError(VecDouble &errors){};
-    
+
+    int NCornerNodes() override {return tshape::NCornerNodes;}
+
     void setIntegPointWeightFunction() override;
 
-    int getBoundaryGroup()override{return 0;};
     int getElement()override{return 0;};
-    int getConstrain(int dir) override{return 0;};
     int getElementSide()override {return 0;};
-    double getConstrainValue(int dir)override{return 0;};
     void setElement(int el)override{ };
     void setElementSide(int el)override {};
-    void setBoundaryGroup(int gr) override{};
+
+    //Method for creating a copy of the element
+    virtual Element *Clone() const;
 };
 
 
