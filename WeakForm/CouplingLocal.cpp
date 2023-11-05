@@ -60,15 +60,15 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 
     int DIM = fDimension;
     int nphi = data.fPhi.size();
-    auto ellocal = fLocalMesh->ElementVec()[fLocalIndex];
+    auto *ellocal = fLocalMesh->ElementVec()[fLocalIndex];
 
     //Velocity
     VecDouble u_(fNState+1);
-    ellocal->interpolateSolution(index, u_);
+    ellocal->interpolateSolution(data.fPhi, u_);
 
     //Velocity Derivatives
     MatrixDouble du_dx(fNState+1,DIM);
-    ellocal->interpolateSolDerivatives(du_dx);
+    ellocal->interpolateSolDerivatives(data.fDPhiX0,du_dx);
     
     double WJ = data.fWeight * data.fJacA0;
 

@@ -27,17 +27,20 @@ void IntRuleTriangle::SetOrder(int order) {
         fWeights[0] = 0.5;        
         break;
     case 2:
-        fPoints.resize(3,2);
-        fWeights.resize(3);
-        fPoints(0,0) = 0.166666666666666666666666666666667e+0;
-        fPoints(0,1) = 0.666666666666666666666666666666667e+0;
-        fPoints(1,0) = 0.666666666666666666666666666666667e+0;
-        fPoints(1,1) = 0.166666666666666666666666666666667e+0;
-        fPoints(2,0) = 0.166666666666666666666666666666667e+0;
-        fPoints(2,1) = 0.166666666666666666666666666666667e+0;
-        fWeights[0] = 1./6.;
-        fWeights[1] = 1./6.;
-        fWeights[2] = 1./6.;
+        fPoints.resize(4,2);
+        fWeights.resize(4);
+        fPoints(0,0) = 1./3.;
+        fPoints(0,1) = 1./3.;
+        fPoints(1,0) = 0.2;
+        fPoints(1,1) = 0.6;
+        fPoints(2,0) = 0.2;
+        fPoints(2,1) = 0.2;
+        fPoints(3,0) = 0.6;
+        fPoints(3,1) = 0.2;
+        fWeights[0]  =  -0.5625/2.;
+        fWeights[1]  =  0.520833333333333333333333333333333/2.;
+        fWeights[2]  =  0.520833333333333333333333333333333/2.;
+        fWeights[3]  =  0.520833333333333333333333333333333/2.;
         break;
     case 3:
     case 4:

@@ -330,174 +330,189 @@ void Arlequin::SetElementBoxes() {
 void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh, 
                                         int &elCorr, VecDouble &xsiCorr, int elSearch){
     
-    // int DIM = cmesh->Dimension();
-    // int DEG = cmesh->GetDefaultOrder();
-    // ShapeFunction shapeQuad(DIM,DEG);
-    // int nElNodes = cmesh->NElNodes();
-    // VecDouble phi_(nElNodes);    
-    // VecDouble xsiCC(3);
-    // std::pair<VecDouble,VecDouble> XK;
+    int DIM = cmesh->Dimension();
+    int DEG = cmesh->GetDefaultOrder();
+    VecDouble xsiCC(3);
+    std::pair<VecDouble,VecDouble> XK;
 
-    // elCorr = 150000;
-    // VecDouble xsi(DIM);
-    // VecDouble x_(DIM);
-    // VecDouble deltaX(DIM);
-    // VecDouble deltaXsi(DIM);
-    // xsi.setZero(); x_.setZero(); deltaX.setZero(); deltaXsi.setZero();
-    // bool flg = true;
-    // VecInt connec = cmesh->ElementVec()[elSearch] -> getConnectivity();
+    elCorr = 150000;
+    VecDouble xsi(DIM);
+    VecDouble x_(DIM);
+    VecDouble deltaX(DIM);
+    VecDouble deltaXsi(DIM);
+    xsi.setZero(); x_.setZero(); deltaX.setZero(); deltaXsi.setZero();
+    bool flg = true;
     
-    // xsiCC.fill(1.e10);
-    // xsiCorr.fill(1.e50);
-    // xsi.fill(1./3.);
-    // x_.fill(0.);
     
-    // shapeQuad.Shape(xsi,phi_);
-
-    // for (int i = 0; i < nElNodes; i++){
-    //     VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
-    //     for (int k = 0; k < DIM; k++){
-    //         x_[k] += xint[k] * phi_[i];
-    //     }        
-    // };
-
-    // double error = 1.e6;
-    // int iterations = 0;
-
-    // while ((error > 1.e-8) && (iterations < 4)) {
-        
-    //     iterations++;
-        
-    //     for (int k = 0; k < DIM; k++) deltaX[k] = x[k] - x_[k];
-    //     deltaXsi.setZero();
-        
-    //     cmesh->ElementVec()[elSearch] -> ComputeJacobian(0);
-
-    //     // for (int i = 0; i < DIM; i++)
-    //     //     for (int j = 0; j < DIM; j++)
-    //     //         deltaXsi[i] += ainv(j,i) * deltaX[j];
-    //     deltaXsi = cmesh->ElementVec()[elSearch]->IntegrationData().fA0Inv.transpose()*deltaX;    
-
-    //     xsi += deltaXsi;
-    //     x_.setZero();
-        
-    //     shapeQuad.Shape(xsi,phi_);
-        
-    //     for (int i=0; i<nElNodes; i++){
-    //         VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
-    //         for (int k = 0; k < DIM; k++)x_[k] += xint[k] * phi_[i];
-    //     };
-
-    //     error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
-    // };
+    xsiCC.fill(1.e10);
+    xsiCorr.fill(1.e50);
+    xsi.fill(1./3.);
+    x_.fill(0.);
     
-    // double t1 = -1.e-2;
-    // double t2 =  1. - t1;
+    Element *elemsearch = nullptr;
+    if (cmesh->ElementVec()[elSearch]->Dimension() != cmesh->Dimension()){
+        for (int i=0; i<cmesh->NElements(); i++){
+            if(cmesh->ElementVec()[i]->Dimension() != cmesh->Dimension()) continue;
+            elemsearch = cmesh->ElementVec()[i];
+            break;
+        }
+    } else {
+        elemsearch = cmesh->ElementVec()[elSearch];
+    }
+    VecInt connec = elemsearch -> getConnectivity();
     
-    // xsiCC[0] = xsi[0];
-    // xsiCC[1] = xsi[1];       
-    // xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
+    auto &integdata = elemsearch->IntegrationData();
+    integdata.fAdimCoord = xsi;
+    elemsearch->ComputeJacobian();
+    int nElNodes = integdata.fPhi.size();
 
-    // if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-    //     (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+    for (int i = 0; i < nElNodes; i++){
+        VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+        for (int k = 0; k < DIM; k++){
+            x_[k] += xint[k] * integdata.fPhi[i];
+        }        
+    };
 
-    //     xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
-    //     elCorr = elSearch;
-    //     // return;
-    // } else {
+    double error = 1.e6;
+    int iterations = 0;
 
-    //     int nEl;
-    //     if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
-    //         nEl = cmesh->NElements();
-    //     } else {
-    //         nEl = cmesh->ElementVec()[elSearch] -> getNumberOfNeighborElements(); 
-    //     }   
+    while ((error > 1.e-8) && (iterations < 4)) {
+        
+        iterations++;
+        
+        for (int k = 0; k < DIM; k++) deltaX[k] = x[k] - x_[k];
+        deltaXsi.setZero();
+        
+        elemsearch -> ComputeJacobian();
 
-    //     for (int jel = 0; jel < nEl; jel++){
+        // for (int i = 0; i < DIM; i++)
+        //     for (int j = 0; j < DIM; j++)
+        //         deltaXsi[i] += ainv(j,i) * deltaX[j];
+        deltaXsi = elemsearch->IntegrationData().fA0Inv*deltaX;    
 
-    //         if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
-    //             connec = cmesh->ElementVec()[jel] -> getConnectivity();
-    //         } else {
-    //             connec = cmesh->ElementVec()[cmesh->ElementVec()[elSearch] -> getNeighborElement(jel)] -> getConnectivity();
-    //         }   
+        xsi += deltaXsi;
+        x_.setZero();
+        
+        integdata.fAdimCoord = xsi;
+        // shapeQuad.Shape(xsi,phi_);
+        
+        for (int i=0; i<nElNodes; i++){
+            VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+            for (int k = 0; k < DIM; k++)x_[k] += xint[k] * integdata.fPhi[i];
+        };
 
-    //         //get boxes information        
-    //         XK = cmesh->ElementVec()[jel] -> getXIntersectionParameter();
+        error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+    };
+    
+    double t1 = -1.e-2;
+    double t2 =  1. - t1;
+    
+    xsiCC[0] = xsi[0];
+    xsiCC[1] = xsi[1];       
+    xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
 
-    //         //Chech if the node is inside the element box
-    //         if ((x[0] < XK.first[0]*0.95) || (x[0] > XK.second[0]*1.05) ||
-    //             (x[1] < XK.first[1]*0.95) || (x[1] > XK.second[1]*1.05)) continue;
+    if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
+        (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+
+        xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+        elCorr = elemsearch->Index();
+        // return;
+    } else {
+
+        int nEl;
+        if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
+            nEl = cmesh->NElements();
+        } else {
+            nEl = elemsearch -> getNumberOfNeighborElements(); 
+        }   
+
+        for (int jel = 0; jel < nEl; jel++){
+            if (cmesh->ElementVec()[jel]->Dimension()!= cmesh->Dimension()) continue;
+            if (fMeshVector[1]->getProblemParameters().getTimeInstant() == 0){
+                connec = cmesh->ElementVec()[jel] -> getConnectivity();
+            } else {
+                connec = cmesh->ElementVec()[elemsearch -> getNeighborElement(jel)] -> getConnectivity();
+            }   
+
+            //get boxes information        
+            XK = cmesh->ElementVec()[jel] -> getXIntersectionParameter();
+
+            //Chech if the node is inside the element box
+            if ((x[0] < XK.first[0]) || (x[0] > XK.second[0]) ||
+                (x[1] < XK.first[1]) || (x[1] > XK.second[1])) continue;
             
-    //         //Compute nodal correspondence
-    //         for (int i = DIM+1; i--; ) xsiCC[i] = 1.e10;
+            //Compute nodal correspondence
+            for (int i = DIM+1; i--; ) xsiCC[i] = 1.e10;
     
-    //         for (int i = DIM; i--; ){
-    //             xsi[i] = 1. / 3.;
-    //             x_[i] = 0.;
-    //         }
+            for (int i = DIM; i--; ){
+                xsi[i] = 1. / 3.;
+                x_[i] = 0.;
+            }
 
-    //         shapeQuad.Shape(xsi,phi_);
+            // shapeQuad.Shape(xsi,phi_);
+            cmesh->ElementVec()[jel]->IntegrationData().fAdimCoord = xsi;
+            cmesh->ElementVec()[jel]->ComputeJacobian();
 
-    //         for (int i = 0; i < nElNodes; i++){
-    //             VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
-    //             for (int k = DIM; k--; )
-    //                 x_[k] += xint[k] * phi_[i];
-    //         };
+            for (int i = 0; i < nElNodes; i++){
+                VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+                for (int k = DIM; k--; )
+                    x_[k] += xint[k] * cmesh->ElementVec()[jel]->IntegrationData().fPhi[i];
+            };
             
-    //         double error = 1.e6;
-    //         int iterations = 0;
+            double error = 1.e6;
+            int iterations = 0;
 
-    //         while ((error > 1.e-8) && (iterations < 4)) {
+            while ((error > 1.e-8) && (iterations < 4)) {
                 
-    //             iterations++;
+                iterations++;
 
-    //             for (int k = DIM; k--; ){
-    //                 deltaX[k] = x[k] - x_[k];
-    //                 deltaXsi[k] = 0.;
-    //             }
+                for (int k = DIM; k--; ){
+                    deltaX[k] = x[k] - x_[k];
+                    deltaXsi[k] = 0.;
+                }
                 
-    //             cmesh->ElementVec()[jel] -> ComputeJacobian(0);
-    //             auto ainv = cmesh->ElementVec()[jel]->IntegrationData().fA0Inv;
-    //             for (int i = 0; i < DIM; i++)
-    //                 for (int j = 0; j < DIM; j++)
-    //                     deltaXsi[i] += ainv(j,i) * deltaX[j];
+                cmesh->ElementVec()[jel] -> ComputeJacobian();
+                auto ainv = cmesh->ElementVec()[jel]->IntegrationData().fA0Inv;
+                for (int i = 0; i < DIM; i++)
+                    for (int j = 0; j < DIM; j++)
+                        deltaXsi[i] += ainv(i,j) * deltaX[j];
                 
-    //             for (int k = DIM; k--; ){
-    //                 xsi[k] += deltaXsi[k];
-    //                 x_[k] = 0.;
-    //             }
+                for (int k = DIM; k--; ){
+                    xsi[k] += deltaXsi[k];
+                    x_[k] = 0.;
+                }
             
-    //             shapeQuad.Shape(xsi,phi_);
-                
-    //             for (int i=0; i<nElNodes; i++){
-    //                 VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
-    //                 for (int k = DIM; k--; ) x_[k] += xint[k] * phi_[i];
-    //             };
+                cmesh->ElementVec()[jel]->IntegrationData().fAdimCoord = xsi;
+                cmesh->ElementVec()[jel] -> ComputeJacobian();
+                for (int i=0; i<nElNodes; i++){
+                    VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+                    for (int k = DIM; k--; ) x_[k] += xint[k] * cmesh->ElementVec()[jel]->IntegrationData().fPhi[i];
+                };
                         
-    //             error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
-    //         };
+                error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+            };
             
-    //         double t1 = -1.e-2;
-    //         double t2 =  1. - t1;
+            double t1 = -1.e-2;
+            double t2 =  1. - t1;
             
-    //         xsiCC[0] = xsi[0];
-    //         xsiCC[1] = xsi[1];       
-    //         xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
+            xsiCC[0] = xsi[0];
+            xsiCC[1] = xsi[1];       
+            xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
 
-    //         if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-    //             (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+            if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
+                (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
 
-    //             xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
-    //             elCorr = jel;
-    //             break;
-    //         }
-    //     }
-    // };
+                xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+                elCorr = jel;
+                break;
+            }
+        }
+    };
 
-    // if (fabs(xsi[0]) > 2.) {
-    //     std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
-    //     PanicButton();
-    // }
+    if (fabs(xsi[0]) > 2.) {
+        std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
+        PanicButton();
+    }
     return;
 };
 
@@ -577,8 +592,14 @@ void Arlequin::setNodalCorrespondenceFine() {
             int elCorr = 0;
             VecDouble xsiCorr(DIM);
 
-            if (fLocalIntPointToGlobalElement[ielem].size()==0) fLocalIntPointToGlobalElement[ielem].resize(numberIntPoints);
-            if (fLocalIntPointToGlobalXsi[ielem].rows()==0) fLocalIntPointToGlobalXsi[ielem].resize(numberIntPoints,DIM);
+            if (fLocalIntPointToGlobalElement[ielem].size()==0) {
+                fLocalIntPointToGlobalElement[ielem].resize(numberIntPoints);
+                fLocalIntPointToGlobalElement[ielem].setZero();
+            };
+            if (fLocalIntPointToGlobalXsi[ielem].rows()==0) {
+                fLocalIntPointToGlobalXsi[ielem].resize(numberIntPoints,DIM);
+                fLocalIntPointToGlobalXsi[ielem].setZero();
+            }
             searchNodeCorrespondence(x,fMeshVector[0],elCorr,xsiCorr,
                                      fLocalIntPointToGlobalElement[ielem][i]);
                             
@@ -822,6 +843,7 @@ void Arlequin::setSignaledDistance(){
      };
 
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
+        if(fMeshVector[0]->ElementVec()[jel]->Dimension()!=fMeshVector[0]->Dimension())continue;
         auto connect = fMeshVector[0]->ElementVec()[jel]->getConnectivity();
         VecDouble distfunction(connect.size());
         for (int i = 0; i < connect.size(); i++){
@@ -830,6 +852,7 @@ void Arlequin::setSignaledDistance(){
         fMeshVector[0]->ElementVec()[jel] -> ComputeIntPointDistFunction(distfunction);        
     };
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
+        if(fMeshVector[1]->ElementVec()[jel]->Dimension()!=fMeshVector[1]->Dimension())continue;
         auto connect = fMeshVector[1]->ElementVec()[jel]->getConnectivity();
         VecDouble distfunction(connect.size());
         for (int i = 0; i < connect.size(); i++){
@@ -996,6 +1019,7 @@ void Arlequin::setWeightFunction(double val){
     };         
 
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
+        if(fMeshVector[0]->ElementVec()[jel]->Dimension() != fMeshVector[0]->Dimension()) continue;
         for (int i = 0; i < fMeshVector[0]->ElementVec()[jel]->getNumberOfIntegrationPoints(); i++){
             double dist = fMeshVector[0]->ElementVec()[jel]->GetIntPointDistFunction(i);
             double wFuncValue = GlobalWeightFunction(dist);
@@ -1011,6 +1035,7 @@ void Arlequin::setWeightFunction(double val){
     };
     
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
+        if(fMeshVector[1]->ElementVec()[jel]->Dimension() != fMeshVector[1]->Dimension()) continue;
         for (int i = 0; i < fMeshVector[1]->ElementVec()[jel]->getNumberOfIntegrationPoints(); i++){
             double dist = fMeshVector[1]->ElementVec()[jel]->GetIntPointDistFunction(i);
             double wFuncValue = LocalWeightFunction(dist);

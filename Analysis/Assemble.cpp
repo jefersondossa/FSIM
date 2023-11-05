@@ -77,7 +77,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         // if (fAnalysis->MeshVector()[1]->part_elem[jel] == rank) {
             
         int nElNodes = connecL.size();
-        int nLocDOF = nElNodes*DIM;
+        int nLocDOF = nElNodes*fAnalysis->MeshVector()[2]->NState();
 
         int nstiffness = 1;
         auto probltype = fAnalysis->MeshVector()[0]->getProblemParameters().ProbType();

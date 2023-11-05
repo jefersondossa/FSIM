@@ -94,6 +94,7 @@ public:
     virtual void interpolateSolution(int &index, VecDouble &u_) = 0;
     virtual void interpolateSolution(VecDouble &phi, VecDouble &u_) = 0;
     virtual void interpolateSolDerivatives(MatrixDouble &du_dx) = 0;
+    virtual void interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) = 0;
     
 
 
@@ -123,6 +124,10 @@ public:
     virtual void setElementSide(int el) = 0;
     virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
     void setFSIInterface(){FSIInterface = true;};
+
+    /// Gets the coordinates intersection parameters
+    /// @return minimum and maximum coordinates
+    std::pair<VecDouble,VecDouble> getXIntersectionParameter() {return std::make_pair(xK,XK);};
 
     virtual double getJacobian() = 0;
 
@@ -162,7 +167,7 @@ public:
         return  fIntegData.fDistFunction[index];
     }
 
-    IntPointData IntegrationData() {return fIntegData;}
+    IntPointData &IntegrationData() {return fIntegData;}
 
     virtual int Dimension() = 0;
 

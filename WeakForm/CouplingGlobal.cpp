@@ -22,8 +22,8 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
     VecDouble XsiGlobal(DIM);
     for (int k = 0; k < DIM; k++) XsiGlobal[k] = fGlobalXsi(index,k);
     //Computes the coarse mesh shape functions
-    auto elglobal = fGlobalMesh->ElementVec()[fGlobalIndex];
-    auto dataglobal = elglobal->IntegrationData();
+    auto *elglobal = fGlobalMesh->ElementVec()[fGlobalIndex];
+    auto &dataglobal = elglobal->IntegrationData();
     dataglobal.fAdimCoord = XsiGlobal;
     // VecDouble phiGlobal(nphi);
     // tshape::Shape(XsiGlobal,phiGlobal);
@@ -78,9 +78,9 @@ void CouplingGlobal::ComputeResidual(int &index, IntPointData &data, std::vector
 
     int DIM = fDimension;
     int nphi = data.fPhi.size();
-    auto elglobal = fGlobalMesh->ElementVec()[fGlobalIndex];
+    auto *elglobal = fGlobalMesh->ElementVec()[fGlobalIndex];
 
-    auto dataglobal = elglobal->IntegrationData();
+    auto &dataglobal = elglobal->IntegrationData();
     //In this case, we need the global solution
     //Velocity
     VecDouble u_(fNState+1);

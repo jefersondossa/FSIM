@@ -192,7 +192,7 @@ void ElementT<tshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
     // }
 
     int index=0;
-
+    fIntegData.fDistFunction.setZero();
     for(int it = 0; it < fIntRule.NPoints(); it++){
         
         for (int i=0; i<DIM; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(index,i);
@@ -287,6 +287,7 @@ void ElementT<tshape>::ComputeJacobian() {
 
     int DIM = tshape::Dimension;
     fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fA0Inv.setZero();
     fIntegData.fA0.resize(DIM,DIM);
     fIntegData.fA0.setZero();
     fIntegData.fX.resize(3);
@@ -645,6 +646,7 @@ double ElementT<tshape>::InterpolateVariable(VecDouble &nValues, int point) {
         double shapeFi = fIntegData.fPhi[i];
         val += nValues[i] * shapeFi;
     }
+    return val;
 }
 
 
@@ -684,6 +686,20 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
                 du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(i,j);
+            }
+        }
+    }
+}
+
+template<class tshape>
+void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) {
+    du_dx.setZero();    
+    int DIM = tshape::Dimension;
+    for (int i = tshape::NElNodes; i--; ){
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        for (int j = DIM; j--; ){
+            for (int k = nstate; k--; ){
+                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * dphidx(i,j);
             }
         }
     }

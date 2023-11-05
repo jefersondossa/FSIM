@@ -115,6 +115,7 @@ public:
     void interpolateSolution();
     void interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &umeshPrev_);
     void interpolateSolDerivatives(MatrixDouble &du_dx) override;
+    void interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) override;
     void interpolateSolDerivatives();
 
 
@@ -159,9 +160,7 @@ public:
     /// @param side lenght
     void setIntersectionParameters(VecDouble &x, VecDouble &X) override ;
 
-    /// Gets the coordinates intersection parameters
-    /// @return minimum and maximum coordinates
-    std::pair<VecDouble,VecDouble> getXIntersectionParameter() {return std::make_pair(xK,XK);};
+    
 
     //.............................Model functions..............................
     /// Sets if the element belongs to the fluid structure interface
