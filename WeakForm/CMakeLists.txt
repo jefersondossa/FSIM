@@ -18,6 +18,8 @@ file(GLOB weakform
     Poisson.cpp
     L2Projection.h 
     L2Projection.cpp
+    MohrCoulomb.h 
+    MohrCoulomb.cpp
 )
 
 set(WEAKFORM ${weakform} PARENT_SCOPE)

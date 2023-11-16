@@ -1,5 +1,5 @@
 #ifndef ELASTICITY2D_H
-#define LASTICITY2D_H
+#define ELASTICITY2D_H
 
 #include "WeakForm.h"
 

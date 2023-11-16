@@ -7,8 +7,8 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
-    MatrixDouble matD(3,2*nphi);
-    matD.setZero();
+    MatrixDouble matB(3,2*nphi);
+    matB.setZero();
 
     MatrixDouble Hooke(3,3);
     Hooke.setZero();
@@ -21,18 +21,19 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         Hooke(1,1) = k;
         Hooke(2,2) = k * (1. - fPoissonRatio) * 0.5;
     } else {
+        PanicButton();
         std::cout << "Please Implement me" <<std::endl;
     }
     
 
     for (int j = 0; j < nphi; j++){
-        matD(0,fDimension*j  ) = data.fDPhiX0(j,0);
-        matD(1,fDimension*j+1) = data.fDPhiX0(j,1);
-        matD(2,fDimension*j  ) = data.fDPhiX0(j,1);
-        matD(2,fDimension*j+1) = data.fDPhiX0(j,0);
+        matB(0,2*j  ) = data.fDPhiX0(j,0);
+        matB(1,2*j+1) = data.fDPhiX0(j,1);
+        matB(2,2*j  ) = data.fDPhiX0(j,1);
+        matB(2,2*j+1) = data.fDPhiX0(j,0);
     }
     
-    Stiffness += matD.transpose() * Hooke * matD * WJ;
+    Stiffness += matB.transpose() * Hooke * matB * WJ;
 
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
@@ -42,8 +43,8 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     int nphi = data.fPhi.size();
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
-    MatrixDouble matD(3,2*nphi);
-    matD.setZero();
+    MatrixDouble matB(3,2*nphi);
+    matB.setZero();
 
     auto force = fForceFunction;
     VecDouble forcingF(fDimension);
@@ -65,10 +66,10 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     }
     
     for (int j = 0; j < nphi; j++){
-        matD(0,fDimension*j  ) = data.fDPhiX0(j,0);
-        matD(1,fDimension*j+1) = data.fDPhiX0(j,1);
-        matD(2,fDimension*j  ) = data.fDPhiX0(j,1);
-        matD(2,fDimension*j+1) = data.fDPhiX0(j,0);
+        matB(0,fDimension*j  ) = data.fDPhiX0(j,0);
+        matB(1,fDimension*j+1) = data.fDPhiX0(j,1);
+        matB(2,fDimension*j  ) = data.fDPhiX0(j,1);
+        matB(2,fDimension*j+1) = data.fDPhiX0(j,0);
     }
     
     VecDouble strain(3);
@@ -77,7 +78,7 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     strain[1] = data.fDSolDx(1,1);
     strain[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
 
-    Rhs -= matD.transpose() * Hooke * strain * WJ;
+    Rhs -= matB.transpose() * Hooke * strain * WJ;
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
