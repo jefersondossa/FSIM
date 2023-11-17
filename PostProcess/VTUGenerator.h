@@ -5,11 +5,12 @@
 #include<iostream>
 #include<string>
 #include "Element.h"
-#include "CompMesh.h"
+#include "GraphMesh.h"
 
 namespace VTUGenerator{
 
-    void PrintResults(CompMesh *cmesh, std::string filename, int step = 0);
+
+    void PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step = 0);
 
 };
 

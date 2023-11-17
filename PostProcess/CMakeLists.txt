@@ -4,6 +4,8 @@ file(GLOB postprocess
     VTUGenerator.cpp
     XDMFGenerator.h
     XDMFGenerator.cpp
+    GraphMesh.h
+    GraphMesh.cpp
 )
 
 set(POSTPROCESS ${postprocess} PARENT_SCOPE)

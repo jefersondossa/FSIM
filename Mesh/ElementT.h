@@ -111,11 +111,11 @@ public:
 
     void interpolateSolution(int &index, VecDouble &u_) override;
     void interpolateSolution(VecDouble &phi, VecDouble &u_) override;
-    void interpolateSolution();
+    void interpolateSolution() override;
     void interpolateMeshVelocity(int &index, VecDouble &umesh_, VecDouble &umeshPrev_);
     void interpolateSolDerivatives(MatrixDouble &du_dx) override;
     void interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) override;
-    void interpolateSolDerivatives();
+    void interpolateSolDerivatives() override;
 
 
     void ComputeIntPointDistFunction(VecDouble &nodalval) override;
@@ -192,6 +192,18 @@ public:
 
     //Method for creating a copy of the element
     virtual Element *Clone() const;
+
+    VecDouble NodeCoord(int inode) override{
+        VecDouble xnode(tshape::Dimension);
+        MatrixDouble coords(tshape::Dimension,tshape::NElNodes);
+        tshape::getCoordinates(coords);
+        for (int i = 0; i < tshape::Dimension; i++){
+            xnode[i] = coords(i,inode);
+        }
+        return xnode;
+    }
+
+    // void Solution(int var) override;
 };
 
 

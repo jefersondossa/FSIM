@@ -31,6 +31,14 @@ public:
     
     void ComputeError(IntPointData &data, VecDouble &errors) override;
     
+
+    int VariableIndex(const std::string &name) const override{
+        return 0;
+    };
+
+    int NSolutionVariables(int var) const override{
+        return 0;
+    };
 };
 
 

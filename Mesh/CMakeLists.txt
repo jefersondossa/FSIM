@@ -3,6 +3,7 @@ file(GLOB mesh
     Arlequin.h
     Arlequin.cpp
     CompMesh.h
+    CompMesh.cpp
     Element.h
     Element.cpp
     ElementT.h

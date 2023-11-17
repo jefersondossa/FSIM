@@ -123,33 +123,36 @@ void ShapeTriangleCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &d
 
 
 void ShapeTriangleCub::getCoordinates(MatrixDouble &coord) {
+    //     1
+    //     54
+    //     693
+    //     2780
+    coord(0,2) = 0.0;
+    coord(1,2) = 0.0;
 
-    coord(0,0) = 0.0;
+    coord(0,0) = 1.0;
     coord(1,0) = 0.0;
 
-    coord(0,1) = 1.0;
-    coord(1,1) = 0.0;
+    coord(0,1) = 0.0;
+    coord(1,1) = 1.0;
 
-    coord(0,2) = 0.0;
-    coord(1,2) = 1.0;
+    coord(0,7) = 1./3.;
+    coord(1,7) = 0.0;
 
-    coord(0,3) = 1./3.;
-    coord(1,3) = 0.0;
+    coord(0,8) = 2./3.;
+    coord(1,8) = 0.0;
 
-    coord(0,4) = 2./3.;
-    coord(1,4) = 0.0;
+    coord(0,3) = 2./3.;
+    coord(1,3) = 1./3.;
 
-    coord(0,5) = 2./3.;
-    coord(1,5) = 1./3.;
+    coord(0,4) = 1./3.;
+    coord(1,4) = 2./3.;
 
-    coord(0,6) = 1./3.;
-    coord(1,6) = 2./3.;
+    coord(0,5) = 0.0;
+    coord(1,5) = 2./3.;
 
-    coord(0,7) = 0.0;
-    coord(1,7) = 2./3.;
-
-    coord(0,8) = 0.0;
-    coord(1,8) = 1./3.;
+    coord(0,6) = 0.0;
+    coord(1,6) = 1./3.;
 
     coord(0,9) = 1./3.;
     coord(1,9) = 1./3.;

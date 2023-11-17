@@ -93,8 +93,10 @@ public:
 
     virtual void interpolateSolution(int &index, VecDouble &u_) = 0;
     virtual void interpolateSolution(VecDouble &phi, VecDouble &u_) = 0;
+    virtual void interpolateSolution() = 0;
     virtual void interpolateSolDerivatives(MatrixDouble &du_dx) = 0;
     virtual void interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) = 0;
+    virtual void interpolateSolDerivatives() = 0;
     
 
 
@@ -173,6 +175,12 @@ public:
 
     // Method for creating a copy of the element
     virtual Element *Clone() const = 0;
+
+    virtual VecDouble NodeCoord(int inode) = 0;
+
+    void Solution(int var, VecDouble &Sol){
+        fWeakForm->Solution(fIntegData,var,Sol);
+    };
 };
 
 

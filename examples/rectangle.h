@@ -125,73 +125,77 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // pParameters.setArlequinOperatorConstants(1.,0.0);
 
     CompMesh* coarseModel = new CompMesh();
-    CompMesh* fineModel = new CompMesh();  
+    // CompMesh* fineModel = new CompMesh();  
 
-    Poisson * matpoisson = new Poisson(8,2);
-    coarseModel->InsertMaterial(matpoisson);
+    // Poisson * matpoisson = new Poisson(8,2);
+    // coarseModel->InsertMaterial(matpoisson);
     // matpoisson->SetForcingFunction(forcingFunctionPoisson);
     // matpoisson->SetExactSolution(exactSolPoisson);
 
-    // Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
-    // coarseModel->InsertMaterial(matpoisson);
+    Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
+    coarseModel->InsertMaterial(matpoisson);
     // ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1.,.3);
     // coarseModel->InsertMaterial(matpoisson);
-    // matpoisson->SetForcingFunction(forcingFunctionElasticity2D);
-    // matpoisson->SetExactSolution(exactSolElasticity2D);
+    matpoisson->SetForcingFunction(forcingFunctionElasticity2D);
+    matpoisson->SetExactSolution(exactSolElasticity2D);
     //BC
-    MatrixDouble val1(1,1);
+    MatrixDouble val1(2,2);
     val1.setZero();
-    VecDouble val2(1);
-    VecDouble val3(1);
+    VecDouble val2(2);
+    VecDouble val3(2);
     val2.setZero();val3.setZero();
     val2[0] = 1.5;
-    L2Projection * matbc3 = new L2Projection(6,1,1,val1,val2);
+    L2Projection * matbc3 = new L2Projection(6,1,0,val1,val2);
     val2.setZero();
     L2Projection * matbc1 = new L2Projection(5,1,0,val1,val2);
-    L2Projection * matbc2 = new L2Projection(7,1,1,val1,val3);
-    // matbc1->SetForcingFunction(forcingFunctionElasticity2D);
-    // matbc1->SetExactSolution(exactSolElasticity2D);
-    // matbc2->SetForcingFunction(forcingFunctionElasticity2D);
-    // matbc2->SetExactSolution(exactSolElasticity2D);
-    // matbc3->SetForcingFunction(forcingFunctionElasticity2D);
-    // matbc3->SetExactSolution(exactSolElasticity2D);
+    L2Projection * matbc2 = new L2Projection(7,1,0,val1,val3);
+    matbc1->SetForcingFunction(forcingFunctionElasticity2D);
+    matbc1->SetExactSolution(exactSolElasticity2D);
+    matbc2->SetForcingFunction(forcingFunctionElasticity2D);
+    matbc2->SetExactSolution(exactSolElasticity2D);
+    matbc3->SetForcingFunction(forcingFunctionElasticity2D);
+    matbc3->SetExactSolution(exactSolElasticity2D);
 
     coarseModel->InsertMaterial(matbc1);
     coarseModel->InsertMaterial(matbc2);
     coarseModel->InsertMaterial(matbc3);
 
-    fineModel->InsertMaterial(matpoisson);
-    val2[0] = 1.5; 
-    L2Projection * matbc4 = new L2Projection(6,1,0,val1,val2);
-    val2.setZero();
-    L2Projection * matbc5 = new L2Projection(5,1,1,val1,val2);
-    L2Projection * matbc6 = new L2Projection(7,1,1,val1,val3);    
-    fineModel->InsertMaterial(matbc4);
-    fineModel->InsertMaterial(matbc5);
-    fineModel->InsertMaterial(matbc6);
+    // fineModel->InsertMaterial(matpoisson);
+    // val2[0] = 1.5; 
+    // L2Projection * matbc4 = new L2Projection(6,1,0,val1,val2);
+    // val2.setZero();
+    // L2Projection * matbc5 = new L2Projection(5,1,1,val1,val2);
+    // L2Projection * matbc6 = new L2Projection(7,1,1,val1,val3);    
+    // fineModel->InsertMaterial(matbc4);
+    // fineModel->InsertMaterial(matbc5);
+    // fineModel->InsertMaterial(matbc6);
 
     GmshTools::Read(*coarseModel,"../coarse_test.msh");
-    GmshTools::Read(*fineModel,"../fine_test.msh");
+    // GmshTools::Read(*fineModel,"../fine_test.msh");
 
     // CompMeshTools::InitialSolution(coarseModel);
-    std::set<int> gluematids={5};
-    std::vector<CompMesh *> meshvector(2);
-    meshvector[0] = coarseModel;
-    meshvector[1] = fineModel;
-    Arlequin arl(meshvector,1.,0.);
-    arl.SetGlueIds(gluematids);
-    arl.SetUp();
+    // std::set<int> gluematids={5};
+    // std::vector<CompMesh *> meshvector(2);
+    // meshvector[0] = coarseModel;
+    // meshvector[1] = fineModel;
+    // Arlequin arl(meshvector,1.,0.);
+    // arl.SetGlueIds(gluematids);
+    // arl.SetUp();
 
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    NonLinearAnalysis an(&arl,SolverType::ESuiteSparse,1.e-6,2);
-    // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    // NonLinearAnalysis an(&arl,SolverType::ESuiteSparse,1.e-6,2);
+    NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     an.Run();
 
-    VTUGenerator::PrintResults(coarseModel,"resultCoarse");
-    VTUGenerator::PrintResults(fineModel,"resultFine");
-    VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
+    std::vector<std::string> ScalarNames, VectorNames;
+    ScalarNames = {"SigmaX","ExactSigmaX"};
+    VectorNames = {"Displacement","ExactDisplacement"};
+
+    VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
+    // VTUGenerator::PrintResults(fineModel,"resultFine");
+    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
     VecDouble errors;
     an.PostProcessError(errors);

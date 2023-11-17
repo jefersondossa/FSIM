@@ -5,25 +5,28 @@
 
 class Elasticity2D : public WeakForm{
 protected:
-    bool fPlaneStress = true;
-    double fYoungModulus;
-    double fPoissonRatio;
+    // enum 
+    bool         fPlaneStress;
+    double       fYoungModulus;
+    double       fPoissonRatio;
+    MatrixDouble fConstitutiveMatrix;
 
 public:
-    Elasticity2D(int matid, double young, double poisson, bool planes = true) : WeakForm() {
-        this->fMatId = matid;
-        fDimension = 2;
-        fNState = 2;
-        fYoungModulus = young;
-        fPoissonRatio = poisson;
-        fPlaneStress = planes;
-    };
+    enum PostProcVar {EDisplacement, EStress, EStrain, EExactStress, EExactDisplacement, EExactStrain};
+    
+    Elasticity2D(int matid, double young, double poisson, bool planes = true);
 
     void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) override;
     
     void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) override;
     
     void ComputeError(IntPointData &data, VecDouble &errors) override;
+
+    int VariableIndex(const std::string &name) const override;
+
+    int NSolutionVariables(int var) const override;
+    
+    void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 };
 
 

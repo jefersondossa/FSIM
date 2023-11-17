@@ -1,5 +1,33 @@
 #include "Elasticity2D.h"
 
+Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes) : WeakForm() {
+    this->fMatId = matid;
+    fDimension = 2;
+    fNState = 2;
+    fYoungModulus = young;
+    fPoissonRatio = poisson;
+    fPlaneStress = planes;
+    fConstitutiveMatrix.resize(3,3);
+    fConstitutiveMatrix.setZero();
+    if (fPlaneStress){//Plane Stress Matrix
+        double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
+        fConstitutiveMatrix(0,0) = k;
+        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,1) = k;
+        fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
+    } else {//Plane Strain Matrix
+        double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+        double k = 2.*G / (1.-2.*fPoissonRatio);
+        fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * k;
+        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * k;
+        fConstitutiveMatrix(2,2) = 2. * G;
+    }
+};
+
+
 void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
 
     data.fNeedsDSol = true;
@@ -10,22 +38,6 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
 
-    MatrixDouble Hooke(3,3);
-    Hooke.setZero();
-    // For EPT
-    if (fPlaneStress){
-        double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
-        Hooke(0,0) = k;
-        Hooke(0,1) = k * fPoissonRatio;
-        Hooke(1,0) = k * fPoissonRatio;
-        Hooke(1,1) = k;
-        Hooke(2,2) = k * (1. - fPoissonRatio) * 0.5;
-    } else {
-        PanicButton();
-        std::cout << "Please Implement me" <<std::endl;
-    }
-    
-
     for (int j = 0; j < nphi; j++){
         matB(0,2*j  ) = data.fDPhiX0(j,0);
         matB(1,2*j+1) = data.fDPhiX0(j,1);
@@ -33,7 +45,7 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         matB(2,2*j+1) = data.fDPhiX0(j,0);
     }
     
-    Stiffness += matB.transpose() * Hooke * matB * WJ;
+    Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
 
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
@@ -50,20 +62,6 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     VecDouble forcingF(fDimension);
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
-
-    MatrixDouble Hooke(3,3);
-    Hooke.setZero();
-    // For EPT
-    if (fPlaneStress){
-        double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
-        Hooke(0,0) = k;
-        Hooke(0,1) = k * fPoissonRatio;
-        Hooke(1,0) = k * fPoissonRatio;
-        Hooke(1,1) = k;
-        Hooke(2,2) = k * (1. - fPoissonRatio) * 0.5;
-    } else {
-        std::cout << "Please Implement me" <<std::endl;
-    }
     
     for (int j = 0; j < nphi; j++){
         matB(0,fDimension*j  ) = data.fDPhiX0(j,0);
@@ -78,7 +76,7 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     strain[1] = data.fDSolDx(1,1);
     strain[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
 
-    Rhs -= matB.transpose() * Hooke * strain * WJ;
+    Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
@@ -157,3 +155,187 @@ void Elasticity2D::ComputeError(IntPointData &data, VecDouble &errors){
     // errors[2] = errors[0]+errors[1];
 }
 
+int Elasticity2D::VariableIndex(const std::string &name) const{
+    
+    if(!strcmp("Displacement",name.c_str()))     return 1;
+    if(!strcmp("SigmaX",name.c_str()))           return 2;
+    if(!strcmp("SigmaY",name.c_str()))           return 3;
+    if(!strcmp("TauXY",name.c_str()))            return 4;
+    if(!strcmp("EpsilonX",name.c_str()))         return 5;
+    if(!strcmp("EpsilonY",name.c_str()))         return 6;
+    if(!strcmp("EpsilonXY",name.c_str()))        return 7;
+    if(!strcmp("ExactDisplacement",name.c_str()))return 8;
+    if(!strcmp("ExactSigmaX",name.c_str()))      return 9;
+    if(!strcmp("ExactSigmaY",name.c_str()))      return 10;
+    if(!strcmp("ExactTauXY",name.c_str()))       return 11;
+    if(!strcmp("ExactEpsilonX",name.c_str()))    return 12;
+    if(!strcmp("ExactEpsilonY",name.c_str()))    return 13;
+    if(!strcmp("ExactEpsilonXY",name.c_str()))   return 14;
+    if(!strcmp("ExactForce",name.c_str()))       return 15;
+
+    std::cout << "Post Process variable not implemented \n";
+    PanicButton();
+    return -1;
+};
+
+int Elasticity2D::NSolutionVariables(int var) const{
+    switch (var)
+    {
+    case 1:
+    case 8:
+    case 15:
+        return 3;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+        return 1;
+
+    default:
+        PanicButton();
+        return -1;
+    }
+};
+
+void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
+
+    //Displacement
+    if (var == 1){
+        Sol[0] = data.fSol[0];
+        Sol[1] = data.fSol[1];
+        Sol[2] = 0.;
+        return;
+    };
+
+    //Sigma X
+    if (var == 2){
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[0];
+        return;
+    };
+
+    //Sigma Y
+    if (var == 3){
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[1];
+        return;
+    };
+
+    //Tau XY
+    if (var == 4){
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[2];
+        return;
+    };
+
+    //Epsilon X
+    if (var == 5){
+        Sol[0] = data.fDSolDx(0,0);
+        return;
+    };
+    //Epsilon Y
+    if (var == 6){
+        Sol[0] = data.fDSolDx(1,1);
+        return;
+    };
+    //Epsilon XY
+    if (var == 7){
+        Sol[0] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        return;
+    };
+
+
+    VecDouble forcingF(fDimension);
+    VecDouble x_ = data.fX;
+    if (fForceFunction) fForceFunction(x_,forcingF);
+
+    VecDouble disp(fDimension);
+    MatrixDouble gradDisp(fDimension,3);
+    if (fExactSol) fExactSol(x_,disp,gradDisp);
+
+    //Exact Displacement
+    if (var == 8){
+        Sol[0] = disp[0];
+        Sol[1] = disp[1];
+        Sol[2] = 0.;
+        return;
+    };
+    
+    //Exact Sigma X
+    if (var == 9){
+        VecDouble epsilon(3);
+        epsilon[0] = gradDisp(0,0);
+        epsilon[1] = gradDisp(1,1);
+        epsilon[2] = gradDisp(0,1)+gradDisp(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[0];
+        return;
+    };
+
+    //Exact Sigma Y
+    if (var == 10){
+        VecDouble epsilon(3);
+        epsilon[0] = gradDisp(0,0);
+        epsilon[1] = gradDisp(1,1);
+        epsilon[2] = gradDisp(0,1)+gradDisp(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[1];
+        return;
+    };
+
+    //Exact Tau XY
+    if (var == 11){
+        VecDouble epsilon(3);
+        epsilon[0] = gradDisp(0,0);
+        epsilon[1] = gradDisp(1,1);
+        epsilon[2] = gradDisp(0,1)+gradDisp(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[2];
+        return;
+    };
+
+    //Exact Epsilon X
+    if (var == 12){
+        Sol[0] = gradDisp(0,0);
+        return;
+    };
+    //Exact Epsilon Y
+    if (var == 13){
+        Sol[0] = gradDisp(1,1);
+        return;
+    };
+    //Exact Epsilon XY
+    if (var == 14){
+        Sol[0] = gradDisp(0,1)+gradDisp(1,0);
+        return;
+    };
+
+    //Exact Force
+    if (var == 8){
+        Sol[0] = forcingF[0];
+        Sol[1] = forcingF[1];
+        Sol[2] = 0.;
+        return;
+    };
+
+}; 

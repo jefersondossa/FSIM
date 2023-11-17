@@ -52,6 +52,18 @@ public:
     virtual void ComputeStiffness(int &index, IntPointData &data, std::vector<MatrixDouble> &Stiffness) {};
     
     virtual void ComputeResidual(int &index, IntPointData &data, std::vector<VecDouble> &Rhs) {};
+
+    virtual int VariableIndex(const std::string &name) const {
+        PanicButton();
+        return 0;
+    };
+
+    virtual int NSolutionVariables(int var) const {
+        PanicButton();
+        return 0;
+    };
+
+    virtual void Solution(IntPointData &data, int var, VecDouble &Sol) {};
 };
 
 

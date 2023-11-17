@@ -1,20 +1,20 @@
 #include "VTUGenerator.h"
 
 
-void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step){
+void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step){
+
+    auto graphmesh = cmesh->GetGraphMesh();
 
     //    std::cout << "Printing Velocity Results" << std::endl;
     std::string s = filename + std::to_string(step) + ".vtu";
     
     std::fstream output_v(s.c_str(), std::ios_base::out);
-    int DIM = cmesh->Dimension();
-    int DEG = cmesh->GetDefaultOrder();
 
     output_v << "<?xml version=\"1.0\"?>" << std::endl
              << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
              << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << cmesh->NNodes()
-             << "\"  NumberOfCells=\"" << cmesh->NElements()
+             << "  <Piece NumberOfPoints=\"" << graphmesh->NNodes()
+             << "\"  NumberOfCells=\"" << graphmesh->NElements()
              << "\">" << std::endl;
 
     //WRITE NODAL COORDINATES
@@ -22,19 +22,11 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << "      <DataArray type=\"Float64\" "
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    if (cmesh->ElementVec().back()->GetWeakForm()->IsPositionalFEM()){
-        for (int i=0; i<cmesh->NNodes(); i++){
-            auto x = cmesh->NodeVec()[i]->getCoordinates();
-            auto solx = cmesh->NodeVec()[i]->GetSolution(0);
-            auto soly = cmesh->NodeVec()[i]->GetSolution(1);
-            output_v << x[0]+solx << " " << x[1]+soly << " " << x[2] << std::endl;        
-        };
-    } else {
-        for (int i=0; i<cmesh->NNodes(); i++){
-            auto x = cmesh->NodeVec()[i]->getCoordinates();
-            output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
-        };
-    }
+    for (int i=0; i<graphmesh->NNodes(); i++){
+        auto x = graphmesh->Node(i);
+        output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
+    };
+
     output_v << "      </DataArray>" << std::endl
              << "    </Points>" << std::endl;
     
@@ -43,8 +35,8 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << "      <DataArray type=\"Int32\" "
              << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
     
-    for (int i=0; i<cmesh->NElements(); i++){
-        auto connec=cmesh->ElementVec()[i]->getConnectivity();
+    for (int i=0; i<graphmesh->NElements(); i++){
+        auto connec=graphmesh->Connect(i);
         for (int k = 0; k < connec.size(); k++)
         {
             output_v << connec[k] << " ";
@@ -58,9 +50,9 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
              << " Name=\"offsets\" format=\"ascii\">" << std::endl;
     
     int aux = 0;
-    for (int i=0; i<cmesh->NElements(); i++){
-        output_v << aux +cmesh->ElementVec()[i]->NElNodes() << std::endl;
-        aux += cmesh->ElementVec()[i]->NElNodes();
+    for (int i=0; i<graphmesh->NElements(); i++){
+        aux += graphmesh->Connect(i).size();
+        output_v << aux << std::endl;
     };
     output_v << "      </DataArray>" << std::endl;
   
@@ -68,8 +60,8 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
     output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
              << "format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<cmesh->NElements(); i++){
-        output_v << cmesh->ElementVec()[i]->PrintType() << std::endl;
+    for (int i=0; i<graphmesh->NElements(); i++){
+        output_v << graphmesh->ElType(i) << std::endl;
     };
 
     output_v << "      </DataArray>" << std::endl
@@ -77,78 +69,77 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, int step)
 
     //WRITE NODAL RESULTS
     output_v << "    <PointData>" << std::endl;
-    // if (cmesh->getProblemParameters().ProbType()==EPoisson){
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //         << "Name=\"Solution\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){
-    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << std::endl;
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //         << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){
-    //         output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    // } else if (cmesh->getProblemParameters().ProbType()==EElastic){
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //         << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){           
-    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
-    //                 << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
-    //         if (DIM == 2) {
-    //             output_v <<  0. << std::endl;
-    //         } else {
-    //             output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
-    //         }
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //         << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){
-    //         output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    // } else if(cmesh->getProblemParameters().ProbType() == ESolidPositional){
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //         << "Name=\"Displacement\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){           
-    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
-    //                 << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
-    //         if (DIM == 2) {
-    //             output_v <<  0. << std::endl;
-    //         } else {
-    //             output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
-    //         }
-    //     }
-        // output_v << "      </DataArray> " << std::endl;
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //         << "Name=\"WeightFunction\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){
-    //         output_v << cmesh->NodeVec()[i] -> getWeightFunction() << std::endl;
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    // } else if (cmesh->getProblemParameters().ProbType()==EStokes || cmesh->getProblemParameters().ProbType()==ENavierStokes){
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-    //         << "Name=\"Velocity\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){
-    //         // std::cout << "Solution - " << NodeVec()[i] -> GetSolution(0) << " " << NodeVec()[i] -> GetSolution(0) << std::endl;
-    //         output_v << cmesh->NodeVec()[i] -> GetSolution(0) << " "             
-    //                 << cmesh->NodeVec()[i] -> GetSolution(1) << " ";
-    //         if (DIM == 2) {
-    //             output_v <<  0. << std::endl;
-    //         } else {
-    //             output_v <<  cmesh->NodeVec()[i] -> GetSolution(2) << std::endl;
-    //         }
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    //     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //         << "Name=\"Pressure\" format=\"ascii\">" << std::endl;
-    //     for (int i=0; i<cmesh->NNodes(); i++){
-    //         output_v << cmesh->NodeVec()[i] -> GetSolution(DIM) << std::endl;
-    //     }
-    //     output_v << "      </DataArray> " << std::endl;
-    // }
+
+    //Scalar values
+    std::map<int64_t,std::vector<VecDouble>> scalSol;
+    std::map<int64_t,std::vector<VecDouble>> vectSol;
+    // std::vector<std::vector<VecDouble,scalnames.size()>,graphmesh->NNodes()> scalSol;
+    for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
+        auto compel = cmesh->ElementVec()[iel];
+        auto graphconnect = graphmesh->Connect(iel);
+
+        for (int inode = 0; inode < compel->NElNodes(); inode++){
+            auto xparametric = compel->NodeCoord(inode);
+            compel->IntegrationData().fAdimCoord = xparametric;
+            compel->IntegrationData().fNeedsSol = true;
+            compel->IntegrationData().fNeedsDSol = true;
+            compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
+            compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
+            compel->ComputeJacobian();
+            compel->ComputeSpatialDerivatives();
+            compel->interpolateSolution();
+            compel->interpolateSolDerivatives();
+            
+            for (int iscal = 0; iscal < scalnames.size(); iscal++){
+                int varindex = compel->GetWeakForm()->VariableIndex(scalnames[iscal]);
+                int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
+                VecDouble Sol(nvar);
+                compel->Solution(varindex,Sol);
+                scalSol[graphconnect[inode]].push_back(Sol);
+            }
+            for (int ivect = 0; ivect < vecnames.size(); ivect++){
+                int varindex = compel->GetWeakForm()->VariableIndex(vecnames[ivect]);
+                int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
+                VecDouble Sol(nvar);
+                compel->Solution(varindex,Sol);
+                vectSol[graphconnect[inode]].push_back(Sol);
+            }
+        }
+    }
+    for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
+        auto compel = cmesh->ElementVec()[iel];
+        if (compel->Dimension() == cmesh->Dimension()) continue;
+        auto graphconnect = graphmesh->Connect(iel);
+        for (int i = 0; i < graphconnect.size(); i++){
+            auto meshnode = graphmesh->GraphNodeToMeshNode(graphconnect[i]);
+            auto graphnode = graphmesh->MeshNodeToGraphNode(meshnode);
+            scalSol[graphconnect[i]] = scalSol[graphnode];
+            vectSol[graphconnect[i]] = vectSol[graphnode];
+        }
+    }
+    
+    for (int iscal = 0; iscal < scalnames.size(); iscal++){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+            << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<graphmesh->NNodes(); i++){
+            output_v << scalSol[i][iscal][0] << std::endl;
+        }
+        output_v << "      </DataArray> " << std::endl;
+    }
+    
+    for (int iscal = 0; iscal < vecnames.size(); iscal++){
+        output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
+            << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<graphmesh->NNodes(); i++){
+            output_v << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;
+        }
+        output_v << "      </DataArray> " << std::endl;
+    }
+    
+    
+
+
+
 
     output_v << "    </PointData>" << std::endl; 
 

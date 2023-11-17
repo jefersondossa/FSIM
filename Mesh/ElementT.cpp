@@ -994,6 +994,11 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 };
 
 
+// template<class tshape>
+// void ElementT<tshape>::Solution(int ivar){
+//     fWeakForm->Solution(data,ivar,Sol);
+// }
+
 
 template<class tshape >
 Element * ElementT<tshape>::Clone() const {

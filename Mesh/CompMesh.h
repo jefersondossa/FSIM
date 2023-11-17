@@ -10,9 +10,11 @@
 #include "GmshTools.h"
 #include "WeakForm.h"
 #include <vector>
+#include "GraphMesh.h"
 
 class Element;
 class Analysis;
+class GraphMesh;
 
 class CompMesh{
 private:
@@ -28,6 +30,8 @@ private:
     std::vector<Element *>    fElementVector;
 
     std::map<int,WeakForm *> fMaterialVector;
+
+    GraphMesh *fGraphMesh;
 
 public:
     CompMesh() = default;
@@ -77,6 +81,8 @@ public:
     // int &NElNodes() {return nElNodes;}
     int &NBdNodes() {return nBdNodes;}
     int64_t NGlobalDOF() {return fNodeVector.size()*fNState;}
+
+    GraphMesh* GetGraphMesh();
 };
 
 #endif

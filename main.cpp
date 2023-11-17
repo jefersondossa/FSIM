@@ -43,6 +43,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "L2Projection.h"
 #include "Elasticity2D.h"
 #include "ElasticityPositional2D.h"
+#include "GraphMesh.h"
 
 int main(int argc, char **args) {
 
