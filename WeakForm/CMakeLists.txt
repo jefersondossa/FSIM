@@ -20,6 +20,8 @@ file(GLOB weakform
     L2Projection.cpp
     MohrCoulomb.h 
     MohrCoulomb.cpp
+    ElasticTruss.h 
+    ElasticTruss.cpp
 )
 
 set(WEAKFORM ${weakform} PARENT_SCOPE)

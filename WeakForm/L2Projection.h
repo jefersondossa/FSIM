@@ -31,6 +31,7 @@ public:
     
     void ComputeError(IntPointData &data, VecDouble &errors) override;
     
+    VecDouble &BCValue(){return BCVal2;}
 
     int VariableIndex(const std::string &name) const override{
         return 0;

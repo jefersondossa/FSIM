@@ -288,6 +288,8 @@ void ElementT<tshape>::ComputeJacobian() {
     int DIM = tshape::Dimension;
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fA0Inv.setZero();
+    fIntegData.fAxes.resize(3,DIM);
+    fIntegData.fAxes.setZero();
     fIntegData.fA0.resize(DIM,DIM);
     fIntegData.fA0.setZero();
     fIntegData.fX.resize(3);
@@ -302,8 +304,6 @@ void ElementT<tshape>::ComputeJacobian() {
     tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
     tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
    
-    MatrixDouble gradx(3,DIM);
-    gradx.setZero();
     fIntegData.fA0.setZero();
     VecDouble xna(3);
     for (int i = tshape::NElNodes; i--; ){
@@ -313,7 +313,7 @@ void ElementT<tshape>::ComputeJacobian() {
             xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
             
             for (int k = DIM; k--; ){
-                gradx(j,k) += xna[j] * fIntegData.fDPhi(i,k);
+                fIntegData.fAxes(j,k) += xna[j] * fIntegData.fDPhi(i,k);
             };
         };
     };
@@ -332,7 +332,7 @@ void ElementT<tshape>::ComputeJacobian() {
             v_1.setZero();
 
             for (int i = 0; i < nrows; i++) {
-                v_1[i] = gradx(i, 0);
+                v_1[i] = fIntegData.fAxes(i, 0);
             }
 
             double norm_v_1 = 0.;
@@ -352,10 +352,10 @@ void ElementT<tshape>::ComputeJacobian() {
         case 2:
         {
             //     //Computing the jacobian determinant and Inverse
-            fIntegData.fA0(0,0) = gradx(0,0);
-            fIntegData.fA0(0,1) = gradx(0,1);
-            fIntegData.fA0(1,0) = gradx(1,0);
-            fIntegData.fA0(1,1) = gradx(1,1);
+            fIntegData.fA0(0,0) = fIntegData.fAxes(0,0);
+            fIntegData.fA0(0,1) = fIntegData.fAxes(0,1);
+            fIntegData.fA0(1,0) = fIntegData.fAxes(1,0);
+            fIntegData.fA0(1,1) = fIntegData.fAxes(1,1);
             fIntegData.fJacA0 = fIntegData.fA0(0,0) * fIntegData.fA0(1,1) - fIntegData.fA0(0,1) * fIntegData.fA0(1,0);
 
             fIntegData.fA0Inv(0,0) = fIntegData.fA0(1,1) / fIntegData.fJacA0;
@@ -370,9 +370,9 @@ void ElementT<tshape>::ComputeJacobian() {
             // axes.resize(dim, 3);
 
             for (int i = 0; i < nrows; i++) {
-                fIntegData.fA0(i, 0) = gradx(i, 0);
-                fIntegData.fA0(i, 1) = gradx(i, 1);
-                fIntegData.fA0(i, 2) = gradx(i, 2);
+                fIntegData.fA0(i, 0) = fIntegData.fAxes(i, 0);
+                fIntegData.fA0(i, 1) = fIntegData.fAxes(i, 1);
+                fIntegData.fA0(i, 2) = fIntegData.fAxes(i, 2);
             }
 
             fIntegData.fJacA0 -= fIntegData.fA0(0, 2) * fIntegData.fA0(1, 1) * fIntegData.fA0(2, 0); //- a02 a11 a20

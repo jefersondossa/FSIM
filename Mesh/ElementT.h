@@ -194,10 +194,10 @@ public:
     virtual Element *Clone() const;
 
     VecDouble NodeCoord(int inode) override{
-        VecDouble xnode(tshape::Dimension);
-        MatrixDouble coords(tshape::Dimension,tshape::NElNodes);
+        VecDouble xnode(3);
+        MatrixDouble coords(3,tshape::NElNodes);
         tshape::getCoordinates(coords);
-        for (int i = 0; i < tshape::Dimension; i++){
+        for (int i = 0; i < 3; i++){
             xnode[i] = coords(i,inode);
         }
         return xnode;

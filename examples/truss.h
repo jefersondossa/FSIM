@@ -1,6 +1,6 @@
 
    // Defines the problem dimension
-    const int dimension = 1;
+    const int dimension = 2;
 {
 //==========================================================================
 //==============================PROBLEM MESHES==============================
@@ -10,18 +10,18 @@
 
     CompMesh* truss = new CompMesh();
     truss->SetDimension(dimension);
-    Poisson * matpoisson = new Poisson(4,dimension);
-    truss->InsertMaterial(matpoisson);
+    ElasticTruss * mattruss = new ElasticTruss(4,dimension,1000.,1.);
+    truss->InsertMaterial(mattruss);
     
     //BC
-    MatrixDouble val1(1,1);
+    MatrixDouble val1(2,2);
     val1.setZero();
-    VecDouble val2(1);
+    VecDouble val2(2);
     val2.setZero();
-    val2[0] = 1.5;
-    L2Projection * matbc1 = new L2Projection(2,1,0,val1,val2);
-    val2.setZero();
-    L2Projection * matbc2 = new L2Projection(3,1,0,val1,val2);
+    
+    L2Projection * matbc1 = new L2Projection(5,2,0,val1,val2);
+    val2[1] = -0.1;
+    L2Projection * matbc2 = new L2Projection(6,2,0,val1,val2);
     
     truss->InsertMaterial(matbc1);
     truss->InsertMaterial(matbc2);
@@ -30,12 +30,18 @@
     
     // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
     // an.Run();
-    LinearAnalysis an(truss,SolverType::ESuiteSparse);
+    // LinearAnalysis an(truss,SolverType::ESuiteSparse);
+    std::vector<L2Projection *> bcIncrement = {matbc2};
+    IncrementalAnalysis an(truss,SolverType::ESuiteSparse, 5, bcIncrement);
     // NonLinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse,1.e-6,2);
     // NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
-    an.Run();
+    // an.Run();
 
-    VTUGenerator::PrintResults(truss,"resultCoarse");
+    std::vector<std::string> ScalarNames, VectorNames;
+    ScalarNames = {"NormalStress"};
+    VectorNames = {"Displacement"};
+    an.Run("truss",ScalarNames,VectorNames);
+    // VTUGenerator::PrintResults(truss,"truss",ScalarNames,VectorNames);
 
     VecDouble errors;
     // an.PostProcessError(errors);

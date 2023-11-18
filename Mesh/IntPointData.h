@@ -9,6 +9,7 @@ class IntPointData {
 public:
     MatrixDouble fA0;
     MatrixDouble fA0Inv;
+    MatrixDouble fAxes;
 
     MatrixDouble fA1;
 
@@ -36,6 +37,7 @@ public:
 
     bool fNeedsSol = false;
     bool fNeedsDSol = false;
+    
 
 };
 

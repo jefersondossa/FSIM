@@ -1,18 +1,17 @@
-#ifndef ELASTICITY2D_H
-#define ELASTICITY2D_H
+#ifndef ELASTICTRUSS_H
+#define ELASTICTRUSS_H
 
 #include "WeakForm.h"
 
-class Elasticity2D : public WeakForm{
+class ElasticTruss : public WeakForm{
 protected:
     // enum 
     bool         fPlaneStress;
     double       fYoungModulus;
-    double       fPoissonRatio;
-    MatrixDouble fConstitutiveMatrix;
+    double       fArea;
 
-public:  
-    Elasticity2D(int matid, double young, double poisson, bool planes = true);
+public:    
+    ElasticTruss(int matid, int dim, double young, double area);
 
     void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) override;
     

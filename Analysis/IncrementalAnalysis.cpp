@@ -1,11 +1,59 @@
 #include "IncrementalAnalysis.h"
+#include "VTUGenerator.h"
+
+IncrementalAnalysis::IncrementalAnalysis(CompMesh *cmesh, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol, int maxIter) 
+    : NonLinearAnalysis(cmesh,stype,tol,maxIter), fNSteps(nsteps){
+    fIncrementBC = bcinc;
+};
+
+
+IncrementalAnalysis::IncrementalAnalysis(Arlequin *arl, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol, int maxIter) 
+    : NonLinearAnalysis(arl,stype,tol,maxIter), fNSteps(nsteps){
+    fIncrementBC = bcinc;
+};
 
 void IncrementalAnalysis::Run(){
 
+    std::vector<VecDouble > increments(fIncrementBC.size());
+    //Define the step size for each BC
+    for (int i = 0; i < fIncrementBC.size(); i++){
+        auto bcval = fIncrementBC[i]->BCValue();
+        increments[i] = bcval/fNSteps;
+    }
+    
     int iStep = 0;
+    while (iStep <= fNSteps){
+        std::cout << "Computing step... " << iStep << std::endl;
+        
+        for (int i = 0; i < fIncrementBC.size(); i++){
+            fIncrementBC[i]->BCValue() = increments[i] * iStep;
+        }
 
-    while (iStep < fNSteps)
-    {   
         NonLinearAnalysis::Run();
+        iStep++;
+    }
+}
+
+
+void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames){
+
+    std::vector<VecDouble > increments(fIncrementBC.size());
+    //Define the step size for each BC
+    for (int i = 0; i < fIncrementBC.size(); i++){
+        auto bcval = fIncrementBC[i]->BCValue();
+        increments[i] = bcval/fNSteps;
+    }
+    
+    int iStep = 0;
+    while (iStep <= fNSteps){
+        std::cout << "Computing step... " << iStep << std::endl;
+        
+        for (int i = 0; i < fIncrementBC.size(); i++){
+            fIncrementBC[i]->BCValue() = increments[i] * iStep;
+        }
+
+        NonLinearAnalysis::Run();
+        VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,iStep);
+        iStep++;
     }
 }

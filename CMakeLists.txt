@@ -48,6 +48,7 @@ add_subdirectory(Util)
 add_subdirectory(Analysis)
 add_subdirectory(Integral)
 add_subdirectory(Mesh)
+add_subdirectory(Plasticity)
 add_subdirectory(PostProcess)
 add_subdirectory(PreProcess)
 add_subdirectory(Shape)
@@ -60,6 +61,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/Analysis"
 	"${PROJECT_SOURCE_DIR}/Integral"
 	"${PROJECT_SOURCE_DIR}/Mesh"
+	"${PROJECT_SOURCE_DIR}/Plasticity"
 	"${PROJECT_SOURCE_DIR}/PostProcess"
 	"${PROJECT_SOURCE_DIR}/PreProcess"
 	"${PROJECT_SOURCE_DIR}/Shape"
@@ -76,7 +78,7 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
+add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
 

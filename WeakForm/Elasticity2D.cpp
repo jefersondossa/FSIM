@@ -331,7 +331,7 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
     };
 
     //Exact Force
-    if (var == 8){
+    if (var == 15){
         Sol[0] = forcingF[0];
         Sol[1] = forcingF[1];
         Sol[2] = 0.;

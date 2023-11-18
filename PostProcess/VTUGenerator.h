@@ -9,7 +9,6 @@
 
 namespace VTUGenerator{
 
-
     void PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step = 0);
 
 };

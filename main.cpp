@@ -35,6 +35,7 @@ static char help[] = "Solves the Incompressible flow problem";
 // Developed Header Files
 #include "LinearAnalysis.h"
 #include "NonLinearAnalysis.h"
+#include "IncrementalAnalysis.h"
 #include "Arlequin.h"
 #include "GmshTools.h"
 #include "VTUGenerator.h"
@@ -44,6 +45,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "Elasticity2D.h"
 #include "ElasticityPositional2D.h"
 #include "GraphMesh.h"
+#include "ElasticTruss.h"
 
 int main(int argc, char **args) {
 
@@ -63,8 +65,8 @@ int main(int argc, char **args) {
 
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
-    #include "examples/rectangle.h"
-    // #include "examples/truss.h"
+    // #include "examples/rectangle.h"
+    #include "examples/truss.h"
      
     //Finalize main program   
     PetscFinalize();
