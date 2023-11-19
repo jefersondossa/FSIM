@@ -30,8 +30,10 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
 
 void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
 
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(this->fDimension, this->fDimension);
+    if (!data.fNeedsDSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+    }
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
@@ -339,3 +341,8 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
     };
 
 }; 
+
+
+MatrixDouble Elasticity2D::ConstitutiveMatrix(){
+    return fConstitutiveMatrix;
+}

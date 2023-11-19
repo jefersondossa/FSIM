@@ -47,6 +47,8 @@ public:
 
     int &NState() {return fNState; }
 
+    int &Dimension() {return fDimension;}
+
     bool &IsPositionalFEM() {return fPositionalFEM;}
 
     virtual void ComputeStiffness(int &index, IntPointData &data, std::vector<MatrixDouble> &Stiffness) {};

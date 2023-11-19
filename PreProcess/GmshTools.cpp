@@ -16,6 +16,8 @@
 #include<fstream>
 #include<iostream>
 #include "ElementT.h"
+#include "ElementWithMem.h"
+#include "PlasticityModel.h"
 #include <vector>
 
 void GmshTools::RenumberConnectivity(CompMesh *cmesh){
@@ -1142,54 +1144,83 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
 
     //The element should be ignored if there is no material inserted with its physical identifier
     if (!gmesh->Material(physical_identifier)) return gel;
+    PlasticityModel *plasticmaterial = dynamic_cast<PlasticityModel * > (gmesh->Material(physical_identifier));
+
 
     switch (el_type) {
         case 1:
         {   // Ligelne
-        
-            gel = new ElementT<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 3;
         }
             break;
         case 2:
         {
             // Linear Triangle
-            gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 5;           
             break;
         }
         case 8:
         {
             // Quadratic Line
-            gel = new ElementT<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 21;           
             break;
         }
         case 9:
         {
             // Quadratic Triangle
-            gel = new ElementT<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 22;           
             break;
         }
         case 15:
         {
             // Point
-            gel = new ElementT<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 1;           
             break;
         }
         case 21:
         {
             // Cubic Triangle
-            gel = new ElementT<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 69;           
             break;
         }
         case 26:
         {
             // Cubic Line
-            gel = new ElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
             gel->PrintType() = 35;           
             break;
         }

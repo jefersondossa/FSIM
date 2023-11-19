@@ -46,6 +46,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "ElasticityPositional2D.h"
 #include "GraphMesh.h"
 #include "ElasticTruss.h"
+#include "LinearHardening.h"
 
 int main(int argc, char **args) {
 

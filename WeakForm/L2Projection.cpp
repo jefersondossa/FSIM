@@ -1,8 +1,10 @@
 #include "L2Projection.h"
 
 void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-    data.fNeedsSol = true;
-    data.fSol.resize(fNState);
+    if (!data.fNeedsSol){
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * WeakForm::fBigNumber;
     double nphi = data.fPhi.size();
 
@@ -42,7 +44,7 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         fExactSol(data.fX, result, deriv);
     }
 
-    result -= data.fSol;
+    // result -= data.fSol;
     switch (BCType)
     {
     case 0: // Dirichlet in all state variables
@@ -56,7 +58,7 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
-                // Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];
+                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];
             }
         }
     }

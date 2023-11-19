@@ -1,8 +1,10 @@
 #include "Poisson.h"
 
 void Poisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(fNState,fDimension);
+    if (!data.fNeedsDSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+    }
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();

@@ -7,10 +7,12 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
     //Stiffness[1] is always the diagonal contribution to the global stiffness matrix
     //The remaining positions corresponds to the other contributions, 
     //which will be added to stiffness[0] in the global matrix and depends on the problem.
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(fNState,fDimension);
-    data.fNeedsSol = true;
-    data.fSol.resize(fNState);
+    if (!data.fNeedsDSol || !data.fNeedsSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
 
     int DIM = fDimension;
     int nphi = data.fPhi.size();

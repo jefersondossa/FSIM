@@ -36,32 +36,6 @@ public:
         fIntRule.SetOrder(tshape::Order+tshape::Order);
     };
 
-    /// fluid element constructor
-    /// @param int element index @param Connectivity element connectivity
-    /// @param vector<Nodes> 
-    ElementT(int64_t index, VecInt &connect, CompMesh* mesh) : Element(){
-        
-        fMesh = mesh;
-        fConnect.resize(tshape::NElNodes);
-        fIndex = index;
-        for (int i = tshape::NElNodes; i--; ) fConnect[i] = connect[i];
-        DEG = fMesh->GetDefaultOrder();
-
-        FSIInterface = false;
-        fNeighborElements.clear();
-
-        fIntRule.SetOrder(tshape::Order+tshape::Order);
-        fIntegData.fWeightFunction.resize(fIntRule.NPoints());
-        fIntegData.fDistFunction.resize(fIntRule.NPoints());
-        fIntegData.fPrevWeightFunction.resize(fIntRule.NPoints());
-
-        fIntegData.fWeightFunction.fill(1.);
-        fIntegData.fPrevWeightFunction.fill(1.);
-    
-        getIntegPointCoordinates();
-
-    };
-
     ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : Element(){
         
         fMesh = mesh;

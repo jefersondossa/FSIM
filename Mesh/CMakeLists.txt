@@ -13,6 +13,8 @@ file(GLOB mesh
     Node.h
     Node.cpp
     IntPointData.h
+    ElementWithMem.h
+    ElementWithMem.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)

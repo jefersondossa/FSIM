@@ -39,17 +39,29 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
 
     std::vector<VecDouble > increments(fIncrementBC.size());
     //Define the step size for each BC
-    for (int i = 0; i < fIncrementBC.size(); i++){
-        auto bcval = fIncrementBC[i]->BCValue();
-        increments[i] = bcval/fNSteps;
+    if (fIncrementValue.size() == 0){
+        for (int i = 0; i < fIncrementBC.size(); i++){
+            auto bcval = fIncrementBC[i]->BCValue();
+            increments[i] = bcval/fNSteps;
+        }
+    } else {
+        for (int i = 0; i < fIncrementBC.size(); i++){
+            increments[i] = fIncrementValue; 
+        }
     }
     
     int iStep = 0;
     while (iStep <= fNSteps){
         std::cout << "Computing step... " << iStep << std::endl;
         
-        for (int i = 0; i < fIncrementBC.size(); i++){
-            fIncrementBC[i]->BCValue() = increments[i] * iStep;
+        if (fIncrementValue.size() == 0){
+            for (int i = 0; i < fIncrementBC.size(); i++){
+                fIncrementBC[i]->BCValue() = increments[i] * iStep;
+            }
+        } else {
+            for (int i = 0; i < fIncrementBC.size(); i++){
+                fIncrementBC[i]->BCValue() += increments[i] * iStep;
+            }
         }
 
         NonLinearAnalysis::Run();

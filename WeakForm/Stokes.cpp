@@ -109,10 +109,12 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
 };
 
 void Stokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(fDimension, fNState);
-    data.fNeedsSol = true;
-    data.fSol.resize(fNState);
+    if (!data.fNeedsDSol || !data.fNeedsSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
     int nphi = data.fPhi.size();
 
     int DIM = fDimension;

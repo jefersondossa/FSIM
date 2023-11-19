@@ -1,8 +1,10 @@
 #include "ElasticityPositional2D.h"
 
 void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(fDimension, fDimension);
+    if (!data.fNeedsDSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+    }
     int nphi = data.fPhi.size();
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     

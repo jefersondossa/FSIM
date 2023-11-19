@@ -81,10 +81,12 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
         for (int inode = 0; inode < compel->NElNodes(); inode++){
             auto xparametric = compel->NodeCoord(inode);
             compel->IntegrationData().fAdimCoord = xparametric;
-            compel->IntegrationData().fNeedsSol = true;
-            compel->IntegrationData().fNeedsDSol = true;
-            compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
-            compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
+            if (!compel->IntegrationData().fNeedsSol || compel->IntegrationData().fNeedsDSol){
+                compel->IntegrationData().fNeedsSol = true;
+                compel->IntegrationData().fNeedsDSol = true;
+                compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
+                compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
+            }
             compel->ComputeJacobian();
             compel->ComputeSpatialDerivatives();
             compel->interpolateSolution();

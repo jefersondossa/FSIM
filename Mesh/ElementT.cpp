@@ -904,7 +904,6 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     if (!fWeakForm) return;
 
     int DIM = tshape::Dimension;
-    DEG = fMesh->GetDefaultOrder();
     
     int index = 0;
     fIntegData.fAdimCoord.resize(DIM);
@@ -940,6 +939,7 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     };  
 
     // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << "Rhs \n" << rhsVector << std::endl;
 
     return;
 };
@@ -954,7 +954,6 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
     if (!fWeakForm) return;
 
     int DIM = tshape::Dimension;
-    DEG = fMesh->GetDefaultOrder();
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fAdimCoord.resize(DIM);
 

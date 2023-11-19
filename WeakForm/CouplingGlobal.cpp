@@ -9,10 +9,13 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
     //which will be added to stiffness[0] in the global matrix and depends on the problem.
 
     if ((fGlobalElemCorresp[index] != fGlobalIndex)) return;// This contribution belongs to another global element
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(fNState,fDimension);
-    data.fNeedsSol = true;
-    data.fSol.resize(fNState);
+    
+    if (!data.fNeedsDSol || !data.fNeedsSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
 
     int nphi = data.fPhi.size();
     int DIM = fDimension;

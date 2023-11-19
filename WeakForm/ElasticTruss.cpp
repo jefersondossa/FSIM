@@ -10,15 +10,17 @@ ElasticTruss::ElasticTruss(int matid, int dim, double young, double area) : Weak
 
 
 void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(this->fDimension, this->fDimension);
-
+    if (!data.fNeedsDSol || !data.fNeedsSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
+    
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
     double elementLenght = 2.*data.fJacA0;
     double K = fYoungModulus * fArea / elementLenght;
-
 
 
     MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
@@ -29,57 +31,66 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     double sina = data.fAxes(1,0) / data.fJacA0;
     double check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
-        for (int i = 0; i < fDimension; i++){
-            matB(i,fDimension*j + i) = data.fDPhiX0(j,0);
-        }
+        // for (int i = 0; i < fDimension; i++){
+            matB(0,fDimension*j) = data.fDPhiX0(j,0);
+        // }
         rotation(2*j  ,2*j  ) = cosa;
-        rotation(2*j+1,2*j  ) = -sina;
-        rotation(2*j  ,2*j+1) = sina;
+        rotation(2*j+1,2*j  ) = sina;
+        rotation(2*j  ,2*j+1) = -sina;
         rotation(2*j+1,2*j+1) = cosa;
     }
+    // std::cout << "matB =\n"<< matB << std::endl;
     // std::cout << "rotation =\n"<< rotation << std::endl;
-    Stiffness += rotation * matB.transpose() * matB * rotation.transpose() * WJ * K;
+    // std::cout << "K =\n"<< matB.transpose() * matB << std::endl;
+    Stiffness += rotation * matB.transpose() * matB * rotation.transpose() * WJ * elementLenght * K;
 
-    // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
 
 void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
-    // int nphi = data.fPhi.size();
-
-    // double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
-    // MatrixDouble matB(3,2*nphi);
-    // matB.setZero();
-
-    // auto force = fForceFunction;
-    // VecDouble forcingF(fDimension);
-    // VecDouble x_ = data.fX;
-    // if (force) force(x_,forcingF);
+    int nphi = data.fPhi.size();
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    auto force = fForceFunction;
+    VecDouble forcingF(fDimension);
+    VecDouble x_ = data.fX;
+    if (force) force(x_,forcingF);
     
-    // for (int j = 0; j < nphi; j++){
-    //     matB(0,fDimension*j  ) = data.fDPhiX0(j,0);
-    //     matB(1,fDimension*j+1) = data.fDPhiX0(j,1);
-    //     matB(2,fDimension*j  ) = data.fDPhiX0(j,1);
-    //     matB(2,fDimension*j+1) = data.fDPhiX0(j,0);
-    // }
-    
-    // VecDouble strain(3);
-    // strain.setZero();
-    // strain[0] = data.fDSolDx(0,0);
-    // strain[1] = data.fDSolDx(1,1);
-    // strain[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+    double elementLenght = 2.*data.fJacA0;
+    double K = fYoungModulus * fArea / elementLenght;
 
-    // Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
+    MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
+    MatrixDouble matB(fDimension,fDimension*nphi);
+    rotation.setZero();
+    matB.setZero();
+    double cosa = data.fAxes(0,0) / data.fJacA0;
+    double sina = data.fAxes(1,0) / data.fJacA0;
+    double check = sina*sina+cosa*cosa;
+    for (int j = 0; j < nphi; j++){
+        // for (int i = 0; i < fDimension; i++){
+            matB(0,fDimension*j) = data.fDPhiX0(j,0);
+        // }
+        rotation(2*j  ,2*j  ) = cosa;
+        rotation(2*j+1,2*j  ) = sina;
+        rotation(2*j  ,2*j+1) = -sina;
+        rotation(2*j+1,2*j+1) = cosa;
+    }
 
-    // for (int i = nphi; i--; ){
-    //     double shapeFi = data.fPhi[i];
-    //     //External force
-    //     double Fx = forcingF[0] * shapeFi;
-    //     double Fy = forcingF[1] * shapeFi;
-    //     Rhs[2*i  ] += Fx * WJ;
-    //     Rhs[2*i+1] += Fy * WJ;
-    // };
+    VecDouble sol(2);// = data.fSol;
+    sol[0] = -data.fDSolDx(1,0)*sina;
+    sol[1] = +data.fDSolDx(0,0)*cosa;
 
+    // std::cout << "rotation =\n"<< rotation << std::endl;
+    Rhs += rotation * matB.transpose() * sol * WJ * elementLenght * K;
+
+    for (int i = nphi; i--; ){
+        double shapeFi = data.fPhi[i];
+        //External force
+        double Fx = forcingF[0] * shapeFi;
+        double Fy = forcingF[1] * shapeFi;
+        Rhs[2*i  ] += Fx * WJ;
+        Rhs[2*i+1] += Fy * WJ;
+    };
+    // std::cout << "RHS = " << Rhs << std::endl;
     
 };
 
@@ -151,9 +162,9 @@ void ElasticTruss::ComputeError(IntPointData &data, VecDouble &errors){
 int ElasticTruss::VariableIndex(const std::string &name) const{
     
     if(!strcmp("Displacement",name.c_str()))           return 1;
-    if(!strcmp("NormalStress",name.c_str()))           return 2;
+    if(!strcmp("Stress",name.c_str()))           return 2;
     if(!strcmp("ExactDisplacement",name.c_str()))      return 3;
-    if(!strcmp("ExactNormalStress",name.c_str()))      return 4;
+    if(!strcmp("ExactStress",name.c_str()))      return 4;
     if(!strcmp("ExactForce",name.c_str()))             return 5;
 
     std::cout << "Post Process variable not implemented \n";
@@ -190,8 +201,9 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //NormalStress
     if (var == 2){
-        double epsilon = data.fDSolDx.norm();
-        Sol[0] = fYoungModulus * epsilon;
+        double cosa = data.fAxes(0,0) / data.fJacA0;
+        double sina = data.fAxes(1,0) / data.fJacA0;
+        Sol[0] = fYoungModulus * (-data.fDSolDx(1,0)*sina + data.fDSolDx(0,0)*cosa) ;
         return;
     };
 
@@ -227,3 +239,9 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
     };
 
 }; 
+
+MatrixDouble ElasticTruss::ConstitutiveMatrix(){
+    MatrixDouble constitutive(1,1);
+    constitutive(0,0) = fYoungModulus;
+    return constitutive;
+}

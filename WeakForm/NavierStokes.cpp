@@ -2,10 +2,12 @@
 
 void NavierStokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     
-    data.fNeedsDSol = true;
-    data.fDSolDx.resize(fDimension, fNState);
-    data.fNeedsSol = true;
-    data.fSol.resize(fNState);
+    if (!data.fNeedsDSol || !data.fNeedsSol){
+        data.fNeedsDSol = true;
+        data.fDSolDx.resize(fNState,fDimension);
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
     int DIM = fDimension;
     auto dphi_dx = data.fDPhiX0;
     this->GetStabilizationParameter(index, data);

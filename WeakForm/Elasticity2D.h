@@ -25,6 +25,10 @@ public:
     int NSolutionVariables(int var) const override;
     
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
+
+    MatrixDouble ConstitutiveMatrix();
+
+    double YoungModulus(){return fYoungModulus;}
 };
 
 
