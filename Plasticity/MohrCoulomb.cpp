@@ -104,7 +104,7 @@ void MohrCoulomb::ComputePlasticStrain(IntPointData &data, MatrixDouble &plastic
     ComputePrincipalStress(StressTensor,PrincipalStress);
 
 
-    if (PrincipalStress[0] > fYield + plasticstrain.norm() * fHardening){
+    if (fabs(PrincipalStress[0]) > fYield + plasticstrain.norm() * fHardening){
         std::cout << "Please Implement me\n";
     } else {
         totalstrain = fConstitutiveMatrix.inverse() * StressTensor;

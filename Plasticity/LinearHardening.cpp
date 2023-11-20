@@ -22,11 +22,7 @@ void LinearHardening::ComputeStiffness(int &index, IntPointData &data, MatrixDou
     fElasticModel->ComputeStiffness(index,data,Stiffness);
     // Change stiffness;
     if (fPlasticStrain.rows()>0){
-        if (fRealDimension == 1){
-            Stiffness *= fHardening/(fYoungModulus+fHardening);
-        } else {
-            PanicButton();
-        }
+        Stiffness *= fHardening / (fYoungModulus+fHardening);
     }
 };
     
@@ -37,7 +33,7 @@ void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble 
             int nphi = data.fPhi.size();
             double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
             double elementLenght = 2.*data.fJacA0;
-            double K = fYoungModulus / elementLenght;
+            double K = (fYoungModulus / elementLenght);
 
             MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
             MatrixDouble matB(fDimension,fDimension*nphi);
@@ -62,6 +58,24 @@ void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble 
 
             // std::cout << "rotation =\n"<< rotation << std::endl;
             Rhs += rotation * matB.transpose() * sol * WJ * elementLenght * K;
+        } else if (fRealDimension == 2){
+            int nphi = data.fPhi.size();
+
+            double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+            MatrixDouble matB(3,2*nphi);
+            matB.setZero();
+            
+            for (int j = 0; j < nphi; j++){
+                matB(0,fDimension*j  ) = data.fDPhiX0(j,0);
+                matB(1,fDimension*j+1) = data.fDPhiX0(j,1);
+                matB(2,fDimension*j  ) = data.fDPhiX0(j,1);
+                matB(2,fDimension*j+1) = data.fDPhiX0(j,0);
+            }
+            
+            VecDouble auxplasticstrain;
+            TensorToVoigt(fPlasticStrain,auxplasticstrain);
+            
+            Rhs -= matB.transpose() * fConstitutiveMatrix * auxplasticstrain * WJ;
         } else {
             PanicButton();
         }
@@ -102,18 +116,31 @@ void LinearHardening::ComputePlasticStrain(IntPointData &data, MatrixDouble &pla
     ComputePrincipalStress(StressTensor,PrincipalStress);
 
 
-    if (PrincipalStress[0] > fYield + plasticstrain.norm() * fHardening){
-        MatrixDouble DeltaStrain = fConstitutiveMatrix.inverse() * StressTensor - totalstrain;
-        MatrixDouble DeltaPlasticStrain = (fYoungModulus/(fYoungModulus+fHardening)) * DeltaStrain;
-        MatrixDouble DeltaSigma = (fYoungModulus*fHardening/(fYoungModulus+fHardening)) * DeltaStrain;
-        totalstrain += DeltaStrain;
-        plasticstrain += DeltaPlasticStrain;
+    if (fabs(PrincipalStress[0]) > fYield + plasticstrain.norm() * fHardening){
+        VecDouble auxStress, auxTotalStrain;
+        TensorToVoigt(StressTensor,auxStress);
+        TensorToVoigt(totalstrain,auxTotalStrain);
+        VecDouble DeltaStrain = fConstitutiveMatrix.inverse() * auxStress - auxTotalStrain;
+        VecDouble DeltaPlasticStrain = (fYoungModulus/(fYoungModulus+fHardening)) * DeltaStrain;
+        VecDouble DeltaSigma = (fYoungModulus*fHardening/(fYoungModulus+fHardening)) * DeltaStrain;
+        MatrixDouble auxDStrain, auxDPlastStrain;
+        VoigtToTensor(auxDStrain,DeltaStrain);
+        VoigtToTensor(auxDPlastStrain,DeltaPlasticStrain);
+        totalstrain += auxDStrain;
+        plasticstrain += auxDPlastStrain;
         fTotalStrain = totalstrain;
         fPlasticStrain = plasticstrain;
     } else {
-        totalstrain = fConstitutiveMatrix.inverse() * StressTensor;
-        fPlasticStrain.resize(0,0);
-        fTotalStrain.resize(0,0);
+        VecDouble auxStress;
+        TensorToVoigt(StressTensor,auxStress);
+        VecDouble auxStrain = fConstitutiveMatrix.inverse() * auxStress;
+        VoigtToTensor(totalstrain,auxStrain);
+        
+        if (fPlasticStrain.rows() > 0){
+            fPlasticStrain.resize(0,0);
+            fTotalStrain.resize(0,0);
+        }
+        
     }
 
 }

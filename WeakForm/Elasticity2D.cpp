@@ -174,6 +174,7 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     if(!strcmp("ExactEpsilonY",name.c_str()))    return 13;
     if(!strcmp("ExactEpsilonXY",name.c_str()))   return 14;
     if(!strcmp("ExactForce",name.c_str()))       return 15;
+    if(!strcmp("Stress",name.c_str()))           return 16;
 
     std::cout << "Post Process variable not implemented \n";
     PanicButton();
@@ -186,6 +187,7 @@ int Elasticity2D::NSolutionVariables(int var) const{
     case 1:
     case 8:
     case 15:
+    case 16:
         return 3;
     case 2:
     case 3:
@@ -337,6 +339,19 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = forcingF[0];
         Sol[1] = forcingF[1];
         Sol[2] = 0.;
+        return;
+    };
+
+    //Stress
+    if (var == 16){
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        auto sigma = fConstitutiveMatrix * epsilon;
+        Sol[0] = sigma[0];
+        Sol[1] = sigma[1];
+        Sol[2] = sigma[2];
         return;
     };
 

@@ -17,7 +17,7 @@ private:
     MatrixDouble fTotalStrain;
 
 public:
-    LinearHardening(WeakForm *elast, double hardModulus, double intfriction);
+    MohrCoulomb(WeakForm *elast, double hardModulus, double intfriction);
 
     void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) override;
     

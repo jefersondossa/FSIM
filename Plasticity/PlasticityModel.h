@@ -23,6 +23,10 @@ public:
     virtual void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) = 0;
 
     int &RealDimension(){return fRealDimension;}
+
+    void TensorToVoigt(MatrixDouble &tensor, VecDouble &voigt);
+
+    void VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt);
 };
 
 
