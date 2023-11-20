@@ -6,8 +6,9 @@
 class NonLinearAnalysis : public LinearAnalysis
 {
 protected:
-    int fMaxIterations;
+    int    fMaxIterations;
     double fTolerance;
+    Vec    fPreviousSolution;
 
 public:
     NonLinearAnalysis() : LinearAnalysis(){};

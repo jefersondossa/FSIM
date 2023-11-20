@@ -5,6 +5,9 @@ void NonLinearAnalysis::UpdateSolution(){
     VecScatter        ctx;
     Vec               All, Allu;
     PetscErrorCode    ierr;
+    PetscScalar one = -1.;
+    VecAXPY(Solution(), one, fPreviousSolution);
+    VecCopy(Solution(), fPreviousSolution);
 
     ierr = VecDuplicate(Rhs(),&All);
     //Gathers the solution vector to the master process
@@ -45,12 +48,15 @@ void NonLinearAnalysis::Run(){
     double NRL2norm = 1000.;
     int iteration = 0;
 
+    VecDuplicate(this->Solution(),&fPreviousSolution);
+    VecZeroEntries(fPreviousSolution);
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
+        
         Compute();
-        VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
+        // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
         Solve();
-        VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
+        // VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
         // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD); 
         UpdateSolution();
         VecNorm(this->Solution(),NORM_2,&NRL2norm);

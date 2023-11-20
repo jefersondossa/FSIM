@@ -22,8 +22,8 @@
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
-    LinearHardening *plastmodel = new LinearHardening(matelas,111.,100000.); 
-    cmesh->InsertMaterial(matelas);
+    LinearHardening *plastmodel = new LinearHardening(matelas,111.,100.); 
+    cmesh->InsertMaterial(plastmodel);
     std::vector<L2Projection *> bcIncrement = {matbc3};
   
     GmshTools::Read(*cmesh,"../coarse_test.msh");
