@@ -1,6 +1,19 @@
 
 #include "PlasticityModel.h"
 
+PlasticityModel::PlasticityModel(WeakForm *elast){
+    fElasticModel = elast;
+    fNState = elast->NState();
+    fMatId = elast->Id();
+    int var = fElasticModel->VariableIndex("Stress");
+    int nsol = fElasticModel->NSolutionVariables(var);
+    fRealDimension = 0;
+    if (nsol == 1) fRealDimension = 1;
+    if (nsol == 3) fRealDimension = 2;
+    if (nsol == 6) fRealDimension = 3;
+
+    fDimension = elast->Dimension();
+};
 
 void PlasticityModel::BuildStressTensor(VecDouble &Sol, MatrixDouble &Stress){
 

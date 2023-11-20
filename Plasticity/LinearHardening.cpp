@@ -2,20 +2,9 @@
 #include "ElasticTruss.h"
 #include "Elasticity2D.h"
 
-LinearHardening::LinearHardening(WeakForm *elast, double hardModulus, double yield) : PlasticityModel(){
+LinearHardening::LinearHardening(WeakForm *elast, double hardModulus, double yield) : PlasticityModel(elast){
     fHardening = hardModulus;
     fYield = yield;
-    fElasticModel = elast;
-    fNState = elast->NState();
-    fMatId = elast->Id();
-    int var = fElasticModel->VariableIndex("Stress");
-    int nsol = fElasticModel->NSolutionVariables(var);
-    fRealDimension = 0;
-    if (nsol == 1) fRealDimension = 1;
-    if (nsol == 3) fRealDimension = 2;
-    if (nsol == 6) fRealDimension = 3;
-
-    fDimension = elast->Dimension();
 
     ElasticTruss *truss = dynamic_cast<ElasticTruss* >(fElasticModel);
     Elasticity2D *mat2d = dynamic_cast<Elasticity2D* >(fElasticModel);
@@ -31,10 +20,53 @@ LinearHardening::LinearHardening(WeakForm *elast, double hardModulus, double yie
 
 void LinearHardening::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     fElasticModel->ComputeStiffness(index,data,Stiffness);
+    // Change stiffness;
+    if (fPlasticStrain.rows()>0){
+        if (fRealDimension == 1){
+            Stiffness *= fHardening/(fYoungModulus+fHardening);
+        } else {
+            PanicButton();
+        }
+    }
 };
     
 void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     fElasticModel->ComputeResidual(index,data,Rhs);
+    if (fPlasticStrain.rows()>0){
+        if (fRealDimension == 1){
+            int nphi = data.fPhi.size();
+            double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+            double elementLenght = 2.*data.fJacA0;
+            double K = fYoungModulus / elementLenght;
+
+            MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
+            MatrixDouble matB(fDimension,fDimension*nphi);
+            rotation.setZero();
+            matB.setZero();
+            double cosa = data.fAxes(0,0) / data.fJacA0;
+            double sina = data.fAxes(1,0) / data.fJacA0;
+            double check = sina*sina+cosa*cosa;
+            for (int j = 0; j < nphi; j++){
+                // for (int i = 0; i < fDimension; i++){
+                    matB(0,fDimension*j) = data.fDPhiX0(j,0);
+                // }
+                rotation(2*j  ,2*j  ) = cosa;
+                rotation(2*j+1,2*j  ) = sina;
+                rotation(2*j  ,2*j+1) = -sina;
+                rotation(2*j+1,2*j+1) = cosa;
+            }
+
+            VecDouble sol(2);// = data.fSol;
+            sol[0] = -fPlasticStrain(0,0)*sina;
+            sol[1] = +fPlasticStrain(0,0)*cosa;
+
+            // std::cout << "rotation =\n"<< rotation << std::endl;
+            Rhs += rotation * matB.transpose() * sol * WJ * elementLenght * K;
+        } else {
+            PanicButton();
+        }
+    }
+    
 };
     
 void LinearHardening::ComputeError(IntPointData &data, VecDouble &errors){
@@ -70,14 +102,25 @@ void LinearHardening::ComputePlasticStrain(IntPointData &data, MatrixDouble &pla
     ComputePrincipalStress(StressTensor,PrincipalStress);
 
 
-    if (PrincipalStress[0] > fYield){
+    if (PrincipalStress[0] > fYield + plasticstrain.norm() * fHardening){
         MatrixDouble DeltaStrain = fConstitutiveMatrix.inverse() * StressTensor - totalstrain;
         MatrixDouble DeltaPlasticStrain = (fYoungModulus/(fYoungModulus+fHardening)) * DeltaStrain;
         MatrixDouble DeltaSigma = (fYoungModulus*fHardening/(fYoungModulus+fHardening)) * DeltaStrain;
-        std::cout << "Need to do something\n";
+        totalstrain += DeltaStrain;
+        plasticstrain += DeltaPlasticStrain;
+        fTotalStrain = totalstrain;
+        fPlasticStrain = plasticstrain;
+        // for (int i = 0; i < fIncrementBC.size(); i++){
+        //     auto &bcval =  fIncrementBC[i]->BCValue();
+        //     bcval[1] -=0.333333333;
+        // }
+        
+        
+        // std::cout << "Need to do something\n";
     } else {
-        totalstrain = fConstitutiveMatrix.inverse() * StressTensor; 
+        totalstrain = fConstitutiveMatrix.inverse() * StressTensor;
+        fPlasticStrain.resize(0,0);
+        fTotalStrain.resize(0,0);
     }
 
 }
-

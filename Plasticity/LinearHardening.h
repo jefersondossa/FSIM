@@ -11,6 +11,8 @@ private:
     double fYield;
     MatrixDouble fConstitutiveMatrix;
     double fYoungModulus;
+    MatrixDouble fPlasticStrain;
+    MatrixDouble fTotalStrain;
 
 public:
     LinearHardening(WeakForm *elast, double hardModulus, double yield);

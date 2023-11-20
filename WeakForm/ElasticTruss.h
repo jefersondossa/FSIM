@@ -4,7 +4,7 @@
 #include "WeakForm.h"
 
 class ElasticTruss : public WeakForm{
-protected:
+public:
     // enum 
     bool         fPlaneStress;
     double       fYoungModulus;
