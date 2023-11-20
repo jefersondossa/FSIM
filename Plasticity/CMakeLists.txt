@@ -4,6 +4,8 @@ file(GLOB plasticity
     PlasticityModel.cpp 
     LinearHardening.h
     LinearHardening.cpp
+    MohrCoulomb.h 
+    MohrCoulomb.cpp
 )
 
 set(PLASTICITY ${plasticity} PARENT_SCOPE)

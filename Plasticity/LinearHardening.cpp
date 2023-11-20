@@ -110,13 +110,6 @@ void LinearHardening::ComputePlasticStrain(IntPointData &data, MatrixDouble &pla
         plasticstrain += DeltaPlasticStrain;
         fTotalStrain = totalstrain;
         fPlasticStrain = plasticstrain;
-        // for (int i = 0; i < fIncrementBC.size(); i++){
-        //     auto &bcval =  fIncrementBC[i]->BCValue();
-        //     bcval[1] -=0.333333333;
-        // }
-        
-        
-        // std::cout << "Need to do something\n";
     } else {
         totalstrain = fConstitutiveMatrix.inverse() * StressTensor;
         fPlasticStrain.resize(0,0);

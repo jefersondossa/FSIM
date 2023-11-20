@@ -18,8 +18,6 @@ file(GLOB weakform
     Poisson.cpp
     L2Projection.h 
     L2Projection.cpp
-    MohrCoulomb.h 
-    MohrCoulomb.cpp
     ElasticTruss.h 
     ElasticTruss.cpp
 )
