@@ -8,12 +8,13 @@
 #include <execinfo.h>
 #include <stdio.h>
 
+/// @brief Class to check consistency in the code. Returns an error code when called.
 class PanicButton
 {
 public:
     //Error 
     PanicButton(){
-        std::cout << "Not implemented yet! Put a break point here." << std::endl;
+        std::cout << "Put a break point here!" << std::endl;
 
         void* callstack[128];
         int i, frames = backtrace(callstack, 128);
