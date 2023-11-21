@@ -111,7 +111,7 @@ void LinearHardening::ComputePlasticStrain(IntPointData &data, MatrixDouble &pla
     StressTensor.setZero();
     fElasticModel->Solution(data,var,Sol);
     //Compute the principal stress'
-    BuildStressTensor(Sol,StressTensor);
+    VoigtToTensor(StressTensor,Sol);
     VecDouble PrincipalStress(fRealDimension);
     ComputePrincipalStress(StressTensor,PrincipalStress);
 

@@ -2,8 +2,8 @@
 #include "ElasticTruss.h"
 #include "Elasticity2D.h"
 
-MohrCoulomb::MohrCoulomb(WeakForm *elast, double hardModulus, double intfriction) : PlasticityModel(elast){
-    fHardening = hardModulus;
+MohrCoulomb::MohrCoulomb(WeakForm *elast, double cohesion, double intfriction) : PlasticityModel(elast){
+    fCohesion = cohesion;
     fInternalFriction = intfriction;
 
     ElasticTruss *truss = dynamic_cast<ElasticTruss* >(fElasticModel);
@@ -99,12 +99,12 @@ void MohrCoulomb::ComputePlasticStrain(IntPointData &data, MatrixDouble &plastic
     StressTensor.setZero();
     fElasticModel->Solution(data,var,Sol);
     //Compute the principal stress'
-    BuildStressTensor(Sol,StressTensor);
+    VoigtToTensor(StressTensor,Sol);
     VecDouble PrincipalStress(fRealDimension);
     ComputePrincipalStress(StressTensor,PrincipalStress);
 
-
-    if (fabs(PrincipalStress[0]) > fYield + plasticstrain.norm() * fHardening){
+    double criterion = fYoungModulus;
+    if (fabs(PrincipalStress[0]) > criterion){
         std::cout << "Please Implement me\n";
     } else {
         totalstrain = fConstitutiveMatrix.inverse() * StressTensor;
