@@ -1,5 +1,14 @@
 #include "L2Projection.h"
 
+L2Projection::L2Projection(int matid, int dim, int bctype, MatrixDouble &val1, VecDouble &val2) : WeakForm() {
+    this->fDimension = dim;
+    this->fMatId = matid;
+    fNState = val2.size();
+    BCType = bctype;
+    BCVal1 = val1;
+    BCVal2 = val2;
+};
+
 void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     if (!data.fNeedsSol){
         data.fNeedsSol = true;
@@ -44,7 +53,6 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         fExactSol(data.fX, result, deriv);
     }
 
-    // result -= data.fSol;
     switch (BCType)
     {
     case 0: // Dirichlet in all state variables

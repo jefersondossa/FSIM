@@ -1,8 +1,15 @@
 #include "Stokes.h"
 
-//------------------------------------------------------------------------------
-//------------------COMPUTES THE SUPG STABILIZATION PARAMETER-------------------
-//------------------------------------------------------------------------------
+//Class constructor
+Stokes::Stokes(int matid, int dim, double density, double viscosity) : WeakForm() {
+    this->fMatId = matid;
+    fDimension = dim;
+    fNState = dim+1;
+    fViscosity = viscosity;
+    fDensity = density;
+};
+
+//Stabilization parameters computation
 void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
     int DIM = fDimension;
     int nphi = data.fPhi.size();
@@ -121,7 +128,6 @@ void Stokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stif
     auto dphi_dx = data.fDPhiX0;
     GetStabilizationParameter(index, data);
 
-    // Trust me, it improves performance!
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
 
     for (int i = nphi; i-- ; ){        
@@ -203,5 +209,5 @@ void Stokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 void Stokes::ComputeError(IntPointData &data, VecDouble &errors){
     std::cout << "Not implemented yet\n";
     
-    // PanicButton();
+    PanicButton();
 }

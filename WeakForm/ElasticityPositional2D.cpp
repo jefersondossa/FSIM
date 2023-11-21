@@ -1,5 +1,14 @@
 #include "ElasticityPositional2D.h"
 
+ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double poisson, bool planes) : WeakForm() {
+    this->fMatId = matid;
+    fDimension = 2;
+    fNState = 2;
+    fYoungModulus = young;
+    fPoissonRatio = poisson;
+    fPlaneStress = planes;
+};
+
 void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     if (!data.fNeedsDSol){
         data.fNeedsDSol = true;
@@ -168,6 +177,6 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
 
 void ElasticityPositional2D::ComputeError(IntPointData &data, VecDouble &errors){
     std::cout << "Not implemented yet\n";
-    return;
-    // PanicButton();
+    PanicButton();
+
 }

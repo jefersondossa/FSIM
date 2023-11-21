@@ -920,11 +920,12 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
-
-        if (fWeakForm->IsPositionalFEM()){
-            ComputeCurrentJacobian();
-            ComputeCurrentSpatialDerivatives();
-        }
+        
+        /// Make a dynamic cast to check if it consists in a positional element
+        // if (fWeakForm->IsPositionalFEM()){
+        //     ComputeCurrentJacobian();
+        //     ComputeCurrentSpatialDerivatives();
+        // }
 
         //Computes the element diffusion/viscosity matrix
         fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);

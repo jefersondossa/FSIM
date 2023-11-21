@@ -95,6 +95,9 @@ void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 };
 
 void ElasticTruss::ComputeError(IntPointData &data, VecDouble &errors){
+    std::cout << "Not implemented yet\n";
+    PanicButton();
+
     // int index = 0;
     // errors.resize(3);
     // errors.setZero();

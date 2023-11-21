@@ -1,5 +1,12 @@
 #include "Poisson.h"
 
+//Class constructor
+Poisson::Poisson(int matid, int dim, int nState) : WeakForm() {
+    fMatId = matid;
+    fDimension = dim;
+    fNState = nState;
+};
+
 void Poisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     if (!data.fNeedsDSol){
         data.fNeedsDSol = true;
@@ -12,9 +19,7 @@ void Poisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Sti
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){            
             for (int k = fDimension; k--;  ){
-                //Diffusion matrix
-                double K = data.fDPhiX0(i,k) * data.fDPhiX0(j,k);
-                Stiffness(i,j) += K * WJ;
+                Stiffness(i,j) += data.fDPhiX0(i,k) * data.fDPhiX0(j,k) * WJ;
             }
         };
     };
@@ -34,11 +39,11 @@ void Poisson::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
 
-        //Viscosity
+        //Matrix residual
         double K = 0.;
         for (int l=fDimension; l--; ) K += data.fDPhiX0(i,l) * data.fDSolDx(0,l);
 
-        //External force
+        //Source term
         double F = (forcingF[0]) * shapeFi;
 
         Rhs[i] += (-K + F) * WJ;
@@ -46,6 +51,8 @@ void Poisson::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 };
 
 void Poisson::ComputeError(IntPointData &data, VecDouble &errors){
+    std::cout << "Need refactor \n" << std::endl;
+    PanicButton();
     // int index = 0;
     // errors.resize(3);
     // errors.setZero();

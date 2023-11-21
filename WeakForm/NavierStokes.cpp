@@ -1,5 +1,9 @@
 #include "NavierStokes.h"
 
+NavierStokes::NavierStokes(int matid, int dim, double density, double viscosity) : Stokes(matid,dim,density,viscosity) {
+    
+};
+
 void NavierStokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     
     if (!data.fNeedsDSol || !data.fNeedsSol){

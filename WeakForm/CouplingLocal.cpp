@@ -1,5 +1,13 @@
 #include "CouplingLocal.h"
 
+CouplingLocal::CouplingLocal(int dim, int64_t fineindex, CompMesh* meshlocal, double k0, double k1) : WeakForm(){
+    fLocalMesh = meshlocal;
+    fLocalIndex = fineindex;
+    fDimension = dim;
+    fK0 = k0;
+    fK1 = k1;
+};
+
  
 void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector<MatrixDouble> &Stiffness){
 

@@ -45,10 +45,11 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
 
-        if (this->fWeakForm->IsPositionalFEM()){
-            this->ComputeCurrentJacobian();
-            this->ComputeCurrentSpatialDerivatives();
-        }
+        /// Make a dynamic cast to check if it consists in a positional element
+        // if (this->fWeakForm->IsPositionalFEM()){
+        //     this->ComputeCurrentJacobian();
+        //     this->ComputeCurrentSpatialDerivatives();
+        // }
 
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
