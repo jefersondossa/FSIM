@@ -270,7 +270,9 @@ int GetNumberofNodes(int & el_type){
 
 
 void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
-{
+{   
+    std::cout << "Need refactor!\n " << std::endl;
+    PanicButton();
      /** @brief MaterialVec */
     /** Structure of both, physical entities dimension and names */
     std::vector<std::map<int,std::string> > fMaterialDataVec(4);
@@ -1122,10 +1124,7 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
     gmesh.part_elem= new int[gmesh.NElements()]();
 }
 
-
-
-
-
+//Inserts elements onto the mesh
 Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_type, int  el_identifier, VecInt & node_identifiers){
     
     VecInt Topology;
@@ -1232,7 +1231,5 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         }
             break;
     }
-    // ElementT<tshape> *gel = new ElementT<tshape>();
-    // gmesh->SetElement(el_identifier, gel);
     return gel;
 };

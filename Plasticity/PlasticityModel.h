@@ -3,7 +3,6 @@
 
 #include "DataTypes.h"
 #include "WeakForm.h"
-#include "L2Projection.h"
 
 class PlasticityModel : public WeakForm
 {
