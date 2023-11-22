@@ -1,4 +1,7 @@
 #include "ElementT.h"
+#include "PositionalTruss.h"
+#include "ElasticityPositional2D.h"
+
 // #include "Boundary.h"
 // #include "CompMesh.h"
 
@@ -288,8 +291,8 @@ void ElementT<tshape>::ComputeJacobian() {
     int DIM = tshape::Dimension;
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fA0Inv.setZero();
-    fIntegData.fAxes.resize(3,DIM);
-    fIntegData.fAxes.setZero();
+    fIntegData.fAxes0.resize(3,DIM);
+    fIntegData.fAxes0.setZero();
     fIntegData.fA0.resize(DIM,DIM);
     fIntegData.fA0.setZero();
     fIntegData.fX.resize(3);
@@ -313,12 +316,11 @@ void ElementT<tshape>::ComputeJacobian() {
             xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
             
             for (int k = DIM; k--; ){
-                fIntegData.fAxes(j,k) += xna[j] * fIntegData.fDPhi(i,k);
+                fIntegData.fAxes0(j,k) += xna[j] * fIntegData.fDPhi(i,k);
             };
         };
     };
 
-    int nrows = 3;
     int ncols = DIM;
     int dim = DIM;
 
@@ -331,12 +333,12 @@ void ElementT<tshape>::ComputeJacobian() {
             VecDouble v_1(3);
             v_1.setZero();
 
-            for (int i = 0; i < nrows; i++) {
-                v_1[i] = fIntegData.fAxes(i, 0);
+            for (int i = 0; i < 3; i++) {
+                v_1[i] = fIntegData.fAxes0(i, 0);
             }
 
             double norm_v_1 = 0.;
-            for (int i = 0; i < nrows; i++) {
+            for (int i = 0; i < 3; i++) {
                 norm_v_1 += v_1[i] * v_1[i];
             }
 
@@ -352,10 +354,10 @@ void ElementT<tshape>::ComputeJacobian() {
         case 2:
         {
             //     //Computing the jacobian determinant and Inverse
-            fIntegData.fA0(0,0) = fIntegData.fAxes(0,0);
-            fIntegData.fA0(0,1) = fIntegData.fAxes(0,1);
-            fIntegData.fA0(1,0) = fIntegData.fAxes(1,0);
-            fIntegData.fA0(1,1) = fIntegData.fAxes(1,1);
+            fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
+            fIntegData.fA0(0,1) = fIntegData.fAxes0(0,1);
+            fIntegData.fA0(1,0) = fIntegData.fAxes0(1,0);
+            fIntegData.fA0(1,1) = fIntegData.fAxes0(1,1);
             fIntegData.fJacA0 = fIntegData.fA0(0,0) * fIntegData.fA0(1,1) - fIntegData.fA0(0,1) * fIntegData.fA0(1,0);
 
             fIntegData.fA0Inv(0,0) = fIntegData.fA0(1,1) / fIntegData.fJacA0;
@@ -369,10 +371,10 @@ void ElementT<tshape>::ComputeJacobian() {
         {
             // axes.resize(dim, 3);
 
-            for (int i = 0; i < nrows; i++) {
-                fIntegData.fA0(i, 0) = fIntegData.fAxes(i, 0);
-                fIntegData.fA0(i, 1) = fIntegData.fAxes(i, 1);
-                fIntegData.fA0(i, 2) = fIntegData.fAxes(i, 2);
+            for (int i = 0; i < 3; i++) {
+                fIntegData.fA0(i, 0) = fIntegData.fAxes0(i, 0);
+                fIntegData.fA0(i, 1) = fIntegData.fAxes0(i, 1);
+                fIntegData.fA0(i, 2) = fIntegData.fAxes0(i, 2);
             }
 
             fIntegData.fJacA0 -= fIntegData.fA0(0, 2) * fIntegData.fA0(1, 1) * fIntegData.fA0(2, 0); //- a02 a11 a20
@@ -411,22 +413,22 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     int DIM = tshape::Dimension;
     fIntegData.fA1.resize(DIM,DIM);
     fIntegData.fA1.setZero();
-    fIntegData.fX1.resize(DIM);
+    fIntegData.fX1.resize(3);
     fIntegData.fX1.setZero();
+    fIntegData.fAxes1.resize(3,DIM);
+    fIntegData.fAxes1.setZero();
 
-    MatrixDouble grady(3,tshape::Dimension);
-    grady.setZero();
     VecDouble yna(3);
     
     fIntegData.fA1.setZero();
     for (int i = tshape::NElNodes; i--; ){
-        for (int j = DIM; j--; ){
+        for (int j = fWeakForm->NState(); j--; ){
             // Approximate the integration space
             fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
             yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j);
 
             for (int k = DIM; k--; ){
-                grady(j,k) += yna[j] * fIntegData.fDPhi(i,k);
+                fIntegData.fAxes1(j,k) += yna[j] * fIntegData.fDPhi(i,k);
             };
         };
     };
@@ -439,7 +441,7 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
         v_1.setZero();
 
         for (int i = 0; i < 3; i++) {
-            v_1[i] = grady(i, 0);
+            v_1[i] = fIntegData.fAxes1(i, 0);
         }
 
         double norm_v_1 = 0.;
@@ -455,14 +457,38 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     case 2:
     {
         //Computing the jacobian determinant and Inverse
-        fIntegData.fA1(0,0) = grady(0,0);
-        fIntegData.fA1(0,1) = grady(0,1);
-        fIntegData.fA1(1,0) = grady(1,0);
-        fIntegData.fA1(1,1) = grady(1,1);
+        fIntegData.fA1(0,0) = fIntegData.fAxes1(0,0);
+        fIntegData.fA1(0,1) = fIntegData.fAxes1(0,1);
+        fIntegData.fA1(1,0) = fIntegData.fAxes1(1,0);
+        fIntegData.fA1(1,1) = fIntegData.fAxes1(1,1);
         fIntegData.fJacA1 = fIntegData.fA1(0,0) * fIntegData.fA1(1,1) - fIntegData.fA1(0,1) * fIntegData.fA1(1,0);
         fIntegData.fJacA1 = fabs(fIntegData.fJacA1);
     }
         break;
+    case 3:
+    {
+        // axes.resize(dim, 3);
+
+        for (int i = 0; i < 3; i++) {
+            fIntegData.fA1(i, 0) = fIntegData.fAxes1(i, 0);
+            fIntegData.fA1(i, 1) = fIntegData.fAxes1(i, 1);
+            fIntegData.fA1(i, 2) = fIntegData.fAxes1(i, 2);
+        }
+
+        fIntegData.fJacA1 -= fIntegData.fA1(0, 2) * fIntegData.fA1(1, 1) * fIntegData.fA1(2, 0); //- a02 a11 a20
+        fIntegData.fJacA1 += fIntegData.fA1(0, 1) * fIntegData.fA1(1, 2) * fIntegData.fA1(2, 0); //+ a01 a12 a20
+        fIntegData.fJacA1 += fIntegData.fA1(0, 2) * fIntegData.fA1(1, 0) * fIntegData.fA1(2, 1); //+ a02 a10 a21
+        fIntegData.fJacA1 -= fIntegData.fA1(0, 0) * fIntegData.fA1(1, 2) * fIntegData.fA1(2, 1); //- a00 a12 a21
+        fIntegData.fJacA1 -= fIntegData.fA1(0, 1) * fIntegData.fA1(1, 0) * fIntegData.fA1(2, 2); //- a01 a10 a22
+        fIntegData.fJacA1 += fIntegData.fA1(0, 0) * fIntegData.fA1(1, 1) * fIntegData.fA1(2, 2); //+ a00 a11 a22
+
+        fIntegData.fJacA1 = fabs(fIntegData.fJacA1);
+
+        // axes.setZero();
+        // axes(0, 0) = 1.0;
+        // axes(1, 1) = 1.0;
+        // axes(2, 2) = 1.0;
+    }
     
     default:
         std::cout << "Please implement me";
@@ -904,6 +930,9 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     if (!fWeakForm) return;
 
     int DIM = tshape::Dimension;
+
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
     
     int index = 0;
     fIntegData.fAdimCoord.resize(DIM);
@@ -921,11 +950,11 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
-        /// Make a dynamic cast to check if it consists in a positional element
-        // if (fWeakForm->IsPositionalFEM()){
-        //     ComputeCurrentJacobian();
-        //     ComputeCurrentSpatialDerivatives();
-        // }
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }
 
         //Computes the element diffusion/viscosity matrix
         fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
@@ -959,6 +988,8 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
     fIntegData.fAdimCoord.resize(DIM);
 
     int index = 0;
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
 
     for(int it = 0; it < fIntRule.NPoints(); it++){
 
@@ -973,6 +1004,12 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
+        
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }
 
         //Computes the element diffusion/viscosity matrix
         fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);

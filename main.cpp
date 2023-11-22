@@ -47,6 +47,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "GraphMesh.h"
 #include "ElasticTruss.h"
 #include "LinearHardening.h"
+#include "PositionalTruss.h"
 
 int main(int argc, char **args) {
 
@@ -67,8 +68,8 @@ int main(int argc, char **args) {
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
     // #include "examples/rectangle.h"
-    // #include "examples/truss.h"
-    #include "examples/plasticitytest.h"
+    #include "examples/truss.h"
+    // #include "examples/plasticitytest.h"
      
     //Finalize main program   
     PetscFinalize();

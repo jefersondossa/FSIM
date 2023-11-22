@@ -9,7 +9,8 @@ class IntPointData {
 public:
     MatrixDouble fA0;
     MatrixDouble fA0Inv;
-    MatrixDouble fAxes;
+    MatrixDouble fAxes0;
+    MatrixDouble fAxes1;
 
     MatrixDouble fA1;
 

@@ -27,8 +27,8 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     MatrixDouble matB(fDimension,fDimension*nphi);
     rotation.setZero();
     matB.setZero();
-    double cosa = data.fAxes(0,0) / data.fJacA0;
-    double sina = data.fAxes(1,0) / data.fJacA0;
+    double cosa = data.fAxes0(0,0) / data.fJacA0;
+    double sina = data.fAxes0(1,0) / data.fJacA0;
     double check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
         // for (int i = 0; i < fDimension; i++){
@@ -62,8 +62,8 @@ void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     MatrixDouble matB(fDimension,fDimension*nphi);
     rotation.setZero();
     matB.setZero();
-    double cosa = data.fAxes(0,0) / data.fJacA0;
-    double sina = data.fAxes(1,0) / data.fJacA0;
+    double cosa = data.fAxes0(0,0) / data.fJacA0;
+    double sina = data.fAxes0(1,0) / data.fJacA0;
     double check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
         // for (int i = 0; i < fDimension; i++){
@@ -204,8 +204,8 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //NormalStress
     if (var == 2){
-        double cosa = data.fAxes(0,0) / data.fJacA0;
-        double sina = data.fAxes(1,0) / data.fJacA0;
+        double cosa = data.fAxes0(0,0) / data.fJacA0;
+        double sina = data.fAxes0(1,0) / data.fJacA0;
         Sol[0] = fYoungModulus * (-data.fDSolDx(1,0)*sina + data.fDSolDx(0,0)*cosa) ;
         return;
     };

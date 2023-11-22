@@ -39,8 +39,8 @@ void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble 
             MatrixDouble matB(fDimension,fDimension*nphi);
             rotation.setZero();
             matB.setZero();
-            double cosa = data.fAxes(0,0) / data.fJacA0;
-            double sina = data.fAxes(1,0) / data.fJacA0;
+            double cosa = data.fAxes0(0,0) / data.fJacA0;
+            double sina = data.fAxes0(1,0) / data.fJacA0;
             double check = sina*sina+cosa*cosa;
             for (int j = 0; j < nphi; j++){
                 // for (int i = 0; i < fDimension; i++){

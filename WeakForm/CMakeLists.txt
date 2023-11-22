@@ -20,6 +20,8 @@ file(GLOB weakform
     L2Projection.cpp
     ElasticTruss.h 
     ElasticTruss.cpp
+    PositionalTruss.h
+    PositionalTruss.cpp
 )
 
 set(WEAKFORM ${weakform} PARENT_SCOPE)

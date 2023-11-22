@@ -6,8 +6,8 @@ void NonLinearAnalysis::UpdateSolution(){
     Vec               All, Allu;
     PetscErrorCode    ierr;
     PetscScalar one = -1.;
-    VecAXPY(Solution(), one, fPreviousSolution);
-    VecCopy(Solution(), fPreviousSolution);
+    // VecAXPY(Solution(), one, fPreviousSolution);
+    // VecCopy(Solution(), fPreviousSolution);
 
     ierr = VecDuplicate(Rhs(),&All);
     //Gathers the solution vector to the master process
@@ -54,10 +54,10 @@ void NonLinearAnalysis::Run(){
     {   
         
         Compute();
-        // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
+        VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
         Solve();
-        // VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
-        // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD); 
+        VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
+        MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD); 
         UpdateSolution();
         VecNorm(this->Solution(),NORM_2,&NRL2norm);
         std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
