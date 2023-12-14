@@ -48,6 +48,8 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "ElasticTruss.h"
 #include "LinearHardening.h"
 #include "PositionalTruss.h"
+#include "MohrCoulomb.h"
+#include "VonMises.h"
 
 int main(int argc, char **args) {
 
@@ -67,9 +69,10 @@ int main(int argc, char **args) {
 
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
-    // #include "examples/rectangle.h"
+    #include "examples/rectangle.h"
     // #include "examples/truss.h"
-    #include "examples/geogrelha.h"
+    // #include "examples/mohrcoulombtest.h"
+    // #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      
     //Finalize main program   

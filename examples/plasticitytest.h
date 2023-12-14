@@ -28,7 +28,7 @@
   
     GmshTools::Read(*cmesh,"../coarse_test.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ESuiteSparse, 10, bcIncrement);
+    IncrementalAnalysis an(cmesh,SolverType::EUmfpack, 10, bcIncrement);
     
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Stress"};

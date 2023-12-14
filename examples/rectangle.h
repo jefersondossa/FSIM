@@ -118,7 +118,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     //     pParameters.setForcingFunction(forcingFunctionNavierStokes);
     //     pParameters.setExactSolution(exactSolStokes);
     // }
-    // pParameters.Solver() = SolverType::ESuiteSparse;
+    // pParameters.Solver() = SolverType::EUmfpack;
     // pParameters.ArlequinStab() = ArlequinStabType::ENoStab;
     // // pParameters.ArlequinStab() = ArlequinStabType::EOption1;
     // pParameters.setSpectralRadius(1.);
@@ -182,11 +182,12 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // arl.SetGlueIds(gluematids);
     // arl.SetUp();
 
-    // LinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // an.Run();
-    // LinearAnalysis an(arl.MeshVec(),SolverType::ESuiteSparse);
-    // NonLinearAnalysis an(&arl,SolverType::ESuiteSparse,1.e-6,2);
-    NonLinearAnalysis an(coarseModel,SolverType::ESuiteSparse);
+    // LinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack);
+    // NonLinearAnalysis an(&arl,SolverType::EUmfpack,1.e-6,2);
+    // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
+    NonLinearAnalysis an(coarseModel,SolverType::ECholmod);
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;

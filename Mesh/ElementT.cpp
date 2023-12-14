@@ -1031,11 +1031,59 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 };
 
 
-// template<class tshape>
-// void ElementT<tshape>::Solution(int ivar){
-//     fWeakForm->Solution(data,ivar,Sol);
-// }
+//------------------------------------------------------------------------------
+//-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
+//------------------------------------------------------------------------------
+template<class tshape>
+void ElementT<tshape>::ComputeError(VecDouble &errors){
 
+    if (!fWeakForm || (fWeakForm->Dimension() != Mesh()->Dimension())) return;
+    if (!fWeakForm->GetExactSolution()){
+        std::cout << "Exact solution not set for material " << fWeakForm->Id() << std::endl;
+        PanicButton();
+    }
+
+    int DIM = tshape::Dimension;
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fAdimCoord.resize(DIM);
+    fIntegData.fSol.resize(fWeakForm->NState());
+    fIntegData.fDSolDx.resize(fWeakForm->NState(),fWeakForm->Dimension());
+
+    int index = 0;
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
+    errors.setZero();
+
+    for(int it = 0; it < fIntRule.NPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        fIntegData.fWeight = fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        ComputeJacobian();
+
+        //Computes spatial derivatives
+        ComputeSpatialDerivatives();
+        
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }
+
+        interpolateSolution();
+        interpolateSolDerivatives();
+
+        //Computes the RHS vector
+        fWeakForm->ComputeError(fIntegData, errors); 
+
+        index++;        
+    };  
+    return;
+};
 
 template<class tshape >
 Element * ElementT<tshape>::Clone() const {

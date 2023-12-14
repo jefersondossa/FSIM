@@ -3,7 +3,7 @@
 
 void NonLinearAnalysis::UpdateSolution(){
     VecScatter        ctx;
-    Vec               All, Allu;
+    Vec               All;
     PetscErrorCode    ierr;
     PetscScalar one = -1.;
     // VecAXPY(Solution(), one, fPreviousSolution);
@@ -16,11 +16,6 @@ void NonLinearAnalysis::UpdateSolution(){
     ierr = VecScatterEnd(ctx, Solution(), All, INSERT_VALUES, SCATTER_FORWARD);
     ierr = VecScatterDestroy(&ctx);
 
-    ierr = VecScatterCreateToAll(Rhs(), &ctx, &Allu);
-    ierr = VecScatterBegin(ctx, Rhs(), Allu, INSERT_VALUES, SCATTER_FORWARD);
-    ierr = VecScatterEnd(ctx, Rhs(), Allu, INSERT_VALUES, SCATTER_FORWARD);
-    ierr = VecScatterDestroy(&ctx);
-    
     //Updates nodal values
     PetscInt Ione = 1;
     PetscInt Ii;
@@ -40,7 +35,6 @@ void NonLinearAnalysis::UpdateSolution(){
         };
     }
     ierr = VecDestroy(&All); 
-    ierr = VecDestroy(&Allu); 
 }
 
 void NonLinearAnalysis::Run(){
@@ -64,7 +58,7 @@ void NonLinearAnalysis::Run(){
         MatZeroEntries(this->Stiffness());
         VecZeroEntries(this->Rhs());
         VecZeroEntries(this->Solution());
-        for (int i=0; i<NEquations(); i++){
+        for (PetscInt i=0; i<NEquations(); i++){
             double val = 1.e-20;
             MatSetValues(this->Stiffness(),1,&i,1,&i,&val,ADD_VALUES);
         }

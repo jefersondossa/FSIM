@@ -49,6 +49,8 @@ public:
     /// @param tensor tensor
     /// @param voigt vector in Voigt notation
     void VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt);
+
+    WeakForm* ElasticModel(){return fElasticModel;}
 };
 
 

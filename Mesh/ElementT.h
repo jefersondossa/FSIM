@@ -149,6 +149,7 @@ public:
         return tshape::Dimension;
     }
 
+    void ComputeError(VecDouble &errors) override;
     
     const int &NElNodes() override {return tshape::NElNodes;}
 

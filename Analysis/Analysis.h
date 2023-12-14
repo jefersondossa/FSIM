@@ -10,7 +10,7 @@
 class CompMesh;
 class Arlequin;
 
-enum SolverType{EMumps, ESuiteSparse, EIterative};
+enum SolverType{EMumps, EIterative, EUmfpack, ECholmod};
 
 class Analysis
 {

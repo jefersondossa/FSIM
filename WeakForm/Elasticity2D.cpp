@@ -93,68 +93,44 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 };
 
 void Elasticity2D::ComputeError(IntPointData &data, VecDouble &errors){
-    // int index = 0;
-    // errors.resize(3);
-    // errors.setZero();
-    // int DIM = this->Mesh()->Dimension();
-    // int DEG = this->Mesh()->GetDefaultOrder();
+    errors.resize(4);
 
-    // IntegQuadrature nQuad(DIM,DEG);
+    VecDouble uExact(fDimension);
+    MatrixDouble DuExact(fDimension,fDimension);
+    VecDouble x_ = data.fX;
+    fExactSol(x_,uExact,DuExact);
 
-    // MatrixDouble dphi_dx(tshape::NElNodes,DIM);
-    // MatrixDouble ainv_(DIM,DIM);
-    // VecDouble xsi(DIM);
+    //L2 displacement
+    errors[0] += ((uExact[0]-data.fSol[0])*(uExact[0]-data.fSol[0]) + 
+                  (uExact[1]-data.fSol[1])*(uExact[1]-data.fSol[1]))
+                  * data.fWeight * data.fJacA0 ;
 
-    // auto exactSol = this->Mesh()->getProblemParameters().getExactSolution();
-    // if (!exactSol) PanicButton();
+    VecDouble exactStrain(3);
+    exactStrain(0) = DuExact(0,0);
+    exactStrain(1) = DuExact(1,1);
+    exactStrain(2) = 0.5 * (DuExact(1,0) + DuExact(0,1));
+    auto exactStress = fConstitutiveMatrix * exactStrain;
 
-    // for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+    VecDouble StrainMEF(3);
+    StrainMEF(0) = data.fDSolDx(0,0);
+    StrainMEF(1) = data.fDSolDx(1,1);
+    StrainMEF(2) = 0.5 * (data.fDSolDx(1,0) + data.fDSolDx(0,1));
+    auto StressMEF = fConstitutiveMatrix * StrainMEF;
 
-    //     //Defines the integration points adimentional coordinates
-    //     for (int i = DIM; i--; ) xsi[i] = nQuad.PointList(index,i);
+    double sigx = StressMEF[0] - exactStress[0];
+    double sigy = StressMEF[1] - exactStress[1];
+    double sigxy = StressMEF[2] - exactStress[2];
 
-    //     //Returns the quadrature integration weight
-    //     data.fWeight = nQuad.WeightList(index);
-
-    //     //Computes the jacobian matrix
-    //     this->ComputeJacobian(index);
-                    
-    //     this->ComputeSpatialDerivatives();
-        
-    //     VecDouble uMEF_(DIM);
-    //     this->interpolateSolution(index, uMEF_);
-    //     MatrixDouble du_dxMEF(DIM,DIM);
-    //     this->interpolateSolDerivatives(du_dxMEF);
-        
-    //     VecDouble u_(DIM);
-    //     MatrixDouble gradU(DIM,DIM);
-
-    //     VecDouble x_ = this->getIntegPointCoordinatesValue(index);
-        
-    //     exactSol(x_,u_,gradU);
-
-    //     //Consider Arlequin weight function
-    //     u_ *= this->getIntegPointWeightFunction(index);
-    //     gradU *= this->getIntegPointWeightFunction(index);
-    //     uMEF_ *= this->getIntegPointWeightFunction(index);
-    //     du_dxMEF *= this->getIntegPointWeightFunction(index);
-
-    //     //L2 displacement
-    //     errors[0] += ((u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) + (u_[1]-uMEF_[1])*(u_[1]-uMEF_[1]))
-    //                   * data.fWeight * data.fJacA0 ;
-        
-
-    //     // std::cout << "Stress and Energy norms not implemented yet\n";
-    //     // //Semi H1 state variable
-    //     // for (int m = DIM; m--; ){
-    //     //     errors[1] += (gradU[m]-du_dxMEF(0,m))* (gradU[m]-du_dxMEF(0,m)) * weight_ * djac_;
-    //     // }
-
-    //     index++;        
-    // }; 
-
-    // //H1 state variable
-    // errors[2] = errors[0]+errors[1];
+    // Energy norm
+    errors[1] = (sigx*(StrainMEF[0]-exactStrain[0])+sigy*(StrainMEF[1]-exactStrain[1])+2.*sigxy*(StrainMEF[2]-exactStrain[2]));
+	
+	// erro em norma L2 em tensoes
+    errors[2] = sigx*sigx + sigy*sigy + 2.*sigxy*sigxy;
+    
+	// erro estimado na norma H1
+    double SemiH1 =0.;
+    for(int i = 0; i < 2; i++) for(int j = 0; j < 2; j++) SemiH1 += (data.fDSolDx(i,j) - DuExact(i,j)) * (data.fDSolDx(i,j) - DuExact(i,j));
+	errors[3] = errors[0] + SemiH1;
 }
 
 int Elasticity2D::VariableIndex(const std::string &name) const{
@@ -175,6 +151,7 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     if(!strcmp("ExactEpsilonXY",name.c_str()))   return 14;
     if(!strcmp("ExactForce",name.c_str()))       return 15;
     if(!strcmp("Stress",name.c_str()))           return 16;
+    if(!strcmp("Strain",name.c_str()))           return 17;
 
     std::cout << "Post Process variable not implemented \n";
     PanicButton();
@@ -188,6 +165,7 @@ int Elasticity2D::NSolutionVariables(int var) const{
     case 8:
     case 15:
     case 16:
+    case 17:
         return 3;
     case 2:
     case 3:
@@ -352,6 +330,14 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = sigma[0];
         Sol[1] = sigma[1];
         Sol[2] = sigma[2];
+        return;
+    };
+
+    //Strain
+    if (var == 17){
+        Sol[0] = data.fDSolDx(0,0);
+        Sol[1] = data.fDSolDx(1,1);
+        Sol[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         return;
     };
 

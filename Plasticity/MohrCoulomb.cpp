@@ -4,7 +4,7 @@
 
 MohrCoulomb::MohrCoulomb(WeakForm *elast, double cohesion, double intfriction) : PlasticityModel(elast){
     fCohesion = cohesion;
-    fInternalFriction = intfriction;
+    fInternalFriction = intfriction * M_PI / 180.;
 
     ElasticTruss *truss = dynamic_cast<ElasticTruss* >(fElasticModel);
     Elasticity2D *mat2d = dynamic_cast<Elasticity2D* >(fElasticModel);
@@ -103,13 +103,80 @@ void MohrCoulomb::ComputePlasticStrain(IntPointData &data, MatrixDouble &plastic
     VecDouble PrincipalStress(fRealDimension);
     ComputePrincipalStress(StressTensor,PrincipalStress);
 
-    double criterion = fYoungModulus;
-    if (fabs(PrincipalStress[0]) > criterion){
-        std::cout << "Please Implement me\n";
+
+
+
+    //Computing the deviatory stress tensor
+    double sigmam = 0.;
+    for (int i = 0; i < fRealDimension; i++){
+        sigmam += StressTensor(i,i)/fRealDimension;
+    }
+    MatrixDouble identity(fRealDimension,fRealDimension);
+    identity.setIdentity();
+    MatrixDouble DeriatoryStress = StressTensor - identity*sigmam;
+    
+    //Defining MohrColumb Faiulure Criterion Components 
+    double theta; 
+    double j2d; 
+    double j3d;
+    double j1 = 0.;
+    double tr2 = 0.;
+    double tr3 = 0.;
+    //Computing Deviatory Matrix Trace
+    for (int i=0; i< fRealDimension; i++){
+        j1 += DeriatoryStress(i,i);
+    }
+    //Computing J2D = (1/2)*tr(DeviatoryStress²)
+    for (int i=0; i<fRealDimension; i++){
+        for(int j=0; j<fRealDimension; j++){
+            tr2 += DeriatoryStress(i,j)*DeriatoryStress(j,i);
+       };
+   };
+    j2d = tr2/2.;
+    //Computing J3D = (1/3)*tr(DeviatoryStress³)
+    for (int i=0; i<fRealDimension; i++){
+        for(int j=0; j<fRealDimension; j++){
+            for(int k=0; k<fRealDimension; k++){
+                tr3 += DeriatoryStress(i,j)*DeriatoryStress(j,k)*DeriatoryStress(k,i);
+            };
+        };
+    };
+    j3d = tr3/3.;
+    //Computing Theta and his limits
+    theta = -(1./3.)*asin((-3.*sqrt(3.)/2.)*j3d/(pow(j2d,1.5)));
+    if ((theta >= M_PI/6.) || (theta <= -M_PI/6.)){
+        PanicButton();
+    }
+    //Computing criterion function f(j1,j2d,phi,theta,cohesion)
+    double criterion = j1*sin(fInternalFriction) + sqrt(j2d)*cos(theta) - sqrt(j2d)*sin(fInternalFriction)*sin(theta)/3. - fCohesion*cos(fInternalFriction);
+
+    if (fabs(PrincipalStress[0]) > fabs(criterion)){
+        // VecDouble auxStress, auxTotalStrain;
+        // TensorToVoigt(StressTensor,auxStress);
+        // TensorToVoigt(totalstrain,auxTotalStrain);
+        // // strain variation - delta Strain: dE_{ij} = \lambda S_{ij}
+        // VecDouble Lambda = fConstitutiveMatrix.inverse() * auxStress - auxTotalStrain;
+        // // Delta plastic strain: dEP = \lambda df/dS
+        // VecDouble DeltaPlasticStrain = (fYoungModulus/(fYoungModulus+fHardening)) * Lambda;
+        // // Delta Sigma: dS_{ij} = C_{ijkl} \Lambda_{kl}
+        // VecDouble DeltaSigma = fConstitutiveMatrix * Lambda;
+        // MatrixDouble auxDStrain, auxDPlastStrain;
+        // VoigtToTensor(auxDStrain,Lambda);
+        // VoigtToTensor(auxDPlastStrain,DeltaPlasticStrain);
+        // totalstrain += auxDStrain;
+        // plasticstrain += auxDPlastStrain;
+        // fTotalStrain = totalstrain;
+        // fPlasticStrain = plasticstrain;
     } else {
-        totalstrain = fConstitutiveMatrix.inverse() * StressTensor;
-        fPlasticStrain.resize(0,0);
-        fTotalStrain.resize(0,0);
+        VecDouble auxStress;
+        TensorToVoigt(StressTensor,auxStress);
+        VecDouble auxStrain = fConstitutiveMatrix.inverse() * auxStress;
+        VoigtToTensor(totalstrain,auxStrain);
+        
+        if (fPlasticStrain.rows() > 0){
+            fPlasticStrain.resize(0,0);
+            fTotalStrain.resize(0,0);
+        }
     }
 
 }

@@ -7,6 +7,8 @@ ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double p
     fYoungModulus = young;
     fPoissonRatio = poisson;
     fPlaneStress = planes;
+    fConstitutiveMatrix.resize(2,2);
+    fConstitutiveMatrix.setZero();
 };
 
 void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
@@ -37,21 +39,19 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
     E(0,0) -= 0.5; E(1,1) -= 0.5;
 
     //Second Piola-Kirchhoff stress tensor
-    MatrixDouble S(fDimension,fDimension);
-    S.setZero();
     if (fPlaneStress){
-        S(0,0) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(0,0) + fPoissonRatio * E(1,1));
-        S(0,1) = 2.0 * (fYoungModulus / (2.0 * (1.0+fPoissonRatio))) * E(0,1);
-        S(1,0) = S(0,1);
-        S(1,1) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(1,1) + fPoissonRatio * E(0,0));
+        fConstitutiveMatrix(0,0) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(0,0) + fPoissonRatio * E(1,1));
+        fConstitutiveMatrix(0,1) = 2.0 * (fYoungModulus / (2.0 * (1.0+fPoissonRatio))) * E(0,1);
+        fConstitutiveMatrix(1,0) = fConstitutiveMatrix(0,1);
+        fConstitutiveMatrix(1,1) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(1,1) + fPoissonRatio * E(0,0));
     } else {
-        std::cout << "Pleas implement me " << std::endl;
-        PanicButton();
+        const double prop1 = fYoungModulus / ((1.0 + fPoissonRatio) * (1.0 - 2.0 * fPoissonRatio));
+        const double prop2 = 1.0 - fPoissonRatio;
+        const double prop3 = fYoungModulus / (1.0 + fPoissonRatio);
+        fConstitutiveMatrix(0,0) = prop1 *(prop2 * E(0,0) + fPoissonRatio * E(1,1));    
+        fConstitutiveMatrix(1,1) = prop1 *(prop2 * E(1,1) + fPoissonRatio * E(0,0));    
+        fConstitutiveMatrix(0,1) = fConstitutiveMatrix(1,0) = prop3 * E(1,0);      
     }
-    fConstitutiveMatrix = S;
-    //     S[0][0] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * E[0][0] + poisson * E[1][1]);
-    //     S[1][1] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * E[1][1] + poisson * E[0][0]);
-
 
     //element rhs vector
     for (int a = 0; a < nphi; a++){
@@ -101,7 +101,7 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
                     double e = 0.0;
                     for (int i = 0; i < fDimension; i++)
                         for (int j = 0; j < fDimension; j++)
-                            e += dS_dybl(i,j) * dE_dyak(i,j) + S(i,j) * d2E_dyakbl(i,j);
+                            e += dS_dybl(i,j) * dE_dyak(i,j) + fConstitutiveMatrix(i,j) * d2E_dyakbl(i,j);
 
                     //mass matrix
                     double m = 0.;
@@ -130,32 +130,6 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
     //jacobian
     auto jac = data.fJacA1;
 
-    //Green-Lagrange strain tensor
-    MatrixDouble E(fDimension,fDimension);
-    for (int i = 0; i < fDimension; i++)
-        for (int j = 0; j < fDimension; j++)
-            E(i,j) = 0.5 * (dy_dx(0,i) * dy_dx(0,j) + dy_dx(1,i) * dy_dx(1,j));
-    E(0,0) -= 0.5; E(1,1) -= 0.5;
-
-    //Second Piola-Kirchhoff stress tensor
-    MatrixDouble S(fDimension,fDimension);
-    S.setZero();
-    double young = fYoungModulus;
-    double poisson = fPoissonRatio;
-    if (fPlaneStress){
-        S(0,0) = young / (1.0-(poisson*poisson)) * (E(0,0) + poisson * E(1,1));
-        S(0,1) = 2.0 * (young / (2.0 * (1.0+poisson))) * E(0,1);
-        S(1,0) = S(0,1);
-        S(1,1) = young / (1.0-(poisson*poisson)) * (E(1,1) + poisson * E(0,0));
-    } else {
-        std::cout << "Pleas implement me " << std::endl;
-        PanicButton();
-    }
-    
-    //     S[0][0] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * E[0][0] + poisson * E[1][1]);
-    //     S[1][1] = (young / ( (1.0+poisson) * (1.0-2.0*poisson))) * ((1.0-poisson) * E[1][1] + poisson * E[0][0]);
-
-
     //element rhs vector
     for (int a = 0; a < nphi; a++){
         for (int k = 0; k < fDimension; k++){
@@ -169,7 +143,7 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
             double f = 0.0;
             for (int i = 0; i < fDimension; i++)
                 for (int j = 0; j < fDimension; j++)
-                    f += S(i,j) * dE_dyak(i,j);
+                    f += fConstitutiveMatrix(i,j) * dE_dyak(i,j);
 
             Rhs[2 * a + k] -= f * data.fWeight * j0;
         }
@@ -369,14 +343,36 @@ void ElasticityPositional2D::Solution(IntPointData &data, int var, VecDouble &So
 
     //Stress
     if (var == 16){
-        VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
-        auto sigma = fConstitutiveMatrix * epsilon;
-        Sol[0] = sigma[0];
-        Sol[1] = sigma[1];
-        Sol[2] = sigma[2];
+        //dy_dx
+        auto dy_dx = data.fA1 * data.fA0Inv;
+        //jacobian
+        auto jac = dy_dx.determinant();
+
+        //Green-Lagrange strain tensor
+        MatrixDouble E(fDimension,fDimension);
+        for (int i = 0; i < fDimension; i++)
+            for (int j = 0; j < fDimension; j++)
+                E(i,j) = 0.5 * (dy_dx(0,i) * dy_dx(0,j) + dy_dx(1,i) * dy_dx(1,j));
+        E(0,0) -= 0.5; E(1,1) -= 0.5;
+
+        //Second Piola-Kirchhoff stress tensor
+        if (fPlaneStress){
+            fConstitutiveMatrix(0,0) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(0,0) + fPoissonRatio * E(1,1));
+            fConstitutiveMatrix(0,1) = 2.0 * (fYoungModulus / (2.0 * (1.0+fPoissonRatio))) * E(0,1);
+            fConstitutiveMatrix(1,0) = fConstitutiveMatrix(0,1);
+            fConstitutiveMatrix(1,1) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(1,1) + fPoissonRatio * E(0,0));
+        } else {
+            const double prop1 = fYoungModulus / ((1.0 + fPoissonRatio) * (1.0 - 2.0 * fPoissonRatio));
+            const double prop2 = 1.0 - fPoissonRatio;
+            const double prop3 = fYoungModulus / (1.0 + fPoissonRatio);
+            fConstitutiveMatrix(0,0) = prop1 *(prop2 * E(0,0) + fPoissonRatio * E(1,1));    
+            fConstitutiveMatrix(1,1) = prop1 *(prop2 * E(1,1) + fPoissonRatio * E(0,0));    
+            fConstitutiveMatrix(0,1) = fConstitutiveMatrix(1,0) = prop3 * E(1,0);      
+        }
+        auto sigma = dy_dx * fConstitutiveMatrix * dy_dx.transpose() / jac;
+        Sol[0] = sigma(0,0);
+        Sol[1] = sigma(1,1);
+        Sol[2] = sigma(0,1);
         return;
     };
 

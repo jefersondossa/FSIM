@@ -1,25 +1,48 @@
-#ifndef PositionalTruss_H
-#define PositionalTruss_H
+#ifndef Tresca_H
+#define Tresca_H
 
-#include "WeakForm.h"
-/// @brief Implements the truss element in positional formulation;
-class PositionalTruss : public WeakForm{
-protected:
-    // Material Young modulus
+#include "PlasticityModel.h"
+#include "PlasticStep.h"
+
+/// @brief Implements the linear hardening plasticity model
+class Tresca : public PlasticityModel
+{
+private:
+    // Hardening modulus
+    double fHardening;
+
+    // Yield stress
+    double fYield;
+
+    // Updated constitutive matrix
+    MatrixDouble fConstitutiveMatrix;
+
+    // The Young modulus
     double fYoungModulus;
-    // Material Area
-    double fArea;
-public:
-    //Positional elasticity 2D constructor
-    PositionalTruss(int matid, int dim, double young, double area);
+    double fPoissonRatio;
 
-    /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
+    // Plastic strain tensor
+    MatrixDouble fPlasticStrain;
+
+    // Total strain tensor
+    MatrixDouble fTotalStrain;
+
+    PlasticStep<Tresca> fPlasticStep;
+
+public:
+    /// @brief Linear hardening plasticity model constructor
+    /// @param elast elasticity model
+    /// @param hardModulus hardening modulus
+    /// @param yield yield stress
+    Tresca(WeakForm *elast, double hardModulus, double yield);
+
+    /// @brief Overloads the updated weak form stiffness matrix computation for the plasticity model
     /// @param index integration point index
     /// @param data integration point data
     /// @param Stiffness vector of stiffness matrices
     void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) override;
     
-    /// @brief Returns the weak form residual vector. It should never be called in this class
+    /// @brief Returns the updated weak form residual vector for the plasticity model 
     /// @param index integration point index
     /// @param data integration point data
     /// @param Rhs residual vector
@@ -39,24 +62,20 @@ public:
     /// @param var solution variable's index
     /// @return number of solution variables
     int NSolutionVariables(int var) const override;
-    
+
     /// @brief Post process the results for a given solution variable. It should never be called here, but in the derived weak form.
     /// @param data integration point data
     /// @param var solution variable's index
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    /// @brief Computes the material constitutive matrix (used in plasticity models)
-    /// @return constitutive matrix
-    MatrixDouble ConstitutiveMatrix();
-
-    /// @brief Returns the material young modulus
-    /// @return Young modulus
-    double &YoungModulus(){
-        return fYoungModulus;
-    }
-
+    /// @brief Verify the plastic creterion and computes the plastic strain
+    /// @param data integration point data
+    /// @param plasticstrain tensor of plastic strain
+    /// @param totalstrain tensor of total strain
+    void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) override;
 };
+
 
 
 #endif

@@ -1,10 +1,10 @@
-#include "LinearHardening.h"
+#include "VonMises.h"
 #include "ElasticTruss.h"
 #include "Elasticity2D.h"
 #include "PositionalTruss.h"
 #include "ElasticityPositional2D.h"
 
-LinearHardening::LinearHardening(WeakForm *elast, double hardModulus, double yield) : PlasticityModel(elast){
+VonMises::VonMises(WeakForm *elast, double hardModulus, double yield) : PlasticityModel(elast){
     fHardening = hardModulus;
     fYield = yield;
 
@@ -25,7 +25,7 @@ LinearHardening::LinearHardening(WeakForm *elast, double hardModulus, double yie
     }
 }
 
-void LinearHardening::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
+void VonMises::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     fElasticModel->ComputeStiffness(index,data,Stiffness);
     // Change stiffness;
     if (fPlasticStrain.rows()>0){
@@ -33,7 +33,7 @@ void LinearHardening::ComputeStiffness(int &index, IntPointData &data, MatrixDou
     }
 };
     
-void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
+void VonMises::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     fElasticModel->ComputeResidual(index,data,Rhs);
     if (fPlasticStrain.rows()>0){
         if (fRealDimension == 1){
@@ -82,7 +82,7 @@ void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble 
             VecDouble auxplasticstrain;
             TensorToVoigt(fPlasticStrain,auxplasticstrain);
             
-            Rhs -= matB.transpose() * auxplasticstrain * WJ;
+            Rhs -= matB.transpose() * fConstitutiveMatrix * auxplasticstrain * WJ;
         } else {
             PanicButton();
         }
@@ -90,43 +90,52 @@ void LinearHardening::ComputeResidual(int &index, IntPointData &data, VecDouble 
     
 };
     
-void LinearHardening::ComputeError(IntPointData &data, VecDouble &errors){
+void VonMises::ComputeError(IntPointData &data, VecDouble &errors){
     fElasticModel->ComputeError(data,errors);
 
 };
 
-int LinearHardening::VariableIndex(const std::string &name) const{
+int VonMises::VariableIndex(const std::string &name) const{
     return fElasticModel->VariableIndex(name);
 
 };
 
-int LinearHardening::NSolutionVariables(int var) const {
+int VonMises::NSolutionVariables(int var) const {
     return fElasticModel->NSolutionVariables(var);
 };
 
-void LinearHardening::Solution(IntPointData &data, int var, VecDouble &Sol){
+void VonMises::Solution(IntPointData &data, int var, VecDouble &Sol){
     fElasticModel->Solution(data,var,Sol);
 };
 
-void LinearHardening::ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain){
+void VonMises::ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain){
     //Check if the Integration Point is in the elastic region
     //1 - Compute integration point stress
     int var = fElasticModel->VariableIndex("Stress");
     int nsol = fElasticModel->NSolutionVariables(var);
-    VecDouble Sol(nsol);
+    VecDouble Sol(nsol), auxPlasticStrain;
     MatrixDouble StressTensor(fRealDimension,fRealDimension);
     StressTensor.setZero();
     fElasticModel->Solution(data,var,Sol);
     //Compute the principal stress'
+    
+    TensorToVoigt(plasticstrain,auxPlasticStrain);
+    Sol -= fConstitutiveMatrix * auxPlasticStrain;
     VoigtToTensor(StressTensor,Sol);
     VecDouble PrincipalStress(fRealDimension);
     ComputePrincipalStress(StressTensor,PrincipalStress);
+
+    double C1 = pow(StressTensor(0,0) + StressTensor(1,1),2.);
+    double C2 = pow(StressTensor(0,0) - StressTensor(1,1),2.) + StressTensor(0,1)*StressTensor(0,1);
+    // double C3 = fYoungModulus / (3.*(1.-fElasticModel->Y))
+
+    double f = StressTensor.norm() - sqrt(2./3.) * fHardening;
 
     double maxStress = PrincipalStress.maxCoeff();
     double minStress = PrincipalStress.minCoeff();
     double maxAbsStress = std::max(fabs(maxStress),fabs(minStress));
 
-    if (maxAbsStress > fYield + plasticstrain.norm() * fHardening){
+    if (maxAbsStress > fabs(f)){
         VecDouble auxStress, auxTotalStrain;
         TensorToVoigt(StressTensor,auxStress);
         TensorToVoigt(totalstrain,auxTotalStrain);

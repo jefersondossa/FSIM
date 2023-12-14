@@ -31,8 +31,8 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                     int nstatej = fAnalysis->MeshVector()[mesh]->NodeVec()[connec[j]]->GetNStateVariables();
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
-                            int dof_i = startDOF + nstatei * connec[i] + istate;
-                            int dof_j = startDOF + nstatej * connec[j] + jstate; 
+                            PetscInt dof_i = startDOF + nstatei * connec[i] + istate;
+                            PetscInt dof_j = startDOF + nstatej * connec[j] + jstate; 
                             MatSetValues(fAnalysis->Stiffness(), 1, &dof_i,1, &dof_j, &matrix(nstatei*i+istate,nstatej*j+jstate), ADD_VALUES);
                         }
                     }
@@ -40,7 +40,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
-                    int dof_i = startDOF + nstatei * connec[i] + istate;
+                    PetscInt dof_i = startDOF + nstatei * connec[i] + istate;
                     VecSetValues(fAnalysis->Rhs(), 1, &dof_i, &rhs[nstatei*i+istate], ADD_VALUES);
                 }
             };
@@ -110,8 +110,8 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
                 for (int istate = 0; istate < nState; istate++){
                     for (int jstate = 0; jstate < nState; jstate++){
                         if (fabs(matrix[0](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                            int d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                            int d_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                            PetscInt d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                            PetscInt d_j = startDOF + nStateMonomodel*connec[j] + jstate;
                             MatSetValues(fAnalysis->Stiffness(),1,&d_i,1,&d_j,&matrix[0](nState*i+istate,nState*j+jstate),ADD_VALUES);
                             MatSetValues(fAnalysis->Stiffness(),1,&d_j,1,&d_i,&matrix[0](nState*i+istate,nState*j+jstate),ADD_VALUES);
                         };
@@ -123,15 +123,15 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
                         for (int jstate = 0; jstate < nState; jstate++){
                             //Diagonal term
                             if (fabs(matrix[1](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                                int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                                int dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
+                                PetscInt dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                PetscInt dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
                                 MatSetValues(fAnalysis->Stiffness(),1,&dof_i,1,&dof_j,&matrix[1](nState*i+istate,nState*j+jstate),ADD_VALUES);
                             };
                             //Non Diagonal term
                             for (int iarl = 2; iarl < matrix.size(); iarl++){
                                 if (fabs(matrix[iarl](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                                    int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                                    int dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                                    PetscInt dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                    PetscInt dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
                                     MatSetValues(fAnalysis->Stiffness(),1,&dof_i,1,&dof_j,&matrix[iarl](nState*i+istate,nState*j+jstate),ADD_VALUES);
                                 };
                             }
@@ -142,7 +142,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
             //RHS VECTOR
             //COUPLING OPERATOR
             for (int istate = 0; istate < nState; istate++){
-                int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                PetscInt dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                 VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[0][nState*i+istate],ADD_VALUES);
                 
                 dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
@@ -151,7 +151,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
             //Arlequin Stabilization
             if (fAnalysis->ArlequinModel()->getArlequinStabilization() != ENoStab){
                 for (int istate = 0; istate < nState; istate++){
-                    int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                    PetscInt dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                     VecSetValues(fAnalysis->Rhs(),1,&dof_i,&rhs[1][nState*i+istate],ADD_VALUES);
                     
                     dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;

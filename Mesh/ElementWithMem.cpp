@@ -1,5 +1,9 @@
 #include "ElementWithMem.h"
 #include "PlasticityModel.h"
+#include "Elasticity2D.h"
+#include "ElasticityPositional2D.h"
+#include "ElasticTruss.h"
+#include "PositionalTruss.h"
 
 template<class tshape>
 ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
@@ -31,6 +35,9 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     this->fIntegData.fNeedsSol = true;
     this->fIntegData.fSol.resize(fPlasticityModel->NState());
     
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
+    auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
+
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
 
         //Defines the integration points adimentional coordinates
@@ -45,17 +52,17 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
 
-        /// Make a dynamic cast to check if it consists in a positional element
-        // if (this->fWeakForm->IsPositionalFEM()){
-        //     this->ComputeCurrentJacobian();
-        //     this->ComputeCurrentSpatialDerivatives();
-        // }
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            this->ComputeCurrentJacobian();
+            this->ComputeCurrentSpatialDerivatives();
+        }
 
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
 
         //Update the plastic strain
-        fPlasticityModel->ComputePlasticStrain(this->fIntegData,fTotalStrain[it],fPlasticStrain[it]);
+        fPlasticityModel->ComputePlasticStrain(this->fIntegData,fPlasticStrain[it],fTotalStrain[it]);
 
         //Computes the element diffusion/viscosity matrix
         this->fWeakForm->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);

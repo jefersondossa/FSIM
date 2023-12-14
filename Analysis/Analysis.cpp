@@ -35,10 +35,15 @@ void Analysis::Solve(){
     
     switch (fSolverType)
     {
-    case SolverType::ESuiteSparse:
+    case SolverType::EUmfpack:
         KSPGetPC(ksp, &pc);
         PCSetType(pc, PCLU);
         PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+        break;
+    case SolverType::ECholmod:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCCHOLESKY);
+        PCFactorSetMatSolverType(pc, MATSOLVERCHOLMOD);
         break;
     case SolverType::EMumps:
         KSPGetPC(ksp, &pc);
@@ -70,13 +75,13 @@ void Analysis::AllocateMonomodel(){
 
     PetscErrorCode    ierr;
     int numDOF = fMeshVector[0]->NGlobalDOF();
-    if (fSolverType == SolverType::ESuiteSparse){
+    if (fSolverType == SolverType::EUmfpack || fSolverType == SolverType::ECholmod){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
     } else {
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
     }
-    for (int i=0; i<numDOF; i++){
+    for (PetscInt i=0; i<numDOF; i++){
         double val = 1.e-20;
         ierr = MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
     }
@@ -97,13 +102,13 @@ void Analysis::AllocateArlequin(){
     int64_t numDOFLocal = fMeshVector[1]->NGlobalDOF();
     int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
     int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
-    if (fSolverType == SolverType::ESuiteSparse){
+    if (fSolverType == SolverType::EUmfpack || fSolverType == SolverType::ECholmod){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
     } else {
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
     }
-    for (int i=0; i<numDOF; i++){
+    for (PetscInt i=0; i<numDOF; i++){
         double val = 1.e-20;
         ierr = MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
     }
@@ -126,35 +131,32 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
 
     int rank;
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-    return;// Need refactor
-    // for (int imesh = 0; imesh < fMeshVector.size(); imesh++){
-    //     if (fMeshVector[imesh]->getProblemParameters().getExactSolution()){
-    //         VecDouble errorsProcess;
-    //         // Loop over the elements
-    //         for (int jel = fMeshVector[imesh]->NElements(); jel--; ){
 
-    //             VecDouble errors;
+    for (int imesh = 0; imesh < fMeshVector.size(); imesh++){
+        VecDouble errorsProcess;
+        // Loop over the elements
+        for (int jel = fMeshVector[imesh]->NElements(); jel--; ){
 
-    //             fMeshVector[imesh]->ElementVec()[jel] -> ComputeError(errors);
-    //             errorsProcess.resize(errors.size());
-    //             errorsProcess += errors;
+            VecDouble errors;
 
-    //         }; //Elements
-    //         errorsTotal.resize(errorsProcess.size());
-    //         errorsTotal.setZero();
+            fMeshVector[imesh]->ElementVec()[jel] -> ComputeError(errors);
+            if (errors.size() == 0) continue;
+            errorsProcess.resize(errors.size());
+            errorsProcess += errors;
 
-    //         if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+        }; //Elements
+        errorsTotal.resize(errorsProcess.size());
+        errorsTotal.setZero();
 
-    //         if (rank == 0 && errorsTotal.size()>0){
-    //             std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10)
-    //                 << "L2 state var = " << sqrt(errorsTotal[0]) << "\n" 
-    //                 << "Semi H1 state var = " << sqrt(errorsTotal[1]) << "\n" 
-    //                 << "H1 state var = " << sqrt(errorsTotal[2]) << "\n"; 
-    //         }
-    //     } else {
-    //         std::cout << "Exact solution not defined for MESHVECTOR[" << imesh << "]:" << std::endl;
-    //     }
-    // }
+        if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+
+        if (rank == 0 && errorsTotal.size()>0){
+            std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10);
+            for (int k = 0; k < errorsTotal.size(); k++){
+                std::cout << "Errors[" << k << "] = " << sqrt(errorsTotal[k]) << "\n";
+            }
+        }
+    }
 }
 
 

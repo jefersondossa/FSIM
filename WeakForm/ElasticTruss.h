@@ -58,9 +58,10 @@ public:
 
     /// @brief Returns the material young modulus
     /// @return Young modulus
-    double YoungModulus(){
+    double &YoungModulus(){
         return fYoungModulus;
     }
+
 };
 
 

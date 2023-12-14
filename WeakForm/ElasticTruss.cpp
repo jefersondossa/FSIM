@@ -206,7 +206,7 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
     if (var == 2){
         double cosa = data.fAxes0(0,0) / data.fJacA0;
         double sina = data.fAxes0(1,0) / data.fJacA0;
-        Sol[0] = fYoungModulus * (-data.fDSolDx(1,0)*sina + data.fDSolDx(0,0)*cosa) ;
+        Sol[0] = fYoungModulus * (data.fDSolDx(1,0)*sina - data.fDSolDx(0,0)*cosa) ;
         return;
     };
 
