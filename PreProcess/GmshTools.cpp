@@ -1168,6 +1168,39 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             gel->PrintType() = 5;           
             break;
         }
+        case 3:
+        {
+            // Linear Quadrilateral
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
+            gel->PrintType() = 9;
+            break;
+        }
+        case 4:
+        {
+            // Linear Tetrahedron
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeTetrahedronLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeTetrahedronLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
+            gel->PrintType() = 10;
+            break;
+        }
+        case 5:
+        {
+            // Linear Hexahedron
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeHexahedron>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeHexahedron>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
+            gel->PrintType() = 12;
+            break;
+        }
         case 8:
         {
             // Quadratic Line

@@ -40,6 +40,16 @@ void Analysis::Solve(){
         PCSetType(pc, PCLU);
         PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
         break;
+    case SolverType::EKLU:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCLU);
+        PCFactorSetMatSolverType(pc, MATSOLVERKLU);
+        break;
+    case SolverType::ESPQR:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCQR);
+        PCFactorSetMatSolverType(pc, MATSOLVERSPQR);
+        break;
     case SolverType::ECholmod:
         KSPGetPC(ksp, &pc);
         PCSetType(pc, PCCHOLESKY);
@@ -75,8 +85,12 @@ void Analysis::AllocateMonomodel(){
 
     PetscErrorCode    ierr;
     int numDOF = fMeshVector[0]->NGlobalDOF();
-    if (fSolverType == SolverType::EUmfpack || fSolverType == SolverType::ECholmod){
+    std::cout << "Number of DOF = " << numDOF << std::endl;
+    if (fSolverType == SolverType::EUmfpack){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+    } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
+        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+        MatSetOption(fGlobalStiffness, MAT_SYMMETRIC, PETSC_TRUE);
     } else {
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
@@ -102,8 +116,11 @@ void Analysis::AllocateArlequin(){
     int64_t numDOFLocal = fMeshVector[1]->NGlobalDOF();
     int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
     int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
-    if (fSolverType == SolverType::EUmfpack || fSolverType == SolverType::ECholmod){
+    if (fSolverType == SolverType::EUmfpack){
         ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
+    } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
+        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
+        MatSetOption(fGlobalStiffness, MAT_SYMMETRIC, PETSC_TRUE);
     } else {
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 

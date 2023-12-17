@@ -173,7 +173,7 @@ public:
         MatrixDouble coords(3,tshape::NElNodes);
         tshape::getCoordinates(coords);
         for (int i = 0; i < 3; i++){
-            xnode[i] = coords(i,inode);
+            xnode[i] = coords(i,4);
         }
         return xnode;
     }

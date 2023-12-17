@@ -49,7 +49,7 @@ private:
     VecDouble        fMeshVelocity;           //Nodal mesh velocity
     double           fWeightFunction;         //Nodal Energy Weight Function
     double           fPrevWeightFunction;
-    std::vector<int> fInverseIncidence;
+    std::vector<int64_t> fInverseIncidence;
     
 public:
     Node(VecDouble &coor, int64_t index, int nState = 1){
@@ -136,7 +136,7 @@ public:
 
     /// Gets the number of elements which contains the node
     /// @return int number of elements which contains the node
-    int getNumberOfElements() const {return fInverseIncidence.size();}
+    int64_t getNumberOfElements() const {return fInverseIncidence.size();}
 
     /// Gets an specific member of the inverse incidence
     /// @param int index @return int element of the inverse incidence

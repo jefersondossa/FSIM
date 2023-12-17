@@ -15,7 +15,7 @@ public:
     const static int Order = 1;
 
     // Number of element nodes
-    const static int NElNodes = 4;
+    const static int NElNodes = 8;
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 8;

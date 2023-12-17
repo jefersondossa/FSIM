@@ -46,10 +46,14 @@ void NonLinearAnalysis::Run(){
     VecZeroEntries(fPreviousSolution);
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
-        
+        std::clock_t t3 = std::clock();
         Compute();
+        std::clock_t t4 = std::clock();
+        std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
         // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
         Solve();
+        std::clock_t t5 = std::clock();
+        std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
         // VecView(this->Solution(),PETSC_VIEWER_STDOUT_WORLD);
         // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD); 
         UpdateSolution();

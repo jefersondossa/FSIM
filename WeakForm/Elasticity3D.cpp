@@ -1,34 +1,31 @@
-#include "Elasticity2D.h"
+#include "Elasticity3D.h"
 
-Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes) : WeakForm() {
+Elasticity3D::Elasticity3D(int matid, double young, double poisson) : WeakForm() {
     this->fMatId = matid;
-    fDimension = 2;
-    fNState = 2;
+    fDimension = 3;
+    fNState = 3;
     fYoungModulus = young;
     fPoissonRatio = poisson;
-    fPlaneStress = planes;
-    fConstitutiveMatrix.resize(3,3);
+    fConstitutiveMatrix.resize(6,6);
     fConstitutiveMatrix.setZero();
-    if (fPlaneStress){//Plane Stress Matrix
-        double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
-        fConstitutiveMatrix(0,0) = k;
-        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,1) = k;
-        fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
-    } else {//Plane Strain Matrix
-        double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
-        double k = 2.*G / (1.-2.*fPoissonRatio);
-        fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * k;
-        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * k;
-        fConstitutiveMatrix(2,2) = 2. * G;
-    }
+
+    double k = fYoungModulus/((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+    fConstitutiveMatrix(0,0) = k * (1. - fPoissonRatio);
+    fConstitutiveMatrix(0,1) = k * fPoissonRatio;
+    fConstitutiveMatrix(0,2) = k * fPoissonRatio;
+    fConstitutiveMatrix(1,0) = k * fPoissonRatio;
+    fConstitutiveMatrix(1,1) = k * (1. - fPoissonRatio);
+    fConstitutiveMatrix(1,2) = k * fPoissonRatio;
+    fConstitutiveMatrix(2,0) = k * fPoissonRatio;
+    fConstitutiveMatrix(2,1) = k * fPoissonRatio;
+    fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio);
+    fConstitutiveMatrix(3,3) = fYoungModulus / (1. + fPoissonRatio);
+    fConstitutiveMatrix(4,4) = fYoungModulus / (1. + fPoissonRatio);
+    fConstitutiveMatrix(5,5) = fYoungModulus / (1. + fPoissonRatio);
 };
 
 
-void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
+void Elasticity3D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
 
     if (!data.fNeedsDSol){
         data.fNeedsDSol = true;
@@ -37,14 +34,19 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
-    MatrixDouble matB(3,2*nphi);
+    MatrixDouble matB(6,3*nphi);
     matB.setZero();
 
     for (int j = 0; j < nphi; j++){
-        matB(0,2*j  ) = data.fDPhiX0(j,0);
-        matB(1,2*j+1) = data.fDPhiX0(j,1);
-        matB(2,2*j  ) = data.fDPhiX0(j,1);
-        matB(2,2*j+1) = data.fDPhiX0(j,0);
+        matB(0,3*j  ) = data.fDPhiX0(j,0);
+        matB(1,3*j+1) = data.fDPhiX0(j,1);
+        matB(2,3*j+2) = data.fDPhiX0(j,2);
+        matB(3,3*j  ) = data.fDPhiX0(j,1);
+        matB(3,3*j+1) = data.fDPhiX0(j,0);
+        matB(4,3*j+1) = data.fDPhiX0(j,2);
+        matB(4,3*j+2) = data.fDPhiX0(j,1);
+        matB(5,3*j  ) = data.fDPhiX0(j,2);
+        matB(5,3*j+2) = data.fDPhiX0(j,0);
     }
     
     Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
@@ -52,12 +54,12 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
 
-void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
+void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
     int nphi = data.fPhi.size();
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
-    MatrixDouble matB(3,2*nphi);
+    MatrixDouble matB(6,3*nphi);
     matB.setZero();
 
     auto force = fForceFunction;
@@ -67,17 +69,25 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     if (force) force(x_,forcingF);
     
     for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j  ) = data.fDPhiX0(j,0);
-        matB(1,fDimension*j+1) = data.fDPhiX0(j,1);
-        matB(2,fDimension*j  ) = data.fDPhiX0(j,1);
-        matB(2,fDimension*j+1) = data.fDPhiX0(j,0);
+        matB(0,3*j  ) = data.fDPhiX0(j,0);
+        matB(1,3*j+1) = data.fDPhiX0(j,1);
+        matB(2,3*j+2) = data.fDPhiX0(j,2);
+        matB(3,3*j  ) = data.fDPhiX0(j,1);
+        matB(3,3*j+1) = data.fDPhiX0(j,0);
+        matB(4,3*j+1) = data.fDPhiX0(j,2);
+        matB(4,3*j+2) = data.fDPhiX0(j,1);
+        matB(5,3*j  ) = data.fDPhiX0(j,2);
+        matB(5,3*j+2) = data.fDPhiX0(j,0);
     }
     
-    VecDouble strain(3);
+    VecDouble strain(6);
     strain.setZero();
     strain[0] = data.fDSolDx(0,0);
     strain[1] = data.fDSolDx(1,1);
-    strain[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+    strain[2] = data.fDSolDx(2,2);
+    strain[3] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+    strain[4] = data.fDSolDx(1,2)+data.fDSolDx(2,1);
+    strain[5] = data.fDSolDx(0,2)+data.fDSolDx(2,0);
 
     Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
 
@@ -86,16 +96,18 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         //External force
         double Fx = forcingF[0] * shapeFi;
         double Fy = forcingF[1] * shapeFi;
-        Rhs[2*i  ] += Fx * WJ;
-        Rhs[2*i+1] += Fy * WJ;
+        double Fz = forcingF[2] * shapeFi;
+        Rhs[3*i  ] += Fx * WJ;
+        Rhs[3*i+1] += Fy * WJ;
+        Rhs[3*i+2] += Fz * WJ;
     };
 
     
 };
 
-void Elasticity2D::ComputeError(IntPointData &data, VecDouble &errors){
+void Elasticity3D::ComputeError(IntPointData &data, VecDouble &errors){
     errors.resize(4);
-
+    PanicButton();
     VecDouble uExact(fDimension);
     MatrixDouble DuExact(fDimension,fDimension);
     VecDouble x_ = data.fX;
@@ -134,7 +146,7 @@ void Elasticity2D::ComputeError(IntPointData &data, VecDouble &errors){
 	errors[3] = errors[0] + SemiH1;
 }
 
-int Elasticity2D::VariableIndex(const std::string &name) const{
+int Elasticity3D::VariableIndex(const std::string &name) const{
     
     if(!strcmp("Displacement",name.c_str()))     return 1;
     if(!strcmp("SigmaX",name.c_str()))           return 2;
@@ -159,7 +171,7 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     return -1;
 };
 
-int Elasticity2D::NSolutionVariables(int var) const{
+int Elasticity3D::NSolutionVariables(int var) const{
     switch (var)
     {
     case 1:
@@ -188,13 +200,13 @@ int Elasticity2D::NSolutionVariables(int var) const{
     }
 };
 
-void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
+void Elasticity3D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Displacement
     if (var == 1){
         Sol[0] = data.fSol[0];
         Sol[1] = data.fSol[1];
-        Sol[2] = 0.;
+        Sol[2] = data.fSol[2];
         return;
     };
 
@@ -260,7 +272,7 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
     if (var == 8){
         Sol[0] = disp[0];
         Sol[1] = disp[1];
-        Sol[2] = 0.;
+        Sol[2] = disp[2];
         return;
     };
     
@@ -345,6 +357,6 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 }; 
 
 
-MatrixDouble Elasticity2D::ConstitutiveMatrix(){
+MatrixDouble Elasticity3D::ConstitutiveMatrix(){
     return fConstitutiveMatrix;
 }

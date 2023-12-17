@@ -38,6 +38,9 @@ class IntRuleHexahedron : public IntRule
     // Method to set polynomial order of the integration rule for tetrahedro elements
     virtual void SetOrder(int order) override;
     
+    // Integration rule 3D (hexahedron elements) method obtained from Numerical Recipes
+    static void gaulegHexa(const double x1, const double x2, VecDouble &x, VecDouble &w);
+
 };
 
 

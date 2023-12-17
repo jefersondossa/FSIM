@@ -6,6 +6,8 @@ file(GLOB weakform
     CouplingLocal.cpp
     Elasticity2D.h
     Elasticity2D.cpp
+    Elasticity3D.h
+    Elasticity3D.cpp
     ElasticityPositional2D.h
     ElasticityPositional2D.cpp
     NavierStokes.h
