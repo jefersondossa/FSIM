@@ -6,9 +6,12 @@
 
 class TransientAnalysis : public Analysis
 {
+private:
+    bool IsLinear;
+
 public:
     TransientAnalysis() : Analysis(){};
-    TransientAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
+    TransientAnalysis(CompMesh *cmesh, SolverType stype, bool linear = true);
 
     void Compute() override;
 

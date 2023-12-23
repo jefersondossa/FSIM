@@ -24,6 +24,8 @@ file(GLOB shape
     ShapeTriangleQua.cpp
     ShapeTriangleLin.h
     ShapeTriangleLin.cpp
+    ShapeQuadrilateralQua.h
+    ShapeQuadrilateralQua.cpp    
 )
 
 set(SHAPE ${shape} PARENT_SCOPE)

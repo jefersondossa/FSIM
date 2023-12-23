@@ -28,7 +28,7 @@ class IntRuleQuad : public IntRule
     // Return the maximum polynomial order that can be integrated exactly
     static int gMaxOrder()
     {
-        return 5;
+        return 20;
     }
 
     // Return the maximum polynomial order that can be integrated exactly

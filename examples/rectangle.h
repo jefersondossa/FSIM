@@ -182,6 +182,14 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // arl.SetGlueIds(gluematids);
     // arl.SetUp();
 
+    for (int i = 0; i < coarseModel->NNodes(); i++){
+        std::cout << "node " << i << "\ncoord = " << coarseModel->NodeVec()[i]->getCoordinates() << std::endl;
+    }
+    for (int i = 0; i < coarseModel->NElements(); i++){
+        std::cout << "element " << i << "\nconnect = " << coarseModel->ElementVec()[i]->getConnectivity() << std::endl;
+    }
+    
+
     // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // an.Run();
     // LinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack);

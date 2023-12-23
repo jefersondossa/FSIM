@@ -70,8 +70,8 @@ int main(int argc, char **args) {
 
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
-    // #include "examples/rectangle.h"
-    #include "examples/cube.h"
+    #include "examples/rectangle.h"
+    // #include "examples/cube.h"
     // #include "examples/truss.h"
     // #include "examples/mohrcoulombtest.h"
     // #include "examples/geogrelha.h"

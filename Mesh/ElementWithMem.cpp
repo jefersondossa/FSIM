@@ -135,6 +135,7 @@ void ElementWithMem<tshape>::ComputeElContribution(std::vector<MatrixDouble> &ja
 #include "ShapeOneDQua.h"
 #include "ShapeOneDCub.h"
 #include "ShapeQuadrilateralLin.h"
+#include "ShapeQuadrilateralQua.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
 #include "ShapeTetrahedronQua.h"
@@ -151,6 +152,7 @@ template class ElementWithMem<ShapeTriangleLin>;
 template class ElementWithMem<ShapeTriangleQua>;
 template class ElementWithMem<ShapeTriangleCub>;
 template class ElementWithMem<ShapeQuadrilateralLin>;
+template class ElementWithMem<ShapeQuadrilateralQua>;
 template class ElementWithMem<ShapeTetrahedronLin>;
 template class ElementWithMem<ShapeTetrahedronQua>;
 template class ElementWithMem<ShapeTetrahedronCub>;

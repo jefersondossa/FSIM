@@ -4,6 +4,7 @@
 #include "ShapeOneDQua.h"
 #include "ShapeOneDCub.h"
 #include "ShapeQuadrilateralLin.h"
+#include "ShapeQuadrilateralQua.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
 #include "ShapeTetrahedronQua.h"
@@ -251,6 +252,11 @@ int GetNumberofNodes(int & el_type){
         case 26:{
             // Cubic Line
             n_nodes = 4;  
+        }
+            break;
+        case 36:{
+            // Cubic Quadrilateral
+            n_nodes = 16;  
         }
             break;
         default:
@@ -1223,6 +1229,17 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             gel->PrintType() = 22;           
             break;
         }
+        case 10:
+        {
+            // Quadratic Quad
+            if (plasticmaterial){
+                gel = new ElementWithMem<ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else {
+                gel = new ElementT<ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            }
+            gel->PrintType() = 28;           
+            break;
+        }
         case 15:
         {
             // Point
@@ -1254,6 +1271,19 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
                 gel = new ElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
             gel->PrintType() = 35;           
+            break;
+        }
+
+        case 36:
+        {
+            PanicButton();
+            // Cubic Quadrilateral
+            // if (plasticmaterial){
+            //     gel = new ElementWithMem<ShapeQuadrilateralCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            // } else {
+            //     gel = new ElementT<ShapeQuadrilateralCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            // }
+            // gel->PrintType() = 70;
             break;
         }
         

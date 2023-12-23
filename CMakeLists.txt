@@ -68,6 +68,11 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/WeakForm"
 	"${PROJECT_SOURCE_DIR}/Util"
 	"${PROJECT_SOURCE_DIR}/triangle"
+	"${PROJECT_SOURCE_DIR}/WeakForm/Arlequin"
+	"${PROJECT_SOURCE_DIR}/WeakForm/Elasticity"
+	"${PROJECT_SOURCE_DIR}/WeakForm/Poisson"
+	"${PROJECT_SOURCE_DIR}/WeakForm/NavierStokes"
+	"${PROJECT_SOURCE_DIR}/WeakForm/Stokes"
 )
 
 file(GLOB MY_MESH_FILES

@@ -1095,6 +1095,7 @@ Element * ElementT<tshape>::Clone() const {
 #include "ShapeOneDQua.h"
 #include "ShapeOneDCub.h"
 #include "ShapeQuadrilateralLin.h"
+#include "ShapeQuadrilateralQua.h"
 #include "ShapePoint.h"
 #include "ShapeTetrahedronLin.h"
 #include "ShapeTetrahedronQua.h"
@@ -1111,6 +1112,7 @@ template class ElementT<ShapeTriangleLin>;
 template class ElementT<ShapeTriangleQua>;
 template class ElementT<ShapeTriangleCub>;
 template class ElementT<ShapeQuadrilateralLin>;
+template class ElementT<ShapeQuadrilateralQua>;
 template class ElementT<ShapeTetrahedronLin>;
 template class ElementT<ShapeTetrahedronQua>;
 template class ElementT<ShapeTetrahedronCub>;
