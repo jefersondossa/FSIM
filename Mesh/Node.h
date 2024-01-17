@@ -44,6 +44,7 @@ private:
     VecDouble fPrevCoord;
     VecDouble fInitialCoord;
     VecDouble fDTimeSolution;
+    VecDouble fDDTimeSolution;
     int64_t fIndex;
     int fDimension;
     VecDouble        fMeshVelocity;           //Nodal mesh velocity
@@ -58,11 +59,8 @@ public:
         fDimension = coor.size();
 
         fSolution.resize(fNStateVariables);
-        fDTimeSolution.resize(fNStateVariables);
         fPrevSolution.resize(fNStateVariables);
         fCoord.resize(fDimension);
-        fPrevCoord.resize(fDimension);
-        fInitialCoord.resize(fDimension);
         fPrevSolution.setZero();
         fSolution.setZero();
 
@@ -73,14 +71,13 @@ public:
         fWeightFunction = 0.;   fPrevWeightFunction = 0.;
         
         fInverseIncidence.clear();
-        fMeshVelocity.resize(fDimension);
-        fMeshVelocity.setZero();
     }
 
     void SetNStateVariables(int nstate){
         fNStateVariables = nstate;
         fSolution.resize(fNStateVariables);
         fDTimeSolution.resize(fNStateVariables);
+        fDDTimeSolution.resize(fNStateVariables);
         fPrevSolution.resize(fNStateVariables);
     }
 
@@ -96,6 +93,13 @@ public:
     VecDouble &PrevSolution() {return fPrevSolution;}
     double GetSolution(int istate){
         return fSolution[istate];
+    }
+
+    double GetDSolutionDTime(int istate){
+        return fDTimeSolution[istate];
+    }
+    double GetDSolutionDDTime(int istate){
+        return fDDTimeSolution[istate];
     }
 
     int64_t &Index(){return fIndex;}

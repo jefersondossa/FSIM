@@ -8,146 +8,6 @@
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-//---------------CREATES AN AUXILIARY FINITE ELEMENT OF DIMENSION---------------
-//----------------------DIM-1 FOR THE BOUNDARY INTEGRATION----------------------
-//------------------------------------------------------------------------------
-template<class tshape>
-void ElementT<tshape>::getBoundaryNodes(int *nodesb_){
-    // if (fMesh->Dimension() == 2){
-    //     switch (fMesh->GetDefaultOrder())
-    //     {
-    //     case 1:
-    //         if(fSideInBoundary == 0){
-    //             nodesb_[0] = fConnect[2]; 
-    //             nodesb_[1] = fConnect[1]; 
-    //         }else{
-    //             if(fSideInBoundary == 1){
-    //                 nodesb_[0] = fConnect[0]; 
-    //                 nodesb_[1] = fConnect[2]; 
-    //             }else{
-    //                 nodesb_[0] = fConnect[1];
-    //                 nodesb_[1] = fConnect[0];
-    //             };        
-    //         };
-    //         break;
-    //     case 2:
-    //         //!!!!!!!ATENÇÃO ESSAS CONECTIVIDADES FORAM ALTERADAS EM RELAÇÃO AO PROGRAMA Fluid.
-    //         if(fSideInBoundary == 0){
-    //             nodesb_[0] = fConnect[1]; 
-    //             nodesb_[1] = fConnect[2]; 
-    //             nodesb_[2] = fConnect[4];         
-    //         }else{
-    //             if(fSideInBoundary == 1){
-    //                 nodesb_[0] = fConnect[2]; 
-    //                 nodesb_[1] = fConnect[0]; 
-    //                 nodesb_[2] = fConnect[5]; 
-    //             }else{
-    //                 nodesb_[0] = fConnect[0];
-    //                 nodesb_[1] = fConnect[1];
-    //                 nodesb_[2] = fConnect[3];
-    //             };        
-    //         };
-    //         break;
-    //     case 3:
-    //         if(fSideInBoundary == 0){
-    //             nodesb_[0] = fConnect[1]; 
-    //             nodesb_[1] = fConnect[2]; 
-    //             nodesb_[2] = fConnect[5];         
-    //             nodesb_[3] = fConnect[6];         
-    //         }else{
-    //             if(fSideInBoundary == 1){
-    //                 nodesb_[0] = fConnect[2]; 
-    //                 nodesb_[1] = fConnect[0]; 
-    //                 nodesb_[2] = fConnect[7]; 
-    //                 nodesb_[3] = fConnect[8]; 
-    //             }else{
-    //                 nodesb_[0] = fConnect[0];
-    //                 nodesb_[1] = fConnect[1];
-    //                 nodesb_[2] = fConnect[3];
-    //                 nodesb_[3] = fConnect[4];
-    //             };        
-    //         };
-    //         break;
-    //     default:
-    //         PanicButton();
-    //         break;
-    //     }
-    // } else if (fMesh->Dimension() == 3){
-    //     switch (fMesh->GetDefaultOrder())
-    //     {
-    //     case 1:
-    //         if(fSideInBoundary == 0){
-    //             nodesb_[0] = fConnect[1]; 
-    //             nodesb_[1] = fConnect[2]; 
-    //             nodesb_[2] = fConnect[3];         
-    //         }else{
-    //             if(fSideInBoundary == 1){
-    //                 nodesb_[0] = fConnect[0]; 
-    //                 nodesb_[1] = fConnect[3]; 
-    //                 nodesb_[2] = fConnect[2]; 
-    //             }else{
-    //                 if(fSideInBoundary == 2){
-    //                     nodesb_[0] = fConnect[0];
-    //                     nodesb_[1] = fConnect[1];
-    //                     nodesb_[2] = fConnect[3];
-    //                 }else{
-    //                     nodesb_[0] = fConnect[0];
-    //                     nodesb_[1] = fConnect[2];
-    //                     nodesb_[2] = fConnect[1];
-    //                 }
-    //             };        
-    //         };
-    //         break;
-    //     case 2:
-    //         if(fSideInBoundary == 0){
-    //             nodesb_[0] = fConnect[2]; 
-    //             nodesb_[1] = fConnect[3]; 
-    //             nodesb_[2] = fConnect[1];
-    //             nodesb_[3] = fConnect[9]; 
-    //             nodesb_[4] = fConnect[8]; 
-    //             nodesb_[5] = fConnect[5];
-    //         }else{
-    //             if(fSideInBoundary == 1){
-    //                 nodesb_[0] = fConnect[0]; 
-    //                 nodesb_[1] = fConnect[3]; 
-    //                 nodesb_[2] = fConnect[2];
-    //                 nodesb_[3] = fConnect[7]; 
-    //                 nodesb_[4] = fConnect[9]; 
-    //                 nodesb_[5] = fConnect[6];
-    //             }else{
-    //                 if(fSideInBoundary == 2){
-    //                     nodesb_[0] = fConnect[3]; 
-    //                     nodesb_[1] = fConnect[0]; 
-    //                     nodesb_[2] = fConnect[1];
-    //                     nodesb_[3] = fConnect[7]; 
-    //                     nodesb_[4] = fConnect[4]; 
-    //                     nodesb_[5] = fConnect[8];
-    //                 }else{
-    //                     nodesb_[0] = fConnect[0]; 
-    //                     nodesb_[1] = fConnect[2]; 
-    //                     nodesb_[2] = fConnect[1];
-    //                     nodesb_[3] = fConnect[6]; 
-    //                     nodesb_[4] = fConnect[5]; 
-    //                     nodesb_[5] = fConnect[4];
-    //                 }
-    //             };        
-    //         };
-    //         break;
-    //     case 3:
-    //         PanicButton();
-    //         break;
-    //     default:
-    //         PanicButton();
-    //         break;
-    //     }
-    // } else {
-    //     PanicButton();
-    // }
-    
-
-    return;
-}
 
 template<class tshape>
 void ElementT<tshape>::setIntegPointWeightFunction() {
@@ -247,27 +107,6 @@ void ElementT<tshape>::getIntegPointCoordinates(){
     return;
 };
 
-
-
-//------------------------------------------------------------------------------
-//---------------------------CLEAR ELEMENT VARIABLES----------------------------
-//------------------------------------------------------------------------------
-template<class tshape>
-void ElementT<tshape>::clearVariables(){
-
-    int DIM = tshape::Dimension;
-
-    for (int i=0; i < fIntRule.NPoints(); i++){
-        fIntegData.fWeightFunction[i] = 1.;
-        for (int j =0; j<DIM; j++) {
-            fIntPointCoordinates(i,j) = 0.;
-        }
-    };
-    
-    getIntegPointCoordinates();
-
-    return;
-}; 
 
 //------------------------------------------------------------------------------
 //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
@@ -665,6 +504,36 @@ double ElementT<tshape>::InterpolateVariable(VecDouble &nValues, int point) {
     return val;
 }
 
+template<class tshape>
+void ElementT<tshape>::interpolateSolDTimeDerivatives() {
+    fIntegData.fDSolDt.setZero();
+    fIntegData.fDSolDDt.setZero();
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = fIntegData.fPhi[i];
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        for (int j = 0; j < nstate; j++ ){
+            fIntegData.fDSolDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
+            fIntegData.fDSolDDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
+        }
+    }
+}
+
+template<class tshape>
+void ElementT<tshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDouble &du_ddt) {
+    fIntegData.fDSolDt.setZero();
+    fIntegData.fDSolDDt.setZero();
+    for (int i = tshape::NElNodes; i--; ){
+        double shapeFi = fIntegData.fPhi[i];
+        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        for (int j = 0; j < nstate; j++ ){
+            fIntegData.fDSolDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
+            fIntegData.fDSolDDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
+        }
+    }
+    du_dt = fIntegData.fDSolDt;
+    du_ddt = fIntegData.fDSolDDt;
+}
+
 
 template<class tshape>
 void ElementT<tshape>::interpolateSolution() {
@@ -734,180 +603,6 @@ void ElementT<tshape>::interpolateSolDerivatives() {
         }
     }
 }
-//------------------------------------------------------------------------------
-//-------------INTERPOLATES VELOCITY, PRESSURE AND ITS DERIVATIVES--------------
-//------------------------------------------------------------------------------
-template<class tshape>
-void ElementT<tshape>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
-    // std::cout << "asdasd 0 " << std::endl;
-    // int nBdNodes = fMesh->NBdNodes() = 3*(1-DEG)+DIM*(2*DEG-1);
-
-    // double &visc_ = fMesh->getProblemParameters().GetViscosity();
-    // double &alpha_f = fMesh->getProblemParameters().getAlphaF();
-
-    // VecDouble phi_(tshape::NElNodes);
-
-    // MatrixDouble dphi_dx(tshape::NElNodes,DIM);
-
-    // double shearStress[DIM][DIM] = {};
-    
-    // MatrixDouble dphi(tshape::NElNodes,DIM);
-    // MatrixDouble ainv_(DIM,DIM);
-
-    // double ident[DIM][DIM] = {}; ident[0][0] = 1.; ident[1][1] = 1.;
-    // ShapeFunction shapeQuad(DIM,DEG);
-    
-    // // std::cout << "asdasd 1 " << std::endl;
-    // fIntegData.fAdimCoord = xsi;
-    // //Computes the shape functions        
-    // shapeQuad.Shape(xsi,phi_);
-    // double djac_ = 0.;
-    // //Computes the jacobian matrix
-    // ComputeJacobian(0);
-    // //Computes spatial derivatives
-    // ComputeSpatialDerivatives();
-
-    // shapeQuad.ShapeGradient(xsi, dphi); 
-
-    // //Velocity Derivatives
-    // MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
-    // // interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
-    // duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
-    //     // std::cout << "asdasd 4 " << std::endl;
-    // //Pressure
-    // double p_;
-    // VecDouble dp_dx(DIM);
-    // int index = 0;
-    // // interpolatePressure(index, dphi_dx, p_, dp_dx);
-    // // std::cout << "asdasd 5 " << std::endl;
-    // shearStress[0][0] = 2. * visc_ * duna_dx(0,0);
-    // shearStress[0][1] = visc_ * (duna_dx(0,1) + duna_dx(1,0));
-    // shearStress[1][0] = visc_ * (duna_dx(0,1) + duna_dx(1,0));
-    // shearStress[1][1] = 2. * visc_ * duna_dx(1,1);
-
-    // int nodesb_[fMesh->NBdNodes()];
-    // VecDouble xsiB(DIM-1);
-    
-    // if (DEG == 2){
-    //     if(fSideInBoundary == 0){
-    //         nodesb_[0] = fConnect[1]; 
-    //         nodesb_[1] = fConnect[4]; 
-    //         nodesb_[2] = fConnect[2];
-    //         xsiB[0] = 2. * xsi[0] - 1.;
-    //     }else{
-    //         if(fSideInBoundary == 1){
-    //             nodesb_[0] = fConnect[2]; 
-    //             nodesb_[1] = fConnect[5]; 
-    //             nodesb_[2] = fConnect[0]; 
-    //             xsiB[0] = 2. * xsi[1] - 1.;
-    //         }else{
-    //             nodesb_[0] = fConnect[0];
-    //             nodesb_[1] = fConnect[3];
-    //             nodesb_[2] = fConnect[1];
-    //             xsiB[0] = 1. - 2. * xsi[0];
-    //         };        
-    //     };
-    // } else {
-    //     if(fSideInBoundary == 0){
-    //         nodesb_[0] = fConnect[2]; 
-    //         nodesb_[1] = fConnect[1];
-    //         xsiB[0] = 2. * xsi[0] - 1.;
-    //     }else{
-    //         if(fSideInBoundary == 1){
-    //             nodesb_[0] = fConnect[0]; 
-    //             nodesb_[1] = fConnect[2];
-    //             xsiB[0] = 2. * xsi[1] - 1.;
-    //         }else{
-    //             nodesb_[0] = fConnect[1];
-    //             nodesb_[1] = fConnect[0];
-    //             xsiB[0] = 1. - 2. * xsi[0];
-    //         };        
-    //     };
-    // }
-
-    // VecDouble phib_(fMesh->NBdNodes());
-
-    // MatrixDouble dphib_(fMesh->NBdNodes(),DIM-1);
-
-    // double dx_dxsiB[3][DIM-1] = {};
-    // double xna_[3] = {};
-
-    // BoundShapeFunction::getShapeFunction(DIM,DEG,xsiB,phib_,dphib_);
-
-    // // shapeBound.getShapeFunction(xsiB,phib_,dphib_);
-
-    // // std::cout << "asdasd 7 " << std::endl;
-    // for (int i = 0; i < fMesh->NBdNodes(); i++){
-    //     for (int j = 0; j < DIM; j++){
-    //         // Approximate the integration space
-    //         xna_[j] = alpha_f * fMesh->NodeVec()[nodesb_[i]] -> getCoordinateValue(j) + 
-    //                 (1.-alpha_f) * fMesh->NodeVec()[nodesb_[i]] -> getPreviousCoordinateValue(j);
-    //         for (int k = DIM-1; k--; ) dx_dxsiB[j][k] += xna_[j] * dphib_(i,k);
-    //     };
-    // };
-    // // std::cout << "asdasd 8 " << std::endl;
-    // double Maux[DIM-1][DIM-1] = {};
-    //     for (int i = DIM-1; i--; )
-    //         for (int j = DIM-1; j--; )
-    //             for (int k = 3; k--; )
-    //                 Maux[i][j] += dx_dxsiB[k][i] * dx_dxsiB[k][j];
-
-    // double djacb_ = 0.;
-    // if (DIM == 2){
-    //     djacb_ = std::sqrt(Maux[0][0]);
-    // } else {
-    //     djacb_ = std::sqrt(Maux[0][0] * Maux[1][1] - Maux[0][1] * Maux[1][0]);
-    // }
-
-    // VecDouble n_vector(DIM);
-    // if (DIM == 2){
-    //     n_vector[0] =  dx_dxsiB[1][0] / djacb_;
-    //     n_vector[1] = -dx_dxsiB[0][0] / djacb_;
-    // } else {
-    //     n_vector[0] = (dx_dxsiB[1][0]*dx_dxsiB[2][1] - dx_dxsiB[2][0]*dx_dxsiB[1][1]) / djacb_;
-    //     n_vector[1] = (dx_dxsiB[2][0]*dx_dxsiB[0][1] - dx_dxsiB[0][0]*dx_dxsiB[2][1]) / djacb_;
-    //     n_vector[2] = (dx_dxsiB[0][0]*dx_dxsiB[1][1] - dx_dxsiB[1][0]*dx_dxsiB[0][1]) / djacb_;
-    // }
-
-    // // for (int i = 0; i < fMesh->NBdNodes(); i++) fMesh->NodeVec()[nodesb_[i]] -> setInnerNormal(n_vector);
-    
-    // // std::cout << "asdasd 9 " << std::endl;
-    // // std::cout << "dx_dxsiB " << dx_dxsiB[0][0] << " " << dx_dxsiB[1][0] << " " << dx_dxsiB[2][0] << std::endl;
-    // // std::cout << "N vector " << xna_[0] << " " << xna_[1] << " " << n_vector[0] << " " << n_vector[1] << " " << djacb_<< " " << fIndex << std::endl;
-
-    // // if (fSideInBoundary == 1){
-    // //     for (int i = 0; i < 6; i++){
-    // //         t_vector[0] -= dphi[1][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(0);
-    // //         t_vector[1] -= dphi[1][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(1);
-    // //     };        
-    // // };
-
-    // // if (fSideInBoundary == 2){
-    // //     for (int i = 0; i < 6; i++){
-    // //         t_vector[0] += dphi[0][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(0);
-    // //         t_vector[1] += dphi[0][i] * fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(1);
-    // //     };        
-    // // };
-
-    // // if (fSideInBoundary == 0){
-    // //     std::cout << "VERIFICAR VETOR NORMAL - getBoundaryLoad" << std::endl;
-    // // };
-
-    // // n_vector[0] =  t_vector[1] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
-    // // n_vector[1] = -t_vector[0] / std::sqrt(t_vector[0]*t_vector[0] + t_vector[1]*t_vector[1]);
-
-    // for (int i = 0; i < DIM; i++)
-    //     for (int j = 0; j < DIM; j++)
-    //         load[i] -= -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
-    // // load = -p_ * prod(ident,n_vector) + prod(shearStress,n_vector);
-
-    // //std::cout << "N Vector " << fSideInBoundary << " " <<  n_vector(0) << " " << n_vector(1) << " " << load(0) << " " << load(1) << " " << p_ << std::endl;
-    
-    // // std::cout << "asdasd 10 " << std::endl;
-
-
-    return;
-};
 
 
 //------------------------------------------------------------------------------

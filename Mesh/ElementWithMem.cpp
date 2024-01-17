@@ -8,15 +8,23 @@
 template<class tshape>
 ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
     fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
-    int nintpoints = this->fIntRule.NPoints();
-    fPlasticStrain.resize(nintpoints);
-    fTotalStrain.resize(nintpoints);
-    int realdim = fPlasticityModel->RealDimension();
-    for (int i = 0; i < nintpoints; i++){
-        fPlasticStrain[i].resize(realdim,realdim);
-        fPlasticStrain[i].setZero();
-        fTotalStrain[i].resize(realdim,realdim);
-        fTotalStrain[i].setZero();
+    if (fPlasticityModel){
+        int nintpoints = this->fIntRule.NPoints();
+        fPlasticStrain.resize(nintpoints);
+        fTotalStrain.resize(nintpoints);
+        int realdim = fPlasticityModel->RealDimension();
+        for (int i = 0; i < nintpoints; i++){
+            fPlasticStrain[i].resize(realdim,realdim);
+            fPlasticStrain[i].setZero();
+            fTotalStrain[i].resize(realdim,realdim);
+            fTotalStrain[i].setZero();
+        }
+    } else {
+        auto connect = this->getConnectivity();
+        int nstate = wf->NState();
+        for (int i = 0; i < connect.size(); i++){
+            this->Mesh()->NodeVec()[connect[i]]->SetNStateVariables(nstate);
+        }
     }
 
 };

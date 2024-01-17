@@ -23,6 +23,10 @@ include_directories(${MPI_INCLUDE_PATH})
 
 include(FortranCInterface)
 
+# Catch2
+include(cmake-modules/EnableCatch2.cmake)
+enable_catch2()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #[[
 If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -73,6 +77,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/WeakForm/Poisson"
 	"${PROJECT_SOURCE_DIR}/WeakForm/NavierStokes"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Stokes"
+	"${PROJECT_SOURCE_DIR}/WeakForm/UnitTest"
 )
 
 file(GLOB MY_MESH_FILES
@@ -85,10 +90,29 @@ set(FOR_FILES ${for_files})
 
 add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FOR_FILES})
+target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen )
+target_compile_definitions(fsarl_library
+                           PUBLIC
+                           "$<$<CONFIG:RELEASE>:RELEASE_BUILD>"
+                           "$<$<CONFIG:DEBUG>:DEBUG_BUILD>")
+
 
 add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+#To enable unit test using Catch2 UnitTest framework
+option(BUILD_UNITTEST "Whether the Catch2 UnitTest will be linked in" OFF)
+if(BUILD_UNITTEST)
+  include(cmake-modules/add_unit_test.cmake)
+  include(cmake-modules/EnableCatch2.cmake)
+  enable_catch2()
+endif()
 
 
+if(BUILD_UNITTEST)
+    add_subdirectory(UnitTest)
+    #Enabling tests
+    ENABLE_TESTING()
+    include(CTest)
+endif()

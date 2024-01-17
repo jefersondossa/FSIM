@@ -26,25 +26,16 @@ protected:
     WeakForm *fWeakForm;
     IntPointData  fIntegData;
 
-    int fPrintType;
-public:
-
-    bool          FSIInterface;  
+    int fPrintType;  
 
 public:
     Element() = default;
 
-    // Element(int64_t index, VecInt &connect, CompMesh* mesh){
-        
-    //     fMesh = mesh;
-    //     fConnect.resize(connect.size());
-    //     fIndex = index;
-    //     for (int i = connect.size(); i--; ) fConnect[i] = connect[i];
-
-    // };
-
     ~Element() = default;
-    int &NLocDOF() {return nLocDOF;}
+
+    int &NLocDOF() {
+        return nLocDOF;
+    }
     virtual const int &NElNodes() = 0;
 
     int &PrintType() {return fPrintType;}
@@ -97,8 +88,8 @@ public:
     virtual void interpolateSolDerivatives(MatrixDouble &du_dx) = 0;
     virtual void interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) = 0;
     virtual void interpolateSolDerivatives() = 0;
-    
-
+    virtual void interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDouble &du_ddt) = 0;
+    virtual void interpolateSolDTimeDerivatives() = 0;
 
     /// Gets the integration point global coordinates
     /// @param int integration point index @return integration point coordinates
@@ -120,12 +111,7 @@ public:
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
     double &getIntegPointWeightFunction(int index) {return fIntegData.fWeightFunction[index];};
-    virtual int getElement() = 0;
-    virtual int getElementSide() = 0;
-    virtual void setElement(int el) = 0;
-    virtual void setElementSide(int el) = 0;
     virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
-    void setFSIInterface(){FSIInterface = true;};
 
     /// Gets the coordinates intersection parameters
     /// @return minimum and maximum coordinates

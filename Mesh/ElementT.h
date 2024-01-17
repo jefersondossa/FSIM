@@ -46,7 +46,6 @@ public:
         fWeakForm = wf;
         if (fWeakForm) nLocDOF = tshape::NElNodes * fWeakForm->NState(); 
 
-        FSIInterface = false;
         fNeighborElements.clear();
         int increase = 0;
         if(wf->GetExactSolution()) increase = 2;
@@ -68,15 +67,11 @@ public:
     double InterpolateVariable(VecDouble &nValues, int point) override;
     void getIntegPointCoordinates();
     //........................Element basic information.........................
-    /// Clear all element variables
-    void clearVariables();
-
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
     void ComputeJacobian() override;
     void ComputeCurrentJacobian() override;
 
-    
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates
     void ComputeSpatialDerivatives() override;
@@ -90,6 +85,8 @@ public:
     void interpolateSolDerivatives(MatrixDouble &du_dx) override;
     void interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) override;
     void interpolateSolDerivatives() override;
+    virtual void interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDouble &du_ddt) override;
+    virtual void interpolateSolDTimeDerivatives() override;
 
 
     void ComputeIntPointDistFunction(VecDouble &nodalval) override;
@@ -108,23 +105,17 @@ public:
         return fIntegData.fJacA0;
     };
 
-    /// Compute and store the drag and lift forces at the element boundary
-    void computeDragAndLiftForces(double &pressureDragForce, double &pressureLiftForce, double &frictionDragForce,
-                                  double &frictionLiftForce, double &dragForce, double &liftForce,
-                                  double &pitchingMoment, double & perimeter);
+    // /// Compute and store the drag and lift forces at the element boundary
+    // void computeDragAndLiftForces(double &pressureDragForce, double &pressureLiftForce, double &frictionDragForce,
+    //                               double &frictionLiftForce, double &dragForce, double &liftForce,
+    //                               double &pitchingMoment, double & perimeter);
 
-    /// Compute and store the boundary forces
-    void getBoundaryLoad(VecDouble &xsi, VecDouble &load);
+    // /// Compute and store the boundary forces
+    // void getBoundaryLoad(VecDouble &xsi, VecDouble &load);
 
     
 
     int Dimension() override {return tshape::Dimension;}  
-
-    
-
-    /// Gets the boundary connectivity for boundary integration
-    /// @param int* boundary connectivity
-    void getBoundaryNodes(int *nodesb_);
 
     //.................Element intersection and correspondence..................
     /// Gets the element intersection parameters 
@@ -136,10 +127,6 @@ public:
     
 
     //.............................Model functions..............................
-    /// Sets if the element belongs to the fluid structure interface
-    
-    bool &getFSIInterface(){return FSIInterface;};
-
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
@@ -160,11 +147,6 @@ public:
 
     void setIntegPointWeightFunction() override;
 
-    int getElement()override{return 0;};
-    int getElementSide()override {return 0;};
-    void setElement(int el)override{ };
-    void setElementSide(int el)override {};
-
     //Method for creating a copy of the element
     virtual Element *Clone() const;
 
@@ -178,7 +160,6 @@ public:
         return xnode;
     }
 
-    // void Solution(int var) override;
 };
 
 

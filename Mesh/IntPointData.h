@@ -36,8 +36,12 @@ public:
     VecDouble fSol;
     MatrixDouble fDSolDx;
 
+    VecDouble fDSolDt;
+    VecDouble fDSolDDt;
+
     bool fNeedsSol = false;
     bool fNeedsDSol = false;
+    bool fNeedsTimeDerivatives = false;
     
 
 };

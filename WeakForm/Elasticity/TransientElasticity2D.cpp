@@ -1,13 +1,11 @@
 #include "TransientElasticity2D.h"
 
-TransientElasticity2D::TransientElasticity2D(int matid, double young, double poisson, bool planes, double damp, double dens, double dt) : 
+TransientElasticity2D::TransientElasticity2D(int matid, double young, double poisson, bool planes, double damp, double dens, double dt, TimeIntegScheme integscheme) : 
                         Elasticity2D(matid,young,poisson,planes) {
-    this->fMatId = matid;
-    fDimension = 2;
-    fNState = 2;
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
+    fIntegScheme = integscheme;
 };
 
 
@@ -16,12 +14,39 @@ void TransientElasticity2D::ComputeStiffness(int &index, IntPointData &data, Mat
     //Static Stiffness
     Elasticity2D::ComputeStiffness(index,data,Stiffness);
     
+    //Mass matrix
+    int nphi = data.fPhi.size();
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    MatrixDouble Mass(2*nphi,2*nphi);
+    Mass.setZero();
+    for (size_t i = 0; i < nphi; i++){
+        for (size_t j = 0; j < nphi; j++){
+            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j];
+            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j];
+        }
+    }
+    Mass *= WJ * fDensity;
+
+    switch (fIntegScheme)
+    {
+    case ENewmark:
+        Stiffness += (1./(fBeta*fTimeStep*fTimeStep) + fGamma*fDamping/(fBeta*fTimeStep)) * Mass;    
+        break;
+    
+    default:
+        PanicButton();
+        break;
+    }
+    
 }
 
 void TransientElasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
     //Static Residual
     Elasticity2D::ComputeResidual(index,data,Rhs);
+
+    
+
     
 };
 

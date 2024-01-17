@@ -4,20 +4,20 @@
 #include "LinearAnalysis.h"
 #include "NonLinearAnalysis.h"
 
-class TransientAnalysis : public Analysis
+class TransientAnalysis : public NonLinearAnalysis
 {
 private:
     bool IsLinear;
 
 public:
-    TransientAnalysis() : Analysis(){};
+    TransientAnalysis() : NonLinearAnalysis(){};
     TransientAnalysis(CompMesh *cmesh, SolverType stype, bool linear = true);
 
-    void Compute() override;
+    void Run(int64_t nsteps);
 
-    void UpdateSolution() override;
-
-    void Run() override;
+    void Run() override{
+        PanicButton();
+    }
 
 };
 

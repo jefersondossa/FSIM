@@ -208,6 +208,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // VTUGenerator::PrintResults(fineModel,"resultFine");
     // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
+
     VecDouble errors;
     an.PostProcessError(errors);
 
