@@ -1,3 +1,8 @@
+# Introduction
+Code developed by Prof. Jeferson W. D. Fernandes
+
+[![Run Unit Tests](https://github.com/jefersondossa/FSArl/actions/workflows/runUnitTests.yml/badge.svg)](https://github.com/jefersondossa/FSArl/actions/workflows/runUnitTests.yml)
+
 # Usage
 Perform Fluid-Structure interactions using the Arlequin method.
 
