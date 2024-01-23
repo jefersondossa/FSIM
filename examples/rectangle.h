@@ -181,12 +181,12 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // arl.SetGlueIds(gluematids);
     // arl.SetUp();
 
-    for (int i = 0; i < coarseModel->NNodes(); i++){
-        std::cout << "node " << i << "\ncoord = " << coarseModel->NodeVec()[i]->getCoordinates() << std::endl;
-    }
-    for (int i = 0; i < coarseModel->NElements(); i++){
-        std::cout << "element " << i << "\nconnect = " << coarseModel->ElementVec()[i]->getConnectivity() << std::endl;
-    }
+    // for (int i = 0; i < coarseModel->NNodes(); i++){
+    //     std::cout << "node " << i << "\ncoord = " << coarseModel->NodeVec()[i]->getCoordinates() << std::endl;
+    // }
+    // for (int i = 0; i < coarseModel->NElements(); i++){
+    //     std::cout << "element " << i << "\nconnect = " << coarseModel->ElementVec()[i]->getConnectivity() << std::endl;
+    // }
     
 
     // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
@@ -194,7 +194,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // LinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack);
     // NonLinearAnalysis an(&arl,SolverType::EUmfpack,1.e-6,2);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
-    NonLinearAnalysis an(coarseModel,SolverType::ECholmod);
+    LinearAnalysis an(coarseModel,SolverType::ECholmod);
     // NonLinearAnalysis an(coarseModel,SolverType::EKLU);
     // NonLinearAnalysis an(coarseModel,SolverType::ESPQR);
     an.Run();

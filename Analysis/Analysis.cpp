@@ -1,5 +1,16 @@
 #include "Analysis.h"
 #include "Assemble.h"
+#include "PETScSolver.h"
+#include "EigenLinearSolver.h"
+#include "GlobalMatrixT.h"
+#include "PETScMatrix.h"
+
+Analysis::Analysis(CompMesh *cmesh, SolverType stype){
+    fMeshVector.resize(1);
+    fMeshVector[0] = cmesh;
+    fSolverType = stype;
+    AllocateMonomodel();
+};
 
 Analysis::Analysis(Arlequin *arl, SolverType stype){
     fArlequin = arl;
@@ -8,9 +19,7 @@ Analysis::Analysis(Arlequin *arl, SolverType stype){
     AllocateArlequin();        
 };
 
-Analysis::~Analysis()
-{
-    KSPDestroy(&ksp); 
+Analysis::~Analysis() {
     VecDestroy(&fGlobalRhs); 
     VecDestroy(&fGlobalSolution); 
     MatDestroy(&fGlobalStiffness); 
@@ -28,59 +37,12 @@ int64_t Analysis::NEquations(){
 void Analysis::Solve(){
     std::cout << "Solving..." << std::endl;
 
-    //Create KSP context to solve the linear system
-    KSPCreate(PETSC_COMM_WORLD,&ksp);
-    KSPSetOperators(ksp,fGlobalStiffness,fGlobalStiffness);
-    
-    switch (fSolverType)
-    {
-    case SolverType::EUmfpack:
-        KSPGetPC(ksp, &pc);
-        PCSetType(pc, PCLU);
-        PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
-        break;
-    case SolverType::EKLU:
-        KSPGetPC(ksp, &pc);
-        PCSetType(pc, PCLU);
-        PCFactorSetMatSolverType(pc, MATSOLVERKLU);
-        break;
-    case SolverType::ESPQR:
-        KSPGetPC(ksp, &pc);
-        PCSetType(pc, PCQR);
-        PCFactorSetMatSolverType(pc, MATSOLVERSPQR);
-        break;
-    case SolverType::ECholmod:
-        KSPGetPC(ksp, &pc);
-        PCSetType(pc, PCCHOLESKY);
-        PCFactorSetMatSolverType(pc, MATSOLVERCHOLMOD);
-        break;
-    case SolverType::EMumps:
-        KSPGetPC(ksp, &pc);
-        PCSetType(pc, PCLU);
-        PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
-        break;
-
-    case SolverType::EIterative:
-        KSPSetType(ksp,KSPFGMRES);
-        KSPGetPC(ksp, &pc);
-        PCSetType(pc,PCBJACOBI);
-        KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
-        break;
-
-    default:
-        PanicButton();
-        break;
-    }
-
 #ifdef HAS_PETSC
-    //KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-    
-    KSPSolve(ksp,fGlobalRhs,fGlobalSolution);
-    // KSPGetTotalIterations(ksp, &iterations); 
-
-    // VecView(fGlobalSolution,PETSC_VIEWER_STDOUT_WORLD);
+    fSolver = new PETScSolver(this);
+#else
+    fSolver = new EigenLinearSolver(this);
 #endif
-
+    fSolver->Solve();
 }
 
 void Analysis::AllocateMonomodel(){
@@ -91,6 +53,7 @@ void Analysis::AllocateMonomodel(){
 
 #ifdef HAS_PETSC
     if (fSolverType == SolverType::EUmfpack){
+        fGlobalMatrix = new GlobalMatrixT<PETScMatrix>(numDOF,numDOF);
         MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
         MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
@@ -103,7 +66,6 @@ void Analysis::AllocateMonomodel(){
         double val = 1.e-20;
         MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
     }
-
     //Create PETSc vectors
     VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
     VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);

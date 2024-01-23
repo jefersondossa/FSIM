@@ -2,15 +2,23 @@
 #define PETSC_SOLVER_H
 #include "LinearSolver.h"
 
+#ifdef HAS_PETSC
+
+#include <petscksp.h> 
+
 class PETScSolver : public LinearSolver
 {
 private:
-    /* data */
+    KSP               ksp;
+    PC                pc;
+
 public:
-    PETScSolver(/* args */);
+    PETScSolver(Analysis *an);
     ~PETScSolver();
+
+    void Solve() override;
 };
 
-
+#endif
 
 #endif

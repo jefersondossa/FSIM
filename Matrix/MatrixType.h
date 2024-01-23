@@ -12,11 +12,13 @@ protected:
     
 public:
     MatrixType(int64_t rows, int64_t cols);
-    ~MatrixType();
+    virtual ~MatrixType();
 
     virtual void AddValue(int64_t row, int64_t col, double val) = 0;
     virtual void PutValue(int64_t row, int64_t col, double val) = 0;
     virtual double GetValue(int64_t row, int64_t col) = 0;
+
+    virtual void* Matrix() = 0;
 
 };
 

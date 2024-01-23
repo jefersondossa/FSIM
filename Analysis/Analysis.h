@@ -11,6 +11,7 @@
 // class Assemble;
 class CompMesh;
 class Arlequin;
+class LinearSolver;
 
 enum SolverType{EMumps, EIterative, EUmfpack, ECholmod, EKLU, ESPQR};
 
@@ -27,20 +28,13 @@ private:
     LinearSolver     *fSolver;
     Mat               fGlobalStiffness;
     Vec               fGlobalRhs, fGlobalSolution;
-    KSP               ksp;
-    PC                pc;
 
 public:
     
     
     Analysis() = default;
 
-    Analysis(CompMesh *cmesh, SolverType stype){
-        fMeshVector.resize(1);
-        fMeshVector[0] = cmesh;
-        fSolverType = stype;
-        AllocateMonomodel();
-    };
+    Analysis(CompMesh *cmesh, SolverType stype);
 
     Analysis(Arlequin *arl, SolverType stype);
     
@@ -58,6 +52,8 @@ public:
     void Solve();
     void AllocateMonomodel();
     void AllocateArlequin();
+
+    SolverType SType(){return fSolverType;}
     
     virtual void Run(){
         std::cout << "Allocating problem..." << std::endl;

@@ -14,6 +14,7 @@ file(GLOB matrix
     GlobalMatrixT.h
     GlobalMatrixT.cpp
     LinearSolver.h
+    LinearSolver.cpp
     PETScSolver.h
     PETScSolver.cpp
     EigenLinearSolver.h

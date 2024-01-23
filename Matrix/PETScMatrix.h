@@ -25,6 +25,8 @@ public:
     double GetValue(int64_t row, int64_t col) override{
         PanicButton();
     };
+
+    virtual PETScMat* Matrix(){return fMatrix;}
 };
 
 #endif

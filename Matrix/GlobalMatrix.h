@@ -11,7 +11,7 @@ public:
 
     GlobalMatrix(int64_t rows, int64_t cols);
 
-    ~GlobalMatrix();
+    ~GlobalMatrix(){};
 };
 
 

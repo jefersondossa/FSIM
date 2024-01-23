@@ -1,10 +1,15 @@
 #include "EigenLinearSolver.h"
 
 
-EigenLinearSolver::EigenLinearSolver(/* args */)
-{
+EigenLinearSolver::EigenLinearSolver(Analysis *an) : LinearSolver(an){
+
 }
 
-EigenLinearSolver::~EigenLinearSolver()
-{
+EigenLinearSolver::~EigenLinearSolver(){
+
+}
+
+void EigenLinearSolver::Solve(){
+
+
 }

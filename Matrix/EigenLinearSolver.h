@@ -8,8 +8,10 @@ class EigenLinearSolver : public LinearSolver
 private:
     /* data */
 public:
-    EigenLinearSolver(/* args */);
+    EigenLinearSolver(Analysis *an);
     ~EigenLinearSolver();
+
+    void Solve() override;
 };
 
 

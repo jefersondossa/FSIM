@@ -9,11 +9,14 @@ class GlobalMatrixT : public GlobalMatrix
 {
 protected:
     MatType *fGlobalMatrix;
+    
 
 public:
     GlobalMatrixT(int64_t rows, int64_t cols);
     
     ~GlobalMatrixT();
+
+    MatType *StrMatrix() {return fGlobalMatrix;}
 };
 
 

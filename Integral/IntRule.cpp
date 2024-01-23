@@ -44,7 +44,7 @@ void IntRule::Print(std::ostream &out) const {
 
         int dim = co.size();
 
-        out << "ponto: " << i << endl;
+        // out << "ponto: " << i << endl;
 
         for (int j = 0; j < dim; j++) {
             out << "coord: " << setprecision(10) << co[j] << endl;
