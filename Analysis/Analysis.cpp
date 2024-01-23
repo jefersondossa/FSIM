@@ -27,11 +27,10 @@ int64_t Analysis::NEquations(){
 
 void Analysis::Solve(){
     std::cout << "Solving..." << std::endl;
-    PetscErrorCode    ierr;
+
     //Create KSP context to solve the linear system
-    ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);
-    
-    ierr = KSPSetOperators(ksp,fGlobalStiffness,fGlobalStiffness);
+    KSPCreate(PETSC_COMM_WORLD,&ksp);
+    KSPSetOperators(ksp,fGlobalStiffness,fGlobalStiffness);
     
     switch (fSolverType)
     {
@@ -73,81 +72,90 @@ void Analysis::Solve(){
         break;
     }
 
-    //ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+#ifdef HAS_PETSC
+    //KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
     
-    ierr = KSPSolve(ksp,fGlobalRhs,fGlobalSolution);
-    // ierr = KSPGetTotalIterations(ksp, &iterations); 
+    KSPSolve(ksp,fGlobalRhs,fGlobalSolution);
+    // KSPGetTotalIterations(ksp, &iterations); 
 
-    // ierr = VecView(fGlobalSolution,PETSC_VIEWER_STDOUT_WORLD);
+    // VecView(fGlobalSolution,PETSC_VIEWER_STDOUT_WORLD);
+#endif
+
 }
 
 void Analysis::AllocateMonomodel(){
 
-    PetscErrorCode    ierr;
     int numDOF = fMeshVector[0]->NGlobalDOF();
     std::cout << "Number of DOF = " << numDOF << std::endl;
+
+
+#ifdef HAS_PETSC
     if (fSolverType == SolverType::EUmfpack){
-        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
-        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
         MatSetOption(fGlobalStiffness, MAT_SYMMETRIC, PETSC_TRUE);
     } else {
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+        MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
     }
     for (PetscInt i=0; i<numDOF; i++){
         double val = 1.e-20;
-        ierr = MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
+        MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
     }
 
     //Create PETSc vectors
-    ierr = VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
-    ierr = VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
+    VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
+    VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
     
-    ierr = VecSetFromOptions(fGlobalRhs);
-    ierr = VecDuplicate(fGlobalRhs,&fGlobalSolution);
+    VecSetFromOptions(fGlobalRhs);
+    VecDuplicate(fGlobalRhs,&fGlobalSolution);
+#endif
+
+
 }
 
 
 void Analysis::AllocateArlequin(){
 
-    PetscErrorCode    ierr;
     int64_t numDOFGlobal = fMeshVector[0]->NGlobalDOF();
     int64_t numDOFLocal = fMeshVector[1]->NGlobalDOF();
     int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
     int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
     if (fSolverType == SolverType::EUmfpack){
-        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
+        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
-        ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
+        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
         MatSetOption(fGlobalStiffness, MAT_SYMMETRIC, PETSC_TRUE);
     } else {
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+        MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                         numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
     }
     for (PetscInt i=0; i<numDOF; i++){
         double val = 1.e-20;
-        ierr = MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
+        MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
     }
 
     //Create PETSc vectors
-    ierr = VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
-    ierr = VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
+    VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
+    VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
     
-    ierr = VecSetFromOptions(fGlobalRhs);
-    ierr = VecDuplicate(fGlobalRhs,&fGlobalSolution);
+    VecSetFromOptions(fGlobalRhs);
+    VecDuplicate(fGlobalRhs,&fGlobalSolution);
 
-    // ierr = MatAssemblyBegin(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
-    // ierr = MatAssemblyEnd(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
+    // MatAssemblyBegin(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
+    // MatAssemblyEnd(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
 
-    // ierr = VecAssemblyBegin(fGlobalRhs);
-    // ierr = VecAssemblyEnd(fGlobalRhs);
+    // VecAssemblyBegin(fGlobalRhs);
+    // VecAssemblyEnd(fGlobalRhs);
 }
 
 void Analysis::PostProcessError(VecDouble &errorsTotal){
 
+#ifdef HAS_PETSC
     int rank;
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+#endif
 
     for (int imesh = 0; imesh < fMeshVector.size(); imesh++){
         VecDouble errorsProcess;
@@ -165,14 +173,24 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
         errorsTotal.resize(errorsProcess.size());
         errorsTotal.setZero();
 
+#ifdef HAS_PETSC
         if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-
         if (rank == 0 && errorsTotal.size()>0){
             std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10);
             for (int k = 0; k < errorsTotal.size(); k++){
                 std::cout << "Errors[" << k << "] = " << sqrt(errorsTotal[k]) << "\n";
             }
         }
+#else
+        if (errorsTotal.size()>0) errorsTotal = errorsProcess;
+        if (errorsTotal.size()>0){
+            std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10);
+            for (int k = 0; k < errorsTotal.size(); k++){
+                std::cout << "Errors[" << k << "] = " << sqrt(errorsTotal[k]) << "\n";
+            }
+        }
+#endif
+        
     }
 }
 

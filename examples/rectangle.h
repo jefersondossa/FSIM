@@ -96,7 +96,6 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 //==============================PROBLEM MESHES==============================
 //==========================================================================
    
-	MPI_Barrier(PETSC_COMM_WORLD);   
     // ProblemParameters pParameters;
     // // pParameters.ProbType() = ESolidPositional;
     // pParameters.ProbType() = EPoisson;

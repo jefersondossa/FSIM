@@ -4,8 +4,15 @@ enable_language( Fortran CXX )
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
-find_package (MPI REQUIRED)
-find_package (PETSc REQUIRED)   
+option(ENABLE_MPI_PETSC "Compile MPI and PETSc packages " ON)
+if(ENABLE_MPI_PETSC)
+    find_package(MPI REQUIRED)
+    find_package(PETSc REQUIRED)
+endif()
+
+#hide warnings
+add_definitions(-w) 
+ 
 find_package (METIS REQUIRED)
 find_package (HDF5 REQUIRED)
 # find_package (Gmsh REQUIRED)
@@ -27,6 +34,10 @@ include(FortranCInterface)
 include(cmake-modules/EnableCatch2.cmake)
 enable_catch2()
 
+# Eigen
+include(cmake-modules/EnableEigen.cmake)
+enable_eigen()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #[[
 If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
@@ -43,14 +54,12 @@ endif() # CMAKE_BUILD_TYPE
  
 set(CMAKE_CXX_STANDARD 17)
 
-# Eigen
-include(cmake-modules/EnableEigen.cmake)
-enable_eigen()
 
 add_subdirectory(triangle)
 add_subdirectory(Util)
 add_subdirectory(Analysis)
 add_subdirectory(Integral)
+add_subdirectory(Matrix)
 add_subdirectory(Mesh)
 add_subdirectory(Plasticity)
 add_subdirectory(PostProcess)
@@ -64,6 +73,7 @@ add_subdirectory(WeakForm)
 include_directories(
 	"${PROJECT_SOURCE_DIR}/Analysis"
 	"${PROJECT_SOURCE_DIR}/Integral"
+	"${PROJECT_SOURCE_DIR}/Matrix"
 	"${PROJECT_SOURCE_DIR}/Mesh"
 	"${PROJECT_SOURCE_DIR}/Plasticity"
 	"${PROJECT_SOURCE_DIR}/PostProcess"
@@ -88,14 +98,19 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
+add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen )
 target_compile_definitions(fsarl_library
                            PUBLIC
                            "$<$<CONFIG:RELEASE>:RELEASE_BUILD>"
                            "$<$<CONFIG:DEBUG>:DEBUG_BUILD>")
-
+if(ENABLE_MPI_PETSC)
+	target_compile_definitions(fsarl_library
+		PUBLIC
+		"$<$<CONFIG:RELEASE>:HAS_PETSC>"
+		"$<$<CONFIG:DEBUG>:HAS_PETSC>")
+endif()
 
 add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)

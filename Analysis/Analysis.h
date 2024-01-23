@@ -5,6 +5,8 @@
 #include "CompMesh.h"
 #include "Arlequin.h"
 #include <petscksp.h> 
+#include "GlobalMatrix.h"
+#include "LinearSolver.h"
 
 // class Assemble;
 class CompMesh;
@@ -21,6 +23,8 @@ private:
     Arlequin* fArlequin;
 
     //PetscVariable
+    GlobalMatrix     *fGlobalMatrix;
+    LinearSolver     *fSolver;
     Mat               fGlobalStiffness;
     Vec               fGlobalRhs, fGlobalSolution;
     KSP               ksp;

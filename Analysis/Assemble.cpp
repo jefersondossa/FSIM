@@ -51,8 +51,11 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
 
 }
 void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
+    
+#ifdef HAS_PETSC
     int rank=0;
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+#endif
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
     int64_t GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();

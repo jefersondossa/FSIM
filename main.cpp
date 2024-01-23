@@ -54,19 +54,10 @@ static char help[] = "Solves the Incompressible flow problem";
 
 int main(int argc, char **args) {
 
+#ifdef HAS_PETSC
     // Starts main program invoking PETSc
     PetscInitialize(&argc, &args, (char*)0, help);
-
-    int rank, size;
-
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-    MPI_Comm_size(PETSC_COMM_WORLD, &size);
- 
-    if (rank == 0){
-        std::cout << "2D Incompressible Flows Numerical Analysis" << std::endl;
-        std::cout << "Starting.." << std::endl;
-        std::cout << "Type the input file name:" << std::endl;
-    };
+#endif
 
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
@@ -77,9 +68,11 @@ int main(int argc, char **args) {
     // #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      
+#ifdef HAS_PETSC
     //Finalize main program   
     PetscFinalize();
- 
+#endif
+
     return 0; 
 }
  

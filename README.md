@@ -1,6 +1,8 @@
 # Introduction
 Code developed by Prof. Jeferson W. D. Fernandes
 
+OMEGA - Object-oriented tool for Multi-physics Engineering Analyses
+
 [![Run Unit Tests](https://github.com/jefersondossa/FSArl/actions/workflows/runUnitTests.yml/badge.svg)](https://github.com/jefersondossa/FSArl/actions/workflows/runUnitTests.yml)
 
 # Usage
