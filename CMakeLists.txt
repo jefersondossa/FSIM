@@ -12,9 +12,16 @@ endif()
 
 #hide warnings
 add_definitions(-w) 
- 
-find_package (METIS REQUIRED)
-find_package (HDF5 REQUIRED)
+
+option(ENABLE_METIS "Compile METIS package " ON)
+if (ENABLE_METIS)
+	find_package (METIS REQUIRED)
+endif()
+
+option(ENABLE_HDF5 "Compile HDF5 package" ON)
+if (ENABLE_HDF5)
+	find_package (HDF5 REQUIRED)
+endif()
 # find_package (Gmsh REQUIRED)
 
 # Essential: include our directories first otherwise we can get internal headers from some installed path
@@ -110,6 +117,20 @@ if(ENABLE_MPI_PETSC)
 		PUBLIC
 		"$<$<CONFIG:RELEASE>:HAS_PETSC>"
 		"$<$<CONFIG:DEBUG>:HAS_PETSC>")
+endif()
+
+if(ENABLE_HDF5)
+	target_compile_definitions(fsarl_library
+		PUBLIC
+		"$<$<CONFIG:RELEASE>:HAS_HDF5>"
+		"$<$<CONFIG:DEBUG>:HAS_HDF5>")
+endif()
+
+if(ENABLE_METIS)
+	target_compile_definitions(fsarl_library
+		PUBLIC
+		"$<$<CONFIG:RELEASE>:HAS_METIS>"
+		"$<$<CONFIG:DEBUG>:HAS_METIS>")
 endif()
 
 add_executable(f main.cpp )

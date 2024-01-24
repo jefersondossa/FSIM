@@ -1,6 +1,9 @@
 #include "CompMeshTools.h"
 #include "fstream"
+
+#ifdef HAS_METIS
 #include <metis.h>
+#endif
 
 void CompMeshTools::DomainDecompositionMETIS(CompMesh *cmesh){
 

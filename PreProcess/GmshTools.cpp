@@ -12,7 +12,9 @@
 #include "ShapeTriangleLin.h"
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
+#ifdef HAS_METIS
 #include <metis.h>
+#endif
 #include<cstdlib>
 #include<fstream>
 #include<iostream>
@@ -23,6 +25,7 @@
 
 void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     // Renumber nodes - start
+#ifdef HAS_METIS
     std::vector<int > neighborNodes;
 
     int* xadj;
@@ -150,6 +153,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     delete [] adjncy2;
     delete [] xadj;
     // Renumber nodes - end
+#endif
 
 }
 

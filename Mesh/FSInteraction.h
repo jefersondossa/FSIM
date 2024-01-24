@@ -13,9 +13,9 @@
 
 #ifndef FSINTERACTION_H
 #define FSINTERACTION_H
-#include "hdf5.h"
+// #include "hdf5.h"
 #include "Arlequin.h"
-#include <metis.h>
+// #include <metis.h>
 
 class Arlequin;
 
