@@ -13,12 +13,12 @@ endif()
 #hide warnings
 add_definitions(-w) 
 
-option(ENABLE_METIS "Compile METIS package " ON)
+option(ENABLE_METIS "Compile METIS package " OFF)
 if (ENABLE_METIS)
 	find_package (METIS REQUIRED)
 endif()
 
-option(ENABLE_HDF5 "Compile HDF5 package" ON)
+option(ENABLE_HDF5 "Compile HDF5 package" OFF)
 if (ENABLE_HDF5)
 	find_package (HDF5 REQUIRED)
 endif()
