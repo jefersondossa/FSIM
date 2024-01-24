@@ -5,8 +5,8 @@
 PETScSolver::PETScSolver(Analysis *an) : LinearSolver(an){
     //Create KSP context to solve the linear system
     KSPCreate(PETSC_COMM_WORLD,&ksp);
-    KSPSetOperators(ksp,fAnalysis->Stiffness(),fAnalysis->Stiffness());
-
+    auto * pmat = dynamic_cast<PETScMatrix*> (fAnalysis->GlobalMatrix());
+    KSPSetOperators(ksp,pmat->Matrix(),pmat->Matrix());
 }
 
 PETScSolver::~PETScSolver(){
@@ -55,8 +55,9 @@ void PETScSolver::Solve(){
     }
 
     // KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-    
-    KSPSolve(ksp,fAnalysis->Rhs(),fAnalysis->Solution());
+    auto * pmat = dynamic_cast<PETScMatrix*> (fAnalysis->GlobalMatrix());
+
+    KSPSolve(ksp,pmat->Rhs(),pmat->Solution());
     // KSPGetTotalIterations(ksp, &iterations); 
 
     // VecView(fAnalysis->Solution(),PETSC_VIEWER_STDOUT_WORLD);

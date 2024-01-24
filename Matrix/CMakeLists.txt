@@ -9,10 +9,6 @@ file(GLOB matrix
     PETScMatrix.cpp
     EigenSpMatrix.h
     EigenSpMatrix.cpp
-    GlobalMatrix.h
-    GlobalMatrix.cpp
-    GlobalMatrixT.h
-    GlobalMatrixT.cpp
     LinearSolver.h
     LinearSolver.cpp
     PETScSolver.h

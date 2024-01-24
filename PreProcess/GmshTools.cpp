@@ -112,10 +112,12 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
         for (int k = 0; k < connect.size(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
     }
 
+#ifdef HAS_PETSC
     PetscLogDouble bytes = 0;
     PetscMemoryGetCurrentUsage(&bytes);
     PetscPrintf(PETSC_COMM_WORLD,"Memory used-1 %g M\n",bytes/(1024*1024));
-    
+#endif
+
     for (int i = 0; i < cmesh->NNodes(); i++){
         for (int j = 0; j < cmesh->NodeVec()[i] -> getNumberOfElements(); j++){
             int elJ = cmesh->NodeVec()[i] -> getInverseIncidenceElement(j);
@@ -124,14 +126,17 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
         }
     }
 
+#ifdef HAS_PETSC
     PetscMemoryGetCurrentUsage(&bytes);
     PetscPrintf(PETSC_COMM_WORLD,"Memory used00 %g M\n",bytes/(1024*1024));
+#endif
 
     for (int i = 0; i < cmesh->NElements(); i++) cmesh->ElementVec()[i] -> sortEraseNeighborElements();
 
+#ifdef HAS_PETSC
     PetscMemoryGetCurrentUsage(&bytes);
     PetscPrintf(PETSC_COMM_WORLD,"Memory used11 %g M\n",bytes/(1024*1024));        
-
+#endif
     // for (int i = 0; i < NElements(); i++){
     //     if (rank == 0) std::cout << "Neighbor " << i << " ";
     //     for (int j = 0; j < ElementVec()[i] -> getNumberOfNeighborElements(); j++){

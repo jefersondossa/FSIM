@@ -2,8 +2,8 @@
 #include "Assemble.h"
 #include "PETScSolver.h"
 #include "EigenLinearSolver.h"
-#include "GlobalMatrixT.h"
 #include "PETScMatrix.h"
+#include "EigenSpMatrix.h"
 
 Analysis::Analysis(CompMesh *cmesh, SolverType stype){
     fMeshVector.resize(1);
@@ -20,9 +20,7 @@ Analysis::Analysis(Arlequin *arl, SolverType stype){
 };
 
 Analysis::~Analysis() {
-    VecDestroy(&fGlobalRhs); 
-    VecDestroy(&fGlobalSolution); 
-    MatDestroy(&fGlobalStiffness); 
+    
 }
 
 int64_t Analysis::NEquations(){
@@ -53,27 +51,17 @@ void Analysis::AllocateMonomodel(){
 
 #ifdef HAS_PETSC
     if (fSolverType == SolverType::EUmfpack){
-        fGlobalMatrix = new GlobalMatrixT<PETScMatrix>(numDOF,numDOF);
-        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
+        fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeq);
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
-        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 100,NULL,&fGlobalStiffness);
-        MatSetOption(fGlobalStiffness, MAT_SYMMETRIC, PETSC_TRUE);
+        fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeqSym);
     } else {
-        MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                        numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
+        fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::EAij);
     }
-    for (PetscInt i=0; i<numDOF; i++){
+    for (int64_t i=0; i<numDOF; i++){
         double val = 1.e-20;
-        MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
+        fGlobalMatrix->AddValueMatrix(i,i,val);
     }
-    //Create PETSc vectors
-    VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
-    VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
-    
-    VecSetFromOptions(fGlobalRhs);
-    VecDuplicate(fGlobalRhs,&fGlobalSolution);
 #endif
-
 
 }
 
@@ -85,31 +73,28 @@ void Analysis::AllocateArlequin(){
     int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
     int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
     if (fSolverType == SolverType::EUmfpack){
-        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
+#ifdef HAS_PETSC
+        fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeq);
+#else 
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+#endif
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
-        MatCreateSeqAIJ(PETSC_COMM_WORLD, numDOF, numDOF, 150,NULL,&fGlobalStiffness);
-        MatSetOption(fGlobalStiffness, MAT_SYMMETRIC, PETSC_TRUE);
+#ifdef HAS_PETSC
+        fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeqSym);
+#else
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+#endif
     } else {
-        MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                        numDOF, numDOF,100,NULL,300,NULL,&fGlobalStiffness); 
+#ifdef HAS_PETSC
+        fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::EAij);
+#else
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+#endif
     }
-    for (PetscInt i=0; i<numDOF; i++){
+    for (int64_t i=0; i<numDOF; i++){
         double val = 1.e-20;
-        MatSetValues(fGlobalStiffness,1,&i,1,&i,&val,ADD_VALUES);
+        fGlobalMatrix->AddValueMatrix(i,i,val);
     }
-
-    //Create PETSc vectors
-    VecCreate(PETSC_COMM_WORLD,&fGlobalRhs);
-    VecSetSizes(fGlobalRhs,PETSC_DECIDE,numDOF);
-    
-    VecSetFromOptions(fGlobalRhs);
-    VecDuplicate(fGlobalRhs,&fGlobalSolution);
-
-    // MatAssemblyBegin(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
-    // MatAssemblyEnd(fGlobalStiffness,MAT_FINAL_ASSEMBLY);
-
-    // VecAssemblyBegin(fGlobalRhs);
-    // VecAssemblyEnd(fGlobalRhs);
 }
 
 void Analysis::PostProcessError(VecDouble &errorsTotal){

@@ -9,41 +9,19 @@ void LinearAnalysis::Compute(){
     } else {
         Assemble::Arlequin(this);
     }
-    PetscErrorCode    ierr;
 
-    //Assemble matrices and vectors
-    ierr = MatAssemblyBegin(this->Stiffness(),MAT_FINAL_ASSEMBLY);
-    ierr = MatAssemblyEnd(this->Stiffness(),MAT_FINAL_ASSEMBLY);
+    this->GlobalMatrix()->MatVecAssemble();
     
-    ierr = VecAssemblyBegin(this->Rhs());
-    ierr = VecAssemblyEnd(this->Rhs());
-
-    // MatView(this->Stiffness(),PETSC_VIEWER_STDOUT_WORLD);
-    // MatView(this->Stiffness(),PETSC_VIEWER_DRAW_WORLD);
-    // VecView(this->Rhs(),PETSC_VIEWER_STDOUT_WORLD);
+    // this->GlobalMatrix()->PrintMatrix();
+    // this->GlobalMatrix()->PrintRhs();
 } 
 
 void LinearAnalysis::UpdateSolution(){
-    VecScatter        ctx;
-    Vec               All, Allu;
-    PetscErrorCode    ierr;
+    this->GlobalMatrix()->ExpandSolution();
 
-    ierr = VecDuplicate(Rhs(),&All);
-    //Gathers the solution vector to the master process
-    ierr = VecScatterCreateToAll(Solution(), &ctx, &All);
-    ierr = VecScatterBegin(ctx, Solution(), All, INSERT_VALUES, SCATTER_FORWARD);
-    ierr = VecScatterEnd(ctx, Solution(), All, INSERT_VALUES, SCATTER_FORWARD);
-    ierr = VecScatterDestroy(&ctx);
-
-    ierr = VecScatterCreateToAll(Rhs(), &ctx, &Allu);
-    ierr = VecScatterBegin(ctx, Rhs(), Allu, INSERT_VALUES, SCATTER_FORWARD);
-    ierr = VecScatterEnd(ctx, Rhs(), Allu, INSERT_VALUES, SCATTER_FORWARD);
-    ierr = VecScatterDestroy(&ctx);
-    
     //Updates nodal values
-    PetscInt Ione = 1;
-    PetscInt Ii;
-    PetscScalar val;
+    int64_t Ii;
+    double val;
     
     int64_t nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
@@ -52,12 +30,12 @@ void LinearAnalysis::UpdateSolution(){
             int nstate = this->MeshVector()[imesh]->NodeVec()[i]->GetNStateVariables();
             for (int k = 0; k<nstate; k++){
                 Ii = nstartDOF + nstate*i+k;
-                ierr = VecGetValues(All, Ione, &Ii, &val);
+                val = this->GlobalMatrix()->GetValueSolution(Ii);
+                // ierr = VecGetValues(All, Ione, &Ii, &val);
                 this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
             }
         };
     }
-    ierr = VecDestroy(&All); 
-    ierr = VecDestroy(&Allu); 
+    this->GlobalMatrix()->ClearSolution();
 }
 

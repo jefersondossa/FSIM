@@ -4,9 +4,9 @@
 #include "Element.h"
 #include "CompMesh.h"
 #include "Arlequin.h"
-#include <petscksp.h> 
-#include "GlobalMatrix.h"
 #include "LinearSolver.h"
+#include "MatrixType.h"
+#include "PETScMatrix.h"
 
 // class Assemble;
 class CompMesh;
@@ -24,10 +24,8 @@ private:
     Arlequin* fArlequin;
 
     //PetscVariable
-    GlobalMatrix     *fGlobalMatrix;
+    MatrixType       *fGlobalMatrix;
     LinearSolver     *fSolver;
-    Mat               fGlobalStiffness;
-    Vec               fGlobalRhs, fGlobalSolution;
 
 public:
     
@@ -40,9 +38,8 @@ public:
     
     int64_t NEquations();
 
-    Mat &Stiffness(){return fGlobalStiffness;}
-    Vec &Rhs(){return fGlobalRhs;}
-    Vec &Solution(){return fGlobalSolution;}
+    MatrixType * GlobalMatrix() {return fGlobalMatrix;}
+
     std::vector<CompMesh *> &MeshVector(){return fMeshVector;}
 
     virtual void Compute() = 0;

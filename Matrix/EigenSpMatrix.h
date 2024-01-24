@@ -13,16 +13,38 @@ public:
 
     ~EigenSpMatrix();
 
-    void AddValue(int64_t row, int64_t col, double val) override{
+    void AddValueMatrix(int64_t &row, int64_t &col, double &val) override{
         PanicButton();
     };
-    void PutValue(int64_t row, int64_t col, double val) override{
+    void PutValueMatrix(int64_t &row, int64_t &col, double &val) override{
         PanicButton();
     };
-    double GetValue(int64_t row, int64_t col) override{
+    double GetValueMatrix(int64_t &row, int64_t &col) override{
         PanicButton();
     };
+
+    void AddValueRhs(int64_t &row, double &val) override{
+        PanicButton();
+    };
+    void PutValueRhs(int64_t &row, double &val) override{
+        PanicButton();
+    };
+    double GetValueRhs(int64_t &row) override{
+        PanicButton();
+    };
+
+    void AddValueSolution(int64_t &row, double &val) override{
+        PanicButton();
+    };
+    void PutValueSolution(int64_t &row, double &val) override{
+        PanicButton();
+    };
+    double GetValueSolution(int64_t &row) override{
+        PanicButton();
+    };
+    
     virtual SparseMat* Matrix(){return fMatrix;}
+    double SolutionNorm() override{return 0;}
 
 };
 

@@ -2,7 +2,7 @@
 
 
 EigenLinearSolver::EigenLinearSolver(Analysis *an) : LinearSolver(an){
-
+    PanicButton();
 }
 
 EigenLinearSolver::~EigenLinearSolver(){
@@ -10,6 +10,6 @@ EigenLinearSolver::~EigenLinearSolver(){
 }
 
 void EigenLinearSolver::Solve(){
-
+    PanicButton();
 
 }
