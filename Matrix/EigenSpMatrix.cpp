@@ -2,9 +2,13 @@
 
 
 EigenSpMatrix::EigenSpMatrix(int64_t rows, int64_t cols) : MatrixType(rows,cols){
-    fSolution.resize(rows, 1);
+    
     fMatrix.resize(rows, cols);
     fRhs.resize(rows, 1);
+    fSolution.resize(rows, 1);
+    ZeroMatrix();
+    ZeroRhs();
+    ZeroSolution();
 }
 
 EigenSpMatrix::~EigenSpMatrix()
@@ -53,3 +57,19 @@ void EigenSpMatrix::PutValueSolution(int64_t &row, double &val) {
 double EigenSpMatrix::GetValueSolution(int64_t &row) {
     return fSolution(row,0);
 };
+
+double EigenSpMatrix::SolutionNorm(){
+    return fSolution.norm();
+}
+
+void EigenSpMatrix::PrintMatrix(){
+    std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
+}
+
+void EigenSpMatrix::PrintRhs(){
+    std::cout << "Global RHS = \n"<< fRhs << std::endl;
+}
+
+void EigenSpMatrix::PrintSolution(){
+    std::cout << "Solution = \n"<< fSolution << std::endl;
+}

@@ -36,7 +36,11 @@ public:
     void ZeroRhs() override;
     void ZeroSolution() override;
 
-    double SolutionNorm() override{return 0;}
+    void PrintMatrix() override;
+    void PrintRhs() override;
+    void PrintSolution() override;
+
+    double SolutionNorm() override;
 
 };
 

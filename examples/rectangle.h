@@ -194,7 +194,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // LinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack);
     // NonLinearAnalysis an(&arl,SolverType::EUmfpack,1.e-6,2);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
-    LinearAnalysis an(coarseModel,SolverType::ECholmod);
+    NonLinearAnalysis an(coarseModel,SolverType::ELDLt);
     // NonLinearAnalysis an(coarseModel,SolverType::EKLU);
     // NonLinearAnalysis an(coarseModel,SolverType::ESPQR);
     an.Run();

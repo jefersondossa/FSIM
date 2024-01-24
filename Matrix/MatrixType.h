@@ -26,9 +26,9 @@ public:
     virtual void PutValueSolution(int64_t &row, double &val) = 0;
     virtual double GetValueSolution(int64_t &row) = 0;
 
-    virtual void PrintMatrix(){};
-    virtual void PrintRhs(){};
-    virtual void PrintSolution(){};
+    virtual void PrintMatrix() = 0;
+    virtual void PrintRhs() = 0;
+    virtual void PrintSolution() = 0;
 
     virtual void ZeroMatrix() = 0;
     virtual void ZeroRhs() = 0;
