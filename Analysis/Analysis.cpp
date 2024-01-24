@@ -49,19 +49,30 @@ void Analysis::AllocateMonomodel(){
     std::cout << "Number of DOF = " << numDOF << std::endl;
 
 
-#ifdef HAS_PETSC
+
     if (fSolverType == SolverType::EUmfpack){
+#ifdef HAS_PETSC
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeq);
+#else 
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+#endif
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
+#ifdef HAS_PETSC
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeqSym);
+#else
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+#endif
     } else {
+#ifdef HAS_PETSC
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::EAij);
+#else
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+#endif
     }
     for (int64_t i=0; i<numDOF; i++){
         double val = 1.e-20;
         fGlobalMatrix->AddValueMatrix(i,i,val);
     }
-#endif
 
 }
 

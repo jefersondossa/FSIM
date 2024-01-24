@@ -30,9 +30,9 @@ public:
     virtual void PrintRhs(){};
     virtual void PrintSolution(){};
 
-    virtual void ZeroMatrix(){};
-    virtual void ZeroRhs(){};
-    virtual void ZeroSolution(){};
+    virtual void ZeroMatrix() = 0;
+    virtual void ZeroRhs() = 0;
+    virtual void ZeroSolution() = 0;
 
     virtual void MatVecAssemble(){};
 

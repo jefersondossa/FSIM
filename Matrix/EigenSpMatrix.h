@@ -2,48 +2,40 @@
 #define EIGEN_SPMATRIX_H
 #include "MatrixType.h"
 #include "SparseEigen.h"
+#include "DataTypes.h"
 
 class EigenSpMatrix : public MatrixType
 {
 protected:
-    SparseMat *fMatrix;
+    SparseMat     fMatrix;
+    MatrixDouble  fSolution;
+    MatrixDouble  fRhs;
 
 public:
     EigenSpMatrix(int64_t rows, int64_t cols);
 
     ~EigenSpMatrix();
 
-    void AddValueMatrix(int64_t &row, int64_t &col, double &val) override{
-        PanicButton();
-    };
-    void PutValueMatrix(int64_t &row, int64_t &col, double &val) override{
-        PanicButton();
-    };
-    double GetValueMatrix(int64_t &row, int64_t &col) override{
-        PanicButton();
-    };
+    void AddValueMatrix(int64_t &row, int64_t &col, double &val);
+    void PutValueMatrix(int64_t &row, int64_t &col, double &val);
+    double GetValueMatrix(int64_t &row, int64_t &col);
 
-    void AddValueRhs(int64_t &row, double &val) override{
-        PanicButton();
-    };
-    void PutValueRhs(int64_t &row, double &val) override{
-        PanicButton();
-    };
-    double GetValueRhs(int64_t &row) override{
-        PanicButton();
-    };
+    void AddValueRhs(int64_t &row, double &val);
+    void PutValueRhs(int64_t &row, double &val);
+    double GetValueRhs(int64_t &row);
 
-    void AddValueSolution(int64_t &row, double &val) override{
-        PanicButton();
-    };
-    void PutValueSolution(int64_t &row, double &val) override{
-        PanicButton();
-    };
-    double GetValueSolution(int64_t &row) override{
-        PanicButton();
-    };
+    void AddValueSolution(int64_t &row, double &val);
+    void PutValueSolution(int64_t &row, double &val);
+    double GetValueSolution(int64_t &row);
     
-    virtual SparseMat* Matrix(){return fMatrix;}
+    virtual SparseMat &Matrix(){return fMatrix;}
+    virtual MatrixDouble &Rhs(){return fRhs;}
+    virtual MatrixDouble &Solution(){return fSolution;}
+    
+    void ZeroMatrix() override;
+    void ZeroRhs() override;
+    void ZeroSolution() override;
+
     double SolutionNorm() override{return 0;}
 
 };
