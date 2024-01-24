@@ -72,6 +72,7 @@ add_subdirectory(Plasticity)
 add_subdirectory(PostProcess)
 add_subdirectory(PreProcess)
 add_subdirectory(Shape)
+add_subdirectory(Solver)
 add_subdirectory(WeakForm)
 # add_subdirectory(examples)
 # add_subdirectory(main)
@@ -86,6 +87,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/PostProcess"
 	"${PROJECT_SOURCE_DIR}/PreProcess"
 	"${PROJECT_SOURCE_DIR}/Shape"
+	"${PROJECT_SOURCE_DIR}/Solver"
 	"${PROJECT_SOURCE_DIR}/WeakForm"
 	"${PROJECT_SOURCE_DIR}/Util"
 	"${PROJECT_SOURCE_DIR}/triangle"
@@ -105,7 +107,7 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${WEAKFORM})
+add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen )
 target_compile_definitions(fsarl_library
