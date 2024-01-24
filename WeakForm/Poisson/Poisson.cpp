@@ -51,64 +51,106 @@ void Poisson::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 };
 
 void Poisson::ComputeError(IntPointData &data, VecDouble &errors){
-    std::cout << "Need refactor \n" << std::endl;
-    PanicButton();
-    // int index = 0;
-    // errors.resize(3);
-    // errors.setZero();
-    // int DIM = this->Mesh()->Dimension();
-    // int DEG = this->Mesh()->GetDefaultOrder();
 
-    // IntegQuadrature nQuad(DIM,DEG);
+    errors.resize(3);
+    errors.setZero();
 
-    // auto exactSol = this->Mesh()->getProblemParameters().getExactSolution();
-    // if (!exactSol) PanicButton();
+    VecDouble uExact(1);
+    MatrixDouble DuExact(3,1);
+    VecDouble x_ = data.fX;
+    fExactSol(x_,uExact,DuExact);
 
-    // for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+    //Consider Arlequin weight function
+    // uExact *= data.fWeightFunction[index];
+    // DuExact *= data.fWeightFunction[index];
+    // data.fSol *= data.fWeightFunction[index];
+    // data.fDSolDx *= data.fWeightFunction[index];
 
-    //     //Defines the integration points adimentional coordinates
-    //     for (int i = DIM; i--; ) data.fAdimCoord[i] = nQuad.PointList(index,i);
-
-    //     //Returns the quadrature integration weight
-    //     data.fWeight = nQuad.WeightList(index);
-
-    //     //Computes the jacobian matrix
-    //     this->ComputeJacobian(index);
-                    
-    //     this->ComputeSpatialDerivatives();
+    //L2 state variable
+    errors[0] += (uExact[0]-data.fSol[0])*(uExact[0]-data.fSol[0]) * data.fWeight * data.fJacA0 ;
         
-    //     VecDouble uMEF_(1);
-    //     this->interpolateSolution(index, uMEF_);
-    //     MatrixDouble du_dxMEF(1,DIM);
-    //     this->interpolateSolDerivatives(du_dxMEF);
-        
-    //     VecDouble u_(1);
-    //     MatrixDouble gradU(DIM,1);
+    //Semi H1 state variable
+    for (int m = fDimension; m--; ){
+        errors[1] += (DuExact(m,0)-data.fDSolDx(0,m))* (DuExact(m,0)-data.fDSolDx(0,m)) * data.fWeight * data.fJacA0;
+    }
 
-    //     VecDouble xna_ = this->getIntegPointCoordinatesValue(index);
-        
-    //     exactSol(xna_,u_,gradU);
-
-
-    //     //Consider Arlequin weight function
-    //     u_ *= data.fWeightFunction[index];
-    //     gradU *= data.fWeightFunction[index];
-    //     uMEF_ *= data.fWeightFunction[index];
-    //     du_dxMEF *= data.fWeightFunction[index];
-
-    //     //L2 state variable
-    //     errors[0] += (u_[0]-uMEF_[0])*(u_[0]-uMEF_[0]) * data.fWeight * data.fJacA0 ;
-        
-    //     //Semi H1 state variable
-    //     for (int m = DIM; m--; ){
-    //         errors[1] += (gradU(m,0)-du_dxMEF(0,m))* (gradU(m,0)-du_dxMEF(0,m)) * data.fWeight * data.fJacA0;
-    //     }
-
-    //     index++;        
-    // }; 
-
-    // //H1 state variable
-    // errors[2] = errors[0]+errors[1];
+    //H1 state variable
+    errors[2] = errors[0]+errors[1];
 }
 
 
+int Poisson::VariableIndex(const std::string &name) const{
+    
+    if(!strcmp("Solution",name.c_str()))        return 1;
+    if(!strcmp("Derivative",name.c_str()))      return 2;
+    if(!strcmp("ExactSolution",name.c_str()))   return 3;
+    if(!strcmp("ExactDerivative",name.c_str())) return 4;
+    if(!strcmp("ForceFunction",name.c_str()))   return 5;
+    
+    std::cout << "Post Process variable not implemented \n";
+    PanicButton();
+    return -1;
+};
+
+int Poisson::NSolutionVariables(int var) const{
+    switch (var)
+    {
+    case 1:
+    case 3:
+    case 5:
+        return 1;
+    case 2:
+    case 4:
+        return 3;
+
+    default:
+        PanicButton();
+        return -1;
+    }
+};
+
+void Poisson::Solution(IntPointData &data, int var, VecDouble &Sol) {
+
+    //Solution
+    if (var == 1){
+        Sol[0] = data.fSol[0];
+        return;
+    };
+
+    //Derivative
+    if (var == 2){
+        Sol[0] = data.fDSolDx(0,0);
+        Sol[1] = data.fDSolDx(0,1);
+        if (fDimension == 3) Sol[2] = data.fDSolDx(0,2);
+        return;
+    };
+
+    VecDouble forcingF(1);
+    VecDouble x_ = data.fX;
+    if (fForceFunction) fForceFunction(x_,forcingF);
+
+    VecDouble disp(3);
+    MatrixDouble gradDisp(3,3);
+    if (fExactSol) fExactSol(x_,disp,gradDisp);
+
+    //Exact Solution
+    if (var == 3){
+        Sol[0] = disp[0];
+        return;
+    };
+    
+    //Exact Derivative
+    if (var == 4){
+        Sol[0] = gradDisp(0,0);
+        Sol[1] = gradDisp(1,0);
+        if (fDimension == 3) Sol[2] = gradDisp(2,0);
+        return;
+    };
+
+    //ForceFunction
+    if (var == 5){
+        Sol[0] = forcingF[0];
+        return;
+    };
+
+}; 

@@ -114,8 +114,9 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
     int rank;
     MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 #endif
-
-    for (int imesh = 0; imesh < fMeshVector.size(); imesh++){
+    int isArlequin = 0;
+    if (fArlequin) isArlequin = 1;
+    for (int imesh = 0; imesh < fMeshVector.size()-isArlequin; imesh++){
         VecDouble errorsProcess;
         // Loop over the elements
         for (int jel = fMeshVector[imesh]->NElements(); jel--; ){
