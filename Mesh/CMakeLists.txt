@@ -15,6 +15,8 @@ file(GLOB mesh
     IntPointData.h
     ElementWithMem.h
     ElementWithMem.cpp
+    ElementTransient.h
+    ElementTransient.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)
