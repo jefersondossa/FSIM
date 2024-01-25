@@ -53,44 +53,26 @@ private:
     std::vector<int64_t> fInverseIncidence;
     
 public:
-    Node(VecDouble &coor, int64_t index, int nState = 1){
-        fNStateVariables = nState;
-        fIndex = index;
-        fDimension = coor.size();
+    Node(VecDouble &coor, int64_t index, int nState = 1);
 
-        fSolution.resize(fNStateVariables);
-        fPrevSolution.resize(fNStateVariables);
-        fCoord.resize(fDimension);
-        fPrevSolution.setZero();
-        fSolution.setZero();
+    void SetNStateVariables(int nstate);
 
-        fCoord = coor;
-        fPrevCoord = coor;
-        fInitialCoord = coor;
-
-        fWeightFunction = 0.;   fPrevWeightFunction = 0.;
-        
-        fInverseIncidence.clear();
+    int &GetNStateVariables() {
+        return fNStateVariables;
     }
 
-    void SetNStateVariables(int nstate){
-        fNStateVariables = nstate;
-        fSolution.resize(fNStateVariables);
-        fDTimeSolution.resize(fNStateVariables);
-        fDDTimeSolution.resize(fNStateVariables);
-        fPrevSolution.resize(fNStateVariables);
+    void SetSolution(int istate, double sol);
+
+    void IncrementSolution(int istate, double sol);
+
+    VecDouble &Solution() {
+        return fSolution;
+    }
+    
+    VecDouble &PrevSolution() {
+        return fPrevSolution;
     }
 
-    int &GetNStateVariables() {return fNStateVariables;}
-    void SetSolution(int istate, double sol){
-        fPrevSolution[istate] = fSolution[istate];
-        fSolution[istate] = sol;
-    }
-    void IncrementSolution(int istate, double sol){
-        fSolution[istate] += sol;
-    }
-    VecDouble &Solution() {return fSolution;}
-    VecDouble &PrevSolution() {return fPrevSolution;}
     double GetSolution(int istate){
         return fSolution[istate];
     }
@@ -106,49 +88,61 @@ public:
 
     /// Returns the node coordinate vector
     /// @return node coordinate vector
-    VecDouble &getCoordinates() {return fCoord;};
+    VecDouble &getCoordinates() {
+        return fCoord;
+    };
 
     /// Returns the node coordinate component value
     /// @return node coordinate component value
-    double getCoordinateValue(int dir) const {return fCoord[dir];};
-    double getPreviousCoordinateValue(int dir) const {return fPrevCoord[dir];};
+    double getCoordinateValue(int dir) const {
+        return fCoord[dir];
+    };
+    double getPreviousCoordinateValue(int dir) const {
+        return fPrevCoord[dir];
+    };
 
     /// Returns the node initial coordinate vector
     /// @return node initial coordinate vector
-    VecDouble &getInitialCoordinates() {return fInitialCoord;};
+    VecDouble &getInitialCoordinates() {
+        return fInitialCoord;
+    };
 
     /// Returns the node coordinate vector at the previous time step
     /// @return node coordinate vector at the previous time step
-    VecDouble &getPreviousCoordinates() {return fPrevCoord;}
+    VecDouble &getPreviousCoordinates() {
+        return fPrevCoord;
+    }
 
     /// Increment the coordinate vector
     /// @param int direction @param double increment value
-    void incrementCoordinate(int dir, double u){fCoord[dir] += u;};
+    void incrementCoordinate(int dir, double u);
 
     /// Sets the previous coordinate vector
     /// @param int direction @param double value
-    void setPreviousCoordinates(int dir, double u){fPrevCoord[dir] = u;};
+    void setPreviousCoordinates(int dir, double u);
 
     /// Sets the node coordinate vector
     /// @param VecLocD Coordinate
-    void setCoordinates(VecDouble &coor){for (int i=0; i<fDimension; i++) fCoord[i] = coor[i];};
+    void setCoordinates(VecDouble &coor);
 
     /// Pushs back a term of the inverse incidence, i.e., an element which
     /// contains the node
     /// @param int element
-    void pushInverseIncidence(int el) {fInverseIncidence.push_back(el);}
+    void pushInverseIncidence(int el);
 
     /// Gets the number of elements which contains the node
     /// @return int number of elements which contains the node
-    int64_t getNumberOfElements() const {return fInverseIncidence.size();}
+    int64_t getNumberOfElements() const {
+        return fInverseIncidence.size();
+    }
 
     /// Gets an specific member of the inverse incidence
     /// @param int index @return int element of the inverse incidence
-    int getInverseIncidenceElement(int i) const {return fInverseIncidence[i];}
-    void clearInverseIncidence(){
-        fInverseIncidence.clear();
-        fInverseIncidence.shrink_to_fit();
+    int getInverseIncidenceElement(int i) const {
+        return fInverseIncidence[i];
     }
+
+    void clearInverseIncidence();
     
     //.........................Mesh Velocity functions..........................
     /// Sets the node mesh velocity

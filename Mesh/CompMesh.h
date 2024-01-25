@@ -32,21 +32,24 @@ private:
     std::map<int,WeakForm *> fMaterialVector;
 
     GraphMesh *fGraphMesh;
-
-public:
-    CompMesh() = default;
     
-    int* part_elem;      //Fluid Domain Decomposition - Elements
-    int* part_nodes;     //Fluid Domain Decomposition - Nodes
+public:
+    int* part_elem;      //Domain Decomposition - Elements
+    int* part_nodes;     //Domain Decomposition - Nodes
 
-    void InsertMaterial(WeakForm *wf){
-        fMaterialVector[wf->Id()] = wf;
-        if (fNState == 0){
-            fNState = wf->NState();            
-        } else if (fNState != wf->NState()){
-            PanicButton(); //We don't know how solve a problem with two materials with different state variables in the same mesh
-        }
-    }
+    /// @brief Default constructor
+    CompMesh() = default;
+
+    /// @brief Default destructor
+    ~CompMesh() = default;
+
+    /// @brief Inserts a weak form to the computational mesh
+    /// @param wf weak form
+    void InsertMaterial(WeakForm *wf);
+
+    /// @brief Returns the weak for associated with a given material id
+    /// @param matid material id
+    /// @return weak form object
     WeakForm* Material(int matid){
         return fMaterialVector[matid];
     }
@@ -75,13 +78,38 @@ public:
         fNState = nstate;
     }
 
-    int &Dimension() {return fDimension;}
-    int &GetDefaultOrder() {return fOrder;}
-    int &NState(){return fNState;}
-    // int &NElNodes() {return nElNodes;}
-    int &NBdNodes() {return nBdNodes;}
-    int64_t NGlobalDOF() {return fNodeVector.size()*fNState;}
+    /// @brief Returns the problem dimension
+    /// @return dimension
+    int &Dimension() {
+        return fDimension;
+    }
+    
+    /// @brief returns the polynomial order
+    /// @return polynominal order
+    int &GetDefaultOrder() {
+        return fOrder;
+    }
 
+    /// @brief returns the number of state variables
+    /// @return state variables
+    int &NState(){
+        return fNState;
+    }
+
+    /// @brief Returns the number of boundary nodes
+    /// @return element boundary nodes
+    int &NBdNodes() {
+        return nBdNodes;
+    }
+
+    /// @brief returns the number of global DOF's
+    /// @return number of DOF's
+    int64_t NGlobalDOF() {
+        return fNodeVector.size()*fNState;
+    }
+
+    /// @brief Returns the graphycal mesh to print results.
+    /// @return graphycal mesh 
     GraphMesh* GetGraphMesh();
 };
 
