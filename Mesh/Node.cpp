@@ -66,3 +66,18 @@ void Node::clearInverseIncidence(){
     fInverseIncidence.clear();
     fInverseIncidence.shrink_to_fit();
 }
+
+void Node::setMeshVelocity(VecDouble &u){
+    for (int i=fDimension; i--; ){
+        fMeshVelocity[i] = u[i];          
+    };
+};
+
+void Node::setMeshVelocityComponent(int dir,double u){
+    fMeshVelocity[dir] = u;
+} ;
+
+void Node::setWeightFunction(double val) {
+    fPrevWeightFunction = fWeightFunction; 
+    fWeightFunction = val;
+};

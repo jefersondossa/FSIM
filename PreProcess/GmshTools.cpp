@@ -20,7 +20,9 @@
 #include<iostream>
 #include "ElementT.h"
 #include "ElementWithMem.h"
+#include "ElementTransient.h"
 #include "PlasticityModel.h"
+#include "TransientWeakForm.h"
 #include <vector>
 
 void GmshTools::RenumberConnectivity(CompMesh *cmesh){
@@ -1159,6 +1161,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
     //The element should be ignored if there is no material inserted with its physical identifier
     if (!gmesh->Material(physical_identifier)) return gel;
     PlasticityModel *plasticmaterial = dynamic_cast<PlasticityModel * > (gmesh->Material(physical_identifier));
+    TransientWeakForm *transientmaterial = dynamic_cast<TransientWeakForm * > (gmesh->Material(physical_identifier));
 
 
     switch (el_type) {
@@ -1166,6 +1169,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         {   // Ligelne
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1177,6 +1182,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Linear Triangle
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1188,6 +1195,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Linear Quadrilateral
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1199,6 +1208,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Linear Tetrahedron
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeTetrahedronLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){    
+                gel = new ElementTransient<ShapeTetrahedronLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeTetrahedronLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1210,6 +1221,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Linear Hexahedron
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeHexahedron>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeHexahedron>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeHexahedron>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1221,6 +1234,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Quadratic Line
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1232,6 +1247,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Quadratic Triangle
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1243,6 +1260,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Quadratic Quad
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1254,6 +1273,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Point
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1265,6 +1286,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Cubic Triangle
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
@@ -1276,6 +1299,8 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             // Cubic Line
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+            } else if (transientmaterial){
+                gel = new ElementTransient<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else {
                 gel = new ElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }

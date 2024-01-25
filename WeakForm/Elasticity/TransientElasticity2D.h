@@ -2,9 +2,10 @@
 #define TRANSIENTELASTICITY2D_H
 
 #include "Elasticity2D.h"
+#include "TransientWeakForm.h"
 
 /// @brief Implements the linear (Hooke's law) transient 2D elasticity problem with newmark integration
-class TransientElasticity2D : public Elasticity2D{
+class TransientElasticity2D : public Elasticity2D, public TransientWeakForm{
 public:  
     enum TimeIntegScheme {ENewmark, EGeneralizedAlpha};
 
@@ -63,6 +64,8 @@ public:
         fBeta = beta;
         fGamma = gamma;
     }
+
+    void UpdateTimeDerivatives() override{};
 };
 
 
