@@ -18,7 +18,9 @@ EigenLinearSolver::~EigenLinearSolver(){
 void EigenLinearSolver::Solve(){
     
     auto * emat = dynamic_cast<EigenSpMatrix*> (fAnalysis->GlobalMatrix());
+#ifdef DEBUG_BUILD
     if (!emat) PanicButton();
+#endif
 
     switch (fAnalysis->SType())
     {

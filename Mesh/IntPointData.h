@@ -58,6 +58,8 @@ public:
     VecDouble fDSolDt;
     /// @brief Solution second time derivative
     VecDouble fDSolDDt;
+    /// @brief Previous time/load step Solution
+    VecDouble fSolPrev;
 
     /// @brief Flags implemented to compute or not the solution and its derivatives
     bool fNeedsSol = false;

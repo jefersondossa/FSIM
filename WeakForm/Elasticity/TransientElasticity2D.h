@@ -3,6 +3,7 @@
 
 #include "Elasticity2D.h"
 #include "TransientWeakForm.h"
+#include "CompMesh.h"
 
 /// @brief Implements the linear (Hooke's law) transient 2D elasticity problem with newmark integration
 class TransientElasticity2D : public Elasticity2D, public TransientWeakForm{
@@ -65,7 +66,7 @@ public:
         fGamma = gamma;
     }
 
-    void UpdateTimeDerivatives() override{};
+    void UpdateTimeDerivatives(CompMesh *cmesh) override;
 };
 
 

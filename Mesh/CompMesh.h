@@ -53,6 +53,10 @@ public:
     WeakForm* Material(int matid){
         return fMaterialVector[matid];
     }
+
+    std::map<int,WeakForm *> &MaterialVector(){
+        return fMaterialVector;
+    }
     
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method

@@ -131,12 +131,9 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // matpoisson->SetForcingFunction(forcingFunctionPoisson);
     // matpoisson->SetExactSolution(exactSolPoisson);
 
-    Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
+    TransientElasticity2D * matpoisson = new TransientElasticity2D(8,1.,.0,true,0.,1.,0.1);
     coarseModel->InsertMaterial(matpoisson);
-    // ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1.,.3);
-    // coarseModel->InsertMaterial(matpoisson);
-    // matpoisson->SetForcingFunction(forcingFunctionElasticity2D);
-    // matpoisson->SetExactSolution(exactSolElasticity2D);
+    
     //BC
     MatrixDouble val1(2,2);
     val1.setZero();
@@ -148,68 +145,20 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     val2.setZero();
     L2Projection * matbc1 = new L2Projection(5,1,0,val1,val2);
     L2Projection * matbc2 = new L2Projection(7,1,1,val1,val3);
-    // matbc1->SetForcingFunction(forcingFunctionElasticity2D);
-    // matbc1->SetExactSolution(exactSolElasticity2D);
-    // matbc2->SetForcingFunction(forcingFunctionElasticity2D);
-    // matbc2->SetExactSolution(exactSolElasticity2D);
-    // matbc3->SetForcingFunction(forcingFunctionElasticity2D);
-    // matbc3->SetExactSolution(exactSolElasticity2D);
-
     coarseModel->InsertMaterial(matbc1);
     coarseModel->InsertMaterial(matbc2);
     coarseModel->InsertMaterial(matbc3);
 
-    // fineModel->InsertMaterial(matpoisson);
-    // val2[0] = 1.5; 
-    // L2Projection * matbc4 = new L2Projection(6,1,0,val1,val2);
-    // val2.setZero();
-    // L2Projection * matbc5 = new L2Projection(5,1,1,val1,val2);
-    // L2Projection * matbc6 = new L2Projection(7,1,1,val1,val3);    
-    // fineModel->InsertMaterial(matbc4);
-    // fineModel->InsertMaterial(matbc5);
-    // fineModel->InsertMaterial(matbc6);
-
     GmshTools::Read(*coarseModel,"../coarse_test.msh");
     // GmshTools::Read(*fineModel,"../fine_test.msh");
 
-    // CompMeshTools::InitialSolution(coarseModel);
-    // std::set<int> gluematids={5};
-    // std::vector<CompMesh *> meshvector(2);
-    // meshvector[0] = coarseModel;
-    // meshvector[1] = fineModel;
-    // Arlequin arl(meshvector,1.,0.);
-    // arl.SetGlueIds(gluematids);
-    // arl.SetUp();
-
-    // for (int i = 0; i < coarseModel->NNodes(); i++){
-    //     std::cout << "node " << i << "\ncoord = " << coarseModel->NodeVec()[i]->getCoordinates() << std::endl;
-    // }
-    // for (int i = 0; i < coarseModel->NElements(); i++){
-    //     std::cout << "element " << i << "\nconnect = " << coarseModel->ElementVec()[i]->getConnectivity() << std::endl;
-    // }
-    
-
-    // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
-    // an.Run();
-    // LinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack);
-    // NonLinearAnalysis an(&arl,SolverType::EUmfpack,1.e-6,2);
-    // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
-    NonLinearAnalysis an(coarseModel,SolverType::ELDLt,1.e-6,2);
-    // NonLinearAnalysis an(coarseModel,SolverType::ELDLt);
-    // NonLinearAnalysis an(coarseModel,SolverType::EKLU);
-    // NonLinearAnalysis an(coarseModel,SolverType::ESPQR);
-    an.Run();
-
+    TransientAnalysis an(coarseModel,SolverType::ELDLt,true);
+       
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"SigmaX","ExactSigmaX"};
     VectorNames = {"Displacement","ExactDisplacement"};
 
-    VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
-    // VTUGenerator::PrintResults(fineModel,"resultFine");
-    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
-
-
-    // VecDouble errors;
-    // an.PostProcessError(errors);
-
+    an.PrintVariables("Dynamic",ScalarNames,VectorNames);
+    an.Run(100);
+    
 }           

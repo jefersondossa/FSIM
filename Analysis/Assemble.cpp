@@ -45,6 +45,8 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 }
             };
         };
+        // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
+        // fAnalysis->GlobalMatrix()->PrintRhs();
     }; //Elements
     
     
@@ -69,7 +71,9 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         int64_t jelcoupled = 0;
 
         //Determine if the coupling element is from global or local model
+#ifdef DEBUG_BUILD
         if (!elclocal && !elcglobal) PanicButton();
+#endif
         if(elclocal){
             jelcoupled = elclocal->GetLocalIndex();
         } else if (elcglobal){

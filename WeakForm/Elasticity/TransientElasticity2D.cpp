@@ -21,16 +21,17 @@ void TransientElasticity2D::ComputeStiffness(int &index, IntPointData &data, Mat
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
         for (size_t j = 0; j < nphi; j++){
-            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j];
-            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j];
+            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity;
+            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity;
         }
     }
-    Mass *= WJ * fDensity;
+
 
     switch (fIntegScheme)
     {
     case ENewmark:
-        Stiffness += (1./(fBeta*fTimeStep*fTimeStep) + fGamma*fDamping/(fBeta*fTimeStep)) * Mass;    
+        Stiffness += (1./(fBeta*fTimeStep*fTimeStep)) * Mass;    
+        // Stiffness += (1./(fBeta*fTimeStep*fTimeStep) + fGamma*fDamping/(fBeta*fTimeStep)) * Mass;    
         break;
     
     default:
@@ -45,9 +46,34 @@ void TransientElasticity2D::ComputeResidual(int &index, IntPointData &data, VecD
     //Static Residual
     Elasticity2D::ComputeResidual(index,data,Rhs);
 
-    
+    auto vel = data.fDSolDt;
+    auto acel = data.fDSolDDt;
+    auto disp = data.fSol;
+    auto dispPrev = data.fSolPrev;
+    int nphi = data.fPhi.size();
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
 
+    for (size_t i = 0; i < nphi; i++){
+        Rhs[2*i  ] -= (dispPrev[0]/(fBeta * fTimeStep * fTimeStep) + 
+                       vel[0]/(fBeta*fTimeStep) + 
+                       (1./(2.*fBeta)-1.) * acel[0]) * data.fPhi[i] * fDensity * WJ;
+        Rhs[2*i+1] -= (dispPrev[1]/(fBeta * fTimeStep * fTimeStep) + 
+                       vel[1]/(fBeta*fTimeStep) + 
+                       (1./(2.*fBeta)-1.) * acel[1]) * data.fPhi[i] * fDensity * WJ;
+    }
     
+    // Rhs[2*i  ] += (dispPrev[0]/(fBeta * fTimeStep * fTimeStep) + 
+    //                    vel[0]/(fBeta*fTimeStep) + 
+    //                    (1./(2.*fBeta)-1.) * acel[0]) * data.fPhi[i] * fDensity * WJ +
+    //                   (dispPrev[0]*fGamma/(fBeta * fTimeStep) +
+    //                    vel[0] * (fGamma/fBeta - 1.) +
+    //                    acel[0] * fTimeStep * (fGamma/(2.*fBeta)-1.)) * data.fPhi[i] * fDensity * fDamping * WJ;
+    //     Rhs[2*i+1] += (dispPrev[1]/(fBeta * fTimeStep * fTimeStep) + 
+    //                    vel[1]/(fBeta*fTimeStep) + 
+    //                    (1./(2.*fBeta)-1.) * acel[1]) * data.fPhi[i] * fDensity * WJ +
+    //                   (dispPrev[1]*fGamma/(fBeta * fTimeStep) +
+    //                    vel[1] * (fGamma/fBeta - 1.) +
+    //                    acel[1] * fTimeStep * (fGamma/(2.*fBeta)-1.)) * data.fPhi[i] * fDensity * fDamping * WJ;
 };
 
 void TransientElasticity2D::ComputeError(IntPointData &data, VecDouble &errors){
@@ -263,4 +289,44 @@ void TransientElasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol
     };
 
 }; 
+
+void TransientElasticity2D::UpdateTimeDerivatives(CompMesh *cmesh){
+
+    switch (fIntegScheme){
+    case ENewmark:
+        {
+            for (int64_t inode = 0; inode < cmesh->NNodes(); inode++){
+                //Update Acceleration
+                auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
+                auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
+                auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
+                auto disp = cmesh->NodeVec()[inode]->Solution();
+                VecDouble acelUpdated(2), velUpdated(2);
+                acelUpdated = (disp-dispPrev)/(fBeta*fTimeStep*fTimeStep) -
+                                velPrev/(fBeta*fTimeStep) -
+                                (1./(2.*fBeta) - 1.) * acelPrev; 
+
+                //Update Velocity
+                velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
+
+                cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
+                cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
+                
+                cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
+                cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
+            }           
+        }
+        break;
+    case EGeneralizedAlpha:
+        // Nesse caso vai ser complicado porque o domínio /gradiente da função mudança
+        // de configuração deve ser interpolada entre os passos anterior e atual
+        /* code */
+        break;
+    
+    default:
+        PanicButton();
+        break;
+    }
+
+}
 

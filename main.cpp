@@ -36,6 +36,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "LinearAnalysis.h"
 #include "NonLinearAnalysis.h"
 #include "IncrementalAnalysis.h"
+#include "TransientAnalysis.h"
 #include "Arlequin.h"
 #include "GmshTools.h"
 #include "VTUGenerator.h"
@@ -51,6 +52,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "MohrCoulomb.h"
 #include "VonMises.h"
 #include "Elasticity3D.h"
+#include "TransientElasticity2D.h"
 
 int main(int argc, char **args) {
 
@@ -62,7 +64,8 @@ int main(int argc, char **args) {
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
     // #include "examples/rectangle.h"
-    #include "examples/arlequin.h"
+    #include "examples/rectangledyn.h"
+    // #include "examples/arlequin.h"
     // #include "examples/cube.h"
     // #include "examples/truss.h"
     // #include "examples/mohrcoulombtest.h"

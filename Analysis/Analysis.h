@@ -19,7 +19,7 @@ enum SolverType{
 
 class Analysis
 {
-private:
+protected:
     
     std::vector<CompMesh *> fMeshVector;
     SolverType fSolverType;

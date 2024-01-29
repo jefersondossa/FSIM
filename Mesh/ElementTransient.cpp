@@ -22,6 +22,9 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     this->fIntegData.fNeedsSol = true;
     this->fIntegData.fSol.resize(this->fWeakForm->NState());
+    this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
+    this->fIntegData.fDSolDt.resize(this->fWeakForm->NState());
+    this->fIntegData.fDSolDDt.resize(this->fWeakForm->NState());
     this->fIntegData.fNeedsTimeDerivatives = true;
     
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (this->fWeakForm);

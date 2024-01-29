@@ -17,9 +17,11 @@ void IntRuleHexahedron::SetOrder(int order) {
     order = 2;
     fOrder = order;
 
+#ifdef DEBUG_BUILD
     if (order < 0 || order > MaxOrder()) {
         PanicButton();
     }
+#endif
 
     int nPoints = 2*order-1;
     if (order == 0) {

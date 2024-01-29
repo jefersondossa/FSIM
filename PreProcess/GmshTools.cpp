@@ -1163,7 +1163,6 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
     PlasticityModel *plasticmaterial = dynamic_cast<PlasticityModel * > (gmesh->Material(physical_identifier));
     TransientWeakForm *transientmaterial = dynamic_cast<TransientWeakForm * > (gmesh->Material(physical_identifier));
 
-
     switch (el_type) {
         case 1:
         {   // Ligelne
@@ -1328,5 +1327,13 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         }
             break;
     }
+    if(transientmaterial){
+        for (int i = 0; i < gel->getConnectivity().size(); i++){
+            auto connect = gel->getConnectivity();
+            gmesh->NodeVec()[connect[i]]->AllocateTimeDerivatives();
+        }
+        
+    }
+
     return gel;
 };

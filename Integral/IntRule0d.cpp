@@ -11,9 +11,12 @@ IntRule0d::IntRule0d(){
 }
 
 IntRule0d::IntRule0d(int order) {
+
+#ifdef DEBUG_BUILD 
     if (order != 0) {
         PanicButton();
     }
+#endif
 
     SetOrder(order);
 
@@ -22,12 +25,12 @@ IntRule0d::IntRule0d(int order) {
 
 void IntRule0d::SetOrder(int order) {
     fOrder = order;  
-    
+
+#ifdef DEBUG_BUILD    
     if (order != 0) {
         fOrder = 0;
-        // PanicButton();//Apenas comentar esse debug stop e adicionar a linha de cima
     }
-
+#endif
     int npoints = 1;
     
     fPoints.resize(npoints, 0);

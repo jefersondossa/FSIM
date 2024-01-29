@@ -45,6 +45,7 @@ void PETScMatrix::PutValueMatrix(int64_t &row, int64_t &col, double &val) {
 };
 
 double PETScMatrix::GetValueMatrix(int64_t &row, int64_t &col) {
+    std::cout << "It may need a scatter context. Please check PETSc manual and implement it. \n";
     PanicButton();
 };
 
@@ -90,6 +91,7 @@ void PETScMatrix::PutValueRhs(int64_t &row, double &val) {
 };
 
 double PETScMatrix::GetValueRhs(int64_t &row) {
+    std::cout << "This vector need a scatter context to get values. Please implement it. \n";
     PanicButton();
 };
 

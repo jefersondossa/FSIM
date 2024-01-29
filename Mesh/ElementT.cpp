@@ -538,11 +538,15 @@ void ElementT<tshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDoubl
 template<class tshape>
 void ElementT<tshape>::interpolateSolution() {
     fIntegData.fSol.setZero();
+    if (fIntegData.fSolPrev.size() != 0) fIntegData.fSolPrev.setZero();
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
             fIntegData.fSol[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+            if (fIntegData.fSolPrev.size() != 0) {
+                fIntegData.fSolPrev[j] += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(j) * shapeFi;
+            }
         }
     }
 }
@@ -732,11 +736,13 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
 template<class tshape>
 void ElementT<tshape>::ComputeError(VecDouble &errors){
 
+#ifdef DEBUG_BUILD
     if (!fWeakForm || (fWeakForm->Dimension() != Mesh()->Dimension())) return;
     if (!fWeakForm->GetExactSolution()){
         std::cout << "Exact solution not set for material " << fWeakForm->Id() << std::endl;
         PanicButton();
     }
+#endif
 
     int DIM = tshape::Dimension;
     fIntegData.fA0Inv.resize(DIM,DIM);

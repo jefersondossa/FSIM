@@ -12,9 +12,11 @@ IntRuleTriangle::IntRuleTriangle(int order) {
 void IntRuleTriangle::SetOrder(int order) {
     fOrder = order;
 
+#ifdef DEBUG_BUILD
     if (order < 0 || order > MaxOrder()) {
         PanicButton();
     }
+#endif
 
     switch (order)
     {

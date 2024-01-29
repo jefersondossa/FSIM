@@ -16,9 +16,11 @@ IntRule1d::IntRule1d(int order) : IntRule(order) {
 void IntRule1d::SetOrder(int order) {
     fOrder = order;
 
+#ifdef DEBUG_BUILD
     if (order < 0 || order > MaxOrder()) {
         PanicButton();
     }
+#endif
 
     int nPoints = 2*order-1;
     if (order == 0) {

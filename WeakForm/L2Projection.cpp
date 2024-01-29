@@ -16,6 +16,16 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     }
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * WeakForm::fBigNumber;
     double nphi = data.fPhi.size();
+    
+    MatrixDouble deriv(data.fX.size(), fNState);
+    deriv.setZero();
+    VecDouble result = BCVal2;
+    
+    if(this->fExactSol)
+    {
+        fExactSol(data.fX, result, deriv);
+    }
+    // result -= data.fSol;
 
     switch (BCType)
     {
@@ -32,14 +42,22 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         break;
     case 3: // Directional Null Dirichlet - displacement is set to null in the non-null vector component direction
         for(int i = 0 ; i < nphi; i++) {
+            double val = result.norm();
 //                ef(nstate*in+0,0) += BIGNUMBER * (0. - data.sol[0][0]) * v2[0] * phi(in,0) * weight;
 //                ef(nstate*in+1,0) += BIGNUMBER * (0. - data.sol[0][1]) * v2[1] * phi(in,0) * weight;
             for (int j = 0 ; j < nphi; j++) {
                 for (int istate = 0; istate < fNState; istate++){
-                    Stiffness(fNState*i+istate,fNState*j+istate) += WJ * data.fPhi[i] * data.fPhi[j] * BCVal2[istate];
+                    if (fabs(BCVal2[istate]) > 0)
+                    Stiffness(fNState*i+istate,fNState*i+istate) += WJ * data.fPhi[i] * data.fPhi[j];
                 }
             }//jn
         }//in
+        // for (int j = 0 ; j < nphi; j++) {
+        //     for (int istate = 0; istate < fNState; istate++){
+        //         // if (fabs(BCVal2[istate]) > 0)
+        //         Stiffness(fNState*j+istate,fNState*j+istate) *= result[istate];
+        //     }
+        // }//jn
         break;
     
     default:
@@ -77,12 +95,18 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
-                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * result[istate];
+                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * BCVal2[istate];
             }
         }
     }
         break;
     case 3:
+        for (int i = 0; i < nphi; i++){
+            for (int istate = 0; istate < fNState; istate++){
+                if (fabs(BCVal2[istate]) > 0 && fabs(result[istate]>1.e-10))   
+                Rhs(fNState*i+istate) +=  WeakForm::fBigNumber * WJ * data.fPhi[i] * (result[istate]);
+            }
+        }
         break;
     default:
         std::cout << "BC Type not implemented \n" ;

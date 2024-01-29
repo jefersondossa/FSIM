@@ -12,6 +12,8 @@ GraphMesh* CompMesh::GetGraphMesh(){
     if (fNState == 0){
         fNState = wf->NState();            
     } else if (fNState != wf->NState()){
-        PanicButton(); //We don't know how solve a problem with two materials with different state variables in the same mesh
+        std::cout << "In the current vertion, the code don't support materials in the \
+                      same mesh with different number of state variables. Please check it. \n";
+        PanicButton(); 
     }
 }

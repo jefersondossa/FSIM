@@ -14,6 +14,7 @@ void LinearAnalysis::Compute(){
     
     // this->GlobalMatrix()->PrintMatrix();
     // this->GlobalMatrix()->PrintRhs();
+    // this->GlobalMatrix()->PrintSolution();
 } 
 
 void LinearAnalysis::UpdateSolution(){

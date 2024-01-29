@@ -115,12 +115,24 @@ public:
         return fSolution[istate];
     }
 
+    /// @brief Returns the nodal solution of a given state variable in the previous time/load step
+    /// @param istate state variable index
+    /// @return solution
+    double GetPreviousSolution(int istate) const {
+        return fPrevSolution[istate];
+    }
+    void SetPreviousSolution(int istate, double val);
+
     /// @brief Returns the solution first time derivative of a given state variable
     /// @param istate state variable index
     /// @return solution first time derivative
     double GetDSolutionDTime(int istate) const {
         return fDTimeSolution[istate];
     }
+    VecDouble &SolutionDTime(){
+        return fDTimeSolution;
+    }
+    void SetDSolutionDTime(int istate, double val);
 
     /// @brief Returns the solution second time derivative of a given state variable
     /// @param istate state variable index
@@ -128,6 +140,12 @@ public:
     double GetDSolutionDDTime(int istate) const {
         return fDDTimeSolution[istate];
     }
+    VecDouble &SolutionDDTime(){
+        return fDDTimeSolution;
+    }
+    void SetDSolutionDDTime(int istate, double val);
+
+    void AllocateTimeDerivatives();
 
     /// @brief Returns the node index
     /// @return index

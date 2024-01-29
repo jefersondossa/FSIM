@@ -8,6 +8,9 @@ class TransientAnalysis : public NonLinearAnalysis
 {
 private:
     bool IsLinear;
+    std::vector<std::string> fScalVars;
+    std::vector<std::string> fVectVars;
+    std::string fFilename;
 
 public:
     TransientAnalysis() : NonLinearAnalysis(){};
@@ -18,6 +21,7 @@ public:
     void Run() override{
         PanicButton();
     }
+    void PrintVariables(std::string filename, std::vector<std::string> &scal, std::vector<std::string> &vec);
 
 };
 

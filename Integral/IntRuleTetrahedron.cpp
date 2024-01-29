@@ -15,9 +15,11 @@ IntRuleTetrahedron::IntRuleTetrahedron(int order) : IntRule(order) {
 
 void IntRuleTetrahedron::SetOrder(int order) {
 
+#ifdef DEBUG_BUILD
     if (order < 0 || order > MaxOrder()) {
         PanicButton();
     }
+#endif
 
     fPoints.resize(3,1);
     fWeights.resize(1);
