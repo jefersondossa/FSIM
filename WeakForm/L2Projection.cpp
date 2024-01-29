@@ -42,9 +42,15 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         break;
     case 3: // Directional Null Dirichlet - displacement is set to null in the non-null vector component direction
         for(int i = 0 ; i < nphi; i++) {
-            double val = result.norm();
-//                ef(nstate*in+0,0) += BIGNUMBER * (0. - data.sol[0][0]) * v2[0] * phi(in,0) * weight;
-//                ef(nstate*in+1,0) += BIGNUMBER * (0. - data.sol[0][1]) * v2[1] * phi(in,0) * weight;
+            for (int j = 0 ; j < nphi; j++) {
+                for (int istate = 0; istate < fNState; istate++){
+                    Stiffness(fNState*i+istate,fNState*i+istate) += WJ * data.fPhi[i] * data.fPhi[j] * BCVal2[istate];
+                }
+            }//jn
+        }//in
+        break;
+    case 4: // Directional NonHomogeneous Dirichlet - displacement is set to null in the non-null vector component direction
+        for(int i = 0 ; i < nphi; i++) {
             for (int j = 0 ; j < nphi; j++) {
                 for (int istate = 0; istate < fNState; istate++){
                     if (fabs(BCVal2[istate]) > 0)
@@ -52,12 +58,6 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
                 }
             }//jn
         }//in
-        // for (int j = 0 ; j < nphi; j++) {
-        //     for (int istate = 0; istate < fNState; istate++){
-        //         // if (fabs(BCVal2[istate]) > 0)
-        //         Stiffness(fNState*j+istate,fNState*j+istate) *= result[istate];
-        //     }
-        // }//jn
         break;
     
     default:
@@ -101,6 +101,9 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     }
         break;
     case 3:
+        break;
+    
+    case 4:
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
                 if (fabs(BCVal2[istate]) > 0 && fabs(result[istate]>1.e-10))   

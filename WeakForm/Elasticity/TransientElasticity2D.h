@@ -7,22 +7,15 @@
 
 /// @brief Implements the linear (Hooke's law) transient 2D elasticity problem with newmark integration
 class TransientElasticity2D : public Elasticity2D, public TransientWeakForm{
-public:  
-    enum TimeIntegScheme {ENewmark, EGeneralizedAlpha};
-
 protected:
     // Damping
     double fDamping;
     // Density
     double fDensity;
-    // Time Step
-    double fTimeStep;
     // Integration parameters
     double fBeta = 0.25;
     double fGamma = 0.5;
     double fSpectralRadius = 1.;
-
-    TimeIntegScheme fIntegScheme;
 
 public:  
     // Elasticity 2D class constructor

@@ -1,20 +1,24 @@
-#ifndef POISSON_H
-#define POISSON_H
+#ifndef TransientPositionalTruss_H
+#define TransientPositionalTruss_H
 
-#include "WeakForm.h"
+#include "PositionalTruss.h"
+#include "TransientWeakForm.h"
 
-/// @brief Implements the Poisson's equation weak form
-class Poisson : public WeakForm{
+/// @brief Implements the truss element in positional formulation;
+class TransientPositionalTruss : public PositionalTruss, public TransientWeakForm{
 protected:
-    // A scale factor for the Poisson problem
-    double  fScale = 1.;
+    // Damping
+    double fDamping;
+    // Density
+    double fDensity;
+    // Integration parameters
+    double fBeta = 0.25;
+    double fGamma = 0.5;
+    double fSpectralRadius = 1.;
 
 public:
-    /// @brief Poisson weak for constructor
-    /// @param matid physical tag
-    /// @param dim problem dimension
-    /// @param nState number of state variables
-    Poisson(int matid, int dim, int nState = 1);
+    //Positional elasticity 2D constructor
+    TransientPositionalTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme = ENewmark);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -32,14 +36,6 @@ public:
     /// @param data integration point data
     /// @param errors vector storing all errors
     void ComputeError(IntPointData &data, VecDouble &errors) override;
-    
-    /// Sets the Poisson problem scale factor
-    /// @param double scale factor
-    void SetScale(double &value) {fScale = value;};
-
-    /// Gets the Poisson problem scale factor
-    /// @return scale factor
-    double &GetScale(){return fScale;};
 
     /// @brief Returns the variable index of a given solution variable
     /// @param name solution variable name
@@ -56,6 +52,8 @@ public:
     /// @param var solution variable's index
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
+
+    void UpdateTimeDerivatives(CompMesh *cmesh) override;
 
 };
 

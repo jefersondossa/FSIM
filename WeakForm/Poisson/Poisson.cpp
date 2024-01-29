@@ -120,7 +120,7 @@ void Poisson::Solution(IntPointData &data, int var, VecDouble &Sol) {
     //Derivative
     if (var == 2){
         Sol[0] = data.fDSolDx(0,0);
-        Sol[1] = data.fDSolDx(0,1);
+        if (fDimension > 1) Sol[1] = data.fDSolDx(0,1);
         if (fDimension == 3) Sol[2] = data.fDSolDx(0,2);
         return;
     };

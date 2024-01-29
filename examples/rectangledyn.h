@@ -131,7 +131,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // matpoisson->SetForcingFunction(forcingFunctionPoisson);
     // matpoisson->SetExactSolution(exactSolPoisson);
 
-    TransientElasticity2D * matpoisson = new TransientElasticity2D(8,1.,.0,true,0.,1.,0.1);
+    TransientElasticity2D * matpoisson = new TransientElasticity2D(8,1.,.0,true,0.5,1.,0.1);
     coarseModel->InsertMaterial(matpoisson);
     
     //BC
@@ -141,10 +141,11 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     VecDouble val3(2);
     val2.setZero();val3.setZero();
     val2[0] = 1.0;
-    L2Projection * matbc3 = new L2Projection(6,1,3,val1,val2);
+    L2Projection * matbc3 = new L2Projection(6,1,1,val1,val2);
     val2.setZero();
     L2Projection * matbc1 = new L2Projection(5,1,0,val1,val2);
-    L2Projection * matbc2 = new L2Projection(7,1,1,val1,val3);
+    val3[1] = 1.0;
+    L2Projection * matbc2 = new L2Projection(7,1,3,val1,val3);
     coarseModel->InsertMaterial(matbc1);
     coarseModel->InsertMaterial(matbc2);
     coarseModel->InsertMaterial(matbc3);

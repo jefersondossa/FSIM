@@ -12,6 +12,10 @@ file(GLOB elasticity
     PositionalTruss.cpp
     TransientElasticity2D.h
     TransientElasticity2D.cpp
+    TransientElasticTruss.h
+    TransientElasticTruss.cpp
+    TransientPositionalTruss.h
+    TransientPositionalTruss.cpp
 )
 
 set(ELASTICITY ${elasticity} PARENT_SCOPE)

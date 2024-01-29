@@ -19,9 +19,6 @@ Analysis::Analysis(Arlequin *arl, SolverType stype){
     AllocateArlequin();        
 };
 
-Analysis::~Analysis() {
-    
-}
 
 int64_t Analysis::NEquations(){
     int64_t fNumEquations = 0;
@@ -153,4 +150,18 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
     }
 }
 
-
+void Analysis::Run(){
+    std::cout << "Allocating problem..." << std::endl;
+    std::clock_t t3 = std::clock();
+    Compute();
+    std::clock_t t4 = std::clock();
+    std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
+    Solve();
+    std::clock_t t5 = std::clock();
+    std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
+    std::cout << "Updating solution..." << std::endl;
+    UpdateSolution();
+    // fGlobalMatrix->PrintMatrix();
+    // fGlobalMatrix->PrintRhs();
+    // fGlobalMatrix->PrintSolution();
+};

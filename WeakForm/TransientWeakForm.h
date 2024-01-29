@@ -6,7 +6,14 @@
 
 class TransientWeakForm
 {
-private:
+public:
+    enum TimeIntegScheme {ENewmark, EGeneralizedAlpha};
+protected:
+
+    TimeIntegScheme fIntegScheme;
+
+    // Time Step
+    double fTimeStep;
 
 public:
     TransientWeakForm() = default;

@@ -30,6 +30,7 @@ void EigenLinearSolver::Solve(){
             solver.analyzePattern(emat->Matrix());
             solver.factorize(emat->Matrix());
             emat->Solution() = solver.solve(emat->Rhs()); 
+            std::cout << "Mat determinant = " << solver.determinant() << std::endl;
         }
         break;
     case ELLt:

@@ -9,7 +9,8 @@ protected:
     // Boundary condition ID
     // 0 = Dirichlet (all directions)
     // 1 = Neumann (all directions)
-    // 3 = Directional Dirichlet - apply Dirichlet BC in the non zero Val2 entry  
+    // 3 = Directional Homogeneous Dirichlet - apply Dirichlet BC in the non zero Val2 entry  
+    // 4 = Directional Non-Homogeneous Dirichlet - apply Dirichlet BC in the non zero Val2 entry  
     int BCType = 0;
     
     // Boundary condition value - Set into the stiffness matrix

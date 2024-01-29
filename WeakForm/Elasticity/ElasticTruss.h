@@ -5,7 +5,7 @@
 
 /// @brief Implements the linear elastic truss element
 class ElasticTruss : public WeakForm{
-public:
+protected:
     // Material Young modulus
     double       fYoungModulus;
     // Cross section area

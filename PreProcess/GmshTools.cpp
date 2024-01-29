@@ -1165,7 +1165,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
 
     switch (el_type) {
         case 1:
-        {   // Ligelne
+        {   // Line
             if (plasticmaterial){
                 gel = new ElementWithMem<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             } else if (transientmaterial){

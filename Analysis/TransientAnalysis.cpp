@@ -10,11 +10,19 @@ TransientAnalysis::TransientAnalysis(CompMesh *cmesh, SolverType stype, bool lin
 void TransientAnalysis::Run(int64_t nsteps){
 
     for (int64_t i = 0; i < nsteps; i++){
+        std::cout << "Time Step = " << i << std::endl;
         if (IsLinear){
-            LinearAnalysis::Run();
+            LinearAnalysis::Compute();
+            LinearAnalysis::Solve();
+            LinearAnalysis::UpdateSolution();
         } else {
-            NonLinearAnalysis::Run();
+            NonLinearAnalysis::Compute();
+            NonLinearAnalysis::Solve();
+            NonLinearAnalysis::UpdateSolution();
         }
+        fGlobalMatrix->PrintMatrix();
+        fGlobalMatrix->PrintRhs();
+        fGlobalMatrix->PrintSolution();
         for (int i = 0; i < fMeshVector.size(); i++){
             // Loop over all weak forms in the mesh. If it is a transient weak form
             // update the time derivatives
@@ -23,6 +31,13 @@ void TransientAnalysis::Run(int64_t nsteps){
                 TransientWeakForm *twf = dynamic_cast<TransientWeakForm*> (val);
                 if(twf) twf->UpdateTimeDerivatives(fMeshVector[i]);
             }
+        }
+        fGlobalMatrix->ZeroMatrix();
+        fGlobalMatrix->ZeroRhs();
+        fGlobalMatrix->ZeroSolution();
+        for (int64_t i=0; i<NEquations(); i++){
+            double val = 1.e-20;
+            fGlobalMatrix->AddValueMatrix(i,i,val);
         }
         VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,i);
     }
