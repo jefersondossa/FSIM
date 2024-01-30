@@ -43,6 +43,21 @@ public:
     /// @param errors vector storing all errors
     void ComputeError(IntPointData &data, VecDouble &errors) override;
 
+    /// @brief Returns the variable index of a given solution variable
+    /// @param name solution variable name
+    /// @return solution variable's index
+    int VariableIndex(const std::string &name) const override;
+
+    /// @brief Returns the number of solution variables of a given post processing variable
+    /// @param var solution variable's index
+    /// @return number of solution variables
+    int NSolutionVariables(int var) const override;
+    
+    /// @brief Post process the results for a given solution variable. It should never be called here, but in the derived weak form.
+    /// @param data integration point data
+    /// @param var solution variable's index
+    /// @param Sol solution vector
+    void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 };
 
 

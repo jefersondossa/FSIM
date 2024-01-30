@@ -93,7 +93,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
         tSUGN1_ = hUGN_ / 2.e-10;
     };
               
-    tSUGN2_ = 10000.;//dTime_ / 2.;
+    tSUGN2_ = 100.1;//dTime_ / 2.;
 
     tSUGN3_ = hRGN_ * hRGN_ / (4. * fViscosity / fDensity);
    
@@ -108,7 +108,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
     //tSUPG_ = 0.;
 
 
-    tPSPG_ = 1.e-2*tSUPG_;
+    tPSPG_ = tSUPG_;
     tLSIC_ = tSUPG_ * uNorm * uNorm;
 
 
@@ -210,4 +210,47 @@ void Stokes::ComputeError(IntPointData &data, VecDouble &errors){
     std::cout << "Not implemented yet\n";
     
     PanicButton();
+}
+
+int Stokes::VariableIndex(const std::string &name) const{
+    if(!strcmp("Velocity",name.c_str()))           return 1;
+    if(!strcmp("Pressure",name.c_str()))           return 2;
+    
+    std::cout << "Post Process variable not implemented \n";
+    PanicButton();
+    return -1;
+};
+
+int Stokes::NSolutionVariables(int var) const{
+    switch (var)
+    {
+    case 1:
+        return 3;
+    case 2:
+        return 1;
+
+    default:
+        PanicButton();
+        return -1;
+    }
+};
+
+void Stokes::Solution(IntPointData &data, int var, VecDouble &Sol){
+    //Velocity
+    if (var == 1){
+        Sol[0] = data.fSol[0];
+        Sol[1] = data.fSol[1];
+        if (fDimension == 3) Sol[2] = data.fSol[2];
+        return;
+    };
+
+    //Pressure
+    if (var == 2){
+        if (fDimension == 2){
+            Sol[0] = data.fSol[2];
+        } else if (fDimension == 3) {
+            Sol[0] = data.fSol[3];
+        }
+        return;
+    };
 }

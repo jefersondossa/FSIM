@@ -50,8 +50,7 @@ void TransientPositional2D::ComputeResidual(int &index, IntPointData &data, VecD
 
     auto qs = dispPrev/(fBeta*fTimeStep*fTimeStep) + vel/(fBeta*fTimeStep) +
                     (1./(2.*fBeta) - 1.) * acel;
-    auto rs = vel + (1.-fGamma)*fTimeStep*acel;
-
+                    
     for (size_t i = 0; i < nphi; i++){
         Rhs[2*i  ] -= (disp[0]/(fBeta * fTimeStep * fTimeStep) -qs[0]) * data.fPhi[i] * fDensity * WJ;
         Rhs[2*i+1] -= (disp[1]/(fBeta * fTimeStep * fTimeStep) -qs[1]) * data.fPhi[i] * fDensity * WJ;
@@ -70,7 +69,7 @@ int TransientPositional2D::VariableIndex(const std::string &name) const{
 };
 
 int TransientPositional2D::NSolutionVariables(int var) const{
-    return NSolutionVariables(var);
+    return ElasticityPositional2D::NSolutionVariables(var);
 };
 
 void TransientPositional2D::Solution(IntPointData &data, int var, VecDouble &Sol) {

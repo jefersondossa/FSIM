@@ -17,6 +17,12 @@ file(GLOB mesh
     ElementWithMem.cpp
     ElementTransient.h
     ElementTransient.cpp
+    BoundaryCoupling.h
+    BoundaryCoupling.cpp
+    BndCondCoupling.h
+    BndCondCoupling.cpp
+    LagrangeMultCoupling.h
+    LagrangeMultCoupling.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)

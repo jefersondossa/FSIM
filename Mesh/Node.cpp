@@ -39,7 +39,6 @@ void Node::SetSolution(int istate, double sol){
 }
 
 void Node::IncrementSolution(int istate, double sol){
-    fPrevSolution[istate] = fSolution[istate];
     fSolution[istate] += sol;
 }
 

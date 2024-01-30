@@ -5,7 +5,6 @@ TransientNavierStokes::TransientNavierStokes(int matid, int dim, double density,
 };
 
 void TransientNavierStokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-    
     NavierStokes::ComputeStiffness(index,data,Stiffness);
     
 }

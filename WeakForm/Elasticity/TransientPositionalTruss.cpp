@@ -1,8 +1,6 @@
 #include "TransientPositionalTruss.h"
 
-TransientPositionalTruss::TransientPositionalTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme) : PositionalTruss(matid,dim,young,area) {
-    std::cout << "This material is not working properly. Please debug it" << std::endl;
-    
+TransientPositionalTruss::TransientPositionalTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme) : PositionalTruss(matid,dim,young,area) {    
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
@@ -47,10 +45,6 @@ void TransientPositionalTruss::ComputeResidual(int &index, IntPointData &data, V
     auto acel = data.fDSolDDt;
     auto posi = data.fSol;
     auto posiPrev = data.fSolPrev;
-    // for (int i = 0; i < fDimension; i++){
-    //     posi[i] += data.fX[i];
-    //     posiPrev[i] += data.fX[i];
-    // }
 
     VecDouble qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + vel/(fBeta*fTimeStep) +
                     (1./(2.*fBeta) - 1.) * acel;
@@ -95,10 +89,6 @@ void TransientPositionalTruss::UpdateTimeDerivatives(CompMesh *cmesh){
                 auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
                 auto posiPrev = cmesh->NodeVec()[inode]->PrevSolution();
                 auto posi = cmesh->NodeVec()[inode]->Solution();
-                // for (int i = 0; i < fDimension; i++){
-                //     posi[i] += cmesh->NodeVec()[inode]->getCoordinateValue(i);
-                //     posiPrev[i] += cmesh->NodeVec()[inode]->getCoordinateValue(i);
-                // }
                 VecDouble acelUpdated(2), velUpdated(2);
                 auto qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
                                 (1./(2.*fBeta) - 1.) * acelPrev;
@@ -108,42 +98,15 @@ void TransientPositionalTruss::UpdateTimeDerivatives(CompMesh *cmesh){
 
                 // //Update Velocity                
                 velUpdated = posi*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
-                // acelUpdated = (posi-posiPrev)/(fBeta*fTimeStep*fTimeStep) -
-                //                 velPrev/(fBeta*fTimeStep) -
-                //                 (1./(2.*fBeta) - 1.) * acelPrev; 
-
-                // //Update Velocity
-                // velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
-
 
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
                 
                 cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
-                std::cout << "Acel = " << acelUpdated[0] << std::endl;
-                std::cout << "Vel = " << velUpdated[0] << std::endl;
-            }    
-            // for (int64_t inode = 0; inode < cmesh->NNodes(); inode++){
-            //     //Update Acceleration
-            //     auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
-            //     auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
-            //     auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
-            //     auto disp = cmesh->NodeVec()[inode]->Solution();
-            //     VecDouble acelUpdated(2), velUpdated(2);
-            //     acelUpdated = (disp-dispPrev)/(fBeta*fTimeStep*fTimeStep) -
-            //                     velPrev/(fBeta*fTimeStep) -
-            //                     (1./(2.*fBeta) - 1.) * acelPrev; 
-
-            //     //Update Velocity
-            //     velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
-
-            //     cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
-            //     cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
-                
-            //     cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
-            //     cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
-            // }             
+                // std::cout << "Acel = " << acelUpdated[0] << std::endl;
+                // std::cout << "Vel = " << velUpdated[0] << std::endl;
+            }           
         }
         break;
     case EGeneralizedAlpha:

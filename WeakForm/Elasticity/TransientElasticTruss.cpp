@@ -1,8 +1,6 @@
 #include "TransientElasticTruss.h"
 
 TransientElasticTruss::TransientElasticTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme) : ElasticTruss(matid,dim,young,area) {
-    std::cout << "This material is not working properly. Please debug it" << std::endl;
-    
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
@@ -92,16 +90,17 @@ void TransientElasticTruss::UpdateTimeDerivatives(CompMesh *cmesh){
                 //Update Acceleration
                 auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
                 auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
-                auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
-                auto disp = cmesh->NodeVec()[inode]->Solution();
+                auto posiPrev = cmesh->NodeVec()[inode]->PrevSolution();
+                auto posi = cmesh->NodeVec()[inode]->Solution();
                 VecDouble acelUpdated(2), velUpdated(2);
-                acelUpdated = (disp-dispPrev)/(fBeta*fTimeStep*fTimeStep) -
-                                velPrev/(fBeta*fTimeStep) -
-                                (1./(2.*fBeta) - 1.) * acelPrev; 
+                auto qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
+                                (1./(2.*fBeta) - 1.) * acelPrev;
+                auto rs = velPrev + (1.-fGamma)*fTimeStep*acelPrev;
+                //Update Acceleration
+                acelUpdated = posi/(fBeta*fTimeStep*fTimeStep) - qs;
 
-                //Update Velocity
-                velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
-
+                // //Update Velocity                
+                velUpdated = posi*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
                 

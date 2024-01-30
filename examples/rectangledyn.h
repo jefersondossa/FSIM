@@ -131,7 +131,8 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // matpoisson->SetForcingFunction(forcingFunctionPoisson);
     // matpoisson->SetExactSolution(exactSolPoisson);
 
-    TransientElasticity2D * matpoisson = new TransientElasticity2D(8,1.,.0,true,0.5,1.,0.1);
+    // TransientElasticity2D * matpoisson = new TransientElasticity2D(8,1.,.0,true,0.5,1.,0.1);
+    TransientPositional2D * matpoisson = new TransientPositional2D(8,1.,.0,true,0.5,1.,0.1);
     coarseModel->InsertMaterial(matpoisson);
     
     //BC
@@ -153,11 +154,11 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     GmshTools::Read(*coarseModel,"../coarse_test.msh");
     // GmshTools::Read(*fineModel,"../fine_test.msh");
 
-    TransientAnalysis an(coarseModel,SolverType::ELDLt,true);
+    TransientAnalysis an(coarseModel,SolverType::ELDLt,false);
        
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"SigmaX","ExactSigmaX"};
-    VectorNames = {"Displacement","ExactDisplacement"};
+    ScalarNames = {};
+    VectorNames = {"Displacement"};
 
     an.PrintVariables("Dynamic",ScalarNames,VectorNames);
     an.Run(100);

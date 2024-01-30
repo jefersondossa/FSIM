@@ -37,8 +37,6 @@ auto forcingFunctionElasticity3D = [](const VecDouble &coord, VecDouble &force){
 //==========================================================================
 //==============================PROBLEM MESHES==============================
 //==========================================================================
-   
-	MPI_Barrier(PETSC_COMM_WORLD);   
 
     CompMesh* coarseModel = new CompMesh();
 
@@ -50,19 +48,22 @@ auto forcingFunctionElasticity3D = [](const VecDouble &coord, VecDouble &force){
     MatrixDouble val1(3,3);
     val1.setZero();
     VecDouble val2(3);
-    VecDouble val3(3);
-    val2.setZero();val3.setZero();
+    val2.setZero();
+    L2Projection * matbc1 = new L2Projection(16,3,0,val1,val2);    
+    L2Projection * matbc3 = new L2Projection(18,3,1,val1,val2);
     val2[0]=1.;
-    L2Projection * matbc3 = new L2Projection(13,3,0,val1,val2);
+    L2Projection * matbc2 = new L2Projection(17,3,1,val1,val2);
     // matbc3->SetForcingFunction(forcingFunctionElasticity3D);
     // matbc3->SetExactSolution(exactSolElasticity3D);
 
+    coarseModel->InsertMaterial(matbc1);
+    coarseModel->InsertMaterial(matbc2);
     coarseModel->InsertMaterial(matbc3);
 
     GmshTools::Read(*coarseModel,"../cube.msh");
 
     // NonLinearAnalysis an(coarseModel,SolverType::ECholmod);
-    LinearAnalysis an(coarseModel,SolverType::ECholmod);
+    LinearAnalysis an(coarseModel,SolverType::ELU);
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;
