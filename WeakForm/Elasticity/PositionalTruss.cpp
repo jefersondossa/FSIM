@@ -49,7 +49,6 @@ void PositionalTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDou
 void PositionalTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     
     //Green-Lagrange strain tensor
     double initLenght = 2.*data.fJacA0;

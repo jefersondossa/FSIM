@@ -176,3 +176,16 @@ void NavierStokes::ComputeError(IntPointData &data, VecDouble &errors){
     std::cout << "Not implemented yet.\n";
     // PanicButton();
 }
+
+
+int NavierStokes::VariableIndex(const std::string &name) const{
+    PanicButton();
+};
+
+int NavierStokes::NSolutionVariables(int var) const{
+    PanicButton();
+};
+
+void NavierStokes::Solution(IntPointData &data, int var, VecDouble &Sol){
+    PanicButton();
+};

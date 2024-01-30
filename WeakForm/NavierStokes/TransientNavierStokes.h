@@ -1,17 +1,18 @@
-#ifndef ELEMENTNAVIERSTOKES_H
-#define ELEMENTNAVIERSTOKES_H
+#ifndef TRANSIENTELEMENTNAVIERSTOKES_H
+#define TRANSIENTELEMENTNAVIERSTOKES_H
 
-#include "Stokes.h"
+#include "NavierStokes.h"
+#include "TransientWeakForm.h"
 
 /// @brief Implements the stabilized Navier-Stokes weak form: SUPG, PSPG and LSIC stabilizations are employed
-class NavierStokes : public Stokes{
+class TransientNavierStokes : public NavierStokes, public TransientWeakForm{
 public:
     /// @brief Navier-Stokes flow weak form constructor
     /// @param matid physical tag
     /// @param dim problem dimension (2 or 3)
     /// @param density fluid density
     /// @param viscosity fluid dynamic viscosity
-    NavierStokes(int matid, int dim, double density, double viscosity);
+    TransientNavierStokes(int matid, int dim, double density, double viscosity);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -46,7 +47,8 @@ public:
     /// @param var solution variable's index
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
-    
+
+    void UpdateTimeDerivatives(CompMesh *cmesh) override;
 };
 
 

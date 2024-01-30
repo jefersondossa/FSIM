@@ -41,21 +41,24 @@ void TransientPositionalTruss::ComputeResidual(int &index, IntPointData &data, V
 
     PositionalTruss::ComputeResidual(index,data,Rhs);
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fArea * fDensity;
     
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;
-    auto disp = data.fSol;
-    auto dispPrev = data.fSolPrev;
+    auto posi = data.fSol;
+    auto posiPrev = data.fSolPrev;
+    // for (int i = 0; i < fDimension; i++){
+    //     posi[i] += data.fX[i];
+    //     posiPrev[i] += data.fX[i];
+    // }
 
-    auto qs = dispPrev/(fBeta*fTimeStep*fTimeStep) + vel/(fBeta*fTimeStep) +
+    VecDouble qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + vel/(fBeta*fTimeStep) +
                     (1./(2.*fBeta) - 1.) * acel;
-    auto rs = vel + (1.-fGamma)*fTimeStep*acel;
-
     for (size_t i = 0; i < nphi; i++){
-        Rhs[2*i  ] -= (disp[0]/(fBeta * fTimeStep * fTimeStep) -qs[0]) * data.fPhi[i] * fDensity * WJ;
-        Rhs[2*i+1] -= (disp[1]/(fBeta * fTimeStep * fTimeStep) -qs[1]) * data.fPhi[i] * fDensity * WJ;
+        Rhs[2*i  ] -= (posi[0]/(fBeta * fTimeStep * fTimeStep) - qs[0]) * data.fPhi[i] * WJ;
+        Rhs[2*i+1] -= (posi[1]/(fBeta * fTimeStep * fTimeStep) - qs[1]) * data.fPhi[i] * WJ;
     }
+    
 };
 
 void TransientPositionalTruss::ComputeError(IntPointData &data, VecDouble &errors){
@@ -90,29 +93,57 @@ void TransientPositionalTruss::UpdateTimeDerivatives(CompMesh *cmesh){
                 //Update Acceleration
                 auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
                 auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
-                auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
-                auto disp = cmesh->NodeVec()[inode]->Solution();
+                auto posiPrev = cmesh->NodeVec()[inode]->PrevSolution();
+                auto posi = cmesh->NodeVec()[inode]->Solution();
+                // for (int i = 0; i < fDimension; i++){
+                //     posi[i] += cmesh->NodeVec()[inode]->getCoordinateValue(i);
+                //     posiPrev[i] += cmesh->NodeVec()[inode]->getCoordinateValue(i);
+                // }
                 VecDouble acelUpdated(2), velUpdated(2);
-                auto qs = dispPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
+                auto qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
                                 (1./(2.*fBeta) - 1.) * acelPrev;
                 auto rs = velPrev + (1.-fGamma)*fTimeStep*acelPrev;
+                //Update Acceleration
+                acelUpdated = posi/(fBeta*fTimeStep*fTimeStep) - qs;
 
-                // acelUpdated = (disp-dispPrev)/(fBeta*fTimeStep*fTimeStep) -
+                // //Update Velocity                
+                velUpdated = posi*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
+                // acelUpdated = (posi-posiPrev)/(fBeta*fTimeStep*fTimeStep) -
                 //                 velPrev/(fBeta*fTimeStep) -
                 //                 (1./(2.*fBeta) - 1.) * acelPrev; 
-                acelUpdated = disp/(fBeta*fTimeStep*fTimeStep) - qs;
 
-                //Update Velocity
+                // //Update Velocity
                 // velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
-                
-                velUpdated = disp*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
+
 
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
                 
                 cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
-            }           
+                std::cout << "Acel = " << acelUpdated[0] << std::endl;
+                std::cout << "Vel = " << velUpdated[0] << std::endl;
+            }    
+            // for (int64_t inode = 0; inode < cmesh->NNodes(); inode++){
+            //     //Update Acceleration
+            //     auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
+            //     auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
+            //     auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
+            //     auto disp = cmesh->NodeVec()[inode]->Solution();
+            //     VecDouble acelUpdated(2), velUpdated(2);
+            //     acelUpdated = (disp-dispPrev)/(fBeta*fTimeStep*fTimeStep) -
+            //                     velPrev/(fBeta*fTimeStep) -
+            //                     (1./(2.*fBeta) - 1.) * acelPrev; 
+
+            //     //Update Velocity
+            //     velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
+
+            //     cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
+            //     cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
+                
+            //     cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
+            //     cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
+            // }             
         }
         break;
     case EGeneralizedAlpha:

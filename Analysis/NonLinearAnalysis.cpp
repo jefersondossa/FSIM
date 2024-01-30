@@ -43,8 +43,8 @@ void NonLinearAnalysis::Run(){
         std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
         UpdateSolution();
         // this->GlobalMatrix()->PrintMatrix();
-        // this->GlobalMatrix()->PrintRhs();
-        // this->GlobalMatrix()->PrintSolution();
+        this->GlobalMatrix()->PrintRhs();
+        this->GlobalMatrix()->PrintSolution();
         NRL2norm = this->GlobalMatrix()->SolutionNorm();
         std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
         this->GlobalMatrix()->ZeroMatrix();

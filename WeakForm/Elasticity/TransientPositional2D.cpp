@@ -19,8 +19,8 @@ void TransientPositional2D::ComputeStiffness(int &index, IntPointData &data, Mat
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
         for (size_t j = 0; j < nphi; j++){
-            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fArea;
-            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fArea;
+            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity;
+            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity;
         }
     }
 
