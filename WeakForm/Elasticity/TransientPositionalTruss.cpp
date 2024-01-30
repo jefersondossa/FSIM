@@ -17,9 +17,13 @@ void TransientPositionalTruss::ComputeStiffness(int &index, IntPointData &data, 
     
     double initLenght = 2.*data.fJacA0;
     MatrixDouble Mass(2*nphi,2*nphi);
-    Mass.setIdentity();
-
-    Mass *= initLenght*fArea*fDensity*0.5;
+    Mass.setZero();
+    for (size_t i = 0; i < nphi; i++){
+        for (size_t j = 0; j < nphi; j++){
+            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fArea;
+            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fArea;
+        }
+    }
 
     switch (fIntegScheme)
     {
@@ -49,8 +53,8 @@ void TransientPositionalTruss::ComputeResidual(int &index, IntPointData &data, V
     auto rs = vel + (1.-fGamma)*fTimeStep*acel;
 
     for (size_t i = 0; i < nphi; i++){
-        Rhs[2*i  ] += (disp[0]/(fBeta * fTimeStep * fTimeStep) -qs[0]) * data.fPhi[i] * fDensity * WJ;
-        Rhs[2*i+1] += (disp[1]/(fBeta * fTimeStep * fTimeStep) -qs[1]) * data.fPhi[i] * fDensity * WJ;
+        Rhs[2*i  ] -= (disp[0]/(fBeta * fTimeStep * fTimeStep) -qs[0]) * data.fPhi[i] * fDensity * WJ;
+        Rhs[2*i+1] -= (disp[1]/(fBeta * fTimeStep * fTimeStep) -qs[1]) * data.fPhi[i] * fDensity * WJ;
     }
 };
 

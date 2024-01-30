@@ -16,6 +16,6 @@ Line(2) = {4, 1};
 //+
 Physical Curve("Domain", 4) = {2};
 //+
-Physical Point("Fixed", 5) = {1};
+Physical Point("Fixed", 5) = {2,1};
 //+
 Physical Point("Disp", 6) = {4};

@@ -20,10 +20,10 @@ void TransientAnalysis::Run(int64_t nsteps){
             NonLinearAnalysis::Solve();
             NonLinearAnalysis::UpdateSolution();
         }
-        fGlobalMatrix->PrintMatrix();
-        fGlobalMatrix->PrintRhs();
+        // fGlobalMatrix->PrintMatrix();
+        // fGlobalMatrix->PrintRhs();
         fGlobalMatrix->PrintSolution();
-        for (int i = 0; i < fMeshVector.size(); i++){
+            for (int i = 0; i < fMeshVector.size(); i++){
             // Loop over all weak forms in the mesh. If it is a transient weak form
             // update the time derivatives
             auto matvec = fMeshVector[i]->MaterialVector();

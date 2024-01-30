@@ -14,26 +14,14 @@ void TransientElasticTruss::ComputeStiffness(int &index, IntPointData &data, Mat
     
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
-    MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
-    MatrixDouble matB(fDimension,fDimension*nphi);
-    rotation.setZero();
-    matB.setZero();
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
-    double check = sina*sina+cosa*cosa;
-    for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j) = data.fPhi[j];
-        
-        rotation(2*j  ,2*j  ) = cosa;
-        rotation(2*j+1,2*j  ) = sina;
-        rotation(2*j  ,2*j+1) = -sina;
-        rotation(2*j+1,2*j+1) = cosa;
-    }
-    // std::cout << "matB =\n"<< matB << std::endl;
-    // std::cout << "rotation =\n"<< rotation << std::endl;
-    // std::cout << "K =\n"<< matB.transpose() * matB << std::endl;
     MatrixDouble Mass(2*nphi,2*nphi);
-    Mass = rotation * matB.transpose() * matB * rotation.transpose() * WJ * fDensity * fArea;
+    Mass.setZero();
+    for (size_t i = 0; i < nphi; i++){
+        for (size_t j = 0; j < nphi; j++){
+            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fArea;
+            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fArea;
+        }
+    }
 
     switch (fIntegScheme)
     {
@@ -52,37 +40,24 @@ void TransientElasticTruss::ComputeResidual(int &index, IntPointData &data, VecD
     
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
-    MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
-    MatrixDouble matB(fDimension,fDimension*nphi);
-    rotation.setZero();
-    matB.setZero();
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
-    double check = sina*sina+cosa*cosa;
-    for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j) = data.fPhi[j];
-        rotation(2*j  ,2*j  ) = cosa;
-        rotation(2*j+1,2*j  ) = sina;
-        rotation(2*j  ,2*j+1) = -sina;
-        rotation(2*j+1,2*j+1) = cosa;
-    }
-
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;
     auto disp = data.fSol;
     auto dispPrev = data.fSolPrev;
 
-    // std::cout << "rotation =\n"<< rotation << std::endl;
-    auto aux = rotation * matB.transpose() * WJ * fDensity * fArea;
-    // std::cout << "Aux  = " << aux << std::endl;
     for (size_t i = 0; i < nphi; i++){
-        auto aux = (disp/(fBeta * fTimeStep * fTimeStep) + 
-                    vel/(fBeta*fTimeStep) + 
-                    (1./(2.*fBeta)-1.) * acel) +
-                    (disp*fGamma/(fBeta * fTimeStep) +
-                    vel * (fGamma/fBeta - 1.) +
-                    acel * fTimeStep * (fGamma/(2.*fBeta)-1.)) * fDamping;
-        Rhs += rotation * matB.transpose() * aux * WJ * fDensity * fArea;
+        Rhs[2*i  ] += (disp[0]/(fBeta * fTimeStep * fTimeStep) + 
+                       vel[0]/(fBeta*fTimeStep) + 
+                       (1./(2.*fBeta)-1.) * acel[0]) * data.fPhi[i] * fDensity * WJ +
+                       (disp[0]*fGamma/(fBeta * fTimeStep) +
+                       vel[0] * (fGamma/fBeta - 1.) +
+                       acel[0] * fTimeStep * (fGamma/(2.*fBeta)-1.)) * data.fPhi[i] * fDensity * fDamping * WJ;
+        Rhs[2*i+1] += (disp[1]/(fBeta * fTimeStep * fTimeStep) + 
+                       vel[1]/(fBeta*fTimeStep) + 
+                       (1./(2.*fBeta)-1.) * acel[1]) * data.fPhi[i] * fDensity * WJ +
+                       (disp[1]*fGamma/(fBeta * fTimeStep) +
+                       vel[1] * (fGamma/fBeta - 1.) +
+                       acel[1] * fTimeStep * (fGamma/(2.*fBeta)-1.)) * data.fPhi[i] * fDensity * fDamping * WJ;
     }
 };
 

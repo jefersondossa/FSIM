@@ -25,8 +25,6 @@ void TransientElasticity2D::ComputeStiffness(int &index, IntPointData &data, Mat
             Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity;
         }
     }
-
-
     switch (fIntegScheme)
     {
     case ENewmark:

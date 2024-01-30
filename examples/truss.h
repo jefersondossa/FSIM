@@ -10,8 +10,8 @@
     truss->SetDimension(dimension);
     // PositionalTruss * mattruss = new PositionalTruss(4,dimension,1000.,1.);
     // ElasticTruss * mattruss = new ElasticTruss(4,dimension,1000.,1.);
-    // TransientElasticTruss * mattruss = new TransientElasticTruss(4,dimension,1.,1.,0.,1.,0.05);
-    TransientPositionalTruss * mattruss = new TransientPositionalTruss(4,dimension,1.,1.,0.,100.,.5);
+    TransientElasticTruss * mattruss = new TransientElasticTruss(4,dimension,1.,1.,0.,1.,0.05);
+    // TransientPositionalTruss * mattruss = new TransientPositionalTruss(4,dimension,10000.,1.,0.,1.0,.001);
     truss->InsertMaterial(mattruss);
     //BC
     MatrixDouble val1(2,2);
@@ -20,7 +20,7 @@
     val2.setZero();
     
     L2Projection * matbc1 = new L2Projection(2,2,0,val1,val2);
-    val2[0] = 0.0001;
+    val2[0] = 1.;
     L2Projection * matbc2 = new L2Projection(3,2,1,val1,val2);
     
     truss->InsertMaterial(matbc1);
@@ -36,7 +36,7 @@
 
     
     // LinearAnalysis an(truss,SolverType::ELDLt);
-    TransientAnalysis an(truss,SolverType::ELU,false);
+    TransientAnalysis an(truss,SolverType::ELU,true);
     // NonLinearAnalysis an(truss,SolverType::EUmfpack);
     // NonLinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack,1.e-6,2);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
