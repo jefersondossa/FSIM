@@ -18,6 +18,10 @@ file(GLOB elasticity
     TransientPositionalTruss.cpp
     TransientPositional2D.h
     TransientPositional2D.cpp
+    LinearBeam.h
+    LinearBeam.cpp
+    LinearFrame.h
+    LinearFrame.cpp
 )
 
 set(ELASTICITY ${elasticity} PARENT_SCOPE)
