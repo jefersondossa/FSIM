@@ -68,14 +68,14 @@ int main(int argc, char **args) {
 #endif
 
     // #include "examples/turbine.h"
-    #include "examples/cylinder.h"
+    // #include "examples/cylinder.h"
     // #include "examples/rectangle.h"
     // #include "examples/rectangledyn.h"
     // #include "examples/poisson.h"
     // #include "examples/arlequin.h"
     // #include "examples/cube.h"
     // #include "examples/truss.h"
-    // #include "examples/mohrcoulombtest.h"
+    #include "examples/mohrcoulombtest.h"
     // #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      

@@ -70,6 +70,8 @@ public:
     /// @param plasticstrain tensor of plastic strain
     /// @param totalstrain tensor of total strain
     void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) override;
+
+    double YieldFunction(Tensor &Stress) override;
 };
 
 

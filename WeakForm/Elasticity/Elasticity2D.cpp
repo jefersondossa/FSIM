@@ -79,16 +79,16 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     strain[1] = data.fDSolDx(1,1);
     strain[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
 
-    // Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
+    Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
 
-    // for (int i = nphi; i--; ){
-    //     double shapeFi = data.fPhi[i];
-    //     //External force
-    //     double Fx = forcingF[0] * shapeFi;
-    //     double Fy = forcingF[1] * shapeFi;
-    //     Rhs[2*i  ] += Fx * WJ;
-    //     Rhs[2*i+1] += Fy * WJ;
-    // };
+    for (int i = nphi; i--; ){
+        double shapeFi = data.fPhi[i];
+        //External force
+        double Fx = forcingF[0] * shapeFi;
+        double Fy = forcingF[1] * shapeFi;
+        Rhs[2*i  ] += Fx * WJ;
+        Rhs[2*i+1] += Fy * WJ;
+    };
 
     
 };

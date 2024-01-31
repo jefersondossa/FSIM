@@ -56,16 +56,16 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
     
     int iStep = 0;
     
-    while (iStep <= fNSteps-1){
+    while (iStep < fNSteps){
         std::cout << "Computing step... " << iStep << std::endl;
         
         if (fIncrementValue.size() == 0){
             for (int i = 0; i < fIncrementBC.size(); i++){
-                fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * iStep;
+                fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * (iStep+1);
             }
         } else {
             for (int i = 0; i < fIncrementBC.size(); i++){
-                fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * iStep;
+                fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * (iStep+1);
             }
         }
 

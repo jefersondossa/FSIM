@@ -9,6 +9,8 @@ file(GLOB matrix
     PETScMatrix.cpp
     EigenSpMatrix.h
     EigenSpMatrix.cpp
+    Tensor.h
+    Tensor.cpp
 )
 
 set(MATRIX ${matrix} PARENT_SCOPE)

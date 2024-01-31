@@ -110,56 +110,68 @@ void VonMises::Solution(IntPointData &data, int var, VecDouble &Sol){
 
 void VonMises::ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain){
     //Check if the Integration Point is in the elastic region
-    //1 - Compute integration point stress
+    //1 - Compute integration point Elastic stress
     int var = fElasticModel->VariableIndex("Stress");
     int nsol = fElasticModel->NSolutionVariables(var);
     VecDouble Sol(nsol), auxPlasticStrain;
-    MatrixDouble StressTensor(fRealDimension,fRealDimension);
-    StressTensor.setZero();
+    MatrixDouble fElasticStress(fRealDimension,fRealDimension);
+    fElasticStress.setZero();
     fElasticModel->Solution(data,var,Sol);
+    VoigtToTensor(fElasticStress,Sol);
+
+    Tensor elastTensor(fElasticStress);
+    
     //Compute the principal stress'
     
-    TensorToVoigt(plasticstrain,auxPlasticStrain);
-    Sol -= fConstitutiveMatrix * auxPlasticStrain;
-    VoigtToTensor(StressTensor,Sol);
-    VecDouble PrincipalStress(fRealDimension);
-    ComputePrincipalStress(StressTensor,PrincipalStress);
 
-    double C1 = pow(StressTensor(0,0) + StressTensor(1,1),2.);
-    double C2 = pow(StressTensor(0,0) - StressTensor(1,1),2.) + StressTensor(0,1)*StressTensor(0,1);
-    // double C3 = fYoungModulus / (3.*(1.-fElasticModel->Y))
 
-    double f = StressTensor.norm() - sqrt(2./3.) * fHardening;
 
-    double maxStress = PrincipalStress.maxCoeff();
-    double minStress = PrincipalStress.minCoeff();
-    double maxAbsStress = std::max(fabs(maxStress),fabs(minStress));
+    // TensorToVoigt(plasticstrain,auxPlasticStrain);
+    // Sol -= fConstitutiveMatrix * auxPlasticStrain;
+    // VoigtToTensor(StressTensor,Sol);
+    // VecDouble PrincipalStress(fRealDimension);
+    // ComputePrincipalStress(StressTensor,PrincipalStress);
 
-    if (maxAbsStress > fabs(f)){
-        VecDouble auxStress, auxTotalStrain;
-        TensorToVoigt(StressTensor,auxStress);
-        TensorToVoigt(totalstrain,auxTotalStrain);
-        VecDouble DeltaStrain = fConstitutiveMatrix.inverse() * auxStress - auxTotalStrain;
-        VecDouble DeltaPlasticStrain = (fYoungModulus/(fYoungModulus+fHardening)) * DeltaStrain;
-        VecDouble DeltaSigma = (fYoungModulus*fHardening/(fYoungModulus+fHardening)) * DeltaStrain;
-        MatrixDouble auxDStrain, auxDPlastStrain;
-        VoigtToTensor(auxDStrain,DeltaStrain);
-        VoigtToTensor(auxDPlastStrain,DeltaPlasticStrain);
-        totalstrain += auxDStrain;
-        plasticstrain += auxDPlastStrain;
-        fTotalStrain = totalstrain;
-        fPlasticStrain = plasticstrain;
-    } else {
-        VecDouble auxStress;
-        TensorToVoigt(StressTensor,auxStress);
-        VecDouble auxStrain = fConstitutiveMatrix.inverse() * auxStress;
-        VoigtToTensor(totalstrain,auxStrain);
+    // double C1 = pow(StressTensor(0,0) + StressTensor(1,1),2.);
+    // double C2 = pow(StressTensor(0,0) - StressTensor(1,1),2.) + StressTensor(0,1)*StressTensor(0,1);
+    // // double C3 = fYoungModulus / (3.*(1.-fElasticModel->Y))
+
+    // double f = StressTensor.norm() - sqrt(2./3.) * fHardening;
+
+    // double maxStress = PrincipalStress.maxCoeff();
+    // double minStress = PrincipalStress.minCoeff();
+    // double maxAbsStress = std::max(fabs(maxStress),fabs(minStress));
+
+    // if (maxAbsStress > fabs(f)){
+    //     VecDouble auxStress, auxTotalStrain;
+    //     TensorToVoigt(StressTensor,auxStress);
+    //     TensorToVoigt(totalstrain,auxTotalStrain);
+    //     VecDouble DeltaStrain = fConstitutiveMatrix.inverse() * auxStress - auxTotalStrain;
+    //     VecDouble DeltaPlasticStrain = (fYoungModulus/(fYoungModulus+fHardening)) * DeltaStrain;
+    //     VecDouble DeltaSigma = (fYoungModulus*fHardening/(fYoungModulus+fHardening)) * DeltaStrain;
+    //     MatrixDouble auxDStrain, auxDPlastStrain;
+    //     VoigtToTensor(auxDStrain,DeltaStrain);
+    //     VoigtToTensor(auxDPlastStrain,DeltaPlasticStrain);
+    //     totalstrain += auxDStrain;
+    //     plasticstrain += auxDPlastStrain;
+    //     fTotalStrain = totalstrain;
+    //     fPlasticStrain = plasticstrain;
+    // } else {
+    //     VecDouble auxStress;
+    //     TensorToVoigt(StressTensor,auxStress);
+    //     VecDouble auxStrain = fConstitutiveMatrix.inverse() * auxStress;
+    //     VoigtToTensor(totalstrain,auxStrain);
         
-        if (fPlasticStrain.rows() > 0){
-            fPlasticStrain.resize(0,0);
-            fTotalStrain.resize(0,0);
-        }
+    //     if (fPlasticStrain.rows() > 0){
+    //         fPlasticStrain.resize(0,0);
+    //         fTotalStrain.resize(0,0);
+    //     }
         
-    }
+    // }
 
+}
+
+double VonMises::YieldFunction(Tensor &Stress){
+    double YF = fYield;
+    return YF;
 }

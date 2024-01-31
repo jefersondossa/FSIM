@@ -3,6 +3,7 @@
 
 #include "DataTypes.h"
 #include "WeakForm.h"
+#include "Tensor.h"
 
 /// @brief Implements the base class for all plasticity models
 class PlasticityModel : public WeakForm
@@ -49,6 +50,10 @@ public:
     /// @param tensor tensor
     /// @param voigt vector in Voigt notation
     void VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt);
+
+    virtual double YieldFunction(Tensor &Stress){
+        PanicButton();
+    }
 
     WeakForm* ElasticModel(){return fElasticModel;}
 };
