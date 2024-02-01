@@ -120,7 +120,7 @@ void VonMises::ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstr
     VoigtToTensor(fElasticStress,Sol);
 
     Tensor elastTensor(fElasticStress);
-    
+
     //Compute the principal stress'
     
 
@@ -172,6 +172,6 @@ void VonMises::ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstr
 }
 
 double VonMises::YieldFunction(Tensor &Stress){
-    double YF = fYield;
+    double YF = sqrt(3.*Stress.J2()) - fYield;
     return YF;
 }

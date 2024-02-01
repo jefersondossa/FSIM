@@ -7,7 +7,7 @@
 
 template<class tshape>
 ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
-    fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
+    auto fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
     if (fPlasticityModel){
         int nintpoints = this->fIntRule.NPoints();
         fPlasticStrain.resize(nintpoints);
@@ -33,15 +33,16 @@ template<class tshape>
 void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     if (!this->fWeakForm) return;
+    auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
 
     int DIM = tshape::Dimension;
     
     int index = 0;
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fNeedsDSol = true;
-    this->fIntegData.fDSolDx.resize(fPlasticityModel->NState(), DIM);
+    this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     this->fIntegData.fNeedsSol = true;
-    this->fIntegData.fSol.resize(fPlasticityModel->NState());
+    this->fIntegData.fSol.resize(this->fWeakForm->NState());
     
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
@@ -69,14 +70,28 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
 
-        //Update the plastic strain
-        fPlasticityModel->ComputePlasticStrain(this->fIntegData,fPlasticStrain[it],fTotalStrain[it]);
+        //Check for the Yield crieterion
+        int var = fPlasticityModel->ElasticModel()->VariableIndex("Stress");
+        int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
+        VecDouble Sol(nsol);
+        int dim = fPlasticityModel->RealDimension();
+        MatrixDouble fElasticStress(dim,dim);
+        fElasticStress.setZero();
+        fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
+        fPlasticityModel->VoigtToTensor(fElasticStress,Sol);
+        Tensor ElasStress(fElasticStress);
+        double YieldFunction = fPlasticityModel->YieldFunction(ElasStress);
 
-        //Computes the element diffusion/viscosity matrix
-        this->fWeakForm->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
-
-        //Computes the RHS vector
-        this->fWeakForm->ComputeResidual(index, this->fIntegData, rhsVector); 
+        if (YieldFunction < 0){
+            //Elastic step
+            fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
+            fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector); 
+        } else {
+            //Plastic step
+            fPlasticityModel->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
+            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector); 
+        }
+        
 
         index++;        
     };  

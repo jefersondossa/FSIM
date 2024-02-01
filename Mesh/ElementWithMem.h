@@ -23,7 +23,7 @@ class ElementWithMem : public ElementT<tshape>{
 protected:
     std::vector<MatrixDouble> fPlasticStrain;
     std::vector<MatrixDouble> fTotalStrain;
-    PlasticityModel *fPlasticityModel;
+    // PlasticityModel *fPlasticityModel;
     
 public:
     ElementWithMem() : ElementT<tshape>(){
