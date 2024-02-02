@@ -43,6 +43,12 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     this->fIntegData.fNeedsSol = true;
     this->fIntegData.fSol.resize(this->fWeakForm->NState());
+    this->fIntegData.fPlasticMultiplier.resize(this->fIntRule.NPoints());
+    this->fIntegData.fPlasticMultiplier.setZero();
+    this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
+    this->fIntegData.fPlasticStrain.setZero();
+    this->fIntegData.fEffectiveStress.resize(this->fIntRule.NPoints());
+    this->fIntegData.fEffectiveStress.setZero();
     
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
@@ -70,7 +76,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
 
-        //Check for the Yield crieterion
+        //Assemble the stress tensor
         int var = fPlasticityModel->ElasticModel()->VariableIndex("Stress");
         int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
         VecDouble Sol(nsol);
@@ -79,8 +85,10 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         fElasticStress.setZero();
         fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
         fPlasticityModel->VoigtToTensor(fElasticStress,Sol);
+
+        //Check for the Yield crieterion
         Tensor ElasStress(fElasticStress);
-        double YieldFunction = fPlasticityModel->YieldFunction(ElasStress);
+        double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
 
         if (YieldFunction < 0){
             //Elastic step
@@ -88,12 +96,13 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
             fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector); 
         } else {
             //Plastic step
-            fPlasticityModel->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
+            this->fIntegData.fPlasticMultiplier[index] = YieldFunction;
+            fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,ElasStress);
             fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector); 
         }
         
 
-        index++;        
+        index++;
     };  
 
     // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;

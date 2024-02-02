@@ -68,7 +68,7 @@ public:
     
     /// @brief Sets the exact solution
     /// @param exSol Lambda function to compute the exact solution and its gradient for a given coordinate
-    void SetExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exSol){
+    void SetExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> &exSol){
         fExactSol = exSol;
     }
 
@@ -80,7 +80,7 @@ public:
 
     /// @brief Sets the source term Lambda function
     /// @param ffunction Lambda function to compute the source term for given coordinate.
-    void SetForcingFunction(std::function<void (const VecDouble &coord, VecDouble &force)> ffunction){
+    void SetForcingFunction(std::function<void (const VecDouble &coord, VecDouble &force)> &ffunction){
         fForceFunction = ffunction;
     }
 
@@ -125,6 +125,10 @@ public:
     virtual void Solution(IntPointData &data, int var, VecDouble &Sol) {
         PanicButton();
     };
+
+    virtual MatrixDouble &ConstitutiveMatrix(){
+        PanicButton();
+    }
 };
 
 

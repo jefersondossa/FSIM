@@ -52,7 +52,7 @@ public:
 
     /// @brief Computes the material constitutive matrix (used in plasticity models)
     /// @return constitutive matrix
-    MatrixDouble ConstitutiveMatrix();
+    MatrixDouble &ConstitutiveMatrix() override;
 
     /// @brief Returns the material young modulus
     /// @return Young modulus

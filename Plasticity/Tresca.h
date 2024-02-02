@@ -8,33 +8,27 @@
 class Tresca : public PlasticityModel
 {
 private:
-    // Hardening modulus
-    double fHardening;
+    // // Updated constitutive matrix
+    // MatrixDouble fConstitutiveMatrix;
 
-    // Yield stress
-    double fYield;
+    // // The Young modulus
+    // double fYoungModulus;
+    // double fPoissonRatio;
 
-    // Updated constitutive matrix
-    MatrixDouble fConstitutiveMatrix;
+    // // Plastic strain tensor
+    // MatrixDouble fPlasticStrain;
 
-    // The Young modulus
-    double fYoungModulus;
-    double fPoissonRatio;
+    // // Total strain tensor
+    // MatrixDouble fTotalStrain;
 
-    // Plastic strain tensor
-    MatrixDouble fPlasticStrain;
-
-    // Total strain tensor
-    MatrixDouble fTotalStrain;
-
-    PlasticStep<Tresca> fPlasticStep;
+    // PlasticStep<Tresca> fPlasticStep;
 
 public:
     /// @brief Linear hardening plasticity model constructor
     /// @param elast elasticity model
     /// @param hardModulus hardening modulus
     /// @param yield yield stress
-    Tresca(WeakForm *elast, double hardModulus, double yield);
+    Tresca(WeakForm *elast);
 
     /// @brief Overloads the updated weak form stiffness matrix computation for the plasticity model
     /// @param index integration point index

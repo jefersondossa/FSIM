@@ -160,7 +160,7 @@ void PositionalTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
 }; 
 
-MatrixDouble PositionalTruss::ConstitutiveMatrix(){
+MatrixDouble &PositionalTruss::ConstitutiveMatrix(){
     MatrixDouble constitutive(1,1);
     constitutive(0,0) = fYoungModulus;
     return constitutive;

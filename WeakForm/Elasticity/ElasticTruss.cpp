@@ -243,7 +243,7 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
 }; 
 
-MatrixDouble ElasticTruss::ConstitutiveMatrix(){
+MatrixDouble &ElasticTruss::ConstitutiveMatrix(){
     MatrixDouble constitutive(1,1);
     constitutive(0,0) = fYoungModulus;
     return constitutive;

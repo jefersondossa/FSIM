@@ -7,36 +7,25 @@
 class VonMises : public PlasticityModel
 {
 private:
-    // Hardening modulus
-    double fHardening;
-
-    // Yield stress
-    double fYield;
-
     // Updated constitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
     // The Young modulus
     double fYoungModulus;
-
-    // Plastic strain tensor
-    MatrixDouble fPlasticStrain;
-
-    // Total strain tensor
-    MatrixDouble fTotalStrain;
+    double fPoissonRatio;
 
 public:
     /// @brief Linear hardening plasticity model constructor
     /// @param elast elasticity model
     /// @param hardModulus hardening modulus
     /// @param yield yield stress
-    VonMises(WeakForm *elast, double hardModulus, double yield);
+    VonMises(WeakForm *elast);
 
     /// @brief Overloads the updated weak form stiffness matrix computation for the plasticity model
     /// @param index integration point index
     /// @param data integration point data
     /// @param Stiffness vector of stiffness matrices
-    void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) override;
+    void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress) override;
     
     /// @brief Returns the updated weak form residual vector for the plasticity model 
     /// @param index integration point index
@@ -71,7 +60,9 @@ public:
     /// @param totalstrain tensor of total strain
     void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) override;
 
-    double YieldFunction(Tensor &Stress) override;
+    double YieldFunction(int &index, IntPointData &data, Tensor &Stress) override;
+
+    Tensor FlowVector(Tensor &Stress);
 };
 
 

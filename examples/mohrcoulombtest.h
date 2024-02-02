@@ -2,6 +2,9 @@
    // Defines the problem dimension
     const int dimension = 2;
 {
+auto yieldFunction = [](const double &plast, double &sigma_y){
+    sigma_y = 2.e6 - 2.e9*plast;
+};
 
     CompMesh* cmesh = new CompMesh();
 
@@ -32,7 +35,8 @@
     cmesh->InsertMaterial(matbc6);
     // MohrCoulomb *plastmodel = new MohrCoulomb(matelas,6.89e4,20.); 
     // LinearHardening *plastmodel = new LinearHardening(matelas,6.89e4,1.e6); 
-    VonMises *plastmodel = new VonMises(matelas,2.e9,2.e6); 
+    VonMises *plastmodel = new VonMises(matelas);
+    plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel); 
     std::vector<L2Projection *> bcIncrement = {matbc4};

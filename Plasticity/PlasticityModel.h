@@ -15,6 +15,9 @@ protected:
     // The elastic model
     WeakForm *fElasticModel;
 
+    // Lambda function returning the stress-stran relation
+    std::function<void (const double &plasticStrain, double &yieldStress)> fUniaxialYield = 0; 
+
 public:
     /// @brief Default constructor
     PlasticityModel() = default;
@@ -25,6 +28,16 @@ public:
 
     /// @brief Default destructor
     ~PlasticityModel(){};
+
+    /// @brief Returns the weak form stiffness matrix. It should never be called in this class
+    /// @param index integration point index
+    /// @param data integration point data
+    /// @param Stiffness stiffness matrix
+    virtual void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress) {
+        PanicButton();
+    };
+
+
 
     /// @brief Verify the plastic creterion and computes the plastic strain
     /// @param data integration point data
@@ -51,11 +64,19 @@ public:
     /// @param voigt vector in Voigt notation
     void VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt);
 
-    virtual double YieldFunction(Tensor &Stress){
+    virtual double YieldFunction(int &index, IntPointData &data, Tensor &Stress){
         PanicButton();
     }
 
     WeakForm* ElasticModel(){return fElasticModel;}
+
+    std::function<void (const double &plasticStrain, double &yieldStress)> &UniaxialYield(){
+        return fUniaxialYield;
+    }
+
+    void SetUniaxialYieldFunction(std::function<void (const double &plasticStrain, double &yieldStress)> yield){
+        fUniaxialYield = yield;
+    }
 };
 
 

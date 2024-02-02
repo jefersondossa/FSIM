@@ -3,36 +3,52 @@
 
 #include "DenseEigen.h"
 
-class Tensor{
-protected:
-    MatrixDouble fTensor;
-    MatrixDouble fDeviatory;
-    MatrixDouble fHydrostatic;
-    double fDimension;
+#define XX 0
+#define YY 1
+#define ZZ 2
+#define XY 3
+#define XZ 4
+#define YZ 5
 
+class Tensor{
+public:
+    VecDouble    fData;
+    int          fDimension;
 public:
     Tensor();
 
     Tensor(MatrixDouble &tensor);
+    Tensor(const Tensor &tensor);
     
     ~Tensor() = default;
 
-    double I1();
-    double I2();
-    double I3();
+    //Tensor invariants
+    double I1() const;
+    double I2() const;
+    double I3() const;
 
     double J1();
-    double J2();
+    double J2() const;
     double J3();
 
-    void ComputeDeviatory();
-    void ComputeHydrostatic();
+    Tensor Deviatory();
 
-    MatrixDouble Deviatory();
+    VecDouble Hydrostatic();
 
-    MatrixDouble Hydrostatic();
+    double Determinant();
 
+    double Norm();
+    double DeviatoryNorm();
 
+    double DoubleContraction(Tensor &t);
+    Tensor TensorProduct(Tensor &t);
+    void Identity();
+    Tensor Normalized();
+    Tensor NormalizedDeviatory();
+
+    const Tensor & operator*=(const double &multipl);
+    Tensor operator*(const double &multipl) const;
+    
 };
 
 

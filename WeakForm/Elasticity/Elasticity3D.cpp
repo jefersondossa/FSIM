@@ -357,6 +357,6 @@ void Elasticity3D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 }; 
 
 
-MatrixDouble Elasticity3D::ConstitutiveMatrix(){
+MatrixDouble &Elasticity3D::ConstitutiveMatrix(){
     return fConstitutiveMatrix;
 }
