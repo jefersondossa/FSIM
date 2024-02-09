@@ -106,8 +106,9 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     case 4:
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
-                if (fabs(BCVal2[istate]) > 0 && fabs(result[istate]>1.e-10))   
-                Rhs(fNState*i+istate) +=  WeakForm::fBigNumber * WJ * data.fPhi[i] * (result[istate]);
+                if (fabs(BCVal2[istate]) > 0 && fabs(result[istate])>1.e-10){
+                    Rhs(fNState*i+istate) +=  WeakForm::fBigNumber * WJ * data.fPhi[i] * (result[istate]);
+                }
             }
         }
         break;

@@ -21,9 +21,6 @@
 template<class tshape>
 class ElementWithMem : public ElementT<tshape>{
 protected:
-    std::vector<MatrixDouble> fPlasticStrain;
-    std::vector<MatrixDouble> fTotalStrain;
-    // PlasticityModel *fPlasticityModel;
     
 public:
     ElementWithMem() : ElementT<tshape>(){

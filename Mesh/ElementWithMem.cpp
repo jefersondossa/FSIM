@@ -9,22 +9,28 @@ template<class tshape>
 ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
     if (fPlasticityModel){
-        int nintpoints = this->fIntRule.NPoints();
-        fPlasticStrain.resize(nintpoints);
-        fTotalStrain.resize(nintpoints);
-        int realdim = fPlasticityModel->RealDimension();
-        for (int i = 0; i < nintpoints; i++){
-            fPlasticStrain[i].resize(realdim,realdim);
-            fPlasticStrain[i].setZero();
-            fTotalStrain[i].resize(realdim,realdim);
-            fTotalStrain[i].setZero();
-        }
+        this->fIntegData.fPlasticMultiplier.resize(this->fIntRule.NPoints());
+        this->fIntegData.fPlasticMultiplier.setZero();
+        this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
+        this->fIntegData.fPlasticStrain.setZero();
+        this->fIntegData.fEffectiveStress.resize(this->fIntRule.NPoints());
+        this->fIntegData.fEffectiveStress.setZero();
+        // int nintpoints = this->fIntRule.NPoints();
+        // fPlasticStrain.resize(nintpoints);
+        // fTotalStrain.resize(nintpoints);
+        // int realdim = fPlasticityModel->RealDimension();
+        // for (int i = 0; i < nintpoints; i++){
+        //     fPlasticStrain[i].resize(realdim,realdim);
+        //     fPlasticStrain[i].setZero();
+        //     fTotalStrain[i].resize(realdim,realdim);
+        //     fTotalStrain[i].setZero();
+        // }
     } else {
-        auto connect = this->getConnectivity();
-        int nstate = wf->NState();
-        for (int i = 0; i < connect.size(); i++){
-            this->Mesh()->NodeVec()[connect[i]]->SetNStateVariables(nstate);
-        }
+        // auto connect = this->getConnectivity();
+        // int nstate = wf->NState();
+        // for (int i = 0; i < connect.size(); i++){
+        //     this->Mesh()->NodeVec()[connect[i]]->SetNStateVariables(nstate);
+        // }
     }
 
 };
@@ -43,12 +49,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     this->fIntegData.fNeedsSol = true;
     this->fIntegData.fSol.resize(this->fWeakForm->NState());
-    this->fIntegData.fPlasticMultiplier.resize(this->fIntRule.NPoints());
-    this->fIntegData.fPlasticMultiplier.setZero();
-    this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
-    this->fIntegData.fPlasticStrain.setZero();
-    this->fIntegData.fEffectiveStress.resize(this->fIntRule.NPoints());
-    this->fIntegData.fEffectiveStress.setZero();
+    
     
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
