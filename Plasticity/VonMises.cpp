@@ -33,7 +33,7 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
         }
     }
 
-    fElasticModel->ConstitutiveMatrix() = fTangentTensor;
+    // fElasticModel->ConstitutiveMatrix() = fTangentTensor;
     fElasticModel->ComputeStiffness(index,data,Stiffness);
 
 };
@@ -255,7 +255,7 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
     double deltaGamma = 0.;
     double PhiTil = Qtrial-sigmay;
     
-    while (fabs(PhiTil) > 1.e-5){
+    while (fabs(PhiTil/sigmay) > 1.e-5){
         double d = -3. * fShearModulus - fHardening;
         dGamma -= PhiTil/d;
         fUniaxialYield(data.fPlasticStrain[index]+dGamma,sigmay,fHardening);
