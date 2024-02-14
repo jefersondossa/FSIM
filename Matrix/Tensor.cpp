@@ -36,15 +36,20 @@ Tensor::Tensor(MatrixDouble &tensor){
     }
 }
 
-VecDouble Tensor::Hydrostatic(){
-    VecDouble fHydrostatic(fDimension);
-    fHydrostatic.setZero();
+void Tensor::Zero(){
+    fData.setZero();
+}
+
+Tensor Tensor::Hydrostatic(){
+    Tensor fHydrostatic(*this);
+    fHydrostatic.Zero();
     double val = I1() / 3.;
-    fHydrostatic[XX] = val;
-    fHydrostatic[YY] = val;
-    fHydrostatic[ZZ] = val;
+    fHydrostatic.fData[XX] = val;
+    fHydrostatic.fData[YY] = val;
+    fHydrostatic.fData[ZZ] = val;
     return fHydrostatic;
 }
+
 
 Tensor Tensor::Deviatory(){ 
     Tensor fDeviatory(*this);
@@ -153,6 +158,17 @@ Tensor Tensor::operator*(const double &multipl) const {
     return temp *= multipl;
 }
 
+const Tensor & Tensor::operator+=(const Tensor &sum) {
+    int i;
+    for (i = 0; i < 6; i++)fData[i] += sum.fData[i];
+    return *this;
+}
+
+Tensor Tensor::operator+(const Tensor &sum) const {
+    Tensor temp(*this);
+    return temp += sum;
+}
+
 Tensor Tensor::Normalized(){
     Tensor temp(*this);
     temp *= 1./Norm();
@@ -163,4 +179,8 @@ Tensor Tensor::NormalizedDeviatory(){
     Tensor temp = Deviatory();
     temp *= 1./DeviatoryNorm();
     return temp;
+}
+
+double Tensor::Trace() const{
+    return fData[XX] + fData[YY] + fData[ZZ];
 }

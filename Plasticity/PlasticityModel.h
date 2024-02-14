@@ -15,8 +15,25 @@ protected:
     // The elastic model
     WeakForm *fElasticModel;
 
+    //Number of Stress components
+    int fNStressComponents;
+    //2nd order identity tensor
+    VecDouble fIdentity2;
+    //4th order identity tensor
+    MatrixDouble fIdentity4;
+    //Deviatory 4th order identity tensor
+    MatrixDouble fIdentity4Dev;
+
+    // The Young modulus
+    double fYoungModulus;
+    double fPoissonRatio;
+    double fShearModulus;
+    double fBulkModulus;
+
+    double fHardening;
+
     // Lambda function returning the stress-stran relation
-    std::function<void (const double &plasticStrain, double &yieldStress)> fUniaxialYield = 0; 
+    std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> fUniaxialYield = 0; 
 
 public:
     /// @brief Default constructor
@@ -38,13 +55,14 @@ public:
     };
 
 
+    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress){
+        PanicButton();
+    };
 
-    /// @brief Verify the plastic creterion and computes the plastic strain
-    /// @param data integration point data
-    /// @param plasticstrain tensor of plastic strain
-    /// @param totalstrain tensor of total strain
-    virtual void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) = 0;
-    
+    virtual double PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
+        PanicButton();
+    };
+
     /// @brief Computes the principal stress tensor by means of eigenvalue problem
     /// @param Stress Stress tensor
     /// @param PrincipalS principal stresses
@@ -70,13 +88,19 @@ public:
 
     WeakForm* ElasticModel(){return fElasticModel;}
 
-    std::function<void (const double &plasticStrain, double &yieldStress)> &UniaxialYield(){
+    std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> &UniaxialYield(){
         return fUniaxialYield;
     }
 
-    void SetUniaxialYieldFunction(std::function<void (const double &plasticStrain, double &yieldStress)> yield){
+    void SetUniaxialYieldFunction(std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> yield){
         fUniaxialYield = yield;
     }
+
+    int NStressComponents(){return fNStressComponents;}
+
+    virtual void UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
+        PanicButton();
+    };
 };
 
 

@@ -63,11 +63,6 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    /// @brief Verify the plastic creterion and computes the plastic strain
-    /// @param data integration point data
-    /// @param plasticstrain tensor of plastic strain
-    /// @param totalstrain tensor of total strain
-    void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) override;
 };
 
 

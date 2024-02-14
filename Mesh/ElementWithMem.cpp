@@ -9,28 +9,14 @@ template<class tshape>
 ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
     if (fPlasticityModel){
-        this->fIntegData.fPlasticMultiplier.resize(this->fIntRule.NPoints());
-        this->fIntegData.fPlasticMultiplier.setZero();
+        this->fIntegData.fYieldFunction.resize(this->fIntRule.NPoints());
+        this->fIntegData.fYieldFunction.setZero();
         this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
         this->fIntegData.fPlasticStrain.setZero();
-        this->fIntegData.fEffectiveStress.resize(this->fIntRule.NPoints());
-        this->fIntegData.fEffectiveStress.setZero();
-        // int nintpoints = this->fIntRule.NPoints();
-        // fPlasticStrain.resize(nintpoints);
-        // fTotalStrain.resize(nintpoints);
-        // int realdim = fPlasticityModel->RealDimension();
-        // for (int i = 0; i < nintpoints; i++){
-        //     fPlasticStrain[i].resize(realdim,realdim);
-        //     fPlasticStrain[i].setZero();
-        //     fTotalStrain[i].resize(realdim,realdim);
-        //     fTotalStrain[i].setZero();
-        // }
+        this->fIntegData.fElasticStrain.resize(fPlasticityModel->NStressComponents());
+        this->fIntegData.fElasticStrain.setZero();
     } else {
-        // auto connect = this->getConnectivity();
-        // int nstate = wf->NState();
-        // for (int i = 0; i < connect.size(); i++){
-        //     this->Mesh()->NodeVec()[connect[i]]->SetNStateVariables(nstate);
-        // }
+
     }
 
 };
@@ -97,12 +83,12 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
             fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector); 
         } else {
             //Plastic step
-            this->fIntegData.fPlasticMultiplier[index] = YieldFunction;
+            this->fIntegData.fYieldFunction[index] = YieldFunction;
+            this->fIntegData.fPlasticMultiplier = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
+            fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);
             fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,ElasStress);
-            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector); 
+            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
         }
-        
-
         index++;
     };  
 

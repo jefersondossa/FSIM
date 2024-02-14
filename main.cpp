@@ -74,7 +74,8 @@ int main(int argc, char **args) {
     // #include "examples/arlequin.h"
     // #include "examples/cube.h"
     // #include "examples/truss.h"
-    #include "examples/mohrcoulombtest.h"
+    // #include "examples/mohrcoulombtest.h"
+    #include "examples/notched.h"
     // #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      

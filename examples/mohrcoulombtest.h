@@ -9,7 +9,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y){
 
     CompMesh* cmesh = new CompMesh();
 
-    Elasticity2D * matelas = new Elasticity2D(11,1.e7,.48,false);
+    Elasticity2D * matelas = new Elasticity2D(11,1.e7,.48);
     //BC
     MatrixDouble val1(2,2);
     val1.setZero();
@@ -49,7 +49,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y){
     IncrementalAnalysis an(cmesh,SolverType::ELDLt, 14, bcIncrement,1.e-4);
     
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {};
+    ScalarNames = {"PlasticStrain"};
     VectorNames = {"Displacement","Stress","Strain"};
     an.Run("plasticitytest",ScalarNames,VectorNames);
 

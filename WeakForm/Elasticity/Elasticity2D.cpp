@@ -154,8 +154,8 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     if(!strcmp("Stress",name.c_str()))           return 16;
     if(!strcmp("Strain",name.c_str()))           return 17;
 
-    std::cout << "Post Process variable not implemented \n";
-    PanicButton();
+    // std::cout << "Post Process variable not implemented \n";
+    // PanicButton();
     return -1;
 };
 
@@ -183,7 +183,7 @@ int Elasticity2D::NSolutionVariables(int var) const{
         return 1;
 
     default:
-        PanicButton();
+        // PanicButton();
         return -1;
     }
 };
@@ -327,10 +327,17 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         epsilon[0] = data.fDSolDx(0,0);
         epsilon[1] = data.fDSolDx(1,1);
         epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
-        auto sigma = fConstitutiveMatrix * epsilon;
-        Sol[0] = sigma[0];
-        Sol[1] = sigma[1];
-        Sol[2] = sigma[2];
+        if (fPlaneStress){
+            double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+            Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
+            Sol[1] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
+            Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
+        } else {
+            double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+            Sol[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
+            Sol[1] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
+            Sol[2] = k * (1.-2.*fPoissonRatio) * epsilon[2];
+        }
         return;
     };
 

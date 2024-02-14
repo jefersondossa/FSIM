@@ -31,9 +31,11 @@ public:
     double J2() const;
     double J3();
 
+    double Trace() const;
+
     Tensor Deviatory();
 
-    VecDouble Hydrostatic();
+    Tensor Hydrostatic();
 
     double Determinant();
 
@@ -48,6 +50,9 @@ public:
 
     const Tensor & operator*=(const double &multipl);
     Tensor operator*(const double &multipl) const;
+    Tensor operator+(const Tensor &sum) const;
+    const Tensor & operator+=(const Tensor &sum);
+    void Zero();
     
 };
 

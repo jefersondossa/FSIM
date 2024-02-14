@@ -6,14 +6,6 @@
 /// @brief Implements the linear hardening plasticity model
 class VonMises : public PlasticityModel
 {
-private:
-    // Updated constitutive matrix
-    MatrixDouble fConstitutiveMatrix;
-
-    // The Young modulus
-    double fYoungModulus;
-    double fPoissonRatio;
-
 public:
     /// @brief Linear hardening plasticity model constructor
     /// @param elast elasticity model
@@ -31,7 +23,7 @@ public:
     /// @param index integration point index
     /// @param data integration point data
     /// @param Rhs residual vector
-    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) override;
+    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) override;
     
     /// @brief Computes the element error. The exact solution shoul be provided.
     /// @param data integration point data
@@ -54,15 +46,13 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    /// @brief Verify the plastic creterion and computes the plastic strain
-    /// @param data integration point data
-    /// @param plasticstrain tensor of plastic strain
-    /// @param totalstrain tensor of total strain
-    void ComputePlasticStrain(IntPointData &data, MatrixDouble &plasticstrain, MatrixDouble &totalstrain) override;
-
     double YieldFunction(int &index, IntPointData &data, Tensor &Stress) override;
 
     Tensor FlowVector(Tensor &Stress);
+
+    double PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress) override;
+
+    void UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress) override;
 };
 
 

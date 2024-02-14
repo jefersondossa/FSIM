@@ -66,10 +66,11 @@ public:
     bool fNeedsDSol = false;
     bool fNeedsTimeDerivatives = false;
 
-    VecDouble fPlasticMultiplier;
+    VecDouble fYieldFunction;
     VecDouble fPlasticStrain;
-    VecDouble fEffectiveStress;
-
+    VecDouble fElasticStrain;
+    VecDouble fTotalStress;
+    double fPlasticMultiplier;
 };
 
 

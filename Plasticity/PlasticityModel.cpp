@@ -1,5 +1,9 @@
 
 #include "PlasticityModel.h"
+#include "ElasticTruss.h"
+#include "Elasticity2D.h"
+#include "PositionalTruss.h"
+#include "ElasticityPositional2D.h"
 
 PlasticityModel::PlasticityModel(WeakForm *elast){
     fElasticModel = elast;
@@ -11,8 +15,52 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     if (nsol == 1) fRealDimension = 1;
     if (nsol == 3) fRealDimension = 2;
     if (nsol == 6) fRealDimension = 3;
-
+    fNStressComponents = nsol;
     fDimension = elast->Dimension();
+
+    ElasticTruss *truss = dynamic_cast<ElasticTruss* >(fElasticModel);
+    Elasticity2D *mat2d = dynamic_cast<Elasticity2D* >(fElasticModel);
+    PositionalTruss *postruss = dynamic_cast<PositionalTruss* >(fElasticModel);
+    if (truss) {
+        fYoungModulus = truss->YoungModulus();
+        fPoissonRatio = 0.;
+    }
+    if (mat2d) {
+        fYoungModulus = mat2d->YoungModulus();
+        fPoissonRatio = mat2d->PoissonRatio();
+    }
+    if (postruss) {
+        fYoungModulus = postruss->YoungModulus();
+        fPoissonRatio = 0.;
+    }
+
+    fIdentity2.resize(fNStressComponents);
+    fIdentity2.setZero();
+    fIdentity4.resize(fNStressComponents,fNStressComponents);
+    fIdentity4Dev.resize(fNStressComponents,fNStressComponents);
+    fIdentity4.setIdentity();
+    fIdentity4Dev.setZero();
+
+    if (fRealDimension == 2){
+        fIdentity2[0] = 1.;
+        fIdentity2[1] = 1.;
+        fIdentity4(2,2) = 0.5;
+        for (int i = 0; i < fNStressComponents; i++){
+            for (int j = 0; j < fNStressComponents; j++){
+                fIdentity4Dev(i,j) = fIdentity4Dev(i,j) - fIdentity2[i] * fIdentity2[j] / 3.; 
+            }
+        }
+        fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+    } else if (fRealDimension == 3) {
+        fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
+        fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+        
+        std::cout << "please define the tensors for the desired dimension\n";
+        PanicButton();
+    }
+
+    
 };
 
 void PlasticityModel::ComputePrincipalStress(MatrixDouble &Stress, VecDouble &PrincipalS){
