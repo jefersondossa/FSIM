@@ -1,9 +1,17 @@
    // Defines the problem dimension
     const int dimension = 1;
 
+auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    // force[0] = 1.-x*x;
+    // force[0] = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
+};
+
 {
     CompMesh* cmesh = new CompMesh();
-    TransientPoisson * matpoisson = new TransientPoisson(4,dimension,0.,1.5,0.05);
+    Poisson * matpoisson = new Poisson(4,dimension);
+    matpoisson->SetForcingFunction(forcingFunctionPoisson);
     cmesh->InsertMaterial(matpoisson);
     
     //BC
@@ -19,13 +27,13 @@
     
     GmshTools::Read(*cmesh,"../line.msh");
 
-    TransientAnalysis an(cmesh,SolverType::ELDLt,true);
+    LinearAnalysis an(cmesh,SolverType::ELDLt);
        
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Solution"};
     VectorNames = {"Derivative"};
 
-    an.PrintVariables("Dynamic",ScalarNames,VectorNames);
-    an.Run(100);
-    
+    an.Run();
+
+    VTUGenerator::PrintResults(cmesh,"result",ScalarNames,VectorNames);    
 }           

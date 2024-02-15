@@ -28,6 +28,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     if (mat2d) {
         fYoungModulus = mat2d->YoungModulus();
         fPoissonRatio = mat2d->PoissonRatio();
+        fPlaneStress = mat2d->PlaneState();
     }
     if (postruss) {
         fYoungModulus = postruss->YoungModulus();
@@ -42,15 +43,21 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     fIdentity4Dev.setZero();
 
     if (fRealDimension == 2){
+        //Definition of 2nd and 4th order identity tensors  
         fIdentity2[0] = 1.;
         fIdentity2[1] = 1.;
         fIdentity4(2,2) = 0.5;
-        for (int i = 0; i < fNStressComponents; i++){
-            for (int j = 0; j < fNStressComponents; j++){
-                fIdentity4Dev(i,j) = fIdentity4Dev(i,j) - fIdentity2[i] * fIdentity2[j] / 3.; 
+        fIdentity4Dev = fIdentity4;
+        for (int i = 0; i < fRealDimension; i++){
+            for (int j = 0; j < fRealDimension; j++){
+                fIdentity4Dev(i,j) -= fIdentity2[i] * fIdentity2[j] / 3.; 
             }
         }
-        fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        if (fPlaneStress){
+            fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        } else {
+            fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
+        }
         fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
     } else if (fRealDimension == 3) {
         fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));

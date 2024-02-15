@@ -23,11 +23,11 @@ Tensor::Tensor(MatrixDouble &tensor){
     fData[XX] = tensor(0,0);
     fDimension = 1;
     if (tensor.rows() == 2){
-        fDimension = 3;
+        fDimension = 2;
         fData[XY] = tensor(0,1);
         fData[YY] = tensor(1,1);
     } else if (tensor.rows() == 3){
-        fDimension = 6;
+        fDimension = 3;
         fData[XY] = tensor(0,1);
         fData[YY] = tensor(1,1);
         fData[XZ] = tensor(0,2);
@@ -183,4 +183,43 @@ Tensor Tensor::NormalizedDeviatory(){
 
 double Tensor::Trace() const{
     return fData[XX] + fData[YY] + fData[ZZ];
+}
+
+VecDouble Tensor::Eigenvalues(){
+    VecDouble eigval(fDimension);
+    eigval.setZero();
+    switch (fDimension)
+    {
+    case 1:
+        eigval[0] = fData[XX];
+        break;
+    case 2:
+        { 
+            //Using Mohr's circle relations
+            double radius = sqrt((0.25*(fData[XX]-fData[YY])*(fData[XX]-fData[YY]))+fData[XY]*fData[XY]);
+            double sigmed = 0.5*(fData[XX]+fData[YY]);
+            eigval[0] = sigmed + radius;
+            eigval[1] = sigmed - radius;
+        }
+        break;
+    case 3:
+        {
+            MatrixDouble aux(3,3);
+            aux(0,0) = fData[XX];
+            aux(1,1) = fData[YY];
+            aux(2,2) = fData[ZZ];
+            aux(0,1) = aux(1,0) = fData[XY];
+            aux(0,2) = aux(2,0) = fData[XZ];
+            aux(1,2) = aux(2,1) = fData[YZ];
+
+            EigenSolver<MatrixDouble> solver(aux,EigenvaluesOnly);
+            eigval = solver.eigenvalues().real();
+        }
+    
+    default:
+        PanicButton();
+        break;
+    }
+
+    return eigval;
 }

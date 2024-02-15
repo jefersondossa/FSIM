@@ -1,14 +1,25 @@
 #include "VonMises.h"
 
 VonMises::VonMises(WeakForm *elast) : PlasticityModel(elast){
-    
+    fMatP.resize(3,3);//Box 9.3
+    fMatP.setZero();
+    fMatP(0,0) = fMatP(1,1) = 2./3.;
+    fMatP(0,1) = fMatP(1,0) =-1./3.;
+    fMatP(2,2) = 6./3.;
+
+    if (fPlaneStress) {
+        std::cout << "Please implement this option" << std::endl;
+        PanicButton();
+    }
 }
 
 void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress){
     
     VecDouble deviatory(fNStressComponents);
     MatrixDouble fTangentTensor(fNStressComponents,fNStressComponents);
+    MatrixDouble fTangentTensor2(fNStressComponents,fNStressComponents);
     fTangentTensor.setZero();
+    fTangentTensor2.setZero();
     deviatory.setZero();
     auto devAux = Stress.Deviatory();
 
@@ -21,19 +32,28 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
     } else {
         PanicButton();
     }
-    double vonMisesStress = Stress.DeviatoryNorm();
-    double Qtrial = sqrt(1.5) * vonMisesStress;
+    // double sNorm = Stress.DeviatoryNorm();
+    // double Qtrial = sqrt(1.5) * vonMisesStress+3.*fShearModulus*data.fPlasticMultiplier;
 
-    double Afactor = 2. * fShearModulus *(1.-3.*fShearModulus*data.fPlasticMultiplier/Qtrial);
-    double Bfactor = 6. * fShearModulus * fShearModulus * (data.fPlasticMultiplier/Qtrial - 1./(3.*fShearModulus+fHardening))/(vonMisesStress*vonMisesStress);
+    double Afactor = 2. * fShearModulus *(1.-3.*fShearModulus*data.fPlasticMultiplier/fVonMisesStress);
+    double Bfactor = 6. * fShearModulus * fShearModulus * (data.fPlasticMultiplier/fVonMisesStress - 1./(3.*fShearModulus+fHardening))/(fDevNorm*fDevNorm);
 
     for (int i = 0; i < fNStressComponents; i++){
         for (int j = 0; j < fNStressComponents; j++){
-            fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*deviatory[i]*deviatory[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
+            if (fPlaneStress){
+
+            } else {
+                fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*deviatory[i]*deviatory[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
+                fTangentTensor2(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
+            }
         }
     }
+    //Elastic operator 7.107
+ 
+    auto elastic = fElasticModel->ConstitutiveMatrix();
+    std::cout << "Diff = \n" << elastic-fTangentTensor2 << std::endl;
 
-    // fElasticModel->ConstitutiveMatrix() = fTangentTensor;
+    fElasticModel->ConstitutiveMatrix() = fTangentTensor;
     fElasticModel->ComputeStiffness(index,data,Stiffness);
 
 };
@@ -228,11 +248,22 @@ void VonMises::Solution(IntPointData &data, int var, VecDouble &Sol){
     };
 };
 double VonMises::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
-    //Eq (7.74)
-    double plasticstrain = data.fPlasticStrain[index];
-    double fYield;
-    fUniaxialYield(plasticstrain,fYield,fHardening);
-    double YF = sqrt(3.*Stress.J2()) - fYield;
+    double YF = 0.;
+    if (fPlaneStress){
+        //Box 9.3
+        VecDouble Sigma(3);
+        Sigma[0] = Stress.fData[0];
+        Sigma[1] = Stress.fData[1];
+        Sigma[2] = Stress.fData[3];
+        double sigmay;
+        fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+        YF = 0.5 * Sigma.transpose()*fMatP*Sigma-sigmay*sigmay/3.; 
+    } else {
+        //Eq (7.74)
+        double sigmay;
+        fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+        YF = sqrt(3.*Stress.J2()) - sigmay;
+    }
     return YF;
 }
 
@@ -246,31 +277,40 @@ Tensor VonMises::FlowVector(Tensor &Stress){
 
 double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
     //Newton-Raphson to find plastic multiplier
-
-    //Plastic Multiplier - Box 7.4 Souza Neto
     double dGamma = 0.;
-    double Qtrial = sqrt(1.5) * Stress.DeviatoryNorm();
-    double sigmay = 0.;
-    fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
-    double deltaGamma = 0.;
-    double PhiTil = Qtrial-sigmay;
-    
-    while (fabs(PhiTil/sigmay) > 1.e-5){
-        double d = -3. * fShearModulus - fHardening;
-        dGamma -= PhiTil/d;
-        fUniaxialYield(data.fPlasticStrain[index]+dGamma,sigmay,fHardening);
-        PhiTil = Qtrial - 3.*fShearModulus*dGamma-sigmay;
+    if (fPlaneStress){//Box 9.5
+        VecDouble principalStress = Stress.Eigenvalues();
+        double xi = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY()) / 6.
+                  + (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX()) / 2.
+                  + 2. * Stress.fXY() * Stress.fXY();
+        double sigmay;
+        fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+        double PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
+
+    } else { //Box 7.4 Souza Neto
+        fDevNorm = Stress.DeviatoryNorm();
+        fVonMisesStress = sqrt(1.5) * fDevNorm;
+        double sigmay = 0.;
+        fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+        double deltaGamma = 0.;
+        double PhiTil = fVonMisesStress-sigmay;
+        
+        while (fabs(PhiTil/sigmay) > 1.e-5){
+            double d = -3. * fShearModulus - fHardening;
+            dGamma -= PhiTil/d;
+            fUniaxialYield(data.fPlasticStrain[index]+dGamma,sigmay,fHardening);
+            PhiTil = fVonMisesStress - 3.*fShearModulus*dGamma-sigmay;
+        }
     }
-    
+
     return dGamma;
 }
 
 void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
 
     auto dev = Stress.Deviatory();
-    double Qtrial = sqrt(1.5) * Stress.DeviatoryNorm();
     auto hydrostatic = Stress.Hydrostatic();
-    dev *= (1. - data.fPlasticMultiplier * 3 * fShearModulus / Qtrial);
+    dev *= (1. - data.fPlasticMultiplier * 3 * fShearModulus / fVonMisesStress);
     Stress = dev + hydrostatic;
     data.fPlasticStrain[index] += data.fPlasticMultiplier;
 }   

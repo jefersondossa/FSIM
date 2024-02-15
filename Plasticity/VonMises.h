@@ -6,6 +6,12 @@
 /// @brief Implements the linear hardening plasticity model
 class VonMises : public PlasticityModel
 {
+protected:
+    double fVonMisesStress;
+    double fDevNorm;
+
+    MatrixDouble fMatP;
+
 public:
     /// @brief Linear hardening plasticity model constructor
     /// @param elast elasticity model

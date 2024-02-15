@@ -65,6 +65,10 @@ public:
     double &PoissonRatio(){
         return fPoissonRatio;
     }
+
+    bool &PlaneState(){
+        return fPlaneStress;
+    }
 };
 
 

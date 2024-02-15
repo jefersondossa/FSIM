@@ -80,7 +80,7 @@ public:
 
     /// @brief Sets the source term Lambda function
     /// @param ffunction Lambda function to compute the source term for given coordinate.
-    void SetForcingFunction(std::function<void (const VecDouble &coord, VecDouble &force)> &ffunction){
+    void SetForcingFunction(std::function<void (const VecDouble &coord, VecDouble &force)> ffunction){
         fForceFunction = ffunction;
     }
 

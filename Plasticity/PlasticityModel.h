@@ -29,6 +29,7 @@ protected:
     double fPoissonRatio;
     double fShearModulus;
     double fBulkModulus;
+    bool fPlaneStress = false;
 
     double fHardening;
 

@@ -9,11 +9,12 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     //hardening H = d(sigma_y)/d(epsilon_p)
     hardening = 0.2;
+    // hardening = 0.;
 };
 
     CompMesh* cmesh = new CompMesh();
 
-    Elasticity2D * matelas = new Elasticity2D(11,206.9,.29);
+    Elasticity2D * matelas = new Elasticity2D(11,206.9,.29,false);
     //BC
     MatrixDouble val1(2,2);
     val1.setZero();

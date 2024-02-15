@@ -19,11 +19,12 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
     } else {//Plane Strain Matrix
         double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
         double k = 2.*G / (1.-2.*fPoissonRatio);
-        fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * k;
-        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * k;
-        fConstitutiveMatrix(2,2) = 2. * G;
+        double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
+        fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * aux;
+        fConstitutiveMatrix(0,1) = aux * fPoissonRatio;
+        fConstitutiveMatrix(1,0) = aux * fPoissonRatio;
+        fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
+        fConstitutiveMatrix(2,2) = G;
     }
 };
 

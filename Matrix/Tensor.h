@@ -53,6 +53,28 @@ public:
     Tensor operator+(const Tensor &sum) const;
     const Tensor & operator+=(const Tensor &sum);
     void Zero();
+
+    VecDouble Eigenvalues();
+
+
+    double fXX(){
+        return fData[XX];
+    }
+    double fYY(){
+        return fData[YY];
+    }
+    double fZZ(){
+        return fData[ZZ];
+    }
+    double fXY(){
+        return fData[XY];
+    }
+    double fXZ(){
+        return fData[XZ];
+    }
+    double fYZ(){
+        return fData[YZ];
+    }
     
 };
 

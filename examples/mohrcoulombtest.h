@@ -2,7 +2,7 @@
    // Defines the problem dimension
     const int dimension = 2;
 {
-auto yieldFunction = [](const double &plast, double &sigma_y){
+auto yieldFunction = [](const double &plast, double &sigma_y, double &yield){
     // sigma_y = 2.e6 - 2.e9*plast;
     sigma_y = 848.7;
 };
