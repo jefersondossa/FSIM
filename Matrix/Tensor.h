@@ -57,22 +57,22 @@ public:
     VecDouble Eigenvalues();
 
 
-    double fXX(){
+    double &fXX(){
         return fData[XX];
     }
-    double fYY(){
+    double &fYY(){
         return fData[YY];
     }
-    double fZZ(){
+    double &fZZ(){
         return fData[ZZ];
     }
-    double fXY(){
+    double &fXY(){
         return fData[XY];
     }
-    double fXZ(){
+    double &fXZ(){
         return fData[XZ];
     }
-    double fYZ(){
+    double &fYZ(){
         return fData[YZ];
     }
     

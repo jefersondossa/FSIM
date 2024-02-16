@@ -167,6 +167,11 @@ public:
     void Solution(int var, VecDouble &Sol){
         fWeakForm->Solution(fIntegData,var,Sol);
     };
+
+    virtual void Integrate(std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result){
+        PanicButton();
+    };
+
 };
 
 

@@ -10,6 +10,7 @@
 #include "GmshTools.h"
 #include "WeakForm.h"
 #include <vector>
+#include <set>
 #include "GraphMesh.h"
 
 class Element;
@@ -115,6 +116,8 @@ public:
     /// @brief Returns the graphycal mesh to print results.
     /// @return graphycal mesh 
     GraphMesh* GetGraphMesh();
+
+    void Integrate(std::set<int> &matIds, std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result);
 };
 
 #endif

@@ -49,19 +49,22 @@ public:
     /// @return BC value
     VecDouble &BCValue(){return BCVal2;}
     
-    /// @brief Post processing variable index - not used in this class
-    /// @param name variable name
-    /// @return variable index
-    int VariableIndex(const std::string &name) const override{
-        return 0;
-    };
+    /// @brief Returns the variable index of a given solution variable
+    /// @param name solution variable name
+    /// @return solution variable's index
+    int VariableIndex(const std::string &name) const override;
 
     /// @brief Returns the number of solution variables of a given post processing variable
     /// @param var solution variable's index
     /// @return number of solution variables
-    int NSolutionVariables(int var) const override{
-        return 0;
-    };
+    int NSolutionVariables(int var) const override;
+    
+    /// @brief Post process the results for a given solution variable. It should never be called here, but in the derived weak form.
+    /// @param data integration point data
+    /// @param var solution variable's index
+    /// @param Sol solution vector
+    void Solution(IntPointData &data, int var, VecDouble &Sol) override;
+    
 };
 
 

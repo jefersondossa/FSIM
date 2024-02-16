@@ -5,11 +5,11 @@
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
     // sigma_y = 2.e6 - 2.e9*plast;
     sigma_y = 0.45 + 0.2*plast;
-    // sigma_y = 0.45;
+    // sigma_y = 0.45 + 0.0001*plast;
 
     //hardening H = d(sigma_y)/d(epsilon_p)
     hardening = 0.2;
-    // hardening = 0.;
+    // hardening = 0.0001;
 };
 
     CompMesh* cmesh = new CompMesh();
@@ -50,12 +50,20 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
   
     GmshTools::Read(*cmesh,"../notched.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 50, bcIncrement,1.e-4);
+    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 15, bcIncrement,1.e-5);
     
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};
     VectorNames = {"Displacement","Stress","Strain"};
     an.Run("plasticitytest",ScalarNames,VectorNames);
-
+    
+    // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};
+    // std::set<int> matid = {6};
+    // std::map<std::string,VecDouble> result;
+    // cmesh->Integrate(matid,integrate,result);
+    // double aux = 206.9/((1.29)*(1.-2.*.29));
+    // double valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
+    // double valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
+    // int a = 0;
     
 }           

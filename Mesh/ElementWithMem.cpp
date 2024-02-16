@@ -67,14 +67,26 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         int var = fPlasticityModel->ElasticModel()->VariableIndex("Stress");
         int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
         VecDouble Sol(nsol);
+        Sol.setZero();
         int dim = fPlasticityModel->RealDimension();
         MatrixDouble fElasticStress(dim,dim);
         fElasticStress.setZero();
         fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
         fPlasticityModel->VoigtToTensor(fElasticStress,Sol);
 
-        //Check for the Yield crieterion
+        
         Tensor ElasStress(fElasticStress);
+        //Add sigma z component for plane strain problem
+        if (dim == 2 && !fPlasticityModel->PlaneStress()){
+            int varz = fPlasticityModel->ElasticModel()->VariableIndex("SigmaZ");
+            int nsolz = fPlasticityModel->ElasticModel()->NSolutionVariables(varz);
+            VecDouble Solz(nsolz);
+            Solz.setZero();
+            fPlasticityModel->ElasticModel()->Solution(this->fIntegData,varz,Solz);
+            ElasStress.fZZ() = Solz[0];
+        }
+
+        //Check the Yield crieterion
         double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
 
         if (YieldFunction < 0){
@@ -147,6 +159,8 @@ void ElementWithMem<tshape>::ComputeElContribution(std::vector<MatrixDouble> &ja
 
     return;
 };
+
+
 
 
 #include "ShapeHexahedron.h"

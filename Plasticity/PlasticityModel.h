@@ -102,6 +102,10 @@ public:
     virtual void UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
         PanicButton();
     };
+
+    bool PlaneStress(){
+        return fPlaneStress;
+    }
 };
 
 

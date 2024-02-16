@@ -1,5 +1,9 @@
 #include "IncrementalAnalysis.h"
 #include "VTUGenerator.h"
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <ios>
 
 IncrementalAnalysis::IncrementalAnalysis(CompMesh *cmesh, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol, int maxIter) 
     : NonLinearAnalysis(cmesh,stype,tol,maxIter), fNSteps(nsteps){
@@ -36,7 +40,7 @@ void IncrementalAnalysis::Run(){
 
 
 void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames){
-
+    std::ofstream output("integral",std::ios::app);
     std::vector<VecDouble > increments(fIncrementBC.size());
     std::vector<VecDouble> initialbc(fIncrementBC.size());
     //Define the step size for each BC
@@ -71,6 +75,17 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
 
         NonLinearAnalysis::Run();
         VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,iStep);
+        {
+            // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};
+            // std::set<int> matid = {6};
+            // std::map<std::string,VecDouble> result;
+            // MeshVector()[0]->Integrate(matid,integrate,result);
+            // double aux = 206.9/((1.29)*(1.-2.*.29));
+            // double valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
+            // double valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
+            // double disp =  fIncrementBC[0]->BCValue()[1] * 2. * 206.9/(0.45*10.);
+            // output << disp << " " << valX << " " << -valY << "\n";
+        }
         iStep++;
     }
 }

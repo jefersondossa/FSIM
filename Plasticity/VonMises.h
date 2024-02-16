@@ -11,6 +11,7 @@ protected:
     double fDevNorm;
 
     MatrixDouble fMatP;
+    Tensor fFlowVector;
 
 public:
     /// @brief Linear hardening plasticity model constructor

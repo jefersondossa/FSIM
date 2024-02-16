@@ -160,6 +160,9 @@ public:
         return xnode;
     }
 
+    void Integrate(std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result) override;
+
+
 };
 
 

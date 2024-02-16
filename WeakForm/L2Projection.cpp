@@ -125,3 +125,63 @@ void L2Projection::ComputeError(IntPointData &data, VecDouble &errors){
 
 
 
+int L2Projection::VariableIndex(const std::string &name) const{
+    
+    if(!strcmp("Solution",name.c_str()))        return 1;
+    if(!strcmp("DerivativeX",name.c_str()))      return 2;
+    if(!strcmp("DerivativeY",name.c_str()))      return 3;
+    if(!strcmp("DerivativeZ",name.c_str()))      return 4;
+    
+    std::cout << "Post Process variable not implemented \n";
+    PanicButton();
+    return -1;
+};
+
+int L2Projection::NSolutionVariables(int var) const{
+    switch (var)
+    {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+        return fNState;
+
+    default:
+        PanicButton();
+        return -1;
+    }
+};
+
+void L2Projection::Solution(IntPointData &data, int var, VecDouble &Sol) {
+
+    //Solution
+    if (var == 1){
+        for (int i = 0; i < fNState; i++){
+            Sol[i] = data.fSol[i];
+        }
+        return;
+    };
+
+    //Derivative X
+    if (var == 2){
+        for (int i = 0; i < fNState; i++){
+            Sol[i] = data.fDSolDx(i,0);
+        }
+        return;
+    };
+    //Derivative Y
+    if (var == 3){
+        for (int i = 0; i < fNState; i++){
+            Sol[i] = data.fDSolDx(i,1);
+        }
+        return;
+    };
+    //Derivative Z
+    if (var == 4){
+        for (int i = 0; i < fNState; i++){
+            Sol[i] = data.fDSolDx(i,2);
+        }
+        return;
+    };
+
+}; 

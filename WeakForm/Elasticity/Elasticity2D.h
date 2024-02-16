@@ -15,6 +15,8 @@ protected:
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
+    double fThickness = 0.1;
+
 public:  
     // Elasticity 2D class constructor
     Elasticity2D(int matid, double young, double poisson, bool planes = true);
