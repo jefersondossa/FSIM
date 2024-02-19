@@ -4,12 +4,13 @@
 {
 auto yieldFunction = [](const double &plast, double &sigma_y, double &yield){
     // sigma_y = 2.e6 - 2.e9*plast;
-    sigma_y = 848.7;
+    sigma_y = 848700;
+    // yield = 2.e9;
 };
 
     CompMesh* cmesh = new CompMesh();
 
-    Elasticity2D * matelas = new Elasticity2D(11,1.e7,.48);
+    Elasticity2D * matelas = new Elasticity2D(11,1.e10,.48,false);
     //BC
     MatrixDouble val1(2,2);
     val1.setZero();
@@ -20,7 +21,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &yield){
     val2[1] = -0.002;
     L2Projection * matbc4 = new L2Projection(6,2,4,val1,val2);
     //Top
-    L2Projection * matbc6 = new L2Projection(7,2,1,val1,val3);
+    L2Projection * matbc6 = new L2Projection(7,2,3,val1,val2);
     //Left and Right
     val3[0] = 1.;
     L2Projection * matbc3 = new L2Projection(8,2,3,val1,val3);
@@ -46,8 +47,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &yield){
   
     GmshTools::Read(*cmesh,"../mohrcoulomb.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 14, bcIncrement,1.e-4);
-    
+    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 50, bcIncrement,1.e-7);
+    // an.SetMaxIter(2);
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};
     VectorNames = {"Displacement","Stress","Strain"};

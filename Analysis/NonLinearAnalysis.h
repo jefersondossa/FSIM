@@ -14,6 +14,10 @@ public:
     NonLinearAnalysis(CompMesh *cmesh, SolverType stype, double tol = 1.e-6, int maxIter = 10) : LinearAnalysis(cmesh,stype), fMaxIterations(maxIter), fTolerance(tol) {};
     NonLinearAnalysis(Arlequin* arl, SolverType stype, double tol = 1.e-6, int maxIter = 10) : LinearAnalysis(arl,stype), fMaxIterations(maxIter), fTolerance(tol) {};
 
+    void SetMaxIter(int maxiter){
+        fMaxIterations = maxiter;
+    }
+
     void UpdateSolution() override;
 
     void Run() override;

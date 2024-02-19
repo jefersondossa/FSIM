@@ -104,7 +104,9 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
             double E = fPlasticityModel->YoungModulus();
             double nu = fPlasticityModel->PoissonRatio();
             double k = E / ((1.+nu)*(1.-2.*nu));
-            ElasStress.fZZ() = k * (nu * Sol[0] + nu * Sol[1]);
+            ElasStress.fXX() += k * nu * this->fIntegData.fElasticStrain[index].fZZ();
+            ElasStress.fYY() += k * nu * this->fIntegData.fElasticStrain[index].fZZ();
+            ElasStress.fZZ() = k * (nu * elasticStrainTrial[0]+ nu * elasticStrainTrial[1] + (1.-nu)*this->fIntegData.fElasticStrain[index].fZZ());
         }
         // std::cout << "Elastic tangent = \n" << fElasticConstitutiveMatrix << std::endl;
 

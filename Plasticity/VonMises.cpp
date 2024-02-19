@@ -48,8 +48,9 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
             if (fPlaneStress){
 
             } else {
-                fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowPrev[i]*flowPrev[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
-                fTangentTensor2(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j];// - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flowcurr[i]*flowcurr[j];
+                fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowcurr[i]*flowcurr[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
+                // fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowPrev[i]*flowPrev[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
+                // fTangentTensor2(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j];// - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flowcurr[i]*flowcurr[j];
                 // fTangentTensor2(i,j) = fConstitutiveMatrix(i,j) - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flow.fData[i]*flow.fData[j];
                 // fTangentTensor(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j] - 6.*fShearModulus*fShearModulus*flowcurr[i]*flowcurr[j]/(3.*fShearModulus+fHardening)
                 //                     - data.fPlasticMultiplier * 6. * fShearModulus * fShearModulus/fVonMisesStress * (fIdentity4Dev(i,j) - flowPrev[i]*flowPrev[j]);  
@@ -231,14 +232,34 @@ void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stre
     Ident *= epslion_e_trial / 3.;
     epsilonUpdated += Ident;
 
-    if (fNStressComponents == 2){
-        data.fElasticStrain[index] = epsilonUpdated;
-        // data.fElasticStrain[index][0] = epsilonUpdated.fXX();
-        // data.fElasticStrain[index][1] = epsilonUpdated.fYY();
-        // data.fElasticStrain[index][2] = epsilonUpdated.fXY();
-    }
+    Tensor epsilonUpdated2(data.fElasticStrain[index]);
+    double devnorm = dev.Norm();
+    epsilonUpdated2 += dev * (-data.fPlasticMultiplier * sqrt(1.5) / devnorm);
+    data.fElasticStrain[index] = epsilonUpdated;
+    // if (fNStressComponents == 2){
+        
+    //     // data.fElasticStrain[index][0] = epsilonUpdated.fXX();
+    //     // data.fElasticStrain[index][1] = epsilonUpdated.fYY();
+    //     // data.fElasticStrain[index][2] = epsilonUpdated.fXY();
+    // }
+    MatrixDouble matelas(3,3);
+    matelas.setZero();
+    double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+    double k = 2.*G / (1.-2.*fPoissonRatio);
+    double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
+    matelas(0,0) = (1.-fPoissonRatio) * aux;
+    matelas(0,1) = aux * fPoissonRatio;
+    matelas(1,0) = aux * fPoissonRatio;
+    matelas(1,1) = (1.-fPoissonRatio) * aux;
+    matelas(2,2) = G;
     
     // dev *= (1. - data.fPlasticMultiplier * 3 * fShearModulus / fVonMisesStress);
     Stress = dev + hydrostatic;
+    VecDouble auxstress(3);
+    auxstress[0] = Stress.fXX();
+    auxstress[1] = Stress.fYY();
+    auxstress[2] = Stress.fXY();
+    VecDouble elastaux = matelas.inverse() * auxstress; 
+
     data.fPlasticStrain[index] += data.fPlasticMultiplier;
 }   
