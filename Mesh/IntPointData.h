@@ -2,7 +2,7 @@
 #define INTPOINTDATA
 
 #include "DataTypes.h"
-
+#include "Tensor.h"
 
 class IntPointData {
 
@@ -60,6 +60,8 @@ public:
     VecDouble fDSolDDt;
     /// @brief Previous time/load step Solution
     VecDouble fSolPrev;
+    /// @brief Solution gradient
+    MatrixDouble fDSolDxPrev;
 
     /// @brief Flags implemented to compute or not the solution and its derivatives
     bool fNeedsSol = false;
@@ -68,8 +70,8 @@ public:
 
     VecDouble fYieldFunction;
     VecDouble fPlasticStrain;
-    VecDouble fElasticStrain;
-    VecDouble fTotalStress;
+    std::vector<Tensor> fElasticStrain;
+    std::vector<VecDouble> fTotalStrain;
     double fPlasticMultiplier;
 };
 

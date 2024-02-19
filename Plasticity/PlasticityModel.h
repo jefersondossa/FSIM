@@ -24,6 +24,9 @@ protected:
     //Deviatory 4th order identity tensor
     MatrixDouble fIdentity4Dev;
 
+    Tensor fId4;
+    Tensor fId4Dev;
+
     // The Young modulus
     double fYoungModulus;
     double fPoissonRatio;
@@ -103,8 +106,16 @@ public:
         PanicButton();
     };
 
-    bool PlaneStress(){
+    bool &PlaneStress(){
         return fPlaneStress;
+    }
+
+    double &YoungModulus(){
+        return fYoungModulus;
+    }
+
+    double &PoissonRatio(){
+        return fPoissonRatio;
     }
 };
 

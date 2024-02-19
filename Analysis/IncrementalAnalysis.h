@@ -20,7 +20,7 @@ public:
     int &NSteps(){return fNSteps;}
 
     void SetIncrement(VecDouble &increment){fIncrementValue = increment; }
-
+    void UpdateSolution() override;
     void Run() override;
     void Run(std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames);
 };

@@ -21,7 +21,8 @@
 template<class tshape>
 class ElementWithMem : public ElementT<tshape>{
 protected:
-    
+    MatrixDouble fElasticConstitutiveMatrix;
+
 public:
     ElementWithMem() : ElementT<tshape>(){
     };

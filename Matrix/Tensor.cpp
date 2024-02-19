@@ -36,6 +36,29 @@ Tensor::Tensor(MatrixDouble &tensor){
     }
 }
 
+void Tensor::SetData(MatrixDouble &tensor){
+#ifdef DEBUG_BUILD
+    if (tensor.rows() != tensor.cols() || tensor.rows() == 0){
+        std::cout << "Please provide a symmetric tensor" << std::endl;
+        PanicButton();
+    }
+#endif
+    fData[XX] = tensor(0,0);
+    fDimension = 1;
+    if (tensor.rows() == 2){
+        fDimension = 2;
+        fData[XY] = tensor(0,1);
+        fData[YY] = tensor(1,1);
+    } else if (tensor.rows() == 3){
+        fDimension = 3;
+        fData[XY] = tensor(0,1);
+        fData[YY] = tensor(1,1);
+        fData[XZ] = tensor(0,2);
+        fData[YZ] = tensor(1,2);
+        fData[YZ] = tensor(2,2);
+    }
+}
+
 void Tensor::Zero(){
     fData.setZero();
 }

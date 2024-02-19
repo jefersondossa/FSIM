@@ -13,8 +13,13 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         this->fIntegData.fYieldFunction.setZero();
         this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
         this->fIntegData.fPlasticStrain.setZero();
-        this->fIntegData.fElasticStrain.resize(fPlasticityModel->NStressComponents());
-        this->fIntegData.fElasticStrain.setZero();
+        this->fIntegData.fElasticStrain.resize(this->fIntRule.NPoints());
+        for (int i = 0; i < this->fIntRule.NPoints(); i++){
+            this->fIntegData.fElasticStrain[i].Zero();
+            // this->fIntegData.fElasticStrain[i].setZero();
+        }
+        fElasticConstitutiveMatrix = fPlasticityModel->ElasticModel()->ConstitutiveMatrix();
+        
     } else {
 
     }
@@ -33,10 +38,11 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fNeedsDSol = true;
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    this->fIntegData.fDSolDxPrev.resize(this->fWeakForm->NState(), DIM);
     this->fIntegData.fNeedsSol = true;
     this->fIntegData.fSol.resize(this->fWeakForm->NState());
-    
-    
+    this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
+
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
 
@@ -62,34 +68,50 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
 
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
-
-        //Assemble the stress tensor
-        int var = fPlasticityModel->ElasticModel()->VariableIndex("Stress");
-        int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
-        VecDouble Sol(nsol);
-        Sol.setZero();
+        
+        //Assemble the trial stress tensor
+        //the first step compute the initial elastic strain and store it
+        Tensor ElasStress;
+        VecDouble stressVoigt;
         int dim = fPlasticityModel->RealDimension();
         MatrixDouble fElasticStress(dim,dim);
         fElasticStress.setZero();
+        int var = fPlasticityModel->ElasticModel()->VariableIndex("DeltaStrain");
+        int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
+        VecDouble Sol(nsol);
+        Sol.setZero();
         fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
-        fPlasticityModel->VoigtToTensor(fElasticStress,Sol);
-
-        
-        Tensor ElasStress(fElasticStress);
+        this->fIntegData.fElasticStrain[index].fXX() += Sol[0];
+        this->fIntegData.fElasticStrain[index].fYY() += Sol[1];
+        this->fIntegData.fElasticStrain[index].fXY() += Sol[2];
+        VecDouble elasticStrainTrial(3);
+        elasticStrainTrial[0] = this->fIntegData.fElasticStrain[index].fXX();
+        elasticStrainTrial[1] = this->fIntegData.fElasticStrain[index].fYY();
+        elasticStrainTrial[2] = this->fIntegData.fElasticStrain[index].fXY();
+        // if (this->fIntegData.fElasticStrain[index].norm() == 0){
+        //     stressVoigt = fElasticConstitutiveMatrix * Sol;
+        //     this->fIntegData.fElasticStrain[index] = Sol;
+        // } else {
+            stressVoigt = fElasticConstitutiveMatrix * elasticStrainTrial;
+        // }
+        // if (this->fIntegData.fElasticStrain[index].norm() == 0){
+            
+        // }
+        fPlasticityModel->VoigtToTensor(fElasticStress,stressVoigt);
+        ElasStress.SetData(fElasticStress);
         //Add sigma z component for plane strain problem
         if (dim == 2 && !fPlasticityModel->PlaneStress()){
-            int varz = fPlasticityModel->ElasticModel()->VariableIndex("SigmaZ");
-            int nsolz = fPlasticityModel->ElasticModel()->NSolutionVariables(varz);
-            VecDouble Solz(nsolz);
-            Solz.setZero();
-            fPlasticityModel->ElasticModel()->Solution(this->fIntegData,varz,Solz);
-            ElasStress.fZZ() = Solz[0];
+            double E = fPlasticityModel->YoungModulus();
+            double nu = fPlasticityModel->PoissonRatio();
+            double k = E / ((1.+nu)*(1.-2.*nu));
+            ElasStress.fZZ() = k * (nu * Sol[0] + nu * Sol[1]);
         }
+        // std::cout << "Elastic tangent = \n" << fElasticConstitutiveMatrix << std::endl;
 
         //Check the Yield crieterion
         double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
 
-        if (YieldFunction < 0){
+        if (YieldFunction < 1.e-10){
             //Elastic step
             fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
             fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector); 

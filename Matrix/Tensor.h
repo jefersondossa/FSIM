@@ -22,6 +22,8 @@ public:
     
     ~Tensor() = default;
 
+    void SetData(MatrixDouble &tensor);
+
     //Tensor invariants
     double I1() const;
     double I2() const;
@@ -52,6 +54,7 @@ public:
     Tensor operator*(const double &multipl) const;
     Tensor operator+(const Tensor &sum) const;
     const Tensor & operator+=(const Tensor &sum);
+    
     void Zero();
 
     VecDouble Eigenvalues();

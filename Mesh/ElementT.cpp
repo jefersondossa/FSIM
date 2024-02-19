@@ -640,13 +640,19 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDou
 
 template<class tshape>
 void ElementT<tshape>::interpolateSolDerivatives() {
-    fIntegData.fDSolDx.setZero();    
+    fIntegData.fDSolDx.setZero();
+    bool flag = false;
+    if (fIntegData.fDSolDxPrev.size() != 0){
+        fIntegData.fDSolDxPrev.setZero(); 
+        flag = true;
+    }     
     int DIM = tshape::Dimension;
     for (int i = tshape::NElNodes; i--; ){
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
                 fIntegData.fDSolDx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(i,j);
+                if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(i,j);
 #ifdef DEBUG_BUILD
                 if (std::isnan(fIntegData.fDSolDx(k,j))){
                     PanicButton();

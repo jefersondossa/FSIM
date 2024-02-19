@@ -26,6 +26,7 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
         fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
         fConstitutiveMatrix(2,2) = G;
     }
+    
 };
 
 
@@ -36,7 +37,7 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fDSolDx.resize(fNState,fDimension);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
@@ -57,7 +58,7 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
 
@@ -155,6 +156,7 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     if(!strcmp("Stress",name.c_str()))           return 16;
     if(!strcmp("Strain",name.c_str()))           return 17;
     if(!strcmp("SigmaZ",name.c_str()))           return 18;
+    if(!strcmp("DeltaStrain",name.c_str()))      return 19;
 
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
@@ -169,6 +171,7 @@ int Elasticity2D::NSolutionVariables(int var) const{
     case 15:
     case 16:
     case 17:
+    case 19:
         return 3;
     case 2:
     case 3:
@@ -366,10 +369,20 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
             Sol[1] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
             Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
         } else {
+            
+            //  double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
+            // fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * aux;
+            // fConstitutiveMatrix(0,1) = aux * fPoissonRatio;
+            // fConstitutiveMatrix(1,0) = aux * fPoissonRatio;
+            // fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
+            // fConstitutiveMatrix(2,2) = G;
+
+            double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+            
             double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
             Sol[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
             Sol[1] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
-            Sol[2] = k * (1.-2.*fPoissonRatio) * epsilon[2];
+            Sol[2] = G * epsilon[2];
 #ifdef DEBUG_BUILD
             if (std::isnan(Sol[0])){
                 PanicButton();
@@ -402,6 +415,13 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         return;
     };
 
+    //Delta Strain
+    if (var == 19){
+        Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
+        Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
+        Sol[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0));
+        return;
+    };
 }; 
 
 
