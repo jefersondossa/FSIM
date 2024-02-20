@@ -35,24 +35,74 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
         fPoissonRatio = 0.;
     }
 
-    fIdentity2.resize(fNStressComponents);
-    fIdentity2.setZero();
-    fIdentity4.resize(fNStressComponents,fNStressComponents);
-    fIdentity4Dev.resize(fNStressComponents,fNStressComponents);
-    fIdentity4.setIdentity();
-    fIdentity4Dev.setZero();
-
-    if (fRealDimension == 2){
-        //Definition of 2nd and 4th order identity tensors  
-        fIdentity2[0] = 1.;
-        fIdentity2[1] = 1.;
-        fIdentity4(2,2) = 0.5;
-        fIdentity4Dev = fIdentity4;
-        for (int i = 0; i < fRealDimension; i++){
-            for (int j = 0; j < fRealDimension; j++){
-                fIdentity4Dev(i,j) -= fIdentity2[i] * fIdentity2[j] / 3.; 
+    Tensor Id2;
+    Id2.Identity();
+    MatrixDouble Id2xId2 = Id2.TensorProduct(Id2);
+    
+    std::vector<std::vector<std::vector<std::vector<double>>>> fIdSymmetric;
+    fIdSymmetric.resize(3);
+    for (int i = 0; i < 3; i++){
+        fIdSymmetric[i].resize(3);
+        for (int j = 0; j < 3; j++){
+            fIdSymmetric[i][j].resize(3);
+            for (int k = 0; k < 3; k++){
+                fIdSymmetric[i][j][k].resize(3);
             }
         }
+    }
+
+    double dik,djl,dil,djk;
+
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 3; j++){
+            for (int k = 0; k < 3; k++){
+                for (int l = 0; l < 3; l++){
+                    dik = i == k ? 1. : 0.; 
+                    djl = j == l ? 1. : 0.; 
+                    dil = i == l ? 1. : 0.; 
+                    djk = j == k ? 1. : 0.; 
+                    fIdSymmetric[i][j][k][l] = 0.5 * (dik*djl + dil*djk);
+                }
+            }
+        }
+    }
+
+    //4th order identity tensor
+    MatrixDouble fIdentity4S(6,6);
+    fIdentity4S.setZero();
+    
+    //Transform 4th order tensor into matrix: https://wiki.seg.org/wiki/Voigt_notation
+    //Diagonal
+    fIdentity4S(0,0) = fIdSymmetric[0][0][0][0];
+    fIdentity4S(1,1) = fIdSymmetric[1][1][1][1];
+    fIdentity4S(2,2) = fIdSymmetric[2][2][2][2];
+    fIdentity4S(3,3) = fIdSymmetric[1][2][1][2];
+    fIdentity4S(4,4) = fIdSymmetric[0][2][0][2];
+    fIdentity4S(5,5) = fIdSymmetric[0][1][0][1];
+    //1st line
+    fIdentity4S(0,1) = fIdentity4S(1,0) = fIdSymmetric[0][0][1][1];
+    fIdentity4S(0,2) = fIdentity4S(2,0) = fIdSymmetric[0][0][2][2];
+    fIdentity4S(0,3) = fIdentity4S(3,0) = fIdSymmetric[0][0][1][2];
+    fIdentity4S(0,4) = fIdentity4S(4,0) = fIdSymmetric[0][0][0][2];
+    fIdentity4S(0,5) = fIdentity4S(5,0) = fIdSymmetric[0][0][0][1];
+    //2nd line
+    fIdentity4S(1,2) = fIdentity4S(2,1) = fIdSymmetric[1][1][2][2];
+    fIdentity4S(1,3) = fIdentity4S(3,1) = fIdSymmetric[1][1][1][2];
+    fIdentity4S(1,4) = fIdentity4S(4,1) = fIdSymmetric[1][1][0][2];
+    fIdentity4S(1,5) = fIdentity4S(5,1) = fIdSymmetric[1][1][0][1];
+    //3rd line
+    fIdentity4S(2,3) = fIdentity4S(3,2) = fIdSymmetric[2][2][1][2];
+    fIdentity4S(2,4) = fIdentity4S(4,2) = fIdSymmetric[2][2][0][2];
+    fIdentity4S(2,5) = fIdentity4S(5,2) = fIdSymmetric[2][2][0][1];
+    //4th line
+    fIdentity4S(3,4) = fIdentity4S(4,3) = fIdSymmetric[1][2][0][2];
+    fIdentity4S(3,5) = fIdentity4S(5,3) = fIdSymmetric[1][2][0][1];
+    //5th line
+    fIdentity4S(4,5) = fIdentity4S(5,4) = fIdSymmetric[0][2][0][1];
+
+    fIdentity4Dev = fIdentity4S - Id2xId2/3.;
+
+    if (fRealDimension == 2){
         if (fPlaneStress){
             fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
         } else {
@@ -137,4 +187,47 @@ void PlasticityModel::VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt){
         break;
     }
 
+};
+
+void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress){
+
+    // fElasticModel->ComputeResidual(index,data,Rhs);
+    // return;
+    int nphi = data.fPhi.size();
+
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    MatrixDouble matB(3,2*nphi);
+    matB.setZero();
+    for (int j = 0; j < nphi; j++){
+        matB(0,2*j  ) = data.fDPhiX0(j,0);
+        matB(1,2*j+1) = data.fDPhiX0(j,1);
+        matB(2,2*j  ) = data.fDPhiX0(j,1);
+        matB(2,2*j+1) = data.fDPhiX0(j,0);
+    }
+
+    auto force = fForceFunction;
+    VecDouble forcingF(fDimension);
+    forcingF.setZero();
+    VecDouble x_ = data.fX;
+    if (force) force(x_,forcingF);
+    
+    VecDouble stress(3);
+
+    // TensorToVoigt(Stress,stress);
+    stress[0] = Stress.fXX();
+    stress[1] = Stress.fYY();
+    stress[2] = Stress.fXY();
+
+    // Rhs -= matB.transpose() * fElasticModel->ConstitutiveMatrix() * strain * WJ;
+    Rhs -= matB.transpose() * stress * WJ;
+
+    for (int i = nphi; i--; ){
+        double shapeFi = data.fPhi[i];
+        //External force
+        double Fx = forcingF[0] * shapeFi;
+        double Fy = forcingF[1] * shapeFi;
+        Rhs[2*i  ] += Fx * WJ;
+        Rhs[2*i+1] += Fy * WJ;
+    };
+    
 };

@@ -12,6 +12,7 @@ protected:
 
     MatrixDouble fMatP;
     Tensor fFlowVector;
+    Tensor fDeviatory;
 
 public:
     /// @brief Linear hardening plasticity model constructor
@@ -25,12 +26,6 @@ public:
     /// @param data integration point data
     /// @param Stiffness vector of stiffness matrices
     void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress) override;
-    
-    /// @brief Returns the updated weak form residual vector for the plasticity model 
-    /// @param index integration point index
-    /// @param data integration point data
-    /// @param Rhs residual vector
-    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) override;
     
     /// @brief Computes the element error. The exact solution shoul be provided.
     /// @param data integration point data

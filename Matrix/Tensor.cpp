@@ -8,7 +8,6 @@ Tensor::Tensor(){
 
 Tensor::Tensor(const Tensor &tensor){
     fData = tensor.fData;
-    fDimension = tensor.fDimension;
 }
 
 Tensor::Tensor(MatrixDouble &tensor){
@@ -21,19 +20,13 @@ Tensor::Tensor(MatrixDouble &tensor){
     }
 #endif
     fData[XX] = tensor(0,0);
-    fDimension = 1;
-    if (tensor.rows() == 2){
-        fDimension = 2;
-        fData[XY] = tensor(0,1);
-        fData[YY] = tensor(1,1);
-    } else if (tensor.rows() == 3){
-        fDimension = 3;
-        fData[XY] = tensor(0,1);
-        fData[YY] = tensor(1,1);
-        fData[XZ] = tensor(0,2);
-        fData[YZ] = tensor(1,2);
-        fData[YZ] = tensor(2,2);
-    }
+    fData[XY] = tensor(0,1);
+    fData[YY] = tensor(1,1);
+    fData[XY] = tensor(0,1);
+    fData[YY] = tensor(1,1);
+    fData[XZ] = tensor(0,2);
+    fData[YZ] = tensor(1,2);
+    fData[YZ] = tensor(2,2);
 }
 
 void Tensor::SetData(MatrixDouble &tensor){
@@ -44,19 +37,13 @@ void Tensor::SetData(MatrixDouble &tensor){
     }
 #endif
     fData[XX] = tensor(0,0);
-    fDimension = 1;
-    if (tensor.rows() == 2){
-        fDimension = 2;
-        fData[XY] = tensor(0,1);
-        fData[YY] = tensor(1,1);
-    } else if (tensor.rows() == 3){
-        fDimension = 3;
-        fData[XY] = tensor(0,1);
-        fData[YY] = tensor(1,1);
-        fData[XZ] = tensor(0,2);
-        fData[YZ] = tensor(1,2);
-        fData[YZ] = tensor(2,2);
-    }
+    fData[XY] = tensor(0,1);
+    fData[YY] = tensor(1,1);
+    fData[XY] = tensor(0,1);
+    fData[YY] = tensor(1,1);
+    fData[XZ] = tensor(0,2);
+    fData[YZ] = tensor(1,2);
+    fData[YZ] = tensor(2,2);
 }
 
 void Tensor::Zero(){
@@ -159,10 +146,6 @@ double Tensor::DoubleContraction(Tensor &t){
            2.*(fData[XY]*t.fData[XY] + fData[XZ]*t.fData[XZ] + fData[YZ]*t.fData[YZ]);
 }
 
-Tensor Tensor::TensorProduct(Tensor&t){
-    PanicButton();
-}
-
 void Tensor::Identity(){
     fData.setZero();
     fData[XX] = 1.;
@@ -181,6 +164,17 @@ Tensor Tensor::operator*(const double &multipl) const {
     return temp *= multipl;
 }
 
+const Tensor & Tensor::operator/=(const double &multipl) {
+    int i;
+    for (i = 0; i < 6; i++)fData[i] /= multipl;
+    return *this;
+}
+
+Tensor Tensor::operator/(const double &multipl) const {
+    Tensor temp(*this);
+    return temp /= multipl;
+}
+
 const Tensor & Tensor::operator+=(const Tensor &sum) {
     int i;
     for (i = 0; i < 6; i++)fData[i] += sum.fData[i];
@@ -190,6 +184,17 @@ const Tensor & Tensor::operator+=(const Tensor &sum) {
 Tensor Tensor::operator+(const Tensor &sum) const {
     Tensor temp(*this);
     return temp += sum;
+}
+
+const Tensor & Tensor::operator-=(const Tensor &sum) {
+    int i;
+    for (i = 0; i < 6; i++)fData[i] -= sum.fData[i];
+    return *this;
+}
+
+Tensor Tensor::operator-(const Tensor &sum) const {
+    Tensor temp(*this);
+    return temp -= sum;
 }
 
 Tensor Tensor::Normalized(){
@@ -209,40 +214,92 @@ double Tensor::Trace() const{
 }
 
 VecDouble Tensor::Eigenvalues(){
-    VecDouble eigval(fDimension);
+    VecDouble eigval(3);
     eigval.setZero();
-    switch (fDimension)
-    {
-    case 1:
-        eigval[0] = fData[XX];
-        break;
-    case 2:
-        { 
-            //Using Mohr's circle relations
-            double radius = sqrt((0.25*(fData[XX]-fData[YY])*(fData[XX]-fData[YY]))+fData[XY]*fData[XY]);
-            double sigmed = 0.5*(fData[XX]+fData[YY]);
-            eigval[0] = sigmed + radius;
-            eigval[1] = sigmed - radius;
-        }
-        break;
-    case 3:
-        {
-            MatrixDouble aux(3,3);
-            aux(0,0) = fData[XX];
-            aux(1,1) = fData[YY];
-            aux(2,2) = fData[ZZ];
-            aux(0,1) = aux(1,0) = fData[XY];
-            aux(0,2) = aux(2,0) = fData[XZ];
-            aux(1,2) = aux(2,1) = fData[YZ];
-
-            EigenSolver<MatrixDouble> solver(aux,EigenvaluesOnly);
-            eigval = solver.eigenvalues().real();
-        }
     
-    default:
-        PanicButton();
-        break;
-    }
+    MatrixDouble aux(3,3);
+    aux(0,0) = fData[XX];
+    aux(1,1) = fData[YY];
+    aux(2,2) = fData[ZZ];
+    aux(0,1) = aux(1,0) = fData[XY];
+    aux(0,2) = aux(2,0) = fData[XZ];
+    aux(1,2) = aux(2,1) = fData[YZ];
 
+    EigenSolver<MatrixDouble> solver(aux,EigenvaluesOnly);
+    eigval = solver.eigenvalues().real();
+    
     return eigval;
+}
+
+Tensor Tensor::Multiply(MatrixDouble &mat){
+    Tensor temp(*this);
+#ifdef DEBUG_BUILD
+    if(mat.rows() != 6 || mat.cols() != 6){
+        std::cout << "Matrix with wrong size\n";
+        PanicButton();
+    }
+#endif
+
+    VecDouble aux = mat * fData;
+    temp.fXX() = aux[XX];
+    temp.fYY() = aux[YY];
+    temp.fZZ() = aux[ZZ];
+    temp.fXY() = aux[XY];
+    temp.fXZ() = aux[XZ];
+    temp.fYZ() = aux[YZ];
+    
+    return temp;
+}
+
+MatrixDouble Tensor::MatrixForm(){
+    MatrixDouble mat(3,3);
+    mat.setZero();
+
+    mat(0,0) = fData[XX];
+    mat(1,1) = fData[YY];
+    mat(2,2) = fData[ZZ];
+    mat(0,1) = mat(1,0) = fData[XY];
+    mat(0,2) = mat(2,0) = fData[XZ];
+    mat(1,2) = mat(2,1) = fData[YZ];
+
+    return mat;
+}
+
+MatrixDouble Tensor::TensorProduct(Tensor &tensor){
+    MatrixDouble tensor1 = this->MatrixForm();
+    MatrixDouble tensor2 = tensor.MatrixForm();
+    //Based on this reference: https://wiki.seg.org/wiki/Voigt_notation
+    
+    MatrixDouble result(6,6);
+    result.setZero();
+    //Diagonal
+    result(0,0) = tensor1(0,0) * tensor2(0,0);
+    result(1,1) = tensor1(1,1) * tensor2(1,1);
+    result(2,2) = tensor1(2,2) * tensor2(2,2);
+    result(3,3) = tensor1(1,2) * tensor2(1,2);
+    result(4,4) = tensor1(0,2) * tensor2(0,2);
+    result(5,5) = tensor1(0,1) * tensor2(0,1);
+    //Off diagonal
+    //1st line
+    result(0,1) = result(1,0) = tensor1(0,0) * tensor2(1,1);
+    result(0,2) = result(2,0) = tensor1(0,0) * tensor2(2,2);
+    result(0,3) = result(3,0) = tensor1(0,0) * tensor2(1,2);
+    result(0,4) = result(4,0) = tensor1(0,0) * tensor2(0,2);
+    result(0,5) = result(5,0) = tensor1(0,0) * tensor2(0,1);
+    //2nd line
+    result(1,2) = result(2,1) = tensor1(1,1) * tensor2(2,2);
+    result(1,3) = result(3,1) = tensor1(1,1) * tensor2(1,2);
+    result(1,4) = result(4,1) = tensor1(1,1) * tensor2(0,2);
+    result(1,5) = result(5,1) = tensor1(1,1) * tensor2(0,1);
+    //3rd line
+    result(2,3) = result(3,2) = tensor1(2,2) * tensor2(1,2);
+    result(2,4) = result(4,2) = tensor1(2,2) * tensor2(0,2);
+    result(2,5) = result(5,2) = tensor1(2,2) * tensor2(0,1);
+    //4th line
+    result(3,4) = result(4,3) = tensor1(1,2) * tensor2(0,2);
+    result(3,5) = result(5,3) = tensor1(1,2) * tensor2(0,1);
+    //5th line
+    result(4,5) = result(5,4) = tensor1(0,2) * tensor2(0,1);
+
+    return result;
 }

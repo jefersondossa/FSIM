@@ -1,5 +1,6 @@
 #include "NonLinearAnalysis.h"
 #include "Assemble.h"
+#include "L2Projection.h"
 
 void NonLinearAnalysis::UpdateSolution(){
     
@@ -31,7 +32,7 @@ void NonLinearAnalysis::Run(){
     
     double NRL2norm = 1000.;
     int iteration = 0;
-
+    
     //Save Previous solution
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         for (int64_t inode = 0; inode < this->MeshVector()[imesh]->NNodes(); inode++){

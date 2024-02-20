@@ -48,7 +48,9 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
             if (fPlaneStress){
 
             } else {
-                fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowcurr[i]*flowcurr[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
+                //Update to 3x3 tensors
+                PanicButton();
+                fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowcurr[i]*flowcurr[j] + fBulkModulus*Id2xId2(i,j);  
                 // fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowPrev[i]*flowPrev[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
                 // fTangentTensor2(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j];// - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flowcurr[i]*flowcurr[j];
                 // fTangentTensor2(i,j) = fConstitutiveMatrix(i,j) - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flow.fData[i]*flow.fData[j];
@@ -66,52 +68,9 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
 
     // std::cout << "Differenca = \n" << elast - fTangentTensor2 << std::endl; 
 
-    fElasticModel->ConstitutiveMatrix() = fTangentTensor;
+    // fElasticModel->ConstitutiveMatrix() = fTangentTensor;
     fElasticModel->ComputeStiffness(index,data,Stiffness);
 
-};
-    
-void VonMises::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress){
-
-    // fElasticModel->ComputeResidual(index,data,Rhs);
-    // return;
-    int nphi = data.fPhi.size();
-
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
-    MatrixDouble matB(3,2*nphi);
-    matB.setZero();
-    for (int j = 0; j < nphi; j++){
-        matB(0,2*j  ) = data.fDPhiX0(j,0);
-        matB(1,2*j+1) = data.fDPhiX0(j,1);
-        matB(2,2*j  ) = data.fDPhiX0(j,1);
-        matB(2,2*j+1) = data.fDPhiX0(j,0);
-    }
-
-    auto force = fForceFunction;
-    VecDouble forcingF(fDimension);
-    forcingF.setZero();
-    VecDouble x_ = data.fX;
-    if (force) force(x_,forcingF);
-    
-    VecDouble stress(3);
-
-    // TensorToVoigt(Stress,stress);
-    stress[0] = Stress.fXX();
-    stress[1] = Stress.fYY();
-    stress[2] = Stress.fXY();
-
-    // Rhs -= matB.transpose() * fElasticModel->ConstitutiveMatrix() * strain * WJ;
-    Rhs -= matB.transpose() * stress * WJ;
-
-    for (int i = nphi; i--; ){
-        double shapeFi = data.fPhi[i];
-        //External force
-        double Fx = forcingF[0] * shapeFi;
-        double Fy = forcingF[1] * shapeFi;
-        Rhs[2*i  ] += Fx * WJ;
-        Rhs[2*i+1] += Fy * WJ;
-    };
-    
 };
     
 void VonMises::ComputeError(IntPointData &data, VecDouble &errors){
@@ -198,8 +157,8 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
         double PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
 
     } else { //Box 7.4 Souza Neto
-        auto deviatory = Stress.Deviatory();
-        fVonMisesStress = sqrt(1.5*deviatory.DoubleContraction(deviatory));
+        fDeviatory = Stress.Deviatory();
+        fVonMisesStress = sqrt(1.5*fDeviatory.DoubleContraction(fDeviatory));
         double sigmay = 0.;
         fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
         double deltaGamma = 0.;
@@ -218,13 +177,12 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
 
 void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
     //Box 7.3
-    auto dev = Stress.Deviatory();
     auto hydrostatic = Stress.Hydrostatic();
+
     fFlowVector = FlowVector(Stress);
-    // implementar atualização da deformação elasticaç
-    // Tensor devUpdated(dev);
-    dev *= (1. - data.fPlasticMultiplier * 3. * fShearModulus / fVonMisesStress);
-    Tensor epsilonUpdated(dev);
+
+    fDeviatory *= (1. - data.fPlasticMultiplier * 3. * fShearModulus / fVonMisesStress);
+    Tensor epsilonUpdated(fDeviatory);
     epsilonUpdated *= 1./(2. * fShearModulus);
     Tensor Ident;
     double epslion_e_trial = data.fElasticStrain[index].Trace();
@@ -232,34 +190,13 @@ void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stre
     Ident *= epslion_e_trial / 3.;
     epsilonUpdated += Ident;
 
-    Tensor epsilonUpdated2(data.fElasticStrain[index]);
-    double devnorm = dev.Norm();
-    epsilonUpdated2 += dev * (-data.fPlasticMultiplier * sqrt(1.5) / devnorm);
+    // Tensor epsilonUpdated2(data.fElasticStrain[index]);
+    // double devnorm = fDeviatory.Norm();
+    // epsilonUpdated2 += fDeviatory * (-data.fPlasticMultiplier * sqrt(1.5) / devnorm);
     data.fElasticStrain[index] = epsilonUpdated;
-    // if (fNStressComponents == 2){
-        
-    //     // data.fElasticStrain[index][0] = epsilonUpdated.fXX();
-    //     // data.fElasticStrain[index][1] = epsilonUpdated.fYY();
-    //     // data.fElasticStrain[index][2] = epsilonUpdated.fXY();
-    // }
-    MatrixDouble matelas(3,3);
-    matelas.setZero();
-    double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
-    double k = 2.*G / (1.-2.*fPoissonRatio);
-    double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
-    matelas(0,0) = (1.-fPoissonRatio) * aux;
-    matelas(0,1) = aux * fPoissonRatio;
-    matelas(1,0) = aux * fPoissonRatio;
-    matelas(1,1) = (1.-fPoissonRatio) * aux;
-    matelas(2,2) = G;
+
     
-    // dev *= (1. - data.fPlasticMultiplier * 3 * fShearModulus / fVonMisesStress);
-    Stress = dev + hydrostatic;
-    VecDouble auxstress(3);
-    auxstress[0] = Stress.fXX();
-    auxstress[1] = Stress.fYY();
-    auxstress[2] = Stress.fXY();
-    VecDouble elastaux = matelas.inverse() * auxstress; 
+    Stress = fDeviatory + hydrostatic;
 
     data.fPlasticStrain[index] += data.fPlasticMultiplier;
 }   

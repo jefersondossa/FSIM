@@ -95,7 +95,7 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
-                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * BCVal2[istate];
+                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * (BCVal2[istate]);
             }
         }
     }

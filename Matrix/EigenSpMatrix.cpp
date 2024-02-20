@@ -63,13 +63,37 @@ double EigenSpMatrix::SolutionNorm(){
 }
 
 void EigenSpMatrix::PrintMatrix(){
-    std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
+    // std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
+    std::cout << "GlobalMatrix = {\n";
+    for (int64_t i = 0; i < fMatrix.rows(); i++){
+        std::cout << "{";
+        for (int64_t j = 0; j < fMatrix.cols(); j++){
+            std::cout << fMatrix.coeffRef(i,j);
+            if (j<fMatrix.cols()-1) std::cout << ",";
+        }
+        std::cout << "}";
+        if (i<fMatrix.rows()-1) std::cout << ",\n";
+    }
+    std::cout << "};\n"; 
 }
 
 void EigenSpMatrix::PrintRhs(){
-    std::cout << "Global RHS = \n"<< fRhs << std::endl;
+    // std::cout << "Global RHS = \n"<< fRhs << std::endl;
+    std::cout << "RHS = {\n";
+    for (int64_t i = 0; i < fRhs.rows(); i++){
+        std::cout << "{" << fRhs(i,0) << "}";
+        if (i<fRhs.rows()-1) std::cout << ",\n";
+    }
+    std::cout << "};\n"; 
+    
 }
 
 void EigenSpMatrix::PrintSolution(){
-    std::cout << "Solution = \n"<< fSolution << std::endl;
+    // std::cout << "Solution = \n"<< fSolution << std::endl;
+    std::cout << "Solution = {\n";
+    for (int64_t i = 0; i < fSolution.rows(); i++){
+        std::cout << "{" << fSolution(i,0) << "}";
+        if (i<fSolution.rows()-1) std::cout << ",\n";
+    }
+    std::cout << "};\n"; 
 }

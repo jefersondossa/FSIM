@@ -19,12 +19,51 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
             // this->fIntegData.fElasticStrain[i].setZero();
         }
         fElasticConstitutiveMatrix = fPlasticityModel->ElasticModel()->ConstitutiveMatrix();
-        
+        fElasticConstitutiveMatrix.resize(6,6);
+        fElasticConstitutiveMatrix.setZero();
+
+        double k = fPlasticityModel->YoungModulus()/((1.+fPlasticityModel->PoissonRatio())*(1.-2.*fPlasticityModel->PoissonRatio()));
+        fElasticConstitutiveMatrix(0,0) = k * (1. - fPlasticityModel->PoissonRatio());
+        fElasticConstitutiveMatrix(0,1) = k * fPlasticityModel->PoissonRatio();
+        fElasticConstitutiveMatrix(0,2) = k * fPlasticityModel->PoissonRatio();
+        fElasticConstitutiveMatrix(1,0) = k * fPlasticityModel->PoissonRatio();
+        fElasticConstitutiveMatrix(1,1) = k * (1. - fPlasticityModel->PoissonRatio());
+        fElasticConstitutiveMatrix(1,2) = k * fPlasticityModel->PoissonRatio();
+        fElasticConstitutiveMatrix(2,0) = k * fPlasticityModel->PoissonRatio();
+        fElasticConstitutiveMatrix(2,1) = k * fPlasticityModel->PoissonRatio();
+        fElasticConstitutiveMatrix(2,2) = k * (1. - fPlasticityModel->PoissonRatio());
+        fElasticConstitutiveMatrix(3,3) = fPlasticityModel->ShearModulus();
+        fElasticConstitutiveMatrix(4,4) = fPlasticityModel->ShearModulus();
+        fElasticConstitutiveMatrix(5,5) = fPlasticityModel->ShearModulus();
     } else {
-
+        PanicButton();
     }
-
 };
+
+template<class tshape>
+void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
+    
+    auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
+    
+    //Assemble the trial stress tensor
+    MatrixDouble fElasticStress(3,3);
+    fElasticStress.setZero();
+    int var = fPlasticityModel->ElasticModel()->VariableIndex("DeltaStrain");
+    int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
+    VecDouble Sol(nsol);
+    Sol.setZero();
+    fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
+
+    if (fPlasticityModel -> Dimension() == 2){
+        this->fIntegData.fElasticStrain[index].fXX() += Sol[0];
+        this->fIntegData.fElasticStrain[index].fYY() += Sol[1];
+        this->fIntegData.fElasticStrain[index].fXY() += Sol[2];
+    } else {
+        PanicButton();
+    }
+    ElasStress = this->fIntegData.fElasticStrain[index].Multiply(fElasticConstitutiveMatrix);
+}
+
 
 template<class tshape>
 void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
@@ -69,46 +108,8 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
         
-        //Assemble the trial stress tensor
-        //the first step compute the initial elastic strain and store it
         Tensor ElasStress;
-        VecDouble stressVoigt;
-        int dim = fPlasticityModel->RealDimension();
-        MatrixDouble fElasticStress(dim,dim);
-        fElasticStress.setZero();
-        int var = fPlasticityModel->ElasticModel()->VariableIndex("DeltaStrain");
-        int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
-        VecDouble Sol(nsol);
-        Sol.setZero();
-        fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
-        this->fIntegData.fElasticStrain[index].fXX() += Sol[0];
-        this->fIntegData.fElasticStrain[index].fYY() += Sol[1];
-        this->fIntegData.fElasticStrain[index].fXY() += Sol[2];
-        VecDouble elasticStrainTrial(3);
-        elasticStrainTrial[0] = this->fIntegData.fElasticStrain[index].fXX();
-        elasticStrainTrial[1] = this->fIntegData.fElasticStrain[index].fYY();
-        elasticStrainTrial[2] = this->fIntegData.fElasticStrain[index].fXY();
-        // if (this->fIntegData.fElasticStrain[index].norm() == 0){
-        //     stressVoigt = fElasticConstitutiveMatrix * Sol;
-        //     this->fIntegData.fElasticStrain[index] = Sol;
-        // } else {
-            stressVoigt = fElasticConstitutiveMatrix * elasticStrainTrial;
-        // }
-        // if (this->fIntegData.fElasticStrain[index].norm() == 0){
-            
-        // }
-        fPlasticityModel->VoigtToTensor(fElasticStress,stressVoigt);
-        ElasStress.SetData(fElasticStress);
-        //Add sigma z component for plane strain problem
-        if (dim == 2 && !fPlasticityModel->PlaneStress()){
-            double E = fPlasticityModel->YoungModulus();
-            double nu = fPlasticityModel->PoissonRatio();
-            double k = E / ((1.+nu)*(1.-2.*nu));
-            ElasStress.fXX() += k * nu * this->fIntegData.fElasticStrain[index].fZZ();
-            ElasStress.fYY() += k * nu * this->fIntegData.fElasticStrain[index].fZZ();
-            ElasStress.fZZ() = k * (nu * elasticStrainTrial[0]+ nu * elasticStrainTrial[1] + (1.-nu)*this->fIntegData.fElasticStrain[index].fZZ());
-        }
-        // std::cout << "Elastic tangent = \n" << fElasticConstitutiveMatrix << std::endl;
+        ComputeTrialStress(index,ElasStress);        
 
         //Check the Yield crieterion
         double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);

@@ -17,8 +17,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     VecDouble val2(2);
     val2.setZero();
     //Left
-    val2[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(9,2,3,val1,val2);
+    val2[1] = 0.;
+    L2Projection * matbc1 = new L2Projection(9,2,0,val1,val2);
 
     val2.setZero();
     val2[0] = 1.;
@@ -26,7 +26,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     L2Projection * matbc2 = new L2Projection(11,2,3,val1,val2);
 
     val2.setZero();
-    val2[1] = 0.0015;
+    val2[1] = 0.0005;
+    // val2[1] = 0.5;
     //Right
     L2Projection * matbc3 = new L2Projection(12,2,4,val1,val2);
     val2.setZero();
@@ -44,11 +45,12 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
    
     GmshTools::Read(*cmesh,"../marques_viga_biengastada.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 50, bcIncrement,1.e-7,30);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 25, bcIncrement,1.e-7,30);
     VecDouble increment(2);
     increment.setZero();    
-    increment[0] = 0.00004;
-    // an.SetIncrement(increment);
+    increment[1] = 0.00004;
+    // increment[1] = 0.04;
+    an.SetIncrement(increment);
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};

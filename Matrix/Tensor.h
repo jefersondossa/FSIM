@@ -2,18 +2,21 @@
 #define TENSOR_H
 
 #include "DenseEigen.h"
+#include "Tensor4D.h"
 
 #define XX 0
 #define YY 1
 #define ZZ 2
-#define XY 3
+#define XY 5
 #define XZ 4
-#define YZ 5
+#define YZ 3
+
+class Tensor4D;
 
 class Tensor{
 public:
     VecDouble    fData;
-    int          fDimension;
+
 public:
     Tensor();
 
@@ -45,15 +48,22 @@ public:
     double DeviatoryNorm();
 
     double DoubleContraction(Tensor &t);
-    Tensor TensorProduct(Tensor &t);
     void Identity();
     Tensor Normalized();
     Tensor NormalizedDeviatory();
+    Tensor Multiply(MatrixDouble &mat);
 
-    const Tensor & operator*=(const double &multipl);
-    Tensor operator*(const double &multipl) const;
     Tensor operator+(const Tensor &sum) const;
     const Tensor & operator+=(const Tensor &sum);
+
+    Tensor operator-(const Tensor &sum) const;
+    const Tensor & operator-=(const Tensor &sum);
+
+    Tensor operator*(const double &multipl) const;
+    const Tensor & operator*=(const double &multipl);
+
+    Tensor operator/(const double &multipl) const;
+    const Tensor & operator/=(const double &multipl);    
     
     void Zero();
 
@@ -78,7 +88,11 @@ public:
     double &fYZ(){
         return fData[YZ];
     }
+
+    MatrixDouble MatrixForm();
     
+    MatrixDouble TensorProduct(Tensor &tensor);
+
 };
 
 

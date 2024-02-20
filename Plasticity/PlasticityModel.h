@@ -18,14 +18,10 @@ protected:
     //Number of Stress components
     int fNStressComponents;
     //2nd order identity tensor
-    VecDouble fIdentity2;
-    //4th order identity tensor
-    MatrixDouble fIdentity4;
+    MatrixDouble Id2xId2;
+    
     //Deviatory 4th order identity tensor
     MatrixDouble fIdentity4Dev;
-
-    Tensor fId4;
-    Tensor fId4Dev;
 
     // The Young modulus
     double fYoungModulus;
@@ -59,9 +55,7 @@ public:
     };
 
 
-    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress){
-        PanicButton();
-    };
+    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress);
 
     virtual double PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
         PanicButton();
@@ -116,6 +110,9 @@ public:
 
     double &PoissonRatio(){
         return fPoissonRatio;
+    }
+    double &ShearModulus(){
+        return fShearModulus;
     }
 };
 
