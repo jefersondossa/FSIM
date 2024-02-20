@@ -10,6 +10,8 @@ file(GLOB plasticity
     Tresca.cpp
     PlasticStep.h
     PlasticStep.cpp
+    DruckerPrager.h
+    DruckerPrager.cpp
 )
 
 set(PLASTICITY ${plasticity} PARENT_SCOPE)

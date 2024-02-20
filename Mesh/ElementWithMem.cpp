@@ -120,6 +120,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
             fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector); 
         } else {
             //Plastic step
+            // std::cout << "Constitutive elas\n" << fElasticConstitutiveMatrix << std::endl; 
             this->fIntegData.fYieldFunction[index] = YieldFunction;
             this->fIntegData.fPlasticMultiplier = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
             fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);

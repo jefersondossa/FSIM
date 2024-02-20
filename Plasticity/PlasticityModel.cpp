@@ -37,7 +37,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
 
     Tensor Id2;
     Id2.Identity();
-    MatrixDouble Id2xId2 = Id2.TensorProduct(Id2);
+    fId2xId2 = Id2.TensorProduct(Id2);
     
     std::vector<std::vector<std::vector<std::vector<double>>>> fIdSymmetric;
     fIdSymmetric.resize(3);
@@ -100,7 +100,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     //5th line
     fIdentity4S(4,5) = fIdentity4S(5,4) = fIdSymmetric[0][2][0][1];
 
-    fIdentity4Dev = fIdentity4S - Id2xId2/3.;
+    fIdentity4Dev = fIdentity4S - fId2xId2/3.;
 
     if (fRealDimension == 2){
         if (fPlaneStress){
@@ -230,4 +230,42 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
         Rhs[2*i+1] += Fy * WJ;
     };
     
+};
+
+
+int PlasticityModel::VariableIndex(const std::string &name) const{
+    auto n = fElasticModel->VariableIndex(name);
+    if (n != -1){
+        return n;
+    } else {
+        if(!strcmp("PlasticStrain",name.c_str()))    return 101;
+    }
+    return -1;
+    // return fElasticModel->VariableIndex(name);
+};
+
+int PlasticityModel::NSolutionVariables(int var) const {
+    int val = fElasticModel->NSolutionVariables(var);
+    if (val != -1){
+        return val;
+    } else {
+        switch (var)
+        {
+        case 101:
+            return 1;
+        
+        default:
+            return -1;
+        }
+    }
+    return -1;
+};
+
+void PlasticityModel::Solution(IntPointData &data, int var, VecDouble &Sol){
+    fElasticModel->Solution(data,var,Sol);
+    if (var == 101){
+        if (data.fPlasticStrain.norm() > 0)
+        Sol[0] = data.fPlasticStrain.mean();
+        return;
+    };
 };

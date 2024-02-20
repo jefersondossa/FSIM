@@ -37,6 +37,9 @@ void Elasticity3D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     MatrixDouble matB(6,3*nphi);
     matB.setZero();
 
+    std::cout << "Corrigir as derivadas para a ordem do tensor de voigt" << std::endl;
+    //xx, yy, zz, yz, xz, xy <- ordem correta
+    PanicButton();
     for (int j = 0; j < nphi; j++){
         matB(0,3*j  ) = data.fDPhiX0(j,0);
         matB(1,3*j+1) = data.fDPhiX0(j,1);

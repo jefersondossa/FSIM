@@ -15,105 +15,56 @@ VonMises::VonMises(WeakForm *elast) : PlasticityModel(elast){
 
 void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress){
     
-    VecDouble flowcurr(fNStressComponents);
-    VecDouble flowPrev(fNStressComponents);
-    MatrixDouble fTangentTensor(fNStressComponents,fNStressComponents);
-    MatrixDouble fTangentTensor2(fNStressComponents,fNStressComponents);
+    MatrixDouble fTangentTensor(6,6);
 
     fTangentTensor.setZero();
-    fTangentTensor2.setZero();
-    auto devAux = Stress.Deviatory();
-    auto flow = FlowVector(Stress);
-    if (fRealDimension == 2){
-        flowPrev[0] = fFlowVector.fXX(); 
-        flowPrev[1] = fFlowVector.fYY(); 
-        flowPrev[2] = fFlowVector.fXY();
-        flowcurr[0] = flow.fXX(); 
-        flowcurr[1] = flow.fYY(); 
-        flowcurr[2] = flow.fXY();
-    } else if (fRealDimension == 3){
-        PanicButton();
-    } else {
-        PanicButton();
-    }
-    // 
-    double q = Stress.DeviatoryNorm() ;//* sqrt(1.5);
-    double qtrial = Stress.DeviatoryNorm() * sqrt(1.5) + 3.*fShearModulus*data.fPlasticMultiplier;
-
+    
+    MatrixDouble NxN = fFlowVector.TensorProduct(fFlowVector);
+    
     double Afactor = 2. * fShearModulus *(1.-3.*fShearModulus*data.fPlasticMultiplier/fVonMisesStress);
     double Bfactor = 6. * fShearModulus * fShearModulus * (data.fPlasticMultiplier/fVonMisesStress - 1./(3.*fShearModulus+fHardening));
 
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 3; j++){
-            if (fPlaneStress){
-
-            } else {
-                //Update to 3x3 tensors
-                PanicButton();
-                fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowcurr[i]*flowcurr[j] + fBulkModulus*Id2xId2(i,j);  
-                // fTangentTensor(i,j) = Afactor*fIdentity4Dev(i,j) + Bfactor*flowPrev[i]*flowPrev[j] + fBulkModulus*fIdentity2[i]*fIdentity2[j];  
-                // fTangentTensor2(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j];// - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flowcurr[i]*flowcurr[j];
-                // fTangentTensor2(i,j) = fConstitutiveMatrix(i,j) - 6. * fShearModulus * fShearModulus/ (3.*fShearModulus+ fHardening) * flow.fData[i]*flow.fData[j];
-                // fTangentTensor(i,j) = 2.*fShearModulus*fIdentity4Dev(i,j) + fBulkModulus*fIdentity2[i]*fIdentity2[j] - 6.*fShearModulus*fShearModulus*flowcurr[i]*flowcurr[j]/(3.*fShearModulus+fHardening)
-                //                     - data.fPlasticMultiplier * 6. * fShearModulus * fShearModulus/fVonMisesStress * (fIdentity4Dev(i,j) - flowPrev[i]*flowPrev[j]);  
-            }
-        }
-    }
-
     //Elastic operator 7.107
+    if (fPlaneStress){
+        PanicButton();
+    } else {
+        //Elastic Tensor
+        // fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
+        //Elastoplastic tensor
+        fTangentTensor = Afactor*fIdentity4Dev + Bfactor*NxN + fBulkModulus*fId2xId2;  
+    }
+    
+    
     // auto elast = fElasticModel->ConstitutiveMatrix();
     // std::cout << "Elastic - \n" << elast << std::endl;
     // std::cout << "Tangent - \n" << fTangentTensor << std::endl;
-    // std::cout << "Tangent2 - \n" << fTangentTensor2 << std::endl;
 
-    // std::cout << "Differenca = \n" << elast - fTangentTensor2 << std::endl; 
-
-    // fElasticModel->ConstitutiveMatrix() = fTangentTensor;
+    if (fElasticModel->Dimension() == 2){
+        VecInt order(3);
+        order[0] = XX;
+        order[1] = YY;
+        order[2] = XY;
+        MatrixDouble fTangent2D(3,3);
+        for (int i = 0; i < 3; i++){
+            for (int j = 0; j < 3; j++){
+                fTangent2D(i,j) = fTangentTensor(order[i],order[j]);
+            }
+        }
+        fElasticModel->ConstitutiveMatrix() = fTangent2D;
+    } else if (fElasticModel->Dimension() == 3) {
+        fElasticModel->ConstitutiveMatrix() = fTangentTensor;
+    } else {
+        PanicButton();
+    }
+    
     fElasticModel->ComputeStiffness(index,data,Stiffness);
-
 };
     
 void VonMises::ComputeError(IntPointData &data, VecDouble &errors){
     fElasticModel->ComputeError(data,errors);
-
 };
 
-int VonMises::VariableIndex(const std::string &name) const{
-    auto n = fElasticModel->VariableIndex(name);
-    if (n != -1){
-        return n;
-    } else {
-        if(!strcmp("PlasticStrain",name.c_str()))    return 101;
-    }
-    return -1;
-    // return fElasticModel->VariableIndex(name);
-};
 
-int VonMises::NSolutionVariables(int var) const {
-    int val = fElasticModel->NSolutionVariables(var);
-    if (val != -1){
-        return val;
-    } else {
-        switch (var)
-        {
-        case 101:
-            return 1;
-        
-        default:
-            return -1;
-        }
-    }
-    return -1;
-};
-
-void VonMises::Solution(IntPointData &data, int var, VecDouble &Sol){
-    fElasticModel->Solution(data,var,Sol);
-    if (var == 101){
-        if (data.fPlasticStrain.norm() > 0)
-        Sol[0] = data.fPlasticStrain.mean();
-        return;
-    };
-};
 double VonMises::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
     double YF = 0.;
     if (fPlaneStress){
