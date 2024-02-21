@@ -72,6 +72,22 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
 
+    if (fPlasticityModel->Dimension() == 2){
+        VecInt order(3);
+        order[0] = XX;
+        order[1] = YY;
+        order[2] = XY;
+        MatrixDouble fTangent2D(3,3);
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
+        fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
+    } else if (fPlasticityModel->Dimension() == 3) {
+        fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
+    } else {
+        PanicButton();
+    }
+
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
 
         //Defines the integration points adimentional coordinates
@@ -103,21 +119,6 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
 
         if (YieldFunction < 1.e-10){
             //Elastic step
-            if (fPlasticityModel->Dimension() == 2){
-                VecInt order(3);
-                order[0] = XX;
-                order[1] = YY;
-                order[2] = XY;
-                MatrixDouble fTangent2D(3,3);
-                for (int i = 0; i < 3; i++)
-                    for (int j = 0; j < 3; j++)
-                        fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
-                fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
-            } else if (fPlasticityModel->Dimension() == 3) {
-                fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
-            } else {
-                PanicButton();
-            }
             fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
             fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
         } else {
