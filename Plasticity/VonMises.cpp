@@ -50,6 +50,9 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
                 fTangent2D(i,j) = fTangentTensor(order[i],order[j]);
             }
         }
+        // fTangent2D(0,2) = fTangent2D(2,0) = 0.;
+        // fTangent2D(1,2) = fTangent2D(2,1) = 0.;
+        // std::cout << "Tangent 2d\n" << fTangent2D << std::endl;
         fElasticModel->ConstitutiveMatrix() = fTangent2D;
     } else if (fElasticModel->Dimension() == 3) {
         fElasticModel->ConstitutiveMatrix() = fTangentTensor;
@@ -80,7 +83,6 @@ double VonMises::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
         //Eq (7.74)
         double sigmay;
         fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
-        auto deviatory = Stress.Deviatory();
         YF = sqrt(3.*Stress.J2()) - sigmay;
     }
     return YF;
@@ -129,25 +131,21 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
 void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
     //Box 7.3
     auto hydrostatic = Stress.Hydrostatic();
-
+    //Flow vector with trial deviatory stress
     fFlowVector = FlowVector(Stress);
 
     fDeviatory *= (1. - data.fPlasticMultiplier * 3. * fShearModulus / fVonMisesStress);
-    Tensor epsilonUpdated(fDeviatory);
-    epsilonUpdated *= 1./(2. * fShearModulus);
-    Tensor Ident;
-    double epslion_e_trial = data.fElasticStrain[index].Trace();
-    Ident.Identity();
-    Ident *= epslion_e_trial / 3.;
-    epsilonUpdated += Ident;
-
-    // Tensor epsilonUpdated2(data.fElasticStrain[index]);
-    // double devnorm = fDeviatory.Norm();
-    // epsilonUpdated2 += fDeviatory * (-data.fPlasticMultiplier * sqrt(1.5) / devnorm);
-    data.fElasticStrain[index] = epsilonUpdated;
-
-    
     Stress = fDeviatory + hydrostatic;
-
+    
+    Tensor epsilonUpdated(fDeviatory);
+    epsilonUpdated /= (2. * fShearModulus);
+    Tensor Ident;
+    double epslion_e_trial = data.fElasticStrain[index].Trace() / 3.;
+    Ident.Identity();
+    Ident *= epslion_e_trial;
+    epsilonUpdated += Ident;
+    //Update elastic strain
+    data.fElasticStrain[index] = epsilonUpdated;
+    //Update plastic strain
     data.fPlasticStrain[index] += data.fPlasticMultiplier;
 }   

@@ -229,6 +229,7 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
         Rhs[2*i  ] += Fx * WJ;
         Rhs[2*i+1] += Fy * WJ;
     };
+     
     
 };
 

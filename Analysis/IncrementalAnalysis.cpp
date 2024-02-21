@@ -40,7 +40,7 @@ void IncrementalAnalysis::Run(){
 
 
 void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames){
-    std::ofstream output("integral",std::ios::app);
+    
     std::vector<VecDouble > increments(fIncrementBC.size());
     std::vector<VecDouble> initialbc(fIncrementBC.size());
     //Define the step size for each BC
@@ -72,10 +72,12 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
                 fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * (iStep);
             }
         }
-
+        std::ofstream output("plasticity.txt",std::ios::app);
+        output << "\n\n------------------STEP = " << iStep << " ------------------" << std::endl;
         NonLinearAnalysis::Run();
         VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,iStep);
         {
+            // std::ofstream output("integral",std::ios::app);
             // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};
             // std::set<int> matid = {6};
             // std::map<std::string,VecDouble> result;

@@ -46,6 +46,8 @@ void NonLinearAnalysis::Run(){
     //Iterative Process
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
+        std::ofstream output("plasticity.txt",std::ios::app);
+        output << "ITERATION = " << iteration << std::endl;
         std::clock_t t3 = std::clock();
         Compute();
         std::clock_t t4 = std::clock();

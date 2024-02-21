@@ -20,21 +20,8 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         }
         fElasticConstitutiveMatrix = fPlasticityModel->ElasticModel()->ConstitutiveMatrix();
         fElasticConstitutiveMatrix.resize(6,6);
-        fElasticConstitutiveMatrix.setZero();
+        fElasticConstitutiveMatrix = 2.*fPlasticityModel->ShearModulus()*fPlasticityModel->fIdentity4Dev + fPlasticityModel->BulkModulus()*fPlasticityModel->fId2xId2;
 
-        double k = fPlasticityModel->YoungModulus()/((1.+fPlasticityModel->PoissonRatio())*(1.-2.*fPlasticityModel->PoissonRatio()));
-        fElasticConstitutiveMatrix(0,0) = k * (1. - fPlasticityModel->PoissonRatio());
-        fElasticConstitutiveMatrix(0,1) = k * fPlasticityModel->PoissonRatio();
-        fElasticConstitutiveMatrix(0,2) = k * fPlasticityModel->PoissonRatio();
-        fElasticConstitutiveMatrix(1,0) = k * fPlasticityModel->PoissonRatio();
-        fElasticConstitutiveMatrix(1,1) = k * (1. - fPlasticityModel->PoissonRatio());
-        fElasticConstitutiveMatrix(1,2) = k * fPlasticityModel->PoissonRatio();
-        fElasticConstitutiveMatrix(2,0) = k * fPlasticityModel->PoissonRatio();
-        fElasticConstitutiveMatrix(2,1) = k * fPlasticityModel->PoissonRatio();
-        fElasticConstitutiveMatrix(2,2) = k * (1. - fPlasticityModel->PoissonRatio());
-        fElasticConstitutiveMatrix(3,3) = fPlasticityModel->ShearModulus();
-        fElasticConstitutiveMatrix(4,4) = fPlasticityModel->ShearModulus();
-        fElasticConstitutiveMatrix(5,5) = fPlasticityModel->ShearModulus();
     } else {
         PanicButton();
     }
@@ -116,11 +103,25 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
 
         if (YieldFunction < 1.e-10){
             //Elastic step
+            if (fPlasticityModel->Dimension() == 2){
+                VecInt order(3);
+                order[0] = XX;
+                order[1] = YY;
+                order[2] = XY;
+                MatrixDouble fTangent2D(3,3);
+                for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 3; j++)
+                        fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
+                fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
+            } else if (fPlasticityModel->Dimension() == 3) {
+                fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
+            } else {
+                PanicButton();
+            }
             fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
-            fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector); 
+            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
         } else {
             //Plastic step
-            // std::cout << "Constitutive elas\n" << fElasticConstitutiveMatrix << std::endl; 
             this->fIntegData.fYieldFunction[index] = YieldFunction;
             this->fIntegData.fPlasticMultiplier = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
             fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);

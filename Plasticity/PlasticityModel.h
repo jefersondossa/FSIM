@@ -17,12 +17,7 @@ protected:
 
     //Number of Stress components
     int fNStressComponents;
-    //2nd order identity tensor
-    MatrixDouble fId2xId2;
     
-    //Deviatory 4th order identity tensor
-    MatrixDouble fIdentity4Dev;
-
     // The Young modulus
     double fYoungModulus;
     double fPoissonRatio;
@@ -34,6 +29,13 @@ protected:
 
     // Lambda function returning the stress-stran relation
     std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> fUniaxialYield = 0; 
+public:
+    //2nd order identity tensor
+    MatrixDouble fId2xId2;
+    
+    //Deviatory 4th order identity tensor
+    MatrixDouble fIdentity4Dev;
+
 
 public:
     /// @brief Default constructor
@@ -113,6 +115,9 @@ public:
     }
     double &ShearModulus(){
         return fShearModulus;
+    }
+    double &BulkModulus(){
+        return fBulkModulus;
     }
 
     /// @brief Returns the variable index of a given solution variable
