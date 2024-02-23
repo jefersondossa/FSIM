@@ -50,6 +50,8 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "PositionalTruss.h"
 #include "MohrCoulomb.h"
 #include "VonMises.h"
+#include "Tresca.h"
+#include "DruckerPrager.h"
 #include "Elasticity3D.h"
 #include "TransientElasticity2D.h"
 #include "TransientPoisson.h"

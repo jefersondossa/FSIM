@@ -27,7 +27,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     val2.setZero();
     // val2[1] = 0.0005;
-    val2[0] = 0.5;
+    val2[1] = 0.5;
     //Right
     L2Projection * matbc3 = new L2Projection(12,2,1,val1,val2);
     val2.setZero();
@@ -37,7 +37,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
-    VonMises *plastmodel = new VonMises(matelas);
+    // VonMises *plastmodel = new VonMises(matelas);
+    Tresca *plastmodel = new Tresca(matelas);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel); 
@@ -49,7 +50,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     VecDouble increment(2);
     increment.setZero();    
     // increment[1] = 0.00004;
-    increment[0] = 0.02;
+    increment[1] = 0.02;
     an.SetIncrement(increment);
 
     std::vector<std::string> ScalarNames, VectorNames;

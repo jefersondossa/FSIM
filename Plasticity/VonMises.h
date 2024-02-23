@@ -8,7 +8,6 @@ class VonMises : public PlasticityModel
 {
 protected:
     double fVonMisesStress;
-    double fDevNorm;
 
     MatrixDouble fMatP;
     Tensor fFlowVector;

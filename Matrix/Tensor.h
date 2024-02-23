@@ -69,6 +69,10 @@ public:
 
     VecDouble Eigenvalues();
 
+    /// @brief Computes Eigenvalues and eigenvectors
+    /// @return 
+    void SpectralDecomposition(VecDouble &eigenvalues, MatrixDouble &eigenvectors);
+
 
     double &fXX(){
         return fData[XX];

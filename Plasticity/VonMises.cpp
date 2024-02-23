@@ -50,9 +50,6 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
                 fTangent2D(i,j) = fTangentTensor(order[i],order[j]);
             }
         }
-        // fTangent2D(0,2) = fTangent2D(2,0) = 0.;
-        // fTangent2D(1,2) = fTangent2D(2,1) = 0.;
-        // std::cout << "Tangent 2d\n" << fTangent2D << std::endl;
         fElasticModel->ConstitutiveMatrix() = fTangent2D;
     } else if (fElasticModel->Dimension() == 3) {
         fElasticModel->ConstitutiveMatrix() = fTangentTensor;
@@ -114,7 +111,6 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
         fVonMisesStress = sqrt(1.5*fDeviatory.DoubleContraction(fDeviatory));
         double sigmay = 0.;
         fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
-        double deltaGamma = 0.;
         double PhiTil = fVonMisesStress-sigmay;
         
         while (fabs(PhiTil/sigmay) > 1.e-5){

@@ -18,10 +18,8 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
             this->fIntegData.fElasticStrain[i].Zero();
             // this->fIntegData.fElasticStrain[i].setZero();
         }
-        fElasticConstitutiveMatrix = fPlasticityModel->ElasticModel()->ConstitutiveMatrix();
         fElasticConstitutiveMatrix.resize(6,6);
         fElasticConstitutiveMatrix = 2.*fPlasticityModel->ShearModulus()*fPlasticityModel->fIdentity4Dev + fPlasticityModel->BulkModulus()*fPlasticityModel->fId2xId2;
-
     } else {
         PanicButton();
     }
@@ -72,24 +70,22 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
 
-    if (fPlasticityModel->Dimension() == 2){
-        VecInt order(3);
-        order[0] = XX;
-        order[1] = YY;
-        order[2] = XY;
-        MatrixDouble fTangent2D(3,3);
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
-                fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
-        fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
-    } else if (fPlasticityModel->Dimension() == 3) {
-        fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
-    } else {
-        PanicButton();
-    }
-
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
-
+        if (fPlasticityModel->Dimension() == 2){
+            VecInt order(3);
+            order[0] = XX;
+            order[1] = YY;
+            order[2] = XY;
+            MatrixDouble fTangent2D(3,3);
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
+            fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
+        } else if (fPlasticityModel->Dimension() == 3) {
+            fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
+        } else {
+            PanicButton();
+        }
         //Defines the integration points adimentional coordinates
         for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = this->fIntRule.PointList(index,k);
 
