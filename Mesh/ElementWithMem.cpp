@@ -113,7 +113,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         //Check the Yield crieterion
         double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
 
-        if (YieldFunction < 1.e-10){
+        if (YieldFunction < 1.e-8){
             //Elastic step
             fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
             fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 

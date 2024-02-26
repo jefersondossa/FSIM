@@ -29,11 +29,9 @@ Tensor::Tensor(MatrixDouble &tensor){
     fData[XX] = tensor(0,0);
     fData[XY] = tensor(0,1);
     fData[YY] = tensor(1,1);
-    fData[XY] = tensor(0,1);
-    fData[YY] = tensor(1,1);
     fData[XZ] = tensor(0,2);
     fData[YZ] = tensor(1,2);
-    fData[YZ] = tensor(2,2);
+    fData[ZZ] = tensor(2,2);
 }
 
 void Tensor::SetData(MatrixDouble &tensor){
@@ -46,11 +44,9 @@ void Tensor::SetData(MatrixDouble &tensor){
     fData[XX] = tensor(0,0);
     fData[XY] = tensor(0,1);
     fData[YY] = tensor(1,1);
-    fData[XY] = tensor(0,1);
-    fData[YY] = tensor(1,1);
     fData[XZ] = tensor(0,2);
     fData[YZ] = tensor(1,2);
-    fData[YZ] = tensor(2,2);
+    fData[ZZ] = tensor(2,2);
 }
 
 void Tensor::Zero(){
@@ -258,25 +254,86 @@ VecDouble Tensor::Eigenvalues(){
     return eigval;
 }
 
-void Tensor::SpectralDecomposition(VecDouble &eigenvalues, MatrixDouble &eigenvectors){ 
+void Tensor::SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDouble> &eigenprojections){ 
     eigenvalues.resize(3); 
-    eigenvectors.resize(3,3);
+    eigenprojections.resize(3);
 
-    MatrixDouble aux(3,3);
-    aux = MatrixForm();
-    // aux(0,0) = fData[XX];
-    // aux(1,1) = fData[YY];
-    // aux(2,2) = fData[ZZ];
-    // aux(0,1) = aux(1,0) = fData[XY];
-    // aux(0,2) = aux(2,0) = fData[XZ];
-    // aux(1,2) = aux(2,1) = fData[YZ];
+    //A.4 Souza Neto
+    double i1 = I1();
+    double i2 = I2();
+    double i3 = I3();
+    double R = (-2.*i1*i1*i1 + 9.*i1*i2 - 27.*i3) / 54.;
+    double Q = (i1*i1 - 3.*i2)/9.;
+    double sqQ = sqrt(Q);
+    double valcos = R/(Q*sqQ);
+    if (valcos < -1.) valcos = -1.;
+    if (valcos >  1.) valcos = 1.;
+    double theta = acos(valcos);
+    if (fabs(i2) < 1.e-10){
+        eigenvalues.setZero();
+        return;
+    } else {
+        eigenvalues[0] = -2. * sqQ * cos(theta/3.) + i1/3.; 
+        eigenvalues[1] = -2. * sqQ * cos((theta+2.*M_PI)/3.) + i1/3.; 
+        eigenvalues[2] = -2. * sqQ * cos((theta-2.*M_PI)/3.) + i1/3.;
+    }
 
-    EigenSolver<MatrixDouble> solver(aux);
-    eigenvalues = solver.eigenvalues().real();
-    eigenvectors = solver.eigenvectors().real();
+    MatrixDouble aux = MatrixForm();
+    
+
+    // If all eigenvalues are different
+    MatrixDouble ident(3,3);
+    ident.setIdentity();
+    if (fabs(eigenvalues[0]-eigenvalues[1]) > 1.e-10 && fabs(eigenvalues[0]-eigenvalues[2]) > 1.e-10 && fabs(eigenvalues[1]-eigenvalues[2]) > 1.e-10){
+        for (size_t i = 0; i < 3; i++){
+            eigenprojections[i] = eigenvalues[i]/(2.*eigenvalues[i]*eigenvalues[i]*eigenvalues[i]-i1*eigenvalues[i]*eigenvalues[i]+i3) *(aux*aux - (i1-eigenvalues[i])*aux + (i3/eigenvalues[i])*ident);
+        }
+#ifdef DEBUG_BUILD
+    if (std::isnan(eigenprojections[0].norm())||std::isnan(eigenprojections[1].norm())||std::isnan(eigenprojections[2].norm())){
+        PanicButton();
+    }
+#endif
+    } else if (eigenvalues[0]==eigenvalues[1]){
+        eigenprojections[2] = eigenvalues[2]/(2.*eigenvalues[2]*eigenvalues[2]*eigenvalues[2]-i1*eigenvalues[2]*eigenvalues[2]+i3) *(aux*aux - (i1-eigenvalues[2])*aux + (i3/eigenvalues[2])*ident);
+        eigenprojections[0] = ident-eigenprojections[2];
+        eigenprojections[1] = ident-eigenprojections[2];
+#ifdef DEBUG_BUILD
+    if (std::isnan(eigenprojections[0].norm())||std::isnan(eigenprojections[1].norm())||std::isnan(eigenprojections[2].norm())){
+        PanicButton();
+    }
+#endif
+    } else if (eigenvalues[0]==eigenvalues[2]){
+        eigenprojections[1] = eigenvalues[1]/(2.*eigenvalues[1]*eigenvalues[1]*eigenvalues[1]-i1*eigenvalues[1]*eigenvalues[1]+i3) *(aux*aux - (i1-eigenvalues[1])*aux + (i3/eigenvalues[1])*ident);
+        eigenprojections[0] = ident-eigenprojections[1];
+        eigenprojections[2] = ident-eigenprojections[1];
+        
+#ifdef DEBUG_BUILD
+    if (std::isnan(eigenprojections[0].norm())||std::isnan(eigenprojections[1].norm())||std::isnan(eigenprojections[2].norm())){
+        PanicButton();
+    }
+#endif        
+    } else if (eigenvalues[1]==eigenvalues[2]) {
+        eigenprojections[0] = eigenvalues[0]/(2.*eigenvalues[0]*eigenvalues[0]*eigenvalues[0]-i1*eigenvalues[0]*eigenvalues[0]+i3) *(aux*aux - (i1-eigenvalues[0])*aux + (i3/eigenvalues[0])*ident);
+        eigenprojections[2] = ident-eigenprojections[0];
+        eigenprojections[1] = ident-eigenprojections[0];
+#ifdef DEBUG_BUILD
+    if (std::isnan(eigenprojections[0].norm())||std::isnan(eigenprojections[1].norm())||std::isnan(eigenprojections[2].norm())){
+        PanicButton();
+    }
+#endif
+    } else {
+        eigenprojections[0] = ident;
+        eigenprojections[1] = ident;
+        eigenprojections[2] = ident;
+#ifdef DEBUG_BUILD
+    if (std::isnan(eigenprojections[0].norm())||std::isnan(eigenprojections[1].norm())||std::isnan(eigenprojections[2].norm())){
+        PanicButton();
+    }
+#endif
+    }
 
     std::vector<int> newindex(3);
-    //Sorting in descending order manually
+    // Sorting in descending order manually
     if (eigenvalues[0] > eigenvalues[1] && eigenvalues[0] > eigenvalues[2]){
         newindex[0] = 0;
         if (eigenvalues[1] > eigenvalues[2]){
@@ -306,50 +363,10 @@ void Tensor::SpectralDecomposition(VecDouble &eigenvalues, MatrixDouble &eigenve
         }
     }
     auto copyeigval = eigenvalues;
-    auto copyeigvec = eigenvectors;
+    auto copyeigproj = eigenprojections;
     for (int i = 0; i < 3; i++){
         eigenvalues[i] = copyeigval[newindex[i]];
-        for (int j = 0; j < 3; j++){
-            eigenvectors(i,j) = copyeigvec(newindex[i],newindex[j]);   
-        }
-    }
-    //A.4 Souza Neto
-    double i1 = I1();
-    double i2 = I2();
-    double i3 = I3();
-    double R = (-2.*i1*i1*i1 + 9.*i1*i2 - 27.*i3) / 54.;
-    double Q = (i1*i1 - 3.*i2)/9.;
-    double sqQ = sqrt(Q);
-    double theta = acos(R/(Q*sqQ));
-    VecDouble xi(3);
-    xi[0] = -2. * sqQ * cos(theta/3.) + i1/3.; 
-    xi[1] = -2. * sqQ * cos((theta+2.*M_PI)/3.) + i1/3.; 
-    xi[2] = -2. * sqQ * cos((theta-2.*M_PI)/3.) + i1/3.;
-
-    // If all eigenvalues are different
-    MatrixDouble ident(3,3);
-    ident.setIdentity();
-    std::vector<MatrixDouble> eigenprojections(3);
-    if (fabs(xi[0]-xi[1]) > 1.e-10 && fabs(xi[0]-xi[2]) > 1.e-10 && fabs(xi[1]-xi[2]) > 1.e-10){
-        for (size_t i = 0; i < 3; i++){
-            eigenprojections[i] = xi[i]/(2.*xi[i]*xi[i]*xi[i]-i1*xi[i]*xi[i]+i3) *(aux*aux - (i1-xi[i])*aux + (i3/xi[i])*ident);
-        } // 
-    } else if (fabs(xi[0]-xi[1]) > 1.e-10){
-        eigenprojections[0] = xi[0]/(2.*xi[0]*xi[0]*xi[0]-i1*xi[0]*xi[0]+i3) *(aux*aux - (i1-xi[0])*aux + (i3/xi[0])*ident);
-        eigenprojections[1] = eigenprojections[0] - ident;
-        eigenprojections[2] = xi[2]/(2.*xi[2]*xi[2]*xi[2]-i1*xi[2]*xi[2]+i3) *(aux*aux - (i1-xi[2])*aux + (i3/xi[2])*ident);
-    } else if (fabs(xi[0]-xi[2]) > 1.e-10){
-        eigenprojections[0] = xi[0]/(2.*xi[0]*xi[0]*xi[0]-i1*xi[0]*xi[0]+i3) *(aux*aux - (i1-xi[0])*aux + (i3/xi[0])*ident);
-        eigenprojections[2] = eigenprojections[0] - ident;
-        eigenprojections[1] = xi[1]/(2.*xi[1]*xi[1]*xi[1]-i1*xi[1]*xi[1]+i3) *(aux*aux - (i1-xi[1])*aux + (i3/xi[1])*ident);
-    } else if (fabs(xi[1]-xi[2]) > 1.e-10) {
-        eigenprojections[0] = xi[0]/(2.*xi[0]*xi[0]*xi[0]-i1*xi[0]*xi[0]+i3) *(aux*aux - (i1-xi[0])*aux + (i3/xi[0])*ident);
-        eigenprojections[2] = xi[2]/(2.*xi[2]*xi[2]*xi[2]-i1*xi[2]*xi[2]+i3) *(aux*aux - (i1-xi[2])*aux + (i3/xi[2])*ident);
-        eigenprojections[1] = eigenprojections[2] - ident;
-    } else {
-        eigenprojections[0] = ident;
-        eigenprojections[1] = ident;
-        eigenprojections[2] = ident;
+        eigenprojections[i] = copyeigproj[newindex[i]];
     }
 
 }

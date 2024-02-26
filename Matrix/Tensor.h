@@ -71,7 +71,7 @@ public:
 
     /// @brief Computes Eigenvalues and eigenvectors
     /// @return 
-    void SpectralDecomposition(VecDouble &eigenvalues, MatrixDouble &eigenvectors);
+    void SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDouble> &eigenprojections);
 
 
     double &fXX(){

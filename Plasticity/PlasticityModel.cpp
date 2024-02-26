@@ -240,6 +240,7 @@ int PlasticityModel::VariableIndex(const std::string &name) const{
         return n;
     } else {
         if(!strcmp("PlasticStrain",name.c_str()))    return 101;
+        if(!strcmp("RealStress",name.c_str()))    return 102;
     }
     return -1;
     // return fElasticModel->VariableIndex(name);
@@ -254,6 +255,8 @@ int PlasticityModel::NSolutionVariables(int var) const {
         {
         case 101:
             return 1;
+        case 102:
+            return 3;
         
         default:
             return -1;
@@ -267,6 +270,15 @@ void PlasticityModel::Solution(IntPointData &data, int var, VecDouble &Sol){
     if (var == 101){
         if (data.fPlasticStrain.norm() > 0)
         Sol[0] = data.fPlasticStrain.mean();
+        return;
+    };
+    if (var == 102){
+        MatrixDouble ElasticConstitutive = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
+        auto stress = data.fElasticStrain[0].Multiply(ElasticConstitutive);
+        // if (data.fPlasticStrain.norm() > 0)
+        Sol[0] = stress.fXX();
+        Sol[1] = stress.fYY();
+        Sol[2] = stress.fXY();
         return;
     };
 };

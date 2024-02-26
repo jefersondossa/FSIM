@@ -50,7 +50,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
   
     GmshTools::Read(*cmesh,"../notched.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 15, bcIncrement,1.e-2,30);
+    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 100, bcIncrement,1.e-6,100  );
     
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};

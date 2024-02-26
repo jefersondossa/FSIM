@@ -11,7 +11,7 @@ private:
     enum ETrescaDirection{EMainPlane, ERightCorner, ELeftCorner};
     //The principal stresses
     double fS1, fS2, fS3;
-    MatrixDouble fPrincipalDirections;
+    std::vector<MatrixDouble> fEigenprojections;
     ETrescaDirection fReturnDirection;
 
 public:

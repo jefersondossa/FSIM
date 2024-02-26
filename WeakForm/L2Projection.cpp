@@ -165,21 +165,21 @@ void L2Projection::Solution(IntPointData &data, int var, VecDouble &Sol) {
     //Derivative X
     if (var == 2){
         for (int i = 0; i < fNState; i++){
-            Sol[i] = data.fDSolDx(i,0);
+            Sol[i] = data.fDSolDx(0,i);
         }
         return;
     };
     //Derivative Y
     if (var == 3){
         for (int i = 0; i < fNState; i++){
-            Sol[i] = data.fDSolDx(i,1);
+            Sol[i] = data.fDSolDx(1,i);
         }
         return;
     };
     //Derivative Z
     if (var == 4){
         for (int i = 0; i < fNState; i++){
-            Sol[i] = data.fDSolDx(i,2);
+            Sol[i] = data.fDSolDx(2,i);
         }
         return;
     };

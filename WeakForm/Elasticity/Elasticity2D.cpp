@@ -26,7 +26,6 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
         fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
         fConstitutiveMatrix(2,2) = G;
     }
-    
 };
 
 
@@ -396,7 +395,7 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
     if (var == 17){
         Sol[0] = data.fDSolDx(0,0);
         Sol[1] = data.fDSolDx(1,1);
-        Sol[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        Sol[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
         return;
     };
 
@@ -419,7 +418,7 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
     if (var == 19){
         Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
         Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
-        Sol[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0));
+        Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
         return;
     };
 }; 

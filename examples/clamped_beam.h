@@ -17,17 +17,18 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     VecDouble val2(2);
     val2.setZero();
     //Left
-    val2[1] = 1.;
+    // val2[1] = 1.;
     L2Projection * matbc1 = new L2Projection(9,2,0,val1,val2);
 
     val2.setZero();
     val2[0] = 1.;
     //bottom
-    L2Projection * matbc2 = new L2Projection(11,2,3,val1,val2);
+    L2Projection * matbc2 = new L2Projection(11,2,1,val1,val2);
 
     val2.setZero();
     // val2[1] = 0.0005;
-    val2[1] = 0.5;
+    val2[0] = 0.5*sqrt(2.)/2.;
+    val2[1] = 0.5*sqrt(2.)/2.;
     //Right
     L2Projection * matbc3 = new L2Projection(12,2,1,val1,val2);
     val2.setZero();
@@ -37,20 +38,21 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
-    // VonMises *plastmodel = new VonMises(matelas);
-    Tresca *plastmodel = new Tresca(matelas);
+    VonMises *plastmodel = new VonMises(matelas);
+    // Tresca *plastmodel = new Tresca(matelas);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel); 
     std::vector<L2Projection *> bcIncrement = {matbc3};
    
-    GmshTools::Read(*cmesh,"../marques_viga_biengastada.msh");
+    GmshTools::Read(*cmesh,"../marques_viga_biengastada_rotated.msh");
 
     IncrementalAnalysis an(cmesh,SolverType::ELDLt, 25, bcIncrement,1.e-10,30);
     VecDouble increment(2);
     increment.setZero();    
     // increment[1] = 0.00004;
-    increment[1] = 0.02;
+    increment[0] = 0.02*sqrt(2.)/2.;
+    increment[1] = 0.02*sqrt(2.)/2.;
     an.SetIncrement(increment);
 
     std::vector<std::string> ScalarNames, VectorNames;

@@ -77,15 +77,18 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
         NonLinearAnalysis::Run();
         VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,iStep);
         {
-            // std::ofstream output("integral",std::ios::app);
+            // std::ofstream output("integral.txt",std::ios::app);
             // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};
             // std::set<int> matid = {6};
             // std::map<std::string,VecDouble> result;
             // MeshVector()[0]->Integrate(matid,integrate,result);
-            // double aux = 206.9/((1.29)*(1.-2.*.29));
-            // double valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
-            // double valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
-            // double disp =  fIncrementBC[0]->BCValue()[1] * 2. * 206.9/(0.45*10.);
+            // double E = 1.e10;
+            // double nu = 0.48;
+            // double sigmaY = 848700./sqrt(3.);
+            // double aux = E/((1.+nu)*(1.-2.*nu));
+            // double valX = result["DerivativeX"][0];
+            // double valY = result["DerivativeY"][0];
+            // double disp =  fIncrementBC[0]->BCValue()[1];// * 2. * E/(sigmaY*10.);
             // output << disp << " " << valX << " " << -valY << "\n";
         }
         iStep++;

@@ -2,10 +2,12 @@
    // Defines the problem dimension
     const int dimension = 2;
 {
-auto yieldFunction = [](const double &plast, double &sigma_y, double &yield){
+auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
     // sigma_y = 2.e6 - 2.e9*plast;
     sigma_y = 848700;
     // yield = 2.e9;
+    hardening = 0.;
+
 };
 
     CompMesh* cmesh = new CompMesh();
@@ -47,11 +49,11 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &yield){
   
     GmshTools::Read(*cmesh,"../mohrcoulomb.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 50, bcIncrement,1.e-7);
+    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 100, bcIncrement,1.e-5,100);
     // an.SetMaxIter(2);
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};
-    VectorNames = {"Displacement","Stress","Strain"};
+    VectorNames = {"Displacement","Stress","Strain","RealStress"};
     an.Run("plasticitytest",ScalarNames,VectorNames);
 
     
