@@ -7,14 +7,26 @@
 class DruckerPrager : public PlasticityModel
 {
 protected:
-   
+    double fInternalFriction;
+    bool fOuterEdges;
+    double fEta; // n com charme
+    double fXi; // E com charme
+    double fDilatancyAngle; 
+    double fEtaBar;
+    double fAlpha;
+    double fBeta;
 
 public:
     /// @brief Linear hardening plasticity model constructor
     /// @param elast elasticity model
     /// @param hardModulus hardening modulus
     /// @param yield yield stress
-    DruckerPrager(WeakForm *elast);
+    /// @param c cohesion
+    /// @param phi internal friction
+    /// @param psi dilatacy angle
+    /// @param oe outer edges
+    
+    DruckerPrager(WeakForm *elast, double phi, double psi, bool oe = true);
 
     /// @brief Overloads the updated weak form stiffness matrix computation for the plasticity model
     /// @param index integration point index

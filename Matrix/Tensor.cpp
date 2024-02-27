@@ -34,6 +34,18 @@ Tensor::Tensor(MatrixDouble &tensor){
     fData[ZZ] = tensor(2,2);
 }
 
+Tensor::Tensor(VecDouble &tensor){
+    fData.resize(6);
+    fData.setZero();
+#ifdef DEBUG_BUILD
+    if (tensor.size() != 6){
+        std::cout << "Please provide a proper tensor" << std::endl;
+        PanicButton();
+    }
+#endif
+    fData = tensor;
+}
+
 void Tensor::SetData(MatrixDouble &tensor){
 #ifdef DEBUG_BUILD
     if (tensor.rows() != tensor.cols() || tensor.rows() == 0){
@@ -217,41 +229,20 @@ double Tensor::Trace() const{
 }
 
 VecDouble Tensor::Eigenvalues(){    
-    MatrixDouble aux(3,3);
-    aux(0,0) = fData[XX];
-    aux(1,1) = fData[YY];
-    aux(2,2) = fData[ZZ];
-    aux(0,1) = aux(1,0) = fData[XY];
-    aux(0,2) = aux(2,0) = fData[XZ];
-    aux(1,2) = aux(2,1) = fData[YZ];
-
+    MatrixDouble aux = MatrixForm();
     EigenSolver<MatrixDouble> solver(aux,EigenvaluesOnly);
     VecDouble eigval = solver.eigenvalues().real();
 
-    std::vector<double> auxvec(3);
-    auxvec[0] = eigval[0];
-    auxvec[1] = eigval[1];
-    auxvec[2] = eigval[2];
-    //Sort in ascending order
-    std::sort(auxvec.begin(), auxvec.end(), &compare_head);
-
-    for (int64_t i = 0; i < eigval.rows(); ++i)
-        eigval[i] = auxvec[i];
-
-
-    //A.4 Souza Neto
-    double i1 = I1();
-    double i2 = I2();
-    double i3 = I3();
-    double R = (-2.*i1*i1*i1 + 9.*i1*i2 - 27.*i3) / 54.;
-    double Q = (i1*i1 - 3.*i2)/9.;
-    double sqQ = sqrt(Q);
-    double theta = acos(R/(Q*sqQ));
-    double val1 = -2. * sqQ * cos(theta/3.) + i1/3.; 
-    double val2 = -2. * sqQ * cos((theta+2.*M_PI)/3.) + i1/3.; 
-    double val3 = -2. * sqQ * cos((theta-2.*M_PI)/3.) + i1/3.; 
-
     return eigval;
+}
+
+MatrixDouble Tensor::Eigenvectors(){    
+    MatrixDouble aux = MatrixForm();
+    
+    EigenSolver<MatrixDouble> solver(aux);
+    MatrixDouble eigvec = solver.eigenvectors().real();
+
+    return eigvec;
 }
 
 void Tensor::SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDouble> &eigenprojections){ 

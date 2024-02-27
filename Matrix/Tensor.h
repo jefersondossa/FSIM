@@ -21,6 +21,7 @@ public:
     Tensor();
 
     Tensor(MatrixDouble &tensor);
+    Tensor(VecDouble &tensor);
     Tensor(const Tensor &tensor);
     
     ~Tensor() = default;
@@ -63,11 +64,22 @@ public:
     const Tensor & operator*=(const double &multipl);
 
     Tensor operator/(const double &multipl) const;
-    const Tensor & operator/=(const double &multipl);    
+    const Tensor & operator/=(const double &multipl);
+
+    Tensor & operator=(const Tensor &other){
+        return *this;
+    };
+
+
+    friend std::ostream &operator<<(std::ostream &out, const Tensor &tens){
+        out << tens.fData << std::endl;
+        return out;
+    };
     
     void Zero();
 
     VecDouble Eigenvalues();
+    MatrixDouble Eigenvectors();
 
     /// @brief Computes Eigenvalues and eigenvectors
     /// @return 

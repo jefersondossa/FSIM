@@ -234,6 +234,9 @@ void Tresca::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress
 
     Tensor epsilonUpdated(StressN1.Deviatory());
     epsilonUpdated /= (2. * fShearModulus);
+    epsilonUpdated.fXY() *= 2.;
+    epsilonUpdated.fXZ() *= 2.;
+    epsilonUpdated.fYZ() *= 2.;
     Tensor Ident;
     double epslion_e_trial = data.fElasticStrain[index].Trace() / 3.;
     Ident.Identity();
