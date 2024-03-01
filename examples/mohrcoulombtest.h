@@ -4,10 +4,10 @@
 {
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
     // sigma_y = 2.e6 - 2.e9*plast;
-    // sigma_y = 848700;
-    sigma_y = 490000;
+    sigma_y = 848700;
+    // sigma_y = 490000;
     // yield = 2.e9;
-    hardening = 0.;
+    // hardening = 0.;
 
 };
 
@@ -42,10 +42,10 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     cmesh->InsertMaterial(matbc5);
     cmesh->InsertMaterial(matbc6);
     // MohrCoulomb *plastmodel = new MohrCoulomb(matelas,6.89e4,20.); 
-    // VonMises *plastmodel = new VonMises(matelas);
+    VonMises *plastmodel = new VonMises(matelas);
     // Tresca *plastmodel = new Tresca(matelas);
     double angle = 20.*M_PI/180.;
-    DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle);
+    // DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel); 
@@ -53,7 +53,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
   
     GmshTools::Read(*cmesh,"../mohrcoulomb.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 100, bcIncrement,1.e-5,100);
+    IncrementalAnalysis an(cmesh,SolverType::ELDLt, 100, bcIncrement,1.e-8,100);
     // an.SetMaxIter(2);
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};

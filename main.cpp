@@ -79,8 +79,8 @@ int main(int argc, char **args) {
     // #include "examples/mohrcoulombtest.h"
     // #include "examples/notched.h"
     // #include "examples/clamped_beam.h"
-    #include "examples/clamped_beam1.h"
-    // #include "examples/geogrelha.h"
+    // #include "examples/clamped_beam1.h"
+    #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      
 #ifdef HAS_PETSC

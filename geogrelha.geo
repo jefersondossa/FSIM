@@ -1,6 +1,6 @@
 // Gmsh project created on Thu Nov 23 08:39:57 2023
 SetFactory("OpenCASCADE");
-a = 0.02;
+a = 0.01;
 alturageogrelha = 0.1;
 //+
 Point(1) = {0, 0, 0, a};
@@ -14,9 +14,11 @@ Point(4) = {0, .15, 0, a};
 Point(5) = {.055, .15, 0, a};
 //+
 Point(6) = {.095, .15, 0, a};
+
+b = 0.005;
 Point(7) = {.0, alturageogrelha, 0, a};
-Point(8) = {.025, alturageogrelha, 0, a};
-Point(9) = {.125, alturageogrelha, 0, a};
+Point(8) = {.025, alturageogrelha, 0, b};
+Point(9) = {.125, alturageogrelha, 0, b};
 Point(10) = {.15, alturageogrelha, 0, a};
 
 //+

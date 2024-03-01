@@ -18,6 +18,12 @@ DruckerPrager::DruckerPrager(WeakForm *elast, double phi, double psi, bool oe) :
         fXi = 6.*cos(fInternalFriction)/(sqrt(3.)*(3.+sin(fInternalFriction))); 
         fEtaBar = 6.*sin(fDilatancyAngle)/(sqrt(3.)*(3.+sin(fDilatancyAngle)));
     }
+    double tanphi = tan(fInternalFriction);
+    double tanpsi = tan(fDilatancyAngle);
+    fEta = 3. * tanphi / sqrt(9. + 12.*tanphi*tanphi);
+    fXi = 3. / sqrt(9. + 12.*tanphi*tanphi);
+    fEtaBar = 3. * tanpsi / sqrt(9. + 12.*tanpsi*tanpsi);
+
 
     fAlpha = fXi/fEta;
     fBeta = fXi/fEtaBar;
@@ -34,7 +40,31 @@ void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, Matr
     if (fPlaneStress){
         PanicButton();
     } else {
-        fTangentTensor = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
+        //Elastic Tensor
+        // fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
+        if (fApex){
+            fTangentTensor = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
+        }else{
+            double A = 1./(fShearModulus + fBulkModulus*fEta*fEtaBar + fXi*fXi*fHardening);
+            double sq2 = sqrt(2.);
+            double devstrainnorm = fTrialDevStrain.Norm();
+            if (fabs(devstrainnorm) > 1.e-10){
+                fTrialDevStrain /= devstrainnorm;
+            } else {
+                fTrialDevStrain.Zero();
+            }
+            // fTrialDevStrain.Zero();
+            Tensor Ident;
+            Ident.Identity();
+            auto DxD = fTrialDevStrain.TensorProduct(fTrialDevStrain);
+            auto DxI = fTrialDevStrain.TensorProduct(Ident);
+            auto IxD = Ident.TensorProduct(fTrialDevStrain);
+            
+            fTangentTensor = 2. * fShearModulus * (1. - data.fPlasticMultiplier/(sq2 * devstrainnorm)) * fIdentity4Dev
+                           + 2. * fShearModulus * (data.fPlasticMultiplier/(sq2 * devstrainnorm) - fShearModulus*A) * DxD
+                           - sq2*fShearModulus*A*fBulkModulus*(fEta*DxI + fEtaBar*IxD)
+                           + fBulkModulus * (1. - fBulkModulus * fEta * fEtaBar * A)*fId2xId2;
+        }
     }
 
     if (fElasticModel->Dimension() == 2){
@@ -106,50 +136,60 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
 
         
         if((sqJ2 - fShearModulus*dGamma)>= 0){
+            fApex = false;
             return dGamma;
         } else{
-            PanicButton();
+            // PanicButton();
             //fAlpha and fBeta created on .h
-            double pn1 = Stress.Trace()/3.;
+            fApex = true;
+            double ptrial = Stress.Trace()/3.;
             double fCohesion = 0.;
             fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
-            double r = fCohesion*fBeta - pn1;
+            double r = fCohesion*fBeta - ptrial;
             double depsilon =0;
             //Box 8.10
 
-
             while (fabs(r) > 1.e-5){
-            
                 double d = fAlpha*fBeta*fHardening + fBulkModulus;
                 depsilon -= r/d;
 
                 data.fPlasticStrain[index] += fAlpha*depsilon;
-                pn1 -= fBulkModulus*depsilon;
+                fUpdatedPressure = ptrial - fBulkModulus*depsilon;
                 fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
-                r = fBeta*fCohesion - pn1;
-
+                r = fBeta*fCohesion - fUpdatedPressure;
             }
-            PanicButton();
         }
     }
+    return dGamma;
 }
 
 void DruckerPrager::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
     
     auto strial = Stress.Deviatory();
-    strial *= (1. - fShearModulus*data.fPlasticMultiplier/sqrt(Stress.J2()));
-    double p = Stress.Trace()/3. - fBulkModulus*fEtaBar*data.fPlasticMultiplier;
-    Tensor Ident;
-    Ident.Identity();
-    Ident*=p;
-    Stress = strial + Ident;
     Tensor epsilonUpdated(strial);
-    epsilonUpdated /= 2*fShearModulus;
+    Tensor Ident;
+    
+    if(fApex){
+        Ident.Identity();
+        Ident *= fUpdatedPressure;
+        Stress = Ident;
+    } else {
+        strial *= (1. - fShearModulus*data.fPlasticMultiplier/sqrt(Stress.J2()));
+        fUpdatedPressure = Stress.Trace()/3. - fBulkModulus*fEtaBar*data.fPlasticMultiplier;
+        
+        Ident.Identity();
+        Ident*=fUpdatedPressure;
+        Stress = strial + Ident;
+    }
+    
+    epsilonUpdated *= (1. - fShearModulus*data.fPlasticMultiplier/sqrt(Stress.J2()))/(2*fShearModulus);
     epsilonUpdated.fXY() *= 2.;
     epsilonUpdated.fXZ() *= 2.;
     epsilonUpdated.fYZ() *= 2.;
-    Ident /= (3.*fBulkModulus);
+    Ident.Identity();
+    Ident *= fUpdatedPressure/(3.*fBulkModulus);
     epsilonUpdated += Ident;
+    fTrialDevStrain = data.fElasticStrain[index].Deviatory();
     data.fElasticStrain[index] = epsilonUpdated;
 
 }   

@@ -37,7 +37,7 @@ void PositionalTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDou
                     if (k==l) dkronecker = 1.;
                     double aux = pow(-1.,a+1) * pow(-1.,b+1) * (fYoungModulus*DeltaY[k]*DeltaY[l] + S*dkronecker) * (fArea / initLenght);
 
-                    Stiffness(nphi*a+k,nphi*b+l) += aux * data.fWeight / 2.;
+                    Stiffness(fDimension*a+k,fDimension*b+l) += aux * data.fWeight / 2.;
                 }
             }
         }

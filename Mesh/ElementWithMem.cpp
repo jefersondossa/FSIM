@@ -47,6 +47,8 @@ void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
         PanicButton();
     }
     ElasStress = this->fIntegData.fElasticStrain[index].Multiply(fElasticConstitutiveMatrix);
+    // ElasStress.fData = fElasticConstitutiveMatrix * this->fIntegData.fElasticStrain[index].fData;
+    // int a = 0.;
 }
 
 

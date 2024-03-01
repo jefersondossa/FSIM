@@ -1,6 +1,8 @@
 #include "VonMises.h"
 
 VonMises::VonMises(WeakForm *elast) : PlasticityModel(elast){
+    fFlowVector.Zero();
+    fDeviatory.Zero();
 
     if (fPlaneStress) {
         fMatP.resize(3,3);//Box 9.3

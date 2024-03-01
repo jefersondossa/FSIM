@@ -66,7 +66,8 @@ public:
     Tensor operator/(const double &multipl) const;
     const Tensor & operator/=(const double &multipl);
 
-    Tensor & operator=(const Tensor &other){
+    Tensor & operator=(const Tensor &source){
+        fData = source.fData;
         return *this;
     };
 

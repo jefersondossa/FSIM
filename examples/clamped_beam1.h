@@ -3,9 +3,12 @@
     const int dimension = 2;
 {
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
-    sigma_y = .5+500.*plast;
-
+    sigma_y =.5/sqrt(3.)+500.*plast;
+    // sigma_y =.5+500.*plast;
     hardening = 500.;
+
+    // sigma_y = .05;
+    // hardening = 0.;
 };
 
     CompMesh* cmesh = new CompMesh();
@@ -38,8 +41,9 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
     // VonMises *plastmodel = new VonMises(matelas);
-    Tresca *plastmodel = new Tresca(matelas);
-    // DruckerPrager *plastmodel = new DruckerPrager(matelas,0.,0.);
+    // Tresca *plastmodel = new Tresca(matelas);
+    double angle = 00.*M_PI/180.;
+    DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel); 

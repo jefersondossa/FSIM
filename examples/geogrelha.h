@@ -4,12 +4,25 @@
 
 {
 
+auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+    // sigma_y =.5/sqrt(3.)+500.*plast;
+    sigma_y =50.+500.*plast;
+    hardening = 500.;
+
+    // sigma_y = .05;
+    // hardening = 0.;
+};
+
     CompMesh* cmesh = new CompMesh(); 
 
     //Dominio
-    ElasticityPositional2D * matelas = new ElasticityPositional2D(17,1000.,.0);
+    // ElasticityPositional2D * matelas = new ElasticityPositional2D(17,1000.,.0);
+    Elasticity2D * matelas = new Elasticity2D(17,1000.,.0,false);
+    // VonMises *plastmodel = new VonMises(matelas);
+    DruckerPrager *plastmodel = new DruckerPrager(matelas,0.,0.);
+    plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
-    LinearHardening *plastmodel = new LinearHardening(matelas,111.,4.); 
+    // LinearHardening *plastmodel = new LinearHardening(matelas,111.,4.); 
     cmesh->InsertMaterial(plastmodel);
 
     //BC
@@ -33,6 +46,8 @@
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
 
+    
+
     PositionalTruss *geogrid = new PositionalTruss(16, 2, 3000.,1.);
     cmesh->InsertMaterial(geogrid);
 
@@ -40,11 +55,11 @@
     std::vector<L2Projection *> bcIncrement = {matbc4};
 
     
-    IncrementalAnalysis an(cmesh,SolverType::EUmfpack, 30, bcIncrement);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 30, bcIncrement);
     
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {};
-    VectorNames = {"Displacement"};
+    ScalarNames = {"PlasticStrain"};
+    VectorNames = {"Displacement","Stress","Strain"};
     
     an.Run("geogrelha",ScalarNames,VectorNames);
 

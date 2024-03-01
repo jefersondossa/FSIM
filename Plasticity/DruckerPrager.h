@@ -15,6 +15,9 @@ protected:
     double fEtaBar;
     double fAlpha;
     double fBeta;
+    bool fApex = false;
+    double fUpdatedPressure;
+    Tensor fTrialDevStrain;
 
 public:
     /// @brief Linear hardening plasticity model constructor

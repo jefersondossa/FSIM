@@ -77,7 +77,7 @@ Tensor Tensor::Hydrostatic(){
 
 
 Tensor Tensor::Deviatory(){ 
-    Tensor fDeviatory(*this);
+    Tensor fDeviatory = *this;
     double val = I1() / 3.;
     fDeviatory.fData[XX] -= val;
     fDeviatory.fData[YY] -= val;
