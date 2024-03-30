@@ -131,6 +131,7 @@ int L2Projection::VariableIndex(const std::string &name) const{
     if(!strcmp("DerivativeX",name.c_str()))      return 2;
     if(!strcmp("DerivativeY",name.c_str()))      return 3;
     if(!strcmp("DerivativeZ",name.c_str()))      return 4;
+    if(!strcmp("Material",name.c_str()))         return 100;
     
     std::cout << "Post Process variable not implemented \n";
     PanicButton();
@@ -144,7 +145,8 @@ int L2Projection::NSolutionVariables(int var) const{
     case 2:
     case 3:
     case 4:
-        return fNState;
+    case 100:
+        return 1;
 
     default:
         PanicButton();
@@ -153,6 +155,11 @@ int L2Projection::NSolutionVariables(int var) const{
 };
 
 void L2Projection::Solution(IntPointData &data, int var, VecDouble &Sol) {
+
+    if (var == 100){
+        Sol[0] = fMatId;
+        return;
+    };
 
     //Solution
     if (var == 1){

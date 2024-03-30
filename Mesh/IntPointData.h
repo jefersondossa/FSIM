@@ -7,6 +7,7 @@
 class IntPointData {
 
 public:
+    int fIndex;
     /// @brief Jacobian transform related to the initial mesh
     MatrixDouble fA0;
     /// @brief Inverse Jacobian transform related to the initial mesh
@@ -71,8 +72,8 @@ public:
     VecDouble fYieldFunction;
     VecDouble fPlasticStrain;
     std::vector<Tensor> fElasticStrain;
-    std::vector<VecDouble> fTotalStrain;
-    double fPlasticMultiplier;
+    std::vector<Tensor> fElasticStrainIncrement;
+    VecDouble fPlasticMultiplier;
 };
 
 

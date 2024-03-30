@@ -52,7 +52,7 @@ public:
     void AllocateMonomodel();
     void AllocateArlequin();
 
-    SolverType SType(){return fSolverType;}
+    SolverType &SType(){return fSolverType;}
     
     virtual void Run();
 

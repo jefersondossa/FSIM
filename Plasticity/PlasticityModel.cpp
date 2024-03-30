@@ -2,6 +2,7 @@
 #include "PlasticityModel.h"
 #include "ElasticTruss.h"
 #include "Elasticity2D.h"
+#include "Elasticity3D.h"
 #include "PositionalTruss.h"
 #include "ElasticityPositional2D.h"
 
@@ -11,15 +12,16 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     fMatId = elast->Id();
     int var = fElasticModel->VariableIndex("Stress");
     int nsol = fElasticModel->NSolutionVariables(var);
-    fRealDimension = 0;
-    if (nsol == 1) fRealDimension = 1;
-    if (nsol == 3) fRealDimension = 2;
-    if (nsol == 6) fRealDimension = 3;
+    fRealDimension = elast->Dimension();
+    // if (nsol == 1) fRealDimension = 1;
+    // if (nsol == 3) fRealDimension = 2;
+    // if (nsol == 6) fRealDimension = 3;
     fNStressComponents = nsol;
     fDimension = elast->Dimension();
 
     ElasticTruss *truss = dynamic_cast<ElasticTruss* >(fElasticModel);
     Elasticity2D *mat2d = dynamic_cast<Elasticity2D* >(fElasticModel);
+    Elasticity3D *mat3d = dynamic_cast<Elasticity3D* >(fElasticModel);
     PositionalTruss *postruss = dynamic_cast<PositionalTruss* >(fElasticModel);
     if (truss) {
         fYoungModulus = truss->YoungModulus();
@@ -29,6 +31,11 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
         fYoungModulus = mat2d->YoungModulus();
         fPoissonRatio = mat2d->PoissonRatio();
         fPlaneStress = mat2d->PlaneState();
+    }
+    if (mat3d) {
+        fYoungModulus = mat3d->YoungModulus();
+        fPoissonRatio = mat3d->PoissonRatio();
+        fPlaneStress = false;
     }
     if (postruss) {
         fYoungModulus = postruss->YoungModulus();
@@ -112,9 +119,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     } else if (fRealDimension == 3) {
         fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
         fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
-        
-        std::cout << "please define the tensors for the desired dimension\n";
-        PanicButton();
+
     }
 
     
@@ -196,13 +201,31 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
     int nphi = data.fPhi.size();
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
-    MatrixDouble matB(3,2*nphi);
-    matB.setZero();
-    for (int j = 0; j < nphi; j++){
-        matB(0,2*j  ) = data.fDPhiX0(j,0);
-        matB(1,2*j+1) = data.fDPhiX0(j,1);
-        matB(2,2*j  ) = data.fDPhiX0(j,1);
-        matB(2,2*j+1) = data.fDPhiX0(j,0);
+    MatrixDouble matB;
+
+    if (this->Dimension() == 2){
+        matB.resize(3,2*nphi);
+        matB.setZero();
+        for (int j = 0; j < nphi; j++){
+            matB(0,2*j  ) = data.fDPhiX0(j,0);
+            matB(1,2*j+1) = data.fDPhiX0(j,1);
+            matB(2,2*j  ) = data.fDPhiX0(j,1);
+            matB(2,2*j+1) = data.fDPhiX0(j,0);
+        }
+    } else if (this->Dimension() == 3){
+        matB.resize(6,3*nphi);
+        matB.setZero();
+        for (int j = 0; j < nphi; j++){
+            matB(0,3*j  ) = data.fDPhiX0(j,0);
+            matB(1,3*j+1) = data.fDPhiX0(j,1);
+            matB(2,3*j+2) = data.fDPhiX0(j,2);
+            matB(5,3*j  ) = data.fDPhiX0(j,1);
+            matB(5,3*j+1) = data.fDPhiX0(j,0);
+            matB(3,3*j+1) = data.fDPhiX0(j,2);
+            matB(3,3*j+2) = data.fDPhiX0(j,1);
+            matB(4,3*j  ) = data.fDPhiX0(j,2);
+            matB(4,3*j+2) = data.fDPhiX0(j,0);
+        }
     }
 
     auto force = fForceFunction;
@@ -211,12 +234,23 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
     
-    VecDouble stress(3);
+    VecDouble stress;
 
-    // TensorToVoigt(Stress,stress);
-    stress[0] = Stress.fXX();
-    stress[1] = Stress.fYY();
-    stress[2] = Stress.fXY();
+    if (fDimension == 2){
+        stress.resize(3);
+        stress[0] = Stress.fXX();
+        stress[1] = Stress.fYY();
+        stress[2] = Stress.fXY();
+    } else if (fDimension == 3){
+        stress.resize(6);
+        stress[0] = Stress.fXX();
+        stress[1] = Stress.fYY();
+        stress[2] = Stress.fZZ();
+        stress[3] = Stress.fYZ();
+        stress[4] = Stress.fXZ();
+        stress[5] = Stress.fXY();
+    }
+    
 
     // Rhs -= matB.transpose() * fElasticModel->ConstitutiveMatrix() * strain * WJ;
     Rhs -= matB.transpose() * stress * WJ;
@@ -224,10 +258,9 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
         //External force
-        double Fx = forcingF[0] * shapeFi;
-        double Fy = forcingF[1] * shapeFi;
-        Rhs[2*i  ] += Fx * WJ;
-        Rhs[2*i+1] += Fy * WJ;
+        for (int k = 0; k < fDimension; k++){
+            Rhs[fDimension*i+k] += forcingF[k] * shapeFi * WJ;
+        }
     };
      
     
@@ -274,7 +307,7 @@ void PlasticityModel::Solution(IntPointData &data, int var, VecDouble &Sol){
     };
     if (var == 102){
         MatrixDouble ElasticConstitutive = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
-        auto stress = data.fElasticStrain[0].Multiply(ElasticConstitutive);
+        auto stress = data.fElasticStrain[data.fIndex].Multiply(ElasticConstitutive);
         // if (data.fPlasticStrain.norm() > 0)
         Sol[0] = stress.fXX();
         Sol[1] = stress.fYY();

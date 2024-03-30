@@ -12,7 +12,7 @@ protected:
 public:
     LinearSolver() = default;
     LinearSolver(Analysis *an);
-    ~LinearSolver() {};
+    virtual ~LinearSolver() {};
 
     virtual void Solve() = 0;
 };

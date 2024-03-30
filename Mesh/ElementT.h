@@ -32,36 +32,9 @@ protected:
     typename tshape::LocIntRule fIntRule;
 
 public:
-    ElementT() : Element(){
-        fIntRule.SetOrder(tshape::Order+tshape::Order);
-    };
+    ElementT();
 
-    ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : Element(){
-        
-        fMesh = mesh;
-        fConnect.resize(tshape::NElNodes);
-        fIndex = index;
-        for (int i = tshape::NElNodes; i--; ) fConnect[i] = connect[i];
-        DEG = fMesh->GetDefaultOrder();
-        fWeakForm = wf;
-        if (fWeakForm) nLocDOF = tshape::NElNodes * fWeakForm->NState(); 
-
-        fNeighborElements.clear();
-        int increase = 0;
-        if(wf->GetExactSolution()) increase = 2;
-
-        fIntRule.SetOrder(tshape::Order+tshape::Order+increase);
-
-        fIntegData.fWeightFunction.resize(fIntRule.NPoints());
-        fIntegData.fDistFunction.resize(fIntRule.NPoints());
-        fIntegData.fPrevWeightFunction.resize(fIntRule.NPoints());
-
-        fIntegData.fWeightFunction.fill(1.);
-        fIntegData.fPrevWeightFunction.fill(1.);
-    
-        getIntegPointCoordinates();
-
-    };
+    ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf);
 
 
     double InterpolateVariable(VecDouble &nValues, int point) override;

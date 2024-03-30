@@ -6,7 +6,16 @@
 
 template<class tshape>
 ElementTransient<tshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
-    
+    int DIM = tshape::Dimension;
+    this->fIntegData.fAdimCoord.resize(DIM);
+    this->fIntegData.fNeedsDSol = true;
+    this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    this->fIntegData.fNeedsSol = true;
+    this->fIntegData.fSol.resize(this->fWeakForm->NState());
+    this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
+    this->fIntegData.fDSolDt.resize(this->fWeakForm->NState());
+    this->fIntegData.fDSolDDt.resize(this->fWeakForm->NState());
+    this->fIntegData.fNeedsTimeDerivatives = true;
 };
 
 template<class tshape>
@@ -17,15 +26,7 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
     int DIM = tshape::Dimension;
     
     int index = 0;
-    this->fIntegData.fAdimCoord.resize(DIM);
-    this->fIntegData.fNeedsDSol = true;
-    this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
-    this->fIntegData.fNeedsSol = true;
-    this->fIntegData.fSol.resize(this->fWeakForm->NState());
-    this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
-    this->fIntegData.fDSolDt.resize(this->fWeakForm->NState());
-    this->fIntegData.fDSolDDt.resize(this->fWeakForm->NState());
-    this->fIntegData.fNeedsTimeDerivatives = true;
+    
     
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (this->fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (this->fWeakForm);
@@ -75,7 +76,7 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
 //------------------------------------------------------------------------------
 template<class tshape>
 void ElementTransient<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
-
+    PanicButton();
     if (!this->fWeakForm) return;
 
     int DIM = tshape::Dimension;

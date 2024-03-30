@@ -22,6 +22,7 @@ void IntRuleQuad::SetOrder(int order) {
     if (order == 0) {
         nPoints = 1;
     }
+    // nPoints = 2;
     fPoints.resize(nPoints*nPoints,2);
     fWeights.resize(nPoints);//is resized in GaulegQuad
     

@@ -68,7 +68,7 @@ void Tensor::Zero(){
 Tensor Tensor::Hydrostatic(){
     Tensor fHydrostatic(*this);
     fHydrostatic.Zero();
-    double val = I1() / 3.;
+    double val = Trace() / 3.;
     fHydrostatic.fData[XX] = val;
     fHydrostatic.fData[YY] = val;
     fHydrostatic.fData[ZZ] = val;

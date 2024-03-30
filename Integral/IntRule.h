@@ -72,6 +72,8 @@ public:
     virtual double PointList(int i, int j) const;
     virtual double WeightList(int i) const;
     
+    MatrixDouble Points() {return fPoints;}
+    VecDouble Weights() {return fWeights;}
     // Function for printing results
     virtual void Print(std::ostream &out) const;
     

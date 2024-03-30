@@ -41,30 +41,30 @@ void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, Matr
         PanicButton();
     } else {
         //Elastic Tensor
-        // fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
-        if (fApex){
-            fTangentTensor = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
-        }else{
-            double A = 1./(fShearModulus + fBulkModulus*fEta*fEtaBar + fXi*fXi*fHardening);
-            double sq2 = sqrt(2.);
-            double devstrainnorm = fTrialDevStrain.Norm();
-            if (fabs(devstrainnorm) > 1.e-10){
-                fTrialDevStrain /= devstrainnorm;
-            } else {
-                fTrialDevStrain.Zero();
-            }
-            // fTrialDevStrain.Zero();
-            Tensor Ident;
-            Ident.Identity();
-            auto DxD = fTrialDevStrain.TensorProduct(fTrialDevStrain);
-            auto DxI = fTrialDevStrain.TensorProduct(Ident);
-            auto IxD = Ident.TensorProduct(fTrialDevStrain);
+        fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
+        // if (fApex){
+        //     fTangentTensor = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
+        // }else{
+        //     double A = 1./(fShearModulus + fBulkModulus*fEta*fEtaBar + fXi*fXi*fHardening);
+        //     double sq2 = sqrt(2.);
+        //     double devstrainnorm = fTrialDevStrain.Norm();
+        //     if (fabs(devstrainnorm) > 1.e-10){
+        //         fTrialDevStrain /= devstrainnorm;
+        //     } else {
+        //         fTrialDevStrain.Zero();
+        //     }
+        //     // fTrialDevStrain.Zero();
+        //     Tensor Ident;
+        //     Ident.Identity();
+        //     auto DxD = fTrialDevStrain.TensorProduct(fTrialDevStrain);
+        //     auto DxI = fTrialDevStrain.TensorProduct(Ident);
+        //     auto IxD = Ident.TensorProduct(fTrialDevStrain);
             
-            fTangentTensor = 2. * fShearModulus * (1. - data.fPlasticMultiplier[index]/(sq2 * devstrainnorm)) * fIdentity4Dev
-                           + 2. * fShearModulus * (data.fPlasticMultiplier[index]/(sq2 * devstrainnorm) - fShearModulus*A) * DxD
-                           - sq2*fShearModulus*A*fBulkModulus*(fEta*DxI + fEtaBar*IxD)
-                           + fBulkModulus * (1. - fBulkModulus * fEta * fEtaBar * A)*fId2xId2;
-        }
+        //     fTangentTensor = 2. * fShearModulus * (1. - data.fPlasticMultiplier[index]/(sq2 * devstrainnorm)) * fIdentity4Dev
+        //                    + 2. * fShearModulus * (data.fPlasticMultiplier[index]/(sq2 * devstrainnorm) - fShearModulus*A) * DxD
+        //                    - sq2*fShearModulus*A*fBulkModulus*(fEta*DxI + fEtaBar*IxD)
+        //                    + fBulkModulus * (1. - fBulkModulus * fEta * fEtaBar * A)*fId2xId2;
+        // }
     }
 
     if (fElasticModel->Dimension() == 2){
@@ -105,10 +105,10 @@ double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor &Stre
         fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
         YF = sqrt(Stress.J2()) + fEta*p - fXi*fCohesion;
     }
-    // double tanphi = tan(fInternalFriction);
-    // fAlpha2 = tanphi / sqrt(9. + 12.*tanphi*tanphi);
-    // fK = 3.*fCohesion / sqrt(9. + 12.*tanphi*tanphi); 
-    // double YF2 = sqrt(Stress.J2()) - fAlpha2 * Stress.I1() - fK;
+    double tanphi = tan(fInternalFriction);
+    fAlpha2 = tanphi / sqrt(9. + 12.*tanphi*tanphi);
+    fK = 3.*fCohesion / sqrt(9. + 12.*tanphi*tanphi); 
+    double YF2 = sqrt(Stress.J2()) - fAlpha2 * Stress.I1() - fK;
     return YF;
 }
 
@@ -116,10 +116,10 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     //Newton-Raphson to find plastic multiplier
 
     // fEtaBar criasdo no .h
-    // double plinha = sqrt(Stress.J2()) / fK * (1. + 9.*fAlpha2*fAlpha2*fBulkModulus/fShearModulus);
-    // double sigmaDepsilon = data.fElasticStrainIncrement[index].DoubleContraction(Stress);
-    // double demm = data.fElasticStrainIncrement[index].Trace();
-    // double lambda = (sigmaDepsilon-(fK/(3.*fAlpha2))*demm*(plinha-1.))/(plinha*fK);
+    double plinha = sqrt(Stress.J2()) / fK * (1. + 9.*fAlpha2*fAlpha2*fBulkModulus/fShearModulus);
+    double sigmaDepsilon = data.fElasticStrainIncrement[index].DoubleContraction(Stress);
+    double demm = data.fElasticStrainIncrement[index].Trace();
+    double lambda = (sigmaDepsilon-(fK/(3.*fAlpha2))*demm*(plinha-1.))/(plinha*fK);
     double dGamma = 0.;
     if (fPlaneStress){
         PanicButton();
@@ -173,7 +173,9 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
             }
         }
     }
-
+    
+    
+    
 
     return dGamma;
 }

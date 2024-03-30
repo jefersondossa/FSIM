@@ -46,6 +46,13 @@ void NonLinearAnalysis::Run(){
     //Iterative Process
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
+        // if (iteration==0){
+        //     for (int64_t imesh = 0; imesh < this->MeshVector().size(); imesh++){
+        //         for (int64_t iel = 0; iel < this->MeshVector()[imesh]->NElements(); iel++){
+        //             this->MeshVector()[imesh]->ElementVec()[iel]->IntegrationData().fPlasticMultiplier.setZero();
+        //         }
+        //     }   
+        // }
         std::ofstream output("plasticity.txt",std::ios::app);
         output << "ITERATION = " << iteration << std::endl;
         std::clock_t t3 = std::clock();

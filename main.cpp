@@ -68,6 +68,7 @@ int main(int argc, char **args) {
     PetscInitialize(&argc, &args, (char*)0, help);
 #endif
 
+    // #include "examples/airfoil.h"
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
     // #include "examples/rectangle.h"
@@ -78,9 +79,11 @@ int main(int argc, char **args) {
     // #include "examples/truss.h"
     // #include "examples/mohrcoulombtest.h"
     // #include "examples/notched.h"
+    // #include "examples/stripfooting.h"
     // #include "examples/clamped_beam.h"
-    // #include "examples/clamped_beam1.h"
-    #include "examples/geogrelha.h"
+    #include "examples/clamped_beam1.h"
+    // #include "examples/plate.h"
+    // #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      
 #ifdef HAS_PETSC

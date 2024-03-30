@@ -9,7 +9,7 @@ private:
     /* data */
 public:
     EigenLinearSolver(Analysis *an);
-    ~EigenLinearSolver();
+    virtual ~EigenLinearSolver();
 
     void Solve() override;
 };

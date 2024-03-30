@@ -12,6 +12,8 @@ file(GLOB plasticity
     PlasticStep.cpp
     DruckerPrager.h
     DruckerPrager.cpp
+    DruckerPrager2.h
+    DruckerPrager2.cpp
 )
 
 set(PLASTICITY ${plasticity} PARENT_SCOPE)

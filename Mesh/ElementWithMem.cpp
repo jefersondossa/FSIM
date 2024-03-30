@@ -11,11 +11,15 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
     if (fPlasticityModel){
         this->fIntegData.fYieldFunction.resize(this->fIntRule.NPoints());
         this->fIntegData.fYieldFunction.setZero();
+        this->fIntegData.fPlasticMultiplier.resize(this->fIntRule.NPoints());
+        this->fIntegData.fPlasticMultiplier.setZero();
         this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
         this->fIntegData.fPlasticStrain.setZero();
         this->fIntegData.fElasticStrain.resize(this->fIntRule.NPoints());
+        this->fIntegData.fElasticStrainIncrement.resize(this->fIntRule.NPoints());
         for (int i = 0; i < this->fIntRule.NPoints(); i++){
             this->fIntegData.fElasticStrain[i].Zero();
+            this->fIntegData.fElasticStrainIncrement[i].Zero();
             // this->fIntegData.fElasticStrain[i].setZero();
         }
         fElasticConstitutiveMatrix.resize(6,6);
@@ -23,6 +27,14 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
     } else {
         PanicButton();
     }
+    int DIM = tshape::Dimension;
+    this->fIntegData.fAdimCoord.resize(DIM);
+    this->fIntegData.fNeedsDSol = true;
+    this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    this->fIntegData.fDSolDxPrev.resize(this->fWeakForm->NState(), DIM);
+    this->fIntegData.fNeedsSol = true;
+    this->fIntegData.fSol.resize(this->fWeakForm->NState());
+    this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
 };
 
 template<class tshape>
@@ -37,14 +49,29 @@ void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
     int nsol = fPlasticityModel->ElasticModel()->NSolutionVariables(var);
     VecDouble Sol(nsol);
     Sol.setZero();
+    this->fIntegData.fIndex = index;
     fPlasticityModel->ElasticModel()->Solution(this->fIntegData,var,Sol);
 
     if (fPlasticityModel -> Dimension() == 2){
         this->fIntegData.fElasticStrain[index].fXX() += Sol[0];
         this->fIntegData.fElasticStrain[index].fYY() += Sol[1];
         this->fIntegData.fElasticStrain[index].fXY() += Sol[2];
+        this->fIntegData.fElasticStrainIncrement[index].fXX() = Sol[0];
+        this->fIntegData.fElasticStrainIncrement[index].fYY() = Sol[1];
+        this->fIntegData.fElasticStrainIncrement[index].fXY() = Sol[2];
     } else {
-        PanicButton();
+        this->fIntegData.fElasticStrain[index].fXX() += Sol[0];
+        this->fIntegData.fElasticStrain[index].fYY() += Sol[1];
+        this->fIntegData.fElasticStrain[index].fZZ() += Sol[2];
+        this->fIntegData.fElasticStrain[index].fYZ() += Sol[3];
+        this->fIntegData.fElasticStrain[index].fXZ() += Sol[4];
+        this->fIntegData.fElasticStrain[index].fXY() += Sol[5];
+        this->fIntegData.fElasticStrainIncrement[index].fXX() = Sol[0];
+        this->fIntegData.fElasticStrainIncrement[index].fYY() = Sol[1];
+        this->fIntegData.fElasticStrainIncrement[index].fZZ() = Sol[2];
+        this->fIntegData.fElasticStrainIncrement[index].fYZ() = Sol[3];
+        this->fIntegData.fElasticStrainIncrement[index].fXZ() = Sol[4];
+        this->fIntegData.fElasticStrainIncrement[index].fXY() = Sol[5];
     }
     ElasStress = this->fIntegData.fElasticStrain[index].Multiply(fElasticConstitutiveMatrix);
     // ElasStress.fData = fElasticConstitutiveMatrix * this->fIntegData.fElasticStrain[index].fData;
@@ -57,21 +84,12 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
 
     if (!this->fWeakForm) return;
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
-
-    int DIM = tshape::Dimension;
     
     int index = 0;
-    this->fIntegData.fAdimCoord.resize(DIM);
-    this->fIntegData.fNeedsDSol = true;
-    this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
-    this->fIntegData.fDSolDxPrev.resize(this->fWeakForm->NState(), DIM);
-    this->fIntegData.fNeedsSol = true;
-    this->fIntegData.fSol.resize(this->fWeakForm->NState());
-    this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
-
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-
+    int DIM = tshape::Dimension;
+    
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
             VecInt order(3);
@@ -122,7 +140,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         } else {
             //Plastic step
             this->fIntegData.fYieldFunction[index] = YieldFunction;
-            this->fIntegData.fPlasticMultiplier = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
+            this->fIntegData.fPlasticMultiplier[index] = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
             fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);
             fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,ElasStress);
             fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
@@ -146,8 +164,7 @@ void ElementWithMem<tshape>::ComputeElContribution(std::vector<MatrixDouble> &ja
     if (!this->fWeakForm) return;
 
     int DIM = tshape::Dimension;
-    this->fIntegData.fA0Inv.resize(DIM,DIM);
-    this->fIntegData.fAdimCoord.resize(DIM);
+    
 
     int index = 0;
 

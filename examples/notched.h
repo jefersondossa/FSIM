@@ -4,11 +4,12 @@
 {
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
     // sigma_y = 2.e6 - 2.e9*plast;
-    sigma_y = 0.45 + 0.2*plast;
+    hardening = 0.0;
+    sigma_y = 0.45 + hardening*plast;
     // sigma_y = 0.45 + 0.0001*plast;
 
     //hardening H = d(sigma_y)/d(epsilon_p)
-    hardening = 0.2;
+    
     // hardening = 0.0001;
 };
 
@@ -32,8 +33,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     L2Projection * matbc5 = new L2Projection(8,2,3,val1,val3);
     //Notch
     val3.setZero();
-    val3[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(6,2,3,val1,val3);
+    // val3[1] = 1.;
+    L2Projection * matbc1 = new L2Projection(6,2,0,val1,val3);
     
 
     
@@ -51,10 +52,14 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     GmshTools::Read(*cmesh,"../notched.msh");
 
     IncrementalAnalysis an(cmesh,SolverType::ELDLt, 100, bcIncrement,1.e-6,100  );
-    
+#ifdef RELEASE_BUILD
+    an.SType() = SolverType::EUmfpack;
+    // an.SType() = SolverType::ECholmod;
+#endif
+
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};
-    VectorNames = {"Displacement","Stress","Strain"};
+    VectorNames = {"Displacement","Stress","Strain","RealStress"};
     an.Run("plasticitytest",ScalarNames,VectorNames);
     
     // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};

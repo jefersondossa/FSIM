@@ -9,7 +9,10 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
     fPlaneStress = planes;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
+
     if (fPlaneStress){//Plane Stress Matrix
+        double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
         double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
         fConstitutiveMatrix(0,0) = k;
         fConstitutiveMatrix(0,1) = k * fPoissonRatio;
@@ -17,14 +20,14 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
         fConstitutiveMatrix(1,1) = k;
         fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
     } else {//Plane Strain Matrix
-        double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
-        double k = 2.*G / (1.-2.*fPoissonRatio);
+        double fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
+        double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
         double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
         fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * aux;
         fConstitutiveMatrix(0,1) = aux * fPoissonRatio;
         fConstitutiveMatrix(1,0) = aux * fPoissonRatio;
         fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
-        fConstitutiveMatrix(2,2) = G;
+        fConstitutiveMatrix(2,2) = fShearModulus;
     }
 };
 
@@ -34,12 +37,15 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     if (!data.fNeedsDSol){
         data.fNeedsDSol = true;
         data.fDSolDx.resize(fNState,fDimension);
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
     }
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
+    auto matBT=matB.transpose();
 
     for (int j = 0; j < nphi; j++){
         matB(0,2*j  ) = data.fDPhiX0(j,0);
@@ -60,6 +66,7 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
+   
 
     auto force = fForceFunction;
     VecDouble forcingF(fDimension);
@@ -78,9 +85,10 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     strain.setZero();
     strain[0] = data.fDSolDx(0,0);
     strain[1] = data.fDSolDx(1,1);
-    strain[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+    strain[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
+    VecDouble stress = fConstitutiveMatrix * strain;
 
-    Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
+    Rhs -= matB.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
@@ -156,6 +164,8 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     if(!strcmp("Strain",name.c_str()))           return 17;
     if(!strcmp("SigmaZ",name.c_str()))           return 18;
     if(!strcmp("DeltaStrain",name.c_str()))      return 19;
+    if(!strcmp("Pressure",name.c_str()))         return 20;
+    if(!strcmp("J2",name.c_str()))               return 21;
 
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
@@ -185,6 +195,8 @@ int Elasticity2D::NSolutionVariables(int var) const{
     case 13:
     case 14:
     case 18:
+    case 20:
+    case 21:
         return 1;
 
     default:
@@ -368,25 +380,12 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
             Sol[1] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
             Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
         } else {
-            
-            //  double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
-            // fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * aux;
-            // fConstitutiveMatrix(0,1) = aux * fPoissonRatio;
-            // fConstitutiveMatrix(1,0) = aux * fPoissonRatio;
-            // fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
-            // fConstitutiveMatrix(2,2) = G;
-
             double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
             
             double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
             Sol[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
             Sol[1] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
             Sol[2] = G * epsilon[2];
-#ifdef DEBUG_BUILD
-            if (std::isnan(Sol[0])){
-                PanicButton();
-            }
-#endif
         }
         return;
     };
@@ -419,6 +418,48 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
         Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
         Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
+        return;
+    };
+
+    //Pressure
+    if (var == 20){
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        if (fPlaneStress){
+            PanicButton();
+        } else {
+            double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+            double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+            Tensor Stress;
+            Stress.fXX() = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
+            Stress.fYY() = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
+            Stress.fZZ() = k * (fPoissonRatio * epsilon[0] + fPoissonRatio * epsilon[1]);
+            Stress.fXY() = G * epsilon[2];
+            Sol[0] = Stress.Trace()/3.;
+        }
+        return;
+    };
+    
+    //J2
+    if (var == 21){
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        if (fPlaneStress){
+            PanicButton();
+        } else {
+            double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+            double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+            Tensor Stress;
+            Stress.fXX() = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
+            Stress.fYY() = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
+            Stress.fZZ() = k * (fPoissonRatio * epsilon[0] + fPoissonRatio * epsilon[1]);
+            Stress.fXY() = G * epsilon[2];
+            Sol[0] = Stress.J2();
+        }
         return;
     };
 }; 

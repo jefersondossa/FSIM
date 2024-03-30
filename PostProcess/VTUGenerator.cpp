@@ -150,12 +150,14 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
     output_v << "    <CellData>" << std::endl;
     
     //Some element wise result
-    // output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-    //             << "Name=\"Process\" format=\"ascii\">" << std::endl;
-    // for (int i=0; i<NElements(); i++){
-    //     output_v << part_elem[i] << std::endl;
-    // };
-    // output_v << "      </DataArray> " << std::endl;
+    output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                << "Name=\"Material\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<graphmesh->NElements(); i++){
+        auto compel = cmesh->ElementVec()[i];
+        int matid = compel->GetWeakForm()->Id();
+        output_v << matid << std::endl;
+    };
+    output_v << "      </DataArray> " << std::endl;
     
     output_v << "    </CellData>" << std::endl; 
 

@@ -60,20 +60,20 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
     
     int iStep = 0;
     
-    while (iStep < fNSteps){
+    while (iStep < fNSteps+1){
         std::cout << "Computing step... " << iStep << std::endl;
         
         if (fIncrementValue.size() == 0){
             for (int i = 0; i < fIncrementBC.size(); i++){
-                fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * (iStep+1);
+                fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * (iStep);
             }
         } else {
             for (int i = 0; i < fIncrementBC.size(); i++){
                 fIncrementBC[i]->BCValue() = initialbc[i] + increments[i] * (iStep);
             }
         }
-        std::ofstream output("plasticity.txt",std::ios::app);
-        output << "\n\n------------------STEP = " << iStep << " ------------------" << std::endl;
+        // std::ofstream output("plasticity.txt",std::ios::app);
+        // output << "\n\n------------------STEP = " << iStep << " ------------------" << std::endl;
         NonLinearAnalysis::Run();
         VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,iStep);
         {
@@ -82,7 +82,7 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
             // std::set<int> matid = {6};
             // std::map<std::string,VecDouble> result;
             // MeshVector()[0]->Integrate(matid,integrate,result);
-            // double E = 1.e10;
+            // double E = 1.e10;    
             // double nu = 0.48;
             // double sigmaY = 848700./sqrt(3.);
             // double aux = E/((1.+nu)*(1.-2.*nu));

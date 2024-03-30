@@ -1,34 +1,4 @@
 //Analytic Solutions
-
-auto exactSolElasticity3D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
-    const auto &x=coord[0];
-    const auto &y=coord[1];
-    auto pi = M_PI;
-    u[0] = cos(pi*x)*sin(2.*pi*y);
-    u[1] = cos(pi*y)*sin(pi*x);
-    gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
-    gradU(0,1) = pi*cos(pi*x)*cos(pi*y);
-    gradU(1,0) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
-    gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
-    // u[0] = x;
-    // u[1] = 0.;
-    // gradU(0,0) = 1.;
-    // gradU(0,1) = 0.;
-    // gradU(1,0) = 0.;
-    // gradU(1,1) = 0.;
-};
-
-auto forcingFunctionElasticity3D = [](const VecDouble &coord, VecDouble &force){
-    const auto &x=coord[0];
-    const auto &y=coord[1];
-    double E=1.;
-    double poisson=0.;
-    auto pi = M_PI;
-    force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
-    force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
-};
-
-
    // Defines the problem dimension
     const int dimension = 3;
 {
@@ -37,41 +7,95 @@ auto forcingFunctionElasticity3D = [](const VecDouble &coord, VecDouble &force){
 //==========================================================================
 //==============================PROBLEM MESHES==============================
 //==========================================================================
+auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+    // sigma_y =.5/sqrt(3.)+500.*plast;
+    // sigma_y =50.+500.*plast;
+    // hardening = 500.;
+
+    // sigma_y = 20e3+5000000.000*plast;
+    // // sigma_y = 10.0;//+0.0001*plast;
+    // hardening = 5000000.000;
+    sigma_y = .5+500.00*plast;
+
+    hardening = 500.00;
+};
 
     CompMesh* coarseModel = new CompMesh();
 
-    Elasticity3D * matpoisson = new Elasticity3D(15,1.,.0);
-    coarseModel->InsertMaterial(matpoisson);
-    // matpoisson->SetForcingFunction(forcingFunctionElasticity3D);
-    // matpoisson->SetExactSolution(exactSolElasticity3D);
+    Elasticity3D * matpoisson = new Elasticity3D(15,1.e3,.0);
+    // Poisson * matpoisson = new Poisson(15,3,1);
+    // coarseModel->InsertMaterial(matpoisson);
+    VonMises *plastmodel = new VonMises(matpoisson);
+    // DruckerPrager *plastmodel = new DruckerPrager(matpoisson,00.,0.,false);
+    plastmodel->SetUniaxialYieldFunction(yieldFunction);
+    coarseModel->InsertMaterial(plastmodel);
+
     //BC
     MatrixDouble val1(3,3);
     val1.setZero();
     VecDouble val2(3);
     val2.setZero();
-    L2Projection * matbc1 = new L2Projection(16,3,0,val1,val2);    
-    L2Projection * matbc3 = new L2Projection(18,3,1,val1,val2);
-    val2[0]=1.;
-    L2Projection * matbc2 = new L2Projection(17,3,1,val1,val2);
+    val2[0] = 0.;
+    L2Projection * matbc1 = new L2Projection(16,3,0,val1,val2);
+    val2.setZero();
+    // L2Projection * matbc3 = new L2Projection(18,3,1,val1,val2);
+    // val2[0] = -20.0;
+    val2[1] = .0;
+    // val2[2] = -20.0;
+    // val2[1] = 0.4;
+    L2Projection * matbc2 = new L2Projection(17,3,0,val1,val2);
+    val2.setZero();
+    // val2[0] = 1.;
+    L2Projection * matbc4 = new L2Projection(18,3,1,val1,val2);
+    val2.setZero();
+    val2[2] = 1.;
+    L2Projection * matbc5 = new L2Projection(19,3,3,val1,val2);
+    // val2.setZero();
+    // val2[2] = 1.;
+    // L2Projection * matbc6 = new L2Projection(21,3,3,val1,val2);
     // matbc3->SetForcingFunction(forcingFunctionElasticity3D);
     // matbc3->SetExactSolution(exactSolElasticity3D);
 
     coarseModel->InsertMaterial(matbc1);
     coarseModel->InsertMaterial(matbc2);
-    coarseModel->InsertMaterial(matbc3);
+    // coarseModel->InsertMaterial(matbc3);
+    coarseModel->InsertMaterial(matbc4);
+    coarseModel->InsertMaterial(matbc5);
+    // coarseModel->InsertMaterial(matbc6);
 
     GmshTools::Read(*coarseModel,"../cube.msh");
 
-    // NonLinearAnalysis an(coarseModel,SolverType::ECholmod);
-    LinearAnalysis an(coarseModel,SolverType::ELU);
-    an.Run();
+    // NonLinearAnalysis an(coarseModel,SolverType::ELU);
+    // LinearAnalysis an(coarseModel,SolverType::ELU);
 
+    std::vector<L2Projection *> bcIncrement = {matbc2};
+    IncrementalAnalysis an(coarseModel,SolverType::ELU, 100, bcIncrement,1.e-7,100);
+#ifdef RELEASE_BUILD
+    an.SType() = SolverType::EUmfpack;
+    // an.SType() = SolverType::ECholmod;
+#endif    
+    VecDouble increment(3);
+    // increment.setZero();
+    increment[0] = 0.000035;
+    an.SetIncrement(increment);
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {};
-    VectorNames = {"Displacement"};
-    // VectorNames = {"Displacement","ExactDisplacement"};
+    ScalarNames = {"PlasticStrain"};
+    // ScalarNames = {"Solution"};
+    // VectorNames = {"Derivative"};
+    VectorNames = {"Displacement","Stress"};
+    an.Run("pureShear",ScalarNames,VectorNames);
 
-    VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
+    // std::vector<std::string> ScalarNames, VectorNames;
+    // ScalarNames = {};
+    // VectorNames = {"Displacement"};
+    // // VectorNames = {"Displacement","ExactDisplacement"};
+    // an.GlobalMatrix()->ZeroSolution();
+    // int64_t row = 9;
+    // double val = 1.;
+    // an.GlobalMatrix()->PutValueSolution(row,val);
+    // an.UpdateSolution();
+
+    // VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
     // VTUGenerator::PrintResults(fineModel,"resultFine");
     // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 

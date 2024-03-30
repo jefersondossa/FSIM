@@ -3,15 +3,16 @@
     const int dimension = 2;
 {
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
-    sigma_y =.5/sqrt(3.)+500.*plast;
-    // sigma_y =.5+500.*plast;
+    // sigma_y =.5/sqrt(3.)+500.*plast;
     hardening = 500.;
+    sigma_y =.5+hardening*plast;
+    
 
     // sigma_y = .05;
     // hardening = 0.;
 };
 
-    CompMesh* cmesh = new CompMesh();
+    CompMesh* cmesh = new CompMesh(); 
 
     Elasticity2D * matelas = new Elasticity2D(10,1.e3,.0,false);
     //BC
@@ -20,30 +21,35 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     VecDouble val2(2);
     val2.setZero();
     //Left
-    val2[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(9,2,3,val1,val2);
+    val2[1] = 0.;
+    L2Projection * matbc1 = new L2Projection(9,2,0,val1,val2);
 
     val2.setZero();
-    val2[0] = 1.;
-    //bottom
-    L2Projection * matbc2 = new L2Projection(11,2,3,val1,val2);
+    val2[0] = 0.;
+    // //bottom
+    // L2Projection * matbc2 = new L2Projection(11,2,1,val1,val2);
 
     val2.setZero();
     // val2[1] = 0.0005;
-    val2[1] = 0.5;
+    // val2[1] = 0.0;
     //Right
-    L2Projection * matbc3 = new L2Projection(12,2,1,val1,val2);
+    L2Projection * matbc3 = new L2Projection(12,2,0,val1,val2);
     val2.setZero();
     L2Projection * matbc4 = new L2Projection(8,2,1,val1,val2);
+    // val2[0] = 1.;
+    L2Projection * matbc5 = new L2Projection(13,2,1,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
-    cmesh->InsertMaterial(matbc2);
+    // cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
-    // VonMises *plastmodel = new VonMises(matelas);
+    cmesh->InsertMaterial(matbc5);
+
+
+    VonMises *plastmodel = new VonMises(matelas);
     // Tresca *plastmodel = new Tresca(matelas);
     double angle = 00.*M_PI/180.;
-    DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
+    // DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel); 
@@ -51,17 +57,21 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
    
     GmshTools::Read(*cmesh,"../marques_viga_biengastada.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 25, bcIncrement,1.e-10,30);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-7,30);
     VecDouble increment(2);
     increment.setZero();    
-    // increment[1] = 0.00004;
-    increment[1] = 0.02;
+    increment[0] = 0.000035;
+    // increment[1] = 0.02;
     an.SetIncrement(increment);
+#ifdef RELEASE_BUILD
+    an.SType() = SolverType::EUmfpack;
+    // an.SType() = SolverType::ECholmod;
+#endif
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};
     VectorNames = {"Displacement","Stress","Strain"};
-    an.Run("plasticitytest",ScalarNames,VectorNames);
+    an.Run("pureShear2D",ScalarNames,VectorNames);
     
     // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};
     // std::set<int> matid = {6};

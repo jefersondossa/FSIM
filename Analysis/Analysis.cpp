@@ -38,6 +38,7 @@ void Analysis::Solve(){
     fSolver = new EigenLinearSolver(this);
 #endif
     fSolver->Solve();
+    delete fSolver;
 }
 
 void Analysis::AllocateMonomodel(){

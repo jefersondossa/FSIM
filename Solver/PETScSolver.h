@@ -14,7 +14,7 @@ private:
 
 public:
     PETScSolver(Analysis *an);
-    ~PETScSolver();
+    virtual ~PETScSolver();
 
     void Solve() override;
 };

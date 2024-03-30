@@ -2,8 +2,53 @@
 #include "PositionalTruss.h"
 #include "ElasticityPositional2D.h"
 
-// #include "Boundary.h"
-// #include "CompMesh.h"
+template<class tshape>
+ElementT<tshape>::ElementT() : Element(){
+    fIntRule.SetOrder(tshape::Order+tshape::Order);
+};
+
+template<class tshape>
+ElementT<tshape>::ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : Element(){
+    int DIM = tshape::Dimension;
+    fMesh = mesh;
+    fConnect.resize(tshape::NElNodes);
+    fIndex = index;
+    for (int i = tshape::NElNodes; i--; ) fConnect[i] = connect[i];
+    DEG = fMesh->GetDefaultOrder();
+    fWeakForm = wf;
+    if (fWeakForm) nLocDOF = tshape::NElNodes * fWeakForm->NState(); 
+
+    fNeighborElements.clear();
+    int increase = 0;
+    if(wf->GetExactSolution()) increase = 2;
+
+    fIntRule.SetOrder(2*tshape::Order+increase);
+
+    fIntegData.fWeightFunction.resize(fIntRule.NPoints());
+    fIntegData.fDistFunction.resize(fIntRule.NPoints());
+    fIntegData.fPrevWeightFunction.resize(fIntRule.NPoints());
+
+    fIntegData.fWeightFunction.fill(1.);
+    fIntegData.fPrevWeightFunction.fill(1.);
+
+    getIntegPointCoordinates();
+    fIntegData.fAdimCoord.resize(DIM);
+
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fA0Inv.setZero();
+    fIntegData.fAxes0.resize(3,DIM);
+    fIntegData.fAxes0.setZero();
+    fIntegData.fA0.resize(DIM,DIM);
+    fIntegData.fA0.setZero();
+    fIntegData.fX.resize(3);
+    fIntegData.fX.setZero();
+
+    fIntegData.fPhi.resize(tshape::NElNodes);
+    fIntegData.fPhi.setZero();
+
+    fIntegData.fDPhi.resize(tshape::NElNodes,tshape::Dimension);
+    fIntegData.fDPhi.setZero();
+};
 
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
@@ -128,19 +173,11 @@ template<class tshape>
 void ElementT<tshape>::ComputeJacobian() {
 
     int DIM = tshape::Dimension;
-    fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fA0Inv.setZero();
-    fIntegData.fAxes0.resize(3,DIM);
     fIntegData.fAxes0.setZero();
-    fIntegData.fA0.resize(DIM,DIM);
     fIntegData.fA0.setZero();
-    fIntegData.fX.resize(3);
     fIntegData.fX.setZero();
-
-    fIntegData.fPhi.resize(tshape::NElNodes);
     fIntegData.fPhi.setZero();
-
-    fIntegData.fDPhi.resize(tshape::NElNodes,tshape::Dimension);
     fIntegData.fDPhi.setZero();
 
     tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
@@ -236,7 +273,7 @@ void ElementT<tshape>::ComputeJacobian() {
             // fIntegData.fA0Inv(1, 0) = -fIntegData.fA0(1, 0) / fIntegData.fJacA0;
 
             // fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
-            //     //Computing the jacobian determinant and Inverse
+                //Computing the jacobian determinant and Inverse
             fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
             fIntegData.fA0(0,1) = fIntegData.fAxes0(0,1);
             fIntegData.fA0(1,0) = fIntegData.fAxes0(1,0);
@@ -259,7 +296,7 @@ void ElementT<tshape>::ComputeJacobian() {
                 fIntegData.fA0(i, 1) = fIntegData.fAxes0(i, 1);
                 fIntegData.fA0(i, 2) = fIntegData.fAxes0(i, 2);
             }
-
+            fIntegData.fJacA0 = 0.;
             fIntegData.fJacA0 -= fIntegData.fA0(0, 2) * fIntegData.fA0(1, 1) * fIntegData.fA0(2, 0); //- a02 a11 a20
             fIntegData.fJacA0 += fIntegData.fA0(0, 1) * fIntegData.fA0(1, 2) * fIntegData.fA0(2, 0); //+ a01 a12 a20
             fIntegData.fJacA0 += fIntegData.fA0(0, 2) * fIntegData.fA0(1, 0) * fIntegData.fA0(2, 1); //+ a02 a10 a21
@@ -689,9 +726,9 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
     
     int index = 0;
-    fIntegData.fAdimCoord.resize(DIM);
+    double val = 0.;
     for(int it = 0; it < fIntRule.NPoints(); it++){
-
+ 
         //Defines the integration points adimentional coordinates
         for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
 
@@ -710,6 +747,19 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
             ComputeCurrentSpatialDerivatives();
         }
 
+        // double auxx=0.;
+        // double auxy=0.;
+        // double auxz=0.;
+        // // for (int i = fIntegData.fPhi.size(); i-- ; ){
+        // //     val += 1.*fIntegData.fPhi[i]*fIntegData.fJacA0 * fIntegData.fWeight;
+        // //     auxx += fIntegData.fDPhiX0(i,0);
+        // //     auxy += fIntegData.fDPhiX0(i,1);
+        // //     // auxz += fIntegData.fDPhiX0(i,2);
+        // // }
+        // double tol = 1.e-10;
+        // if (fabs(auxx) > tol || fabs(auxy) > tol || fabs(auxz) > tol){
+        //     PanicButton();
+        // }
         //Computes the element diffusion/viscosity matrix
         fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
         
@@ -887,6 +937,7 @@ void ElementT<tshape>::Integrate(std::vector<std::string> &varNames, std::map<st
 
             double WJ = fIntegData.fWeight * fIntegData.fJacA0;
             Sol.setZero();
+            fIntegData.fIndex = index;
             fWeakForm->Solution(fIntegData,varindex,Sol);
             // Solution(varindex,Sol);
             result[varNames[ivar]] += Sol * WJ;

@@ -37,19 +37,16 @@ void Elasticity3D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     MatrixDouble matB(6,3*nphi);
     matB.setZero();
 
-    std::cout << "Corrigir as derivadas para a ordem do tensor de voigt" << std::endl;
-    //xx, yy, zz, yz, xz, xy <- ordem correta
-    PanicButton();
     for (int j = 0; j < nphi; j++){
         matB(0,3*j  ) = data.fDPhiX0(j,0);
         matB(1,3*j+1) = data.fDPhiX0(j,1);
         matB(2,3*j+2) = data.fDPhiX0(j,2);
-        matB(3,3*j  ) = data.fDPhiX0(j,1);
-        matB(3,3*j+1) = data.fDPhiX0(j,0);
-        matB(4,3*j+1) = data.fDPhiX0(j,2);
-        matB(4,3*j+2) = data.fDPhiX0(j,1);
-        matB(5,3*j  ) = data.fDPhiX0(j,2);
-        matB(5,3*j+2) = data.fDPhiX0(j,0);
+        matB(5,3*j  ) = data.fDPhiX0(j,1);
+        matB(5,3*j+1) = data.fDPhiX0(j,0);
+        matB(3,3*j+1) = data.fDPhiX0(j,2);
+        matB(3,3*j+2) = data.fDPhiX0(j,1);
+        matB(4,3*j  ) = data.fDPhiX0(j,2);
+        matB(4,3*j+2) = data.fDPhiX0(j,0);
     }
     
     Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
@@ -75,12 +72,12 @@ void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         matB(0,3*j  ) = data.fDPhiX0(j,0);
         matB(1,3*j+1) = data.fDPhiX0(j,1);
         matB(2,3*j+2) = data.fDPhiX0(j,2);
-        matB(3,3*j  ) = data.fDPhiX0(j,1);
-        matB(3,3*j+1) = data.fDPhiX0(j,0);
-        matB(4,3*j+1) = data.fDPhiX0(j,2);
-        matB(4,3*j+2) = data.fDPhiX0(j,1);
-        matB(5,3*j  ) = data.fDPhiX0(j,2);
-        matB(5,3*j+2) = data.fDPhiX0(j,0);
+        matB(5,3*j  ) = data.fDPhiX0(j,1);
+        matB(5,3*j+1) = data.fDPhiX0(j,0);
+        matB(3,3*j+1) = data.fDPhiX0(j,2);
+        matB(3,3*j+2) = data.fDPhiX0(j,1);
+        matB(4,3*j  ) = data.fDPhiX0(j,2);
+        matB(4,3*j+2) = data.fDPhiX0(j,0);
     }
     
     VecDouble strain(6);
@@ -88,9 +85,9 @@ void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     strain[0] = data.fDSolDx(0,0);
     strain[1] = data.fDSolDx(1,1);
     strain[2] = data.fDSolDx(2,2);
-    strain[3] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
-    strain[4] = data.fDSolDx(1,2)+data.fDSolDx(2,1);
-    strain[5] = data.fDSolDx(0,2)+data.fDSolDx(2,0);
+    strain[5] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+    strain[3] = data.fDSolDx(1,2)+data.fDSolDx(2,1);
+    strain[4] = data.fDSolDx(0,2)+data.fDSolDx(2,0);
 
     Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
 
@@ -168,9 +165,10 @@ int Elasticity3D::VariableIndex(const std::string &name) const{
     if(!strcmp("ExactForce",name.c_str()))       return 15;
     if(!strcmp("Stress",name.c_str()))           return 16;
     if(!strcmp("Strain",name.c_str()))           return 17;
+    if(!strcmp("DeltaStrain",name.c_str()))      return 19;
 
-    std::cout << "Post Process variable not implemented \n";
-    PanicButton();
+    // std::cout << "Post Process variable not implemented \n";
+    // PanicButton();
     return -1;
 };
 
@@ -196,9 +194,11 @@ int Elasticity3D::NSolutionVariables(int var) const{
     case 13:
     case 14:
         return 1;
+    case 19:
+        return 6;
 
     default:
-        PanicButton();
+        // PanicButton();
         return -1;
     }
 };
@@ -338,10 +338,13 @@ void Elasticity3D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Stress
     if (var == 16){
-        VecDouble epsilon(3);
+        VecDouble epsilon(6);
         epsilon[0] = data.fDSolDx(0,0);
         epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        epsilon[2] = data.fDSolDx(2,2);
+        epsilon[3] = data.fDSolDx(2,1)+data.fDSolDx(1,2);
+        epsilon[4] = data.fDSolDx(0,2)+data.fDSolDx(2,0);
+        epsilon[5] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         auto sigma = fConstitutiveMatrix * epsilon;
         Sol[0] = sigma[0];
         Sol[1] = sigma[1];
@@ -354,6 +357,17 @@ void Elasticity3D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = data.fDSolDx(0,0);
         Sol[1] = data.fDSolDx(1,1);
         Sol[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        return;
+    };
+
+    //Delta Strain
+    if (var == 19){
+        Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
+        Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
+        Sol[2] = data.fDSolDx(2,2) - data.fDSolDxPrev(2,2);
+        Sol[3] = ((data.fDSolDx(2,1)+data.fDSolDx(1,2))-(data.fDSolDxPrev(2,1)+data.fDSolDxPrev(1,2)));
+        Sol[4] = ((data.fDSolDx(0,2)+data.fDSolDx(2,0))-(data.fDSolDxPrev(0,2)+data.fDSolDxPrev(2,0)));
+        Sol[5] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
         return;
     };
 
