@@ -12,7 +12,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // hardening = 500.;
 
     hardening = 121.e3;
-    sigma_y = 200000.+hardening*plast;
+    sigma_y = 20000.+hardening*plast;
     // sigma_y = 10.0;//+0.0001*plast;
     
 };
@@ -64,12 +64,12 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // PositionalTruss *geogrid = new PositionalTruss(16, 2, 3000.e12,1.);
     // cmesh->InsertMaterial(geogrid);
 
-    // GmshTools::Read(*cmesh,"../geogrelha.msh");
-    GmshTools::Read(*cmesh,"../geogrelha_nosymmetry.msh");
+    GmshTools::Read(*cmesh,"../geogrelha.msh");
+    // GmshTools::Read(*cmesh,"../geogrelha_nosymmetry.msh");
     std::vector<L2Projection *> bcIncrement = {matbc4};
 
     
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 50, bcIncrement,1.e-6 ,100);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 1000, bcIncrement,1.e-6 ,100);
 #ifdef RELEASE_BUILD
     an.SType() = SolverType::EUmfpack;
     // an.SType() = SolverType::ECholmod;
@@ -78,8 +78,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
 
     std::vector<std::string> ScalarNames, VectorNames;
-    // ScalarNames = {"PlasticStrain"};
-    ScalarNames = {"Pressure","J2","PlasticStrain"};
+    ScalarNames = {"PlasticStrain"};
+    // ScalarNames = {"Pressure","J2","PlasticStrain"};
     // ScalarNames = {"Material"};
     VectorNames = {"Displacement","Stress","RealStress"};
     // VectorNames = {"Displacement"};

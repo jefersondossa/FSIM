@@ -17,8 +17,10 @@ public:
    
     /// @brief Jacobian transform related to the current mesh
     MatrixDouble fA1;
+    MatrixDouble fA1Prev;
     /// @brief Element local axes related to the current mesh
     MatrixDouble fAxes1;
+    MatrixDouble fAxes1Prev;
 
     /// @brief Initial element Jacobian determinant
     double fJacA0;

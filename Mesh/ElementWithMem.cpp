@@ -24,6 +24,14 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         }
         fElasticConstitutiveMatrix.resize(6,6);
         fElasticConstitutiveMatrix = 2.*fPlasticityModel->ShearModulus()*fPlasticityModel->fIdentity4Dev + fPlasticityModel->BulkModulus()*fPlasticityModel->fId2xId2;
+
+        auto felastPos = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
+        if (felastPos){
+            this->fIntegData.fAxes1Prev.resize(3,2);
+            this->fIntegData.fAxes1Prev.setZero();
+            this->fIntegData.fA1Prev.resize(2,2);
+            this->fIntegData.fA1Prev.setZero();
+        }
     } else {
         PanicButton();
     }
@@ -143,7 +151,11 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
             this->fIntegData.fPlasticMultiplier[index] = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
             fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);
             fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,ElasStress);
-            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+            if (pos2d || truss){
+                fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+            }else{
+                fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+            }
         }
         index++;
     };  

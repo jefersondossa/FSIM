@@ -14,6 +14,8 @@ protected:
     double fPoissonRatio;
     // Constitutive matrix
     MatrixDouble fConstitutiveMatrix;
+    //Second Piola Kirchhoff Stress
+    MatrixDouble SPKStress; 
 
 public:
     //Positional elasticity 2D constructor
@@ -30,6 +32,7 @@ public:
     /// @param data integration point data
     /// @param Rhs residual vector
     void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) override;
+    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) override;
     
     /// @brief Computes the element error. The exact solution shoul be provided.
     /// @param data integration point data
@@ -51,6 +54,24 @@ public:
     /// @param var solution variable's index
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
+
+    /// @brief Computes the material constitutive matrix (used in plasticity models)
+    /// @return constitutive matrix
+    MatrixDouble &ConstitutiveMatrix() override;
+
+    /// @brief Returns the material young modulus
+    /// @return Young modulus
+    double &YoungModulus(){
+        return fYoungModulus;
+    }
+
+    double &PoissonRatio(){
+        return fPoissonRatio;
+    }
+
+    bool &PlaneState(){
+        return fPlaneStress;
+    }
 };
 
 

@@ -14,7 +14,9 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     CompMesh* cmesh = new CompMesh(); 
 
-    Elasticity2D * matelas = new Elasticity2D(10,1.e3,.0,false);
+    // Elasticity2D * matelas = new Elasticity2D(10,1.e3,.0,false);
+    ElasticityPositional2D * matelas = new ElasticityPositional2D(10,1.e3,.0,false);
+
     //BC
     MatrixDouble val1(2,2);
     val1.setZero();
@@ -60,7 +62,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-7,30);
     VecDouble increment(2);
     increment.setZero();    
-    increment[0] = 0.000035;
+    increment[1] = 0.000035;
     // increment[1] = 0.02;
     an.SetIncrement(increment);
 #ifdef RELEASE_BUILD
@@ -70,8 +72,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"PlasticStrain"};
-    VectorNames = {"Displacement","Stress","Strain"};
-    an.Run("pureShear2D",ScalarNames,VectorNames);
+    VectorNames = {"Displacement","Stress"};
+    an.Run("plasticitytest",ScalarNames,VectorNames);
     
     // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};
     // std::set<int> matid = {6};

@@ -57,7 +57,7 @@ public:
     };
 
 
-    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress);
+    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) override;
 
     virtual double PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
         PanicButton();

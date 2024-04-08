@@ -23,6 +23,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     Elasticity2D *mat2d = dynamic_cast<Elasticity2D* >(fElasticModel);
     Elasticity3D *mat3d = dynamic_cast<Elasticity3D* >(fElasticModel);
     PositionalTruss *postruss = dynamic_cast<PositionalTruss* >(fElasticModel);
+    ElasticityPositional2D *pos2d = dynamic_cast<ElasticityPositional2D* >(fElasticModel);
     if (truss) {
         fYoungModulus = truss->YoungModulus();
         fPoissonRatio = 0.;
@@ -40,6 +41,11 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     if (postruss) {
         fYoungModulus = postruss->YoungModulus();
         fPoissonRatio = 0.;
+    }
+    if (pos2d) {
+        fYoungModulus = pos2d->YoungModulus();
+        fPoissonRatio = pos2d->PoissonRatio();
+        fPlaneStress = pos2d->PlaneState();
     }
 
     Tensor Id2;

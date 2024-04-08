@@ -8,22 +8,23 @@
 
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
 
-    hardening = 0.;
+    hardening = 1.e6;
     sigma_y = 848.7e3+hardening*plast;    
+    // sigma_y = 490e3+hardening*plast;    
 };
 
     CompMesh* cmesh = new CompMesh(); 
 
     //Dominio
-    ElasticityPositional2D * matelas = new ElasticityPositional2D(12,1.e10,.48,true);
+    ElasticityPositional2D * matelas = new ElasticityPositional2D(12,1.e10,.48,false);
     // Elasticity2D * matelas = new Elasticity2D(12,1.e10,.48,false);
-    // VonMises *plastmodel = new VonMises(matelas);
-    // double phi = 40.*M_PI/180.;
-    // double psi = 00.*M_PI/180.;
+    VonMises *plastmodel = new VonMises(matelas);
+    double phi = 20.*M_PI/180.;
+    double psi = 20.*M_PI/180.;
     // DruckerPrager *plastmodel = new DruckerPrager(matelas,phi,psi);
-    // plastmodel->SetUniaxialYieldFunction(yieldFunction);
-    cmesh->InsertMaterial(matelas);
-    // cmesh->InsertMaterial(plastmodel);
+    plastmodel->SetUniaxialYieldFunction(yieldFunction);
+    // cmesh->InsertMaterial(matelas);
+    cmesh->InsertMaterial(plastmodel);
 
     //BC
     MatrixDouble val1(2,2);
@@ -32,8 +33,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     VecDouble val3(2);
     val2.setZero();val3.setZero();
     // Fundo 
-    // val2[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(10,2,0,val1,val2);
+    val2[1] = 1.;
+    L2Projection * matbc1 = new L2Projection(10,2,3,val1,val2);
     val2.setZero();
     // Laterais
     val2[0] = 1.;
@@ -62,7 +63,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     
 
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 50, bcIncrement,1.e-6 ,100);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-6 ,100);
 #ifdef RELEASE_BUILD
     an.SType() = SolverType::EUmfpack;
     // an.SType() = SolverType::ECholmod;
@@ -75,11 +76,11 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // an.SetIncrement(increment);
 
     std::vector<std::string> ScalarNames, VectorNames;
-    // ScalarNames = {"PlasticStrain"};
+    ScalarNames = {"PlasticStrain"};
     // ScalarNames = {"Pressure","J2","PlasticStrain"};
     // ScalarNames = {"Material"};
     // VectorNames = {"Displacement","Stress","RealStress"};
-    VectorNames = {"Displacement","Stress"};
+    VectorNames = {"Displacement","Stress","RealStress"};
     // VectorNames = {"Displacement"};
     
     an.Run("geogrelha",ScalarNames,VectorNames);

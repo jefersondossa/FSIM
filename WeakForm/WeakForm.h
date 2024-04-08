@@ -53,6 +53,9 @@ public:
     virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) {
         PanicButton();
     };
+    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) {
+        PanicButton();
+    };
 
     /// @brief Overloads the weak form residual vector computation in the case more than one contribution is provided
     /// @param index integration point index

@@ -337,6 +337,10 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     fIntegData.fX1.setZero();
     fIntegData.fAxes1.resize(3,DIM);
     fIntegData.fAxes1.setZero();
+    if (fIntegData.fAxes1Prev.size() != 0){
+        fIntegData.fAxes1Prev.setZero();
+        fIntegData.fA1Prev.setZero();
+    }
 
     VecDouble yna(3);
     
@@ -346,9 +350,17 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
             // Approximate the integration space
             fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
             yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j);
+            double yprev = 0.;
+            if (fIntegData.fAxes1Prev.size() != 0){
+                yprev = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(j);
+            }
+
 
             for (int k = DIM; k--; ){
                 fIntegData.fAxes1(j,k) += yna[j] * fIntegData.fDPhi(i,k);
+                if (fIntegData.fAxes1Prev.size() != 0){
+                    fIntegData.fAxes1Prev(j,k) += yprev * fIntegData.fDPhi(i,k);
+                }
             };
         };
     };
@@ -383,6 +395,13 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
         fIntegData.fA1(1,1) = fIntegData.fAxes1(1,1);
         fIntegData.fJacA1 = fIntegData.fA1(0,0) * fIntegData.fA1(1,1) - fIntegData.fA1(0,1) * fIntegData.fA1(1,0);
         fIntegData.fJacA1 = fabs(fIntegData.fJacA1);
+
+        if (fIntegData.fA1Prev.size() != 0){
+            fIntegData.fA1Prev(0,0) = fIntegData.fAxes1Prev(0,0);
+            fIntegData.fA1Prev(0,1) = fIntegData.fAxes1Prev(0,1);
+            fIntegData.fA1Prev(1,0) = fIntegData.fAxes1Prev(1,0);
+            fIntegData.fA1Prev(1,1) = fIntegData.fAxes1Prev(1,1);
+        }
     }
         break;
     case 3:

@@ -61,6 +61,6 @@ Physical Curve("Topo", 14) = { 3};
 //+
 Physical Curve("Carga", 15) = {1};
 //+
-Physical Curve("Geogrelha", 16) = {9};
+//Physical Curve("Geogrelha", 16) = {9};
 //+
 Physical Surface("Domain", 17) = {1, 2};
