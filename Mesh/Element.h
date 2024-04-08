@@ -41,7 +41,11 @@ public:
     int &PrintType() {return fPrintType;}
     
     virtual void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
+    virtual void ComputeElContribution(MatrixDouble &Stiffness) = 0;
+    virtual void ComputeElContribution(VecDouble &Rhs) = 0;
     virtual void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) = 0;
+    virtual void ComputeElContribution(std::vector<MatrixDouble> &Stiffness) = 0;
+    virtual void ComputeElContribution(std::vector<VecDouble> &Rhs) = 0;
     virtual void ApplyBC(MatrixDouble &Stiffness, VecDouble &Rhs){};
     virtual void ApplyBC(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs){};
     virtual void ComputeStiffness(int &index, MatrixDouble &Stiffness){};

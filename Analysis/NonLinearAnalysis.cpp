@@ -1,6 +1,9 @@
 #include "NonLinearAnalysis.h"
 #include "Assemble.h"
 #include "L2Projection.h"
+#ifdef HAS_PETSC
+#include "PETScSolver.h"
+#endif
 
 void NonLinearAnalysis::UpdateSolution(){
     
@@ -28,6 +31,26 @@ void NonLinearAnalysis::UpdateSolution(){
     this->GlobalMatrix()->ClearSolution();
 }
 
+#ifdef HAS_PETSC
+
+PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *ptr){
+    NonLinearAnalysis *an = static_cast<NonLinearAnalysis * >(ptr);
+    an->ComputeRhs();
+    PETScMatrix *petscmat = dynamic_cast<PETScMatrix *> (an->GlobalMatrix());
+    PetscScalar mone = -1.;
+    VecScale(petscmat->Rhs(),mone);
+    return 0;
+}
+
+
+PetscErrorCode NonLinearAnalysis::FormJacobian(SNES snes,Vec u,Mat A, Mat B,void *ptr){
+    NonLinearAnalysis *an = static_cast<NonLinearAnalysis * >(ptr);
+    an->ComputeJacobian();
+    return 0;
+}
+
+#endif
+
 void NonLinearAnalysis::Run(){
     
     double NRL2norm = 1000.;
@@ -43,16 +66,36 @@ void NonLinearAnalysis::Run(){
             }
         }
     }
+#ifdef HAS_PETSC
+    auto kkk= this->fGlobalMatrix;
+    PETScMatrix *petscmat = dynamic_cast<PETScMatrix *> (this->GlobalMatrix());
+    fSolver = new PETScSolver(this);
+    PETScSolver *petscsol = dynamic_cast<PETScSolver *> (this->Solver());
+
+    SNESCreate(PETSC_COMM_WORLD,&fSNES);
+    SNESSetFunction(fSNES,petscmat->Rhs(),FormFunction,&(*this));
+    SNESSetJacobian(fSNES,petscmat->Matrix(),petscmat->Matrix(),FormJacobian,&(*this));
+
+    SNESGetKSP(fSNES,&(*(petscsol->KSPSolver())));
+    
+    SNESSetFromOptions(fSNES);        
+    // SNESView(fSNES,PETSC_VIEWER_STDOUT_WORLD);
+
+    PetscInt iterations = 0;
+    PetscReal fgnorm = 0.;
+    PetscViewerAndFormat *vf;
+    
+    SNESSolve(fSNES,NULL,petscmat->Solution());
+    // SNESMonitorSet(fSNES,Monitor,NULL,NULL);
+    SNESGetIterationNumber(fSNES,&iterations);
+    SNESDestroy(&fSNES);
+    // delete fSolver;
+    UpdateSolution();
+
+#else
     //Iterative Process
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
-        // if (iteration==0){
-        //     for (int64_t imesh = 0; imesh < this->MeshVector().size(); imesh++){
-        //         for (int64_t iel = 0; iel < this->MeshVector()[imesh]->NElements(); iel++){
-        //             this->MeshVector()[imesh]->ElementVec()[iel]->IntegrationData().fPlasticMultiplier.setZero();
-        //         }
-        //     }   
-        // }
         std::ofstream output("plasticity.txt",std::ios::app);
         output << "ITERATION = " << iteration << std::endl;
         std::clock_t t3 = std::clock();
@@ -76,8 +119,6 @@ void NonLinearAnalysis::Run(){
             this->GlobalMatrix()->AddValueMatrix(i,i,val);
         }
     }
-    
-    
-
+#endif
 
 }

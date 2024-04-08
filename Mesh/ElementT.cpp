@@ -765,20 +765,7 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
             ComputeCurrentJacobian();
             ComputeCurrentSpatialDerivatives();
         }
-
-        // double auxx=0.;
-        // double auxy=0.;
-        // double auxz=0.;
-        // // for (int i = fIntegData.fPhi.size(); i-- ; ){
-        // //     val += 1.*fIntegData.fPhi[i]*fIntegData.fJacA0 * fIntegData.fWeight;
-        // //     auxx += fIntegData.fDPhiX0(i,0);
-        // //     auxy += fIntegData.fDPhiX0(i,1);
-        // //     // auxz += fIntegData.fDPhiX0(i,2);
-        // // }
-        // double tol = 1.e-10;
-        // if (fabs(auxx) > tol || fabs(auxy) > tol || fabs(auxz) > tol){
-        //     PanicButton();
-        // }
+        
         //Computes the element diffusion/viscosity matrix
         fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
         
@@ -797,6 +784,100 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     return;
 };
 
+template<class tshape>
+void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
+
+    if (!fWeakForm) return;
+
+    int DIM = tshape::Dimension;
+
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
+    
+    int index = 0;
+    double val = 0.;
+    for(int it = 0; it < fIntRule.NPoints(); it++){
+ 
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        fIntegData.fWeight = fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        ComputeJacobian();
+
+        //Computes spatial derivatives
+        ComputeSpatialDerivatives();
+        
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }
+    
+        //Computes the element diffusion/viscosity matrix
+        fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
+        
+        index++;        
+    };  
+
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << "Rhs \n" << rhsVector << std::endl;
+
+    return;
+};
+
+template<class tshape>
+void ElementT<tshape>::ComputeElContribution(VecDouble &rhsVector){
+
+    if (!fWeakForm) return;
+
+    int DIM = tshape::Dimension;
+    fIntegData.fNeedsDSol = true;
+    fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    fIntegData.fNeedsSol = true;
+    fIntegData.fSol.resize(this->fWeakForm->NState());
+
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
+    
+    int index = 0;
+    double val = 0.;
+    for(int it = 0; it < fIntRule.NPoints(); it++){
+ 
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        fIntegData.fWeight = fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        ComputeJacobian();
+
+        //Computes spatial derivatives
+        ComputeSpatialDerivatives();
+        
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }     
+
+        interpolateSolution();
+        interpolateSolDerivatives();
+
+        //Computes the RHS vector
+        fWeakForm->ComputeResidual(index, fIntegData, rhsVector); 
+
+        index++;        
+    };  
+
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << "Rhs \n" << rhsVector << std::endl;
+
+    return;
+};
 
 //------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
@@ -850,6 +931,105 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
     // //Apply boundary conditions
     // ApplyBC(jacobianNRMatrix, rhsVector);
 
+    return;
+};
+
+//------------------------------------------------------------------------------
+//-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
+//------------------------------------------------------------------------------
+template<class tshape>
+void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix){
+
+    if (!fWeakForm) return;
+
+    int DIM = tshape::Dimension;
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fAdimCoord.resize(DIM);
+
+    int index = 0;
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
+
+    for(int it = 0; it < fIntRule.NPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        fIntegData.fWeight = fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        ComputeJacobian();
+
+        //Computes spatial derivatives
+        ComputeSpatialDerivatives();
+        
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }
+
+        //Computes the element diffusion/viscosity matrix
+        fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix); 
+
+        index++;        
+    };  
+    // // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix[1];
+    // // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector[1];
+    // //Apply boundary conditions
+    // ApplyBC(jacobianNRMatrix, rhsVector);
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
+//------------------------------------------------------------------------------
+template<class tshape>
+void ElementT<tshape>::ComputeElContribution(std::vector<VecDouble> &rhsVector){
+
+    if (!fWeakForm) return;
+
+    int DIM = tshape::Dimension;
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fAdimCoord.resize(DIM);
+
+    int index = 0;
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
+    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
+
+    for(int it = 0; it < fIntRule.NPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        fIntegData.fWeight = fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        ComputeJacobian();
+
+        //Computes spatial derivatives
+        ComputeSpatialDerivatives();
+        
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            ComputeCurrentJacobian();
+            ComputeCurrentSpatialDerivatives();
+        }
+
+        if (fIntegData.fNeedsSol) interpolateSolution();
+        if (fIntegData.fNeedsDSol) interpolateSolDerivatives();
+
+        //Computes the RHS vector
+        fWeakForm->ComputeResidual(index, fIntegData, rhsVector); 
+
+        index++;        
+    };  
+    // // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix[1];
+    // // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector[1];
+   
     return;
 };
 

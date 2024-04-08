@@ -82,6 +82,16 @@ void PETScMatrix::MatVecAssemble(){
     VecAssemblyEnd(fRhs);
 }
 
+void PETScMatrix::MatAssemble(){
+    MatAssemblyBegin(fMatrix,MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(fMatrix,MAT_FINAL_ASSEMBLY);
+}
+
+void PETScMatrix::VecAssemble(){
+    VecAssemblyBegin(fRhs);
+    VecAssemblyEnd(fRhs);
+}
+
 void PETScMatrix::AddValueRhs(int64_t &row, double &val) {
     VecSetValues(fRhs, 1, &row, &val, ADD_VALUES);
 };

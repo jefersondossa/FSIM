@@ -17,6 +17,9 @@ public:
     virtual ~PETScSolver();
 
     void Solve() override;
+
+    KSP *KSPSolver(){return &ksp;}
+    PC  *Preconditioner(){return &pc;}
 };
 
 #endif

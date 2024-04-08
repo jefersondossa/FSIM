@@ -131,10 +131,10 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // matpoisson->SetForcingFunction(forcingFunctionPoisson);
     // matpoisson->SetExactSolution(exactSolPoisson);
 
-    Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
-    coarseModel->InsertMaterial(matpoisson);
-    // ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1.,.3);
+    // Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
     // coarseModel->InsertMaterial(matpoisson);
+    ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1000.,.3);
+    coarseModel->InsertMaterial(matpoisson);
     // matpoisson->SetForcingFunction(forcingFunctionElasticity2D);
     // matpoisson->SetExactSolution(exactSolElasticity2D);
     //BC
@@ -144,7 +144,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     VecDouble val3(2);
     val2.setZero();val3.setZero();
     val2[0] = 1.0;
-    L2Projection * matbc3 = new L2Projection(6,1,3,val1,val2);
+    L2Projection * matbc3 = new L2Projection(6,1,1,val1,val2);
     val2.setZero();
     L2Projection * matbc1 = new L2Projection(5,1,0,val1,val2);
     L2Projection * matbc2 = new L2Projection(7,1,1,val1,val3);
@@ -194,15 +194,15 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // LinearAnalysis an(arl.MeshVec(),SolverType::EUmfpack);
     // NonLinearAnalysis an(&arl,SolverType::EUmfpack,1.e-6,2);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
-    NonLinearAnalysis an(coarseModel,SolverType::ELDLt,1.e-6,2);
+    NonLinearAnalysis an(coarseModel,SolverType::EUmfpack,1.e-10,10);
     // NonLinearAnalysis an(coarseModel,SolverType::ELDLt);
     // NonLinearAnalysis an(coarseModel,SolverType::EKLU);
     // NonLinearAnalysis an(coarseModel,SolverType::ESPQR);
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"SigmaX","ExactSigmaX"};
-    VectorNames = {"Displacement","ExactDisplacement"};
+    ScalarNames = {"SigmaX"};
+    VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
     // VTUGenerator::PrintResults(fineModel,"resultFine");

@@ -35,6 +35,8 @@ public:
     virtual void ZeroSolution() = 0;
 
     virtual void MatVecAssemble(){};
+    virtual void MatAssemble(){};
+    virtual void VecAssemble(){};
 
     virtual void ExpandSolution(){};
     virtual void ClearSolution(){};

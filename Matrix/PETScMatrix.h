@@ -41,6 +41,8 @@ public:
     void PrintSolution() override;
 
     void MatVecAssemble() override;
+    void MatAssemble() override;
+    void VecAssemble() override;
 
     PETScMat &Matrix() {
         return fMatrix;

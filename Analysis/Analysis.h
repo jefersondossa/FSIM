@@ -45,6 +45,8 @@ public:
     std::vector<CompMesh *> &MeshVector(){return fMeshVector;}
 
     virtual void Compute() = 0;
+    virtual void ComputeJacobian() = 0;
+    virtual void ComputeRhs() = 0;
     virtual void UpdateSolution() = 0;
     Arlequin *ArlequinModel(){return fArlequin;}
 
@@ -59,6 +61,8 @@ public:
     void PostProcessError(VecDouble &errorsTotal);
     
     ~Analysis() = default;
+
+    LinearSolver *Solver(){return fSolver;}
 };
 
 

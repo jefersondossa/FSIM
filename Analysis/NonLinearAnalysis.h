@@ -2,12 +2,21 @@
 #define NONLINEARANALYSIS_H
 
 #include "LinearAnalysis.h"
+#ifdef HAS_PETSC
+#include <petscsnes.h>
+#endif
+
+enum NonLinearSolverType{ELinear,ENewtonRaphson,ELineSearch};
 
 class NonLinearAnalysis : public LinearAnalysis
 {
 protected:
     int    fMaxIterations;
     double fTolerance;
+    NonLinearSolverType fSolverType = ENewtonRaphson;
+#ifdef HAS_PETSC
+    SNES   fSNES;
+#endif
 
 public:
     NonLinearAnalysis() : LinearAnalysis(){};
@@ -21,6 +30,12 @@ public:
     void UpdateSolution() override;
 
     void Run() override;
+
+#ifdef HAS_PETSC
+    static PetscErrorCode FormFunction(SNES snes, Vec u,Vec b, void *ptr);
+    static PetscErrorCode FormJacobian(SNES snes,Vec u,Mat A,Mat B,void *ptr);
+#endif
+
 };
 
 #endif

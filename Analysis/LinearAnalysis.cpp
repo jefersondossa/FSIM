@@ -2,15 +2,38 @@
 #include "Assemble.h"
 
 void LinearAnalysis::Compute(){
-    
-
     if (this->MeshVector().size() == 1){
         Assemble::Monomodel(this);
     } else {
         Assemble::Arlequin(this);
     }
-
     this->GlobalMatrix()->MatVecAssemble();
+
+    // this->GlobalMatrix()->PrintMatrix();
+    // this->GlobalMatrix()->PrintRhs();
+    // this->GlobalMatrix()->PrintSolution();
+} 
+
+void LinearAnalysis::ComputeJacobian(){
+    if (this->MeshVector().size() == 1){
+        Assemble::MonomodelMatrix(this);
+    } else {
+        Assemble::ArlequinMatrix(this);
+    }
+    this->GlobalMatrix()->MatAssemble();
+    
+    // this->GlobalMatrix()->PrintMatrix();
+    // this->GlobalMatrix()->PrintRhs();
+    // this->GlobalMatrix()->PrintSolution();
+} 
+
+void LinearAnalysis::ComputeRhs(){
+    if (this->MeshVector().size() == 1){
+        Assemble::MonomodelVector(this);
+    } else {
+        Assemble::ArlequinVector(this);
+    }
+    this->GlobalMatrix()->VecAssemble();
     
     // this->GlobalMatrix()->PrintMatrix();
     // this->GlobalMatrix()->PrintRhs();

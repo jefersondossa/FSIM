@@ -11,6 +11,8 @@ public:
     LinearAnalysis(Arlequin* arl, SolverType stype) : Analysis(arl,stype){};
 
     void Compute() override;
+    void ComputeJacobian() override;
+    void ComputeRhs() override;
 
     void UpdateSolution() override;
 
