@@ -34,7 +34,7 @@ void Node::SetNStateVariables(int nstate){
 
 
 void Node::SetSolution(int istate, double sol){
-    fPrevSolution[istate] = fSolution[istate];
+    // fPrevSolution[istate] = fSolution[istate];
     fSolution[istate] = sol;
 }
 

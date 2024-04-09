@@ -16,9 +16,11 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
         this->fIntegData.fPlasticStrain.setZero();
         this->fIntegData.fElasticStrain.resize(this->fIntRule.NPoints());
+        this->fIntegData.fElasticStress.resize(this->fIntRule.NPoints());
         this->fIntegData.fElasticStrainIncrement.resize(this->fIntRule.NPoints());
         for (int i = 0; i < this->fIntRule.NPoints(); i++){
             this->fIntegData.fElasticStrain[i].Zero();
+            this->fIntegData.fElasticStress[i].Zero();
             this->fIntegData.fElasticStrainIncrement[i].Zero();
             // this->fIntegData.fElasticStrain[i].setZero();
         }
@@ -81,7 +83,7 @@ void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
         this->fIntegData.fElasticStrainIncrement[index].fXZ() = Sol[4];
         this->fIntegData.fElasticStrainIncrement[index].fXY() = Sol[5];
     }
-    ElasStress = this->fIntegData.fElasticStrain[index].Multiply(fElasticConstitutiveMatrix);
+    ElasStress = (this->fIntegData.fElasticStrain[index]).Multiply(fElasticConstitutiveMatrix);
     // ElasStress.fData = fElasticConstitutiveMatrix * this->fIntegData.fElasticStrain[index].fData;
     // int a = 0.;
 }
@@ -166,6 +168,163 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     return;
 };
 
+
+template<class tshape>
+void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
+
+    if (!this->fWeakForm) return;
+    auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
+    
+    int index = 0;
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
+    auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
+    int DIM = tshape::Dimension;
+    
+    for(int it = 0; it < this->fIntRule.NPoints(); it++){
+        if (fPlasticityModel->Dimension() == 2){
+            VecInt order(3);
+            order[0] = XX;
+            order[1] = YY;
+            order[2] = XY;
+            MatrixDouble fTangent2D(3,3);
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
+            fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
+        } else if (fPlasticityModel->Dimension() == 3) {
+            fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
+        } else {
+            PanicButton();
+        }
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = this->fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        this->fIntegData.fWeight = this->fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        this->ComputeJacobian();
+
+        //Computes spatial derivatives
+        this->ComputeSpatialDerivatives();
+
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            this->ComputeCurrentJacobian();
+            this->ComputeCurrentSpatialDerivatives();
+        }
+
+        // if (this->fIntegData.fNeedsSol) this->interpolateSolution();
+        // if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
+        
+        // Tensor ElasStress;
+        // ComputeTrialStress(index,ElasStress);        
+
+        // //Check the Yield crieterion
+        // double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
+    
+        if (this->fIntegData.fYieldFunction[index] < 1.e-8){
+            //Elastic step
+            fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
+        } else {
+            //Plastic step
+            // this->fIntegData.fYieldFunction[index] = YieldFunction;
+            // this->fIntegData.fPlasticMultiplier[index] = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
+            // fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);
+            fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,this->fIntegData.fElasticStress[index]);
+            // if (pos2d || truss){
+            //     fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+            // }else{
+            //     fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+            // }
+        }
+        index++;
+    };  
+
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << "Rhs \n" << rhsVector << std::endl;
+
+    return;
+};
+
+
+
+template<class tshape>
+void ElementWithMem<tshape>::ComputeElContribution(VecDouble &rhsVector){
+
+    if (!this->fWeakForm) return;
+    auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
+    
+    int index = 0;
+    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
+    auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
+    int DIM = tshape::Dimension;
+    
+    for(int it = 0; it < this->fIntRule.NPoints(); it++){
+        if (fPlasticityModel->Dimension() == 2){
+            VecInt order(3);
+            order[0] = XX;
+            order[1] = YY;
+            order[2] = XY;
+            MatrixDouble fTangent2D(3,3);
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    fTangent2D(i,j) = fElasticConstitutiveMatrix(order[i],order[j]);
+            fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fTangent2D;
+        } else if (fPlasticityModel->Dimension() == 3) {
+            fPlasticityModel->ElasticModel()->ConstitutiveMatrix() = fElasticConstitutiveMatrix;
+        } else {
+            PanicButton();
+        }
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = this->fIntRule.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        this->fIntegData.fWeight = this->fIntRule.WeightList(index);
+
+        //Computes the jacobian matrix
+        this->ComputeJacobian();
+
+        //Computes spatial derivatives
+        this->ComputeSpatialDerivatives();
+
+        // Computes current spatial derivatives (only for position-based weak forms)
+        if (pos2d || truss){
+            this->ComputeCurrentJacobian();
+            this->ComputeCurrentSpatialDerivatives();
+        }
+
+        if (this->fIntegData.fNeedsSol) this->interpolateSolution();
+        if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
+        
+        // Tensor ElasStress;
+        ComputeTrialStress(index,this->fIntegData.fElasticStress[index]);        
+
+        //Check the Yield crieterion
+        double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+
+        if (YieldFunction < 1.e-8){
+            //Elastic step
+            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, this->fIntegData.fElasticStress[index]); 
+        } else {
+            //Plastic step
+            this->fIntegData.fYieldFunction[index] = YieldFunction;
+            this->fIntegData.fPlasticMultiplier[index] = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+            fPlasticityModel->UpdateStateVariables(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+            if (pos2d || truss){
+                fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector, this->fIntegData.fElasticStress[index]); 
+            }else{
+                fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, this->fIntegData.fElasticStress[index]); 
+            }
+        }
+        index++;
+    };  
+
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << "Rhs \n" << rhsVector << std::endl;
+
+    return;
+};
 
 //------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------

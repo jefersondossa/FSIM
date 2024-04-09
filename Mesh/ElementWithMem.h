@@ -30,8 +30,8 @@ public:
     ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf);
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
-    // void ComputeElContribution(MatrixDouble &Stiffness) override;
-    // void ComputeElContribution(VecDouble &Rhs) override;
+    void ComputeElContribution(MatrixDouble &Stiffness) override;
+    void ComputeElContribution(VecDouble &Rhs) override;
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) override;
     // void ComputeElContribution(std::vector<MatrixDouble> &Stiffness) override;
     // void ComputeElContribution(std::vector<VecDouble> &Rhs) override;

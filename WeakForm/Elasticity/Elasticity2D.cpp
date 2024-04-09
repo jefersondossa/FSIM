@@ -418,6 +418,9 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
         Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
         Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
+        // Sol[0] = data.fDSolDxPrev(0,0) + data.fDSolDx(0,0);
+        // Sol[1] = data.fDSolDxPrev(1,1) + data.fDSolDx(1,1);
+        // Sol[2] = (data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0))+(data.fDSolDx(0,1)+data.fDSolDx(1,0));
         return;
     };
 

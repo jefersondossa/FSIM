@@ -99,7 +99,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
             rhs.setZero();
 
             fAnalysis->MeshVector()[mesh]->ElementVec()[jel] -> ComputeElContribution(rhs);
-
+        
             //Disperse local contributions into the global matrix
             //Stiffness matrix
             for (int i=0; i<nElNodes; i++){

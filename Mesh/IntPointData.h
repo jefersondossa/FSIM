@@ -74,6 +74,7 @@ public:
     VecDouble fYieldFunction;
     VecDouble fPlasticStrain;
     std::vector<Tensor> fElasticStrain;
+    std::vector<Tensor> fElasticStress;
     std::vector<Tensor> fElasticStrainIncrement;
     VecDouble fPlasticMultiplier;
 };

@@ -95,6 +95,37 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
     }
 }
 
+
+
+#ifdef HAS_PETSC
+void IncrementalAnalysis::UpdateSolution(){
+    
+    this->GlobalMatrix()->ExpandSolution();
+
+    //Updates nodal values
+    int64_t Ione = 1;
+    int64_t Ii;
+    double val;
+    
+    int64_t nstartDOF = 0;
+    for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
+        if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
+        for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
+            int nstate = this->MeshVector()[imesh]->NState();
+            for (int k = 0; k<nstate; k++){
+                Ii = nstartDOF + nstate*i+k;
+                val = this->GlobalMatrix()->GetValueSolution(Ii);
+                // ierr = VecGetValues(All, Ione, &Ii, &val);
+                double prevsol = this->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
+                this->MeshVector()[imesh]->NodeVec()[i] -> SetPreviousSolution(k,prevsol);
+                this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
+            }
+            // std::cout << "Solution mesh " << imesh << " " << i <<" " << val <<"\n";
+        };
+    }
+    this->GlobalMatrix()->ClearSolution();
+}
+#else
 void IncrementalAnalysis::UpdateSolution(){
     
     this->GlobalMatrix()->ExpandSolution();
@@ -122,3 +153,4 @@ void IncrementalAnalysis::UpdateSolution(){
     }
     this->GlobalMatrix()->ClearSolution();
 }
+#endif
