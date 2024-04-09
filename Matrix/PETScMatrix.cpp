@@ -67,10 +67,12 @@ void PETScMatrix::PrintMatrix(){
 }
 
 void PETScMatrix::PrintRhs(){
+    std::cout << "Rhs = \n";
     VecView(fRhs,PETSC_VIEWER_STDOUT_WORLD);
 }
 
 void PETScMatrix::PrintSolution(){
+    std::cout << "Solution = \n";
     VecView(fSolution,PETSC_VIEWER_STDOUT_WORLD);
 }
 

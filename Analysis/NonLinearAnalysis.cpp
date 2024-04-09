@@ -41,6 +41,12 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     int64_t Ione = 1;
     int64_t Ii;
 
+
+    // std::cout << "PrintSol = \n"; 
+    // VecView(u,PETSC_VIEWER_STDOUT_WORLD);
+    // an->GlobalMatrix()->PrintSolution();
+    
+
     VecScatter  ctx;
     Vec         SolAll;
     //Gathers the solution vector to the master process
@@ -48,6 +54,8 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     VecScatterBegin(ctx, u, SolAll, INSERT_VALUES, SCATTER_FORWARD);
     VecScatterEnd(ctx, u, SolAll, INSERT_VALUES, SCATTER_FORWARD);
     VecScatterDestroy(&ctx);
+    // std::cout << "PrintSolAll = \n"; 
+    // VecView(SolAll,PETSC_VIEWER_STDOUT_WORLD);
     
     int64_t nstartDOF = 0;
     for (int imesh = 0; imesh < an->MeshVector().size(); imesh++){
@@ -57,26 +65,30 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
             for (int k = 0; k<nstate; k++){
                 Ii = nstartDOF + nstate*i+k;
                 int64_t Ione = 1;
-                double val;
+                PetscScalar val;
                 VecGetValues(SolAll, Ione, &Ii, &val);
-                val = an->GlobalMatrix()->GetValueSolution(Ii);
                 // double prevsol = an->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
                 an->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
             }
         };
     }
+
     VecDestroy(&SolAll);
     // this->GlobalMatrix()->ClearSolution();
     an->GlobalMatrix()->ZeroRhs();
     an->ComputeRhs();
-    // std::cout << "FORM FUNCTION RHS \n "<< std::endl;
-    // an->GlobalMatrix()->PrintRhs();
-    // std::cout << "FORM FUNCTION B \n "<< std::endl;
-
+    // std::cout << "FORM FUNCTION Before \n "<< std::endl;
+    // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
+    
     PETScMatrix *petscmat = dynamic_cast<PETScMatrix *> (an->GlobalMatrix());
     PetscScalar mone = -1.;
     VecScale(petscmat->Rhs(),mone);
-    VecCopy(petscmat->Rhs(),b);
+    // VecCopy(petscmat->Rhs(),b);
+    // VecCopy(petscmat->Rhs(),b);
+    VecCopy(u,petscmat->Solution());
+    // std::cout << "FORM FUNCTION RHS \n "<< std::endl;
+    // an->GlobalMatrix()->PrintRhs();
+    // std::cout << "FORM FUNCTION B \n "<< std::endl;
     // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
     
 
@@ -87,7 +99,7 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
 
 PetscErrorCode NonLinearAnalysis::FormJacobian(SNES snes,Vec u,Mat A, Mat B,void *ptr){
     NonLinearAnalysis *an = static_cast<NonLinearAnalysis * >(ptr);
-    an->GlobalMatrix()->ZeroMatrix();
+    // an->GlobalMatrix()->ZeroMatrix();
     an->ComputeJacobian();
     return 0;
 }
@@ -110,7 +122,7 @@ void NonLinearAnalysis::Run(){
     //     }
     // }
 #ifdef HAS_PETSC
-    auto kkk= this->fGlobalMatrix;
+    
     PETScMatrix *petscmat = dynamic_cast<PETScMatrix *> (this->GlobalMatrix());
     fSolver = new PETScSolver(this);
     PETScSolver *petscsol = dynamic_cast<PETScSolver *> (this->Solver());

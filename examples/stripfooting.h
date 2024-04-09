@@ -16,15 +16,15 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     CompMesh* cmesh = new CompMesh(); 
 
     //Dominio
-    ElasticityPositional2D * matelas = new ElasticityPositional2D(12,1.e10,.48,false);
-    // Elasticity2D * matelas = new Elasticity2D(12,1.e10,.48,false);
-    VonMises *plastmodel = new VonMises(matelas);
+    // ElasticityPositional2D * matelas = new ElasticityPositional2D(12,1.e10,.48,false);
+    Elasticity2D * matelas = new Elasticity2D(12,1.e10,.48,false);
+    // VonMises *plastmodel = new VonMises(matelas);
     double phi = 20.*M_PI/180.;
     double psi = 20.*M_PI/180.;
     // DruckerPrager *plastmodel = new DruckerPrager(matelas,phi,psi);
-    plastmodel->SetUniaxialYieldFunction(yieldFunction);
-    // cmesh->InsertMaterial(matelas);
-    cmesh->InsertMaterial(plastmodel);
+    // plastmodel->SetUniaxialYieldFunction(yieldFunction);
+    cmesh->InsertMaterial(matelas);
+    // cmesh->InsertMaterial(plastmodel);
 
     //BC
     MatrixDouble val1(2,2);
@@ -44,7 +44,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // Carregamento
     val3[1] = -0.002;
     // val3[1] = -2.e6;
-    L2Projection * matbc4 = new L2Projection(8,2,4,val1,val3);
+    L2Projection * matbc4 = new L2Projection(8,2,0,val1,val3);
 
     val2.setZero();
     // Carregamento
@@ -76,11 +76,11 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // an.SetIncrement(increment);
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"PlasticStrain"};
+    // ScalarNames = {"PlasticStrain"};
     // ScalarNames = {"Pressure","J2","PlasticStrain"};
     // ScalarNames = {"Material"};
     // VectorNames = {"Displacement","Stress","RealStress"};
-    VectorNames = {"Displacement","Stress","RealStress"};
+    VectorNames = {"Displacement","Stress"};
     // VectorNames = {"Displacement"};
     
     an.Run("geogrelha",ScalarNames,VectorNames);
