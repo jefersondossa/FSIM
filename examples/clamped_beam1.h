@@ -14,8 +14,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     CompMesh* cmesh = new CompMesh(); 
 
-    Elasticity2D * matelas = new Elasticity2D(10,1.e3,.0,false);
-    // ElasticityPositional2D * matelas = new ElasticityPositional2D(10,1.e3,.0,false);
+    // Elasticity2D * matelas = new Elasticity2D(10,1.e3,.0,false);
+    ElasticityPositional2D * matelas = new ElasticityPositional2D(10,1.e3,.0,false);
 
     //BC
     MatrixDouble val1(2,2);
@@ -50,7 +50,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     VonMises *plastmodel = new VonMises(matelas);
     // Tresca *plastmodel = new Tresca(matelas);
-    double angle = 00.*M_PI/180.;
+    double angle = 45.*M_PI/180.;
     // DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
@@ -62,7 +62,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-7,30);
     VecDouble increment(2);
     increment.setZero();    
-    increment[1] = 0.000035;
+    increment[0] = 0.000035;
     // increment[1] = 0.02;
     an.SetIncrement(increment);
 #ifdef RELEASE_BUILD

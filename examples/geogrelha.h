@@ -11,7 +11,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // sigma_y =50.+500.*plast;
     // hardening = 500.;
 
-    hardening = 121.e3;
+    hardening = 121.e0;
     sigma_y = 20000.+hardening*plast;
     // sigma_y = 10.0;//+0.0001*plast;
     

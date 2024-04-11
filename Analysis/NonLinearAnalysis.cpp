@@ -99,7 +99,7 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
 
 PetscErrorCode NonLinearAnalysis::FormJacobian(SNES snes,Vec u,Mat A, Mat B,void *ptr){
     NonLinearAnalysis *an = static_cast<NonLinearAnalysis * >(ptr);
-    // an->GlobalMatrix()->ZeroMatrix();
+    an->GlobalMatrix()->ZeroMatrix();
     an->ComputeJacobian();
     return 0;
 }
@@ -143,6 +143,12 @@ void NonLinearAnalysis::Run(){
 
     SNESSetForceIteration(fSNES,PETSC_TRUE);
     SNESSetType(fSNES, SNESNEWTONLS);
+    SNESLineSearch linesearch;
+    SNESGetLineSearch(fSNES, &linesearch);
+    // SNESLineSearchSetType(linesearch, SNESLINESEARCHBASIC);
+    PetscReal tol = 1.e-6;
+    PetscInt maxit = 100;
+    SNESSetTolerances(fSNES, tol, tol, tol, maxit, maxit);
     SNESSolve(fSNES,NULL,petscmat->Solution());
     // petscmat->PrintSolution();
     // SNESMonitorSet(fSNES,Monitor,NULL,NULL);
@@ -170,8 +176,8 @@ void NonLinearAnalysis::Run(){
         std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
         UpdateSolution();
         // this->GlobalMatrix()->PrintMatrix();
-        this->GlobalMatrix()->PrintRhs();
-        this->GlobalMatrix()->PrintSolution();
+        // this->GlobalMatrix()->PrintRhs();
+        // this->GlobalMatrix()->PrintSolution();
         NRL2norm = this->GlobalMatrix()->SolutionNorm();
         std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
         this->GlobalMatrix()->ZeroMatrix();
