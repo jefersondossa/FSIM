@@ -118,8 +118,8 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
 void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
     
 #ifdef HAS_PETSC
-    int rank=0;
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    // int rank=0;
+    // MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 #endif
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
@@ -242,8 +242,8 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
 void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
     
 #ifdef HAS_PETSC
-    int rank=0;
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    // int rank=0;
+    // MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 #endif
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
@@ -340,8 +340,8 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
 void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
     
 #ifdef HAS_PETSC
-    int rank=0;
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    // int rank=0;
+    // MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 #endif
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();

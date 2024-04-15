@@ -77,6 +77,7 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     // this->GlobalMatrix()->ClearSolution();
     an->GlobalMatrix()->ZeroRhs();
     an->ComputeRhs();
+    
     // std::cout << "FORM FUNCTION Before \n "<< std::endl;
     // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
     
@@ -99,8 +100,11 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
 
 PetscErrorCode NonLinearAnalysis::FormJacobian(SNES snes,Vec u,Mat A, Mat B,void *ptr){
     NonLinearAnalysis *an = static_cast<NonLinearAnalysis * >(ptr);
+    // an->GlobalMatrix()->MatAssemble();
     an->GlobalMatrix()->ZeroMatrix();
-    an->ComputeJacobian();
+    an->ComputeJacobian();    
+    // an->GlobalMatrix()->PrintMatrix();
+        // this->GlobalMatrix()->PrintRhs();
     return 0;
 }
 
@@ -121,7 +125,7 @@ void NonLinearAnalysis::Run(){
     //         }
     //     }
     // }
-#ifdef HAS_PETSC
+#ifdef USE_SNES
     
     PETScMatrix *petscmat = dynamic_cast<PETScMatrix *> (this->GlobalMatrix());
     fSolver = new PETScSolver(this);

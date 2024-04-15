@@ -97,7 +97,7 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
 
 
 
-#ifdef HAS_PETSC
+#ifdef USE_SNES
 void IncrementalAnalysis::UpdateSolution(){
     
     this->GlobalMatrix()->ExpandSolution();

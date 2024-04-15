@@ -21,3 +21,15 @@ Once all the packages described in Presentation are provided, the software can b
 - To clear all files created running the program use
 
 	<CODE> make clear </CODE>
+
+- To visualize Eigen matrices and vectors while debugging with gdb, please do the following:
+
+https://gitlab.com/libeigen/eigen/-/tree/master/debug/gdb
+
+- PETSc installation for debug:
+<CODE> sudo ./configure PETSC_ARCH=arch-linux2-c-debug --with-mpi-dir=/home/jeferson/MPICH/install/ --with-cxx-dialect=C++11 --with-debugging=1 --with-X=1 --download-mumps --download-scalapack --download-ptscotch --download-fblaslapack --with-64-bit-indices --download-suitesparse </CODE>
+
+
+- PETSc installation for Release:
+
+<CODE> sudo ./configure PETSC_ARCH=arch-linux2-c-opt --with-mpi-dir=/home/jeferson/MPICH/install/ --with-cxx-dialect=C++11 --with-debugging=0 --with-X=1 COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --download-mumps --download-scalapack --download-ptscotch --download-fblaslapack --with-64-bit-indices --download-suitesparse   </CODE>

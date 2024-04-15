@@ -5,6 +5,7 @@
 
 #ifdef HAS_PETSC
 enum PETScMatType {ESeq, ESeqSym, EAij};
+#include <petscerror.h>
 
 class PETScMatrix : public MatrixType
 {

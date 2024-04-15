@@ -109,8 +109,8 @@ void Analysis::AllocateArlequin(){
 void Analysis::PostProcessError(VecDouble &errorsTotal){
 
 #ifdef HAS_PETSC
-    int rank;
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    // PetscMPIInt rank;
+    // PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
 #endif
     int isArlequin = 0;
     if (fArlequin) isArlequin = 1;
@@ -131,13 +131,13 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
         errorsTotal.setZero();
 
 #ifdef HAS_PETSC
-        if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-        if (rank == 0 && errorsTotal.size()>0){
-            std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10);
-            for (int k = 0; k < errorsTotal.size(); k++){
-                std::cout << "Errors[" << k << "] = " << sqrt(errorsTotal[k]) << "\n";
-            }
-        }
+        // if (errorsTotal.size()>0) MPI_Allreduce(&errorsProcess[0],&errorsTotal[0],errorsTotal.size(),MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+        // if (rank == 0 && errorsTotal.size()>0){
+        //     std::cout << "\n\nERROR REPORT - MESHVECTOR[" << imesh << "]:\n" << std::scientific << std::setprecision(10);
+        //     for (int k = 0; k < errorsTotal.size(); k++){
+        //         std::cout << "Errors[" << k << "] = " << sqrt(errorsTotal[k]) << "\n";
+        //     }
+        // }
 #else
         if (errorsTotal.size()>0) errorsTotal = errorsProcess;
         if (errorsTotal.size()>0){

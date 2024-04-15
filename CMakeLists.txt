@@ -6,7 +6,7 @@ list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
 option(ENABLE_MPI_PETSC "Compile MPI and PETSc packages " OFF)
 if(ENABLE_MPI_PETSC)
-    find_package(MPI REQUIRED)
+   # find_package(MPI REQUIRED)
     find_package(PETSc REQUIRED)
 endif()
 
