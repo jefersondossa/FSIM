@@ -137,26 +137,26 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
         
-        Tensor ElasStress;
-        ComputeTrialStress(index,ElasStress);        
+        // Tensor ElasStress;
+        ComputeTrialStress(index,this->fIntegData.fElasticStress[index]);        
 
         //Check the Yield crieterion
-        double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
+        double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
 
         if (YieldFunction < 1.e-8){
             //Elastic step
             fPlasticityModel->ElasticModel()->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
-            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+            fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, this->fIntegData.fElasticStress[index]); 
         } else {
             //Plastic step
             this->fIntegData.fYieldFunction[index] = YieldFunction;
-            this->fIntegData.fPlasticMultiplier[index] = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,ElasStress);
-            fPlasticityModel->UpdateStateVariables(index,this->fIntegData,ElasStress);
-            fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,ElasStress);
+            this->fIntegData.fPlasticMultiplier[index] = fPlasticityModel->PlasticMultiplier(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+            fPlasticityModel->UpdateStateVariables(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+            fPlasticityModel->ComputeTangentStiffness(index, this->fIntegData, jacobianNRMatrix,this->fIntegData.fElasticStress[index]);
             if (pos2d || truss){
-                fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+                fPlasticityModel->ElasticModel()->ComputeResidual(index, this->fIntegData, rhsVector, this->fIntegData.fElasticStress[index]); 
             }else{
-                fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, ElasStress); 
+                fPlasticityModel->ComputeResidual(index, this->fIntegData, rhsVector, this->fIntegData.fElasticStress[index]); 
             }
         }
         index++;
