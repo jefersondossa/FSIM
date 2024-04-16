@@ -60,6 +60,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "TransientPositional2D.h"
 #include "NavierStokes.h"
 #include "TransientNavierStokes.h"
+#define USE_SNES
 
 int main(int argc, char **args) {
 
@@ -83,7 +84,7 @@ int main(int argc, char **args) {
     // #include "examples/clamped_beam.h"
     #include "examples/clamped_beam1.h"
     // #include "examples/plate.h"
-    // #include "examples/geogrelha.h"
+    #include "examples/geogrelha.h"
     // #include "examples/plasticitytest.h"
      
 #ifdef HAS_PETSC

@@ -25,8 +25,8 @@ DruckerPrager::DruckerPrager(WeakForm *elast, double phi, double psi, bool oe) :
     fEtaBar = 3. * tanpsi / sqrt(9. + 12.*tanpsi*tanpsi);
 
 
-    fAlpha = fXi/fEta;
-    fBeta = fXi/fEtaBar;
+    fAlpha = fXi/fEtaBar;
+    fBeta = fXi/fEta;
     //Equation 8.120
 
 }
@@ -120,66 +120,170 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     // double sigmaDepsilon = data.fElasticStrainIncrement[index].DoubleContraction(Stress);
     // double demm = data.fElasticStrainIncrement[index].Trace();
     // double lambda = (sigmaDepsilon-(fK/(3.*fAlpha2))*demm*(plinha-1.))/(plinha*fK);
-    double dGamma = 0.;
-    if (fPlaneStress){
-        PanicButton();
-    } else {
-        double p = Stress.Trace()/3.;
-        double sqJ2 = sqrt(Stress.J2());
+    //  auto plaststrain = data.fPlasticStrain[index];
+    // double dGamma = 0.;
+    // if (fPlaneStress){
+    //     PanicButton();
+    // } else {
+    //     double p = Stress.Trace()/3.;
+    //     double sqJ2 = sqrt(Stress.J2());
 
-        double fCohesion = 0.;
-        fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
-        double PhiTil = sqJ2 + fEta*p -fXi*fCohesion;
+    //     double fCohesion = 0.;
+    //     fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //     double PhiTil = sqJ2 + fEta*p -fXi*fCohesion;
 
-        int maxiter = 10;
-        int iter = 0;
-        while (fabs(PhiTil) > 1.e-5){
-            iter++;
-            if (iter == maxiter) break;
-            double d = -fShearModulus - fBulkModulus*fEtaBar*fEta - fHardening*fXi*fXi;
-            dGamma -= PhiTil/d;
+    //     int maxiter = 100;
+    //     int iter = 0;
+    //     while (fabs(PhiTil) > 1.e-5){
+    //         iter++;
+    //         if (iter == maxiter) break;
+    //         double d = -fShearModulus - fBulkModulus*fEtaBar*fEta - fHardening*fXi*fXi;
+    //         dGamma -= PhiTil/d;
 
-            data.fPlasticStrain[index] += fXi*dGamma;
-            fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
-            PhiTil = sqJ2 - fShearModulus*dGamma + fEta*(p-fBulkModulus*fEtaBar*dGamma)- fXi*fCohesion;
-        }
-
+    //         data.fPlasticStrain[index] = plaststrain + fXi*dGamma;
+    //         fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //         PhiTil = sqJ2 - fShearModulus*dGamma + fEta*(p-fBulkModulus*fEtaBar*dGamma)- fXi*fCohesion;
+    //     }
+    //     if (iter == maxiter){
+    //         std::cout << "Problem converging surface\n";
+    //         // PanicButton();
+    //     }
         
-        if((sqJ2 - fShearModulus*dGamma)>= 0){
-            fApex = false;
-            return dGamma;
-        } else{
-            // PanicButton();
-            //fAlpha and fBeta created on .h
-            fApex = true;
-            double ptrial = Stress.Trace()/3.;
-            double fCohesion = 0.;
-            fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
-            double r = fCohesion*fBeta - ptrial;
-            double depsilon =0;
-            //Box 8.10
-            int maxiter = 10;
-            int iter = 0;
-            while (fabs(r) > 1.e-5){
-                iter++;
-                if (iter == maxiter) break;
-                double d = fAlpha*fBeta*fHardening + fBulkModulus;
-                depsilon -= r/d;
+    //     if((sqJ2 - fShearModulus*dGamma)>= 0){
+    //         fApex = false;
+    //         return dGamma;
+    //     } else{
+    //         // PanicButton();
+    //         //fAlpha and fBeta created on .h
+    //         fApex = true;
+    //         double ptrial = Stress.Trace()/3.;
+    //         double fCohesion = 0.;
+    //         fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //         double r = fCohesion*fBeta - ptrial;
+    //         double depsilon =0;
+    //         //Box 8.10
+    //         int maxiter = 100;
+    //         int iter = 0;
+           
+    //         while (fabs(r) > 1.e-5){
+    //             iter++;
+    //             if (iter == maxiter) break;
+    //             double d = fAlpha*fBeta*fHardening + fBulkModulus;
+    //             depsilon -= r/d;
 
-                data.fPlasticStrain[index] += fAlpha*depsilon;
-                fUpdatedPressure = ptrial - fBulkModulus*depsilon;
-                fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
-                r = fBeta*fCohesion - fUpdatedPressure;
+    //             data.fPlasticStrain[index] = plaststrain + fAlpha*depsilon;
+    //             fUpdatedPressure = ptrial - fBulkModulus*depsilon;
+    //             fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //             r = fBeta*fCohesion - fUpdatedPressure;
+    //         }
+    //         if (iter == maxiter){
+    //             std::cout << "Problem converging apex\n";
+    //             PanicButton();
+    //         }
+    //     }
+    // }
+
+    double dGamma = 0.;
+    double EETV = data.fElasticStrain[index].Trace();
+    double EPBARN = data.fPlasticStrain[index];
+    double PT = EETV * fBulkModulus;
+    double EEVD3=EETV / 3.;
+    Tensor strial;
+    strial.Zero();
+    double P,EPBAR;
+
+    strial.fXX() = 2. * fShearModulus * (data.fElasticStrain[index].fXX() - EEVD3);
+    strial.fYY() = 2. * fShearModulus * (data.fElasticStrain[index].fYY() - EEVD3);
+    strial.fZZ() = 2. * fShearModulus * (data.fElasticStrain[index].fZZ() - EEVD3);
+    strial.fXY() = 2. * fShearModulus * (data.fElasticStrain[index].fXY()*0.5);
+
+    double VARJ2T = strial.fXY()*strial.fXY() + .5*(strial.fXX()*strial.fXX()+strial.fYY()*strial.fYY()+strial.fZZ()*strial.fZZ());
+    
+    double fCohesion = 0.;
+    fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+        
+    double SQRJ2T=sqrt(VARJ2T);
+    double PHI=SQRJ2T+fEta*PT-fXi*fCohesion;
+    double RES=PHI;
+    if (fCohesion != 0.)RES=RES/fabs(fCohesion);
+
+    double tol = 1.e-8;
+    int maxiter = 100;
+    double FACTOR = 0.;
+
+    if (RES > tol){
+        fApex = false;
+        int iter = 0;
+        while (iter < maxiter){
+            double DENOM = -fShearModulus-fBulkModulus*fEtaBar*fEta-fXi*fXi*fHardening;
+            double DDGAMA = -PHI/DENOM;
+            double dGamma = dGamma + DDGAMA;
+            EPBAR = EPBARN + fXi*dGamma;
+            fUniaxialYield(EPBAR,fCohesion,fHardening);
+            double SQRJ2 = SQRJ2T - fShearModulus*dGamma;
+            P = PT-fBulkModulus*fEtaBar*dGamma;
+            PHI = SQRJ2+fEta*P-fXi*fCohesion;
+
+            double RESNOR = fabs(PHI);
+            
+            if (fCohesion != 0) RESNOR = RESNOR/fabs(fCohesion);
+            if (RESNOR <= tol){
+                if (SQRJ2 == 0){
+                    FACTOR = 0.;
+                }else{
+                    FACTOR = 1.-fShearModulus*dGamma/SQRJ2T;
+                    break;
+                }
+            } else {
+                fApex = true;
+                if (fEta == 0 || fEtaBar == 0){
+                    PanicButton();
+                }
+                double DEPV = 0.;
+                EPBAR = EPBARN;
+                fUniaxialYield(EPBAR,fCohesion,fHardening);
+                RES = fBeta * fCohesion - PT;
+                while (iter < maxiter){
+                    DENOM=fAlpha*fBeta*fHardening+fBulkModulus;
+                    double DDEPV=-RES/DENOM;
+                    DEPV=DEPV+DDEPV;
+                    EPBAR=EPBARN+fAlpha*DEPV;
+                    fUniaxialYield(EPBAR,fCohesion,fHardening);
+                    P = PT-fBulkModulus*DEPV;
+                    RES = fBeta*fCohesion-P;
+                    RESNOR = fabs(RES);
+                    if (fCohesion != 0) RESNOR = RESNOR/fabs(fCohesion);
+                    if (RESNOR <= tol){
+                        dGamma = DEPV/fEtaBar;
+                        FACTOR = 0.;
+                    }
+
+                }
             }
         }
     }
 
+    Stress.fXX() = FACTOR * strial.fXX() + P;
+    Stress.fYY() = FACTOR * strial.fYY() + P;
+    Stress.fZZ() = FACTOR * strial.fZZ() + P;
+    Stress.fXY() = FACTOR * strial.fXY();
+    
+    data.fPlasticStrain[index] = EPBAR;
+
+    FACTOR = FACTOR/(2.*fShearModulus);
+    EEVD3 = P/(fBulkModulus*3.);
+
+    data.fElasticStrain[index].fXX() = FACTOR * strial.fXX() + EEVD3;
+    data.fElasticStrain[index].fYY() = FACTOR * strial.fYY() + EEVD3;
+    data.fElasticStrain[index].fZZ() = FACTOR * strial.fZZ() + EEVD3;
+    data.fElasticStrain[index].fXY() = FACTOR * strial.fXY()*2.;
 
     return dGamma;
 }
 
 void DruckerPrager::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
     
+    return;
     auto strial = Stress.Deviatory();
     Tensor epsilonUpdated(strial);
     Tensor Ident;
@@ -207,7 +311,7 @@ void DruckerPrager::UpdateStateVariables(int &index, IntPointData &data, Tensor 
     // epsilonUpdated.fXZ() = 0.;
     // epsilonUpdated.fYZ() = 0.;
     // epsilonUpdated.fZZ() = 0.;
-    fTrialDevStrain = data.fElasticStrain[index].Deviatory();
+    // fTrialDevStrain = data.fElasticStrain[index].Deviatory();
     data.fElasticStrain[index] = epsilonUpdated;
 
 }   

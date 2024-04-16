@@ -5,7 +5,6 @@
 {
 
 
-
 auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
 
     hardening = 0.e2;
@@ -16,12 +15,12 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     CompMesh* cmesh = new CompMesh(); 
 
     //Dominio
-    ElasticityPositional2D * matelas = new ElasticityPositional2D(12,1.e10,.48,false);
-    // Elasticity2D * matelas = new Elasticity2D(12,1.e10,.48,false);
-    VonMises *plastmodel = new VonMises(matelas);
+    // ElasticityPositional2D * matelas = new ElasticityPositional2D(12,1.e10,.48,false);
+    Elasticity2D * matelas = new Elasticity2D(12,1.e10,.48,false);
+    // VonMises *plastmodel = new VonMises(matelas);
     double phi = 20.*M_PI/180.;
     double psi = 20.*M_PI/180.;
-    // DruckerPrager *plastmodel = new DruckerPrager(matelas,phi,psi);
+    DruckerPrager *plastmodel = new DruckerPrager(matelas,phi,psi);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel);
@@ -63,7 +62,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     
 
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-6 ,100);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-6 ,1000);
 #ifdef HAS_PETSC
     an.SType() = SolverType::EUmfpack;
     // an.SType() = SolverType::EMumps;
