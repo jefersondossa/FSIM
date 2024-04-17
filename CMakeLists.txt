@@ -9,7 +9,11 @@ if(ENABLE_MPI_PETSC)
    # find_package(MPI REQUIRED)
     find_package(PETSc REQUIRED)
 endif()
-find_package(FLTK REQUIRED)
+option(ENABLE_GRAPINTERFACE "Compile Graphic Interface " OFF)
+
+if(ENABLE_GRAPINTERFACE)
+	find_package(FLTK REQUIRED)
+endif()
 
 #hide warnings
 add_definitions(-w) 
