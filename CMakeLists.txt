@@ -9,6 +9,7 @@ if(ENABLE_MPI_PETSC)
    # find_package(MPI REQUIRED)
     find_package(PETSc REQUIRED)
 endif()
+find_package(FLTK REQUIRED)
 
 #hide warnings
 add_definitions(-w) 
@@ -74,12 +75,14 @@ add_subdirectory(PreProcess)
 add_subdirectory(Shape)
 add_subdirectory(Solver)
 add_subdirectory(WeakForm)
+add_subdirectory(GraphicInterface)
 # add_subdirectory(examples)
 # add_subdirectory(main)
 
 #Specify where the headers files must be found
 include_directories(
 	"${PROJECT_SOURCE_DIR}/Analysis"
+	"${PROJECT_SOURCE_DIR}/GraphicInterface"
 	"${PROJECT_SOURCE_DIR}/Integral"
 	"${PROJECT_SOURCE_DIR}/Matrix"
 	"${PROJECT_SOURCE_DIR}/Mesh"
@@ -107,7 +110,7 @@ file(COPY ${MY_MESH_FILES} DESTINATION .)
 file(GLOB for_files *.for)
 set(FOR_FILES ${for_files})
 
-add_library(fsarl_library ${UTIL} ${ANALYSIS} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
+add_library(fsarl_library ${UTIL} ${ANALYSIS} ${GRAPHICINTERFACE} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen )
 target_compile_definitions(fsarl_library
@@ -138,6 +141,11 @@ endif()
 add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(window Window.cpp )
+set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
+target_link_libraries (window fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES})
+
 
 #To enable unit test using Catch2 UnitTest framework
 option(BUILD_UNITTEST "Whether the Catch2 UnitTest will be linked in" OFF)
