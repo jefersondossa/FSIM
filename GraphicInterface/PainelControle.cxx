@@ -8,6 +8,7 @@
 /**
  Para utilizar cout e endl.
 */
+#ifdef HAS_GRAPHINTERFACE
 using namespace std;
 #include <FL/Fl_Widget.H>
 
@@ -7256,3 +7257,7 @@ void PainelControle::desligar() {
   cout << "Desligando equipamento..." << endl;
   this->win->hide();
 }
+
+
+
+#endif

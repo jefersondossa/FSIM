@@ -135,6 +135,13 @@ if(ENABLE_HDF5)
 		"$<$<CONFIG:DEBUG>:HAS_HDF5>")
 endif()
 
+if(ENABLE_GRAPHINTERFACE)
+	target_compile_definitions(fsarl_library
+		PUBLIC
+		"$<$<CONFIG:RELEASE>:HAS_GRAPHINTERFACE>"
+		"$<$<CONFIG:DEBUG>:HAS_GRAPHINTERFACE>")
+endif()
+
 if(ENABLE_METIS)
 	target_compile_definitions(fsarl_library
 		PUBLIC
@@ -146,9 +153,9 @@ add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
-# add_executable(window Window.cpp )
-# set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
-# target_link_libraries (window fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES})
+add_executable(window Window.cpp )
+set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
+target_link_libraries (window fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES})
 
 
 #To enable unit test using Catch2 UnitTest framework

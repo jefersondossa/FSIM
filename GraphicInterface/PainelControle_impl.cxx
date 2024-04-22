@@ -1,4 +1,6 @@
 #include <iostream>
+
+#ifdef HAS_GRAPHINTERFACE
 #include <FL/Fl_File_Chooser.H>
 #include "PainelControle.h"
 
@@ -58,3 +60,8 @@ void PainelControle::escolherArquivo() {
         this->btImprimir->activate();
     }
 }
+
+
+
+
+#endif

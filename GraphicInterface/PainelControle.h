@@ -2,6 +2,8 @@
 
 #ifndef PainelControle_h
 #define PainelControle_h
+
+#ifdef HAS_GRAPHINTERFACE
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Group.H>
@@ -42,4 +44,8 @@ private:
   void imprimir();
   void escolherArquivo();
 };
+#endif
+
+
+
 #endif

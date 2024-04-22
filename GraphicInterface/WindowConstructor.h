@@ -2,6 +2,8 @@
 
 #ifndef WindowConstructor_h
 #define WindowConstructor_h
+
+#ifdef HAS_GRAPHINTERFACE
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
@@ -86,4 +88,6 @@ public:
   static void Input_msh();
   void EP2D_f();
 };
+#endif
+
 #endif
