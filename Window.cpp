@@ -1,12 +1,20 @@
 // Graphical Interface (GUI).cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// Remember to add Window->show() in cpp file
 
 #include "WindowConstructor.h"
+#include <iostream>
+#include "PainelControle.h"
 
 
 int main()
-{
+{  
     WindowConstructor c;
-    Fl::run();
-    int a =0;
+    c.Open();
+    //c.EP2D_f();
+    // c.Show();
+
+    // PainelControle controle;
+    // controle.iniciar();
+
+    return Fl::run();
 }

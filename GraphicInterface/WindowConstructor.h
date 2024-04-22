@@ -4,7 +4,12 @@
 #define WindowConstructor_h
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Output.H>
+#include <FL/Fl_Button.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Value_Input.H>
+#include <FL/Fl_Check_Button.H>
 
 /**
  Class that contains the principals objets for modeling GUI
@@ -12,8 +17,73 @@
 class WindowConstructor {
 public:
   WindowConstructor();
-private:
   Fl_Double_Window *Window;
-  Fl_Choice *WeakForm;
+  Fl_Group *Container_1;
+  Fl_Output *msh_path_w;
+  Fl_Output *geo_path_w;
+  Fl_Button *Save_paths;
+  Fl_Group *Container_2;
+private:
+  Fl_Choice *WeakForm_Menu;
+  static Fl_Menu_Item menu_WeakForm_Menu[];
+public:
+  static Fl_Menu_Item *Elasticity2D;
+  static Fl_Menu_Item *ElasticityPositional2D;
+private:
+  inline void cb_ElasticityPositional2D_i(Fl_Menu_*, void*);
+  static void cb_ElasticityPositional2D(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *Elasticity3D;
+  static Fl_Menu_Item *ElasticTruss;
+  static Fl_Menu_Item *PositionalTruss;
+  static Fl_Menu_Item *LinearBeam;
+  static Fl_Menu_Item *TransientElasticity2D;
+  static Fl_Menu_Item *NavierStokes;
+  static Fl_Menu_Item *Poisson;
+  static Fl_Menu_Item *Stokes;
+  Fl_Group *Container_2_1;
+private:
+  Fl_Value_Input *E2D_young;
+  Fl_Value_Input *E2D_poisson;
+  Fl_Check_Button *E2D_PlaneStress;
+public:
+  Fl_Group *Container_2_2;
+private:
+  Fl_Value_Input *EP2D_young;
+  Fl_Value_Input *EP2D_poisson;
+  Fl_Check_Button *EP2D_PlaneStress;
+public:
+  Fl_Group *Container_2_3;
+private:
+  Fl_Value_Input *E3D_young;
+  Fl_Value_Input *E3D_poisson;
+public:
+  Fl_Group *Container_2_4;
+private:
+  Fl_Value_Input *ET_young;
+  Fl_Value_Input *ET_area;
+public:
+  Fl_Group *Container_2_5;
+private:
+  Fl_Value_Input *PT_young;
+  Fl_Value_Input *PT_area;
+public:
+  Fl_Group *Container_2_6;
+private:
+  Fl_Value_Input *LB_young;
+  Fl_Value_Input *LB_Inertia;
+public:
+  Fl_Group *Container_2_7;
+private:
+  Fl_Value_Input *TE2D_young;
+  Fl_Value_Input *TE2D_poisson;
+  Fl_Check_Button *TE2D_PlaneStress;
+public:
+  Fl_Value_Input *TE2D_damping;
+  Fl_Value_Input *TE2D_density;
+  void Open();
+  void Input_geo();
+  static void Input_msh();
+  void EP2D_f();
 };
 #endif

@@ -47,14 +47,13 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
 
-
-    VonMises *plastmodel = new VonMises(matelas);
+    // VonMises *plastmodel = new VonMises(matelas);
     // Tresca *plastmodel = new Tresca(matelas);
-    double angle = 45.*M_PI/180.;
-    // DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
-    plastmodel->SetUniaxialYieldFunction(yieldFunction);
-    // cmesh->InsertMaterial(matelas);
-    cmesh->InsertMaterial(plastmodel); 
+    //double angle = 45.*M_PI/180.;
+    //DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
+    //plastmodel->SetUniaxialYieldFunction(yieldFunction);
+    cmesh->InsertMaterial(matelas);
+    //cmesh->InsertMaterial(plastmodel); 
     std::vector<L2Projection *> bcIncrement = {matbc3};
    
     GmshTools::Read(*cmesh,"/home/felipe_costa_ubuntu/IC2023/Atividades Felipe/Rosto_Bolacha/Rosto_bolacha.msh");
@@ -66,7 +65,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     increment[1] = 0.02;
     //Quanto de encremento
     an.SetIncrement(increment);
-#ifdef HAS_PETSC
+#ifdef RELEASE_BUILD
     an.SType() = SolverType::EUmfpack;
     // an.SType() = SolverType::ECholmod;
 #endif
