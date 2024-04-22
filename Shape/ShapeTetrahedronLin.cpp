@@ -47,15 +47,19 @@ void ShapeTetrahedronLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble >
 
 void ShapeTetrahedronLin::getCoordinates(MatrixDouble &coord) {
 
-    coord(0,0) = -1.0;
-    coord(1,0) = -1.0;
+    coord(0,0) = 0.0;
+    coord(1,0) = 0.0;
+    coord(2,0) = 0.0;
 
-    coord(0,1) = +1.0;
-    coord(1,1) = -1.0;
+    coord(0,1) = 1.0;
+    coord(1,1) = 0.0;
+    coord(2,1) = 0.0;
 
-    coord(0,2) = +1.0;
-    coord(1,2) = +1.0;
+    coord(0,2) = 0.0;
+    coord(1,2) = 1.0;
+    coord(2,2) = 0.0;
 
-    coord(0,3) = -1.0;
-    coord(1,3) = +1.0;
+    coord(0,3) = 0.0;
+    coord(1,3) = 0.0;
+    coord(2,3) = 1.0;
 }

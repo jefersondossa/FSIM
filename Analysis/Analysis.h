@@ -55,6 +55,9 @@ public:
     void AllocateArlequin();
 
     SolverType &SType(){return fSolverType;}
+    void SetSolverType(SolverType stype){
+        fSolverType = stype;
+    }
     
     virtual void Run();
 

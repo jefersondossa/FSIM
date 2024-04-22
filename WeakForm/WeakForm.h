@@ -71,7 +71,7 @@ public:
     
     /// @brief Sets the exact solution
     /// @param exSol Lambda function to compute the exact solution and its gradient for a given coordinate
-    void SetExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> &exSol){
+    void SetExactSolution(std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> exSol){
         fExactSol = exSol;
     }
 

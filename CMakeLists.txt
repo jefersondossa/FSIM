@@ -9,9 +9,9 @@ if(ENABLE_MPI_PETSC)
    # find_package(MPI REQUIRED)
     find_package(PETSc REQUIRED)
 endif()
-option(ENABLE_GRAPINTERFACE "Compile Graphic Interface " OFF)
+option(ENABLE_GRAPHINTERFACE "Compile Graphic Interface " OFF)
 
-if(ENABLE_GRAPINTERFACE)
+if(ENABLE_GRAPHINTERFACE) 
 	find_package(FLTK REQUIRED)
 endif()
 
@@ -116,7 +116,7 @@ set(FOR_FILES ${for_files})
 
 add_library(fsarl_library ${UTIL} ${ANALYSIS} ${GRAPHICINTERFACE} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen )
+target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FLTK_LIBRARIES})
 target_compile_definitions(fsarl_library
                            PUBLIC
                            "$<$<CONFIG:RELEASE>:RELEASE_BUILD>"
@@ -146,9 +146,9 @@ add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
-add_executable(window Window.cpp )
-set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (window fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES})
+# add_executable(window Window.cpp )
+# set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
+# target_link_libraries (window fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES})
 
 
 #To enable unit test using Catch2 UnitTest framework

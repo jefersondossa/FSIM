@@ -3,6 +3,7 @@
 #include "WindowConstructor.h"
 #include<FL/Fl_File_Chooser.H>
 #include <FL/Fl_Widget.H>
+#include <FL/Fl_Double_Window.H>
 #include<iostream>
 
 void WindowConstructor::cb_ElasticityPositional2D_i(Fl_Menu_*, void*) {

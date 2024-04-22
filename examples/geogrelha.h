@@ -1,6 +1,6 @@
 
-   // Defines the problem dimension
-    const int dimension = 2;
+//    // Defines the problem dimension
+//     const int dimension = 2;
 
 {
 
