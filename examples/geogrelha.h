@@ -11,8 +11,9 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // sigma_y =50.+500.*plast;
     // hardening = 500.;
 
-    hardening = 121.e0;
-    sigma_y = 20000.+hardening*plast;
+    // hardening = 121.e3;
+    hardening = 110.e3;
+    sigma_y = 20.+hardening*plast;
     // sigma_y = 10.0;//+0.0001*plast;
     
 };
@@ -30,7 +31,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // cmesh->InsertMaterial(matelas);
     cmesh->InsertMaterial(plastmodel);
 
-    ElasticTruss *geogrelha = new ElasticTruss(16,2,2.1e7,1);
+    ElasticTruss *geogrelha = new ElasticTruss(16,2,2.1e7,0.0002);
     cmesh->InsertMaterial(geogrelha);
 
     //BC
@@ -40,8 +41,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     VecDouble val3(2);
     val2.setZero();val3.setZero();
     // Fundo 
-    // val2[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(12,2,0,val1,val2);
+    val2[1] = 1.;
+    L2Projection * matbc1 = new L2Projection(12,2,3,val1,val2);
     val2.setZero();
     // Laterais
     val2[0] = 1.;
@@ -64,22 +65,23 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // PositionalTruss *geogrid = new PositionalTruss(16, 2, 3000.e12,1.);
     // cmesh->InsertMaterial(geogrid);
 
+    // GmshTools::Read(*cmesh,"../geogrelha.msh");
     GmshTools::Read(*cmesh,"../geogrelha.msh");
-    // GmshTools::Read(*cmesh,"../geogrelha_nosymmetry.msh");
     std::vector<L2Projection *> bcIncrement = {matbc4};
 
     
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 1000, bcIncrement,1.e-6 ,100);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 50, bcIncrement,1.e-5 ,1000);
 #ifdef RELEASE_BUILD
-    an.SType() = SolverType::EUmfpack;
+    // an.SType() = SolverType::EUmfpack;
+    an.SType() = SolverType::EMumps;
     // an.SType() = SolverType::ECholmod;
 #endif
 
 
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"PlasticStrain"};
-    // ScalarNames = {"Pressure","J2","PlasticStrain"};
+    // ScalarNames = {"PlasticStrain"};
+    ScalarNames = {"Pressure","J2","PlasticStrain"};
     // ScalarNames = {"Material"};
     VectorNames = {"Displacement","Stress","RealStress"};
     // VectorNames = {"Displacement"};

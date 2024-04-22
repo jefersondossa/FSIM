@@ -14,7 +14,7 @@ PETScMatrix::PETScMatrix(int64_t rows, int64_t cols, PETScMatType mtype) : Matri
         break;
     case EAij:
         MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                        rows, cols,100,NULL,300,NULL,&fMatrix); 
+                        rows, cols,1000,NULL,1000,NULL,&fMatrix); 
         break;
     
     default:

@@ -125,7 +125,11 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
             << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << std::endl;
         for (int i=0; i<graphmesh->NNodes(); i++){
-            output_v <<std::scientific<< scalSol[i][iscal][0] << std::endl;
+            // if (scalSol[i].size()==0){
+                // output_v <<std::scientific<< "0" << std::endl;
+            // }else{
+                output_v <<std::scientific<< scalSol[i][iscal][0] << std::endl;
+            // }
         }
         output_v << "      </DataArray> " << std::endl;
     }
@@ -134,7 +138,11 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
         for (int i=0; i<graphmesh->NNodes(); i++){
-            output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;
+            // if (vectSol[i].size()==0){
+                // output_v <<std::scientific<< "0,0,0" << std::endl;
+            // }else{
+                output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
+            // }
         }
         output_v << "      </DataArray> " << std::endl;
     }
