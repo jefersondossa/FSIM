@@ -1,0 +1,220 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0309
+header_name {.h}
+code_name {.cpp}
+decl {\#include<FL/Fl_File_Chooser.H>} {private local
+}
+
+decl {\#include<iostream>} {private local
+}
+
+class WindowConstructor {
+  comment {Class that contains the principals objets for modeling GUI} open
+} {
+  Function {WindowConstructor()} {
+    comment Constructor open
+  } {
+    Fl_Window Window {
+      label Window open
+      xywh {8 31 766 784} type Double box BORDER_BOX visible
+    } {
+      Fl_Group Container_1 {
+        comment {Constains the geo and msh path, in addtion to teh WeakForm} open
+        xywh {20 30 630 625} box BORDER_BOX
+      } {
+        Fl_Output msh_path_w {
+          label {Input .msh Path:}
+          xywh {160 110 280 35}
+        }
+        Fl_Output geo_path_w {
+          label {Input .geo Path: }
+          xywh {160 60 280 35}
+        }
+        Fl_Button Save_paths {
+          label {Save paths} selected
+          xywh {55 160 90 25}
+        }
+      }
+      Fl_Group Container_2 {open
+        xywh {50 210 530 415} box BORDER_BOX
+      } {
+        Fl_Choice WeakForm_Menu {
+          label {Weak Form: } open
+          private xywh {165 230 195 25} box BORDER_BOX down_box BORDER_BOX
+        } {
+          MenuItem Elasticity2D {
+            label {Elasticity 2D}
+            xywh {10 10 100 20}
+          }
+          MenuItem ElasticityPositional2D {
+            label {Elasticity Positional 2D}
+            xywh {10 10 100 20}
+          }
+          MenuItem Elasticity3D {
+            label {Elasticity 3D}
+            xywh {10 10 100 20}
+          }
+          MenuItem ElasticTruss {
+            label {Elastic Truss}
+            xywh {10 10 100 20}
+          }
+          MenuItem PositionalTruss {
+            label {Positional Truss}
+            xywh {10 10 100 20}
+          }
+          MenuItem LinearBeam {
+            label {Linear Beam}
+            xywh {15 15 100 20}
+          }
+          MenuItem TransientElasticity2D {
+            label {Transient Elasticity 2D}
+            xywh {15 15 100 20}
+          }
+          MenuItem NavierStokes {
+            label {Navier Stokes}
+            xywh {15 15 100 20}
+          }
+          MenuItem Poisson {
+            label Poisson
+            xywh {15 15 100 20}
+          }
+          MenuItem Stokes {
+            label Stokes
+            xywh {15 15 100 20}
+          }
+        }
+        Fl_Group Container_2_1 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input E2D_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {205 320 45 25}
+          }
+          Fl_Value_Input E2D_poisson {
+            label {Poisson Modulus:  }
+            private xywh {205 360 45 25}
+          }
+          Fl_Check_Button E2D_PlaneStress {
+            label {Plane Stress }
+            private xywh {80 395 25 25} down_box DOWN_BOX
+          }
+        }
+        Fl_Group Container_2_2 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input EP2D_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {210 325 45 25}
+          }
+          Fl_Value_Input EP2D_poisson {
+            label {Poisson Modulus:  }
+            private xywh {210 365 45 25}
+          }
+          Fl_Check_Button EP2D_PlaneStress {
+            label {Plane Stress }
+            private xywh {85 400 25 25} down_box DOWN_BOX
+          }
+        }
+        Fl_Group Container_2_3 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input E3D_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {220 335 45 25}
+          }
+          Fl_Value_Input E3D_poisson {
+            label {Poisson Modulus:  }
+            private xywh {220 375 45 25}
+          }
+        }
+        Fl_Group Container_2_4 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input ET_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {225 340 45 25}
+          }
+          Fl_Value_Input ET_area {
+            label {Area: }
+            private xywh {225 380 45 25}
+          }
+        }
+        Fl_Group Container_2_5 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input PT_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {255 370 45 25}
+          }
+          Fl_Value_Input PT_area {
+            label {Area:   }
+            private xywh {255 410 45 25}
+          }
+        }
+        Fl_Group Container_2_6 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input LB_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {255 370 45 25}
+          }
+          Fl_Value_Input LB_Inertia {
+            label {Inertia:  }
+            private xywh {255 410 45 25}
+          }
+        }
+        Fl_Group Container_2_7 {
+          comment {Container for Elasticity2D}
+          xywh {60 305 410 215} box FLAT_BOX hide
+        } {
+          Fl_Value_Input TE2D_young {
+            label {Elasticity Modulus: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {225 340 45 25}
+          }
+          Fl_Value_Input TE2D_poisson {
+            label {Poisson Modulus:  }
+            private xywh {225 375 45 25}
+          }
+          Fl_Check_Button TE2D_PlaneStress {
+            label {Plane Stress }
+            private xywh {100 455 25 25} down_box DOWN_BOX
+          }
+          Fl_Value_Input TE2D_damping {
+            label {Damping: }
+            xywh {170 405 45 25}
+          }
+          Fl_Value_Input TE2D_density {
+            label {Density: }
+            xywh {160 430 45 25}
+          }
+        }
+      }
+    }
+  }
+  Function {Open()} {} {
+    code {this->Window->show();} {}
+  }
+  Function {Input_geo()} {} {
+    code {const char * geo_path = fl_file_chooser(".geo file path", "*.geo*", "", 0);
+
+this->geo_path_w->value(geo_path);} {}
+  }
+  Function {Input_msh()} {return_type static
+  } {}
+  Function {E2D_f()} {} {
+    code {this->Container_2_1->show();} {}
+  }
+}
