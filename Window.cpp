@@ -5,6 +5,7 @@
 #include <iostream>
 #include "PainelControle.h"
 
+#ifdef HAS_GRAPHINTERFACE
 
 int main()
 {  
@@ -18,3 +19,4 @@ int main()
 
     return Fl::run();
 }
+#endif
