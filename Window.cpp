@@ -3,14 +3,14 @@
 
 #include "WindowConstructor.h"
 #include <iostream>
-#include "PainelControle.h"
 
-#ifdef HAS_GRAPHINTERFACE
 
 int main()
 {  
+#ifdef HAS_GRAPHINTERFACE
+
     WindowConstructor c;
-    c.Open();
+    c.Open_f();
     //c.EP2D_f();
     // c.Show();
 
@@ -18,5 +18,8 @@ int main()
     // controle.iniciar();
 
     return Fl::run();
-}
+#else 
+    return 0;
 #endif
+
+}

@@ -50,8 +50,8 @@ public:
     std::map<int64_t,std::set<int64_t>> fGlobalElToLocalEl;
     std::set<int> fGlueMatID;
 private:
-    double fGlueZoneThickness = 0.5;
-    double fArlequinEpsilon = 0.e-3;
+    double fGlueZoneThickness = 0.0;
+    double fArlequinEpsilon = 1.e-3;
 
     int numElemGlueZoneFine;
     int numElemGlueZoneCoarse;
@@ -143,6 +143,9 @@ public:
         CreateGlobalCouplingElements();
     };
 
+    void SetGlueZoneThichkess(double val){
+        fGlueZoneThickness = val;
+    }
 
     double GlobalWeightFunction(double dist);
     double LocalWeightFunction(double dist);

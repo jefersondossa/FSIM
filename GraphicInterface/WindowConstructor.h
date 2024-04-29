@@ -2,16 +2,18 @@
 
 #ifndef WindowConstructor_h
 #define WindowConstructor_h
-
-#ifdef HAS_GRAPHINTERFACE
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Value_Output.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Scroll.H>
+#include <FL/Fl_Text_Display.H>
 
 /**
  Class that contains the principals objets for modeling GUI
@@ -21,28 +23,75 @@ public:
   WindowConstructor();
   Fl_Double_Window *Window;
   Fl_Group *Container_1;
-  Fl_Output *msh_path_w;
-  Fl_Output *geo_path_w;
+  Fl_Output *msh_path;
+private:
+  inline void cb_msh_path_i(Fl_Output*, void*);
+  static void cb_msh_path(Fl_Output*, void*);
+public:
+  Fl_Output *geo_path;
+private:
+  inline void cb_geo_path_i(Fl_Output*, void*);
+  static void cb_geo_path(Fl_Output*, void*);
+public:
   Fl_Button *Save_paths;
+  Fl_Value_Output *dimension;
   Fl_Group *Container_2;
 private:
   Fl_Choice *WeakForm_Menu;
   static Fl_Menu_Item menu_WeakForm_Menu[];
 public:
   static Fl_Menu_Item *Elasticity2D;
+private:
+  inline void cb_Elasticity2D_i(Fl_Menu_*, void*);
+  static void cb_Elasticity2D(Fl_Menu_*, void*);
+public:
   static Fl_Menu_Item *ElasticityPositional2D;
 private:
   inline void cb_ElasticityPositional2D_i(Fl_Menu_*, void*);
   static void cb_ElasticityPositional2D(Fl_Menu_*, void*);
 public:
   static Fl_Menu_Item *Elasticity3D;
+private:
+  inline void cb_Elasticity3D_i(Fl_Menu_*, void*);
+  static void cb_Elasticity3D(Fl_Menu_*, void*);
+public:
   static Fl_Menu_Item *ElasticTruss;
+private:
+  inline void cb_ElasticTruss_i(Fl_Menu_*, void*);
+  static void cb_ElasticTruss(Fl_Menu_*, void*);
+public:
   static Fl_Menu_Item *PositionalTruss;
-  static Fl_Menu_Item *LinearBeam;
-  static Fl_Menu_Item *TransientElasticity2D;
-  static Fl_Menu_Item *NavierStokes;
-  static Fl_Menu_Item *Poisson;
+private:
+  inline void cb_PositionalTruss_i(Fl_Menu_*, void*);
+  static void cb_PositionalTruss(Fl_Menu_*, void*);
+public:
   static Fl_Menu_Item *Stokes;
+private:
+  inline void cb_Stokes_i(Fl_Menu_*, void*);
+  static void cb_Stokes(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *NavierStokes;
+private:
+  inline void cb_NavierStokes_i(Fl_Menu_*, void*);
+  static void cb_NavierStokes(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *Poisson;
+private:
+  inline void cb_Poisson_i(Fl_Menu_*, void*);
+  static void cb_Poisson(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *L2Projection;
+private:
+  inline void cb_L2Projection_i(Fl_Menu_*, void*);
+  static void cb_L2Projection(Fl_Menu_*, void*);
+public:
+  Fl_Choice *surfaces;
+  static Fl_Menu_Item menu_surfaces[];
+  static Fl_Menu_Item *EDomain1;
+  static Fl_Menu_Item *EDomain2;
+  static Fl_Menu_Item *ERight;
+  static Fl_Menu_Item *ELeft;
+  Fl_Button *Apply_2;
   Fl_Group *Container_2_1;
 private:
   Fl_Value_Input *E2D_young;
@@ -72,22 +121,48 @@ private:
 public:
   Fl_Group *Container_2_6;
 private:
-  Fl_Value_Input *LB_young;
-  Fl_Value_Input *LB_Inertia;
+  Fl_Value_Input *S_density;
+  Fl_Value_Input *S_viscosity;
 public:
   Fl_Group *Container_2_7;
 private:
-  Fl_Value_Input *TE2D_young;
-  Fl_Value_Input *TE2D_poisson;
-  Fl_Check_Button *TE2D_PlaneStress;
+  Fl_Value_Input *NS_density;
+  Fl_Value_Input *NS_viscosity;
 public:
-  Fl_Value_Input *TE2D_damping;
-  Fl_Value_Input *TE2D_density;
-  void Open();
-  void Input_geo();
-  static void Input_msh();
-  void EP2D_f();
+  Fl_Group *Container_2_8;
+private:
+  Fl_Value_Input *P_nstate;
+public:
+  Fl_Group *Container_2_9;
+  Fl_Choice *BounderyCondition;
+  static Fl_Menu_Item menu_BounderyCondition[];
+  static Fl_Menu_Item *Dirichlet;
+  static Fl_Menu_Item *Neumann;
+  static Fl_Menu_Item *DHDirichlet;
+  static Fl_Menu_Item *DNHDirichlet;
+  Fl_Value_Input *valx;
+  Fl_Value_Input *valy;
+  Fl_Value_Input *valz;
+  Fl_Box *values;
+  Fl_Group *Container_3;
+  Fl_Scroll *scroller;
+  Fl_Text_Display *scriptdisplay;
+  Fl_Button *Update_5;
+  Fl_Group *Container_4;
+  void Open_f();
+  void Input_geo_f();
+  void Input_msh_f();
+  void WF1_f();
+  void SavePath_f();
+  void Apply_2_f(int &WF_id);
+  void Update();
+  void WF2_f();
+  void WF3_f();
+  void WF4_f();
+  void WF5_f();
+  void WF6_f();
+  void WF7_f();
+  void WF8_f();
+  void WF9_f();
 };
-#endif
-
 #endif
