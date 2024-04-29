@@ -2,6 +2,9 @@
 
 #ifndef WindowConstructor_h
 #define WindowConstructor_h
+
+#ifdef HAS_GRAPHINTERFACE
+
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
@@ -165,4 +168,6 @@ public:
   void WF8_f();
   void WF9_f();
 };
+#endif
+
 #endif

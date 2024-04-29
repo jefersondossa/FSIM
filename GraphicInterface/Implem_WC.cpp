@@ -1,4 +1,7 @@
 #include "WindowConstructor.h"
+
+#ifdef HAS_GRAPHINTERFACE
+
 #include <FL/Fl_File_Chooser.H>
 #include <iostream>
 #include <string>
@@ -331,3 +334,4 @@ void WindowConstructor::Update(){
 
 
 
+#endif

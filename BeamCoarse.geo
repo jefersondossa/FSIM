@@ -48,7 +48,7 @@ Transfinite Surface {2};
 //+
 Transfinite Surface {3};
 //+
-Recombine Surface {1, 2, 3};
+//Recombine Surface {1, 2, 3};
 //+
 Physical Curve("Load", 11) = {2, 9, 10};
 //+

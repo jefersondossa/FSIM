@@ -15,6 +15,7 @@
 #include "ShapeTriangleLin.h"
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
+#include "VTUGenerator.h"
 
 #define  REAL double
 
@@ -670,6 +671,7 @@ void Arlequin::setSignaledDistance(){
                                   (x1[0] - x2[0]) * (x1[0] - x2[0]));
 
             VecDouble n(3);
+            n.setZero();
             n[0] = (x2[1] - x1[1]) / sLength;
             n[1] = (x1[0] - x2[0]) / sLength;
 
@@ -874,7 +876,8 @@ void Arlequin::setSignaledDistance(){
     // for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
     //     fMeshVector[1]->ElementVec()[jel] -> ComputeIntPointDistFunction();        
     // };
-
+    
+    VTUGenerator::PrintResults(this,"ArlequinMesh");
 };
 
 //------------------------------------------------------------------------------

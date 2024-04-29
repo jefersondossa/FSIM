@@ -48,13 +48,13 @@
     fineModel->InsertMaterial(matbc4);
     //Glue
     val2.setZero();
-    L2Projection * matbc5 = new L2Projection(14,2,1,val1,val2);
+    L2Projection * matbc5 = new L2Projection(19,2,1,val1,val2);
     fineModel->InsertMaterial(matbc5);
 
     GmshTools::Read(*coarseModel,"../BeamCoarse.msh");
     GmshTools::Read(*fineModel,"../BeamFine.msh");
 
-    std::set<int> gluematids={14};
+    std::set<int> gluematids={19};
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
@@ -64,6 +64,7 @@
     std::vector<std::string> ScalarNames, VectorNames;
     VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
     VTUGenerator::PrintResults(fineModel,"resultFine",ScalarNames,VectorNames);
+    // VTUGenerator::PrintResults(&arl,"ArlequinMesh");
 
     arl.SetUp();
 

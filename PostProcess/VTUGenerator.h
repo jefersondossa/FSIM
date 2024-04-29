@@ -15,6 +15,7 @@ namespace VTUGenerator{
     /// @param vecnames vector variables to be printed
     /// @param step (optional) step, for incremental and transient analyses 
     void PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step = 0);
+    void PrintResults(Arlequin *arl, std::string filename);
     void PrintResultsGraph(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step = 0);
 
 };

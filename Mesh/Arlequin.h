@@ -20,10 +20,13 @@
 #include "Analysis.h"
 #include "CompMesh.h"
 #include "Element.h"
+// #include "VTUGenerator.h"
+
 
 class Analysis;
 class Element;
 class CompMesh;
+// class VTUGenerator;
 
 enum ArlequinStabType{ENoStab, EOption1, EOption2, EOption3, EOption4, EOption5};
 
@@ -134,6 +137,8 @@ public:
     void SetUp(){
         SetElementBoxes();
         setSignaledDistance();
+        
+
         //Construct the glue zone based on some defined criterion
         setCouplingZone();
         //Computes the Weight function for all the finite elements
@@ -151,6 +156,13 @@ public:
     double LocalWeightFunction(double dist);
 
     void ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIntersected);
+
+    double LocalNodeSignaledDistance(int64_t node){
+        return fLocalSignaledDistance[node];
+    }
+    double GlobalNodeSignaledDistance(int64_t node){
+        return fGlobalSignaledDistance[node];
+    }
 
 };
 

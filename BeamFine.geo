@@ -73,9 +73,9 @@ Transfinite Surface {6};
 Transfinite Surface {7};
 Transfinite Surface {8};
 //+
-Recombine Surface {3, 4, 2, 1, 5, 6, 7, 8};
+//Recombine Surface {3, 4, 2, 1, 5, 6, 7, 8};
 //+
-Physical Curve("Glue", 14) = {2, 1, 4, 11};
+Physical Curve("Glue", 19) = {2, 1, 4, 11};
 //+
 Physical Curve("Load", 15) = {12, 3};
 //+
