@@ -33,16 +33,7 @@ enum ArlequinStabType{ENoStab, EOption1, EOption2, EOption3, EOption4, EOption5}
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 class Arlequin{
 public:
-    std::vector<Node *>     nodesLagrangeFine_;
-    std::vector<Node *>     nodesLagrangeCoarse_;
-
-    std::vector<Element *>     glueZoneFine_;
-    std::vector<Element *>     glueZoneCoarse_;
-
-    std::vector<int>         elementsGlueZoneFine_;
-    std::vector<int>         nodesGlueZoneFine_;
-    std::vector<int>         elementsGlueZoneCoarse_;
-    std::vector<int>         nodesGlueZoneCoarse_;
+    std::set<int64_t> fGluingElementIndex;
 
     std::map<int64_t,int64_t> fNodeLocalToElementGlobal;
     std::map<int64_t,VecDouble> fNodeLocalToXsiGlobal;
@@ -137,7 +128,6 @@ public:
     void SetUp(){
         SetElementBoxes();
         setSignaledDistance();
-        
 
         //Construct the glue zone based on some defined criterion
         setCouplingZone();
@@ -163,6 +153,8 @@ public:
     double GlobalNodeSignaledDistance(int64_t node){
         return fGlobalSignaledDistance[node];
     }
+
+    double ShortestDistance(VecDouble &point, VecDouble &startSeg, VecDouble &endSeg);
 
 };
 

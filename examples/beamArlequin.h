@@ -59,7 +59,7 @@
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
     Arlequin arl(meshvector,1.,0.);
-    arl.SetGlueZoneThichkess(1);
+    arl.SetGlueZoneThichkess(0.45);
     arl.SetGlueIds(gluematids);
     std::vector<std::string> ScalarNames, VectorNames;
     VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);

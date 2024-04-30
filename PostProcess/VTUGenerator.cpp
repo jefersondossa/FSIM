@@ -429,6 +429,14 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
     }
     output_v << "      </DataArray> " << std::endl;
 
+    output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        << "Name=\"" << "Weight Function" << "\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<arl->MeshVec()[0]->NNodes(); i++){
+        output_v << arl->MeshVec()[0]->NodeVec()[i]->getWeightFunction() << std::endl;
+    }
+    output_v << "      </DataArray> " << std::endl;
+
+
     output_v << "    </PointData>" << std::endl; 
 
     //WRITE ELEMENT RESULTS
@@ -523,9 +531,17 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
     output_fine << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
         << "Name=\"" << "Signaled Distance" << "\" format=\"ascii\">" << std::endl;
     for (int i=0; i<arl->MeshVec()[1]->NNodes(); i++){
-        output_fine << arl->GlobalNodeSignaledDistance(i) << std::endl;
+        output_fine << arl->LocalNodeSignaledDistance(i) << std::endl;
     }
     output_fine << "      </DataArray> " << std::endl;
+
+    output_fine << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+        << "Name=\"" << "Weight Function" << "\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<arl->MeshVec()[1]->NNodes(); i++){
+        output_fine << arl->MeshVec()[1]->NodeVec()[i]->getWeightFunction() << std::endl;
+    }
+    output_fine << "      </DataArray> " << std::endl;
+
 
     output_fine << "    </PointData>" << std::endl; 
 
@@ -539,6 +555,15 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
         auto compel = arl->MeshVec()[1]->ElementVec()[i];
         int matid = compel->GetWeakForm()->Id();
         output_fine << matid << std::endl;
+    };
+    output_fine << "      </DataArray> " << std::endl;
+
+    output_fine <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                << "Name=\"Gluing Zone\" format=\"ascii\">" << std::endl;
+    for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
+        int isgluing = 0;
+        if (arl->fGluingElementIndex.find(i) != arl->fGluingElementIndex.end())isgluing = 1;
+        output_fine << isgluing << std::endl;
     };
     output_fine << "      </DataArray> " << std::endl;
     

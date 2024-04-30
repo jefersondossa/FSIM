@@ -627,233 +627,185 @@ void Arlequin::setNodalCorrespondenceFine() {
 //------------------------------------------------------------------------------
 //--------------------SETS THE COUPLING ZONE IN COARSE MODEL--------------------
 //------------------------------------------------------------------------------
+// Given a line with coordinates 'start' and 'end' and the
+// coordinates of a point 'pnt' the proc returns the shortest 
+// distance from pnt to the line and the coordinates of the 
+// nearest point on the line.
+// 1  Convert the line segment to a vector ('line_vec').
+// 2  Create a vector connecting start to pnt ('pnt_vec').
+// 3  Find the length of the line vector ('line_len').
+// 4  Convert line_vec to a unit vector ('line_unitvec').
+// 5  Scale pnt_vec by line_len ('pnt_vec_scaled').
+// 6  Get the dot product of line_unitvec and pnt_vec_scaled ('t').
+// 7  Ensure t is in the range 0 to 1.
+// 8  Use t to get the nearest location on the line to the end
+//    of vector pnt_vec_scaled ('nearest').
+// 9  Calculate the distance from nearest to pnt_vec_scaled.
+// 10 Translate nearest back to the start/end line. 
+// Malcolm Kesson 16 Dec 2012
+double Arlequin::ShortestDistance(VecDouble &point, VecDouble &startSeg, VecDouble &endSeg){
+
+    VecDouble line_vec = endSeg - startSeg;
+    VecDouble pnt_vec = point - startSeg;
+    double line_len = line_vec.norm();
+    VecDouble line_unitvec = line_vec/line_len;
+    VecDouble pnt_vec_scaled = pnt_vec/line_len;
+    double t = line_unitvec.dot(pnt_vec_scaled);
+    if (t < 0.0){
+        t = 0.0;
+    } else if (t > 1.){
+        t = 1.;
+    }
+        
+    VecDouble nearest = line_vec * t;
+    double dist = (pnt_vec - nearest).norm();
+    nearest += startSeg;
+    return dist;
+};
+
+
 
 void Arlequin::setSignaledDistance(){
-    
-    std::map<int64_t,VecDouble> NodalNormalVector;
 
-    int DIM = fMeshVector[0]->Dimension();
-    int DEG = fMeshVector[0]->GetDefaultOrder();
-    int nBdNodes = fMeshVector[1]->NBdNodes();
-    int bconnec[nBdNodes];
-    double dist;
-    //approximate normal calculation
-
-    for (int i = 0; i < fMeshVector[1]->NElements(); i++){
-        auto *el = fMeshVector[1]->ElementVec()[i];
-        if (fGlueMatID.find(el->GetWeakForm()->Id())==fGlueMatID.end()) continue;
-
-        VecInt connec = el -> getConnectivity();
-            
-        //Loop over the 1D element segments
-        for (int iSeg = 0; iSeg < DEG; iSeg++){
-            int no1,no2;
-            if (iSeg == 0){
-                no1 = connec[0];
-                if (DEG == 1) {
-                    no2 = connec[1];
-                } else {
-                    no2 = connec[2];
-                }
-            } else {
-                no1 = connec[iSeg+1];
-                if (DEG == 2 || iSeg == 2){
-                    no2 = connec[1];
-                } else {
-                    no2 = connec[3];
-                }
-            }
-            
-            VecDouble x1 = fMeshVector[1]->NodeVec()[no1] -> getCoordinates();
-            VecDouble x2 = fMeshVector[1]->NodeVec()[no2] -> getCoordinates();
-
-            double sLength = sqrt((x2[1] - x1[1]) * (x2[1] - x1[1]) +
-                                  (x1[0] - x2[0]) * (x1[0] - x2[0]));
-
-            VecDouble n(3);
-            n.setZero();
-            n[0] = (x2[1] - x1[1]) / sLength;
-            n[1] = (x1[0] - x2[0]) / sLength;
-
-            NodalNormalVector[no1] = n;
-            NodalNormalVector[no2] = n;
-        }
-    };
-
+    int nSegments = fMeshVector[0]->GetDefaultOrder();
 
     //Fine mesh nodes
     for (int ino = 0; ino < fMeshVector[1]->NNodes(); ino++){
         VecDouble x = fMeshVector[1]->NodeVec()[ino] -> getCoordinates();
-        dist=10000000000000000000000000000.;
-        
+        fLocalSignaledDistance[ino] = 1.e15;
+
         for (int i = 0; i < fMeshVector[1]->NElements(); i++){
             auto *el = fMeshVector[1]->ElementVec()[i];
+
             if (fGlueMatID.find(el->GetWeakForm()->Id())==fGlueMatID.end()) continue;
             VecInt bconnec = el -> getConnectivity();
             
-            for (int iSeg = 0; iSeg < DEG ; ++iSeg){
-                
-            
-                //first segment
-                int no1,no2;
-                if (iSeg == 0){
-                    no1 = bconnec[0];
-                    if (DEG == 1) {
-                        no2 = bconnec[1];
-                    } else {
-                        no2 = bconnec[2];
-                    }
-                } else {
-                    no1 = bconnec[iSeg+1];
-                    if (DEG == 2 || iSeg == 2){
-                        no2 = bconnec[1];
-                    } else {
-                        no2 = bconnec[3];
+            // Loop over the 1D element segments
+            switch (nSegments){
+            case 1:
+                {
+                    VecDouble start(3),end(3);
+                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    double dist = ShortestDistance(x,start,end);
+                    if (fabs(dist)<fabs(fLocalSignaledDistance[ino])){
+                        fLocalSignaledDistance[ino] = dist;
                     }
                 }
-                
-                VecDouble x1 = fMeshVector[1]->NodeVec()[no1] -> getCoordinates();
-                VecDouble x2 = fMeshVector[1]->NodeVec()[no2] -> getCoordinates();
-                
-                double aux0 =  sqrt((x2[1] - x1[1]) * (x2[1] - x1[1]) +
-                                    (x2[0] - x1[0]) * (x2[0] - x1[0]));
-                double aux1 = ((x[0] - x1[0]) * (x2[0] - x1[0])+
-                                (x[1] - x1[1]) * (x2[1] - x1[1])) / aux0;
-                double dist2 =-((x2[1] - x1[1]) * x[0] - 
-                                (x2[0] - x1[0]) * x[1] +
-                                x2[0] * x1[1] - x2[1] * x1[0]) / aux0;
-                
-                if (aux1 > aux0){
-                    dist2 = sqrt((x2[1] - x[1]) * (x2[1] - x[1]) +
-                                    (x2[0] - x[0]) * (x2[0] - x[0]));
-                    //find signal
-                    //side normal vector
-                    VecDouble n = NodalNormalVector[no2];
-                    double test[2];
+                break;
+            case 2:
+                {
+                    VecDouble start(3),end(3);
+                    //Segment 1
+                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    double dist1 = ShortestDistance(x,start,end);
+                    //Segment 2
+                    start = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    double dist2 = ShortestDistance(x,start,end);
 
-                    test[0] = x[0] - x2[0];
-                    test[1] = x[1] - x2[1];
-                    double signaltest = n[0]*test[0] + n[1]*test[1];
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001)signal = 1.;
-                    
-                    dist2 *= signal;
-                };
+                    if (fabs(dist1)<fabs(fLocalSignaledDistance[ino])){
+                        fLocalSignaledDistance[ino] = dist1;
+                    }
+                    if (fabs(dist2)<fabs(fLocalSignaledDistance[ino])){
+                        fLocalSignaledDistance[ino] = dist2;
+                    }
+                }
+                break;
+            case 3:
+                {
+                    VecDouble start(3),end(3);
+                    //Segment 1
+                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    double dist1 = ShortestDistance(x,start,end);
+                    //Segment 2
+                    start = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
+                    double dist2 = ShortestDistance(x,start,end);
+                    //Segment 3
+                    start = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    double dist3 = ShortestDistance(x,start,end);
 
-                if (aux1 < 0.){
-                    dist2 = sqrt((x[1] - x1[1]) * (x[1] - x1[1]) +
-                                    (x[0] - x1[0]) * (x[0] - x1[0]));
-                    //find signal
-                    //side normal vector
-                    VecDouble n = NodalNormalVector[no1];
-                    double test[2];
-
-                    test[0] = x[0] - x1[0];
-                    test[1] = x[1] - x1[1];
-                    double signaltest = n[0]*test[0] + n[1]*test[1];
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001) signal = 1.;
-                    
-                    dist2 *= signal;
-                };
-                
-                if (fabs(dist2) < fabs(dist)) dist = dist2;
+                    if (fabs(dist1)<fabs(fLocalSignaledDistance[ino])){
+                        fLocalSignaledDistance[ino] = dist1;
+                    }
+                    if (fabs(dist2)<fabs(fLocalSignaledDistance[ino])){
+                        fLocalSignaledDistance[ino] = dist2;
+                    }
+                    if (fabs(dist3)<fabs(fLocalSignaledDistance[ino])){
+                        fLocalSignaledDistance[ino] = dist3;
+                    }
+                }
+                break;
+            
+            default:
+                PanicButton();
+                break;
             }
-        }; //
-        if(dist < 0) dist = 0;
-        dist = x[0] - 0.5;
-        fLocalSignaledDistance[ino] = dist;
-     };
+        }
+    }
 
-    //Coarse mesh
-     for (int ino = 0; ino < fMeshVector[0]->NNodes(); ino++){
+    //Coarse mesh nodes
+    for (int ino = 0; ino < fMeshVector[0]->NNodes(); ino++){
         VecDouble x = fMeshVector[0]->NodeVec()[ino] -> getCoordinates();
-        dist=10000000000000000000000000000.;
-        
+        fGlobalSignaledDistance[ino] = 1.e15;
+
         for (int i = 0; i < fMeshVector[1]->NElements(); i++){
             auto *el = fMeshVector[1]->ElementVec()[i];
+
             if (fGlueMatID.find(el->GetWeakForm()->Id())==fGlueMatID.end()) continue;
             VecInt bconnec = el -> getConnectivity();
-
-            for (int iSeg = 0; iSeg < DEG ; ++iSeg){
-                //first segment
-                int no1,no2;
-                if (iSeg == 0){
-                    no1 = bconnec[0];
-                    if (DEG == 1) {
-                        no2 = bconnec[1];
-                    } else {
-                        no2 = bconnec[2];
-                    }
-                } else {
-                    no1 = bconnec[iSeg+1];
-                    if (DEG == 2 || iSeg == 2){
-                        no2 = bconnec[1];
-                    } else {
-                        no2 = bconnec[3];
+            
+            // Loop over the 1D element segments
+            switch (nSegments){
+            case 1:
+                {
+                    VecDouble start(3),end(3);
+                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    double dist = ShortestDistance(x,start,end);
+                    if (fabs(dist)<fabs(fGlobalSignaledDistance[ino])){
+                        fGlobalSignaledDistance[ino] = dist;
                     }
                 }
-                // std::cout<<no1<<" nos "<<no2<<std::endl;
-                
-                VecDouble x1 = fMeshVector[1]->NodeVec()[no1] -> getCoordinates();
-                VecDouble x2 = fMeshVector[1]->NodeVec()[no2] -> getCoordinates();
-                
-                double aux0 =  sqrt((x2[1] - x1[1]) * (x2[1] - x1[1]) +
-                                    (x2[0] - x1[0]) * (x2[0] - x1[0]));
-                double aux1 = ((x[0] - x1[0]) * (x2[0] - x1[0])+
-                                (x[1] - x1[1]) * (x2[1] - x1[1])) / aux0;
-                double dist2 =-((x2[1] - x1[1]) * x[0] - 
-                                (x2[0] - x1[0]) * x[1] +
-                                x2[0] * x1[1] - x2[1] * x1[0]) / aux0;
-                
-                if (aux1 > aux0){
-                    dist2 = sqrt((x2[1] - x[1]) * (x2[1] - x[1]) +
-                                    (x2[0] - x[0]) * (x2[0] - x[0]));
-                    //find signal
-                    //side normal vector
-                    VecDouble n = NodalNormalVector[no2];
+                break;
+            case 2:
+                {
+                    VecDouble start(3),end(3);
+                    //Segment 1
+                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    double dist1 = ShortestDistance(x,start,end);
+                    //Segment 2
+                    start = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
+                    double dist2 = ShortestDistance(x,start,end);
+                    //Segment 3
+                    start = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
+                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    double dist3 = ShortestDistance(x,start,end);
                     
-                    double test[2];
-                    test[0] = x[0] - x2[0];
-                    test[1] = x[1] - x2[1];
-                    double signaltest = n[0]*test[0] + n[1]*test[1];
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001)signal = 1.;
-                    
-                    dist2 *= signal;
-                };
-
-                if (aux1 < 0.){
-                    dist2 = sqrt((x[1] - x1[1]) * (x[1] - x1[1]) +
-                                    (x[0] - x1[0]) * (x[0] - x1[0]));
-                    //find signal
-                    //side normal vector
-                    VecDouble n = NodalNormalVector[no1];
-                    
-                    double test[2];
-                    test[0] = x[0] - x1[0];
-                    test[1] = x[1] - x1[1];
-                    double signaltest = n[0]*test[0] + n[1]*test[1];
-                    double signal = -1.;
-                    
-                    if (signaltest <= -0.001) signal = 1.;
-                    
-                    dist2 *= signal;
-                };
-                
-                if (fabs(dist2) < fabs(dist)) dist = dist2;
+                    if (fabs(dist1)<fabs(fGlobalSignaledDistance[ino])){
+                        fGlobalSignaledDistance[ino] = dist1;
+                    }
+                    if (fabs(dist2)<fabs(fGlobalSignaledDistance[ino])){
+                        fGlobalSignaledDistance[ino] = dist2;
+                    }
+                    if (fabs(dist3)<fabs(fGlobalSignaledDistance[ino])){
+                        fGlobalSignaledDistance[ino] = dist3;
+                    }
+                }
+                break;
+            
+            default:
+                PanicButton();
+                break;
             }
-        }; //
-    
-        if (fabs(fGlobalSignaledDistance[ino]) < 1.e-2){
-            fGlobalSignaledDistance[ino] = dist;
-        };
-        dist = x[0] - 0.5;
-        fGlobalSignaledDistance[ino] = dist;
-     };
+        }
+    }
 
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
         if(fMeshVector[0]->ElementVec()[jel]->Dimension()!=fMeshVector[0]->Dimension())continue;
@@ -873,11 +825,10 @@ void Arlequin::setSignaledDistance(){
         }
         fMeshVector[1]->ElementVec()[jel] -> ComputeIntPointDistFunction(distfunction);        
     };
-    // for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
-    //     fMeshVector[1]->ElementVec()[jel] -> ComputeIntPointDistFunction();        
-    // };
+    // // for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
+    // //     fMeshVector[1]->ElementVec()[jel] -> ComputeIntPointDistFunction();        
+    // // };
     
-    VTUGenerator::PrintResults(this,"ArlequinMesh");
 };
 
 //------------------------------------------------------------------------------
@@ -919,7 +870,8 @@ void Arlequin::setCouplingZone(){
             auto *el = fMeshVector[1]->ElementVec()[jel]->Clone();
             el->SetMesh(fMeshVector[2]);
             el->SetWeakForm(clocal);
-            fMeshVector[2]->ElementVec().push_back(el);  
+            fMeshVector[2]->ElementVec().push_back(el);
+            fGluingElementIndex.insert(el->Index()); 
         };        
     };
     int nElNodes = 0;
@@ -971,8 +923,6 @@ void Arlequin::setCouplingZone(){
             // if (nodesGlueZoneFine_[ino] == connec[k]) connecAux[k] = ino;
 
         fMeshVector[2]->ElementVec()[i] -> setConnectivity(connecAux);
-        // glueZoneFine_[i] -> setNodes(nodesLagrangeFine_);
-
     };
 
      
@@ -1058,6 +1008,8 @@ void Arlequin::setWeightFunction(double val){
         }
             
     };
+
+    VTUGenerator::PrintResults(this,"ArlequinMesh");
 
     return;
 };
