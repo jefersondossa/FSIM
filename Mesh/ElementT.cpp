@@ -229,70 +229,70 @@ void ElementT<tshape>::ComputeJacobian() {
             break;
         case 2:
         {
-            VecDouble v_1(3), v_2(3);
-            VecDouble v_1_til(3), v_2_til(3);
-            v_1.setZero();
-            v_2.setZero();
-            v_1_til.setZero();
-            v_2_til.setZero();
+            // VecDouble v_1(3), v_2(3);
+            // VecDouble v_1_til(3), v_2_til(3);
+            // v_1.setZero();
+            // v_2.setZero();
+            // v_1_til.setZero();
+            // v_2_til.setZero();
 
 
-            auto QR = fIntegData.fAxes0.householderQr();
-            MatrixDouble aaa = QR.matrixQR();
-            for (int i = 0; i < 3; i++) {
-                v_1[i] = fIntegData.fAxes0(i, 0);
-                v_2[i] = fIntegData.fAxes0(i, 1);
-                // v_1[i] = gradx(i, 0);
-                // v_2[i] = gradx(i, 1);
-            }
+            // auto QR = fIntegData.fAxes0.householderQr();
+            // MatrixDouble aaa = QR.matrixQR();
+            // for (int i = 0; i < 3; i++) {
+            //     v_1[i] = fIntegData.fAxes0(i, 0);
+            //     v_2[i] = fIntegData.fAxes0(i, 1);
+            //     // v_1[i] = gradx(i, 0);
+            //     // v_2[i] = gradx(i, 1);
+            // }
 
-            double norm_v_1_til = 0.0;
-            double norm_v_2_til = 0.0;
-            double v_1_dot_v_2 = 0.0;
+            // double norm_v_1_til = 0.0;
+            // double norm_v_2_til = 0.0;
+            // double v_1_dot_v_2 = 0.0;
 
-            for (int i = 0; i < 3; i++) {
-                norm_v_1_til += v_1[i] * v_1[i];
-                v_1_dot_v_2 += v_1[i] * v_2[i];
-            }
-            norm_v_1_til = sqrt(norm_v_1_til);
+            // for (int i = 0; i < 3; i++) {
+            //     norm_v_1_til += v_1[i] * v_1[i];
+            //     v_1_dot_v_2 += v_1[i] * v_2[i];
+            // }
+            // norm_v_1_til = sqrt(norm_v_1_til);
 
-            for (int i = 0; i < 3; i++) {
-                v_1_til[i] = v_1[i] / norm_v_1_til;
-                v_2_til[i] = v_2[i] - v_1_dot_v_2 * v_1_til[i] / norm_v_1_til;
-                norm_v_2_til += v_2_til[i] * v_2_til[i];
-            }
-            norm_v_2_til = sqrt(norm_v_2_til);
+            // for (int i = 0; i < 3; i++) {
+            //     v_1_til[i] = v_1[i] / norm_v_1_til;
+            //     v_2_til[i] = v_2[i] - v_1_dot_v_2 * v_1_til[i] / norm_v_1_til;
+            //     norm_v_2_til += v_2_til[i] * v_2_til[i];
+            // }
+            // norm_v_2_til = sqrt(norm_v_2_til);
 
 
-            fIntegData.fA0(0, 0) = norm_v_1_til;
-            fIntegData.fA0(0, 1) = v_1_dot_v_2 / norm_v_1_til;
-            fIntegData.fA0(1, 1) = norm_v_2_til;
+            // fIntegData.fA0(0, 0) = norm_v_1_til;
+            // fIntegData.fA0(0, 1) = v_1_dot_v_2 / norm_v_1_til;
+            // fIntegData.fA0(1, 1) = norm_v_2_til;
 
-            // fIntegData.fA0(0, 0) = aaa(0,0);
-            // fIntegData.fA0(0, 1) = aaa(0,1);
-            // fIntegData.fA0(1, 0) = aaa(1,0);
-            // fIntegData.fA0(1, 1) = aaa(1,1);
+            // // fIntegData.fA0(0, 0) = aaa(0,0);
+            // // fIntegData.fA0(0, 1) = aaa(0,1);
+            // // fIntegData.fA0(1, 0) = aaa(1,0);
+            // // fIntegData.fA0(1, 1) = aaa(1,1);
 
-            fIntegData.fJacA0 = fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1) - fIntegData.fA0(1, 0) * fIntegData.fA0(0, 1);
+            // fIntegData.fJacA0 = fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1) - fIntegData.fA0(1, 0) * fIntegData.fA0(0, 1);
 
-            fIntegData.fA0Inv(0, 0) = +fIntegData.fA0(1, 1) / fIntegData.fJacA0;
-            fIntegData.fA0Inv(1, 1) = +fIntegData.fA0(0, 0) / fIntegData.fJacA0;
-            fIntegData.fA0Inv(0, 1) = -fIntegData.fA0(0, 1) / fIntegData.fJacA0;
-            fIntegData.fA0Inv(1, 0) = -fIntegData.fA0(1, 0) / fIntegData.fJacA0;
+            // fIntegData.fA0Inv(0, 0) = +fIntegData.fA0(1, 1) / fIntegData.fJacA0;
+            // fIntegData.fA0Inv(1, 1) = +fIntegData.fA0(0, 0) / fIntegData.fJacA0;
+            // fIntegData.fA0Inv(0, 1) = -fIntegData.fA0(0, 1) / fIntegData.fJacA0;
+            // fIntegData.fA0Inv(1, 0) = -fIntegData.fA0(1, 0) / fIntegData.fJacA0;
 
-            fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
-            //     //Computing the jacobian determinant and Inverse
-            // fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
-            // fIntegData.fA0(0,1) = fIntegData.fAxes0(0,1);
-            // fIntegData.fA0(1,0) = fIntegData.fAxes0(1,0);
-            // fIntegData.fA0(1,1) = fIntegData.fAxes0(1,1);
-            // fIntegData.fJacA0 = fIntegData.fA0(0,0) * fIntegData.fA0(1,1) - fIntegData.fA0(0,1) * fIntegData.fA0(1,0);
-
-            // fIntegData.fA0Inv(0,0) = fIntegData.fA0(1,1) / fIntegData.fJacA0;
-            // fIntegData.fA0Inv(1,1) = fIntegData.fA0(0,0) / fIntegData.fJacA0;
-            // fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
-            // fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
             // fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
+                //Computing the jacobian determinant and Inverse
+            fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
+            fIntegData.fA0(0,1) = fIntegData.fAxes0(0,1);
+            fIntegData.fA0(1,0) = fIntegData.fAxes0(1,0);
+            fIntegData.fA0(1,1) = fIntegData.fAxes0(1,1);
+            fIntegData.fJacA0 = fIntegData.fA0(0,0) * fIntegData.fA0(1,1) - fIntegData.fA0(0,1) * fIntegData.fA0(1,0);
+
+            fIntegData.fA0Inv(0,0) = fIntegData.fA0(1,1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1,1) = fIntegData.fA0(0,0) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
+            fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
         }
             break;
         case 3:

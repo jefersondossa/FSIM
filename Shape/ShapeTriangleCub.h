@@ -20,6 +20,8 @@ public:
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 3;
+
+    const static ElementType ElType = ElementType::ETriangle;
     
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 

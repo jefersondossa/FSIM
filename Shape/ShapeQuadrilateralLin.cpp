@@ -4,6 +4,7 @@ const int ShapeQuadrilateralLin::Dimension;
 const int ShapeQuadrilateralLin::Order;
 const int ShapeQuadrilateralLin::NElNodes;
 const int ShapeQuadrilateralLin::NCornerNodes;
+const ElementType ShapeQuadrilateralLin::ElType;
 
 void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi) {
     phi[0] = 0.25 * (1 - xi[0])*(1 - xi[1]);

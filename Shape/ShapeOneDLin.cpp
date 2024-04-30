@@ -4,6 +4,7 @@ const int ShapeOneDLin::Dimension;
 const int ShapeOneDLin::Order;
 const int ShapeOneDLin::NElNodes;
 const int ShapeOneDLin::NCornerNodes;
+const ElementType ShapeOneDLin::ElType;
 
 void ShapeOneDLin::Shape(VecDouble &xi, VecDouble &phi) {
     phi[0] = (1 - xi[0]) / 2.;

@@ -4,6 +4,7 @@ const int ShapeOneDCub::Dimension;
 const int ShapeOneDCub::Order;
 const int ShapeOneDCub::NElNodes;
 const int ShapeOneDCub::NCornerNodes;
+const ElementType ShapeOneDCub::ElType;
 
 void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi) {
     phi[0] = (-1. + xi[0] + 9.*xi[0]*xi[0] - 9.*xi[0]*xi[0]*xi[0]) / 16.;

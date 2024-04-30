@@ -21,6 +21,8 @@ public:
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 4;
 
+    const static ElementType ElType = ElementType::ETetrahedron;
+
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values

@@ -36,7 +36,8 @@ Arlequin::Arlequin(std::vector<CompMesh *> &meshvec, double k0, double k1, Arleq
     fMeshVector = meshvec;
     fMeshVector.resize(3);
     fMeshVector[2] = new CompMesh();
-    fMeshVector[2]->SetNStateVariables(1);
+    int nstate = fMeshVector[0]->NState();
+    fMeshVector[2]->SetNStateVariables(nstate);
     fArlequinStab = stab;
     fK0 = k0;
     fK1 = k1;
@@ -344,7 +345,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     
     int DIM = cmesh->Dimension();
     int DEG = cmesh->GetDefaultOrder();
-    VecDouble xsiCC(3);
+    VecDouble xsiCC(DIM);
     std::pair<VecDouble,VecDouble> XK;
 
     elCorr = 150000;
@@ -353,8 +354,8 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     VecDouble deltaX(DIM);
     VecDouble deltaXsi(DIM);
     xsi.setZero(); x_.setZero(); deltaX.setZero(); deltaXsi.setZero();
-    bool flg = true;
-    
+
+
     
     xsiCC.fill(1.e10);
     xsiCorr.fill(1.e50);
@@ -421,10 +422,9 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     
     xsiCC[0] = xsi[0];
     xsiCC[1] = xsi[1];       
-    xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
 
-    if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-        (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+    if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && ((1. - xsiCC[0] - xsiCC[1]) >= t1) &&
+        (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && ((1. - xsiCC[0] - xsiCC[1]) <= t2)){
 
         xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
         elCorr = elemsearch->Index();
@@ -454,7 +454,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
                 (x[1] < XK.first[1]) || (x[1] > XK.second[1])) continue;
             
             //Compute nodal correspondence
-            for (int i = DIM+1; i--; ) xsiCC[i] = 1.e10;
+            xsiCC.fill(1.e10);
     
             for (int i = DIM; i--; ){
                 xsi[i] = 1. / 3.;
@@ -509,13 +509,30 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
             
             xsiCC[0] = xsi[0];
             xsiCC[1] = xsi[1];       
-            xsiCC[2] = 1. - xsiCC[0] - xsiCC[1];
 
-            if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && (xsiCC[2] >= t1) &&
-                (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && (xsiCC[2] <= t2)){
+            switch (elemsearch->Type())
+            {
+            case ETriangle:
+                if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && ((1. - xsiCC[0] - xsiCC[1]) >= t1) &&
+                    (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && ((1. - xsiCC[0] - xsiCC[1]) <= t2)){
 
-                xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
-                elCorr = jel;
+                    xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+                    elCorr = jel;
+                    break;
+                }
+                break;
+            case EQuadrilateral:
+                if ((xsiCC[0] >= t1-1.) && (xsiCC[1] >= t1-1.) &&
+                    (xsiCC[0] <= t2) && (xsiCC[1] <= t2)){
+
+                    xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+                    elCorr = jel;
+                    break;
+                }
+                break;
+
+            default:
+                PanicButton();
                 break;
             }
         }
@@ -544,6 +561,7 @@ void Arlequin::setNodalCorrespondenceFine() {
         int elCorr = 0;
         VecDouble xsiCorr(DIM);
         searchNodeCorrespondence(x, fMeshVector[0],elCorr,xsiCorr,fNodeLocalToElementGlobal[inode]);
+        if (elCorr == 150000) PanicButton();
         fNodeLocalToElementGlobal[inode]=elCorr;
         fNodeLocalToXsiGlobal[inode]=xsiCorr;
         // fMeshVector[2]->NodeVec()[inode] -> setNodalCorrespondence(elCorr,xsiCorr);             
@@ -627,42 +645,50 @@ void Arlequin::setNodalCorrespondenceFine() {
 //------------------------------------------------------------------------------
 //--------------------SETS THE COUPLING ZONE IN COARSE MODEL--------------------
 //------------------------------------------------------------------------------
-// Given a line with coordinates 'start' and 'end' and the
-// coordinates of a point 'pnt' the proc returns the shortest 
-// distance from pnt to the line and the coordinates of the 
-// nearest point on the line.
-// 1  Convert the line segment to a vector ('line_vec').
-// 2  Create a vector connecting start to pnt ('pnt_vec').
-// 3  Find the length of the line vector ('line_len').
-// 4  Convert line_vec to a unit vector ('line_unitvec').
-// 5  Scale pnt_vec by line_len ('pnt_vec_scaled').
-// 6  Get the dot product of line_unitvec and pnt_vec_scaled ('t').
-// 7  Ensure t is in the range 0 to 1.
-// 8  Use t to get the nearest location on the line to the end
-//    of vector pnt_vec_scaled ('nearest').
-// 9  Calculate the distance from nearest to pnt_vec_scaled.
-// 10 Translate nearest back to the start/end line. 
-// Malcolm Kesson 16 Dec 2012
 double Arlequin::ShortestDistance(VecDouble &point, VecDouble &startSeg, VecDouble &endSeg){
 
-    VecDouble line_vec = endSeg - startSeg;
-    VecDouble pnt_vec = point - startSeg;
-    double line_len = line_vec.norm();
-    VecDouble line_unitvec = line_vec/line_len;
-    VecDouble pnt_vec_scaled = pnt_vec/line_len;
-    double t = line_unitvec.dot(pnt_vec_scaled);
-    if (t < 0.0){
-        t = 0.0;
-    } else if (t > 1.){
-        t = 1.;
-    }
-        
-    VecDouble nearest = line_vec * t;
-    double dist = (pnt_vec - nearest).norm();
-    nearest += startSeg;
-    return dist;
-};
+    VecDouble lineSegment = endSeg - startSeg;
+    VecDouble pointToLineSegment = point - startSeg;
+    
+    double dotPointToLine = lineSegment.dot(pointToLineSegment);
 
+    if (dotPointToLine < 0){
+        // Closest point is 'start', so the distance is negative
+        double dist = sqrt(pow(startSeg[0]-point[0],2)+pow(startSeg[1]-point[1],2)+pow(startSeg[2]-point[2],2));
+        return -dist;
+    }
+
+    double dotLineSeg = lineSegment.dot(lineSegment);
+
+    if (dotPointToLine > dotLineSeg){
+        // Closest point is 'end', so the distance is positive
+        double dist = sqrt(pow(endSeg[0]-point[0],2)+pow(endSeg[1]-point[1],2)+pow(endSeg[2]-point[2],2));
+        return dist;
+    }
+
+    // Closest point is between 'start' and 'end'
+    double t = dotPointToLine / dotLineSeg;
+    VecDouble closest(3);
+    closest[0] = startSeg[0] + lineSegment[0] * t;
+    closest[1] = startSeg[1] + lineSegment[1] * t;
+    closest[2] = startSeg[2] + lineSegment[2] * t;
+    double dist = sqrt(pow(closest[0]-point[0],2)+pow(closest[1]-point[1],2)+pow(closest[2]-point[2],2));
+    // Determine the orientation of the line segment and adjust the sign of the distance
+    VecDouble crossProduct(3);
+    crossProduct[0] = pointToLineSegment[1] * lineSegment[2] - pointToLineSegment[2] * lineSegment[1];
+    crossProduct[1] = pointToLineSegment[2] * lineSegment[0] - pointToLineSegment[0] * lineSegment[2];
+    crossProduct[2] = pointToLineSegment[0] * lineSegment[1] - pointToLineSegment[1] * lineSegment[0];
+    double orientationX = crossProduct[0] > 0 ? 1.: -1.;
+    double orientationY = crossProduct[1] > 0 ? 1.: -1.;
+    double orientationZ = crossProduct[2] > 0 ? 1.: -1.;
+    // double orientation = lineSegment[0] * pointToLineSegment[1] - pointToLineSegment[0] * lineSegment[1];
+
+    if (orientationX*orientationY*orientationZ < 0)
+        return -dist; // Negative distance if the orientation is counter-clockwise
+    else
+        return dist;  // Positive distance if the orientation is clockwise
+
+};
 
 
 void Arlequin::setSignaledDistance(){

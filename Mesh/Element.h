@@ -176,6 +176,10 @@ public:
         PanicButton();
     };
 
+    virtual ElementType Type(){
+        PanicButton();
+    }
+
 };
 
 

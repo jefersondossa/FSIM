@@ -139,6 +139,9 @@ public:
 
     void Integrate(std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result) override;
 
+    ElementType Type() override{
+        return tshape::ElType;
+    }
 
 };
 

@@ -21,6 +21,8 @@ public:
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 1;
 
+    const static ElementType ElType = ElementType::EPoint;
+
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values

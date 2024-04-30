@@ -4,6 +4,7 @@ const int ShapeOneDQua::Dimension;
 const int ShapeOneDQua::Order;
 const int ShapeOneDQua::NElNodes;
 const int ShapeOneDQua::NCornerNodes;
+const ElementType ShapeOneDQua::ElType;
 
 void ShapeOneDQua::Shape(VecDouble &xi, VecDouble &phi) {
     phi[0] = (xi[0] - 1.) * xi[0] / 2.;

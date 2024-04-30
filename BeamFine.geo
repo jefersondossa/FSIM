@@ -5,7 +5,7 @@
 m = 0.5;
 gluezone = 0.1;
 altura = 0.6;
-alturatrinca = altura/10;
+alturatrinca = 0.05;
 postrinca = 3;
 largura = 1;
 
@@ -54,11 +54,11 @@ Curve Loop(4) = {10, 11, 5, 6};
 Plane Surface(4) = {4};
 //+
 //+
-Transfinite Curve {2, 13, 4} = 10 Using Progression 1;
+Transfinite Curve {2, 13, 4} = 12 Using Progression 1;
 //+
-Transfinite Curve {3, 12, 10, 9, 8, 5} = 20 Using Progression 1;
+Transfinite Curve {3, 12, 10, 9, 8, 5} = 11 Using Progression 1;
 //+
-Transfinite Curve {1, 7, 6, 11} = 5 Using Progression 1;
+Transfinite Curve {1, 7, 6, 11} = 2 Using Progression 1;
 
 //+
 Transfinite Surface {1};
@@ -73,7 +73,7 @@ Transfinite Surface {6};
 Transfinite Surface {7};
 Transfinite Surface {8};
 //+
-//Recombine Surface {3, 4, 2, 1, 5, 6, 7, 8};
+Recombine Surface {3, 4, 2, 1, 5, 6, 7, 8};
 //+
 Physical Curve("Glue", 19) = {2, 1, 4, 11};
 //+

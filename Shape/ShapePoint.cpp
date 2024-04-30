@@ -5,3 +5,4 @@ const int ShapePoint::Dimension;
 const int ShapePoint::Order;
 const int ShapePoint::NElNodes;
 const int ShapePoint::NCornerNodes;
+const ElementType ShapePoint::ElType;

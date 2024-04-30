@@ -7,10 +7,10 @@ Point(1) = {0,0,0,m};
 Point(2) = {0,0.6,0,m};
 Point(3) = {6,0.6,0,m};
 Point(4) = {6,0,0,m};
-Point(5) = {5.25,0,0,m};
-Point(6) = {0.75,0,0,m};
-Point(7) = {0.75,0.6,0,m};
-Point(8) = {5.25,0.6,0,m};
+Point(5) = {5.5,0,0,m};
+Point(6) = {0.5,0,0,m};
+Point(7) = {0.5,0.6,0,m};
+Point(8) = {5.5,0.6,0,m};
 
 Line(1) = {1,2};
 Line(2) = {2,7};
@@ -36,11 +36,11 @@ Curve Loop(3) = {10, 3, 4, 8};
 //+
 Plane Surface(3) = {3};
 //+
-Transfinite Curve {1, 7, 8, 3} = 10 Using Progression 1;
+Transfinite Curve {1, 7, 8, 3} = 4 Using Progression 1;
 //+
-Transfinite Curve {9,5} = 20 Using Progression 1;
+Transfinite Curve {9,5} = 21 Using Progression 1;
 //+
-Transfinite Curve {2, 10, 4, 6} = 4.45 Using Progression 1;
+Transfinite Curve {2, 10, 4, 6} = 3 Using Progression 1;
 //+
 Transfinite Surface {1};
 //+
@@ -48,7 +48,7 @@ Transfinite Surface {2};
 //+
 Transfinite Surface {3};
 //+
-//Recombine Surface {1, 2, 3};
+Recombine Surface {1, 2, 3};
 //+
 Physical Curve("Load", 11) = {2, 9, 10};
 //+

@@ -3,7 +3,7 @@ const int ShapeHexahedron::Dimension;
 const int ShapeHexahedron::Order;
 const int ShapeHexahedron::NElNodes;
 const int ShapeHexahedron::NCornerNodes;
-
+const ElementType ShapeHexahedron::ElType;
 
 void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi) {
     double xsi1 = xi[0];

@@ -4,6 +4,7 @@ const int ShapeTriangleQua::Dimension;
 const int ShapeTriangleQua::Order;
 const int ShapeTriangleQua::NElNodes;
 const int ShapeTriangleQua::NCornerNodes;
+const ElementType ShapeTriangleQua::ElType;
 
 void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi) {
 
