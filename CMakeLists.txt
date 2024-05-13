@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.11.0)
+cmake_minimum_required (VERSION 3.20.0)
 project (FSArl C CXX Fortran)
 enable_language( Fortran CXX )
 
@@ -9,10 +9,15 @@ if(ENABLE_MPI_PETSC)
    # find_package(MPI REQUIRED)
     find_package(PETSc REQUIRED)
 endif()
-option(ENABLE_GRAPHINTERFACE "Compile Graphic Interface " OFF)
 
+option(ENABLE_GRAPHINTERFACE "Compile Graphic Interface " OFF)
 if(ENABLE_GRAPHINTERFACE) 
 	find_package(FLTK REQUIRED)
+endif()
+
+option(ENABLE_MATPLOTLIBCPP "Compile MatPlotLib for CPP " OFF)
+if(ENABLE_MATPLOTLIBCPP) 
+	find_package(Python2 COMPONENTS Development)
 endif()
 
 #hide warnings
@@ -74,6 +79,7 @@ add_subdirectory(Integral)
 add_subdirectory(Matrix)
 add_subdirectory(Mesh)
 add_subdirectory(Plasticity)
+add_subdirectory(Plot)
 add_subdirectory(PostProcess)
 add_subdirectory(PreProcess)
 add_subdirectory(Shape)
@@ -91,6 +97,7 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/Matrix"
 	"${PROJECT_SOURCE_DIR}/Mesh"
 	"${PROJECT_SOURCE_DIR}/Plasticity"
+	"${PROJECT_SOURCE_DIR}/Plot"
 	"${PROJECT_SOURCE_DIR}/PostProcess"
 	"${PROJECT_SOURCE_DIR}/PreProcess"
 	"${PROJECT_SOURCE_DIR}/Shape"
@@ -147,6 +154,20 @@ if(ENABLE_METIS)
 		PUBLIC
 		"$<$<CONFIG:RELEASE>:HAS_METIS>"
 		"$<$<CONFIG:DEBUG>:HAS_METIS>")
+endif()
+
+if (ENABLE_MATPLOTLIBCPP)
+	message("\n\n
+			**************************************************************\n
+			To run MATPLOTLIBCPP please provide CMAKE version minimal 3.29\n
+			**************************************************************\n\n\n")
+	add_library(plot_library ${PLOT})
+	target_include_directories(plot_library PRIVATE ${Python2_INCLUDE_DIRS})
+	target_link_libraries(plot_library Python2::Python)
+
+	# add_executable(plotexample quiver.cpp)
+	# # set_property(TARGET plotexample PROPERTY )
+	# target_link_libraries(plotexample plot_library Python2::Python Python2::NumPy)
 endif()
 
 add_executable(f main.cpp )

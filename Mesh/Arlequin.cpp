@@ -678,12 +678,10 @@ double Arlequin::ShortestDistance(VecDouble &point, VecDouble &startSeg, VecDoub
     crossProduct[0] = pointToLineSegment[1] * lineSegment[2] - pointToLineSegment[2] * lineSegment[1];
     crossProduct[1] = pointToLineSegment[2] * lineSegment[0] - pointToLineSegment[0] * lineSegment[2];
     crossProduct[2] = pointToLineSegment[0] * lineSegment[1] - pointToLineSegment[1] * lineSegment[0];
-    double orientationX = crossProduct[0] > 0 ? 1.: -1.;
-    double orientationY = crossProduct[1] > 0 ? 1.: -1.;
     double orientationZ = crossProduct[2] > 0 ? 1.: -1.;
     // double orientation = lineSegment[0] * pointToLineSegment[1] - pointToLineSegment[0] * lineSegment[1];
 
-    if (orientationX*orientationY*orientationZ < 0)
+    if (orientationZ < 0)
         return -dist; // Negative distance if the orientation is counter-clockwise
     else
         return dist;  // Positive distance if the orientation is clockwise
@@ -887,7 +885,7 @@ void Arlequin::setCouplingZone(){
             VecDouble x = fMeshVector[1]->NodeVec()[connec[ino]] -> getCoordinates();
             double dist = fLocalSignaledDistance[connec[ino]];
             //  std::cout << "DIST " << dist << std::endl;
-            if (dist <= fGlueZoneThickness + 0.001) flag++;
+            if (fabs(dist) <= fGlueZoneThickness + 0.001) flag++;
             
         };
 

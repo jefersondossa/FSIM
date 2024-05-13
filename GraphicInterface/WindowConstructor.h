@@ -2,9 +2,6 @@
 
 #ifndef WindowConstructor_h
 #define WindowConstructor_h
-
-#ifdef HAS_GRAPHINTERFACE
-
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
@@ -15,8 +12,9 @@
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Box.H>
-#include <FL/Fl_Scroll.H>
 #include <FL/Fl_Text_Display.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Menu_Bar.H>
 
 /**
  Class that contains the principals objets for modeling GUI
@@ -37,6 +35,10 @@ private:
   static void cb_geo_path(Fl_Output*, void*);
 public:
   Fl_Button *Save_paths;
+private:
+  inline void cb_Save_paths_i(Fl_Button*, void*);
+  static void cb_Save_paths(Fl_Button*, void*);
+public:
   Fl_Value_Output *dimension;
   Fl_Group *Container_2;
 private:
@@ -88,13 +90,6 @@ private:
   inline void cb_L2Projection_i(Fl_Menu_*, void*);
   static void cb_L2Projection(Fl_Menu_*, void*);
 public:
-  Fl_Choice *surfaces;
-  static Fl_Menu_Item menu_surfaces[];
-  static Fl_Menu_Item *EDomain1;
-  static Fl_Menu_Item *EDomain2;
-  static Fl_Menu_Item *ERight;
-  static Fl_Menu_Item *ELeft;
-  Fl_Button *Apply_2;
   Fl_Group *Container_2_1;
 private:
   Fl_Value_Input *E2D_young;
@@ -133,12 +128,12 @@ private:
   Fl_Value_Input *NS_viscosity;
 public:
   Fl_Group *Container_2_8;
-private:
   Fl_Value_Input *P_nstate;
-public:
   Fl_Group *Container_2_9;
-  Fl_Choice *BounderyCondition;
-  static Fl_Menu_Item menu_BounderyCondition[];
+private:
+  Fl_Choice *BoundaryCondition;
+  static Fl_Menu_Item menu_BoundaryCondition[];
+public:
   static Fl_Menu_Item *Dirichlet;
   static Fl_Menu_Item *Neumann;
   static Fl_Menu_Item *DHDirichlet;
@@ -147,18 +142,124 @@ public:
   Fl_Value_Input *valy;
   Fl_Value_Input *valz;
   Fl_Box *values;
+  Fl_Button *Apply_2;
+private:
+  inline void cb_Apply_2_i(Fl_Button*, void*);
+  static void cb_Apply_2(Fl_Button*, void*);
+  Fl_Choice *PhysicalGroups;
+  static Fl_Menu_Item menu_PhysicalGroups[];
+public:
   Fl_Group *Container_3;
-  Fl_Scroll *scroller;
   Fl_Text_Display *scriptdisplay;
-  Fl_Button *Update_5;
+  Fl_Button *Save_script;
+private:
+  inline void cb_Save_script_i(Fl_Button*, void*);
+  static void cb_Save_script(Fl_Button*, void*);
+public:
+  Fl_Group *Container_3_1;
+private:
+  inline void cb_Save_i(Fl_Button*, void*);
+  static void cb_Save(Fl_Button*, void*);
+public:
+  Fl_Input *Input_txt;
+private:
+  inline void cb_Cancel_i(Fl_Button*, void*);
+  static void cb_Cancel(Fl_Button*, void*);
+public:
+  Fl_Menu_Bar *Menu_Top;
+  static Fl_Menu_Item menu_Menu_Top[];
+private:
+  inline void cb_Open_i(Fl_Menu_*, void*);
+  static void cb_Open(Fl_Menu_*, void*);
+  inline void cb_New_i(Fl_Menu_*, void*);
+  static void cb_New(Fl_Menu_*, void*);
+public:
+  Fl_Group *Container_5;
+private:
+  Fl_Choice *AnalysisType;
+  static Fl_Menu_Item menu_AnalysisType[];
+public:
+  static Fl_Menu_Item *Linear;
+  static Fl_Menu_Item *NonLinear;
+  static Fl_Menu_Item *Incremental;
+private:
+  inline void cb_Incremental_i(Fl_Menu_*, void*);
+  static void cb_Incremental(Fl_Menu_*, void*);
+public:
+  static Fl_Menu_Item *Transient;
+private:
+  inline void cb_Transient_i(Fl_Menu_*, void*);
+  static void cb_Transient(Fl_Menu_*, void*);
+public:
+  Fl_Group *Container_5_1;
+private:
+  Fl_Choice *PerguntaraoJeff;
+  static Fl_Menu_Item menu_PerguntaraoJeff[];
+public:
+  static Fl_Menu_Item *CompMesh;
+  static Fl_Menu_Item *Arlequin;
+private:
+  Fl_Choice *SolverType;
+  static Fl_Menu_Item menu_SolverType[];
+public:
+  static Fl_Menu_Item *EMumps;
+  static Fl_Menu_Item *EIterative;
+  static Fl_Menu_Item *EUmfpack;
+  static Fl_Menu_Item *ECholmod;
+  static Fl_Menu_Item *EKLU;
+  static Fl_Menu_Item *ESPQR;
+  static Fl_Menu_Item *ELU;
+  static Fl_Menu_Item *ELLt;
+  static Fl_Menu_Item *ELDLt;
+  static Fl_Menu_Item *EQR;
+  static Fl_Menu_Item *ECG;
+  static Fl_Menu_Item *EBiCGStab;
+  static Fl_Menu_Item *ELSCG;
+private:
+  Fl_Value_Input *nsteps;
+  Fl_Value_Input *Tolerance;
+  Fl_Value_Input *maxIter;
+public:
+  Fl_Group *Container_5_2;
+  Fl_Menu_Bar *Menu_Tools;
+  Fl_Button *G_Icon;
+private:
+  inline void cb_G_Icon_i(Fl_Button*, void*);
+  static void cb_G_Icon(Fl_Button*, void*);
+public:
+  Fl_Button *WF_Icon;
+private:
+  inline void cb_WF_Icon_i(Fl_Button*, void*);
+  static void cb_WF_Icon(Fl_Button*, void*);
+public:
+  Fl_Button *A_Icon;
+private:
+  inline void cb_A_Icon_i(Fl_Button*, void*);
+  static void cb_A_Icon(Fl_Button*, void*);
+public:
   Fl_Group *Container_4;
+  Fl_Group *Container_4_1;
+  Fl_Button *Close_b_1;
+private:
+  inline void cb_Close_b_1_i(Fl_Button*, void*);
+  static void cb_Close_b_1(Fl_Button*, void*);
+public:
+  Fl_Group *Container_4_2;
+  Fl_Button *Close_b_2;
+private:
+  inline void cb_Close_b_2_i(Fl_Button*, void*);
+  static void cb_Close_b_2(Fl_Button*, void*);
+public:
+  Fl_Group *Container_4_3;
+  Fl_Button *Close_b_3;
+private:
+  inline void cb_Close_b_3_i(Fl_Button*, void*);
+  static void cb_Close_b_3(Fl_Button*, void*);
+public:
   void Open_f();
   void Input_geo_f();
   void Input_msh_f();
   void WF1_f();
-  void SavePath_f();
-  void Apply_2_f(int &WF_id);
-  void Update();
   void WF2_f();
   void WF3_f();
   void WF4_f();
@@ -167,7 +268,25 @@ public:
   void WF7_f();
   void WF8_f();
   void WF9_f();
+  void SavePath_f();
+  void Apply_2_f();
+  void Open_warning_f();
+  void Close1_f();
+  void free_WF_f();
+private:
+  inline void freewf_i(Fl_Menu_*, void*);
+  static void freewf(Fl_Menu_* o, void* v);
+public:
+  void sm_open_f();
+  void sm_new_f();
+  void Close2_f();
+  void Close3_f();
+  void Save_Script_f();
+  void Save_txt_f();
+  void Cancel_f();
+  void AT1_f();
+  void AT2_f();
+  void File_Open_f();
+  void File_New_f();
 };
-#endif
-
 #endif

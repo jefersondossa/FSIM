@@ -1,0 +1,9 @@
+geo path: /home/jeferson/Codes_doc/FSArl/GraphicInterface/Rosto_bolacha.geo
+msh path: /home/jeferson/Codes_doc/FSArl/GraphicInterface/Rosto_bolacha.msh
+
+Physical Groups: Domain
+Weak Form: Elasticity Positional 2D
+Young Modulus: 0
+Poisson Modulus: 0
+Plane Stress: 0
+

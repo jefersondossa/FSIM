@@ -179,6 +179,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     meshvector[1] = fineModel;
     Arlequin arl(meshvector,1.,0.);
     arl.SetGlueIds(gluematids);
+    arl.SetGlueZoneThichkess(0.5);
     arl.SetUp();
 
     // for (int i = 0; i < coarseModel->NNodes(); i++){
