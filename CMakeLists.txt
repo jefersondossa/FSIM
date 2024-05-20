@@ -85,7 +85,9 @@ add_subdirectory(PreProcess)
 add_subdirectory(Shape)
 add_subdirectory(Solver)
 add_subdirectory(WeakForm)
-add_subdirectory(GraphicInterface)
+if(ENABLE_GRAPHINTERFACE)
+	add_subdirectory(GraphicInterface)
+endif()
 # add_subdirectory(examples)
 # add_subdirectory(main)
 
@@ -174,9 +176,11 @@ add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
 target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
-add_executable(window Window.cpp )
-set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (window fsarl_library  ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
+if(ENABLE_GRAPHINTERFACE)
+	add_executable(window Window.cpp )
+	set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
+	target_link_libraries (window fsarl_library  ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
+endif()
 
 
 #To enable unit test using Catch2 UnitTest framework
