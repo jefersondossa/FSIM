@@ -52,6 +52,7 @@ private:
     int numNodesGlueZoneFine;
     int numNodesGlueZoneCoarse;
     bool fFirstSearch = true;
+    bool fInvertSignaledDistance = false;
 
     /// @brief Data structure relating signaled distance of local model nodes
     std::map<int64_t,double> fLocalSignaledDistance;
@@ -141,6 +142,9 @@ public:
     void SetGlueZoneThichkess(double val){
         fGlueZoneThickness = val;
     }
+    void SetEpsilon(double val){
+        fArlequinEpsilon = val;
+    }
 
     double GlobalWeightFunction(double dist);
     double LocalWeightFunction(double dist);
@@ -156,6 +160,9 @@ public:
 
     double ShortestDistance(VecDouble &point, VecDouble &startSeg, VecDouble &endSeg);
 
+    void InvertSignaledDistance(){
+        fInvertSignaledDistance = true;
+    }
 };
 
 

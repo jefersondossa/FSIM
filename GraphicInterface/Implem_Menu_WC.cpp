@@ -114,6 +114,9 @@ void WindowConstructor::File_New_f(){
   this->geo_path->value("");
   this->msh_path->value("");
 
+  //Clears Dimension
+  this->dimension->value(0);
+
   //Clears str
   str = "";
 

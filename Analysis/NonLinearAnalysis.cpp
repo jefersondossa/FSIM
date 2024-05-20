@@ -38,8 +38,8 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     an->GlobalMatrix()->ExpandSolution();
 
     //Updates nodal values
-    int64_t Ione = 1;
-    int64_t Ii;
+    PetscInt Ione = 1;
+    PetscInt Ii;
 
 
     // std::cout << "PrintSol = \n"; 
@@ -57,7 +57,7 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     // std::cout << "PrintSolAll = \n"; 
     // VecView(SolAll,PETSC_VIEWER_STDOUT_WORLD);
     
-    int64_t nstartDOF = 0;
+    PetscInt nstartDOF = 0;
     for (int imesh = 0; imesh < an->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += an->MeshVector()[imesh-1]->NGlobalDOF();
         for (int i = 0; i < an->MeshVector()[imesh]->NNodes(); ++i){

@@ -1,0 +1,3 @@
+geo path: /home/felipecosta/FSArl/GraphicInterface/Geogrelha.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/Geogrelha.msh
+

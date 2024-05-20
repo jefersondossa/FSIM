@@ -27,9 +27,15 @@ Once all the packages described in Presentation are provided, the software can b
 https://gitlab.com/libeigen/eigen/-/tree/master/debug/gdb
 
 - PETSc installation for debug:
-<CODE> sudo ./configure PETSC_ARCH=arch-linux2-c-debug --with-mpi-dir=/home/jeferson/MPICH/install/ --with-cxx-dialect=C++11 --with-debugging=1 --with-X=1 --download-mumps --download-scalapack --download-ptscotch --download-fblaslapack --with-64-bit-indices --download-suitesparse </CODE>
+<CODE> sudo ./configure PETSC_ARCH=arch-linux2-c-debug --with-64-bit-indices --with-mpi-dir=/home/jeferson/MPICH/install/ --with-cxx-dialect=C++11 --with-debugging=1 --with-X=1 --download-mumps --download-scalapack --download-ptscotch --download-fblaslapack  --download-suitesparse </CODE>
 
 
 - PETSc installation for Release:
 
 <CODE> sudo ./configure PETSC_ARCH=arch-linux2-c-opt --with-mpi-dir=/home/jeferson/MPICH/install/ --with-cxx-dialect=C++11 --with-debugging=0 --with-X=1 COPTFLAGS='-O3 -march=native -mtune=native' CXXOPTFLAGS='-O3 -march=native -mtune=native' FOPTFLAGS='-O3 -march=native -mtune=native' --download-mumps --download-scalapack --download-ptscotch --download-fblaslapack --with-64-bit-indices --download-suitesparse   </CODE>
+
+-Graphic Interface:
+
+Provide the following libraries:
+
+<CODE> sudo apt-get install libglfw3-dev libfltk1.3-dev libgl1-mesa-dev</CODE>

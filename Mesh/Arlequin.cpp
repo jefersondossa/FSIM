@@ -262,6 +262,7 @@ void Arlequin::CreateGlobalCouplingElements(){
             for (auto ielcoarse : elIntersected){
                 if (fMeshVector[0]->ElementVec()[ielcoarse]->Dimension() != fMeshVector[0]->Dimension()) continue;
                 CouplingGlobal *cglobal = new CouplingGlobal(fMeshVector[0]->Dimension(),ielcoarse,fMeshVector[0],fK0,fK1);
+                cglobal->SetNStateVariables(fMeshVector[2]->NState());
                 cglobal->SetGlobalXsi(fLocalIntPointToGlobalXsi[iel]);
                 cglobal->SetGlobalElemCorresp(fLocalIntPointToGlobalElement[iel]);
                 fGlobalElToLocalEl[ielcoarse].insert(index-1);
@@ -713,7 +714,11 @@ void Arlequin::setSignaledDistance(){
                     end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist = ShortestDistance(x,start,end);
                     if (fabs(dist)<fabs(fLocalSignaledDistance[ino])){
-                        fLocalSignaledDistance[ino] = dist;
+                        if (fInvertSignaledDistance){
+                            fLocalSignaledDistance[ino] = -dist;
+                        } else {
+                            fLocalSignaledDistance[ino] = dist;
+                        }   
                     }
                 }
                 break;
@@ -730,16 +735,24 @@ void Arlequin::setSignaledDistance(){
                     double dist2 = ShortestDistance(x,start,end);
 
                     if (fabs(dist1)<fabs(fLocalSignaledDistance[ino])){
-                        fLocalSignaledDistance[ino] = dist1;
+                        if (fInvertSignaledDistance){
+                            fLocalSignaledDistance[ino] = -dist1;
+                        } else {
+                            fLocalSignaledDistance[ino] = dist1;
+                        }
                     }
                     if (fabs(dist2)<fabs(fLocalSignaledDistance[ino])){
-                        fLocalSignaledDistance[ino] = dist2;
+                        if (fInvertSignaledDistance){
+                            fLocalSignaledDistance[ino] = -dist2;
+                        } else {
+                            fLocalSignaledDistance[ino] = dist2;
+                        }
                     }
                 }
                 break;
             case 3:
                 {
-                    VecDouble start(3),end(3);
+                    VecDouble start(4),end(4);
                     //Segment 1
                     start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
                     end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
@@ -754,13 +767,25 @@ void Arlequin::setSignaledDistance(){
                     double dist3 = ShortestDistance(x,start,end);
 
                     if (fabs(dist1)<fabs(fLocalSignaledDistance[ino])){
-                        fLocalSignaledDistance[ino] = dist1;
+                        if (fInvertSignaledDistance){
+                            fLocalSignaledDistance[ino] = -dist1;
+                        } else {
+                            fLocalSignaledDistance[ino] = dist1;
+                        }
                     }
                     if (fabs(dist2)<fabs(fLocalSignaledDistance[ino])){
-                        fLocalSignaledDistance[ino] = dist2;
+                        if (fInvertSignaledDistance){
+                            fLocalSignaledDistance[ino] = -dist2;
+                        } else {
+                            fLocalSignaledDistance[ino] = dist2;
+                        }
                     }
                     if (fabs(dist3)<fabs(fLocalSignaledDistance[ino])){
-                        fLocalSignaledDistance[ino] = dist3;
+                        if (fInvertSignaledDistance){
+                            fLocalSignaledDistance[ino] = -dist3;
+                        } else {
+                            fLocalSignaledDistance[ino] = dist3;
+                        }
                     }
                 }
                 break;
@@ -792,7 +817,11 @@ void Arlequin::setSignaledDistance(){
                     end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist = ShortestDistance(x,start,end);
                     if (fabs(dist)<fabs(fGlobalSignaledDistance[ino])){
-                        fGlobalSignaledDistance[ino] = dist;
+                        if (fInvertSignaledDistance){
+                            fGlobalSignaledDistance[ino] = -dist;
+                        } else {
+                            fGlobalSignaledDistance[ino] = dist;
+                        }
                     }
                 }
                 break;
@@ -813,13 +842,25 @@ void Arlequin::setSignaledDistance(){
                     double dist3 = ShortestDistance(x,start,end);
                     
                     if (fabs(dist1)<fabs(fGlobalSignaledDistance[ino])){
-                        fGlobalSignaledDistance[ino] = dist1;
+                        if (fInvertSignaledDistance){
+                            fGlobalSignaledDistance[ino] = -dist1;
+                        } else {
+                            fGlobalSignaledDistance[ino] = dist1;
+                        }
                     }
                     if (fabs(dist2)<fabs(fGlobalSignaledDistance[ino])){
-                        fGlobalSignaledDistance[ino] = dist2;
+                        if (fInvertSignaledDistance){
+                            fGlobalSignaledDistance[ino] = -dist2;
+                        } else {
+                            fGlobalSignaledDistance[ino] = dist2;
+                        }
                     }
                     if (fabs(dist3)<fabs(fGlobalSignaledDistance[ino])){
-                        fGlobalSignaledDistance[ino] = dist3;
+                        if (fInvertSignaledDistance){
+                            fGlobalSignaledDistance[ino] = -dist3;
+                        } else {
+                            fGlobalSignaledDistance[ino] = dist3;
+                        }
                     }
                 }
                 break;
@@ -893,6 +934,7 @@ void Arlequin::setCouplingZone(){
             CouplingLocal *clocal = new CouplingLocal(fMeshVector[0]->Dimension(),jel,fMeshVector[1],fK0,fK1);
             auto *el = fMeshVector[1]->ElementVec()[jel]->Clone();
             el->SetMesh(fMeshVector[2]);
+            clocal->SetNStateVariables(fMeshVector[2]->NState());
             el->SetWeakForm(clocal);
             fMeshVector[2]->ElementVec().push_back(el);
             fGluingElementIndex.insert(el->Index()); 

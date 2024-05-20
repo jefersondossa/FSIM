@@ -15,8 +15,8 @@ class WindowConstructor {
     comment Constructor open
   } {
     Fl_Window Window {
-      label FSArl open
-      xywh {0 31 1536 793} type Double color 50 align 65 resizable visible
+      label FSArl open selected
+      xywh {8 122 1536 793} type Double color 50 align 65 hide resizable
     } {
       Fl_Group {} {
         xywh {1159 34 376 750} box BORDER_BOX
@@ -499,11 +499,8 @@ this->Container_2->hide();
 this->Container_1->hide();}
         image {Icons/1x/Analysis_Icon.png} xywh {135 35 45 45} box NO_BOX
       }
-      Fl_Group {} {
-        xywh {444 79 716 704} box BORDER_BOX color 255 labelsize 18
-      } {}
       Fl_Group Container_4 {
-        comment {Error messages} selected
+        comment {Error messages}
         xywh {350 260 825 295}
       } {
         Fl_Group Container_4_1 {

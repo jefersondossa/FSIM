@@ -32,6 +32,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
         fYoungModulus = mat2d->YoungModulus();
         fPoissonRatio = mat2d->PoissonRatio();
         fPlaneStress = mat2d->PlaneState();
+        fThickness = mat2d->Thickness();
     }
     if (mat3d) {
         fYoungModulus = mat3d->YoungModulus();
@@ -206,7 +207,7 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
     // return;
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     MatrixDouble matB;
 
     if (this->Dimension() == 2){
@@ -307,14 +308,14 @@ int PlasticityModel::NSolutionVariables(int var) const {
 void PlasticityModel::Solution(IntPointData &data, int var, VecDouble &Sol){
     fElasticModel->Solution(data,var,Sol);
     if (var == 101){
-        if (data.fPlasticStrain.norm() > 0)
-        Sol[0] = data.fPlasticStrain.mean();
+        if (data.fEffectivePlasticStrain.norm() > 0)
+        Sol[0] = data.fEffectivePlasticStrain.mean();
         return;
     };
     if (var == 102){
         MatrixDouble ElasticConstitutive = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
         auto stress = data.fElasticStrain[data.fIndex].Multiply(ElasticConstitutive);
-        // if (data.fPlasticStrain.norm() > 0)
+        // if (data.fEffectivePlasticStrain.norm() > 0)
         Sol[0] = stress.fXX();
         Sol[1] = stress.fYY();
         Sol[2] = stress.fXY();

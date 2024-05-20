@@ -24,6 +24,7 @@ protected:
     double fShearModulus;
     double fBulkModulus;
     bool fPlaneStress = false;
+    double fThickness = 1.;
 
     double fHardening;
 

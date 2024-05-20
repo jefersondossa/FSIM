@@ -60,7 +60,7 @@ double MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor &Stress
 #endif
     double i1 = Stress.I1();
     double fCohesion = 0.;
-    fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
 
     YF = i1*sin(fInternalFriction) + sqrt(j2)*cos(theta) 
        - sqrt(j2) * sin(theta) * sin(fInternalFriction) / 3.

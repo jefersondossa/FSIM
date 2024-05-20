@@ -176,7 +176,7 @@ target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PET
 
 add_executable(window Window.cpp )
 set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (window fsarl_library  ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES})
+target_link_libraries (window fsarl_library  ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 
 
 #To enable unit test using Catch2 UnitTest framework

@@ -10,9 +10,12 @@ granting the user, in the Container_2, to choose all analysis type and variant.
 
 -> Container_4: Allerts erros for the user.
 
+-> Container_5: Contains the Analysis.
+
 */
 
 #include "WindowConstructor.h"
+#include "OpenGL_WC.h"
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <string>
@@ -53,7 +56,7 @@ vector<string> names;
 string name;
 
 //Structure in vector format named "matid" to store the matid = match[4] values:
-vector<int> matids;
+
 int matid;
 
 //________________________________________________________________________________
@@ -97,17 +100,17 @@ void WindowConstructor::free_WF_f(){
 //Add .geo file path and set it to "gp":
 void WindowConstructor::Input_geo_f() {
 
-Fl_File_Chooser gp(".", "*.geo", Fl_File_Chooser::SINGLE, "Select a .geo file");
+Fl_File_Chooser gpf(".", "*.geo", Fl_File_Chooser::SINGLE, "Select a .geo file");
 
 //Stores the previous value.
 string previous_gp = geo_path->value();
 //Opens the file chooser
-gp.show();
-    while (gp.shown())
+gpf.show();
+    while (gpf.shown())
         Fl::wait();
-    if (gp.value() != nullptr) {
-        this->geo_path->value(gp.value());
-        string gp_value = gp.value();
+    if (gpf.value() != nullptr) {
+        this->geo_path->value(gpf.value());
+        string gp_value = gpf.value();
     }
     else{
       /*Since the previous_gp is a string type class and the Fl_File_Output expects a C-style (a null-terminated array of chacarters,
@@ -119,17 +122,17 @@ gp.show();
 //Add .msh file path and set it to "mp":
 void WindowConstructor::Input_msh_f() {
   
-Fl_File_Chooser mp(".", "*.msh", Fl_File_Chooser::SINGLE, "Select a .msh file");
+Fl_File_Chooser mpf(".", "*.msh", Fl_File_Chooser::SINGLE, "Select a .msh file");
 
 //Stores the previous value.
   string previous_mp = msh_path->value();
 
  //Opens the file chooser
-mp.show();
-    while (mp.shown())
+mpf.show();
+    while (mpf.shown())
         Fl::wait();
-    if (mp.value() != nullptr) {
-        this->msh_path->value(mp.value());
+    if (mpf.value() != nullptr) {
+        this->msh_path->value(mpf.value());
     }
     else{
       /*Since the previous_gp is a string type class and the Fl_File_Output expects a C-style (a null-terminated array of chacarters,
@@ -142,8 +145,12 @@ mp.show();
 //Button to save path values and allows the user to use the Container_2
 void WindowConstructor::SavePath_f(){
 
-  string gp = this->geo_path->value();
-  string mp = this->msh_path->value();
+  gp = this->geo_path->value();
+  mp = this->msh_path->value();
+  playback->SetGeoPath(gp);
+  playback->SetMshPath(mp);
+  //playback->redraw();
+  
 
   //Finds "gp" path file:
   std::ifstream file(gp);
@@ -160,7 +167,7 @@ void WindowConstructor::SavePath_f(){
       }
 
       //Declares the "match" name for each pattern found in the "gp" file:
-      std::smatch match;
+      smatch match;
 
       //PhysicalGroups Identifier:
       //match[1] = Physical Group (Ex: Physical Curve)
@@ -315,7 +322,14 @@ void WindowConstructor::SavePath_f(){
       buff2->append(oss.str().c_str());
     }
   }
+
+  playback->Setmatid(matids);
+  //playback->DrawGeometry();
+  
+  playback->draw();
+  playback->take_focus();
 }
 
 //____________________________________________________________________________________________________________
 //Menu
+

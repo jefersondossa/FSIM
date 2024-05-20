@@ -115,7 +115,7 @@ double Tresca::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
         fS2 = eigenvalues[1];
         fS3 = eigenvalues[2];
         double sigmay = 0.;
-        fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+        fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
         YF = fS1-fS3-sigmay;
     }
     return YF;
@@ -133,12 +133,12 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress)
     } else {
         // First attempt - return to main plane
         double sigmay = 0.;
-        fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+        fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
         double PhiTil = fS1-fS3-sigmay;
         while (fabs(PhiTil) > 1.e-8){
             double d = -4. * fShearModulus - fHardening;
             dGamma -= PhiTil/d;
-            fUniaxialYield(data.fPlasticStrain[index]+dGamma,sigmay,fHardening);
+            fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma,sigmay,fHardening);
             PhiTil = fS1 - fS3 - 4.*fShearModulus*dGamma - sigmay;
         }
         s1 = fS1 - 2. * fShearModulus * dGamma;
@@ -152,7 +152,7 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress)
         //Check validity of main plane return
         if (s1 >= s2 && s2 >= s3){
             //Is in the main plane
-            data.fPlasticStrain[index] += dGamma;
+            data.fEffectivePlasticStrain[index] += dGamma;
         } else {
             // std::cout << "Probably there is a bug here. Please debug me." << std::endl;
             // PanicButton();
@@ -160,7 +160,7 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress)
             VecDouble PhiTilAB(2);
             double sa = fS1-fS3;
             double sb;
-            fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+            fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
             if (fS1 + fS3 - 2.*fS2 > 0){//Apply return to the RIGHT corner
                 fReturnDirection = ERightCorner;
                 sb = fS1-fS2;
@@ -178,13 +178,13 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress)
             d(0,1) = d(1,0) = -2.*fShearModulus - fHardening;
             MatrixDouble dinv = d.inverse();
             int niterations = 0;
-            double epn = data.fPlasticStrain[index];
+            double epn = data.fEffectivePlasticStrain[index];
             while (fabs(PhiTilAB[0])+fabs(PhiTilAB[1]) > 1.e-8){
                 niterations++;
                 double dGammaBarra = dGammaAB[0] + dGammaAB[1];
-                data.fPlasticStrain[index] += dGammaBarra;
+                data.fEffectivePlasticStrain[index] += dGammaBarra;
                 dGammaAB -= dinv * PhiTilAB;
-                fUniaxialYield(data.fPlasticStrain[index],sigmay,fHardening);
+                fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
                 PhiTilAB[0] = sa - 2.*fShearModulus*(2.*dGammaAB[0]+dGammaAB[1])-sigmay;
                 PhiTilAB[1] = sb - 2.*fShearModulus*(dGammaAB[0]+2.*dGammaAB[1])-sigmay;
             }

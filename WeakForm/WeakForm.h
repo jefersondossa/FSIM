@@ -132,6 +132,10 @@ public:
     virtual MatrixDouble &ConstitutiveMatrix(){
         PanicButton();
     }
+
+    void SetNStateVariables(int nst){
+        fNState = nst;
+    }
 };
 
 

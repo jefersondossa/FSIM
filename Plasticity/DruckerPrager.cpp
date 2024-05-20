@@ -102,7 +102,7 @@ double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor &Stre
         //Equation 8.101
         double p = Stress.Trace()/3.;
         
-        fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+        fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
         YF = sqrt(Stress.J2()) + fEta*p - fXi*fCohesion;
     }
     // double tanphi = tan(fInternalFriction);
@@ -120,7 +120,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     // double sigmaDepsilon = data.fElasticStrainIncrement[index].DoubleContraction(Stress);
     // double demm = data.fElasticStrainIncrement[index].Trace();
     // double lambda = (sigmaDepsilon-(fK/(3.*fAlpha2))*demm*(plinha-1.))/(plinha*fK);
-    //  auto plaststrain = data.fPlasticStrain[index];
+    //  auto plaststrain = data.fEffectivePlasticStrain[index];
     // double dGamma = 0.;
     // if (fPlaneStress){
     //     PanicButton();
@@ -129,7 +129,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     //     double sqJ2 = sqrt(Stress.J2());
 
     //     double fCohesion = 0.;
-    //     fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //     fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
     //     double PhiTil = sqJ2 + fEta*p -fXi*fCohesion;
 
     //     int maxiter = 100;
@@ -140,8 +140,8 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     //         double d = -fShearModulus - fBulkModulus*fEtaBar*fEta - fHardening*fXi*fXi;
     //         dGamma -= PhiTil/d;
 
-    //         data.fPlasticStrain[index] = plaststrain + fXi*dGamma;
-    //         fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //         data.fEffectivePlasticStrain[index] = plaststrain + fXi*dGamma;
+    //         fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
     //         PhiTil = sqJ2 - fShearModulus*dGamma + fEta*(p-fBulkModulus*fEtaBar*dGamma)- fXi*fCohesion;
     //     }
     //     if (iter == maxiter){
@@ -158,7 +158,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     //         fApex = true;
     //         double ptrial = Stress.Trace()/3.;
     //         double fCohesion = 0.;
-    //         fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //         fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
     //         double r = fCohesion*fBeta - ptrial;
     //         double depsilon =0;
     //         //Box 8.10
@@ -171,9 +171,9 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     //             double d = fAlpha*fBeta*fHardening + fBulkModulus;
     //             depsilon -= r/d;
 
-    //             data.fPlasticStrain[index] = plaststrain + fAlpha*depsilon;
+    //             data.fEffectivePlasticStrain[index] = plaststrain + fAlpha*depsilon;
     //             fUpdatedPressure = ptrial - fBulkModulus*depsilon;
-    //             fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    //             fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
     //             r = fBeta*fCohesion - fUpdatedPressure;
     //         }
     //         if (iter == maxiter){
@@ -185,7 +185,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
 
     double dGamma = 0.;
     double EETV = data.fElasticStrain[index].Trace();
-    double EPBARN = data.fPlasticStrain[index];
+    double EPBARN = data.fEffectivePlasticStrain[index];
     double PT = EETV * fBulkModulus;
     double EEVD3=EETV / 3.;
     Tensor strial;
@@ -200,7 +200,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     double VARJ2T = strial.fXY()*strial.fXY() + .5*(strial.fXX()*strial.fXX()+strial.fYY()*strial.fYY()+strial.fZZ()*strial.fZZ());
     
     double fCohesion = 0.;
-    fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+    fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
         
     double SQRJ2T=sqrt(VARJ2T);
     double PHI=SQRJ2T+fEta*PT-fXi*fCohesion;
@@ -268,7 +268,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     Stress.fZZ() = FACTOR * strial.fZZ() + P;
     Stress.fXY() = FACTOR * strial.fXY();
     
-    data.fPlasticStrain[index] = EPBAR;
+    data.fEffectivePlasticStrain[index] = EPBAR;
 
     FACTOR = FACTOR/(2.*fShearModulus);
     EEVD3 = P/(fBulkModulus*3.);

@@ -13,8 +13,8 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         this->fIntegData.fYieldFunction.setZero();
         this->fIntegData.fPlasticMultiplier.resize(this->fIntRule.NPoints());
         this->fIntegData.fPlasticMultiplier.setZero();
-        this->fIntegData.fPlasticStrain.resize(this->fIntRule.NPoints());
-        this->fIntegData.fPlasticStrain.setZero();
+        this->fIntegData.fEffectivePlasticStrain.resize(this->fIntRule.NPoints());
+        this->fIntegData.fEffectivePlasticStrain.setZero();
         this->fIntegData.fElasticStrain.resize(this->fIntRule.NPoints());
         this->fIntegData.fElasticStress.resize(this->fIntRule.NPoints());
         this->fIntegData.fElasticStrainIncrement.resize(this->fIntRule.NPoints());
@@ -26,6 +26,14 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         }
         fElasticConstitutiveMatrix.resize(6,6);
         fElasticConstitutiveMatrix = 2.*fPlasticityModel->ShearModulus()*fPlasticityModel->fIdentity4Dev + fPlasticityModel->BulkModulus()*fPlasticityModel->fId2xId2;
+        if (fPlasticityModel->PlaneStress()){
+            fElasticConstitutiveMatrix.row(2).setZero();
+            fElasticConstitutiveMatrix.row(3).setZero();
+            fElasticConstitutiveMatrix.row(4).setZero();
+            fElasticConstitutiveMatrix.col(2).setZero();
+            fElasticConstitutiveMatrix.col(3).setZero();
+            fElasticConstitutiveMatrix.col(4).setZero();
+        }
 
         auto felastPos = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
         if (felastPos){
@@ -69,6 +77,11 @@ void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
         this->fIntegData.fElasticStrainIncrement[index].fXX() = Sol[0];
         this->fIntegData.fElasticStrainIncrement[index].fYY() = Sol[1];
         this->fIntegData.fElasticStrainIncrement[index].fXY() = Sol[2];
+        if (fPlasticityModel->PlaneStress()){
+            double poisson = fPlasticityModel->PoissonRatio();
+            this->fIntegData.fElasticStrain[index].fZZ() -= poisson/(1.-poisson) * (Sol[0] + Sol[1]);
+            this->fIntegData.fElasticStrainIncrement[index].fZZ() = -poisson/(1.-poisson) * (Sol[0] + Sol[1]);
+        }   
     } else {
         this->fIntegData.fElasticStrain[index].fXX() += Sol[0];
         this->fIntegData.fElasticStrain[index].fYY() += Sol[1];
@@ -86,6 +99,11 @@ void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
     ElasStress = (this->fIntegData.fElasticStrain[index]).Multiply(fElasticConstitutiveMatrix);
     // ElasStress.fData = fElasticConstitutiveMatrix * this->fIntegData.fElasticStrain[index].fData;
     // int a = 0.;
+    if (fPlasticityModel->PlaneStress()){
+        ElasStress.fZZ() = 0.;
+        ElasStress.fYZ() = 0.;
+        ElasStress.fXZ() = 0.;
+    }
 }
 
 

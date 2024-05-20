@@ -23,6 +23,7 @@ ElementT<tshape>::ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakF
     if(wf->GetExactSolution()) increase = 2;
 
     fIntRule.SetOrder(2*tshape::Order+increase);
+    // fIntRule.SetOrder(2);
 
     fIntegData.fWeightFunction.resize(fIntRule.NPoints());
     fIntegData.fDistFunction.resize(fIntRule.NPoints());
@@ -898,6 +899,10 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
     int DIM = tshape::Dimension;
     fIntegData.fA0Inv.resize(DIM,DIM);
     fIntegData.fAdimCoord.resize(DIM);
+    fIntegData.fNeedsDSol = true;
+    fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    fIntegData.fNeedsSol = true;
+    fIntegData.fSol.resize(this->fWeakForm->NState());
 
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);

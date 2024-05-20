@@ -25,20 +25,35 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
     int DIM = fDimension;
     int nphi = data.fPhi.size();
     double WJ = data.fWeight * data.fJacA0;
-
+    int nstate = NState();
     // if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
-        for (int i = 0; i < nphi; i++){
-            for (int j = 0; j < nphi; j++){
-                double l2 = data.fPhi[i] * data.fPhi[j] * WJ * fK0;
+    
+    for (int i = 0; i < nphi; i++){
+        for (int j = 0; j < nphi; j++){
+            double l2 = data.fPhi[i] * data.fPhi[j] * WJ * fK0;
+                for (int istate = 0; istate < nstate; istate++){
                 // L2 COUPLING OPERATOR
-                Stiffness[0](i,j) -= l2;
-                for (int l = 0; l < DIM; l++){
-                    //H1 COUPLING OPERATOR
-                    double K = data.fDPhiX0(i,l) * data.fDPhiX0(j,l);
-                    Stiffness[0](i,j) -= K * WJ * fK1;
-                };
+                Stiffness[0](nstate*i+istate,nstate*j+istate) -= l2;
+
+                // H1 COUPLING OPERATOR
+                if (fK1 > 0){
+                    for (int k = DIM; k--;  ){
+                        for (int l = DIM; l--; ){
+                            double K = data.fDPhi(i,l) * data.fDPhi(j,k) * fK1;
+                            if (k==l) for (int m = DIM; m--; ) K += data.fDPhi(i,m) * data.fDPhi(j,m);
+                            Stiffness[0](DIM*i+k,DIM*j+l) -= K * WJ;
+                        }
+                    }
+                }                
+ 
+                // for (int l = 0; l < DIM; l++){
+                //     
+                //     double K = data.fDPhiX0(i,l) * data.fDPhiX0(j,l);
+                //     Stiffness[0](i,j) -= K * WJ * fK1;
+                // };
             };
         };
+    }
     // } else {
     //     for (int i = 0; i < nphi; i++){
     //         for (int j = 0; j < nphi; j++){

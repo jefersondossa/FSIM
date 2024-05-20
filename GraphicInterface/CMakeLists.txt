@@ -6,6 +6,8 @@ file(GLOB graphicinterface
     Implem_C2&3_WC.cpp
     Implem_C5_WC.cpp
     Implem_Menu_WC.cpp
+    OpenGL_WC.h
+    OpenGL_WC.cpp
     
 )
 

@@ -1,12 +1,13 @@
 #include "Elasticity2D.h"
 
-Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes) : WeakForm() {
+Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes, double thick) : WeakForm() {
     this->fMatId = matid;
     fDimension = 2;
     fNState = 2;
     fYoungModulus = young;
     fPoissonRatio = poisson;
     fPlaneStress = planes;
+    fThickness = thick;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
 
@@ -14,11 +15,16 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes)
         double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
         double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
         double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
-        fConstitutiveMatrix(0,0) = k;
-        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
-        fConstitutiveMatrix(1,1) = k;
-        fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
+        // fConstitutiveMatrix(0,0) = k;
+        // fConstitutiveMatrix(0,1) = k * fPoissonRatio;
+        // fConstitutiveMatrix(1,0) = k * fPoissonRatio;
+        // fConstitutiveMatrix(1,1) = k;
+        // fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
+        double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+        fConstitutiveMatrix(0,0) = fConstitutiveMatrix(1,1) = 1. + alpha;
+        fConstitutiveMatrix(0,1) = fConstitutiveMatrix(1,0) = alpha;
+        fConstitutiveMatrix(2,2) = 0.5;
+        fConstitutiveMatrix *= 2.*fShearModulus;
     } else {//Plane Strain Matrix
         double fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
         double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
@@ -41,7 +47,7 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fSol.resize(fNState);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     int nphi = data.fPhi.size();
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
@@ -63,7 +69,7 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
    
@@ -375,10 +381,20 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         epsilon[1] = data.fDSolDx(1,1);
         epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         if (fPlaneStress){
-            double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
-            Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
-            Sol[1] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
-            Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
+            double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+            double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+            double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+            MatrixDouble MatAux(3,3);
+            MatAux.setZero();
+            MatAux(0,0) = MatAux(1,1) = 1. + alpha;
+            MatAux(0,1) = MatAux(1,0) = alpha;
+            MatAux(2,2) = 0.5;
+            MatAux *= 2.*fShearModulus;
+            Sol = MatAux*epsilon;
+            // double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+            // Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
+            // Sol[1] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
+            // Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
         } else {
             double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
             
@@ -415,9 +431,13 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Delta Strain
     if (var == 19){
-        Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
-        Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
-        Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
+        // Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
+        // Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
+        // Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
+        int index = data.fIndex;
+        Sol[0] = data.fDSolDx(0,0) - data.fElasticStrain[index].fXX();
+        Sol[1] = data.fDSolDx(1,1) - data.fElasticStrain[index].fYY();
+        Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))+(data.fElasticStrain[index].fXY()*2.));
         // Sol[0] = data.fDSolDxPrev(0,0) + data.fDSolDx(0,0);
         // Sol[1] = data.fDSolDxPrev(1,1) + data.fDSolDx(1,1);
         // Sol[2] = (data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0))+(data.fDSolDx(0,1)+data.fDSolDx(1,0));

@@ -15,6 +15,10 @@
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Menu_Bar.H>
+#include <string>
+#include <OpenGL_WC.h>
+
+using namespace std;
 
 /**
  Class that contains the principals objets for modeling GUI
@@ -25,6 +29,10 @@ public:
   Fl_Double_Window *Window;
   Fl_Group *Container_1;
   Fl_Output *msh_path;
+  Playback *playback;
+  vector<int> matids;
+  string gp;
+  string mp;
 private:
   inline void cb_msh_path_i(Fl_Output*, void*);
   static void cb_msh_path(Fl_Output*, void*);
@@ -288,5 +296,6 @@ public:
   void AT2_f();
   void File_Open_f();
   void File_New_f();
+
 };
 #endif

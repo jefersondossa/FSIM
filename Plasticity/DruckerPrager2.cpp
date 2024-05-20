@@ -102,7 +102,7 @@ double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor &Stre
         //Equation 8.101
         double p = Stress.Trace()/3.;
         
-        fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+        fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
         YF = sqrt(Stress.J2()) + fEta*p - fXi*fCohesion;
     }
     double tanphi = tan(fInternalFriction);
@@ -128,7 +128,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
         double sqJ2 = sqrt(Stress.J2());
 
         double fCohesion = 0.;
-        fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+        fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
         double PhiTil = sqJ2 + fEta*p -fXi*fCohesion;
 
         int maxiter = 10;
@@ -139,8 +139,8 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
             double d = -fShearModulus - fBulkModulus*fEtaBar*fEta - fHardening*fXi*fXi;
             dGamma -= PhiTil/d;
 
-            data.fPlasticStrain[index] += fXi*dGamma;
-            fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+            data.fEffectivePlasticStrain[index] += fXi*dGamma;
+            fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
             PhiTil = sqJ2 - fShearModulus*dGamma + fEta*(p-fBulkModulus*fEtaBar*dGamma)- fXi*fCohesion;
         }
 
@@ -154,7 +154,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
             fApex = true;
             double ptrial = Stress.Trace()/3.;
             double fCohesion = 0.;
-            fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+            fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
             double r = fCohesion*fBeta - ptrial;
             double depsilon =0;
             //Box 8.10
@@ -166,9 +166,9 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
                 double d = fAlpha*fBeta*fHardening + fBulkModulus;
                 depsilon -= r/d;
 
-                data.fPlasticStrain[index] += fAlpha*depsilon;
+                data.fEffectivePlasticStrain[index] += fAlpha*depsilon;
                 fUpdatedPressure = ptrial - fBulkModulus*depsilon;
-                fUniaxialYield(data.fPlasticStrain[index],fCohesion,fHardening);
+                fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
                 r = fBeta*fCohesion - fUpdatedPressure;
             }
         }

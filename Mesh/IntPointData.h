@@ -72,7 +72,7 @@ public:
     bool fNeedsTimeDerivatives = false;
 
     VecDouble fYieldFunction;
-    VecDouble fPlasticStrain;
+    VecDouble fEffectivePlasticStrain;
     std::vector<Tensor> fElasticStrain;
     std::vector<Tensor> fElasticStress;
     std::vector<Tensor> fElasticStrainIncrement;

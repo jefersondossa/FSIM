@@ -12,13 +12,15 @@ protected:
     double       fYoungModulus;
     // Poisson's ratio
     double       fPoissonRatio;
+    // Thickness
+    double       fThickness;
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
 
 public:  
     // Elasticity 2D class constructor
-    Elasticity2D(int matid, double young, double poisson, bool planes = true);
+    Elasticity2D(int matid, double young, double poisson, bool planes = true, double thick=1);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -69,6 +71,10 @@ public:
 
     bool &PlaneState(){
         return fPlaneStress;
+    }
+
+    double Thickness(){
+        return fThickness;
     }
 };
 

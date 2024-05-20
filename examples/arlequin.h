@@ -126,34 +126,37 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     CompMesh* coarseModel = new CompMesh();
     CompMesh* fineModel = new CompMesh();  
 
-    Poisson * matpoisson = new Poisson(8,2);
-    coarseModel->InsertMaterial(matpoisson);
-    matpoisson->SetForcingFunction(forcingFunctionPoisson);
-    matpoisson->SetExactSolution(exactSolPoisson);
-
-    // Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
+    // Poisson * matpoisson = new Poisson(8,2);
     // coarseModel->InsertMaterial(matpoisson);
-    // // ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1.,.3);
-    // // coarseModel->InsertMaterial(matpoisson);
+    // matpoisson->SetForcingFunction(forcingFunctionPoisson);
+    // matpoisson->SetExactSolution(exactSolPoisson);
+
+    Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
+    coarseModel->InsertMaterial(matpoisson);
+    // ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1.,.3);
+    // coarseModel->InsertMaterial(matpoisson);
     // matpoisson->SetForcingFunction(forcingFunctionElasticity2D);
     // matpoisson->SetExactSolution(exactSolElasticity2D);
+
+    int nstate = matpoisson->NState();
     //BC
-    MatrixDouble val1(1,1);
+    MatrixDouble val1(nstate,nstate);
     val1.setZero();
-    VecDouble val2(1);
-    VecDouble val3(1);
+    VecDouble val2(nstate);
+    VecDouble val3(nstate);
     val2.setZero();val3.setZero();
     // val2[0] = 1.5;
-    L2Projection * matbc3 = new L2Projection(6,1,0,val1,val2);
+    L2Projection * matbc1 = new L2Projection(5,nstate,0,val1,val2);
+    val2[1] = 1.;
+    L2Projection * matbc3 = new L2Projection(6,nstate,3,val1,val2);
     // val2.setZero();
-    L2Projection * matbc1 = new L2Projection(5,1,0,val1,val2);
-    L2Projection * matbc2 = new L2Projection(7,1,0,val1,val3);
-    matbc1->SetForcingFunction(forcingFunctionPoisson);
-    matbc1->SetExactSolution(exactSolPoisson);
-    matbc2->SetForcingFunction(forcingFunctionPoisson);
-    matbc2->SetExactSolution(exactSolPoisson);
-    matbc3->SetForcingFunction(forcingFunctionPoisson);
-    matbc3->SetExactSolution(exactSolPoisson);
+    L2Projection * matbc2 = new L2Projection(7,nstate,3,val1,val3);
+    // matbc1->SetForcingFunction(forcingFunctionElasticity2D);
+    // matbc1->SetExactSolution(exactSolElasticity2D);
+    // matbc2->SetForcingFunction(forcingFunctionElasticity2D);
+    // matbc2->SetExactSolution(exactSolElasticity2D);
+    // matbc3->SetForcingFunction(forcingFunctionElasticity2D);
+    // matbc3->SetExactSolution(exactSolElasticity2D);
 
     coarseModel->InsertMaterial(matbc1);
     coarseModel->InsertMaterial(matbc2);
@@ -161,11 +164,13 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 
     
     fineModel->InsertMaterial(matpoisson);
-    val2[0] = 1.5; 
-    L2Projection * matbc4 = new L2Projection(6,1,0,val1,val2);
     val2.setZero();
-    L2Projection * matbc5 = new L2Projection(5,1,1,val1,val2);
-    L2Projection * matbc6 = new L2Projection(7,1,1,val1,val3);    
+    val2[0] = 1.5; 
+    L2Projection * matbc4 = new L2Projection(6,nstate,0,val1,val2);
+    val2.setZero();
+    val2[1] = 1.;
+    L2Projection * matbc5 = new L2Projection(5,nstate,3,val1,val2);
+    L2Projection * matbc6 = new L2Projection(7,nstate,3,val1,val3);    
     fineModel->InsertMaterial(matbc4);
     fineModel->InsertMaterial(matbc5);
     fineModel->InsertMaterial(matbc6);
@@ -177,9 +182,11 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
-    Arlequin arl(meshvector,1.,0.);
+    Arlequin arl(meshvector,1.e-5,00.00);
+    arl.InvertSignaledDistance();
     arl.SetGlueIds(gluematids);
     arl.SetGlueZoneThichkess(0.5);
+    arl.SetEpsilon(0.);
     arl.SetUp();
 
     // for (int i = 0; i < coarseModel->NNodes(); i++){
@@ -193,7 +200,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // an.Run();
     LinearAnalysis an(&arl,SolverType::ELDLt);
-    // NonLinearAnalysis an(&arl,SolverType::EUmfpack,1.e-6,2);
+    // NonLinearAnalysis an(&arl,SolverType::ELDLt,1.e-6,3);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // NonLinearAnalysis an(coarseModel,SolverType::ELDLt);
     // NonLinearAnalysis an(coarseModel,SolverType::EKLU);
@@ -201,15 +208,17 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"Solution","ExactSolution","ForceFunction"};
-    VectorNames = {"Derivative","ExactDerivative"};
+    // ScalarNames = {"Solution","ExactSolution","ForceFunction"};
+    // VectorNames = {"Derivative","ExactDerivative"};
+    // ScalarNames = {};
+    VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
     VTUGenerator::PrintResults(fineModel,"resultFine",ScalarNames,VectorNames);
     // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
 
 
-    VecDouble errors;
-    an.PostProcessError(errors);
+    // VecDouble errors;
+    // an.PostProcessError(errors);
 
 }           
