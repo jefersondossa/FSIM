@@ -1,0 +1,223 @@
+/* This cpp file describes the following Analysis Menu functions:
+
+1.  fLinear_cb();
+2.  fNonLinear_cb(); 
+3.  fIncrem_Transient_cb();
+4.  fApply_Analysis_cb(); 
+
+*/
+
+#include "WindowConstructor.h"
+
+/* ========================= fLinear_cb ========================= */
+
+void WindowConstructor::fLinear_cb(){
+
+    NonLinear_Menu->hide();
+    Increm_Transient_Menu->hide();
+}
+
+/* ========================= fNonLinear_cb ========================= */
+
+void WindowConstructor::fNonLinear_cb(){
+
+    NonLinear_Menu->show();
+    Increm_Transient_Menu->hide();
+}
+
+/* ========================= fIncrem_Transient_cb ========================= */
+
+void WindowConstructor::fIncrem_Transient_cb(){
+
+    NonLinear_Menu->hide();
+    Increm_Transient_Menu->show();
+}
+
+/* ========================= fApply_Analysis_cb ========================= */
+
+void WindowConstructor::fApply_Analysis_cb(){
+
+    Str = "";
+    Oss.str("");
+
+     string at = this->AnalysisType->text(); //Object that saves Analysis Typer choice from Container_5;
+     string st  = this->SolverType->text(); //Object that saves Solver Typer choice from Container_5;
+     string cm; //Object that saves Comp Mesh choice from Container_5;
+     double a; //Object that saves Container_5_i input variable;
+     double b; //Object that saves Container_5_i input variable;
+     double c; //Object that saves Container_5_i input variable;
+
+     ScriptDisplay->buffer(Buffer);
+
+     if(this->NonLinear_Menu->visible() == 0 & this->Increm_Transient_Menu->visible() == 0){
+
+         a = NULL;
+         b = NULL;
+         c = NULL;
+
+         cm = "";
+
+         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
+
+         if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
+             while(getline(ScriptMemory_txt, Line)){
+                 Str += Line;
+                 Str += "\n";
+             }   
+             ScriptMemory_txt.close();//Closes ScriptMemory.
+         }
+
+         size_t pos = Str.find("Analysis Type",0);
+
+         if(pos != string::npos){
+             size_t pos_null = Str.find("\n\n",pos);
+             Str.erase(pos, pos_null - pos +2); 
+      
+
+             //Firt clear the ScriptMemory
+             ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);//Allows to append text
+             if(ScriptMemory_txt.is_open()){
+                 ScriptMemory_txt.close();
+             }
+
+              ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);//Allows to append text
+              if(ScriptMemory_txt.is_open()){
+      
+                  ScriptMemory_txt << Str; //Append Str to ScriptMemory
+                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "\n";
+                  ScriptMemory_txt.close(); //Closes ScriptMemory.
+              }
+
+              Buffer.remove(0,Buffer.length());
+              Oss<< Str;
+              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: "<< st << "\n"<< "\n";
+              Buffer.append(Oss.str().c_str());
+         }
+
+         else{
+             ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);
+             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: "<< st << "\n"<< "\n";
+             ScriptMemory_txt.close(); //Closes ScriptMemory.
+
+             Buffer.remove(0,Buffer.length());
+             Oss<< Str;
+             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: "<< st << "\n"<< "\n";
+             Buffer.append(Oss.str().c_str());
+         }
+     }
+
+     if(this->NonLinear_Menu->visible() != 0){
+
+         a = this->tolerance->value();
+         b = this->maxInterations->value();
+         c = NULL;
+
+         cm = this->CompMesh->text();
+
+         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
+
+         if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
+             while(getline(ScriptMemory_txt, Line)){
+                 Str += Line;
+                 Str += "\n";
+             }   
+             ScriptMemory_txt.close();//Closes ScriptMemory.
+         }
+
+         size_t pos = Str.find("Analysis Type",0);
+
+         if(pos != string::npos){
+             size_t pos_null = Str.find("\n\n",pos);
+             Str.erase(pos, pos_null - pos +2); 
+      
+
+             //Firt clear the ScriptMemory
+             ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);//Allows to append text
+             if(ScriptMemory_txt.is_open()){
+                 ScriptMemory_txt.close();
+             }
+
+              ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);//Allows to append text
+              if(ScriptMemory_txt.is_open()){
+      
+                  ScriptMemory_txt << Str; //Append Str to ScriptMemory
+                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+                  ScriptMemory_txt.close(); //Closes ScriptMemory.
+              }
+
+              Buffer.remove(0,Buffer.length());
+              Oss<< Str;
+              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+              Buffer.append(Oss.str().c_str());
+         }
+
+         else{
+             ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);
+             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             ScriptMemory_txt.close(); //Closes ScriptMemory.
+
+             Buffer.remove(0,Buffer.length());
+             Oss<< Str;
+             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             Buffer.append(Oss.str().c_str());
+         }
+     }
+
+     if(this->Increm_Transient_Menu->visible() != 0){
+
+         a = this->tolerance->value();
+         b = this->maxInterations->value();
+         c = this->Nsteps->value();
+
+         cm = this->CompMesh->text();
+
+         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
+
+         if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
+         string line;
+             while(getline(ScriptMemory_txt, line)){
+                 Str += line;
+                 Str += "\n";
+             }   
+             ScriptMemory_txt.close();//Closes ScriptMemory.
+         }
+
+         size_t pos = Str.find("Analysis Type",0);
+
+         if(pos != string::npos){
+             size_t pos_null = Str.find("\n\n",pos);
+             Str.erase(pos, pos_null - pos +2); 
+      
+
+             //Firt clear the ScriptMemory
+             ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);//Allows to append text
+             if(ScriptMemory_txt.is_open()){
+                 ScriptMemory_txt.close();
+             }
+
+              ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);//Allows to append text
+              if(ScriptMemory_txt.is_open()){
+      
+                  ScriptMemory_txt << Str; //Append Str to ScriptMemory
+                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+                  ScriptMemory_txt.close(); //Closes ScriptMemory.
+              }
+
+              Buffer.remove(0,Buffer.length());
+              Oss<< Str;
+              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+              Buffer.append(Oss.str().c_str());
+         }
+
+         else{
+             ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);
+             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             ScriptMemory_txt.close(); //Closes ScriptMemory.
+
+             Buffer.remove(0,Buffer.length());
+             Oss<< Str;
+             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             Buffer.append(Oss.str().c_str());
+         }
+     }
+}

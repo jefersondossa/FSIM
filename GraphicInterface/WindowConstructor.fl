@@ -15,8 +15,8 @@ class WindowConstructor {
     comment Constructor open
   } {
     Fl_Window Window {
-      label FSArl open selected
-      xywh {8 122 1536 793} type Double color 50 align 65 hide resizable
+      label FSArl open
+      xywh {34 166 1536 793} type Double color 50 align 65 resizable visible
     } {
       Fl_Group {} {
         xywh {1159 34 376 750} box BORDER_BOX
@@ -24,7 +24,7 @@ class WindowConstructor {
       Fl_Group Container_1 {
         label Geometry
         comment {Constains the geo and msh path, in addtion to teh WeakForm}
-        xywh {1160 75 375 290} color 50 labelsize 18
+        xywh {1160 75 375 290} color 50 labelsize 18 hide
       } {
         Fl_Output msh_path {
           label {Input .msh Path:}
@@ -48,8 +48,8 @@ class WindowConstructor {
       }
       Fl_Group Container_2 {
         label {Weak Form}
-        comment {Contains the Weak Form types and variables}
-        xywh {1160 75 370 275} color 50 labelsize 18 hide
+        comment {Contains the Weak Form types and variables} open
+        xywh {1160 75 375 275} color 50 labelsize 18 hide
       } {
         Fl_Choice WeakForm_Menu {
           label {Weak Form: }
@@ -125,7 +125,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_2 {
           comment {ElasticityPositional2D Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input EP2D_young {
             label {Elasticity Modulus: }
@@ -143,7 +143,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_3 {
           comment {Elasticity3D Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input E3D_young {
             label {Elasticity Modulus: }
@@ -157,7 +157,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_4 {
           comment {ElasticTruss Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input ET_young {
             label {Elasticity Modulus: }
@@ -171,7 +171,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_5 {
           comment {PositionalTruss Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input PT_young {
             label {Elasticity Modulus: }
@@ -185,7 +185,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_6 {
           comment {Stokes Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input S_density {
             label {Density: }
@@ -199,7 +199,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_7 {
           comment {NavierStokes Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input NS_density {
             label {Density: }
@@ -213,7 +213,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_8 {
           comment {Poisson Variables}
-          xywh {1175 175 355 175} color 50 hide
+          xywh {1175 175 360 175} color 50 hide
         } {
           Fl_Value_Input P_nstate {
             label {Number of State Variables: }
@@ -222,7 +222,7 @@ class WindowConstructor {
         }
         Fl_Group Container_2_9 {
           comment {L2Projection Variables}
-          xywh {1160 175 370 140} color 50 hide
+          xywh {1160 175 375 140} color 50 hide
         } {
           Fl_Choice BoundaryCondition {
             label {Boundary Condition:}
@@ -288,7 +288,7 @@ class WindowConstructor {
         Fl_Button Save_script {
           label {Save Script}
           callback {this->Save_Script_f();}
-          xywh {340 738 95 32}
+          xywh {335 738 95 32}
         }
         Fl_Group Container_3_1 {
           comment {Save Script popup.} open
@@ -345,12 +345,12 @@ class WindowConstructor {
         xywh {0 25 1535 10} box FLAT_BOX color 15
       }
       Fl_Group Container_5 {
-        label Analysis
-        xywh {1160 75 375 290} labelsize 18 hide
+        label Analysis selected
+        xywh {1160 75 375 340} labelsize 18 hide
       } {
         Fl_Choice AnalysisType {
           label {Analysis Type: } open
-          private xywh {1310 100 185 25} box BORDER_BOX down_box BORDER_BOX
+          private xywh {1325 100 185 25} box BORDER_BOX down_box BORDER_BOX
         } {
           MenuItem {} {
             label {Set a Analysis type}
@@ -358,125 +358,177 @@ class WindowConstructor {
           }
           MenuItem Linear {
             label Linear
+            callback {this->Ana1_f();}
             xywh {35 35 100 20}
           }
           MenuItem NonLinear {
             label {Non Linear}
+            callback {this->Ana2_f();}
             xywh {35 35 100 20}
           }
           MenuItem Incremental {
             label Incremental
-            callback {this->AT1_f();}
+            callback {this->Ana3_f();}
             xywh {35 35 100 20}
           }
           MenuItem Transient {
             label Transient
-            callback {this->AT2_f();}
+            callback {this->Ana4_f();}
             xywh {35 35 100 20}
           }
         }
         Fl_Group Container_5_1 {
-          comment {Incremental Analysis Type} open
-          xywh {1165 125 365 240} hide
+          comment {Non Linear Analysis Type}
+          xywh {1165 175 370 240} hide
         } {
-          Fl_Choice PerguntaraoJeff {
-            label {Perguntar ao Jeff}
-            private xywh {1310 135 185 25} box BORDER_BOX down_box BORDER_BOX
+          Fl_Choice NL_CompMesh {
+            label {Comp Mesh: }
+            private xywh {1325 185 185 25} box BORDER_BOX down_box BORDER_BOX
           } {
             MenuItem {} {
-              label {Perguntar ao Jeff}
+              label CompMesh
               xywh {30 30 100 20} labelcolor 8 deactivate
             }
             MenuItem CompMesh {
               label CompMesh
               xywh {45 45 100 20}
             }
-            MenuItem Arlequin {
-              label Arlequin
-              xywh {45 45 100 20}
-            }
           }
-          Fl_Choice SolverType {
-            label {Solver Type: } open
-            private xywh {1310 175 185 25} box BORDER_BOX down_box BORDER_BOX
-          } {
-            MenuItem {} {
-              label {Set the Solver Type}
-              xywh {40 40 100 20} labelcolor 8 deactivate
-            }
-            MenuItem EMumps {
-              label EMumps
-              xywh {55 55 100 20}
-            }
-            MenuItem EIterative {
-              label EIterative
-              xywh {55 55 100 20}
-            }
-            MenuItem EUmfpack {
-              label EUmfpack
-              xywh {10 10 100 20}
-            }
-            MenuItem ECholmod {
-              label ECholmod
-              xywh {10 10 100 20}
-            }
-            MenuItem EKLU {
-              label EKLU
-              xywh {10 10 100 20}
-            }
-            MenuItem ESPQR {
-              label ESPQR
-              xywh {10 10 100 20}
-            }
-            MenuItem ELU {
-              label ELU
-              xywh {10 10 100 20}
-            }
-            MenuItem ELLt {
-              label ELLt
-              xywh {10 10 100 20}
-            }
-            MenuItem ELDLt {
-              label ELDLt
-              xywh {10 10 100 20}
-            }
-            MenuItem EQR {
-              label EQR
-              xywh {10 10 100 20}
-            }
-            MenuItem ECG {
-              label ECG
-              xywh {10 10 100 20}
-            }
-            MenuItem EBiCGStab {
-              label EBiCGStab
-              xywh {10 10 100 20}
-            }
-            MenuItem ELSCG {
-              label ELSCG
-              xywh {10 10 100 20}
-            }
-          }
-          Fl_Value_Input nsteps {
-            label {Steps Number: }
-            comment {Input Young Modulus for Elasticity2D}
-            private xywh {1310 220 95 25}
-          }
-          Fl_Value_Input Tolerance {
+          Fl_Value_Input NL_Tolerance {
             label {Tolerance: }
             comment {Input Young Modulus for Elasticity2D}
-            private xywh {1310 260 95 25}
+            private xywh {1325 225 95 25}
           }
-          Fl_Value_Input maxIter {
+          Fl_Value_Input NL_maxIter {
             label {Maximum Interations: }
             comment {Input Young Modulus for Elasticity2D}
-            private xywh {1310 300 95 25}
+            private xywh {1325 265 95 25}
+          }
+        }
+        Fl_Choice SolverType {
+          label {Solver Type: }
+          private xywh {1325 140 185 25} box BORDER_BOX down_box BORDER_BOX
+        } {
+          MenuItem {} {
+            label {Set the Solver Type}
+            xywh {50 50 100 20} labelcolor 8 deactivate
+          }
+          MenuItem EMumps {
+            label EMumps
+            xywh {65 65 100 20}
+          }
+          MenuItem EIterative {
+            label EIterative
+            xywh {65 65 100 20}
+          }
+          MenuItem EUmfpack {
+            label EUmfpack
+            xywh {20 20 100 20}
+          }
+          MenuItem ECholmod {
+            label ECholmod
+            xywh {20 20 100 20}
+          }
+          MenuItem EKLU {
+            label EKLU
+            xywh {20 20 100 20}
+          }
+          MenuItem ESPQR {
+            label ESPQR
+            xywh {20 20 100 20}
+          }
+          MenuItem ELU {
+            label ELU
+            xywh {20 20 100 20}
+          }
+          MenuItem ELLt {
+            label ELLt
+            xywh {20 20 100 20}
+          }
+          MenuItem ELDLt {
+            label ELDLt
+            xywh {20 20 100 20}
+          }
+          MenuItem EQR {
+            label EQR
+            xywh {20 20 100 20}
+          }
+          MenuItem ECG {
+            label ECG
+            xywh {20 20 100 20}
+          }
+          MenuItem EBiCGStab {
+            label EBiCGStab
+            xywh {20 20 100 20}
+          }
+          MenuItem ELSCG {
+            label ELSCG
+            xywh {20 20 100 20}
           }
         }
         Fl_Group Container_5_2 {
+          comment {Incremental Analysis Type}
+          xywh {1165 175 370 240} hide
+        } {
+          Fl_Choice I_CompMesh {
+            label {Comp Mesh: } open
+            private xywh {1325 185 185 25} box BORDER_BOX down_box BORDER_BOX
+          } {
+            MenuItem I_CompMesh_item {
+              label CompMesh
+              xywh {65 65 100 20}
+            }
+          }
+          Fl_Value_Input I_nsteps {
+            label {Steps Number: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {1325 225 95 25}
+          }
+          Fl_Value_Input I_Tolerance {
+            label {Tolerance: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {1325 265 95 25}
+          }
+          Fl_Value_Input I_maxIter {
+            label {Maximum Interations: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {1325 305 95 25}
+          }
+        }
+        Fl_Group Container_5_3 {
           comment {Transient Analysis Type}
-          xywh {1170 125 340 215} hide
-        } {}
+          xywh {1165 175 370 240} hide
+        } {
+          Fl_Choice T_CompMesh {
+            label {Comp Mesh: } open
+            private xywh {1325 185 185 25} box BORDER_BOX down_box BORDER_BOX
+          } {
+            MenuItem T_CompMesh_item {
+              label CompMesh
+              xywh {85 85 100 20}
+            }
+          }
+          Fl_Value_Input T_nsteps {
+            label {Steps Number: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {1325 225 95 25}
+          }
+          Fl_Value_Input T_Tolerance {
+            label {Tolerance: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {1325 265 95 25}
+          }
+          Fl_Value_Input T_maxIter {
+            label {Maximum Interations: }
+            comment {Input Young Modulus for Elasticity2D}
+            private xywh {1325 305 95 25}
+          }
+        }
+        Fl_Button Apply_3 {
+          label Apply
+          callback {this->Apply_3_f();}
+          xywh {1430 350 80 25}
+        }
       }
       Fl_Menu_Bar Menu_Tools {
         xywh {0 35 1160 45} color 255
@@ -484,76 +536,87 @@ class WindowConstructor {
       Fl_Button G_Icon {
         callback {this->Container_1->show();
 this->Container_2->hide();
-this->Container_5->hide();}
+this->Container_5->hide();
+this->Container_6->hide();}
         image {Icons/1x/Geometry_Icon.png} xywh {10 35 45 45} box NO_BOX
       }
       Fl_Button WF_Icon {
         callback {this->Container_2->show();
 this->Container_1->hide();
-this->Container_5->hide();}
+this->Container_5->hide();
+this->Container_6->hide();}
         image {Icons/1x/WeakForm_Icon.png} deimage {Icons/1x/WeakFormInactive_Icon.png} xywh {70 35 45 45} box NO_BOX deactivate
       }
       Fl_Button A_Icon {
         callback {this->Container_5->show();
 this->Container_2->hide();
-this->Container_1->hide();}
+this->Container_1->hide();
+this->Container_6->hide();}
         image {Icons/1x/Analysis_Icon.png} xywh {135 35 45 45} box NO_BOX
       }
       Fl_Group Container_4 {
         comment {Error messages}
-        xywh {350 260 825 295}
+        xywh {1170 590 360 180} box SHADOW_BOX color 7
       } {
         Fl_Group Container_4_1 {
-          xywh {390 350 735 115} box SHADOW_BOX color 51 labeltype ENGRAVED_LABEL align 5 hide
+          xywh {1170 590 360 180} box BORDER_FRAME color 1 labeltype ENGRAVED_LABEL align 5 hide
         } {
           Fl_Box {} {
-            label {It was not possible to determine the Domain. Please, verify the Physical Groups in the .geo file.}
-            xywh {450 380 605 40} labelsize 15
+            label {It was not possible to determine the Domain.}
+            xywh {1183 630 310 40} labelsize 15
           }
           Fl_Button Close_b_1 {
             label Close
             callback {this->Close1_f();}
-            xywh {1005 420 70 25} color 51
+            xywh {1445 720 70 25} color 51
           }
           Fl_Box {} {
             label {Error!!}
-            xywh {462 365 60 25} labelfont 1
+            xywh {1175 600 80 25} labelfont 1 labelcolor 1
+          }
+          Fl_Box {} {
+            label {Please, verify the Physical Groups in the .geo file.}
+            xywh {1198 660 310 40} labelsize 15
           }
         }
         Fl_Group Container_4_2 {
-          xywh {390 350 735 115} box SHADOW_BOX color 51 hide
+          xywh {1170 590 360 180} box BORDER_FRAME color 1 hide
         } {
           Fl_Box {} {
-            label {It was not possible to read the .msh file path. Verify the Input .msh Path.}
-            xywh {450 380 605 40} labelsize 15
+            label {It was not possible to read the .msh file path.}
+            xywh {1197 630 300 37} labelsize 15
           }
           Fl_Button Close_b_2 {
             label Close
             callback {this->Close2_f();}
-            xywh {1005 420 70 25}
+            xywh {1445 720 70 25}
           }
           Fl_Box {} {
             label {Error!!}
-            xywh {462 365 60 25} labelfont 1
-          }
-        }
-        Fl_Group Container_4_3 {
-          xywh {390 350 735 115} box SHADOW_BOX color 51 labeltype ENGRAVED_LABEL align 5 hide
-        } {
-          Fl_Box {} {
-            label {Please, inseart the file paths.}
-            xywh {450 380 605 40} labelsize 15
-          }
-          Fl_Button Close_b_3 {
-            label Close
-            callback {this->Close3_f();}
-            xywh {1005 420 70 25} color 51
+            xywh {1175 600 80 25} color 1 labelfont 1 labelcolor 1
           }
           Fl_Box {} {
-            label {Error!!}
-            xywh {462 365 60 25} labelfont 1
+            label {Verify the Input .msh Path.}
+            xywh {1198 660 180 40} labelsize 15
           }
         }
+      }
+      Fl_Group Container_6 {
+        label {Pos-Processing}
+        xywh {1160 76 375 404} labelsize 18 hide
+      } {
+        Fl_Output vtk_path {
+          label {Input .vtk Path: }
+          callback {this->Input_vtk_f();}
+          xywh {1180 120 325 35} align 5
+        }
+      }
+      Fl_Button PP_Icon {
+        callback {this->Container_5->hide();
+this->Container_2->hide();
+this->Container_1->hide();
+this->Container_6->show();}
+        image {Icons/1x/ParaView_Icon.png} xywh {200 35 45 45} box NO_BOX
       }
     }
   }
@@ -585,12 +648,16 @@ this->Container_1->hide();}
   Function {sm_open_f()} {} {}
   Function {sm_new_f()} {} {}
   Function {Close2_f()} {} {}
-  Function {Close3_f()} {} {}
   Function {Save_Script_f()} {} {}
   Function {Save_txt_f()} {} {}
   Function {Cancel_f()} {} {}
-  Function {AT1_f()} {} {}
-  Function {AT2_f()} {} {}
   Function {File_Open_f()} {} {}
   Function {File_New_f()} {} {}
+  Function {Ana1_f()} {} {}
+  Function {Ana2_f()} {} {}
+  Function {Ana3_f()} {} {}
+  Function {Ana4_f()} {} {}
+  Function {Input_vtk_f()} {} {}
+  Function {Apply_3_f()} {open
+  } {}
 }

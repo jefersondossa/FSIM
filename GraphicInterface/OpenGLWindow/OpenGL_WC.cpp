@@ -1,8 +1,6 @@
 #include "OpenGL_WC.h"
-#ifdef Success
-  #undef Success
-#endif
-#include "CompMesh.h"
+
+
 #include "WeakForm.h"
 #include "GmshTools.h"
 
@@ -40,75 +38,53 @@ void Playback::draw() {
 
     glTranslatef(-average_x, -average_y, 0); //Here , the new camera center.
     
-    // Apply rotations
+    // Applys rotations
     glRotatef(rotationX, 1, 0, 0);
     glRotatef(rotationY, 0, 1, 0);
 
-    // Draw the cube
-    DrawGeometry();
-
-    // Draw the axes
+    // Draws the geometry
+    DrawGeometry(mat);
+    
+    // Draws the axes
     DrawAxes();
+
+}
+
+void Playback::setInt(int newValue) {
+    mat = newValue;
+    redraw();  // Request a redraw to reflect the new value
 }
 
 
-void Playback::DrawGeometry() {
-    if(matids.size() == 0){
-        return;
-    }
+void Playback::PrintElement(Element *el, CompMesh *cmesh){
 
-    CompMesh* Outmesh = new CompMesh();
-    for(int i = 0; i < matids.size(); i++){
-
-        WeakForm *wf = new WeakForm();
-        wf->Id() = matids[i];
-        Outmesh->InsertMaterial(wf);
-    }
-
-    GmshTools::Read(*Outmesh, mshpath);
-    //Sets line colors to black
-    glColor3f(0.0f, 0.0f, 0.0f);
-
-    //Sets line thickness
-    glLineWidth(2.0f);
-
-    //Renders the Geometry (lines)
-    glBegin(GL_LINES);
-    sum_x = 0.;
-    sum_y = 0.;
-    sum_z = 0.;
-
-    for (int i = 0; i < Outmesh->NElements(); i++)
+    auto connect = el->getConnectivity();
+    switch (el->PrintType())
     {
-        auto geo = Outmesh->ElementVec()[i];
+    case 3://Linear line
+        {
+            auto core_A = cmesh->NodeVec()[connect[0]]->getCoordinates();
+            auto core_B = cmesh->NodeVec()[connect[1]]->getCoordinates();
 
-        if(geo->PrintType() == 3){
+            //Since glVertex3fv requires Glfloats as entry, let's convert to it:
+            GLfloat pa []= {static_cast<float>(core_A[0]), static_cast<float>(core_A[1]),static_cast<float> (core_A[2])};
+            GLfloat pb []= {static_cast<float>(core_B[0]), static_cast<float>(core_B[1]),static_cast<float> (core_B[2])};
+            
 
-            auto connect = geo->getConnectivity();
-            auto core_A = Outmesh->NodeVec()[connect[0]]->getCoordinates();
-            auto core_B = Outmesh->NodeVec()[connect[1]]->getCoordinates();
+            sum_x += core_A[0] + core_B[0];
+            sum_y += core_A[1] + core_B[1];
+            sum_z += core_A[2] + core_B[2];
 
-        //Since glVertex3fv requires Glfloats as entry, let's convert to it:
-        GLfloat pa []= {static_cast<float>(core_A[0]), static_cast<float>(core_A[1]),static_cast<float> (core_A[2])};
-        GLfloat pb []= {static_cast<float>(core_B[0]), static_cast<float>(core_B[1]),static_cast<float> (core_B[2])};
-        
-
-        sum_x += core_A[0] + core_B[0];
-        sum_y += core_A[1] + core_B[1];
-        sum_z += core_A[2] + core_B[2];
-
-        //Creates OpenGL points
-        glVertex3fv(pa);
-        glVertex3fv(pb);
-
+            //Creates OpenGL points
+            glVertex3fv(pa);
+            glVertex3fv(pb);
         }
-        
-         else if(geo->PrintType() == 5){
-
-            auto connect = geo->getConnectivity();
-            auto core_A = Outmesh->NodeVec()[connect[0]]->getCoordinates();
-            auto core_B = Outmesh->NodeVec()[connect[1]]->getCoordinates();
-            auto core_C = Outmesh->NodeVec()[connect[2]]->getCoordinates();
+        break;
+        case 5: //Linear triangle
+        {
+            auto core_A = cmesh->NodeVec()[connect[0]]->getCoordinates();
+            auto core_B = cmesh->NodeVec()[connect[1]]->getCoordinates();
+            auto core_C = cmesh->NodeVec()[connect[2]]->getCoordinates();
 
             //Since glVertex3fv requires Glfloats as entry, let's convert to it:
             GLfloat pa []= {static_cast<float>(core_A[0]), static_cast<float>(core_A[1]),static_cast<float> (core_A[2])};
@@ -125,14 +101,14 @@ void Playback::DrawGeometry() {
             glVertex3fv(pc);
             glVertex3fv(pa);
         }
-
-        else if(geo->PrintType() == 9){
-
-            auto connect = geo->getConnectivity();
-            auto core_A = Outmesh->NodeVec()[connect[0]]->getCoordinates();
-            auto core_B = Outmesh->NodeVec()[connect[1]]->getCoordinates();
-            auto core_C = Outmesh->NodeVec()[connect[2]]->getCoordinates();
-            auto core_D = Outmesh->NodeVec()[connect[3]]->getCoordinates();
+        break;
+        
+        case 9: //linear quadrilateral
+        {
+            auto core_A = cmesh->NodeVec()[connect[0]]->getCoordinates();
+            auto core_B = cmesh->NodeVec()[connect[1]]->getCoordinates();
+            auto core_C = cmesh->NodeVec()[connect[2]]->getCoordinates();
+            auto core_D = cmesh->NodeVec()[connect[3]]->getCoordinates();
 
             //Since glVertex3fv requires Glfloats as entry, let's convert to it:
             GLfloat pa []= {static_cast<float>(core_A[0]), static_cast<float>(core_A[1]),static_cast<float> (core_A[2])};
@@ -153,28 +129,56 @@ void Playback::DrawGeometry() {
             glVertex3fv(pd);
             glVertex3fv(pa);
         }
+        break;
 
-        else if(geo->PrintType() == 21){
 
-            auto connect = geo->getConnectivity();
-            auto core_A = Outmesh->NodeVec()[connect[0]]->getCoordinates();
-            auto core_B = Outmesh->NodeVec()[connect[1]]->getCoordinates();
-            auto core_C = Outmesh->NodeVec()[connect[2]]->getCoordinates();
+    default:
+        PanicButton();
+        break;
+    }
+    
+}
 
-            //Since glVertex3fv requires Glfloats as entry, let's convert to it:
-            GLfloat pa []= {static_cast<float>(core_A[0]), static_cast<float>(core_A[1]),static_cast<float> (core_A[2])};
-            GLfloat pb []= {static_cast<float>(core_B[0]), static_cast<float>(core_B[1]),static_cast<float> (core_B[2])};
-            GLfloat pc []= {static_cast<float>(core_C[0]), static_cast<float>(core_C[1]),static_cast<float> (core_C[2])};
 
-            //Creates OpenGL points
-            glVertex3fv(pa);
-            glVertex3fv(pb);
 
-            glVertex3fv(pb);
-            glVertex3fv(pc);
-        }
+void Playback::DrawGeometry(int matidcolor) {
+    if(matids.size() == 0){
+        return;
+    }
 
+    CompMesh* Outmesh = new CompMesh();
+    for(int i = 0; i < matids.size(); i++){
+
+        WeakForm *wf = new WeakForm();
+        wf->Id() = matids[i];
+        Outmesh->InsertMaterial(wf);
+    }
+
+    GmshTools::Read(*Outmesh, mshpath);
+    glBegin(GL_LINES);
+    //Sets line thickness
+    glLineWidth(2.0f);
+
+    //Renders the Geometry (lines)
+    sum_x = 0.;
+    sum_y = 0.;
+    sum_z = 0.;
+
+    for (int i = 0; i < Outmesh->NElements(); i++)
+    {
+        auto geo = Outmesh->ElementVec()[i];
         
+        if (geo->GetWeakForm()->Id() == matidcolor){
+            
+            glColor3f(1,0,0);
+            PrintElement(geo,Outmesh);
+
+        } else {
+
+            glColor3f(0,0,0);
+            PrintElement(geo,Outmesh);
+            
+        }
     }
     average_x = sum_x*3/Outmesh->NNodes();
     average_y = sum_y*3/Outmesh->NNodes();
@@ -182,8 +186,8 @@ void Playback::DrawGeometry() {
     delete Outmesh;
 
     glEnd();
-
 }
+
 
 void Playback::DrawAxes() {
      // Set viewport for the axes in the corner
@@ -207,18 +211,17 @@ void Playback::DrawAxes() {
 
     // Draw the axes
     glBegin(GL_LINES);
-    // X axis in red
     glColor3f(0, 0, 0);
+
+    // X axis
     glVertex3f(0, 0, 0);
     glVertex3f(0.5, 0, 0);
 
-    // Y axis in green
-    glColor3f(0, 0, 0);
+    // Y axis
     glVertex3f(0, 0, 0);
     glVertex3f(0, 0.5, 0);
 
-    // Z axis in blue
-    glColor3f(0, 0, 0);
+    // Z axis
     glVertex3f(0, 0, 0);
     glVertex3f(0, 0, 0.5);
     glEnd();
@@ -226,33 +229,27 @@ void Playback::DrawAxes() {
     // Draw arrows at the end of each axis
     glPushMatrix();
     glTranslatef(0.5, 0, 0);
-    glColor3f(0, 0, 0);
     glutSolidCone(0.05, 0.1, 10, 10);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(0, 0.5, 0);
-    glColor3f(0, 0, 0);
     glutSolidCone(0.05, 0.1, 10, 10);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(0, 0, 0.5);
-    glColor3f(0, 0, 0);
     glutSolidCone(0.05, 0.1, 10, 10);
     glPopMatrix();
 
     // Draw labels for each axis
     glRasterPos3f(0.55, 0, 0);
-    glColor3f(0, 0, 0);
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'X');
 
     glRasterPos3f(0, 0.55, 0);
-    glColor3f(0, 0, 0);
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'Y');
 
     glRasterPos3f(0, 0, 0.55);
-    glColor3f(0, 0, 0);
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'Z');
 }
 
@@ -313,7 +310,6 @@ Playback::Playback(int X, int Y, int W, int H, const char *L)
     rotation = 0.f;
     rotationIncrement = 10.f;
     animating = false;
-    //ReadGeometry(geopath);
     Fl::add_idle(IdleCallback, this);
     end();
 }

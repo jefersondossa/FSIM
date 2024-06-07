@@ -431,13 +431,13 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Delta Strain
     if (var == 19){
-        // Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
-        // Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
-        // Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
-        int index = data.fIndex;
-        Sol[0] = data.fDSolDx(0,0) - data.fElasticStrain[index].fXX();
-        Sol[1] = data.fDSolDx(1,1) - data.fElasticStrain[index].fYY();
-        Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))+(data.fElasticStrain[index].fXY()*2.));
+        Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
+        Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
+        Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
+        // int index = data.fIndex;
+        // Sol[0] = data.fDSolDx(0,0) - data.fElasticStrain[index].fXX();
+        // Sol[1] = data.fDSolDx(1,1) - data.fElasticStrain[index].fYY();
+        // Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))+(data.fElasticStrain[index].fXY()*2.));
         // Sol[0] = data.fDSolDxPrev(0,0) + data.fDSolDx(0,0);
         // Sol[1] = data.fDSolDxPrev(1,1) + data.fDSolDx(1,1);
         // Sol[2] = (data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0))+(data.fDSolDx(0,1)+data.fDSolDx(1,0));

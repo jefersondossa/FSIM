@@ -1,6 +1,6 @@
 #include "ElasticityPositional2D.h"
 
-ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double poisson, bool planes) : WeakForm() {
+ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double poisson, double thick, bool planes) : WeakForm() {
     this->fMatId = matid;
     fDimension = 2;
     fNState = 2;
@@ -9,6 +9,7 @@ ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double p
     fPlaneStress = planes;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
+    fThickness = thick;
 
     if (fPlaneStress){
         fConstitutiveMatrix(0,0) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio));
@@ -37,7 +38,7 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
         data.fDSolDx.resize(fNState,fDimension);
     }
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     
     auto dphi_dx = data.fDPhiX0;
 
@@ -117,7 +118,7 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
                     double m = 0.;
                     // (k==l)? m = (1.0 / (0.25 * dTime_)) *0* data.fPhi[a] * data.fPhi[b] : m = 0.0;
 
-                    Stiffness(2 * a + k,2 * b + l) += (e+m) * j0 * data.fWeight;
+                    Stiffness(2 * a + k,2 * b + l) += (e+m) * j0 * data.fWeight * fThickness;
                 }
             }
         }
@@ -155,7 +156,7 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
                 for (int j = 0; j < fDimension; j++)
                     f += SPKStress(i,j) * dE_dyak(i,j);
 
-            Rhs[2 * a + k] -= f * data.fWeight * j0;
+            Rhs[2 * a + k] -= f * data.fWeight * j0 * fThickness;
         }
     }
 };

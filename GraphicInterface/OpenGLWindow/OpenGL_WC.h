@@ -10,11 +10,16 @@
 #include <FL/glu.h>
 #include <FL/glut.H>
 #include <FL/fl_message.H>
+#include <Fl/Fl_Choice.H>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <tuple>
 #include <regex>
+#ifdef Success
+  #undef Success
+#endif
+#include "CompMesh.h"
 
 using namespace std;
 
@@ -50,9 +55,11 @@ private:
 public:
 
     void draw() override;
+    int mat;
+    void setInt(int newValue);
     void InitializeGL();
     //void ReadGeometry(const string filename);
-    void DrawGeometry();
+    void DrawGeometry(int matidcolor);
     void DrawAxes();
     virtual int handle(int event) override;
 
@@ -71,8 +78,10 @@ public:
     }
 
     void Setmatid(vector<int> matID){
-
         matids = matID;
     }
+
+    void PrintElement(Element *el, CompMesh *cmesh);
+
 };
 #endif

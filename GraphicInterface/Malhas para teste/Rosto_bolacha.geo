@@ -64,4 +64,3 @@ Physical Curve("Right", 12) = {9, 7, 10, 8};
 Physical Surface("Domain", 13) = {5};
 //+
 Physical Curve("Top", 14) = {2, 1};
-

@@ -1,3 +1,15 @@
-geo path: /home/jeferson/Codes_doc/FSArl/BeamFine.geo
-msh path: /home/jeferson/Codes_doc/FSArl/BeamFine.msh
+Physical Groups: Left
+Weak Form: Stokes
+Density: 0
+Viscosity: 0
+
+Physical Groups: Right
+Weak Form: L2Projection
+Boundary Condition: Dirichlet
+X: 0
+Y: -8
+Z: 0
+
+geo path: /home/jeferson/Codes_doc/FSArl/build/BeamCoarse.geo
+msh path: /home/jeferson/Codes_doc/FSArl/build/BeamCoarse.msh
 

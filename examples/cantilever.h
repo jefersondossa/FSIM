@@ -31,7 +31,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     L2Projection * matbc2 = new L2Projection(8,2,0,val1,val2);
 
     //Load
-    val2[1] = -15000.;
+    val2[1] = 000.;
     L2Projection * matbc3 = new L2Projection(9,2,1,val1,val2);
     
     cmesh->InsertMaterial(matbc1);
@@ -46,7 +46,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
    
     GmshTools::Read(*cmesh,"../cantilever.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-7,30);
+    IncrementalAnalysis an(cmesh,SolverType::ELU, 100, bcIncrement,1.e-7,300);
     VecDouble increment(2);
     // increment.setZero();    
     increment[1] = -1000.;
@@ -58,9 +58,9 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 #endif
 
     std::vector<std::string> ScalarNames, VectorNames;
-    // ScalarNames = {"PlasticStrain"};
-    // VectorNames = {"Displacement","Stress","Strain","RealStress"};
-    VectorNames = {"Displacement","Stress","Strain"};
+    ScalarNames = {"PlasticStrain"};
+    VectorNames = {"Displacement","Stress","Strain","RealStress"};
+    // VectorNames = {"Displacement","Stress","Strain"};
     an.Run("plasticitytest",ScalarNames,VectorNames);
     
     // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};

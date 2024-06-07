@@ -9,11 +9,13 @@ sigma_y =.5+hardening*plast;
 
 CompMesh* cmesh = new CompMesh();
 
+//Physical Group Left
+
+Stokes * Left = new Stokes("matid", "dimension", 0, 0);
+
+cmesh->InsertMaterial((Left);
+
 //Physical Group 
 
-//Physical Group Domain
+//Physical Group Right
 
-ElasticityPositional2D * Domain = new ElasticityPositional2D("matid", 0, 0, 0);
-
-cmesh->InsertMaterial((Domain);
-};

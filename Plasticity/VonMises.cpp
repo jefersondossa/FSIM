@@ -44,6 +44,7 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
     // std::cout << "Elastic - \n" << elast << std::endl;
     // std::cout << "Tangent - \n" << fTangentTensor << std::endl;
 
+    if (!fPlaneStress){
     if (fElasticModel->Dimension() == 2){
         VecInt order(3);
         order[0] = XX;
@@ -64,6 +65,7 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
         fElasticModel->ConstitutiveMatrix() = fTangentTensor;
     } else {
         PanicButton();
+    }
     }
     
     fElasticModel->ComputeStiffness(index,data,Stiffness);
@@ -105,28 +107,108 @@ Tensor VonMises::FlowVector(Tensor &Stress){
 
 double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
     //Newton-Raphson to find plastic multiplier
-    double dGamma = 0.;
+    double DGAMA = 0.;
     if (fPlaneStress){//Box 9.5
-        double splus2 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
-        double smin2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
-        double t2 = Stress.fXY() * Stress.fXY();
-        double xi = splus2 / 6. + smin2 / 2 + 2. * t2;
-        double sigmay;
-        fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
-        double PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
-        while (fabs(PhiTil) > 1.e-5){
-            double dXi = (- splus2 * fYoungModulus/(1.-fPoissonRatio)) / (9.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),3))
-                       - 2.*fShearModulus * (smin2+4.*t2) / pow(1.+2.*fShearModulus*dGamma,3);
-            fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma*sqrt(2.*xi/3.),sigmay,fHardening);
-            double fHardBar = 2.*sigmay*fHardening*sqrt(2./3.)*(sqrt(xi)+dGamma*dXi/(2.*sqrt(xi)));
-            double dPhiTil = 0.5*dXi-fHardBar/3.;
-            dGamma -= PhiTil/dPhiTil;
-            xi = splus2/(6.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),2))+
-                (0.5*smin2+2.*t2)/pow(1.+2.*fShearModulus*dGamma,2);
-            fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma*sqrt(2.*xi/3.),sigmay,fHardening);
-            PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
+        double A1 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
+        double A2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
+        double A3 = Stress.fXY() * Stress.fXY();
+        double XI = A1 / 6. + 0.5 * A2 + 2. * A3;
+        double SIGMAY;
+        fUniaxialYield(data.fEffectivePlasticStrain[index],SIGMAY,fHardening);
+        double PHI = 0.5 * XI - SIGMAY*SIGMAY / 3.;
+        double EPBARN = data.fEffectivePlasticStrain[index];
+        double SQR2D3 = sqrt(2./3.);
+        double isValidStress = false;
+        if (PHI/SIGMAY > 1.e-6){
+            double SQRTXI = sqrt(XI);
+            double B1 = 1.;
+            double B2 = 1.;
+            double FMODU = fYoungModulus/(3.*(1.-fPoissonRatio));
+            int NITER = 0;
+            double EPBAR = EPBARN;
+            
+            while (NITER < 100){
+                NITER ++;
+                //Compute residual derivative
+                double HSLOPE = fHardening;
+                double DXI = -A1*FMODU/(3.*B1*B1*B1)-2.*fShearModulus*(A2+4.*A3)/(B2*B2*B2);
+                double HBAR = 2.*SIGMAY*HSLOPE*SQR2D3*(SQRTXI+DGAMA*DXI/(2.*SQRTXI));
+                double DPHI=0.5*DXI-HBAR/3.;
+                //Compute Newton-Raphson increment and update equation variable DGAMA
+                DGAMA=DGAMA-PHI/DPHI;
+                //Compute new residual (yield function value)
+                B1=1.+FMODU*DGAMA;
+                B2=2.+2.*fShearModulus*DGAMA;
+                XI=(1./6.)*A1/(B1*B1)+(0.5*A2+2.*A3)/(B2*B2);
+                SQRTXI=sqrt(XI);
+                EPBAR=EPBARN+DGAMA*SQR2D3*SQRTXI;
+                fUniaxialYield(EPBAR,SIGMAY,fHardening);
+                PHI=0.5*XI-SIGMAY*SIGMAY/3.;
+                //Check for convergence
+                double RESNOR=fabs(PHI/SIGMAY);
+                if (RESNOR <= 1.e-6){
+                    isValidStress = true;
+                    // update accumulated plastic strain
+                    data.fEffectivePlasticStrain[index] = EPBAR;
+                    double ASTAR1=3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*DGAMA);
+                    double ASTAR2=1./(1.+2.*fShearModulus*DGAMA);
+                    double A11=0.5*(ASTAR1+ASTAR2);
+                    double A22 = A11;
+                    double A12=0.5*(ASTAR1-ASTAR2);
+                    double A21 = A12;
+                    double A33 = ASTAR2;
+                    VecDouble StressUp(3);
+                    StressUp[0] = A11*Stress.fXX()+A12*Stress.fYY();
+                    StressUp[1] = A21*Stress.fXX()+A22*Stress.fYY();
+                    StressUp[2] = A33*Stress.fXY();
+                    Stress.fXX() = StressUp[0];
+                    Stress.fYY() = StressUp[1];
+                    Stress.fXY() = StressUp[2];
+                    // compute corresponding elastic (engineering) strain components
+                    double FACTG=1./(2.*fShearModulus);
+                    double P=(StressUp[0]+StressUp[1])/3.;
+                    double EEV=P/fBulkModulus;
+                    double EEVD3=EEV/3.;
+                    VecDouble ElasticStrainUp(4);
+                    ElasticStrainUp[0] = FACTG*(2.*StressUp[0]/3.-StressUp[1]/3.)+EEVD3;
+                    ElasticStrainUp[1] = FACTG*(2.*StressUp[1]/3.-StressUp[0]/3.)+EEVD3;
+                    ElasticStrainUp[2] = FACTG*StressUp[2]*2.;
+                    ElasticStrainUp[3] = -fPoissonRatio/(1.-fPoissonRatio)*(ElasticStrainUp[0]+ElasticStrainUp[1]);
+                    data.fElasticStrain[index].fXX() = ElasticStrainUp[0];
+                    data.fElasticStrain[index].fYY() = ElasticStrainUp[1];
+                    data.fElasticStrain[index].fXY() = ElasticStrainUp[2];
+                    data.fElasticStrain[index].fZZ() = ElasticStrainUp[3];
+                    break;
+                }
+            }
+
         }
-        data.fEffectivePlasticStrain[index] += dGamma * sqrt(2.*xi/3.);
+        if (!isValidStress){
+            PanicButton();
+        }
+        
+
+
+        // double splus2 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
+        // double smin2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
+        // double t2 = Stress.fXY() * Stress.fXY();
+        // double xi = splus2 / 6. + smin2 / 2 + 2. * t2;
+        // double sigmay;
+        // fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
+        // double PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
+        // while (fabs(PhiTil) > 1.e-5){
+        //     double dXi = (- splus2 * fYoungModulus/(1.-fPoissonRatio)) / (9.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),3))
+        //                - 2.*fShearModulus * (smin2+4.*t2) / pow(1.+2.*fShearModulus*dGamma,3);
+        //     fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma*sqrt(2.*xi/3.),sigmay,fHardening);
+        //     double fHardBar = 2.*sigmay*fHardening*sqrt(2./3.)*(sqrt(xi)+dGamma*dXi/(2.*sqrt(xi)));
+        //     double dPhiTil = 0.5*dXi-fHardBar/3.;
+        //     dGamma -= PhiTil/dPhiTil;
+        //     xi = splus2/(6.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),2))+
+        //         (0.5*smin2+2.*t2)/pow(1.+2.*fShearModulus*dGamma,2);
+        //     fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma*sqrt(2.*xi/3.),sigmay,fHardening);
+        //     PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
+        // }
+        // data.fEffectivePlasticStrain[index] += dGamma * sqrt(2.*xi/3.);
     } else { //Box 7.4 Souza Neto
         fDeviatory = Stress.Deviatory();
         fVonMisesStress = sqrt(1.5*fDeviatory.DoubleContraction(fDeviatory))+3.*data.fPlasticMultiplier[index];
@@ -136,52 +218,53 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
         
         while (fabs(PhiTil/sigmay) > 1.e-5){
             double d = -3. * fShearModulus - fHardening;
-            dGamma -= PhiTil/d;
-            fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma,sigmay,fHardening);
-            PhiTil = fVonMisesStress - 3.*fShearModulus*dGamma-sigmay;
+            DGAMA -= PhiTil/d;
+            fUniaxialYield(data.fEffectivePlasticStrain[index]+DGAMA,sigmay,fHardening);
+            PhiTil = fVonMisesStress - 3.*fShearModulus*DGAMA-sigmay;
         }
-        data.fEffectivePlasticStrain[index] += dGamma;
+        data.fEffectivePlasticStrain[index] += DGAMA;
     }
 
-    return dGamma;
+    return DGAMA;
 }
 
 void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
     
     if (fPlaneStress){
-        MatrixDouble MatA(3,3);
-        MatA.setZero();
-        double A11 = 3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*data.fPlasticMultiplier[index]);
-        double A22 = 1./(1.+2.*fShearModulus*data.fPlasticMultiplier[index]);
-        double A33 = A22;
-        MatA(0,0) = MatA(1,1) = 0.5 * (A11+A22);
-        MatA(1,0) = MatA(0,1) = 0.5 * (A11-A22);
-        MatA(2,2) = A33;
-        VecDouble auxStress(3);
-        auxStress[0] = Stress.fXX();
-        auxStress[1] = Stress.fYY();
-        auxStress[2] = Stress.fXY();
-        VecDouble res = MatA * auxStress;
+        return;
+        // MatrixDouble MatA(3,3);
+        // MatA.setZero();
+        // double A11 = 3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*data.fPlasticMultiplier[index]);
+        // double A22 = 1./(1.+2.*fShearModulus*data.fPlasticMultiplier[index]);
+        // double A33 = A22;
+        // MatA(0,0) = MatA(1,1) = 0.5 * (A11+A22);
+        // MatA(1,0) = MatA(0,1) = 0.5 * (A11-A22);
+        // MatA(2,2) = A33;
+        // VecDouble auxStress(3);
+        // auxStress[0] = Stress.fXX();
+        // auxStress[1] = Stress.fYY();
+        // auxStress[2] = Stress.fXY();
+        // VecDouble res = MatA * auxStress;
 
-        Stress.Zero();
-        Stress.fXX() = res[0];
-        Stress.fYY() = res[1];
-        Stress.fXY() = res[2];
-        //Eq. 9.4
-        double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
-        MatrixDouble MatD(3,3);
-        MatD.setZero();
-        MatD(0,0) = MatD(1,1) = 1. + alpha;
-        MatD(0,1) = MatD(1,0) = alpha;
-        MatD(2,2) = 0.5;
-        MatD *= 2.*fShearModulus;
+        // Stress.Zero();
+        // Stress.fXX() = res[0];
+        // Stress.fYY() = res[1];
+        // Stress.fXY() = res[2];
+        // //Eq. 9.4
+        // double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+        // MatrixDouble MatD(3,3);
+        // MatD.setZero();
+        // MatD(0,0) = MatD(1,1) = 1. + alpha;
+        // MatD(0,1) = MatD(1,0) = alpha;
+        // MatD(2,2) = 0.5;
+        // MatD *= 2.*fShearModulus;
         
-        data.fElasticStrain[index].Zero();
-        VecDouble elastStrain = MatD.inverse()*res;
-        data.fElasticStrain[index].fXX() = elastStrain[0];
-        data.fElasticStrain[index].fYY() = elastStrain[1];
-        data.fElasticStrain[index].fXY() = elastStrain[2];
-        data.fElasticStrain[index].fZZ() = -fPoissonRatio/(1.-fPoissonRatio) * (elastStrain[0]+elastStrain[1]);
+        // data.fElasticStrain[index].Zero();
+        // VecDouble elastStrain = MatD.inverse()*res;
+        // data.fElasticStrain[index].fXX() = elastStrain[0];
+        // data.fElasticStrain[index].fYY() = elastStrain[1];
+        // data.fElasticStrain[index].fXY() = elastStrain[2];
+        // data.fElasticStrain[index].fZZ() = -fPoissonRatio/(1.-fPoissonRatio) * (elastStrain[0]+elastStrain[1]);
 
     } else {
         //Box 7.3

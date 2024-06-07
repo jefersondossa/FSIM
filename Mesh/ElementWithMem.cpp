@@ -27,12 +27,12 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
         fElasticConstitutiveMatrix.resize(6,6);
         fElasticConstitutiveMatrix = 2.*fPlasticityModel->ShearModulus()*fPlasticityModel->fIdentity4Dev + fPlasticityModel->BulkModulus()*fPlasticityModel->fId2xId2;
         if (fPlasticityModel->PlaneStress()){
-            fElasticConstitutiveMatrix.row(2).setZero();
-            fElasticConstitutiveMatrix.row(3).setZero();
-            fElasticConstitutiveMatrix.row(4).setZero();
-            fElasticConstitutiveMatrix.col(2).setZero();
-            fElasticConstitutiveMatrix.col(3).setZero();
-            fElasticConstitutiveMatrix.col(4).setZero();
+            fElasticConstitutiveMatrix.setZero();
+            double alpha = (3.*fPlasticityModel->BulkModulus() - 2.*fPlasticityModel->ShearModulus()) / (3.*fPlasticityModel->BulkModulus() + 4.*fPlasticityModel->ShearModulus());
+            fElasticConstitutiveMatrix(0,0) = fElasticConstitutiveMatrix(1,1) = 1. + alpha;
+            fElasticConstitutiveMatrix(0,1) = fElasticConstitutiveMatrix(1,0) = alpha;
+            fElasticConstitutiveMatrix(5,5) = 0.5;
+            fElasticConstitutiveMatrix *= 2.*fPlasticityModel->ShearModulus();
         }
 
         auto felastPos = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());

@@ -10,12 +10,7 @@ int main()
 #ifdef HAS_GRAPHINTERFACE
 
     WindowConstructor c;
-    c.Open_f();
-    //c.EP2D_f();
-    // c.Show();
-
-    // PainelControle controle;
-    // controle.iniciar();
+    c.f_Open();
 
     return Fl::run();
 #else 

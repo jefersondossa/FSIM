@@ -9,6 +9,3 @@ sigma_y =.5+hardening*plast;
 
 CompMesh* cmesh = new CompMesh();
 
-//Physical Group 
-
-};

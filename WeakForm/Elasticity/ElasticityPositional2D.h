@@ -15,11 +15,13 @@ protected:
     // Constitutive matrix
     MatrixDouble fConstitutiveMatrix;
     //Second Piola Kirchhoff Stress
-    MatrixDouble SPKStress; 
+    MatrixDouble SPKStress;
+
+    double fThickness = 1.0;
 
 public:
     //Positional elasticity 2D constructor
-    ElasticityPositional2D(int matid, double young, double poisson, bool planes = true);
+    ElasticityPositional2D(int matid, double young, double poisson, double thick = 1., bool planes = true);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
