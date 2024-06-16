@@ -98,12 +98,19 @@ void WindowConstructor::fApply_geometry_cb(){
   3. Sent to the OpenGl Window the Physical Groups id's (matids) and the .geo and .msh paths. */
 
 //**********************************************************************************************
-
-/* ========================= PART 1. ========================= */
-
-  //Sends to the OpenGL window the .geo and .msh file paths.
+  //Stores the .geo and .msh file paths.
   gp = geo->value();
   mp = msh->value();
+
+  // if((gp == "" || mp != "") || (!gp.empty() && gp.substr(gp.size() - 4) != ".geo") || 
+  //   (!mp.empty() && mp.substr(mp.size() - 4) != ".msh")){
+
+  //   return;
+  // }
+
+  // else{
+
+/* ========================= PART 1. ========================= */
 
   //Sends the text to the Script Display GUI
   ScriptDisplay->buffer(Buffer);
@@ -277,4 +284,5 @@ void WindowConstructor::fApply_geometry_cb(){
   playback->redraw();
   playback->take_focus();
 }
+
 

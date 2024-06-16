@@ -10,6 +10,7 @@
 08. fNavierStokes_cb(); 
 09. fPoisson_cb();
 10. fL2Projection_cb(); 
+11. fOpenFoam_cb();
 
 */
 
@@ -48,6 +49,10 @@ void WindowConstructor::fApply_WF_cb(){
     c = NULL;
 
     d= this->plane_stress->value();
+
+    wf = this->WeakForm->text();
+    pg = this->PhysicalGroups->text();
+    bc = "";
     //Read File and find PhysicalGroups->text() first character position
 
     ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in); //Allows to read ScriptMemory.
@@ -113,7 +118,7 @@ void WindowConstructor::fApply_WF_cb(){
     c = NULL;
     d = this->plane_stress->value();
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -181,7 +186,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = this->poisson->value();
     c = NULL;
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -250,7 +255,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = this->area->value(); 
     c = NULL;
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -319,7 +324,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = this->area->value();
     c = NULL;
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -388,7 +393,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = this->viscosity->value();
     c = NULL;
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -455,7 +460,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = this->viscosity->value();
     c = NULL;
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -523,7 +528,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = NULL;
     c = NULL;
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = "";
 
@@ -591,7 +596,7 @@ void WindowConstructor::fApply_WF_cb(){
     b = this->y->value();
     c = this->z->value();
 
-    wf = this->WeakForm->label();
+    wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     bc = this->BoundaryCondition->text();
 
@@ -665,6 +670,7 @@ void WindowConstructor::fElasticity2D_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fElasticityPositional2D_cb ========================= */
@@ -680,6 +686,7 @@ void WindowConstructor::fElasticityPositional2D_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fElasticity3D_cb ========================= */
@@ -695,6 +702,7 @@ void WindowConstructor::fElasticity3D_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fElasticTruss_cb ========================= */
@@ -710,6 +718,7 @@ void WindowConstructor::fElasticTruss_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fPositionalTruss_cb ========================= */
@@ -725,6 +734,7 @@ void WindowConstructor::fPositionalTruss_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fStokes_cb ========================= */
@@ -740,6 +750,7 @@ void WindowConstructor::fStokes_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fNavierStokes_cb ========================= */
@@ -755,6 +766,7 @@ void WindowConstructor::fNavierStokes_cb(){
     this->NavierStokes_Menu->show();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fPoisson_cb ========================= */
@@ -770,6 +782,7 @@ void WindowConstructor::fPoisson_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->show();
     this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->hide();
 }
 
 /* ========================= fL2Projection_cb ========================= */
@@ -785,4 +798,44 @@ void WindowConstructor::fL2Projection_cb(){
     this->NavierStokes_Menu->hide();
     this->Poisson_Menu->hide();
     this->L2Projection_Menu->show();
+    this->OpenFoam_Menu->hide();
+}
+
+/* ========================= fOpenFoam_cb ========================= */
+
+void WindowConstructor::fOpenFoam_cb(){
+
+    this->Elasticity2D_Menu->hide();
+    this->ElasticityPositional2D_Menu->hide();
+    this->Elasticity3D_Menu->hide();
+    this->ElasticTruss_Menu->hide();
+    this->PositionalTruss_Menu->hide();
+    this->Stokes_Menu->hide();
+    this->NavierStokes_Menu->hide();
+    this->Poisson_Menu->hide();
+    this->L2Projection_Menu->hide();
+    this->OpenFoam_Menu->show();
+}
+
+/* ========================= ffixedValue_cb ========================= */
+
+void WindowConstructor::ffixedValue_cb(){
+
+  string text = FluidVelocity->text();
+
+  if(text != "fixedValue"){
+
+    this->x->deactivate();
+    this->y->deactivate();
+    this->z->deactivate();
+    this->Values->deactivate();
+  }
+
+  if(text == "fixedValue"){
+
+    this->x->activate();
+    this->y->activate();
+    this->z->activate();
+    this->Values->activate();
+  }
 }

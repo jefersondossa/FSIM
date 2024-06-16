@@ -11,6 +11,12 @@ void WindowConstructor::fElasticity3D(Fl_Group *group){
 
   poisson = new Fl_Value_Input(1310, 235, 95, 25, "Poisson Ratio: ");
 
+  /*============================== Button_Apply_WeakForm ==============================*/
+
+  Button_Apply_WeakForm = new Fl_Button(1410, 275, 80, 25, "Apply");
+  Button_Apply_WeakForm->callback((Fl_Callback*)fStatic_Apply_WF);
+
+
   Elasticity3D_Menu->end();
 
   group->add(Elasticity3D_Menu);

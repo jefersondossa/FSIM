@@ -1,0 +1,16 @@
+Physical Groups: Right
+Weak Form: L2 Projection
+Boundary Condition: Neumann
+X: 0
+Y: -9
+Z: 0
+
+Physical Groups: Domain
+Weak Form: Elasticity 2D
+Young Modulus: 0
+Poisson Modulus: 0
+Plane Stress: 0
+
+geo path: /home/felipecosta/FSArl/GraphicInterface/Malhas para teste/Geogrelha.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/Malhas para teste/Geogrelha.msh
+

@@ -145,7 +145,7 @@ public:
   Fl_Value_Output *dimension; //GUI -> Defines the  problem dimension output (Geometry Menu widget);
   Fl_Button *Apply_geometry; //GUI -> Defines the  Save button for the Geometry Menu widget;
 
-  map<string,int> PhysGroup; //GUI -> Allows to list the Physical Groups Nmaes with the Material ID.
+  map<string,int> PhysGroup; //GUI -> Allows to list the Physical Groups Names with the Material ID.
 
   /* ========================= CREATION FUNCTIONS ========================= */
 
@@ -196,6 +196,7 @@ public:
   Fl_Group *NavierStokes_Menu; //GUI -> Defines the Navier Stokes Submenu from Weak Form Menu;
   Fl_Group *Poisson_Menu; //GUI -> Defines the Poisson Submenu from Weak Form Menu;
   Fl_Group *L2Projection_Menu; //GUI -> Defines the L2 Projection Submenu from Weak Form Menu;
+  Fl_Group *OpenFoam_Menu; //GUI -> Defines the OpenFoam Submenu from Weak Form Menu;
 
   Fl_Choice *PhysicalGroups; //GUI -> Defines the Physical Group menu from Weak Form Menu;
   static Fl_Menu_Item menu_PhysicalGroups[];
@@ -205,6 +206,18 @@ public:
 
   Fl_Choice *BoundaryCondition; //GUI -> Defines the Boundary Condition menu from L2 Projection SubMenu;
   static Fl_Menu_Item menu_BoundaryCondition[];
+
+  Fl_Choice *FluidSimulation; //GUI -> Defines the Fluid Simulation menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_FluidSimulation[];
+
+  Fl_Choice *FluidFlow; //GUI -> Defines the Fluid Flow menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_FluidFlow[];
+
+  Fl_Choice *FluidVelocity; //GUI -> Defines the Fluid Velocity menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_FluidVelocity[];
+
+  Fl_Choice *FluidPressure; //GUI -> Defines the Fluid Pressure menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_FluidPressure[];
 
   Fl_Value_Input *young; //GUI -> Defines the Elasticity Modulus variable intput from Weak Form Menu;
   Fl_Value_Input *poisson; //GUI -> Defines the Poisson Ratio variable intput from Weak Form Menu;
@@ -218,6 +231,8 @@ public:
   Fl_Check_Button *plane_stress; //GUI -> Defines the Plane Stress variable intput from Weak Form Menu (0 for Plane Strain; 1 for Plane Stress);
 
   Fl_Button *Button_Apply_WeakForm; //GUI -> Defines the apply button for the WeakForm Menu widget.
+
+  Fl_Box *Values; //GUI -> Defines just a box text;
 
   /* ========================= CREATION FUNCTIONS ========================= */
 
@@ -234,6 +249,7 @@ public:
   void fNavierStokes(Fl_Group *group); //GUI -> Defines the Navier Stokes Submenu function;
   void fPoisson(Fl_Group *group); //GUI -> Defines the Poisson Submenu function;
   void fL2Projection(Fl_Group *group); //GUI -> Defines the L2 Projection Submenu function.
+  void fOpemFoam(Fl_Group *group);  //GUI -> Defines the OpenFoam Submenu function.
 
   /* ========================= CALLBACK FUNCTIONS ========================= */
 
@@ -248,6 +264,9 @@ public:
   void fNavierStokes_cb(); //GUI -> Defines the Navier Stokes Callback Submenu function;
   void fPoisson_cb(); //GUI -> Defines the Poisson Callback Submenu function;
   void fL2Projection_cb(); //GUI -> Defines the L2 Projection Callback Submenu function.
+  void fOpenFoam_cb(); //GUI -> Defines the OpenFoam Callback Submenu function.
+
+  void ffixedValue_cb(); //GUI -> Defines the fixed Value Velocity Callback Submenu function.
 
 private:
 
@@ -281,6 +300,12 @@ private:
   inline void fInline_L2Projection(Fl_Menu_*, void*);
   static void fStatic_L2Projection(Fl_Menu_*, void*);
 
+  inline void fInline_OpenFoam(Fl_Menu_*, void*);
+  static void fStatic_OpenFoam(Fl_Menu_*, void*);
+
+  inline void fInline_fixedValue(Fl_Menu_*, void*);
+  static void fStatic_fixedValue(Fl_Menu_*, void*);
+
 
 //************************************
 //ANALYSIS MENU COMPONENTS - FSArl GUI
@@ -299,9 +324,6 @@ public:
 
   Fl_Group *NonLinear_Menu; //GUI -> Defines the Non Linear Submenu form Analysis Menu;
   Fl_Group *Increm_Transient_Menu; //GUI -> Defines the Incremental and Transient Submenu form Analysis Menu;
-
-  Fl_Choice *CompMesh; //GUI -> Defines the Comp Mesh choice from Analysis Menu;
-  static Fl_Menu_Item menu_CompMesh[];
 
   //As Steps Number variable, the Fl_Value_Input Nsteps will be used.
   Fl_Value_Input *tolerance; //GUI -> Defines the tolerance variable intput from Analysis Menu;

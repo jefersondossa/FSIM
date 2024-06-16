@@ -3,6 +3,7 @@ file(GLOB graphicinterface
     WindowConstructor.h
     OpenGLWindow/OpenGL_WC.h
     OpenGLWindow/OpenGL_WC.cpp
+    OpenFLTKWindow/OpenFLTKWindow.cpp
     WeakFormMenu/Elasticity2DMenu.cpp
     WeakFormMenu/ElasticityPositional2DMenu.cpp
     WeakFormMenu/Elasticity3DMenu.cpp
@@ -14,6 +15,7 @@ file(GLOB graphicinterface
     WeakFormMenu/L2Projection2DMenu.cpp
     WeakFormMenu/WeakFormMenu.cpp
     WeakFormMenu/GeometryMenu.cpp
+    WeakFormMenu/OpenFoamMenu.cpp
     TopHeaderMenu/TopHeaderMenu.cpp
     TopHeaderMenu/TopHeaderFunctions.cpp
     ToolBarMenu/Button_Analysis.cpp

@@ -42,7 +42,6 @@ void WindowConstructor::fApply_Analysis_cb(){
 
      string at = this->AnalysisType->text(); //Object that saves Analysis Typer choice from Container_5;
      string st  = this->SolverType->text(); //Object that saves Solver Typer choice from Container_5;
-     string cm; //Object that saves Comp Mesh choice from Container_5;
      double a; //Object that saves Container_5_i input variable;
      double b; //Object that saves Container_5_i input variable;
      double c; //Object that saves Container_5_i input variable;
@@ -54,8 +53,6 @@ void WindowConstructor::fApply_Analysis_cb(){
          a = NULL;
          b = NULL;
          c = NULL;
-
-         cm = "";
 
          ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
 
@@ -112,8 +109,6 @@ void WindowConstructor::fApply_Analysis_cb(){
          b = this->maxInterations->value();
          c = NULL;
 
-         cm = this->CompMesh->text();
-
          ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
 
          if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
@@ -141,24 +136,24 @@ void WindowConstructor::fApply_Analysis_cb(){
               if(ScriptMemory_txt.is_open()){
       
                   ScriptMemory_txt << Str; //Append Str to ScriptMemory
-                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
                   ScriptMemory_txt.close(); //Closes ScriptMemory.
               }
 
               Buffer.remove(0,Buffer.length());
               Oss<< Str;
-              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n" << "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
               Buffer.append(Oss.str().c_str());
          }
 
          else{
              ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);
-             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n" << "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
              ScriptMemory_txt.close(); //Closes ScriptMemory.
 
              Buffer.remove(0,Buffer.length());
              Oss<< Str;
-             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n" << "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
              Buffer.append(Oss.str().c_str());
          }
      }
@@ -168,8 +163,6 @@ void WindowConstructor::fApply_Analysis_cb(){
          a = this->tolerance->value();
          b = this->maxInterations->value();
          c = this->Nsteps->value();
-
-         cm = this->CompMesh->text();
 
          ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
 
@@ -199,24 +192,24 @@ void WindowConstructor::fApply_Analysis_cb(){
               if(ScriptMemory_txt.is_open()){
       
                   ScriptMemory_txt << Str; //Append Str to ScriptMemory
-                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"  << "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
                   ScriptMemory_txt.close(); //Closes ScriptMemory.
               }
 
               Buffer.remove(0,Buffer.length());
               Oss<< Str;
-              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+              Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"  <<"Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
               Buffer.append(Oss.str().c_str());
          }
 
          else{
              ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);
-             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"  << "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
              ScriptMemory_txt.close(); //Closes ScriptMemory.
 
              Buffer.remove(0,Buffer.length());
              Oss<< Str;
-             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"<< "Comp Mesh: " << cm  << "\n"<< "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
+             Oss<<"Analysis Type: " << at << "\n" << "Solver Type: " << st << "\n"  << "Steps Number: " << c << "\n"<< "Tolerance: " << a << "\n"<< "Maximum Interations: " << b << "\n"<< "\n";
              Buffer.append(Oss.str().c_str());
          }
      }

@@ -17,7 +17,7 @@ void WindowConstructor::fL2Projection(Fl_Group *group){
   BoundaryCondition->down_box(FL_BORDER_BOX);
   BoundaryCondition->menu(menu_BoundaryCondition);
 
-  Fl_Box *Values = new Fl_Box(1172, 240, 58, 25, "Values: ");
+  Values = new Fl_Box(1172, 240, 58, 25, "Values: ");
 
   x = new Fl_Value_Input(1255, 240, 55, 25, "X: ");
 
@@ -30,6 +30,11 @@ void WindowConstructor::fL2Projection(Fl_Group *group){
   this->BoundaryCondition->add("Neumann");
   this->BoundaryCondition->add("Directional Homogeneous Dirichlet");
   this->BoundaryCondition->add("Directional Non-Homogeneous Dirichlet");
+
+ /*============================== Button_Apply_WeakForm ==============================*/
+
+  Button_Apply_WeakForm = new Fl_Button(1410, 270, 80, 25, "Apply");
+  Button_Apply_WeakForm->callback((Fl_Callback*)fStatic_Apply_WF);
 
   L2Projection_Menu->end();
 

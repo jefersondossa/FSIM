@@ -40,6 +40,10 @@
         fInline_L2Projection;
         fStatic_L2Projection;
 
+    From fOpenFoam_cb:
+        fInline_OpenFoam;
+        fStatic_OpenFoam;
+
 */
 
 #include "WindowConstructor.h"
@@ -142,4 +146,25 @@ void WindowConstructor::fInline_L2Projection(Fl_Menu_*, void*){
 
 void WindowConstructor::fStatic_L2Projection(Fl_Menu_* o, void* v){
     ((WindowConstructor*)(o->parent()->parent()->user_data()))->fInline_L2Projection(o,v);
+}
+
+/* ========================= From OpenFoam_cb ========================= */
+
+void WindowConstructor::fInline_OpenFoam(Fl_Menu_*, void*){
+    this->fOpenFoam_cb();
+}
+
+void WindowConstructor::fStatic_OpenFoam(Fl_Menu_* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->user_data()))->fInline_OpenFoam(o,v);
+}
+
+/* ========================= From ffixedValue_cb ========================= */
+
+void WindowConstructor::fInline_fixedValue(Fl_Menu_*, void*){
+    this->ffixedValue_cb();
+
+}
+
+void WindowConstructor::fStatic_fixedValue(Fl_Menu_* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_fixedValue(o,v);
 }

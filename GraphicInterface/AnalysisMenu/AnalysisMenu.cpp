@@ -7,11 +7,6 @@ Fl_Menu_Item WindowConstructor::menu_Analysis[] = {
         {0,0,0,0,0,0,0,0,0}
     };
 
-Fl_Menu_Item WindowConstructor::menu_CompMesh[] = {
-        {"Set a Comp Mesh", 0,  0, 0, 1, (uchar)FL_NORMAL_LABEL, 0, 14, 8},
-        {0,0,0,0,0,0,0,0,0}
-    };
-
 Fl_Menu_Item WindowConstructor::menu_SolverType[] = {
         {"Set a Solver Type", 0,  0, 0, 1, (uchar)FL_NORMAL_LABEL, 0, 14, 8},
         {0,0,0,0,0,0,0,0,0}

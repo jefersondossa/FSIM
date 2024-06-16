@@ -25,7 +25,7 @@ void WindowConstructor::fWF(Fl_Double_Window *window){
 
 /*============================== WF_Menu ==============================*/
 
-    WF_Menu = new Fl_Group(1160, 75, 375, 275, "Weak Form");
+    WF_Menu = new Fl_Group(1160, 75, 375, 460, "Weak Form");
     WF_Menu->color(FL_LIGHT1);
     WF_Menu->labelsize(18);
     WF_Menu->hide();
@@ -54,11 +54,7 @@ void WindowConstructor::fWF(Fl_Double_Window *window){
     fPoisson(WF_Menu);
     fPositionalTruss(WF_Menu);
     fStokes(WF_Menu);
-
-    /*============================== Button_Apply_WeakForm ==============================*/
-
-    Button_Apply_WeakForm = new Fl_Button(1410, 305, 80, 25, "Apply");
-    Button_Apply_WeakForm->callback((Fl_Callback*)fStatic_Apply_WF);
+    fOpemFoam(WF_Menu);
 
     WF_Menu->end();
 

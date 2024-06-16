@@ -10,6 +10,7 @@
 #include "WeakFormMenu/WeakFormMenu.cpp"
 #include "WeakFormMenu/WeakFormFunctions.cpp"
 #include "WeakFormMenu/WeakForm_Inl_Sta_Functions.cpp"
+#include "WeakFormMenu/OpenFoamMenu.cpp"
 #include "ToolBarMenu/ToolBarMenu.cpp"
 #include "ToolBarMenu/Button_WeakForm.cpp"
 #include "ToolBarMenu/Button_Analysis.cpp"
@@ -32,6 +33,7 @@
 #include "PosProcessingMenu/PProcessingMenu.cpp"
 #include "PosProcessingMenu/PProcessingFunction.cpp"
 #include "PosProcessingMenu/PProcessing_Inl_Sta_Functions.cpp"
+
 
 /**
  Constructor
@@ -71,12 +73,3 @@ WindowConstructor::WindowConstructor() {
   
 }
 
-void WindowConstructor::f_Open(){
-
-    Window->show();
-
-    ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);
-    if(ScriptMemory_txt.is_open()){
-      ScriptMemory_txt.close();
-    }
-}
