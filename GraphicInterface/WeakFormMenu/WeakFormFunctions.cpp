@@ -1,6 +1,7 @@
 /* This cpp file describes the following Weak Form Menu functions:
 
-01. fApply_WF_cb
+00. fWF_free_cb();
+01. fApply_WF_cb();
 02. fElasticity2D_cb(); 
 03. fElasticityPositional2D_cb();
 04. fElasticity3D_cb(); 
@@ -11,6 +12,8 @@
 09. fPoisson_cb();
 10. fL2Projection_cb(); 
 11. fOpenFoam_cb();
+12. fU_OpenFoam_cb();
+13. fp_OpenFoam_cb();
 
 */
 
@@ -18,6 +21,36 @@
 #include "WeakFormMenu/Elasticity2DMenu.cpp"
 
 using namespace std;
+
+/* ========================= fWF_free_cb() ========================= */
+
+void WindowConstructor::fWF_free_cb_cb(){
+
+    this->WeakForm->activate();
+    //int matid = PhysGroup[this->WeakForm_Menu->text()];
+    int matid = PhysGroup[this->PhysicalGroups->text()];
+    playback->setInt(matid);
+
+    //Blocks the user to use the OpenFoam for Curve and Volume Physical Groups.
+
+    for (const auto& pair : PhysGroup2){
+
+      int index = WeakForm->find_index("OpenFoam");
+      std::cout << "Name: " << pair.first << ", Phisycal Group Type: " << pair.second << std::endl;
+
+      if(Dimension == 3 && PhysicalGroups->text() == pair.first && pair.second == "Surface"){
+
+        WeakForm->remove(index);
+        WeakForm->add("OpenFoam",0,(Fl_Callback*)WindowConstructor::fStatic_OpenFoam,0,0);
+      }
+
+      if(Dimension != 3 || pair.second != "Surface"){
+
+        WeakForm->remove(index);
+        WeakForm->add("OpenFoam",0,(Fl_Callback*)WindowConstructor::fStatic_OpenFoam,0,1);
+      }
+    }
+}
 
 /* ========================= fApply_WF_cb ========================= */
 
@@ -33,11 +66,23 @@ void WindowConstructor::fApply_WF_cb(){
     double b; 
     double c; 
     double d; 
+    double e;
+    double f;
+    double g;
   
+    string ea;
+    string eb;
+    string ec;
+    string ed;
+    string ee;
+    string ef;
     string wf; 
     string pg; 
     string bc; 
-  
+    string bc2;
+    string st;
+    string ft;
+ 
   ScriptDisplay->buffer(Buffer);
 
   //Elasticity2D Variables
@@ -66,7 +111,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -136,7 +181,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -205,7 +250,7 @@ void WindowConstructor::fApply_WF_cb(){
     }
 
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -273,7 +318,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -343,7 +388,7 @@ void WindowConstructor::fApply_WF_cb(){
     }
 
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -410,7 +455,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -478,7 +523,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -546,7 +591,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -613,7 +658,7 @@ void WindowConstructor::fApply_WF_cb(){
       ScriptMemory_txt.close();//Closes ScriptMemory.
     }
 
-    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Pyisical Groups character position. If was not found, returns npos. pos = position.
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
 
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
@@ -652,6 +697,101 @@ void WindowConstructor::fApply_WF_cb(){
       Buffer.remove(0,Buffer.length());
       Oss<< Str;
       Oss<<"Physical Groups: " << pg << "\n" << "Weak Form: " << wf << "\n" << "Boundary Condition: " << bc << "\n" <<"X: " << a << "\n" << "Y: " << b << "\n" << "Z: " << c << "\n"<< "\n";
+      Buffer.append(Oss.str().c_str());
+    }
+  }
+
+  //OpenFoam Variables
+  if(name == "OpenFoam"){
+
+    ea = to_string(x->value());
+    eb = to_string(y->value());
+    ec = to_string(z->value());
+    ed = to_string(x2->value());
+
+    wf = this->WeakForm->text();
+    pg = this->PhysicalGroups->text();
+    
+    bc = this->BC1_OpenFoam->text();
+    bc2 = this->BC2_OpenFoam->text();
+
+    //Stores U and p conditions
+    string Uvector;
+    string pvector;
+    /*_____________________________Condition 1__________________________________*/
+
+    if(bc == "fixedValue"){
+      Uvector = "\nUvector: (" + ea + " " + eb + " " + ec + ")";
+    }
+
+    else{
+      Uvector = "";
+    }
+
+    if(bc2 == "fixedValue"){
+      pvector = "\npValue: " + ed;
+    }
+
+    else{
+      pvector = "";
+    }
+
+   //Reads File and finds PhysicalGroups->text() first character position
+
+    ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in); //Allows to read ScriptMemory.
+
+    //Copies ScriptMemory text to Str.
+    if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
+      while(getline(ScriptMemory_txt, Line)){
+        Str += Line;
+        Str += "\n";
+      }
+      ScriptMemory_txt.close();//Closes ScriptMemory.
+    }
+
+    size_t pos = Str.find(PhysicalGroups->text(),0); //Finds and returns the first Physical Groups character position. If was not found, returns npos. pos = position.
+
+    //Reads string Str and finds the next NULL line position.
+    if(pos != string::npos){
+      size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
+      Str.erase(pos-17, pos_null - pos +18); //Delete the pos and pos_null gap text (-17 because it's necessary to erase the "Physical Group: ").
+
+      /*
+      At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
+      besides the script print, the Str is copied to ScriptMemory and Oss(Oss-> buff -> scriptdisplay).
+      */
+      
+      //Firt clear the ScriptMemory
+      ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);//Allows to append text
+      if(ScriptMemory_txt.is_open()){
+        ScriptMemory_txt.close();
+      }
+
+      ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);//Allows to append text
+      if(ScriptMemory_txt.is_open()){
+
+      ScriptMemory_txt << Str; //Append Str to ScriptMemory
+      ScriptMemory_txt << "Physical Group: " << pg << "\n" << "Weak Form: " << wf << "\n"
+                       << "Velocity BC: " << bc << Uvector << "\n" <<"Pressure BC: " << bc2 << pvector << "\n" << "\n";
+      ScriptMemory_txt.close(); //Closes ScriptMemory.
+      }
+      Buffer.remove(0,Buffer.length());
+      Oss<< Str;
+      Oss << "Physical Group: " << pg << "\n" << "Weak Form: " << wf << "\n"
+          << "Velocity BC: " << bc << Uvector << "\n" <<"Pressure BC: " << bc2 << pvector << "\n" << "\n";
+      Buffer.append(Oss.str().c_str());
+
+    }
+    else{
+      ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::app);
+      ScriptMemory_txt << "Physical Group: " << pg << "\n" << "Weak Form: " << wf << "\n"
+                       << "Velocity BC: " << bc << Uvector << "\n" <<"Pressure BC: " << bc2 << pvector << "\n" << "\n";
+      ScriptMemory_txt.close(); //Closes ScriptMemory.
+
+      Buffer.remove(0,Buffer.length());
+      Oss<< Str;
+      Oss << "Physical Group: " << pg << "\n" << "Weak Form: " << wf << "\n"
+          << "Velocity BC: " << bc << Uvector << "\n" <<"Pressure BC: " << bc2 << pvector << "\n" << "\n";
       Buffer.append(Oss.str().c_str());
     }
   }
@@ -821,21 +961,115 @@ void WindowConstructor::fOpenFoam_cb(){
 
 void WindowConstructor::ffixedValue_cb(){
 
-  string text = FluidVelocity->text();
+  string text1 = BC1_OpenFoam->text();
+  string text2 = BC2_OpenFoam->text();
 
-  if(text != "fixedValue"){
+   if(text1 != "fixedValue"){
 
-    this->x->deactivate();
-    this->y->deactivate();
-    this->z->deactivate();
-    this->Values->deactivate();
+     this->x->deactivate();
+     this->y->deactivate();
+     this->z->deactivate();
+     this->Values1->deactivate();
+   }
+
+   if(text1 == "fixedValue"){
+
+     this->x->activate();
+     this->y->activate();
+     this->z->activate();
+     this->Values1->activate();
+   }
+
+   if(text2 != "fixedValue"){
+   this->x2->deactivate();
+   }
+
+   if(text2 == "fixedValue"){
+   this->x2->activate();
+   }
+
+  //if noSlip or fixedValue --> zeroGradient:
+  if(text1 == "noSlip"){
+    
+    int index1 = BC1_OpenFoam->find_index("noSlip");
+    BC1_OpenFoam->value(index1);
+    int index2 = BC2_OpenFoam->find_index("zeroGradient");
+    BC2_OpenFoam->value(index2);
+
   }
 
-  if(text == "fixedValue"){
+  if(text1 == "fixedValue"){
 
-    this->x->activate();
-    this->y->activate();
-    this->z->activate();
-    this->Values->activate();
+    int index1 = BC1_OpenFoam->find_index("fixedValue");
+    BC1_OpenFoam->value(index1);
+    int index = BC2_OpenFoam->find_index("zeroGradient");
+    BC2_OpenFoam->value(index);
+
+  }
+
+  if(text2 == "noSlip"){
+    
+    int index1 = BC2_OpenFoam->find_index("noSlip");
+    BC2_OpenFoam->value(index1);
+    int index2 = BC1_OpenFoam->find_index("zeroGradient");
+    BC1_OpenFoam->value(index2);
+
+  }
+
+  if(text2 == "fixedValue"){
+
+    int index1 = BC2_OpenFoam->find_index("fixedValue");
+    BC2_OpenFoam->value(index1);
+    int index = BC1_OpenFoam->find_index("zeroGradient");
+    BC1_OpenFoam->value(index);
+    const Fl_Menu_Item* items = BC1_OpenFoam->menu();
+    const Fl_Menu_Item& item = items[index];
+
+  }
+
+  //if empty --> empty
+  if(text2 == "empty"){
+
+    int index1 = BC1_OpenFoam->find_index("empty");
+    BC1_OpenFoam->value(index1);
+  }
+
+   if(text1 == "empty"){
+
+    int index2 = BC2_OpenFoam->find_index("empty");
+    BC2_OpenFoam->value(index2);
   }
 }
+
+/* ========================= fParameter_OpenFoam_cb ========================= */
+
+void WindowConstructor::fParameter_OpenFoam_cb(){
+
+  Parameter_OpenFoam_Menu->show();
+}
+
+/* ========================= fControlDict_OpenFoam_cb ========================= */
+
+void WindowConstructor::fControlDict_OpenFoam_cb(){
+
+  Parameter_OpenFoam_Menu->hide(); 
+}
+
+/* ========================= fU_OpenFoam_cb ========================= */
+
+void WindowConstructor::fU_OpenFoam_cb(){
+
+  U_OpenFoam_Menu->show();
+  p_OpenFoam_Menu->hide();
+}
+
+/* ========================= fp_OpenFoam_cb ========================= */
+
+void WindowConstructor::fp_OpenFoam_cb(){
+
+  p_OpenFoam_Menu->show();
+  U_OpenFoam_Menu->hide();
+}
+
+
+

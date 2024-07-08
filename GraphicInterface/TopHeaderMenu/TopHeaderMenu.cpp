@@ -8,8 +8,12 @@ Fl_Menu_Item WindowConstructor::Topheader_Menu[] =
     {"Open...    ", 0,  (Fl_Callback*)WindowConstructor::fStatic_Open_File, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
     {"New...      ", 0,  (Fl_Callback*)WindowConstructor::fStatic_New_File, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
     {0,0,0,0,0,0,0,0,0},
-    {"  Options  ", 0x4006f,  0, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
-    {"  Help  ", 0,  0, 0, 64, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+    {"  Generate  ", 0,  0, 0, 192, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+    {"Header File...    ", 0,  (Fl_Callback*)WindowConstructor::fStatic_G_HeaderFile, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+    {"Foam File...      ", 0,  (Fl_Callback*)WindowConstructor::fStatic_G_FoamFile, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+    {0,0,0,0,0,0,0,0,0},
+    {"  Options  ", 0,  0, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
+    {"  Help  ", 0,  0, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
     {0,0,0,0,0,0,0,0,0}
 };
 

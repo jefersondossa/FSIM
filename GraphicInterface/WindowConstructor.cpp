@@ -25,14 +25,22 @@
 #include "TopHeaderMenu/TopHeaderMenu.cpp"
 #include "TopHeaderMenu/TopHeaderFunctions.cpp"
 #include "TopHeaderMenu/TopHeader_Inl_Sta_Functions.cpp"
+#include "TopHeaderMenu/GenerationFunctions/HeaderFile.cpp"
+#include "TopHeaderMenu/GenerationFunctions/FoamFile.cpp"
+#include "TopHeaderMenu/GenerationFunctions/OFfolderGenerator.cpp"
+#include "TopHeaderMenu/GenerationFunctions/pFile.cpp"
+#include "TopHeaderMenu/GenerationFunctions/UFile.cpp"
 #include "AnalysisMenu/Analysis_Inl_Sta_Functions.cpp"
 #include "AnalysisMenu/AnalysisFunctions.cpp"
 #include "AnalysisMenu/AnalysisMenu.cpp"
 #include "AnalysisMenu/NonLinearMenu.cpp"
 #include "AnalysisMenu/Increment&TransientMenu.cpp"
+#include "AnalysisMenu/OpenFoamAnalysisMenu.cpp"
 #include "PosProcessingMenu/PProcessingMenu.cpp"
 #include "PosProcessingMenu/PProcessingFunction.cpp"
 #include "PosProcessingMenu/PProcessing_Inl_Sta_Functions.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/PressureSubMenu.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/VelocitySubMenu.cpp"
 
 
 /**
@@ -44,6 +52,7 @@ WindowConstructor::WindowConstructor() {
     Window->color(FL_LIGHT1);
     Window->user_data((void*)(this));
     Window->align(Fl_Align(65));
+    Window->resizable(Window);
 
     //Just a box that divides the FSArl window for the input and output variables.
     { Fl_Group* o = new Fl_Group(1159, 34, 376, 750);
@@ -69,7 +78,7 @@ WindowConstructor::WindowConstructor() {
     playback->end();
     
     Window->end();
-    Window->resizable(Window);
+    
   
 }
 

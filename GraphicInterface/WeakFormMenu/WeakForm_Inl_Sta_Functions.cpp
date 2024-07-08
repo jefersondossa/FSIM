@@ -43,6 +43,26 @@
     From fOpenFoam_cb:
         fInline_OpenFoam;
         fStatic_OpenFoam;
+    
+    From ffixedValue_cb:
+        fInline_fixedValue;
+        fStatic_fixedValue;
+    
+    From fParameter_OpenFoam_cb:
+        fInline_Parameter_OF;
+        fStatic_Parameter_OF;
+
+    From fControlDict_OpenFoam_cb:
+        fInline_ControlDict_OF;
+        fInline_ControlDict_OF;
+
+    From fU_OpenFoam_cb:
+        fInline_U_OF;
+        fStatic_U_OF;
+
+    From fp_OpenFoam_cb:
+        fInline_p_OF;
+        fStatic_p_OF;
 
 */
 
@@ -55,7 +75,7 @@ void WindowConstructor::fInline_Apply_WF(Fl_Button*, void*){
 }
 
 void WindowConstructor::fStatic_Apply_WF(Fl_Button* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->user_data()))->fInline_Apply_WF(o,v);
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_Apply_WF(o,v);
 }
 
 /* ========================= From fElasticity2D_cb ========================= */
@@ -166,5 +186,51 @@ void WindowConstructor::fInline_fixedValue(Fl_Menu_*, void*){
 }
 
 void WindowConstructor::fStatic_fixedValue(Fl_Menu_* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_fixedValue(o,v);
+    ((WindowConstructor*)(o->parent()->parent()->parent()->parent()->user_data()))->fInline_fixedValue(o,v);
 }
+
+/* ========================= From fParameter_OpenFoam_cb() ========================= */
+
+void WindowConstructor::fInline_Parameter_OF(Fl_Widget*, void*){
+    this->fParameter_OpenFoam_cb();
+
+}
+
+void WindowConstructor::fStatic_Parameter_OF(Fl_Widget* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_Parameter_OF(o,v);
+}
+
+/* ========================= From fControlDict_OpenFoam_cb() ========================= */
+
+void WindowConstructor::fInline_ControlDict_OF(Fl_Widget*, void*){
+    this->fControlDict_OpenFoam_cb();
+
+}
+
+void WindowConstructor::fStatic_ControlDict_OF(Fl_Widget* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_ControlDict_OF(o,v);
+}
+
+/* ========================= From fU_OpenFoam_cb() ========================= */
+
+void WindowConstructor::fInline_U_OF(Fl_Widget*, void*){
+    this->fU_OpenFoam_cb();
+
+}
+
+void WindowConstructor::fStatic_U_OF(Fl_Widget* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_U_OF(o,v);
+}
+
+/* ========================= From fp_OpenFoam_cb() ========================= */
+
+void WindowConstructor::fInline_p_OF(Fl_Widget*, void*){
+    this->fp_OpenFoam_cb();
+
+}
+
+void WindowConstructor::fStatic_p_OF(Fl_Widget* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_p_OF(o,v);
+}
+
+

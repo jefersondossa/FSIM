@@ -1,4 +1,4 @@
-m = 0.1;
+m = 1000;
 
 //Building
 //Inside Points
@@ -68,17 +68,17 @@ Surface Loop(1) = {1, 5, 4, 6, 2, 3};
 Volume(1) = {1};
 
 //+
-//Physical Curve("Curve inlet", 13) = {3, 2, 1, 4};
+Physical Curve("Curve inlet", 13) = {3, 2, 1, 4};
 //+
-//Physical Curve("Curve outlet", 14) = {10, 9, 8, 6};
+Physical Curve("Curve outlet", 14) = {10, 9, 8, 6};
 //+
-//Physical Curve("Curve top", 15) = {2, 12, 9, 11};
+Physical Curve("Curve top", 15) = {2, 12, 9, 11};
 //+
-//Physical Curve("Curve botton", 16) = {4, 7, 6, 5};
+Physical Curve("Curve botton", 16) = {4, 7, 6, 5};
 //+
-//Physical Curve("Curve front", 17) = {1, 11, 8, 5};
+Physical Curve("Curve front", 17) = {1, 11, 8, 5};
 //+
-//Physical Curve("Curve back", 18) = {7, 3, 12, 10};
+Physical Curve("Curve back", 18) = {7, 3, 12, 10};
 
 
 //+

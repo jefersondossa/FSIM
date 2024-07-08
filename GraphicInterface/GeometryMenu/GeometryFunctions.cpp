@@ -1,7 +1,6 @@
 /* This cpp file describes the following Geometry Menu functions:
 
 1.  fOpen_Main_Window
-2.  fWF_free_cb
 3.  fInput_geo_cb
 4.  fInput_msh_cb
 5.  fApply_geometry_cb
@@ -22,20 +21,6 @@ void WindowConstructor::fOpen_Main_Window(){
     ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);
         if(ScriptMemory_txt.is_open()){
         ScriptMemory_txt.close();
-    }
-}
-
-/* ========================= fWF_free() ========================= */
-
-void WindowConstructor::fWF_free_cb(){
-
-    this->WeakForm->activate();
-    //int matid = PhysGroup[this->WeakForm_Menu->text()];
-    int matid = PhysGroup[this->PhysicalGroups->text()];
-    playback->setInt(matid);
-
-    for (const auto& pair : PhysGroup) {
-        std::cout << "Name: " << pair.first << ", matid: " << pair.second << std::endl;
     }
 }
 
@@ -180,7 +165,7 @@ void WindowConstructor::fApply_geometry_cb(){
   //Since the goal is to find the Physical Groups and store then:
 
     //Create the Physical Group pattern at geo file.
-    regex PhysGroup_pattern("(Physical (Curve|Surface|Volume))\\(\"(\\w+)\", (\\d+)\\)");
+    regex PhysGroup_pattern(R"(Physical ((Curve|Surface|Volume))\(\"([^\"]+)\", (\d+)\))");
 
     //Physical Groups Identifier by regex library:
       // 1. match[1] = Physical Group (Ex: Physical Curve);
@@ -213,12 +198,12 @@ void WindowConstructor::fApply_geometry_cb(){
 
           // 4. Defines the "matid" variable being equal to the pattern found by match[4]:
           int matid = std::stoi(Match[4]);
+          //curveCount = 6;
+           if (count == "Curve") {
+             curveCount++;
+           }
 
-          if (count == "Curve") {
-            curveCount++;
-          }
-
-          else if (count == "Surface") {
+          if (count == "Surface") {
             surfaceCount++;
           }
 
@@ -233,6 +218,7 @@ void WindowConstructor::fApply_geometry_cb(){
           matids.push_back(matid);
 
           PhysGroup[name] = matid;
+          PhysGroup2[name] = type;
 
           //Clears the Physical Group menu to add new itens when changing the files.
           for(int i = 1; i <= PhysicalGroups->size(); i++){
@@ -251,10 +237,10 @@ void WindowConstructor::fApply_geometry_cb(){
   //___________________________________________________________________________________________________________________
 
     //Parameter for the Dimension:
-    int d;
+    int d = 0;
 
     if (curveCount > 0 && surfaceCount == 0 && volumeCount == 0) {
-      d =1;//Dimension = 1
+      d = 1;//Dimension = 1
       this->Button_WeakForm->activate();
     }
 

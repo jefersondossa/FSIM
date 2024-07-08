@@ -25,7 +25,7 @@ void WindowConstructor::fWF(Fl_Double_Window *window){
 
 /*============================== WF_Menu ==============================*/
 
-    WF_Menu = new Fl_Group(1160, 75, 375, 460, "Weak Form");
+    WF_Menu = new Fl_Group(1160, 75, 375, 700, "Weak Form");
     WF_Menu->color(FL_LIGHT1);
     WF_Menu->labelsize(18);
     WF_Menu->hide();

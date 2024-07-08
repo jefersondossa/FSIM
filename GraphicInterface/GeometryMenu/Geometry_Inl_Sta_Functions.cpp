@@ -1,6 +1,6 @@
 /* This cpp file describes the following Geometry Menu Inline and Static functions:
 
-1.  From fWF_free_cb:
+1.  From fWF_free_cb_cb:
         fInline_WF_free
         fStatic_WF_free
 
@@ -20,10 +20,10 @@
 
 #include "WindowConstructor.h"
 
-/* ========================= From fWF_free_cb ========================= */
+/* ========================= From fWF_free_cb_cb ========================= */
 
 void WindowConstructor::fInline_WF_free(Fl_Output*, void*){
-  this->fWF_free_cb();
+  this->fWF_free_cb_cb();
 }
 void WindowConstructor::fStatic_WF_free(Fl_Output* o, void* v){
   ((WindowConstructor*)(o->parent()->parent()->user_data()))->fInline_WF_free(o,v);

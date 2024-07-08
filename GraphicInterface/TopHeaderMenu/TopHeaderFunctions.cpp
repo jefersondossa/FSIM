@@ -2,6 +2,7 @@
 
 1.  fOpen_File_cb;
 2.  fNew_File_cb.
+3.  fGenerate_cb;
 
 */
 
@@ -44,6 +45,7 @@ void WindowConstructor::fOpen_File_cb(){
     Buffer.text("");
     ScriptDisplay->buffer(Buffer);
   }
+
   else{
     cout << "User canceled the file chooser dialog.";
     
@@ -102,10 +104,17 @@ void WindowConstructor::fOpen_File_cb(){
   }
 
   ScriptTxt.close();
-
   Buffer.text(); //Clears the Buffer
   ScriptDisplay->buffer(Buffer); //Clears the
   this->Apply_geometry->do_callback();
+  Geometry_Menu->show();
+  WF_Menu->hide();
+  Analysis_Menu->hide();
+  PProcessing_Menu->hide();
+  zeroFiles.clear();
+  systemFiles.clear();
+  constantFiles.clear();
+  
 }
 
 }
@@ -113,6 +122,9 @@ void WindowConstructor::fOpen_File_cb(){
 /* ========================= fNew_File_cb() ========================= */
 
 void WindowConstructor::fNew_File_cb(){
+
+//Clears OpenGL window
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 //Clears ScriptMemory
 ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);
@@ -144,4 +156,22 @@ this->Geometry_Menu->show();
 
 //Set the first item as the default even after change the file open
 this->PhysicalGroups->value(0);
+
+zeroFiles.clear();
+systemFiles.clear();
+constantFiles.clear();
+}
+
+/* ========================= fGenerateHeader_cb() ========================= */
+
+void WindowConstructor::fGenerateHeader_cb(){
+
+  fHeaderFile();
+}
+
+/* ========================= fGenerateFoam_cb() ========================= */
+
+void WindowConstructor::fGenerateFoam_cb(){
+
+  fFoamFile();
 }

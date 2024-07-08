@@ -52,9 +52,11 @@
 #include <fstream>
 #include <regex>
 #include <map>
+#include <filesystem>
 
 
 using namespace std;
+namespace fs = std::filesystem;
 
 class WindowConstructor {
 
@@ -65,7 +67,7 @@ class WindowConstructor {
 public:
 
   Fl_Text_Buffer Buffer; //GUI -> Defines the Buffer that stores the Script text;
-  fstream ScriptMemory_txt; //GUI -> Defines a txt editor file that haves Script Memory information;
+  fstream ScriptMemory_txt; //GUI -> Just a fstream that is used all over the functions;
   string Str;
   ostringstream Oss;
   /* Since the variables are contained in objects and, since Fl_Text_Buffer function only accepts "text", it's necessary to save the entire
@@ -158,7 +160,7 @@ public:
 
 public:
 
-  void fWF_free_cb(); //GUI -> Defines the function that frees the Weak Form Submenus utilization. This reduces the chances of the user making mistakes;
+  void fWF_free_cb_cb(); //GUI -> Defines the function that frees the Weak Form Submenus utilization. This reduces the chances of the user making mistakes;
   void fInput_geo_cb(); //GUI -> Defines the functionality from geo Fl_Output;
   void fInput_msh_cb(); //GUI -> Defines the functionality from msh Fl_Output;
   void fApply_geometry_cb(); //GUI -> Defines the function that saves the geo and msh paths. It also reads and writes the paths in the script.
@@ -207,17 +209,11 @@ public:
   Fl_Choice *BoundaryCondition; //GUI -> Defines the Boundary Condition menu from L2 Projection SubMenu;
   static Fl_Menu_Item menu_BoundaryCondition[];
 
-  Fl_Choice *FluidSimulation; //GUI -> Defines the Fluid Simulation menu from OpenFoam SubMenu;
-  static Fl_Menu_Item menu_FluidSimulation[];
+  Fl_Choice *BC1_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC1_OpenFoam[];
 
-  Fl_Choice *FluidFlow; //GUI -> Defines the Fluid Flow menu from OpenFoam SubMenu;
-  static Fl_Menu_Item menu_FluidFlow[];
-
-  Fl_Choice *FluidVelocity; //GUI -> Defines the Fluid Velocity menu from OpenFoam SubMenu;
-  static Fl_Menu_Item menu_FluidVelocity[];
-
-  Fl_Choice *FluidPressure; //GUI -> Defines the Fluid Pressure menu from OpenFoam SubMenu;
-  static Fl_Menu_Item menu_FluidPressure[];
+  Fl_Choice *BC2_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC2_OpenFoam[];
 
   Fl_Value_Input *young; //GUI -> Defines the Elasticity Modulus variable intput from Weak Form Menu;
   Fl_Value_Input *poisson; //GUI -> Defines the Poisson Ratio variable intput from Weak Form Menu;
@@ -228,11 +224,28 @@ public:
   Fl_Value_Input *x; //GUI -> Defines the X (val2[0]) variable intput from Weak Form Menu;
   Fl_Value_Input *y; //GUI -> Defines the Y (val2[1]) variable intput from Weak Form Menu;
   Fl_Value_Input *z; //GUI -> Defines the Z (val2[2]) variable intput from Weak Form Menu;
+  Fl_Value_Input *x2; //GUI -> Defines the X2 (val2[0]) variable intput from Second choice (BC2) for OpenFoam;
+  Fl_Value_Input *y2; //GUI -> Defines the Y2 (val2[1]) variable intput from Second choice (BC2) for OpenFoam;
+  Fl_Value_Input *z2; //GUI -> Defines the Z2 (val2[2]) variable intput from Second choice (BC2) for OpenFoam;
   Fl_Check_Button *plane_stress; //GUI -> Defines the Plane Stress variable intput from Weak Form Menu (0 for Plane Strain; 1 for Plane Stress);
 
   Fl_Button *Button_Apply_WeakForm; //GUI -> Defines the apply button for the WeakForm Menu widget.
 
-  Fl_Box *Values; //GUI -> Defines just a box text;
+  Fl_Box *Values1; //GUI -> Defines just a box text;
+  Fl_Box *Values2; //GUI -> Defines just a box text;
+
+  /*---Submenus from OpenFoam---*/
+
+  Fl_Menu_Bar *System_OpenFoam_Menu; //GUI -> Defines the System Submenu from OpenFoam Menu;
+  static Fl_Menu_Item system_OpenFoam_Menu[]; //GUI -> Defines the itens from the System Submenu.
+
+  Fl_Menu_Bar *Parameter_OpenFoam_Menu; //GUI -> Defines the Parameter Submenu from System Menu;
+  static Fl_Menu_Item parameter_OpenFoam_Menu[]; //GUI -> Defines the itens from Parameter Submenu;
+
+  Fl_Group *U_OpenFoam_Menu; //GUI -> Defines the Velocity Submenu from OpenFoam Menu; 
+  Fl_Group *p_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
+
+  map<string,string> PhysGroup2; //GUI -> Allows to list the Physical Groups Names with the Physical Groups Types.
 
   /* ========================= CREATION FUNCTIONS ========================= */
 
@@ -250,6 +263,9 @@ public:
   void fPoisson(Fl_Group *group); //GUI -> Defines the Poisson Submenu function;
   void fL2Projection(Fl_Group *group); //GUI -> Defines the L2 Projection Submenu function.
   void fOpemFoam(Fl_Group *group);  //GUI -> Defines the OpenFoam Submenu function.
+  void fU_OpenFoam(Fl_Group *group); //GUI -> Defines the Velocity Submenu function from Parameters Submenu;
+  void fp_OpenFoam(Fl_Group *group); //GUI -> Defines the Pressure Submenu function from Parameters Submenu;
+
 
   /* ========================= CALLBACK FUNCTIONS ========================= */
 
@@ -265,7 +281,10 @@ public:
   void fPoisson_cb(); //GUI -> Defines the Poisson Callback Submenu function;
   void fL2Projection_cb(); //GUI -> Defines the L2 Projection Callback Submenu function.
   void fOpenFoam_cb(); //GUI -> Defines the OpenFoam Callback Submenu function.
-
+  void fParameter_OpenFoam_cb(); //GUI -> Defines the System Callback Submenu function.
+  void fControlDict_OpenFoam_cb(); //GUI -> Defines the ControlDict Callback Submenu function.
+  void fU_OpenFoam_cb(); //GUI -> Defines the Velocity Callback Button function.
+  void fp_OpenFoam_cb(); //GUI -> Defines the Pressure Callback Button function.
   void ffixedValue_cb(); //GUI -> Defines the fixed Value Velocity Callback Submenu function.
 
 private:
@@ -306,6 +325,18 @@ private:
   inline void fInline_fixedValue(Fl_Menu_*, void*);
   static void fStatic_fixedValue(Fl_Menu_*, void*);
 
+  inline void fInline_Parameter_OF(Fl_Widget*, void*);
+  static void fStatic_Parameter_OF(Fl_Widget*, void*);
+
+  inline void fInline_ControlDict_OF(Fl_Widget*, void*);
+  static void fStatic_ControlDict_OF(Fl_Widget*, void*);
+
+  inline void fInline_U_OF(Fl_Widget*, void*); 
+  static void fStatic_U_OF(Fl_Widget*, void*); 
+
+  inline void fInline_p_OF(Fl_Widget*, void*); 
+  static void fStatic_p_OF(Fl_Widget*, void*); 
+
 
 //************************************
 //ANALYSIS MENU COMPONENTS - FSArl GUI
@@ -319,15 +350,28 @@ public:
   Fl_Choice *AnalysisType; //GUI -> Defines the Analysis choice from Analysis Menu;
   static Fl_Menu_Item menu_Analysis[];
 
+  Fl_Choice *FluidSimulation; //GUI -> Defines the Fluid Simulation menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_FluidSimulation[];
+
+  Fl_Choice *FluidFlow; //GUI -> Defines the Fluid Flow menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_FluidFlow[];
+
   Fl_Choice *SolverType; //GUI -> Defines the Solver Type choice from Analysis Menu;
   static Fl_Menu_Item menu_SolverType[];
 
-  Fl_Group *NonLinear_Menu; //GUI -> Defines the Non Linear Submenu form Analysis Menu;
-  Fl_Group *Increm_Transient_Menu; //GUI -> Defines the Incremental and Transient Submenu form Analysis Menu;
+  Fl_Group *NonLinear_Menu; //GUI -> Defines the Non Linear Submenu from Analysis Menu;
+  Fl_Group *Increm_Transient_Menu; //GUI -> Defines the Incremental and Transient Submenu from Analysis Menu;
+  Fl_Group *OpenFoam_Analysis_Menu; //GUI -> Defines the OpenFoam Analysis Submenu from Analysis Menu;
 
   //As Steps Number variable, the Fl_Value_Input Nsteps will be used.
   Fl_Value_Input *tolerance; //GUI -> Defines the tolerance variable intput from Analysis Menu;
   Fl_Value_Input *maxInterations; //GUI -> Defines the Maximum Interations variable intput from Analysis Menu;
+  Fl_Value_Input *endTime; //GUI -> Defines the end time from OpenFoam Analysis SubMenu;
+  Fl_Value_Input *deltaT; //GUI -> Defines the interpolation time from OpenFoam Analysis SubMenu;
+  Fl_Value_Input *writeInterval; //GUI -> Defines the incremental time from OpenFoam Analysis SubMenu;
+  Fl_Value_Input *writePrecision; //GUI -> Defines the ... from OpenFoam Analysis SubMenu;
+  Fl_Value_Input *timePrecision; //GUI -> Defines the ... from OpenFoam Analysis SubMenu;
+  Fl_Value_Input *OFViscosity; //GUI -> Defines the fluid vicosity from OpenFoam SUbmenu from Analysis Menu;
 
   Fl_Button *Apply_Analysis; //GUI -> Defines the apply button for the Analysis Menu widget.
 
@@ -339,6 +383,7 @@ public:
   void fAnalysis(Fl_Double_Window *window); //GUI -> Defines the Analysis Menu function;
   void fNonLinear(Fl_Group *group); //GUI -> Defines the NonLinear Submenu function;
   void fIncrem_Transient(Fl_Group *group); //GUI -> Defines the Incremental and Transient Submenu function. Since this two have the same variables, they have the same structure too.
+  void fOFAnalysis(Fl_Group *group); //GUI -> Defines the OpenFoam Analysis Submenu function;
 
   /* ========================= CALLBACK FUNCTIONS ========================= */
 
@@ -346,6 +391,7 @@ public:
 
   void fLinear_cb(); //GUI -> Defines the Linear Callback Submenu function;
   void fNonLinear_cb(); //GUI -> Defines the Non Linear Callback Submenu function;
+  void fOFAnalysis_cb(); //GUI -> Defines the OpenFoam Analysis Callback Submenu function;
   void fIncrem_Transient_cb(); //GUI -> Defines the Incremental and Transient Callback Submenu function;
   void fApply_Analysis_cb(); //GUI -> Defines the Apply Analysis button Callback function;
 
@@ -360,9 +406,11 @@ private:
   inline void fInline_Increm_Transient(Fl_Menu_*, void*);
   static void fStatic_Increm_Transient(Fl_Menu_*, void*);
 
+  inline void fInline_OF_Analysis(Fl_Menu_*, void*);
+  static void fStatic_OF_Analysis(Fl_Menu_*, void*);
+
   inline void fInline_Apply_Analysis(Fl_Button*, void*);
   static void fStatic_Apply_Analysis(Fl_Button*, void*);
-
 
 //******************************************
 //POS-PROCESSING MENU COMPONENTS - FSArl GUI
@@ -409,13 +457,25 @@ public:
 public:
 
   void fTopHeader_Menu(Fl_Double_Window *window); //GUI -> Defines the Top Header Menu function.
+  // The functions that generates the Header and OpenFoam files are followed bellow:
+  void fHeaderFile(); //GUI-> Defines the functions that generates the .h file;
+  void fOFfolderGenerator(); //GUI-> Defines the function that creates all necessry folder to work the foamRun command.
+  void fFoamFile(); //GUI-> Defines the functions that generates the .foam file;
+  void fUFile();
+  void fpFile();
+
+  vector<string> zeroFiles; //GUI-> Stores the files paths from 0 folder (check what each term [i] is in OFfolderGenerator.cpp);
+  vector<string> systemFiles; //GUI-> Stores the files paths from system folder (check what each term [i] is in OFfolderGenerator.cpp);
+  vector<string> constantFiles; //GUI-> Stores the files paths from constant folder (check what each term [i] is in OFfolderGenerator.cpp).
 
   /* ========================= CALLBACK FUNCTIONS ========================= */
 
 public:
 
   void fOpen_File_cb(); //GUI -> Defines the Open File option callback from File item from Top Header Menu;
-  void fNew_File_cb(); //GUI -> Defines the New File option callback from File item from Top Header Menu.
+  void fNew_File_cb(); //GUI -> Defines the New File option callback from File item from Top Header Menu;
+  void fGenerateHeader_cb(); //GUI -> Defines the Generate option callback from File item from Top Header Menu. Generates the .h files or .foam file.
+  void fGenerateFoam_cb(); //GUI -> Defines the Generate option callback from File item from Top Header Menu. Generates the .h files or .foam file.
 
 private:
 
@@ -424,6 +484,12 @@ private:
 
   inline void fInline_New_File(Fl_Menu_*, void*);
   static void fStatic_New_File(Fl_Menu_*, void*);
+
+  inline void fInline_G_HeaderFile(Fl_Menu_*, void*);
+  static void fStatic_G_HeaderFile(Fl_Menu_*, void*);
+
+  inline void fInline_G_FoamFile(Fl_Menu_*, void*);
+  static void fStatic_G_FoamFile(Fl_Menu_*, void*);
 
 
 //************************************

@@ -20,7 +20,7 @@
   #undef Success
 #endif
 #include "CompMesh.h"
-
+class CompMesh;
 using namespace std;
 
 
@@ -63,9 +63,16 @@ public:
     void DrawAxes();
     virtual int handle(int event) override;
 
+    //Ajust the center when expanding the window
+    void RenderScene();
+    void Reshape();
+
     float rotation;
     float rotationIncrement;
     bool  animating;
+
+    int windowWidth = 714;
+    int windowHeight = 703;
 
 public:
     Playback(int X, int Y, int W, int H, const char *L);

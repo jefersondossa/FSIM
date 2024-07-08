@@ -14,7 +14,7 @@ Fl_Menu_Item WindowConstructor::menu_SolverType[] = {
 
 void WindowConstructor::fAnalysis(Fl_Double_Window *window){
 
-    Analysis_Menu = new Fl_Group(1160, 75, 375, 340, "Analysis");
+    Analysis_Menu = new Fl_Group(1160, 75, 375, 500, "Analysis");
     Analysis_Menu->color(FL_LIGHT1);
     Analysis_Menu->labelsize(18);
     Analysis_Menu->hide();
@@ -25,36 +25,36 @@ void WindowConstructor::fAnalysis(Fl_Double_Window *window){
     AnalysisType->menu(menu_Analysis);
 
     //Adds items to Analysis Type choice menu:
-    this->AnalysisType->add("Linear",0,(Fl_Callback*)WindowConstructor::fStatic_Linear,0,0);
-    this->AnalysisType->add("NonLinear",0,(Fl_Callback*)WindowConstructor::fStatic_NonLinear,0,0);
-    this->AnalysisType->add("Incremental",0,(Fl_Callback*)WindowConstructor::fStatic_Increm_Transient,0,0);
-    this->AnalysisType->add("Transient",0,(Fl_Callback*)WindowConstructor::fStatic_Increm_Transient,0,0);
+    AnalysisType->add("Linear",0,(Fl_Callback*)WindowConstructor::fStatic_Linear,0,0);
+    AnalysisType->add("NonLinear",0,(Fl_Callback*)WindowConstructor::fStatic_NonLinear,0,0);
+    AnalysisType->add("Incremental",0,(Fl_Callback*)WindowConstructor::fStatic_Increm_Transient,0,0);
+    AnalysisType->add("Transient",0,(Fl_Callback*)WindowConstructor::fStatic_Increm_Transient,0,0);
+    AnalysisType->add("OpenFoam Analysis",0,(Fl_Callback*)WindowConstructor::fStatic_OF_Analysis,0,0);
 
     SolverType = new Fl_Choice(1325, 140, 185, 25, "Solver Type: ");
     SolverType->box(FL_BORDER_BOX);
     SolverType->down_box(FL_BORDER_BOX);
     SolverType->menu(menu_SolverType);
+    SolverType->deactivate();
 
     //Adds items to Solver Type choice menu:
-    this->SolverType->add("EMumps");
-    this->SolverType->add("EIterative");
-    this->SolverType->add("EUmfpack");
-    this->SolverType->add("ECholmod");
-    this->SolverType->add("EKLU");
-    this->SolverType->add("ESPQR");
-    this->SolverType->add("ELU");
-    this->SolverType->add("ELLt");
-    this->SolverType->add("ELDLt");
-    this->SolverType->add("EQR");
-    this->SolverType->add("ECG");
-    this->SolverType->add("EBiCGStab");
-    this->SolverType->add("ELSCG");
+    SolverType->add("EMumps");
+    SolverType->add("EIterative");
+    SolverType->add("EUmfpack");
+    SolverType->add("ECholmod");
+    SolverType->add("EKLU");
+    SolverType->add("ESPQR");
+    SolverType->add("ELU");
+    SolverType->add("ELLt");
+    SolverType->add("ELDLt");
+    SolverType->add("EQR");
+    SolverType->add("ECG");
+    SolverType->add("EBiCGStab");
+    SolverType->add("ELSCG");
 
     fNonLinear(Analysis_Menu);
     fIncrem_Transient(Analysis_Menu);
-
-    Apply_Analysis = new Fl_Button(1430, 350, 80, 25, "Apply");
-    Apply_Analysis->callback((Fl_Callback*)fStatic_Apply_Analysis);
+    fOFAnalysis(Analysis_Menu);
 
     Analysis_Menu->end();
 

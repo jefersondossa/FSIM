@@ -4,7 +4,7 @@
 
 void WindowConstructor::fPProcessing(Fl_Double_Window *Window){
 
-    PProcessing_Menu = new Fl_Group(1160, 75, 375, 290, "PProcessing Test");
+    PProcessing_Menu = new Fl_Group(1160, 75, 375, 290, "PProcessing");
     PProcessing_Menu->color(FL_LIGHT1);
     PProcessing_Menu->labelsize(18);
     PProcessing_Menu->hide();

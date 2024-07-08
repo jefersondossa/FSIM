@@ -34,9 +34,11 @@ void Playback::draw() {
     //Since gluLookAt defines the center of the camera, lets calculate a average coordenates from geometry:
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0, 0, (average_x * average_y)+ zoom, 0, 0, 0, 0, 1, 0); // Apply zoom here
+    gluLookAt(0, 0, zoom, //Camera Position
+              0, 0, 0, //New Camera Center
+              0, 1, 0); // Up vector
 
-    glTranslatef(-average_x, -average_y, 0); //Here , the new camera center.
+    //glTranslatef(-average_x, -average_y, 0); //Here , the new camera center.
     
     // Applys rotations
     glRotatef(rotationX, 1, 0, 0);
@@ -156,6 +158,8 @@ void Playback::PrintElement(Element *el, CompMesh *cmesh){
 
             glVertex3fv(pd);
             glVertex3fv(pa);
+
+            
         }
         break;
 
@@ -208,9 +212,9 @@ void Playback::DrawGeometry(int matidcolor) {
             
         }
     }
-    average_x = sum_x*3/Outmesh->NNodes();
-    average_y = sum_y*3/Outmesh->NNodes();
-    average_z = sum_z*3/Outmesh->NNodes();
+    average_x = sum_x/Outmesh->NNodes();
+    average_y = sum_y/Outmesh->NNodes();
+    average_z = sum_z/Outmesh->NNodes();
     delete Outmesh;
 
     glEnd();
@@ -279,6 +283,15 @@ void Playback::DrawAxes() {
 
     glRasterPos3f(0, 0, 0.55);
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'Z');
+
+    // Draw a 3D sphere at the origin
+    // Set viewport for the sphere in the center (0,0,0)
+    glViewport(0, 0, 714, 703);
+    glPushMatrix();
+    //glTranslatef(0.0f, 0.0f, 0.0f); // Explicitly set the position to the origin
+    glColor3f(0, 0, 1); // Set the sphere color (RGB)
+    glutSolidSphere(0.01, 50, 50); // Draw a sphere with radius 0.1
+    glPopMatrix();
 }
 
 int Playback::handle(int event) {

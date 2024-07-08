@@ -14,6 +14,9 @@ Velocity BC: fixedValue
 Uvector: (1.000000 0.000000 0.000000)
 Pressure BC: zeroGradient
 
+geo path: /home/felipecosta/FSArl/GraphicInterface/Malhas para teste/TestCavity2.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/Malhas para teste/TestCavity2.msh
+
 Analysis Type: OpenFoam Analysis
 Simulation Type: Incompressible Fluid
 Flow Type: Laminar
@@ -23,7 +26,4 @@ deltaT: 0.1
 writeInterval: 1
 writePrecision: 6
 timePrecision: 6
-
-geo path: /home/felipecosta/FSArl/GraphicInterface/Malhas para teste/TestCavity2.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/Malhas para teste/TestCavity2.msh
 

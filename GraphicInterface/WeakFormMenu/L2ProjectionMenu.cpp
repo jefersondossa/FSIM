@@ -17,7 +17,7 @@ void WindowConstructor::fL2Projection(Fl_Group *group){
   BoundaryCondition->down_box(FL_BORDER_BOX);
   BoundaryCondition->menu(menu_BoundaryCondition);
 
-  Values = new Fl_Box(1172, 240, 58, 25, "Values: ");
+  Values1 = new Fl_Box(1172, 240, 58, 25, "Values: ");
 
   x = new Fl_Value_Input(1255, 240, 55, 25, "X: ");
 

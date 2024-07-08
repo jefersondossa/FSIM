@@ -11,6 +11,9 @@ void WindowConstructor::fIncrem_Transient(Fl_Group *group){
     tolerance = new Fl_Value_Input(1325, 225, 95, 25, "Tolerance: ");
     maxInterations = new Fl_Value_Input(1325, 265, 95, 25, "Max. Interations: ");
 
+    Apply_Analysis = new Fl_Button(1430, 305, 80, 25, "Apply");
+    Apply_Analysis->callback((Fl_Callback*)fStatic_Apply_Analysis);
+
     Increm_Transient_Menu->end();
 
     group->add(Increm_Transient_Menu);
