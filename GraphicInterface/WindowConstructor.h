@@ -463,6 +463,8 @@ public:
   void fFoamFile(); //GUI-> Defines the functions that generates the .foam file;
   void fUFile();
   void fpFile();
+  void fphysicalPropertiesFile();
+  void fmomentumTransportFile();
 
   vector<string> zeroFiles; //GUI-> Stores the files paths from 0 folder (check what each term [i] is in OFfolderGenerator.cpp);
   vector<string> systemFiles; //GUI-> Stores the files paths from system folder (check what each term [i] is in OFfolderGenerator.cpp);

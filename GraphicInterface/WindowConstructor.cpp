@@ -30,6 +30,8 @@
 #include "TopHeaderMenu/GenerationFunctions/OFfolderGenerator.cpp"
 #include "TopHeaderMenu/GenerationFunctions/pFile.cpp"
 #include "TopHeaderMenu/GenerationFunctions/UFile.cpp"
+#include "TopHeaderMenu/GenerationFunctions/physicalPropertiesFile.cpp"
+#include "TopHeaderMenu/GenerationFunctions/momentumTransportFile.cpp"
 #include "AnalysisMenu/Analysis_Inl_Sta_Functions.cpp"
 #include "AnalysisMenu/AnalysisFunctions.cpp"
 #include "AnalysisMenu/AnalysisMenu.cpp"

@@ -7,4 +7,6 @@ void WindowConstructor::fFoamFile(){
     fOFfolderGenerator();
     fUFile();
     fpFile();
+    fphysicalPropertiesFile();
+    fmomentumTransportFile();
 }
