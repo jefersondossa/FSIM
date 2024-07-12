@@ -451,6 +451,8 @@ public:
 
   Fl_Menu_Bar *TopHeader_Menu; //GUI -> Defines the Top Header Menu;
   static Fl_Menu_Item Topheader_Menu[]; //GUI -> Defines the itens from the Top Header Menu.
+  vector <string> vPhysicalGroup;
+  vector <string> vBoundaryCondition;
 
   /* ========================= CREATION FUNCTIONS ========================= */
 
@@ -467,6 +469,7 @@ public:
   void fmomentumTransportFile();
   void fcontrolDictFile();
   void fRunFoam();
+  void ffv();
 
   vector<string> zeroFiles; //GUI-> Stores the files paths from 0 folder (check what each term [i] is in OFfolderGenerator.cpp);
   vector<string> systemFiles; //GUI-> Stores the files paths from system folder (check what each term [i] is in OFfolderGenerator.cpp);

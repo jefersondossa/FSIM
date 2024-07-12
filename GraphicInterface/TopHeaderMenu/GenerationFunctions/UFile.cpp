@@ -34,8 +34,6 @@ void WindowConstructor::fUFile(){
     ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
     U_file.open((zeroFiles[0]),ios::app);
 
-    vector <string> vPhysicalGroup;
-    vector <string> vBoundaryCondition;
     vector <string> vVector;
     vector <string> vCorrectVector; //Corrects the vVector, turning in to the real Uvector values.
 

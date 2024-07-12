@@ -34,6 +34,7 @@
 #include "TopHeaderMenu/GenerationFunctions/momentumTransportFile.cpp"
 #include "TopHeaderMenu/GenerationFunctions/RunFoam.cpp"
 #include "TopHeaderMenu/GenerationFunctions/controlDictFile.cpp"
+#include "TopHeaderMenu/GenerationFunctions/fvSchemes&SolutionFiles.cpp"
 #include "AnalysisMenu/Analysis_Inl_Sta_Functions.cpp"
 #include "AnalysisMenu/AnalysisFunctions.cpp"
 #include "AnalysisMenu/AnalysisMenu.cpp"

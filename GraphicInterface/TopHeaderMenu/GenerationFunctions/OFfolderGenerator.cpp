@@ -106,7 +106,7 @@ void WindowConstructor::fOFfolderGenerator(){
 ///////////////////////////////////////////////////////////////
 
     string system = systemPath.string(); //Stores the ZeroPath Folder in to a string
-    vector<string> systemNames; systemNames = {"controlDict"};
+    vector<string> systemNames; systemNames = {"controlDict", "fvSchemes", "fvSolution"};
     string systemNamespath;
 
     for(int i = 0; i < systemNames.size(); i++){

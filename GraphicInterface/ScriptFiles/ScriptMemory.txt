@@ -14,9 +14,6 @@ Weak Form: OpenFoam
 Velocity BC: noSlip
 Pressure BC: zeroGradient
 
-geo path: /home/joao_fonte_ubuntu/FSArl/GraphicInterface/Malhasteste/TestCavity2.geo
-msh path: /home/joao_fonte_ubuntu/FSArl/GraphicInterface/Malhasteste/TestCavity2.msh
-
 Analysis Type: OpenFoam Analysis
 Simulation Type: Incompressible Fluid
 Flow Type: Laminar
@@ -26,4 +23,7 @@ deltaT: 0.1
 writeInterval: 10
 writePrecision: 6
 timePrecision: 6
+
+geo path: /home/joao_fonte_ubuntu/FSArl/GraphicInterface/Malhasteste/TestCavity2.geo
+msh path: /home/joao_fonte_ubuntu/FSArl/GraphicInterface/Malhasteste/TestCavity2.msh
 
