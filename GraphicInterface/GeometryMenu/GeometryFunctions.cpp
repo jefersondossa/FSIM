@@ -244,12 +244,12 @@ void WindowConstructor::fApply_geometry_cb(){
       this->Button_WeakForm->activate();
     }
 
-    else if (curveCount > 0 && surfaceCount > 0 && volumeCount == 0) {
+    else if (surfaceCount > 0 && volumeCount == 0) {
       d = 2;//Dimension = 2
       this->Button_WeakForm->activate();
     }
 
-    else if (curveCount > 0 && surfaceCount > 0 && volumeCount > 0) {
+    else if (volumeCount > 0) {
       d = 3;//Dimension = 3
       this->Button_WeakForm->activate();
     }

@@ -14,7 +14,6 @@ void WindowConstructor::fpFile(){
       while(getline(headerFromp, Line)){
         pheader += Line + "\n";
       }
-      ScriptMemory_txt.close();
     }
 
     p_file.open((zeroFiles[1]),ios::app);

@@ -9,4 +9,7 @@ void WindowConstructor::fFoamFile(){
     fpFile();
     fphysicalPropertiesFile();
     fmomentumTransportFile();
+    fcontrolDictFile();
+    fRunFoam();
 }
+

@@ -1,7 +1,5 @@
 #include "WindowConstructor.h"
 
-
-
 void WindowConstructor::fOFfolderGenerator(){
 
     fstream files;
@@ -25,18 +23,12 @@ void WindowConstructor::fOFfolderGenerator(){
 
 
     system("mkdir GeneratedFiles");
-    //Stores the txt file name
-    string name = Script_Text_Name->value();
-
-    //Sets the new folderName as OF_name
-    string NewFolderName = "OF_" + name;
 
     //Path where the new folder will be created
     string defaultFolder = "GeneratedFiles";
 
     //Full path from new folder
-    fs::path basePath = defaultFolder;
-    fs::path OFPath = basePath / NewFolderName; //full path = OFPath
+    fs::path OFPath = defaultFolder;
 
     
     // Checks if the new folder already exists
