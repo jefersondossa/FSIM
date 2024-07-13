@@ -34,7 +34,7 @@ void WindowConstructor::fpFile(){
     vector <string> vCorrectValue; //Corrects the vValue, turning in to the real p values.
 
     //Now, lets read the Script Memory and write the p file:
-
+    fstream ScriptMemory_txt;
     ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
     p_file.open((zeroFiles[1]),ios::app);
 

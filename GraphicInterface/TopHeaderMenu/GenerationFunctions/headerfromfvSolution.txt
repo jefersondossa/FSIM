@@ -18,7 +18,7 @@ solvers
 {
     p
     {
-        solver          GAMG;
+        solver          smoothSolver;
         smoother        DIC;
 
         tolerance       1e-6;
@@ -44,10 +44,12 @@ solvers
 PIMPLE
 {
     momentumPredictor   no;
-    nOuterCorrectors    5;
-    nCorrectors         1;
-    nNonOrthogonalCorrectors 0;
+    nOuterCorrectors    1;
     transportPredictionFirst yes;
+    nCorrectors         2;
+    nNonOrthogonalCorrectors 0;
+    pRefCell    0;
+    pRefValue    0;
 }
 
 

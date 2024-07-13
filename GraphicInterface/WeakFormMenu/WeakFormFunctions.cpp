@@ -760,7 +760,7 @@ void WindowConstructor::fApply_WF_cb(){
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
       besides the script print, the Str is copied to ScriptMemory and Oss(Oss-> buff -> scriptdisplay).
       */
-      
+
       //Firt clear the ScriptMemory
       ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::out);//Allows to append text
       if(ScriptMemory_txt.is_open()){

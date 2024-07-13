@@ -49,7 +49,7 @@ void WindowConstructor::fOFAnalysis(Fl_Group *group){
 
     endTime->value(0);
     deltaT->value(0.1);
-    writeInterval->value(0.5);
+    writeInterval->value(1);
     writePrecision->value(6);
     timePrecision->value(6);
 

@@ -21,28 +21,48 @@ void WindowConstructor::fRunFoam(){
     }
 
     vector <string> vCorrectboundary;
+    vector <string> vinGroups;
 
 
         for(int i = 0; i < vBoundaryCondition.size(); i++){
-            if(vBoundaryCondition[i] == "fixedValue" | vBoundaryCondition[i] =="zeroGradient" ){
-                vCorrectboundary.push_back("patch;");
+            if(vBoundaryCondition[i] == "fixedValue" || vBoundaryCondition[i] == "zeroGradient" ){
+                vCorrectboundary.push_back("type            patch");
+                vinGroups.push_back("");
             }
 
-            if(vBoundaryCondition[i] != "noSlip"){
-                vCorrectboundary.push_back("wall;");
+            if(vBoundaryCondition[i] == "noSlip"){
+                vCorrectboundary.push_back("type            wall");
+                vinGroups.push_back("inGroups        List<word> 1(wall);");
             }
-            else{
-  	             vCorrectboundary.push_back("empty;");              
+            if(vBoundaryCondition[i] == "empty"){
+  	             vCorrectboundary.push_back("type            empty");
+                 vinGroups.push_back("inGroups        List<word> 1(empty);");        
             }
         }
 
-        for(int i = 0; i <vCorrectboundary.size(); i++){
-            size_t pos = boundary_str.find(vPhysicalGroup[i],0);
-            size_t pos_editavel = boundary_str.find("patch",pos);
-            if(pos_editavel!= string::npos){
-                boundary_str.replace(pos_editavel, 6, vCorrectboundary[i]);
-            }
+        for(int i = 0; i < vCorrectboundary.size(); i++){
 
+            size_t pos = boundary_str.find(vPhysicalGroup[i],0);
+            size_t pos_type = boundary_str.find("type            patch",pos);
+            size_t pos_inGroups = boundary_str.find("physicalType    patch;",pos_type);
+
+            if(pos_type != string::npos && pos_inGroups != string::npos){
+
+                boundary_str.replace(pos_type, 21, vCorrectboundary[i]);
+
+                if(vCorrectboundary[i] == "type            empty"){
+                    boundary_str.replace(pos_inGroups, 22, vinGroups[i]);
+                }
+
+                if(vCorrectboundary[i] == "type            wall"){
+                    boundary_str.replace(pos_inGroups-1, 22, vinGroups[i]);
+                }
+
+                if(vCorrectboundary[i] == "type            patch"){
+                    boundary_str.replace(pos_inGroups, 22, vinGroups[i]);
+                }
+            }
+            
         }
 
     RunFoam_file.open("../build/GeneratedFiles/constant/polyMesh/boundary");
@@ -53,4 +73,7 @@ void WindowConstructor::fRunFoam(){
 
     string foamRun = "cd GeneratedFiles && foamRun";
     system(foamRun.c_str());
+
+    string foam = "cd GeneratedFiles && touch project.foam";
+    system(foam.c_str());
 }

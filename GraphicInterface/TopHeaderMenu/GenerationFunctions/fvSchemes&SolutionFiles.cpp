@@ -9,7 +9,7 @@ void WindowConstructor::ffv(){
     string fvheader;
     fstream headerfromfv;
 
-    headerfromfv.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromfvScheames.txt",ios::in);
+    headerfromfv.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromfvSchemes.txt",ios::in);
     if(headerfromfv.is_open()){ //Copies text from headerfromfv to a string fvheader.
       while(getline(headerfromfv, Line)){
         fvheader += Line + "\n";
@@ -23,6 +23,8 @@ void WindowConstructor::ffv(){
         fv_file << fvheader;
         fv_file.close();
     }
+
+    fvheader.clear();
 
     headerfromfv.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromfvSolution.txt",ios::in);
     if(headerfromfv.is_open()){ //Copies text from headerfromfv to a string fvheader.
