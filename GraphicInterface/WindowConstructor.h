@@ -68,14 +68,9 @@ public:
 
   Fl_Text_Buffer Buffer; //GUI -> Defines the Buffer that stores the Script text;
   fstream ScriptMemory_txt; //GUI -> Just a fstream that is used all over the functions;
-  string Str;
-  ostringstream Oss;
   /* Since the variables are contained in objects and, since Fl_Text_Buffer function only accepts "text", it's necessary to save the entire
   text ("text" << objects) inside the Oss object. */
-
-  string Line;
   int Dimension; //GUI -> Saves the problem dimension.
-  smatch Match; //GUI -> Declare the "match" name for each pattern found in the desired files:
   string gp; //GUI -> Saves the choosen .geo file path;
   string mp; //GUI -> Saves the choosen .msh file path;
   vector<int> matids; //GUI -> Saves the Phisical Groups id in to a vector;

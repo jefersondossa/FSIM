@@ -3,6 +3,7 @@
 void WindowConstructor::fUFile(){
 
     fstream U_file;
+    string Line;
 
     //Lets open the Ufile and write his header
 
@@ -28,6 +29,7 @@ void WindowConstructor::fUFile(){
     regex rPhysicalGroup("Physical Group: (\\w+)");
     regex rBoundaryCondition("Velocity BC: (\\w+)");
     regex rVector(R"(Uvector:\s*\(([^)]+)\))");
+    smatch Match;
 
     //Now, lets read the Script Memory and write the U file:
 

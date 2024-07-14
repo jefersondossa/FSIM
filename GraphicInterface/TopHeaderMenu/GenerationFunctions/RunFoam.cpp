@@ -7,6 +7,7 @@ void WindowConstructor::fRunFoam(){
     system(cpMSH.c_str());
 
     fstream RunFoam_file;
+    string Line;
 
     RunFoam_file.open("../build/GeneratedFiles/constant/polyMesh/boundary");
     string boundary_str;

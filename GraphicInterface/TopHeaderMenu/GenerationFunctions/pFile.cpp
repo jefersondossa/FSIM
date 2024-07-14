@@ -3,6 +3,7 @@
 void WindowConstructor::fpFile(){
 
     fstream p_file;
+    string Line;
 
     //Lets open the Ufile and write his header
 
@@ -27,6 +28,7 @@ void WindowConstructor::fpFile(){
     regex rPhysicalGroup("Physical Group: (\\w+)");
     regex rBoundaryCondition("Pressure BC: (\\w+)");
     regex rValue("pValue: ([+-]?([0-9]*[.])?[0-9]+)");
+    smatch Match;
 
     vector <string> vPhysicalGroup;
     vector <string> vBoundaryCondition;
@@ -68,7 +70,7 @@ if (p_file.is_open()) {
         << "        type            " << vBoundaryCondition[i] << ";";
         if(vBoundaryCondition[i] == "fixedValue"){
             p_file << "\n" << "        value           uniform "
-            << "(" << vCorrectValue[i] << ")" << ";" << "\n" << "    }" << "\n\n";
+            << vCorrectValue[i] << ";" << "\n" << "    }" << "\n\n";
         }
         else{
             p_file << "\n" << "    }" << "\n\n";

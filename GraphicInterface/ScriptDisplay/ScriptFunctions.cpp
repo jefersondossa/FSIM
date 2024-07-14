@@ -39,6 +39,9 @@ void WindowConstructor::fButton_TextSave_cb(){
   new_script.open(name_path_txt,ios::out); //Allows to edit new_script.
   ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);//Allow to read ScriptMemory.
 
+  string Str;
+  string Line;
+
   if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
       Str.clear();
       while(getline(ScriptMemory_txt, Line)){

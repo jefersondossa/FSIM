@@ -3,6 +3,7 @@
 void WindowConstructor::fcontrolDictFile(){
 
 fstream cD_file;
+string Line;
 
 //Lets open the controlDictfile and write his header
 
@@ -32,6 +33,7 @@ fstream cD_file;
     regex rwriteInterval(R"(writeInterval:\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?))");
     regex rwritePrecision(R"(writePrecision:\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?))");
     regex rtimePrecision(R"(timePrecision:\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?))");
+    smatch Match;
 
     //Now, lets read the Script Memory and write the Physical Properties file:
 

@@ -103,9 +103,9 @@ void WindowConstructor::fApply_geometry_cb(){
   //Read File and find gp (geo_path) and mp (msh_path) first character position
   ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in); //Allows to read ScriptMemory_txt.
 
-  //Clears str
-  Str = "";
-  Oss.str("");
+  string Str;
+  string Line;
+  ostringstream Oss;
 
   if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory_txt.
     while(getline(ScriptMemory_txt, Line)){
@@ -184,6 +184,7 @@ void WindowConstructor::fApply_geometry_cb(){
         continue;
       }
 
+      smatch Match;
       if (regex_search(Line, Match, PhysGroup_pattern)) {
 
         //Physical Groups by Objects:

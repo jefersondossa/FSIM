@@ -140,8 +140,8 @@ this->msh->value("");
 this->dimension->value(0);
 
 //Clears str
-Str = "";
-Oss.str("");
+string Str;
+ostringstream Oss;
 
 //buff3->remove(0,buff3->length());
 Buffer.text("");

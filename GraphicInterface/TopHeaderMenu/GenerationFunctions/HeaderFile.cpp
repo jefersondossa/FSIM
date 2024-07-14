@@ -36,13 +36,14 @@ void WindowConstructor::fHeaderFile(){
     new_header << endl;
 
     PhysicalGroup group;
+    smatch Match;
 
     regex GroupRegex(R"(Physical Groups: ([^\n]+))");
     regex WeakFormRegex(R"(Weak Form: (.+))");
     regex BoundaryConditionRegex(R"(Boundary Condition: ([^\n]+))");
     regex PropertyRegex(R"(([^:]+): (-?[\d.]+))");
 
-
+  string Line;
   while (getline(ScriptMemory_txt, Line)) {
     if (regex_search(Line, Match, GroupRegex)) {
       group.Name = Match[1];

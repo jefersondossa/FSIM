@@ -3,6 +3,7 @@
 void WindowConstructor::fphysicalPropertiesFile(){
 
     fstream pP_file;
+    string Line;
 
     //Lets open the pPfile and write his header
 
@@ -26,6 +27,7 @@ void WindowConstructor::fphysicalPropertiesFile(){
 
     //Creation of patterns that will store the goals values:
     regex rNu(R"(Viscosity:\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?))");
+    smatch Match;
 
     //Now, lets read the Script Memory and write the Physical Properties file:
     fstream ScriptMemory_txt; //GUI -> Just a fstream that is used all over the functions;

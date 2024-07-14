@@ -5,9 +5,11 @@ void WindowConstructor::ffv(){
     fstream fv_file;
 
     //Lets open the Ufile and write his header
+    //smoothSolver
 
     string fvheader;
     fstream headerfromfv;
+    string Line;
 
     headerfromfv.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromfvSchemes.txt",ios::in);
     if(headerfromfv.is_open()){ //Copies text from headerfromfv to a string fvheader.

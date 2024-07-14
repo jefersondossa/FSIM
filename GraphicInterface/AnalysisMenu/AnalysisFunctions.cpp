@@ -53,8 +53,9 @@ void WindowConstructor::fOFAnalysis_cb(){
 
 void WindowConstructor::fApply_Analysis_cb(){
 
-    Str = "";
-    Oss.str("");
+    string Str;
+    string Line;
+    ostringstream Oss;
 
      string at = this->AnalysisType->text();
      string st  = this->SolverType->text();
@@ -76,7 +77,7 @@ void WindowConstructor::fApply_Analysis_cb(){
          c = NULL;
 
          ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
-
+        
          if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
              while(getline(ScriptMemory_txt, Line)){
                  Str += Line;

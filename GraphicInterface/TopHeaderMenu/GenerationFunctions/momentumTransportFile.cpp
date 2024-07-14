@@ -3,6 +3,7 @@
 void WindowConstructor::fmomentumTransportFile(){
 
     fstream mT_file;
+    string Line;
 
     //Lets open the Ufile and write his header
 
