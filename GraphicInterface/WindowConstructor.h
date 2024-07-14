@@ -155,7 +155,7 @@ public:
 
 public:
 
-  void fWF_free_cb_cb(); //GUI -> Defines the function that frees the Weak Form Submenus utilization. This reduces the chances of the user making mistakes;
+  void fWF_free_cb(); //GUI -> Defines the function that frees the Weak Form Submenus utilization. This reduces the chances of the user making mistakes;
   void fInput_geo_cb(); //GUI -> Defines the functionality from geo Fl_Output;
   void fInput_msh_cb(); //GUI -> Defines the functionality from msh Fl_Output;
   void fApply_geometry_cb(); //GUI -> Defines the function that saves the geo and msh paths. It also reads and writes the paths in the script.

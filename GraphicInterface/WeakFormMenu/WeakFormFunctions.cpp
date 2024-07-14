@@ -24,7 +24,7 @@ using namespace std;
 
 /* ========================= fWF_free_cb() ========================= */
 
-void WindowConstructor::fWF_free_cb_cb(){
+void WindowConstructor::fWF_free_cb(){
 
     this->WeakForm->activate();
     //int matid = PhysGroup[this->WeakForm_Menu->text()];
@@ -38,16 +38,18 @@ void WindowConstructor::fWF_free_cb_cb(){
       int index = WeakForm->find_index("OpenFoam");
       cout << "Name: " << pair.first << ", Phisycal Group Type: " << pair.second << std::endl;
 
-      if(Dimension == 3 && PhysicalGroups->text() == pair.first && pair.second == "Surface"){
+      if(Dimension == 3 && pair.first == PhysicalGroups->text() && pair.second == "Surface"){
 
         WeakForm->remove(index);
         WeakForm->add("OpenFoam",0,(Fl_Callback*)WindowConstructor::fStatic_OpenFoam,0,0);
+        OpenFoam_Menu->activate();
       }
 
-      if(Dimension != 3 || pair.second != "Surface"){
+      if(Dimension != 3 || (pair.first == PhysicalGroups->text() && pair.second != "Surface")){
 
         WeakForm->remove(index);
         WeakForm->add("OpenFoam",0,(Fl_Callback*)WindowConstructor::fStatic_OpenFoam,0,1);
+        OpenFoam_Menu->deactivate();
       }
     }
 }

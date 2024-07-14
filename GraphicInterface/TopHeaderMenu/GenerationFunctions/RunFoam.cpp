@@ -37,7 +37,7 @@ void WindowConstructor::fRunFoam(){
             }
             if(vBoundaryCondition[i] == "empty"){
   	             vCorrectboundary.push_back("type            empty");
-                 vinGroups.push_back("inGroups        List<word> 1(empty);");        
+                 vinGroups.push_back("inGroups        List<word> 1(empty);");       
             }
         }
 

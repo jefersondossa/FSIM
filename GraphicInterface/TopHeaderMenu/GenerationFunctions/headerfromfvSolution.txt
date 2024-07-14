@@ -18,7 +18,7 @@ solvers
 {
     p
     {
-        solver          GAMG;
+        solver          smoothSolver;
         smoother        DIC;
 
         tolerance       1e-6;
