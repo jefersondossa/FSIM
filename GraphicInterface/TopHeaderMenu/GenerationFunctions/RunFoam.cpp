@@ -2,17 +2,21 @@
 
 void WindowConstructor::fRunFoam(){
 
+
     string MSH_PATH = msh->value();
+
+    //Copys the path of .msh file to inside the "GeneratedFiles" directory and defines the string code to put on Ubunto(system comand) and convert the .msh file to format 2
     string cpMSH = "cd GeneratedFiles && cp -r " + MSH_PATH + " ." + " && msh_file=$(find . -type f -name '*.msh') && gmsh \"$msh_file\" -2 -format msh2 && gmshToFoam \"$msh_file\"";
     system(cpMSH.c_str());
 
     fstream RunFoam_file;
     string Line;
 
+    //Open and edit the boundary file
     RunFoam_file.open("../build/GeneratedFiles/constant/polyMesh/boundary");
     string boundary_str;
 
-    //Copies ScriptMemory text to Str.
+    //Copies bondary text to Str.
     if(RunFoam_file.is_open()){ //Opens boundary.
       while(getline(RunFoam_file, Line)){
         boundary_str += Line;
@@ -24,7 +28,7 @@ void WindowConstructor::fRunFoam(){
     vector <string> vCorrectboundary;
     vector <string> vinGroups;
 
-
+    //Include on vectors vCorrectboundary and vinGroups the correlated values since the vBoundaryCondition (Global Vector with zeroGradient, fixedValue, empty...)
         for(int i = 0; i < vBoundaryCondition.size(); i++){
             if(vBoundaryCondition[i] == "fixedValue" || vBoundaryCondition[i] == "zeroGradient" ){
                 vCorrectboundary.push_back("type            patch");
@@ -43,9 +47,11 @@ void WindowConstructor::fRunFoam(){
 
         for(int i = 0; i < vCorrectboundary.size(); i++){
 
-            size_t pos = boundary_str.find(vPhysicalGroup[i],0);
-            size_t pos_type = boundary_str.find("type            patch",pos);
-            size_t pos_inGroups = boundary_str.find("physicalType    patch;",pos_type);
+            size_t pos = boundary_str.find(vPhysicalGroup[i],0);            //Function to find the position of PhysicalGroups include on vector vPhysicalGroup start on position 0
+
+            size_t pos_type = boundary_str.find("type            patch",pos);           //Function to find the position of "type            patch" after the position of PhysicalGroups
+
+            size_t pos_inGroups = boundary_str.find("physicalType    patch;",pos_type);         //Function to find the position of "physicalType    patch;" after the position of "type            patch" 
 
             if(pos_type != string::npos && pos_inGroups != string::npos){
 

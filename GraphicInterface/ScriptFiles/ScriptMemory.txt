@@ -1,7 +1,10 @@
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
+
 Physical Group: entrada
 Weak Form: OpenFoam
 Velocity BC: fixedValue
-Uvector: (1.000000 0.000000 0.000000)
+Uvector: (-1.000000 0.000000 0.000000)
 Pressure BC: zeroGradient
 
 Physical Group: base
@@ -14,15 +17,15 @@ Weak Form: OpenFoam
 Velocity BC: noSlip
 Pressure BC: zeroGradient
 
-Physical Group: topo
-Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
-
 Physical Group: simetria
 Weak Form: OpenFoam
 Velocity BC: empty
 Pressure BC: empty
+
+Physical Group: topo
+Weak Form: OpenFoam
+Velocity BC: noSlip
+Pressure BC: zeroGradient
 
 Physical Group: saida
 Weak Form: OpenFoam
@@ -39,7 +42,4 @@ deltaT: 0.1
 writeInterval: 5
 writePrecision: 6
 timePrecision: 6
-
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
 
