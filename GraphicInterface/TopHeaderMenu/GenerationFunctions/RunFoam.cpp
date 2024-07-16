@@ -47,11 +47,11 @@ void WindowConstructor::fRunFoam(){
 
         for(int i = 0; i < vCorrectboundary.size(); i++){
 
-            size_t pos = boundary_str.find(vPhysicalGroup[i],0);            //Function to find the position of PhysicalGroups include on vector vPhysicalGroup start on position 0
+            size_t pos = boundary_str.find(vPhysicalGroup[i],0); //Function to find the position of PhysicalGroups include on vector vPhysicalGroup start on position 0
 
-            size_t pos_type = boundary_str.find("type            patch",pos);           //Function to find the position of "type            patch" after the position of PhysicalGroups
+            size_t pos_type = boundary_str.find("type            patch",pos); //Function to find the position of "type            patch" after the position of PhysicalGroups
 
-            size_t pos_inGroups = boundary_str.find("physicalType    patch;",pos_type);         //Function to find the position of "physicalType    patch;" after the position of "type            patch" 
+            size_t pos_inGroups = boundary_str.find("physicalType    patch;",pos_type); //Function to find the position of "physicalType    patch;" after the position of "type            patch" 
 
             if(pos_type != string::npos && pos_inGroups != string::npos){
 
@@ -69,13 +69,12 @@ void WindowConstructor::fRunFoam(){
                     boundary_str.replace(pos_inGroups, 22, vinGroups[i]);
                 }
             }
-            
         }
 
     RunFoam_file.open("../build/GeneratedFiles/constant/polyMesh/boundary");
     if(RunFoam_file.is_open(),ios::out){
-    RunFoam_file << boundary_str;
-    RunFoam_file.close();
+        RunFoam_file << boundary_str;
+        RunFoam_file.close();
     }
 
     string foamRun = "cd GeneratedFiles && foamRun";

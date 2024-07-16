@@ -57,26 +57,20 @@ void WindowConstructor::fApply_Analysis_cb(){
     string Line;
     ostringstream Oss;
 
-     string at = this->AnalysisType->text();
-     string st  = this->SolverType->text();
-     string sit = FluidSimulation->text();
-     string ft = FluidFlow->text();
-     double a; 
-     double b; 
-     double c; 
-     double d; 
-     double e; 
-     float f; 
+    string at = this->AnalysisType->text();
+    string st  = this->SolverType->text();
+    string sit = FluidSimulation->text();
+    string ft = FluidFlow->text();
+    double a; 
+    double b; 
+    double c; 
+    double d; 
+    double e; 
+    float f; 
 
-     ScriptDisplay->buffer(Buffer);
+    ScriptDisplay->buffer(Buffer);
 
-     if(NonLinear_Menu->visible() == 0 & Increm_Transient_Menu->visible() == 0 & OpenFoam_Analysis_Menu->visible() == 0){
-
-         a = NULL;
-         b = NULL;
-         c = NULL;
-
-         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
+    ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
         
          if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
              while(getline(ScriptMemory_txt, Line)){
@@ -86,6 +80,13 @@ void WindowConstructor::fApply_Analysis_cb(){
              ScriptMemory_txt.close();//Closes ScriptMemory.
          }
 
+     if(NonLinear_Menu->visible() == 0 & Increm_Transient_Menu->visible() == 0 & OpenFoam_Analysis_Menu->visible() == 0){
+
+         a = NULL;
+         b = NULL;
+         c = NULL;
+
+         
          size_t pos = Str.find("Analysis Type",0);
 
          if(pos != string::npos){
@@ -131,16 +132,6 @@ void WindowConstructor::fApply_Analysis_cb(){
          b = this->maxInterations->value();
          c = NULL;
 
-         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
-
-         if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
-             while(getline(ScriptMemory_txt, Line)){
-                 Str += Line;
-                 Str += "\n";
-             }   
-             ScriptMemory_txt.close();//Closes ScriptMemory.
-         }
-
          size_t pos = Str.find("Analysis Type",0);
 
          if(pos != string::npos){
@@ -185,17 +176,6 @@ void WindowConstructor::fApply_Analysis_cb(){
          a = this->tolerance->value();
          b = this->maxInterations->value();
          c = this->Nsteps->value();
-
-         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
-
-         if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
-         string line;
-             while(getline(ScriptMemory_txt, line)){
-                 Str += line;
-                 Str += "\n";
-             }   
-             ScriptMemory_txt.close();//Closes ScriptMemory.
-         }
 
          size_t pos = Str.find("Analysis Type",0);
 
@@ -244,17 +224,6 @@ void WindowConstructor::fApply_Analysis_cb(){
         c = writeInterval->value();
         d = writePrecision->value();
         e = timePrecision->value();
-
-         ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
-
-         if(ScriptMemory_txt.is_open()){ //Opens ScriptMemory.
-         string line;
-             while(getline(ScriptMemory_txt, line)){
-                 Str += line;
-                 Str += "\n";
-             }   
-             ScriptMemory_txt.close();//Closes ScriptMemory.
-         }
 
          size_t pos = Str.find("Analysis Type",0);
 
