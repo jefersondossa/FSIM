@@ -1000,9 +1000,9 @@ void WindowConstructor::ffixedValue_cb(){
 
   }
 
-    if(text1 == "Slip"){
+    if(text1 == "slip"){
     
-    int index1 = BC1_OpenFoam->find_index("noSlip");
+    int index1 = BC1_OpenFoam->find_index("slip");
     BC1_OpenFoam->value(index1);
     int index2 = BC2_OpenFoam->find_index("zeroGradient");
     BC2_OpenFoam->value(index2);
@@ -1027,9 +1027,9 @@ void WindowConstructor::ffixedValue_cb(){
 
   }
 
-    if(text2 == "Slip"){
+    if(text2 == "slip"){
     
-    int index1 = BC2_OpenFoam->find_index("noSlip");
+    int index1 = BC2_OpenFoam->find_index("slip");
     BC2_OpenFoam->value(index1);
     int index2 = BC1_OpenFoam->find_index("zeroGradient");
     BC1_OpenFoam->value(index2);

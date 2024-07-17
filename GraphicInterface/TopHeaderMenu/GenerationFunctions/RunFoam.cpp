@@ -2,7 +2,6 @@
 
 void WindowConstructor::fRunFoam(){
 
-
     string MSH_PATH = msh->value();
 
     //Copys the path of .msh file to inside the "GeneratedFiles" directory and defines the string code to put on Ubunto(system comand) and convert the .msh file to format 2
@@ -36,13 +35,13 @@ void WindowConstructor::fRunFoam(){
                 vinGroups.push_back("");
             }
 
-            if(vBoundaryCondition[i] == "noSlip" || vBoundaryCondition[i] == "Slip"){
+            if(vBoundaryCondition[i] == "noSlip" || vBoundaryCondition[i] == "slip"){
                 vCorrectboundary.push_back("type            wall");
                 vinGroups.push_back("inGroups        List<word> 1(wall);");
             }
 
-            if(vBoundaryCondition[i] == "Slip"){
-                vSlip.push_back("Slip");
+            if(vBoundaryCondition[i] == "slip"){
+                vSlip.push_back("slip");
             }
 
             if(vBoundaryCondition[i] == "empty"){
@@ -104,20 +103,28 @@ void WindowConstructor::fRunFoam(){
             Slip.close();
         }
 
-        system("cd GeneratedFiles && cd system && mkdir decomposeParDict");
+        system("cd GeneratedFiles && cd system && touch decomposeParDict");
 
-        Slip.open(("GeneratedFiles/system/decomposeParDict"),ios::app);
+        Slip.open(("../build/GeneratedFiles/system/decomposeParDict"),ios::app);
         if (Slip.is_open()){
             Slip << decompose;
             Slip.close();
     }
         string decomposePar = "cd GeneratedFiles && decomposePar";
-        string foamRun = "cd GeneratedFiles && mpirun -np 8 foamRun -parallel";
+        //Here, it's necessary edit the number of processors (NUMBERP):
+        //1. string foamRun: "cd GeneratedFiles && mpirun -np NUMBERP foamRun -parallel"
+        //2. decomposeParDict.txt: numberOfSubdomains NUMBERP and simpleCoeffs {n               (1 2 2);} | 1*2*2 = NUMBERP;
+        string foamRun = "cd GeneratedFiles && mpirun -np 4 foamRun -parallel";
         system(decomposePar.c_str());
         system(foamRun.c_str());
     }
 
-
     string foam = "cd GeneratedFiles && touch project.foam";
     system(foam.c_str());
+
+    if(vSlip.size() > 0){
+
+        string reconstruct = "reconstructPar";
+        system(reconstruct.c_str());
+    }
 }

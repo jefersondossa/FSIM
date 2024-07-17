@@ -180,10 +180,9 @@ void Playback::DrawGeometry(int matidcolor) {
 
     CompMesh* Outmesh = new CompMesh();
     for(int i = 0; i < matids.size(); i++){
-
-        WeakForm *wf = new WeakForm();
-        wf->Id() = matids[i];
-        Outmesh->InsertMaterial(wf);
+        WeakForm wf;
+        wf.Id() = matids[i];
+        Outmesh->InsertMaterial(&wf);
     }
 
     GmshTools::Read(*Outmesh, mshpath);
