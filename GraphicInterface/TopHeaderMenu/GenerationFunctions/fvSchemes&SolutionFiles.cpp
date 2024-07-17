@@ -28,6 +28,8 @@ void WindowConstructor::ffv(){
 
     fvheader.clear();
 
+    
+
     headerfromfv.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromfvSolution.txt",ios::in);
     if(headerfromfv.is_open()){ //Copies text from headerfromfv to a string fvheader.
       while(getline(headerfromfv, Line)){

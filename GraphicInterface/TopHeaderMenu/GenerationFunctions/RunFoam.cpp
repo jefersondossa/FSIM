@@ -27,6 +27,7 @@ void WindowConstructor::fRunFoam(){
 
     vector <string> vCorrectboundary;
     vector <string> vinGroups;
+    vector <string> vSlip; //Stores terms if "Slip" was found;
 
     //Include on vectors vCorrectboundary and vinGroups the correlated values since the vBoundaryCondition (Global Vector with zeroGradient, fixedValue, empty...)
         for(int i = 0; i < vBoundaryCondition.size(); i++){
@@ -35,10 +36,15 @@ void WindowConstructor::fRunFoam(){
                 vinGroups.push_back("");
             }
 
-            if(vBoundaryCondition[i] == "noSlip"){
+            if(vBoundaryCondition[i] == "noSlip" || vBoundaryCondition[i] == "Slip"){
                 vCorrectboundary.push_back("type            wall");
                 vinGroups.push_back("inGroups        List<word> 1(wall);");
             }
+
+            if(vBoundaryCondition[i] == "Slip"){
+                vSlip.push_back("Slip");
+            }
+
             if(vBoundaryCondition[i] == "empty"){
   	             vCorrectboundary.push_back("type            empty");
                  vinGroups.push_back("inGroups        List<word> 1(empty);");       
@@ -77,8 +83,40 @@ void WindowConstructor::fRunFoam(){
         RunFoam_file.close();
     }
 
-    string foamRun = "cd GeneratedFiles && foamRun";
-    system(foamRun.c_str());
+    if(vSlip.size() == 0){
+
+        string foamRun = "cd GeneratedFiles && foamRun";
+        system(foamRun.c_str());
+    }
+
+    if(vSlip.size() > 0){
+
+        fstream Slip;
+        string decompose;
+        string Line;
+
+        Slip.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/decomposeParDict.txt",ios::in);
+        if(Slip.is_open()){ //Copies text from headerfromfv to a string fvheader.
+            while(getline(Slip, Line)){
+                decompose += Line + "\n";
+            }
+
+            Slip.close();
+        }
+
+        system("cd GeneratedFiles && cd system && mkdir decomposeParDict");
+
+        Slip.open(("GeneratedFiles/system/decomposeParDict"),ios::app);
+        if (Slip.is_open()){
+            Slip << decompose;
+            Slip.close();
+    }
+        string decomposePar = "cd GeneratedFiles && decomposePar";
+        string foamRun = "cd GeneratedFiles && mpirun -np 8 foamRun -parallel";
+        system(decomposePar.c_str());
+        system(foamRun.c_str());
+    }
+
 
     string foam = "cd GeneratedFiles && touch project.foam";
     system(foam.c_str());

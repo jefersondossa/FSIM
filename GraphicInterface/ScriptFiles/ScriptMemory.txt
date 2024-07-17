@@ -1,6 +1,3 @@
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/MALHA2.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/MALHA2.msh
-
 Physical Group: entrada
 Weak Form: OpenFoam
 Velocity BC: fixedValue
@@ -12,20 +9,10 @@ Weak Form: OpenFoam
 Velocity BC: noSlip
 Pressure BC: zeroGradient
 
-Physical Group: edificio
-Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
-
 Physical Group: simetria
 Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
-
-Physical Group: topo
-Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
+Velocity BC: empty
+Pressure BC: empty
 
 Physical Group: saida
 Weak Form: OpenFoam
@@ -42,4 +29,18 @@ deltaT: 0.1
 writeInterval: 5
 writePrecision: 6
 timePrecision: 6
+
+Physical Group: edificio
+Weak Form: OpenFoam
+Velocity BC: zeroGradient
+Pressure BC: fixedValue
+pValue: 0.000000
+
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
+
+Physical Group: topo
+Weak Form: OpenFoam
+Velocity BC: noSlip
+Pressure BC: zeroGradient
 
