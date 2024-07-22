@@ -127,7 +127,7 @@ void WindowConstructor::fRunFoam(){
 
     if(vSlip.size() > 0){
 
-        string reconstruct = "reconstructPar";
+        string reconstruct = "cd GeneratedFiles && reconstructPar";
         system(reconstruct.c_str());
     }
 
