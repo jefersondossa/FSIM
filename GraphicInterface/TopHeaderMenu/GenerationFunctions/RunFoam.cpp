@@ -90,33 +90,36 @@ void WindowConstructor::fRunFoam(){
 
     if(vSlip.size() > 0){
 
-        fstream Slip;
-        string decompose;
-        string Line;
-
-        Slip.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/decomposeParDict.txt",ios::in);
-        if(Slip.is_open()){ //Copies text from headerfromfv to a string fvheader.
-            while(getline(Slip, Line)){
-                decompose += Line + "\n";
-            }
-
-            Slip.close();
-        }
-
-        system("cd GeneratedFiles && cd system && touch decomposeParDict");
-
-        Slip.open(("../build/GeneratedFiles/system/decomposeParDict"),ios::app);
-        if (Slip.is_open()){
-            Slip << decompose;
-            Slip.close();
-    }
-        string decomposePar = "cd GeneratedFiles && decomposePar";
-        //Here, it's necessary edit the number of processors (NUMBERP):
-        //1. string foamRun: "cd GeneratedFiles && mpirun -np NUMBERP foamRun -parallel"
-        //2. decomposeParDict.txt: numberOfSubdomains NUMBERP and simpleCoeffs {n               (1 2 2);} | 1*2*2 = NUMBERP;
-        string foamRun = "cd GeneratedFiles && mpirun -np 4 foamRun -parallel";
-        system(decomposePar.c_str());
+        string foamRun = "cd GeneratedFiles && foamRun";
         system(foamRun.c_str());
+
+         fstream Slip;
+         string decompose;
+         string Line;
+
+         Slip.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/decomposeParDict.txt",ios::in);
+         if(Slip.is_open()){ //Copies text from headerfromfv to a string fvheader.
+             while(getline(Slip, Line)){
+                 decompose += Line + "\n";
+             }
+
+             Slip.close();
+         }
+
+         system("cd GeneratedFiles && cd system && touch decomposeParDict");
+
+         Slip.open(("../build/GeneratedFiles/system/decomposeParDict"),ios::app);
+         if (Slip.is_open()){
+             Slip << decompose;
+             Slip.close();
+     }
+         string decomposePar = "cd GeneratedFiles && decomposePar";
+         //Here, it's necessary edit the number of processors (NUMBERP):
+         //1. string foamRun: "cd GeneratedFiles && mpirun -np NUMBERP foamRun -parallel"
+         //2. decomposeParDict.txt: numberOfSubdomains NUMBERP and simpleCoeffs {n               (1 2 2);} | 1*2*2 = NUMBERP;
+         string foamRunparallel = "cd GeneratedFiles && mpirun -np 4 foamRun -parallel";
+         system(decomposePar.c_str());
+         system(foamRunparallel.c_str());
     }
 
     string foam = "cd GeneratedFiles && touch project.foam";
@@ -127,4 +130,5 @@ void WindowConstructor::fRunFoam(){
         string reconstruct = "reconstructPar";
         system(reconstruct.c_str());
     }
+
 }
