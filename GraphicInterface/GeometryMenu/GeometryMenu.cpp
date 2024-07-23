@@ -1,6 +1,7 @@
 //This cpp file describes the fGeometry function (Geometry Menu from FSArl).
 
 #include "WindowConstructor.h"
+
 void WindowConstructor::fGeometry(Fl_Double_Window *Window){
 
     Geometry_Menu = new Fl_Group(1160, 75, 375, 290, "Geometry");
@@ -23,6 +24,8 @@ void WindowConstructor::fGeometry(Fl_Double_Window *Window){
 
     Apply_geometry = new Fl_Button(1425, 250, 90, 25, "Save paths");
     Apply_geometry->callback((Fl_Callback*)fStatic_Apply_geometry);
+
+    Deactivate_Render = new Fl_Check_Button(1270, 300, 90, 25, "Render");
 
     Geometry_Menu->end();
     Window->add(Geometry_Menu);

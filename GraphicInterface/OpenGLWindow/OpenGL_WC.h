@@ -16,6 +16,7 @@
 #include <vector>
 #include <tuple>
 #include <regex>
+//#include "WindowConstructor.h"
 #ifdef Success
   #undef Success
 #endif
@@ -53,6 +54,8 @@ private:
     double average_z;
 
 public:
+
+    //Fl_Check_Button *Deactivate_Render;
 
     void draw() override;
     int mat;

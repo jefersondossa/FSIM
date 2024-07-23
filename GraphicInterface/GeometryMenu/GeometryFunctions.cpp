@@ -262,14 +262,17 @@ void WindowConstructor::fApply_geometry_cb(){
 
 /* ========================= PART 3. ========================= */
 
+
   playback->SetGeoPath(gp);
   playback->SetMshPath(mp);
 
   playback->Setmatid(matids);
   
+  if(Deactivate_Render->value() == 1){
   playback->draw();
   playback->redraw();
   playback->take_focus();
+  }
 }
 
 

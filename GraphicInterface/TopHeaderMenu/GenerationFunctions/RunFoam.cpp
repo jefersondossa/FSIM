@@ -131,4 +131,9 @@ void WindowConstructor::fRunFoam(){
         system(reconstruct.c_str());
     }
 
+    //Post-Process
+
+    // string maxp = "cd GeneratedFiles && postProcess -func totalPressureIncompressible";
+    // system(maxp.c_str());
+
 }

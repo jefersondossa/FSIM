@@ -194,6 +194,7 @@ public:
   Fl_Group *Poisson_Menu; //GUI -> Defines the Poisson Submenu from Weak Form Menu;
   Fl_Group *L2Projection_Menu; //GUI -> Defines the L2 Projection Submenu from Weak Form Menu;
   Fl_Group *OpenFoam_Menu; //GUI -> Defines the OpenFoam Submenu from Weak Form Menu;
+  Fl_Check_Button *Deactivate_Render;
 
   Fl_Choice *PhysicalGroups; //GUI -> Defines the Physical Group menu from Weak Form Menu;
   static Fl_Menu_Item menu_PhysicalGroups[];

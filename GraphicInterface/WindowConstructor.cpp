@@ -76,11 +76,14 @@ WindowConstructor::WindowConstructor() {
     fTopHeader_Menu(Window);
 
     //Creates and adds the OpenGL window in to the FSArl Window.
+
+
     playback = new Playback(445, 80, 714, 703, "Playback");
     Window->add(playback);
     playback->resizable();
     playback->take_focus();
     playback->end();
+   
     
     Window->end();
     

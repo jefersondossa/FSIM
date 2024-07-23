@@ -80,7 +80,22 @@ string Line;
           << "writeCompression off;" << "\n\n"
           << "timeFormat      general;" << "\n\n"
           << "timePrecision   " << vtimePrecision[i] << "\n\n"
-          << "runTimeModifiable true;" << "\n\n\n"
+          << "runTimeModifiable true;"
+          << "\nfunctions {" 
+          << "\nsurfaceFieldValue {"
+          << "\ntype            surfaces;"
+          << "\nlibs            (\"libfieldFunctionObjects.so\");"
+          << "\nwriteControl    timeStep;"
+          << "\nlog             true;"
+          << "\nfields          (p);"
+          << "\nwriteFields     yes;"
+          << "\nregionType      patch;"
+          << "\nname            edificio;"
+          << "\noperation       areaIntegrate;"
+          << "\nuseUserTime     true;"
+          //<< "\nexecuteControl  "<< vendTime[i] 
+          << "}}"
+          << "\n\n\n"
           << "// ************************************************************************* //" << "\n";
       }
   }

@@ -44,6 +44,9 @@ void WindowConstructor::fOFfolderGenerator(){
     // Creates the new directory
     fs::create_directory(OFPath);
     }
+
+    string postProcessing = "cd GeneratedFiles && mkdir postProcessing";
+    system(postProcessing.c_str());
     
 /* ========================= PART 2. ========================= */
 

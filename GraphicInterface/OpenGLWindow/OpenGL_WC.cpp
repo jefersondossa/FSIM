@@ -1,5 +1,5 @@
 #include "OpenGL_WC.h"
-
+#include "WindowConstructor.h"
 
 #include "WeakForm.h"
 #include "GmshTools.h"
@@ -46,6 +46,8 @@ void Playback::draw() {
 
     // Draws the geometry
     DrawGeometry(mat);
+    
+    //DrawGeometry(mat);
     
     // Draws the axes
     DrawAxes();
