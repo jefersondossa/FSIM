@@ -93,7 +93,6 @@ string Line;
           << "\nname            edificio;"
           << "\noperation       areaIntegrate;"
           << "\nuseUserTime     true;"
-          //<< "\nexecuteControl  "<< vendTime[i] 
           << "}}"
           << "\n\n\n"
           << "// ************************************************************************* //" << "\n";

@@ -267,12 +267,22 @@ void WindowConstructor::fApply_geometry_cb(){
   playback->SetMshPath(mp);
 
   playback->Setmatid(matids);
-  
-  if(Deactivate_Render->value() == 1){
-  playback->draw();
-  playback->redraw();
-  playback->take_focus();
-  }
 }
 
+/* ========================= fDeactivate_Render_cb() ========================= */
 
+void WindowConstructor::fDeactivate_Render_cb(){
+
+  if(Deactivate_Render->value() == 1){
+    playback->activate();
+    playback->draw();
+    playback->redraw();
+    playback->take_focus();
+  }
+
+  if(Deactivate_Render->value() == 0){
+    playback->deactivate();
+    playback->clear();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clears the color and depth buffer
+  }
+}

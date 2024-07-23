@@ -16,6 +16,10 @@
         fInline_Apply_geometry
         fStatic_Apply_geometry
 
+5.  From fDeactivate_Render_cb:
+        fInline_Deactivate_Render
+        fStatic_Deactivate_Render
+
 */
 
 #include "WindowConstructor.h"
@@ -58,4 +62,14 @@ void WindowConstructor::fInline_Apply_geometry(Fl_Button*, void*) {
 
 void WindowConstructor::fStatic_Apply_geometry(Fl_Button* o, void* v) {
   ((WindowConstructor*)(o->parent()->parent()->user_data()))->fInline_Apply_geometry(o,v);
+}
+
+/* ========================= From fDeactivate_Render_cb ========================= */
+
+void WindowConstructor::fInline_Deactivate_Render(Fl_Button*, void*) {
+  this->fDeactivate_Render_cb();
+}
+
+void WindowConstructor::fStatic_Deactivate_Render(Fl_Button* o, void* v) {
+  ((WindowConstructor*)(o->parent()->parent()->user_data()))->fInline_Deactivate_Render(o,v);
 }

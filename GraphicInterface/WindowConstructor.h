@@ -141,6 +141,7 @@ public:
   Fl_Output *msh; //GUI -> Defines the  msh_path output (Geometry Menu widget);
   Fl_Value_Output *dimension; //GUI -> Defines the  problem dimension output (Geometry Menu widget);
   Fl_Button *Apply_geometry; //GUI -> Defines the  Save button for the Geometry Menu widget;
+  Fl_Check_Button *Deactivate_Render;
 
   map<string,int> PhysGroup; //GUI -> Allows to list the Physical Groups Names with the Material ID.
 
@@ -159,6 +160,7 @@ public:
   void fInput_geo_cb(); //GUI -> Defines the functionality from geo Fl_Output;
   void fInput_msh_cb(); //GUI -> Defines the functionality from msh Fl_Output;
   void fApply_geometry_cb(); //GUI -> Defines the function that saves the geo and msh paths. It also reads and writes the paths in the script.
+  void fDeactivate_Render_cb(); //GUI -> Defines the functionality from Deactivate_Render;
 
 private:
 
@@ -173,6 +175,9 @@ private:
 
   inline void fInline_Apply_geometry(Fl_Button*, void*);
   static void fStatic_Apply_geometry(Fl_Button*, void*);
+
+  inline void fInline_Deactivate_Render(Fl_Button*, void*);
+  static void fStatic_Deactivate_Render(Fl_Button*, void*);
 
 
 //*************************************
@@ -194,7 +199,6 @@ public:
   Fl_Group *Poisson_Menu; //GUI -> Defines the Poisson Submenu from Weak Form Menu;
   Fl_Group *L2Projection_Menu; //GUI -> Defines the L2 Projection Submenu from Weak Form Menu;
   Fl_Group *OpenFoam_Menu; //GUI -> Defines the OpenFoam Submenu from Weak Form Menu;
-  Fl_Check_Button *Deactivate_Render;
 
   Fl_Choice *PhysicalGroups; //GUI -> Defines the Physical Group menu from Weak Form Menu;
   static Fl_Menu_Item menu_PhysicalGroups[];

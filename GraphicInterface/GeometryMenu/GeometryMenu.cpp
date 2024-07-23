@@ -26,6 +26,7 @@ void WindowConstructor::fGeometry(Fl_Double_Window *Window){
     Apply_geometry->callback((Fl_Callback*)fStatic_Apply_geometry);
 
     Deactivate_Render = new Fl_Check_Button(1270, 300, 90, 25, "Render");
+    Deactivate_Render->callback((Fl_Callback*)fStatic_Deactivate_Render);
 
     Geometry_Menu->end();
     Window->add(Geometry_Menu);

@@ -46,7 +46,7 @@ void Playback::draw() {
 
     // Draws the geometry
     DrawGeometry(mat);
-    
+
     //DrawGeometry(mat);
     
     // Draws the axes

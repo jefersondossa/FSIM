@@ -18,10 +18,11 @@ solvers
 {
     p
     {
-        solver          GAMG;
-        tolerance       1e-06;
+        solver          smoothSolver;
+        smoother        DIC;
+
+        tolerance       1e-6;
         relTol          0.1;
-        smoother        GaussSeidel;
     }
 
     pFinal
