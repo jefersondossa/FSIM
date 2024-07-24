@@ -18,6 +18,10 @@ void Playback::draw() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clears the color and depth buffer
 
+    if (!render_enabled) {
+        return; // Se renderização está desativada, sair da função
+    }
+
     // Get current window size
     int w = this->w();
     int h = this->h();

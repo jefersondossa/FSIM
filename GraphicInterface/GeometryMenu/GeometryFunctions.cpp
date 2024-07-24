@@ -274,15 +274,19 @@ void WindowConstructor::fApply_geometry_cb(){
 void WindowConstructor::fDeactivate_Render_cb(){
 
   if(Deactivate_Render->value() == 1){
+    playback->render_enabled = true;
     playback->activate();
-    playback->draw();
+    // playback->draw();
     playback->redraw();
-    playback->take_focus();
+    // playback->take_focus();
   }
 
   if(Deactivate_Render->value() == 0){
+    playback->render_enabled = false;    
     playback->deactivate();
-    playback->clear();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clears the color and depth buffer
+    playback->InitializeGL();
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    playback->redraw();
   }
 }

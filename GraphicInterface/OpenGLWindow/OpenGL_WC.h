@@ -56,7 +56,8 @@ private:
 public:
 
     //Fl_Check_Button *Deactivate_Render;
-
+    
+    bool render_enabled;
     void draw() override;
     int mat;
     void setInt(int newValue);
