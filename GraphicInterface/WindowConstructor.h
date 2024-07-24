@@ -209,11 +209,26 @@ public:
   Fl_Choice *BoundaryCondition; //GUI -> Defines the Boundary Condition menu from L2 Projection SubMenu;
   static Fl_Menu_Item menu_BoundaryCondition[];
 
-  Fl_Choice *BC1_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
-  static Fl_Menu_Item menu_BC1_OpenFoam[];
+  Fl_Choice *BC_U_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_U_OpenFoam[];
 
-  Fl_Choice *BC2_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
-  static Fl_Menu_Item menu_BC2_OpenFoam[];
+  Fl_Choice *BC_p_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_p_OpenFoam[];
+
+  Fl_Choice *BC_k_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_k_OpenFoam[];
+
+  Fl_Choice *BC_epsilon_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_epsilon_OpenFoam[];
+  
+  Fl_Choice *BC_nuTilda_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_nuTilda_OpenFoam[];
+
+  Fl_Choice *BC_nut_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_nut_OpenFoam[];
+
+  Fl_Choice *BC_omega_OpenFoam; //GUI -> Defines the Boundary Condition menu from OpenFoam SubMenu;
+  static Fl_Menu_Item menu_BC_omega_OpenFoam[];
 
   Fl_Value_Input *young; //GUI -> Defines the Elasticity Modulus variable intput from Weak Form Menu;
   Fl_Value_Input *poisson; //GUI -> Defines the Poisson Ratio variable intput from Weak Form Menu;
@@ -224,9 +239,17 @@ public:
   Fl_Value_Input *x; //GUI -> Defines the X (val2[0]) variable intput from Weak Form Menu;
   Fl_Value_Input *y; //GUI -> Defines the Y (val2[1]) variable intput from Weak Form Menu;
   Fl_Value_Input *z; //GUI -> Defines the Z (val2[2]) variable intput from Weak Form Menu;
-  Fl_Value_Input *x2; //GUI -> Defines the X2 (val2[0]) variable intput from Second choice (BC2) for OpenFoam;
-  Fl_Value_Input *y2; //GUI -> Defines the Y2 (val2[1]) variable intput from Second choice (BC2) for OpenFoam;
-  Fl_Value_Input *z2; //GUI -> Defines the Z2 (val2[2]) variable intput from Second choice (BC2) for OpenFoam;
+
+  Fl_Value_Input *Ux; //GUI -> Defines the UX variable intput from OpenFoam;
+  Fl_Value_Input *Uy; //GUI -> Defines the UY variable intput from OpenFoam;
+  Fl_Value_Input *Uz; //GUI -> Defines the UZ variable intput from OpenFoam;
+  Fl_Value_Input *pressure; //GUI -> Defines the pressure variable intput from OpenFoam;
+  Fl_Value_Input *k; //GUI -> Def//GUI -> Defines the Turbulent kinetic energy variable intput from OpenFoam;
+  Fl_Value_Input *epsilon; //GUI -> Defines the Turbulent kinetic energyu dissipation rate variable intput from OpenFoam;
+  Fl_Value_Input *nuTilda; //GUI -> Defines the Modified turbulent viscosity variable intput from OpenFoam;
+  Fl_Value_Input *nut; //GUI -> Defines the Turbulent (edy) kinematic viscosity variable intput from OpenFoam;
+  Fl_Value_Input *omega; //GUI -> Defines the Specific dissipation rate variable intput from OpenFoam;
+
   Fl_Check_Button *plane_stress; //GUI -> Defines the Plane Stress variable intput from Weak Form Menu (0 for Plane Strain; 1 for Plane Stress);
 
   Fl_Button *Button_Apply_WeakForm; //GUI -> Defines the apply button for the WeakForm Menu widget.
@@ -243,7 +266,12 @@ public:
   static Fl_Menu_Item parameter_OpenFoam_Menu[]; //GUI -> Defines the itens from Parameter Submenu;
 
   Fl_Group *U_OpenFoam_Menu; //GUI -> Defines the Velocity Submenu from OpenFoam Menu; 
-  Fl_Group *p_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
+  Fl_Group *p_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu;
+  Fl_Group *k_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu;
+  Fl_Group *epsilon_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
+  Fl_Group *nuTilda_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
+  Fl_Group *nut_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
+  Fl_Group *omega_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
 
   map<string,string> PhysGroup2; //GUI -> Allows to list the Physical Groups Names with the Physical Groups Types.
 
@@ -265,11 +293,17 @@ public:
   void fOpemFoam(Fl_Group *group);  //GUI -> Defines the OpenFoam Submenu function.
   void fU_OpenFoam(Fl_Group *group); //GUI -> Defines the Velocity Submenu function from Parameters Submenu;
   void fp_OpenFoam(Fl_Group *group); //GUI -> Defines the Pressure Submenu function from Parameters Submenu;
+  void fk_OpenFoam(Fl_Group *group); //GUI -> Defines the Turbulent kinetic energy Submenu function from Parameters Submenu;
+  void fepsilon_OpenFoam(Fl_Group *group); //GUI -> Defines the Turbulent kinetic energyu dissipation rate Submenu function from Parameters Submenu;
+  void fnuTilda_OpenFoam(Fl_Group *group); //GUI -> Defines the Modified turbulent viscosity Submenu function from Parameters Submenu;
+  void fnut_OpenFoam(Fl_Group *group); //GUI -> Defines the Turbulent (edy) kinematic viscosity Submenu function from Parameters Submenu;
+  void fomega_OpenFoam(Fl_Group *group); //GUI -> Defines the Specific dissipation rate Submenu function from Parameters Submenu;
 
 
   /* ========================= CALLBACK FUNCTIONS ========================= */
 
   void fApply_WF_cb();
+  void ffixedValue_cb();
 
   void fElasticity2D_cb(); //GUI -> Defines the Elasticity 2D Callback Submenu function;
   void fElasticityPositional2D_cb(); //GUI -> Defines the Elasticity Positional 2D Callback Submenu function;
@@ -285,7 +319,12 @@ public:
   void fControlDict_OpenFoam_cb(); //GUI -> Defines the ControlDict Callback Submenu function.
   void fU_OpenFoam_cb(); //GUI -> Defines the Velocity Callback Button function.
   void fp_OpenFoam_cb(); //GUI -> Defines the Pressure Callback Button function.
-  void ffixedValue_cb(); //GUI -> Defines the fixed Value Velocity Callback Submenu function.
+  void fk_OpenFoam_cb(); //GUI -> Defines the Turbulent kinetic energy Callback Button function.
+  void fepsilon_OpenFoam_cb(); //GUI -> Defines the Turbulent kinetic energyu dissipation rate Callback Button function.
+  void fnuTilda_OpenFoam_cb(); //GUI -> Defines the Modified turbulent viscosity Callback Button function.
+  void fnut_OpenFoam_cb(); //GUI -> Defines the Turbulent (edy) kinematic viscosity Callback Button function.
+  void fomega_OpenFoam_cb(); //GUI -> Defines the Specific dissipation rate Callback Button function.
+  
 
 private:
 
@@ -336,6 +375,21 @@ private:
 
   inline void fInline_p_OF(Fl_Widget*, void*); 
   static void fStatic_p_OF(Fl_Widget*, void*); 
+
+  inline void fInline_k_OF(Fl_Widget*, void*); 
+  static void fStatic_k_OF(Fl_Widget*, void*); 
+
+  inline void fInline_epsilon_OF(Fl_Widget*, void*); 
+  static void fStatic_epsilon_OF(Fl_Widget*, void*); 
+
+  inline void fInline_nuTilda_OF(Fl_Widget*, void*); 
+  static void fStatic_nuTilda_OF(Fl_Widget*, void*); 
+
+  inline void fInline_nut_OF(Fl_Widget*, void*); 
+  static void fStatic_nut_OF(Fl_Widget*, void*); 
+
+  inline void fInline_omega_OF(Fl_Widget*, void*); 
+  static void fStatic_omega_OF(Fl_Widget*, void*); 
 
 
 //************************************

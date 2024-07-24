@@ -90,14 +90,14 @@ void WindowConstructor::fRunFoam(){
 
     if(vSlip.size() > 0){
 
-        string foamRun = "cd GeneratedFiles && foamRun";
-        system(foamRun.c_str());
+        // string foamRun = "cd GeneratedFiles && foamRun";
+        // system(foamRun.c_str());
 
          fstream Slip;
          string decompose;
          string Line;
 
-         Slip.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/decomposeParDict.txt",ios::in);
+         Slip.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/Parameters_Header/decomposeParDict.txt",ios::in);
          if(Slip.is_open()){ //Copies text from headerfromfv to a string fvheader.
              while(getline(Slip, Line)){
                  decompose += Line + "\n";
@@ -133,7 +133,7 @@ void WindowConstructor::fRunFoam(){
 
     //Post-Process
 
-    // string maxp = "cd GeneratedFiles && postProcess -func totalPressureIncompressible";
-    // system(maxp.c_str());
+    string p_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func wallShearStress";
+    system(p_cell.c_str()); //Calculates the Shear Stress (τ=R⋅n)
 
 }

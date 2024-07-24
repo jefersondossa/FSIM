@@ -21,6 +21,8 @@ laminar
 
     viscosityModel CrossPowerLaw;
 
+    turbulence off;
+
     nuInf           10;
     m               0.4;
     n               3;

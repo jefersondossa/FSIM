@@ -10,7 +10,7 @@ string Line;
     string cDheader;
     fstream headerFromcD;
 
-    headerFromcD.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromcontrolDict.txt",ios::in);
+    headerFromcD.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/Parameters_Header/headerfromcontrolDict.txt",ios::in);
     if(headerFromcD.is_open()){ //Copies text from headerFromcD to a string cDheader.
       while(getline(headerFromcD, Line)){
         cDheader += Line + "\n";
@@ -81,19 +81,21 @@ string Line;
           << "timeFormat      general;" << "\n\n"
           << "timePrecision   " << vtimePrecision[i] << "\n\n"
           << "runTimeModifiable true;"
-          << "\nfunctions {" 
-          << "\nsurfaceFieldValue {"
-          << "\ntype            surfaces;"
-          << "\nlibs            (\"libfieldFunctionObjects.so\");"
-          << "\nwriteControl    timeStep;"
-          << "\nlog             true;"
-          << "\nfields          (p);"
-          << "\nwriteFields     yes;"
-          << "\nregionType      patch;"
-          << "\nname            edificio;"
-          << "\noperation       areaIntegrate;"
-          << "\nuseUserTime     true;"
-          << "}}"
+        //   << "\nfunctions {" 
+        //   << "\nsurfaceFieldValue1 {"
+        //   << "\ntype            surfaces;"
+        //   << "\nlibs            (\"libfieldFunctionObjects.so\");"
+        //   << "\nwriteControl    timeStep;"
+        //   << "\nlog             true;"
+        //   << "\nfields          (U);"
+        //   << "\nwriteFields     yes;"
+        //   << "\nregionType      patch;"
+        //   << "\nname            edificio;"
+        //   << "\noperation       areaIntegrate;"
+        //   << "\nuseUserTime     true;"
+        //   << "\ntimeStart       0;"
+        //   << "\ntimeEnd         100;"
+        //   << "}}"
           << "\n\n\n"
           << "// ************************************************************************* //" << "\n";
       }

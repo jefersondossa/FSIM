@@ -10,7 +10,7 @@ void WindowConstructor::fmomentumTransportFile(){
     string mTheader;
     fstream headerFrommT;
 
-    headerFrommT.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfrommomentumTransport.txt",ios::in);
+    headerFrommT.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/Parameters_Header/headerfrommomentumTransport.txt",ios::in);
     if(headerFrommT.is_open()){ //Copies text from headerFrommT to a string mTheader.
       while(getline(headerFrommT, Line)){
         mTheader += Line + "\n";

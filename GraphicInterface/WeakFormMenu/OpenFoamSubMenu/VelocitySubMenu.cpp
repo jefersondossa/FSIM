@@ -1,6 +1,6 @@
 #include "WindowConstructor.h"
 
-Fl_Menu_Item WindowConstructor::menu_BC1_OpenFoam[] = {
+Fl_Menu_Item WindowConstructor::menu_BC_U_OpenFoam[] = {
         {"Set a BC", 0,  0, 0, 1, (uchar)FL_NORMAL_LABEL, 0, 14, 8},
         {0,0,0,0,0,0,0,0,0}
     };
@@ -15,27 +15,27 @@ void WindowConstructor::fU_OpenFoam(Fl_Group *group){
     o->labelsize(18);
     o->align(FL_ALIGN_CENTER);
 
-    BC1_OpenFoam = new Fl_Choice(1320, 300, 205, 25, "Boundary Condition: ");
-    BC1_OpenFoam->box(FL_BORDER_BOX);
-    BC1_OpenFoam->down_box(FL_BORDER_BOX);
-    BC1_OpenFoam->menu(menu_BC1_OpenFoam);
+    BC_U_OpenFoam = new Fl_Choice(1320, 300, 205, 25, "Boundary Condition: ");
+    BC_U_OpenFoam->box(FL_BORDER_BOX);
+    BC_U_OpenFoam->down_box(FL_BORDER_BOX);
+    BC_U_OpenFoam->menu(menu_BC_U_OpenFoam);
 
-    this->BC1_OpenFoam->add("noSlip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    this->BC1_OpenFoam->add("slip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    //this->BC1_OpenFoam->add("slip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    //this->BC1_OpenFoam->add("symmetry",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    this->BC1_OpenFoam->add("empty",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    this->BC1_OpenFoam->add("fixedValue",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    this->BC1_OpenFoam->add("zeroGradient",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,1);  
+    this->BC_U_OpenFoam->add("noSlip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
+    this->BC_U_OpenFoam->add("slip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
+    //this->BC_U_OpenFoam->add("slip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
+    //this->BC_U_OpenFoam->add("symmetry",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
+    this->BC_U_OpenFoam->add("empty",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
+    this->BC_U_OpenFoam->add("fixedValue",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
+    this->BC_U_OpenFoam->add("zeroGradient",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,1);  
 
     Values1 = new Fl_Box(1172, 340, 58, 25, "Vector");  
-    x = new Fl_Value_Input(1255, 340, 60, 25, "X: ");   
-    y = new Fl_Value_Input(1350, 340, 60, 25, "Y: ");   
-    z = new Fl_Value_Input(1450, 340, 60, 25, "Z: "); 
+    Ux = new Fl_Value_Input(1255, 340, 60, 25, "X: ");   
+    Uy = new Fl_Value_Input(1350, 340, 60, 25, "Y: ");   
+    Uz = new Fl_Value_Input(1450, 340, 60, 25, "Z: "); 
 
-    x->deactivate();
-    y->deactivate();
-    z->deactivate();
+    Ux->deactivate();
+    Uy->deactivate();
+    Uz->deactivate();
     Values1->deactivate();
 
     U_OpenFoam_Menu->end();

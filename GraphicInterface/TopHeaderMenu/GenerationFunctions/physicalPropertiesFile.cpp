@@ -10,7 +10,7 @@ void WindowConstructor::fphysicalPropertiesFile(){
     string pPheader;
     fstream headerfromPp;
 
-    headerfromPp.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromPhysicalProperties.txt",ios::in);
+    headerfromPp.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/Parameters_Header/headerfromPhysicalProperties.txt",ios::in);
     if(headerfromPp.is_open()){ //Copies text from headerfromPp to a string pPheader.
       while(getline(headerfromPp, Line)){
         pPheader += Line + "\n";

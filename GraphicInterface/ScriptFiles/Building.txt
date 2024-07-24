@@ -30,8 +30,8 @@ Velocity BC: zeroGradient
 Pressure BC: fixedValue
 pValue: 0.000000
 
-geo path: /home/joao_fonte/FSArl/GraphicInterface/MalhasTeste/Building.geo
-msh path: /home/joao_fonte/FSArl/GraphicInterface/MalhasTeste/Building.msh
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
 
 Physical Group: topo
 Weak Form: OpenFoam

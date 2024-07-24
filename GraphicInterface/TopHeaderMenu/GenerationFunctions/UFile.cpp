@@ -10,7 +10,7 @@ void WindowConstructor::fUFile(){
     string Uheader;
     fstream headerFromU;
 
-    headerFromU.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromU.txt",ios::in);
+    headerFromU.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/Parameters_Header/headerfromU.txt",ios::in);
     if(headerFromU.is_open()){ //Copies text from headerfromU to a string Uheader.
       while(getline(headerFromU, Line)){
         Uheader += Line + "\n";

@@ -10,7 +10,7 @@ void WindowConstructor::fpFile(){
     string pheader;
     fstream headerFromp;
 
-    headerFromp.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/headerfromp.txt",ios::in);
+    headerFromp.open("../GraphicInterface/TopHeaderMenu/GenerationFunctions/Parameters_Header/headerfromp.txt",ios::in);
     if(headerFromp.is_open()){ //Copies text from headerFromp to a string pheader.
       while(getline(headerFromp, Line)){
         pheader += Line + "\n";

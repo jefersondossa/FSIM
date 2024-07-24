@@ -706,16 +706,16 @@ void WindowConstructor::fApply_WF_cb(){
   //OpenFoam Variables
   if(name == "OpenFoam"){
 
-    ea = to_string(x->value());
-    eb = to_string(y->value());
-    ec = to_string(z->value());
-    ed = to_string(x2->value());
+    ea = to_string(Ux->value());
+    eb = to_string(Uy->value());
+    ec = to_string(Uz->value());
+    ed = to_string(pressure->value());
 
     wf = this->WeakForm->text();
     pg = this->PhysicalGroups->text();
     
-    bc = this->BC1_OpenFoam->text();
-    bc2 = this->BC2_OpenFoam->text();
+    bc = this->BC_U_OpenFoam->text();
+    bc2 = this->BC_p_OpenFoam->text();
 
     //Stores U and p conditions
     string Uvector;
@@ -963,86 +963,86 @@ void WindowConstructor::fOpenFoam_cb(){
 
 void WindowConstructor::ffixedValue_cb(){
 
-  string text1 = BC1_OpenFoam->text();
-  string text2 = BC2_OpenFoam->text();
+  string text1 = BC_U_OpenFoam->text();
+  string text2 = BC_p_OpenFoam->text();
 
    if(text1 != "fixedValue"){
 
-     this->x->deactivate();
-     this->y->deactivate();
-     this->z->deactivate();
+     this->Ux->deactivate();
+     this->Uy->deactivate();
+     this->Uz->deactivate();
      this->Values1->deactivate();
    }
 
    if(text1 == "fixedValue"){
 
-     this->x->activate();
-     this->y->activate();
-     this->z->activate();
+     this->Ux->activate();
+     this->Uy->activate();
+     this->Uz->activate();
      this->Values1->activate();
    }
 
    if(text2 != "fixedValue"){
-   this->x2->deactivate();
+   this->pressure->deactivate();
    }
 
    if(text2 == "fixedValue"){
-   this->x2->activate();
+   this->pressure->activate();
    }
 
   //if noSlip or fixedValue --> zeroGradient:
   if(text1 == "noSlip"){
     
-    int index1 = BC1_OpenFoam->find_index("noSlip");
-    BC1_OpenFoam->value(index1);
-    int index2 = BC2_OpenFoam->find_index("zeroGradient");
-    BC2_OpenFoam->value(index2);
+    int index1 = BC_U_OpenFoam->find_index("noSlip");
+    BC_U_OpenFoam->value(index1);
+    int index2 = BC_p_OpenFoam->find_index("zeroGradient");
+    BC_p_OpenFoam->value(index2);
 
   }
 
     if(text1 == "slip"){
     
-    int index1 = BC1_OpenFoam->find_index("slip");
-    BC1_OpenFoam->value(index1);
-    int index2 = BC2_OpenFoam->find_index("zeroGradient");
-    BC2_OpenFoam->value(index2);
+    int index1 = BC_U_OpenFoam->find_index("slip");
+    BC_U_OpenFoam->value(index1);
+    int index2 = BC_p_OpenFoam->find_index("zeroGradient");
+    BC_p_OpenFoam->value(index2);
 
   }
 
   if(text1 == "fixedValue"){
 
-    int index1 = BC1_OpenFoam->find_index("fixedValue");
-    BC1_OpenFoam->value(index1);
-    int index = BC2_OpenFoam->find_index("zeroGradient");
-    BC2_OpenFoam->value(index);
+    int index1 = BC_U_OpenFoam->find_index("fixedValue");
+    BC_U_OpenFoam->value(index1);
+    int index = BC_p_OpenFoam->find_index("zeroGradient");
+    BC_p_OpenFoam->value(index);
 
   }
 
   if(text2 == "noSlip"){
     
-    int index1 = BC2_OpenFoam->find_index("noSlip");
-    BC2_OpenFoam->value(index1);
-    int index2 = BC1_OpenFoam->find_index("zeroGradient");
-    BC1_OpenFoam->value(index2);
+    int index1 = BC_p_OpenFoam->find_index("noSlip");
+    BC_p_OpenFoam->value(index1);
+    int index2 = BC_U_OpenFoam->find_index("zeroGradient");
+    BC_U_OpenFoam->value(index2);
 
   }
 
     if(text2 == "slip"){
     
-    int index1 = BC2_OpenFoam->find_index("slip");
-    BC2_OpenFoam->value(index1);
-    int index2 = BC1_OpenFoam->find_index("zeroGradient");
-    BC1_OpenFoam->value(index2);
+    int index1 = BC_p_OpenFoam->find_index("slip");
+    BC_p_OpenFoam->value(index1);
+    int index2 = BC_U_OpenFoam->find_index("zeroGradient");
+    BC_U_OpenFoam->value(index2);
 
   }
 
   if(text2 == "fixedValue"){
 
-    int index1 = BC2_OpenFoam->find_index("fixedValue");
-    BC2_OpenFoam->value(index1);
-    int index = BC1_OpenFoam->find_index("zeroGradient");
-    BC1_OpenFoam->value(index);
-    const Fl_Menu_Item* items = BC1_OpenFoam->menu();
+    int index1 = BC_p_OpenFoam->find_index("fixedValue");
+    BC_p_OpenFoam->value(index1);
+    int index = BC_U_OpenFoam->find_index("zeroGradient");
+    BC_U_OpenFoam->value(index);
+    const Fl_Menu_Item* items = BC_U_OpenFoam->menu();
     const Fl_Menu_Item& item = items[index];
 
   }
@@ -1050,14 +1050,14 @@ void WindowConstructor::ffixedValue_cb(){
   //if empty --> empty
   if(text2 == "empty"){
 
-    int index1 = BC1_OpenFoam->find_index("empty");
-    BC1_OpenFoam->value(index1);
+    int index1 = BC_U_OpenFoam->find_index("empty");
+    BC_U_OpenFoam->value(index1);
   }
 
    if(text1 == "empty"){
 
-    int index2 = BC2_OpenFoam->find_index("empty");
-    BC2_OpenFoam->value(index2);
+    int index2 = BC_p_OpenFoam->find_index("empty");
+    BC_p_OpenFoam->value(index2);
   }
 }
 
@@ -1081,14 +1081,89 @@ void WindowConstructor::fU_OpenFoam_cb(){
 
   U_OpenFoam_Menu->show();
   p_OpenFoam_Menu->hide();
+  k_OpenFoam_Menu->hide();
+  epsilon_OpenFoam_Menu->hide();
+  nuTilda_OpenFoam_Menu->hide();
+  nut_OpenFoam_Menu->hide();
+  omega_OpenFoam_Menu->hide();
 }
 
 /* ========================= fp_OpenFoam_cb ========================= */
 
 void WindowConstructor::fp_OpenFoam_cb(){
 
-  p_OpenFoam_Menu->show();
   U_OpenFoam_Menu->hide();
+  p_OpenFoam_Menu->show();
+  k_OpenFoam_Menu->hide();
+  epsilon_OpenFoam_Menu->hide();
+  nuTilda_OpenFoam_Menu->hide();
+  nut_OpenFoam_Menu->hide();
+  omega_OpenFoam_Menu->hide();
+}
+
+/* ========================= fk_OpenFoam_cb ========================= */
+
+void WindowConstructor::fk_OpenFoam_cb(){
+
+  U_OpenFoam_Menu->hide();
+  p_OpenFoam_Menu->hide();
+  k_OpenFoam_Menu->show();
+  epsilon_OpenFoam_Menu->hide();
+  nuTilda_OpenFoam_Menu->hide();
+  nut_OpenFoam_Menu->hide();
+  omega_OpenFoam_Menu->hide();
+}
+
+/* ========================= fepsilon_OpenFoam_cb ========================= */
+
+void WindowConstructor::fepsilon_OpenFoam_cb(){
+
+  U_OpenFoam_Menu->hide();
+  p_OpenFoam_Menu->hide();
+  k_OpenFoam_Menu->hide();
+  epsilon_OpenFoam_Menu->show();
+  nuTilda_OpenFoam_Menu->hide();
+  nut_OpenFoam_Menu->hide();
+  omega_OpenFoam_Menu->hide();
+}
+
+/* ========================= fnuTilda_OpenFoam_cb ========================= */
+
+void WindowConstructor::fnuTilda_OpenFoam_cb(){
+
+  U_OpenFoam_Menu->hide();
+  p_OpenFoam_Menu->hide();
+  k_OpenFoam_Menu->hide();
+  epsilon_OpenFoam_Menu->hide();
+  nuTilda_OpenFoam_Menu->show();
+  nut_OpenFoam_Menu->hide();
+  omega_OpenFoam_Menu->hide();
+}
+
+/* ========================= fnut_OpenFoam_cb ========================= */
+
+void WindowConstructor::fnut_OpenFoam_cb(){
+
+  U_OpenFoam_Menu->hide();
+  p_OpenFoam_Menu->hide();
+  k_OpenFoam_Menu->hide();
+  epsilon_OpenFoam_Menu->hide();
+  nuTilda_OpenFoam_Menu->hide();
+  nut_OpenFoam_Menu->show();
+  omega_OpenFoam_Menu->hide();
+}
+
+/* ========================= fomega_OpenFoam_cb ========================= */
+
+void WindowConstructor::fomega_OpenFoam_cb(){
+
+  U_OpenFoam_Menu->hide();
+  p_OpenFoam_Menu->hide();
+  k_OpenFoam_Menu->hide();
+  epsilon_OpenFoam_Menu->hide();
+  nuTilda_OpenFoam_Menu->hide();
+  nut_OpenFoam_Menu->hide();
+  omega_OpenFoam_Menu->show();
 }
 
 

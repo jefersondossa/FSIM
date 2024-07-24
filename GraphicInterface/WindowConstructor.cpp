@@ -46,12 +46,17 @@
 #include "PosProcessingMenu/PProcessing_Inl_Sta_Functions.cpp"
 #include "WeakFormMenu/OpenFoamSubMenu/PressureSubMenu.cpp"
 #include "WeakFormMenu/OpenFoamSubMenu/VelocitySubMenu.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/kSubMenu.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/omegaSubMenu.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/epsilonSubMenu.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/nutSubMenu.cpp"
+#include "WeakFormMenu/OpenFoamSubMenu/nuTildaSubMenu.cpp"
 
 
 /**
  Constructor
 */
-WindowConstructor::WindowConstructor() {
+WindowConstructor::WindowConstructor(){
   //Creates the FSArl Window.
    Window = new Fl_Double_Window(1536, 793, "FSArl");
     Window->color(FL_LIGHT1);
