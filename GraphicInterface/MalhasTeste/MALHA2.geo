@@ -1,7 +1,7 @@
 // Gmsh project created on Tue Jul 09 21:41:58 2024
 SetFactory("OpenCASCADE");
-hmaior = 2;
-hmenor = 0.2;
+hmaior = 1;
+hmenor = 0.1;
 //pontos face inferior
 Point(1) = {0, 0, 0, hmaior};
 Point(2) = {50, 0, 0, hmaior};

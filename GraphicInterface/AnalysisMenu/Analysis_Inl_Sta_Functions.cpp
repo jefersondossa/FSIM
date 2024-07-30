@@ -20,6 +20,10 @@
         fInline_OF_Analysis;
         fStatic_OF_Analysis;
 
+6.  From fFluidFlow_cb:
+        fInline_FluidFlow;
+        fStatic_FluidFlow;
+
 */
 
 #include "WindowConstructor.h"
@@ -81,5 +85,17 @@ void WindowConstructor::fInline_Apply_Analysis(Fl_Button*, void*){
 
 void WindowConstructor::fStatic_Apply_Analysis(Fl_Button* o, void* v){
     ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_Apply_Analysis(o,v);
+
+}
+
+/* ========================= From fFluidFlow_cb ========================= */
+
+void WindowConstructor::fInline_FluidFlow(Fl_Menu_*, void*){
+    this->fFluidFlow_cb();
+
+}
+
+void WindowConstructor::fStatic_FluidFlow(Fl_Menu_* o, void* v){
+    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_FluidFlow(o,v);
 
 }

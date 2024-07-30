@@ -33,6 +33,7 @@
 #include "TopHeaderMenu/GenerationFunctions/physicalPropertiesFile.cpp"
 #include "TopHeaderMenu/GenerationFunctions/momentumTransportFile.cpp"
 #include "TopHeaderMenu/GenerationFunctions/RunFoam.cpp"
+#include "TopHeaderMenu/GenerationFunctions/TurbulenceFiles.cpp"
 #include "TopHeaderMenu/GenerationFunctions/controlDictFile.cpp"
 #include "TopHeaderMenu/GenerationFunctions/fvSchemes&SolutionFiles.cpp"
 #include "AnalysisMenu/Analysis_Inl_Sta_Functions.cpp"
@@ -46,11 +47,6 @@
 #include "PosProcessingMenu/PProcessing_Inl_Sta_Functions.cpp"
 #include "WeakFormMenu/OpenFoamSubMenu/PressureSubMenu.cpp"
 #include "WeakFormMenu/OpenFoamSubMenu/VelocitySubMenu.cpp"
-#include "WeakFormMenu/OpenFoamSubMenu/kSubMenu.cpp"
-#include "WeakFormMenu/OpenFoamSubMenu/omegaSubMenu.cpp"
-#include "WeakFormMenu/OpenFoamSubMenu/epsilonSubMenu.cpp"
-#include "WeakFormMenu/OpenFoamSubMenu/nutSubMenu.cpp"
-#include "WeakFormMenu/OpenFoamSubMenu/nuTildaSubMenu.cpp"
 
 
 /**

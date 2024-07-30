@@ -3,7 +3,8 @@
 1.  fLinear_cb();
 2.  fNonLinear_cb(); 
 3.  fIncrem_Transient_cb();
-4.  fApply_Analysis_cb(); 
+4.  fFluidFlow_cb();
+5.  fApply_Analysis_cb(); 
 
 */
 
@@ -49,6 +50,25 @@ void WindowConstructor::fOFAnalysis_cb(){
     SolverType->deactivate();
 }
 
+/* ========================= fFluidFlow_cb ========================= */
+
+void WindowConstructor::fFluidFlow_cb(){
+
+    string ff = FluidFlow->text();
+
+    if(ff == "Turbulent"){
+
+        Reynolds_Number->activate();
+        Ref_Length->activate();
+    }
+
+    if(ff == "Laminar"){
+
+        Reynolds_Number->deactivate();
+        Ref_Length->deactivate();
+    }
+}
+
 /* ========================= fApply_Analysis_cb ========================= */
 
 void WindowConstructor::fApply_Analysis_cb(){
@@ -57,8 +77,8 @@ void WindowConstructor::fApply_Analysis_cb(){
     string Line;
     ostringstream Oss;
 
-    string at = this->AnalysisType->text();
-    string st  = this->SolverType->text();
+    string at = AnalysisType->text();
+    string st = SolverType->text();
     string sit = FluidSimulation->text();
     string ft = FluidFlow->text();
     double a; 
@@ -66,7 +86,7 @@ void WindowConstructor::fApply_Analysis_cb(){
     double c; 
     double d; 
     double e; 
-    float f; 
+    float f;
 
     ScriptDisplay->buffer(Buffer);
 
@@ -224,6 +244,57 @@ void WindowConstructor::fApply_Analysis_cb(){
         c = writeInterval->value();
         d = writePrecision->value();
         e = timePrecision->value();
+        string ff = FluidFlow->text();
+
+        //Turbulence Variables:
+        double re = Reynolds_Number->value();
+        double l = Ref_Length->value();
+        double k; // Turbulent kinetic energy [ m2s−2]
+        double I; // Turbulence intensity [%]
+        double er; // Turbulent kinetic energy dissipation rate [ m2s−3]
+
+            //Find velocity uref:
+
+            ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
+            regex U("Velocity BC:\\s*\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)");
+            smatch Match;
+            double UX = 0, UY = 0, UZ = 0; //(x,y,z) Velocity
+
+            if (ScriptMemory_txt.is_open()){
+                while(getline(ScriptMemory_txt, Line)){
+                    if (regex_search(Line, Match, U)) { 
+                        
+                        UX += stod(Match[1]);
+                        UY += stod(Match[2]);
+                        UZ += stod(Match[3]);
+                    }
+                }
+                ScriptMemory_txt.close();
+            }
+
+        string turbulence;
+
+        if(ff == "Laminar"){
+
+            turbulence = "";
+        }
+
+        if(ff == "Turbulent"){
+
+            double Uref = pow((UX*UX + UY*UY + UZ*UZ),1/2);
+            I = 0.16*pow(re, -0.125);
+            k = 1.5*pow((I*Uref),2);
+            er = pow(0.09,0.75)*pow(k,1.5)/l;
+
+            string Re = to_string(re);
+            string L = to_string(l);
+            string K = to_string(k);
+            string E = to_string(er);
+
+            turbulence =    "\nReynolds Number: " + Re + "\nReference Length: " + L + " [m]" +
+                            "\nTurbulent kinetic energy: " + K + " [m2s-2]" + "\nTurbulent kinetic energy dissipation rate: " + E + " [m2s-3]";
+        }
+
 
          size_t pos = Str.find("Analysis Type",0);
 
@@ -245,7 +316,8 @@ void WindowConstructor::fApply_Analysis_cb(){
                   ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Simulation Type: " << sit << "\n" 
                                    << "Flow Type: " << ft << "\n" << "Viscosity: " << f << "\n"
                                    << "endTime: " << a << "\n" << "deltaT: " << b << "\n" << "writeInterval: " << c << "\n" 
-                                   << "writePrecision: " << d << "\n" << "timePrecision: " << e << "\n" << "\n";
+                                   << "writePrecision: " << d << "\n" << "timePrecision: " << e << turbulence
+                                   << "\n" << "\n";
                   ScriptMemory_txt.close(); //Closes ScriptMemory.
               }
 
@@ -254,7 +326,8 @@ void WindowConstructor::fApply_Analysis_cb(){
               Oss<< "Analysis Type: " << at << "\n" << "Simulation Type: " << sit << "\n" 
                  << "Flow Type: " << ft << "\n" << "Viscosity: " << f << "\n"
                  << "endTime: " << a << "\n" << "deltaT: " << b << "\n" << "writeInterval: " << c << "\n"
-                 << "writePrecision: " << d << "\n" << "timePrecision: " << e << "\n" << "\n";
+                 << "writePrecision: " << d << "\n" << "timePrecision: " << e << turbulence
+                 << "\n" << "\n";
               Buffer.append(Oss.str().c_str());
          }
 
@@ -263,7 +336,8 @@ void WindowConstructor::fApply_Analysis_cb(){
              ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Simulation Type: " << sit << "\n" 
                               << "Flow Type: " << ft << "\n" << "Viscosity: " << f << "\n"
                               << "endTime: " << a << "\n" << "deltaT: " << b << "\n" << "writeInterval: " << c << "\n"
-                              << "writePrecision: " << d << "\n" << "timePrecision: " << e << "\n" << "\n";
+                              << "writePrecision: " << d << "\n" << "timePrecision: " << e << turbulence
+                              << "\n" << "\n";
              ScriptMemory_txt.close(); //Closes ScriptMemory.
 
              Buffer.remove(0,Buffer.length());
@@ -271,7 +345,8 @@ void WindowConstructor::fApply_Analysis_cb(){
              Oss<< "Analysis Type: " << at << "\n" << "Simulation Type: " << sit << "\n" 
                 << "Flow Type: " << ft << "\n" << "Viscosity: " << f << "\n"
                 << "endTime: " << a << "\n" << "deltaT: " << b << "\n" << "writeInterval: " << c << "\n"
-                << "writePrecision: " << d << "\n" << "timePrecision: " << e << "\n" << "\n";
+                << "writePrecision: " << d << "\n" << "timePrecision: " << e << turbulence
+                << "\n" << "\n";
              Buffer.append(Oss.str().c_str());
          }
      }

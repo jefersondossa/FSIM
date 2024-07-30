@@ -69,10 +69,38 @@ void WindowConstructor::fOFfolderGenerator(){
     }
     }
 /* ========================= PART 2.1 & 2.2 ========================= */
+    
+  string zero = zeroPath.string(); //Stores the ZeroPath Folder in to a string
+  string zeroNamespath;
+  vector<string> zeroNames; 
 
-    string zero = zeroPath.string(); //Stores the ZeroPath Folder in to a string
-    vector<string> zeroNames; zeroNames = {"U", "p"};
-    string zeroNamespath;
+  fstream ScriptMemory_txt;
+  string Line;
+  ScriptMemory_txt.open("../GraphicInterface/ScriptFiles/ScriptMemory.txt",ios::in);
+
+  regex rff("Flow Type: (\\w+)");
+  string ff;
+  smatch Match;
+
+  if (ScriptMemory_txt.is_open()) {
+    while (getline(ScriptMemory_txt, Line)) {
+        if (regex_search(Line, Match, rff)) { 
+            ff = Match[1];
+        }
+    }
+  }
+
+    fstream mT_file;
+    string mTheader;
+    fstream headerFrommT;
+
+    if(ff == "Laminar"){
+        zeroNames = {"U", "p"};
+    }
+
+    if(ff == "Turbulent"){
+        zeroNames = {"U", "p", "k", "epsilon", "nut"};
+    }
 
     for(int i = 0; i < zeroNames.size(); i++){
 

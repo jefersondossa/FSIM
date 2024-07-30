@@ -14,7 +14,7 @@ Fl_Menu_Item WindowConstructor::menu_SolverType[] = {
 
 void WindowConstructor::fAnalysis(Fl_Double_Window *window){
 
-    Analysis_Menu = new Fl_Group(1160, 75, 375, 500, "Analysis");
+    Analysis_Menu = new Fl_Group(1160, 75, 375, 800, "Analysis");
     Analysis_Menu->color(FL_LIGHT1);
     Analysis_Menu->labelsize(18);
     Analysis_Menu->hide();

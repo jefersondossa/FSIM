@@ -293,12 +293,6 @@ public:
   void fOpemFoam(Fl_Group *group);  //GUI -> Defines the OpenFoam Submenu function.
   void fU_OpenFoam(Fl_Group *group); //GUI -> Defines the Velocity Submenu function from Parameters Submenu;
   void fp_OpenFoam(Fl_Group *group); //GUI -> Defines the Pressure Submenu function from Parameters Submenu;
-  void fk_OpenFoam(Fl_Group *group); //GUI -> Defines the Turbulent kinetic energy Submenu function from Parameters Submenu;
-  void fepsilon_OpenFoam(Fl_Group *group); //GUI -> Defines the Turbulent kinetic energyu dissipation rate Submenu function from Parameters Submenu;
-  void fnuTilda_OpenFoam(Fl_Group *group); //GUI -> Defines the Modified turbulent viscosity Submenu function from Parameters Submenu;
-  void fnut_OpenFoam(Fl_Group *group); //GUI -> Defines the Turbulent (edy) kinematic viscosity Submenu function from Parameters Submenu;
-  void fomega_OpenFoam(Fl_Group *group); //GUI -> Defines the Specific dissipation rate Submenu function from Parameters Submenu;
-
 
   /* ========================= CALLBACK FUNCTIONS ========================= */
 
@@ -319,12 +313,6 @@ public:
   void fControlDict_OpenFoam_cb(); //GUI -> Defines the ControlDict Callback Submenu function.
   void fU_OpenFoam_cb(); //GUI -> Defines the Velocity Callback Button function.
   void fp_OpenFoam_cb(); //GUI -> Defines the Pressure Callback Button function.
-  void fk_OpenFoam_cb(); //GUI -> Defines the Turbulent kinetic energy Callback Button function.
-  void fepsilon_OpenFoam_cb(); //GUI -> Defines the Turbulent kinetic energyu dissipation rate Callback Button function.
-  void fnuTilda_OpenFoam_cb(); //GUI -> Defines the Modified turbulent viscosity Callback Button function.
-  void fnut_OpenFoam_cb(); //GUI -> Defines the Turbulent (edy) kinematic viscosity Callback Button function.
-  void fomega_OpenFoam_cb(); //GUI -> Defines the Specific dissipation rate Callback Button function.
-  
 
 private:
 
@@ -376,21 +364,6 @@ private:
   inline void fInline_p_OF(Fl_Widget*, void*); 
   static void fStatic_p_OF(Fl_Widget*, void*); 
 
-  inline void fInline_k_OF(Fl_Widget*, void*); 
-  static void fStatic_k_OF(Fl_Widget*, void*); 
-
-  inline void fInline_epsilon_OF(Fl_Widget*, void*); 
-  static void fStatic_epsilon_OF(Fl_Widget*, void*); 
-
-  inline void fInline_nuTilda_OF(Fl_Widget*, void*); 
-  static void fStatic_nuTilda_OF(Fl_Widget*, void*); 
-
-  inline void fInline_nut_OF(Fl_Widget*, void*); 
-  static void fStatic_nut_OF(Fl_Widget*, void*); 
-
-  inline void fInline_omega_OF(Fl_Widget*, void*); 
-  static void fStatic_omega_OF(Fl_Widget*, void*); 
-
 
 //************************************
 //ANALYSIS MENU COMPONENTS - FSArl GUI
@@ -426,6 +399,8 @@ public:
   Fl_Value_Input *writePrecision; //GUI -> Defines the ... from OpenFoam Analysis SubMenu;
   Fl_Value_Input *timePrecision; //GUI -> Defines the ... from OpenFoam Analysis SubMenu;
   Fl_Value_Input *OFViscosity; //GUI -> Defines the fluid vicosity from OpenFoam SUbmenu from Analysis Menu;
+  Fl_Value_Input *Ref_Length; //GUI -> Defines the A reference length scale [m] from OpenFoam SUbmenu from Analysis Menu;
+  Fl_Value_Input *Reynolds_Number; //GUI -> Defines the Reynolds Number from OpenFoam SUbmenu from Analysis Menu;
 
   Fl_Button *Apply_Analysis; //GUI -> Defines the apply button for the Analysis Menu widget.
 
@@ -448,6 +423,8 @@ public:
   void fOFAnalysis_cb(); //GUI -> Defines the OpenFoam Analysis Callback Submenu function;
   void fIncrem_Transient_cb(); //GUI -> Defines the Incremental and Transient Callback Submenu function;
   void fApply_Analysis_cb(); //GUI -> Defines the Apply Analysis button Callback function;
+  void fFluidFlow_cb(); //GUI -> Defines the Apply Analysis button Callback function;
+
 
 private:
 
@@ -465,6 +442,9 @@ private:
 
   inline void fInline_Apply_Analysis(Fl_Button*, void*);
   static void fStatic_Apply_Analysis(Fl_Button*, void*);
+
+  inline void fInline_FluidFlow(Fl_Menu_*, void*);
+  static void fStatic_FluidFlow(Fl_Menu_*, void*);
 
 //******************************************
 //POS-PROCESSING MENU COMPONENTS - FSArl GUI
@@ -519,6 +499,9 @@ public:
   void fFoamFile(); //GUI-> Defines the functions that generates the .foam file;
   void fUFile();
   void fpFile();
+  void fkFile();
+  void fEpsilonFile();
+  void fnutFile();
   void fphysicalPropertiesFile();
   void fmomentumTransportFile();
   void fcontrolDictFile();

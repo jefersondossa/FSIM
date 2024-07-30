@@ -31,11 +31,11 @@ solvers
         relTol          0;
     }
 
-    "U.*"
+    "(U|k|epsilon|nut).*"
     {
         solver          PBiCGStab;
         preconditioner  DILU;
-        
+
         tolerance       1e-5;
         relTol          0;
     }

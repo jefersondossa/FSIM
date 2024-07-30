@@ -12,11 +12,6 @@ Fl_Menu_Item WindowConstructor::parameter_OpenFoam_Menu[] =
 {
     {" U ", 0,  fStatic_U_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
     {" p ", 0,  fStatic_p_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
-    {" k ", 0,  fStatic_k_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
-    {" epsilon ", 0,  fStatic_epsilon_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
-    {" nuTilda ", 0,  fStatic_nuTilda_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
-    {" nut ", 0,  fStatic_nut_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
-    {" omega ", 0,  fStatic_omega_OF, 0, 128, (uchar)FL_NORMAL_LABEL, 0, 14, 0},
     {0,0,0,0,0,0,0,0,0}
 };
 
@@ -39,11 +34,6 @@ void WindowConstructor::fOpemFoam(Fl_Group *group){
 
     fU_OpenFoam(OpenFoam_Menu);
     fp_OpenFoam(OpenFoam_Menu);
-    fk_OpenFoam(OpenFoam_Menu);
-    fepsilon_OpenFoam(OpenFoam_Menu);
-    fnuTilda_OpenFoam(OpenFoam_Menu);
-    fnut_OpenFoam(OpenFoam_Menu);
-    fomega_OpenFoam(OpenFoam_Menu);
 
   /*============================== Button_Apply_WeakForm ==============================*/
 

@@ -63,26 +63,7 @@
     From fp_OpenFoam_cb:
         fInline_p_OF;
         fStatic_p_OF;
-    
-    From fk_OpenFoam_cb:
-        fInline_k_OF;
-        fStatic_k_OF;
 
-    From fepsilon_OpenFoam_cb:
-        fInline_epsilon_OF;
-        fStatic_epsilon_OF;
-
-    From fnuTilda_OpenFoam_cb:
-        fInline_nuTilda_OF;
-        fStatic_nuTilda_OF;
-
-    From fnut_OpenFoam_cb:
-        fInline_nut_OF;
-        fStatic_nut_OF;
-
-    From fomega_OpenFoam_cb:
-        fInline_omega_OF;
-        fStatic_omega_OF;
 
 */
 
@@ -251,61 +232,6 @@ void WindowConstructor::fInline_p_OF(Fl_Widget*, void*){
 
 void WindowConstructor::fStatic_p_OF(Fl_Widget* o, void* v){
     ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_p_OF(o,v);
-}
-
-/* ========================= From fk_OpenFoam_cb() ========================= */
-
-void WindowConstructor::fInline_k_OF(Fl_Widget*, void*){
-    this->fk_OpenFoam_cb();
-
-}
-
-void WindowConstructor::fStatic_k_OF(Fl_Widget* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_k_OF(o,v);
-}
-
-/* ========================= From fepsilon_OpenFoam_cb() ========================= */
-
-void WindowConstructor::fInline_epsilon_OF(Fl_Widget*, void*){
-    this->fepsilon_OpenFoam_cb();
-
-}
-
-void WindowConstructor::fStatic_epsilon_OF(Fl_Widget* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_epsilon_OF(o,v);
-}
-
-/* ========================= From fnuTilda_OpenFoam_cb() ========================= */
-
-void WindowConstructor::fInline_nuTilda_OF(Fl_Widget*, void*){
-    this->fnuTilda_OpenFoam_cb();
-
-}
-
-void WindowConstructor::fStatic_nuTilda_OF(Fl_Widget* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_nuTilda_OF(o,v);
-}
-
-/* ========================= From fnut_OpenFoam_cb() ========================= */
-
-void WindowConstructor::fInline_nut_OF(Fl_Widget*, void*){
-    this->fnut_OpenFoam_cb();
-
-}
-
-void WindowConstructor::fStatic_nut_OF(Fl_Widget* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_nut_OF(o,v);
-}
-
-/* ========================= From fomega_OpenFoam_cb() ========================= */
-
-void WindowConstructor::fInline_omega_OF(Fl_Widget*, void*){
-    this->fomega_OpenFoam_cb();
-
-}
-
-void WindowConstructor::fStatic_omega_OF(Fl_Widget* o, void* v){
-    ((WindowConstructor*)(o->parent()->parent()->parent()->user_data()))->fInline_omega_OF(o,v);
 }
 
 

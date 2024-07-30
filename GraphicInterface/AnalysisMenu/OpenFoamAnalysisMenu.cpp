@@ -14,7 +14,7 @@ Fl_Menu_Item WindowConstructor::menu_FluidFlow[] = {
 
 void WindowConstructor::fOFAnalysis(Fl_Group *group){
 
-    OpenFoam_Analysis_Menu = new Fl_Group(1160, 175, 375, 600);
+    OpenFoam_Analysis_Menu = new Fl_Group(1160, 175, 375, 800);
     OpenFoam_Analysis_Menu->hide();
 
     /* ========================= FluidSimulation ========================= */
@@ -33,7 +33,8 @@ void WindowConstructor::fOFAnalysis(Fl_Group *group){
     FluidFlow->down_box(FL_BORDER_BOX);
     FluidFlow->menu(menu_FluidFlow);
 
-    this->FluidFlow->add("Laminar");
+    FluidFlow->add("Laminar",0,(Fl_Callback*)WindowConstructor::fStatic_FluidFlow,0,0);
+    FluidFlow->add("Turbulent",0,(Fl_Callback*)WindowConstructor::fStatic_FluidFlow,0,0);
 
     /*============================== viscosity ==============================*/
 
@@ -47,13 +48,19 @@ void WindowConstructor::fOFAnalysis(Fl_Group *group){
     writePrecision = new Fl_Value_Input(1325, 425, 100, 25, "writePrecision: ");
     timePrecision = new Fl_Value_Input(1325, 465, 100, 25, "timePrecision: ");
 
+    Ref_Length = new Fl_Value_Input(1325, 505, 100, 25, "Reference Length [m]: ");
+    Reynolds_Number = new Fl_Value_Input(1325, 545, 100, 25, "Reynolds Number: ");
+
+    Ref_Length->deactivate();
+    Reynolds_Number->deactivate();
+
     endTime->value(0);
     deltaT->value(0.1);
     writeInterval->value(1);
     writePrecision->value(6);
     timePrecision->value(6);
 
-    Apply_Analysis = new Fl_Button(1430, 505, 80, 25, "Apply");
+    Apply_Analysis = new Fl_Button(1430, 585, 80, 25, "Apply");
     Apply_Analysis->callback((Fl_Callback*)fStatic_Apply_Analysis);
 
     OpenFoam_Analysis_Menu->end();
