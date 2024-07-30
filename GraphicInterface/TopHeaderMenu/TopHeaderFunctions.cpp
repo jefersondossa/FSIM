@@ -107,6 +107,7 @@ void WindowConstructor::fOpen_File_cb(){
   Buffer.text(); //Clears the Buffer
   ScriptDisplay->buffer(Buffer); //Clears the
   this->Apply_geometry->do_callback();
+  Button_Geometry->activate();
   Geometry_Menu->show();
   WF_Menu->hide();
   Analysis_Menu->hide();
@@ -160,6 +161,16 @@ this->PhysicalGroups->value(0);
 zeroFiles.clear();
 systemFiles.clear();
 constantFiles.clear();
+
+// Additional rendering cleanup
+if (playback != nullptr) {
+    playback->render_enabled = false;
+    playback->deactivate();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clears the color and depth buffer
+    playback->InitializeGL();
+    playback->redraw();
+  }
+
 }
 
 /* ========================= fGenerateHeader_cb() ========================= */

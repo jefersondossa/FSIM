@@ -282,7 +282,7 @@ void WindowConstructor::fDeactivate_Render_cb(){
   }
 
   if(Deactivate_Render->value() == 0){
-    playback->render_enabled = false;    
+    playback->render_enabled = false;
     playback->deactivate();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clears the color and depth buffer
     playback->InitializeGL();

@@ -134,6 +134,6 @@ void WindowConstructor::fRunFoam(){
     //Post-Process
 
     string p_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func wallShearStress";
-    system(p_cell.c_str()); //Calculates the Shear Stress (τ=R⋅n)
+    system(p_cell.c_str()); //Calculates the Shear Stress
 
 }

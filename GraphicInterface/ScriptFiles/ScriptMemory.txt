@@ -40,6 +40,6 @@ Weak Form: OpenFoam
 Velocity BC: slip
 Pressure BC: zeroGradient
 
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
+geo path: /home/joao_fonte_ubuntu/FSArl/GraphicInterface/MalhasTeste/Building.geo
+msh path: /home/joao_fonte_ubuntu/FSArl/GraphicInterface/MalhasTeste/Building.msh
 
