@@ -14,10 +14,9 @@ protected:
 public:
     /// @brief Elastic truss class constructor
     /// @param matid physical tag
-    /// @param dim problem dimension (2 or 3)
     /// @param young material Young modulus
     /// @param inertia cross section inertia
-    LinearBeam(int matid, int dim, double young, double inertia);
+    LinearBeam(int matid, double young, double inertia);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -51,6 +50,8 @@ public:
     /// @param var solution variable's index
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
+
+    void HermiteFunction(double &ksi, VecDouble &phi, VecDouble &dphi,  VecDouble &d2phi, VecDouble &d3phi);
 
 };
 

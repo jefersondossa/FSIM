@@ -60,6 +60,8 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "TransientPositional2D.h"
 #include "NavierStokes.h"
 #include "TransientNavierStokes.h"
+#include "LinearBeam.h"
+#include "LinearFrame.h"
 #define USE_SNES
 
 int main(int argc, char **args) {
@@ -82,7 +84,7 @@ int main(int argc, char **args) {
     // #include "examples/notched.h"
     // #include "examples/stripfooting.h"
     // #include "examples/cantilever.h"
-    #include "examples/beamPaulo.h"
+    #include "examples/Beam.h"
     // #include "examples/clamped_beam1.h"
     // #include "examples/beamArlequin.h"
     // #include "examples/building.h"
