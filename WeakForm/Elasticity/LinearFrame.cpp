@@ -83,6 +83,21 @@ void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs
 
     Rhs[2] += forcingF[1] * phi[1] * WJ * 0.5;
     Rhs[5] += forcingF[1] * phi[3] * WJ * 0.5;
+
+    double cosa = data.fAxes0(0,0) / data.fJacA0;
+    double sina = data.fAxes0(1,0) / data.fJacA0;
+    MatrixDouble rotation(6,6);
+    rotation.setZero();
+    //Rotation matrix
+    for (int j = 0; j < 2; j++){
+        rotation(3*j  ,3*j  ) = cosa;
+        rotation(3*j+1,3*j  ) = sina;
+        rotation(3*j  ,3*j+1) = -sina;
+        rotation(3*j+1,3*j+1) = cosa;
+        rotation(3*j+2,3*j+2) = 1.;
+    }
+
+    Rhs = rotation.transpose() * Rhs;
     
 };
 
