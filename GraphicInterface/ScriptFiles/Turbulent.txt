@@ -3,16 +3,35 @@ Weak Form: OpenFoam
 Velocity BC: noSlip
 Pressure BC: zeroGradient
 
+Physical Group: simetria
+Weak Form: OpenFoam
+Velocity BC: empty
+Pressure BC: empty
+
+Physical Group: saida
+Weak Form: OpenFoam
+Velocity BC: fixedValue
+Uvector: (1.000000 0.000000 0.000000)
+Pressure BC: zeroGradient
+
 Physical Group: entrada
 Weak Form: OpenFoam
 Velocity BC: zeroGradient
 Pressure BC: fixedValue
 pValue: 0.000000
 
+Physical Group: topo
+Weak Form: OpenFoam
+Velocity BC: slip
+Pressure BC: zeroGradient
+
 Physical Group: edificio
 Weak Form: OpenFoam
 Velocity BC: slip
 Pressure BC: zeroGradient
+
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
 
 Analysis Type: OpenFoam Analysis
 Simulation Type: Incompressible Fluid
@@ -27,22 +46,4 @@ Reynolds Number: 100.000000
 Reference Length: 0.100000 [m]
 Turbulent kinetic energy: 0.012143 [m2s-2]
 Turbulent kinetic energy dissipation rate: 0.002199 [m2s-3]
-
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building.msh
-
-Physical Group: simetria
-Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
-
-Physical Group: topo
-Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
-
-Physical Group: saida
-Weak Form: OpenFoam
-Velocity BC: noSlip
-Pressure BC: zeroGradient
 

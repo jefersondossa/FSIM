@@ -120,7 +120,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -192,7 +192,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -263,7 +263,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -333,7 +333,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -405,7 +405,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -474,7 +474,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -544,7 +544,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -614,7 +614,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-18, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -683,7 +683,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-17, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
@@ -775,7 +775,7 @@ void WindowConstructor::fApply_WF_cb(){
     //Reads string Str and finds the next NULL line position.
     if(pos != string::npos){
       size_t pos_null = Str.find("\n\n",pos); //find and return the NULL line position. If not found, returns npos.
-      Str.erase(pos-16, pos_null - pos +18); //Delete the pos and pos_null gap text (-18 because it's necessary to erase the "Physical Group: ").
+      Str.erase(pos-15, pos_null - pos +17); //Delete the pos and pos_null gap text (-15 because it's necessary to erase the "Physical Group: ").
 
       /*
       At this moment, Str is modified. Since we want the text to be copied to the ScriptMemory (for future modifications in Str and header),
