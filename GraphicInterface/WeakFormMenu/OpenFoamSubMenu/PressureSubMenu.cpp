@@ -22,9 +22,6 @@ void WindowConstructor::fp_OpenFoam(Fl_Group *group){
     BC_p_OpenFoam->menu(menu_BC_U_OpenFoam);
 
     this->BC_p_OpenFoam->add("noSlip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    this->BC_p_OpenFoam->add("slip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    //this->BC_U_OpenFoam->add("slip",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
-    //this->BC_U_OpenFoam->add("symmetry",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
     this->BC_p_OpenFoam->add("empty",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);
     this->BC_p_OpenFoam->add("fixedValue",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,0);  
     this->BC_p_OpenFoam->add("zeroGradient",0,(Fl_Callback*)WindowConstructor::fStatic_fixedValue,0,1);

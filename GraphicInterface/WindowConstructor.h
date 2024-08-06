@@ -267,11 +267,6 @@ public:
 
   Fl_Group *U_OpenFoam_Menu; //GUI -> Defines the Velocity Submenu from OpenFoam Menu; 
   Fl_Group *p_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu;
-  Fl_Group *k_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu;
-  Fl_Group *epsilon_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
-  Fl_Group *nuTilda_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
-  Fl_Group *nut_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
-  Fl_Group *omega_OpenFoam_Menu; //GUI -> Defines the Pressure Submenu from OpenFoam Menu; 
 
   map<string,string> PhysGroup2; //GUI -> Allows to list the Physical Groups Names with the Physical Groups Types.
 

@@ -1,3 +1,6 @@
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/cylinder2D.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/cylinder2D.msh
+
 Physical Group: inlet
 Weak Form: OpenFoam
 Velocity BC: fixedValue
@@ -33,7 +36,4 @@ Reynolds Number: 1000.000000
 Reference Length: 1.000000 [m]
 Turbulent kinetic energy: 0.006829 [m2s-2]
 Turbulent kinetic energy dissipation rate: 0.000093 [m2s-3]
-
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/cylinder2D.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/cylinder2D.msh
 
