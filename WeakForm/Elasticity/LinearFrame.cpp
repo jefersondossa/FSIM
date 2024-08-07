@@ -53,8 +53,8 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
     //Rotation matrix
     for (int j = 0; j < 2; j++){
         rotation(3*j  ,3*j  ) = cosa;
-        rotation(3*j+1,3*j  ) = sina;
-        rotation(3*j  ,3*j+1) = -sina;
+        rotation(3*j+1,3*j  ) = -sina;
+        rotation(3*j  ,3*j+1) = sina;
         rotation(3*j+1,3*j+1) = cosa;
         rotation(3*j+2,3*j+2) = 1.;
     }
