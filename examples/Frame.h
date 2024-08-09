@@ -4,7 +4,7 @@
     auto forcing = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[1] = -1;
+    force[1] = 1.;
 };
 
 {
@@ -13,7 +13,7 @@
 
     LinearFrame * bhorizontal = new LinearFrame(5,1.,1.,3.);
     LinearFrame * bvertical = new LinearFrame(4,1.,1.,3.);
-    bhorizontal->SetForcingFunction(forcing); 
+    bvertical->SetForcingFunction(forcing); 
     //BC
     MatrixDouble val1(3,3);
     val1.setZero();

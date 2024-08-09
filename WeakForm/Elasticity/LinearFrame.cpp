@@ -73,16 +73,18 @@ void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs
     if (force) force(x_,forcingF);
 
     VecDouble phi,dphi,d2phi,d3phi;
+    VecDouble Rhsaux(6);
+    Rhsaux.setZero();
 
     HermiteFunction(data.fAdimCoord[0],phi,dphi,d2phi,d3phi);
-    Rhs[0] += forcingF[0] * data.fPhi[0] * WJ;
-    Rhs[3] += forcingF[0] * data.fPhi[1] * WJ;
+    Rhsaux[0] = forcingF[0] * data.fPhi[0] * WJ;
+    Rhsaux[3] = forcingF[0] * data.fPhi[1] * WJ;
 
-    Rhs[1] += forcingF[1] * phi[0] * WJ;
-    Rhs[4] += forcingF[1] * phi[2] * WJ;
+    Rhsaux[1] = forcingF[1] * phi[0] * WJ;
+    Rhsaux[4] = forcingF[1] * phi[2] * WJ;
 
-    Rhs[2] += forcingF[1] * phi[1] * WJ * 0.5;
-    Rhs[5] += forcingF[1] * phi[3] * WJ * 0.5;
+    Rhsaux[2] = forcingF[1] * phi[1] * WJ * 0.5;
+    Rhsaux[5] = forcingF[1] * phi[3] * WJ * 0.5;
 
     double cosa = data.fAxes0(0,0) / data.fJacA0;
     double sina = data.fAxes0(1,0) / data.fJacA0;
@@ -91,13 +93,13 @@ void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs
     //Rotation matrix
     for (int j = 0; j < 2; j++){
         rotation(3*j  ,3*j  ) = cosa;
-        rotation(3*j+1,3*j  ) = sina;
-        rotation(3*j  ,3*j+1) = -sina;
+        rotation(3*j+1,3*j  ) = -sina;
+        rotation(3*j  ,3*j+1) = sina;
         rotation(3*j+1,3*j+1) = cosa;
         rotation(3*j+2,3*j+2) = 1.;
     }
 
-    Rhs = rotation.transpose() * Rhs;
+    Rhs += rotation.transpose() * Rhsaux;
     
 };
 
