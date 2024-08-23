@@ -33,7 +33,7 @@ solvers
 
     "(U|k|epsilon|nut).*"
     {
-        solver          PBiCGStab;
+        solver          smoothSolver;
         preconditioner  DILU;
 
         tolerance       1e-5;
@@ -41,13 +41,14 @@ solvers
     }
 }
 
+
 PIMPLE
 {
     momentumPredictor   no;
     nOuterCorrectors    1;
     transportPredictionFirst yes;
     nCorrectors         2;
-    nNonOrthogonalCorrectors 0;
+    nNonOrthogonalCorrectors 2;
     pRefCell    0;
     pRefValue    0;
 }
@@ -61,7 +62,7 @@ relaxationFactors
 
     equations
     {
-        U               0.7;
+        U               0.5;
     }
 }
 

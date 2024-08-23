@@ -164,8 +164,44 @@ void Playback::PrintElement(Element *el, CompMesh *cmesh){
 
             glVertex3fv(pd);
             glVertex3fv(pa);
+        }
+        
+        case 12: //linear hexahedra
+        {
+            auto core_A = cmesh->NodeVec()[connect[0]]->getCoordinates();
+            auto core_B = cmesh->NodeVec()[connect[1]]->getCoordinates();
+            auto core_C = cmesh->NodeVec()[connect[2]]->getCoordinates();
+            auto core_D = cmesh->NodeVec()[connect[3]]->getCoordinates();
+            auto core_E = cmesh->NodeVec()[connect[4]]->getCoordinates();
+            auto core_F = cmesh->NodeVec()[connect[5]]->getCoordinates();
 
-            
+            //Since glVertex3fv requires Glfloats as entry, let's convert to it:
+            GLfloat pa []= {static_cast<float>(core_A[0]), static_cast<float>(core_A[1]),static_cast<float> (core_A[2])};
+            GLfloat pb []= {static_cast<float>(core_B[0]), static_cast<float>(core_B[1]),static_cast<float> (core_B[2])};
+            GLfloat pc []= {static_cast<float>(core_C[0]), static_cast<float>(core_C[1]),static_cast<float> (core_C[2])};
+            GLfloat pd []= {static_cast<float>(core_D[0]), static_cast<float>(core_D[1]),static_cast<float> (core_D[2])};
+            GLfloat pe []= {static_cast<float>(core_E[0]), static_cast<float>(core_E[1]),static_cast<float> (core_E[2])};
+            GLfloat pf []= {static_cast<float>(core_F[0]), static_cast<float>(core_F[1]),static_cast<float> (core_F[2])};
+
+            //Creates OpenGL points
+            glVertex3fv(pa);
+            glVertex3fv(pb);
+
+            glVertex3fv(pb);
+            glVertex3fv(pc);
+
+            glVertex3fv(pc);
+            glVertex3fv(pd);
+
+            glVertex3fv(pd);
+            glVertex3fv(pe);
+
+            glVertex3fv(pe);
+            glVertex3fv(pf);
+
+            glVertex3fv(pf);
+            glVertex3fv(pa);
+
         }
         break;
 

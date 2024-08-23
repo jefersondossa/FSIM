@@ -54,7 +54,7 @@
 */
 WindowConstructor::WindowConstructor(){
   //Creates the FSArl Window.
-   Window = new Fl_Double_Window(1536, 793, "FSArl");
+   Window = new Fl_Double_Window(1536, 793, "Computational Fluid Dynamics Interface");
     Window->color(FL_LIGHT1);
     Window->user_data((void*)(this));
     Window->align(Fl_Align(65));

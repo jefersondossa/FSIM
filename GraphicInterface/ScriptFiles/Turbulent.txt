@@ -11,7 +11,7 @@ Pressure BC: empty
 Physical Group: saida
 Weak Form: OpenFoam
 Velocity BC: fixedValue
-Uvector: (1.000000 0.000000 0.000000)
+Uvector: (1.000000 .000000 0.000000)
 Pressure BC: zeroGradient
 
 Physical Group: entrada

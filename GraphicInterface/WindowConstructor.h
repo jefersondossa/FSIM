@@ -420,7 +420,7 @@ public:
   void fApply_Analysis_cb(); //GUI -> Defines the Apply Analysis button Callback function;
   void fFluidFlow_cb(); //GUI -> Defines the Apply Analysis button Callback function;
 
-
+  
 private:
 
   inline void fInline_Linear(Fl_Menu_*, void*);
@@ -583,6 +583,25 @@ private:
 
   inline void fInline_Button_PProcessing(Fl_Button*, void*);
   static void fStatic_Button_PPospricessing(Fl_Button*, void*);
+
+//************************************
+// Error Messages- FSArl GUI
+//************************************
+
+  /* ========================= WIDGETS ========================= */
+
+public:
+
+  /* ========================= CREATION FUNCTIONS ========================= */
+
+public:
+
+  
+  /* ========================= CALLBACK FUNCTIONS ========================= */
+
+public:
+
+private:
 
 };
 #endif

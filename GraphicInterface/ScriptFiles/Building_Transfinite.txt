@@ -34,6 +34,9 @@ Reference Length: 30.000000 [m]
 Turbulent kinetic energy: 0.0004346872 [m2s-2]
 Turbulent kinetic energy dissipation rate: 0.0000000496 [m2s-3]
 
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.msh
+
 Physical Group: frontAndBack
 Weak Form: OpenFoam
 Velocity BC: slip
@@ -43,7 +46,4 @@ Physical Group: Building
 Weak Form: OpenFoam
 Velocity BC: noSlip
 Pressure BC: zeroGradient
-
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.msh
 

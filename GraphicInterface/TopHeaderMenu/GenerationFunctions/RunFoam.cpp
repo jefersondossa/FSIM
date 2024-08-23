@@ -8,6 +8,10 @@ void WindowConstructor::fRunFoam(){
     string cpMSH = "cd GeneratedFiles && cp -r " + MSH_PATH + " ." + " && msh_file=$(find . -type f -name '*.msh') && gmsh \"$msh_file\" -2 -format msh2 && gmshToFoam \"$msh_file\"";
     system(cpMSH.c_str());
 
+    //Mesh verification
+    string mesh = "cd GeneratedFiles && checkMesh";
+    system(mesh.c_str());
+
     fstream RunFoam_file;
     string Line;
 
@@ -136,4 +140,5 @@ void WindowConstructor::fRunFoam(){
     string p_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func wallShearStress";
     system(p_cell.c_str()); //Calculates the Shear Stress
 
+    string courant = "cd GeneratedFiles && foamPostProcess -func CourantNo";
 }

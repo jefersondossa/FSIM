@@ -19,6 +19,10 @@ application     foamRun;
 
 solver          incompressibleFluid;
 
+//adjustTimeStep  yes;
+
+//maxCo           1;
+
 startFrom       startTime;
 
 startTime       0;

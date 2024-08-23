@@ -288,8 +288,14 @@ void WindowConstructor::fApply_Analysis_cb(){
 
             string Re = to_string(re);
             string L = to_string(l);
-            string K = to_string(k);
-            string E = to_string(er);
+            //string K = to_string(k);
+            //string E = to_string(er);
+
+            char buffer[50];
+            sprintf(buffer, "%.10f", k);
+            string K(buffer);
+            sprintf(buffer, "%.10f", er);
+            string E(buffer);
 
             turbulence =    "\nReynolds Number: " + Re + "\nReference Length: " + L + " [m]" +
                             "\nTurbulent kinetic energy: " + K + " [m2s-2]" + "\nTurbulent kinetic energy dissipation rate: " + E + " [m2s-3]";
@@ -313,7 +319,7 @@ void WindowConstructor::fApply_Analysis_cb(){
               if(ScriptMemory_txt.is_open()){
       
                   ScriptMemory_txt << Str; //Append Str to ScriptMemory
-                  ScriptMemory_txt << "Analysis Type: " << at << "\n" << "Simulation Type: " << sit << "\n" 
+                  ScriptMemory_txt <<"Analysis Type: " << at << "\n" << "Simulation Type: " << sit << "\n" 
                                    << "Flow Type: " << ft << "\n" << "Viscosity: " << f << "\n"
                                    << "endTime: " << a << "\n" << "deltaT: " << b << "\n" << "writeInterval: " << c << "\n" 
                                    << "writePrecision: " << d << "\n" << "timePrecision: " << e << turbulence

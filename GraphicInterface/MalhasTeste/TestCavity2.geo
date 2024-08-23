@@ -1,4 +1,4 @@
-m = 1000;
+m = 800;
 
 //Building
 //Inside Points
