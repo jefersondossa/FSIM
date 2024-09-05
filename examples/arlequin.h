@@ -145,11 +145,9 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     VecDouble val2(nstate);
     VecDouble val3(nstate);
     val2.setZero();val3.setZero();
-    // val2[0] = 1.5;
     L2Projection * matbc1 = new L2Projection(5,nstate,0,val1,val2);
-    val2[1] = 1.;
-    L2Projection * matbc3 = new L2Projection(6,nstate,3,val1,val2);
-    // val2.setZero();
+    L2Projection * matbc3 = new L2Projection(6,nstate,1,val1,val2);
+    val3[1] = 1.;
     L2Projection * matbc2 = new L2Projection(7,nstate,3,val1,val3);
     // matbc1->SetForcingFunction(forcingFunctionElasticity2D);
     // matbc1->SetExactSolution(exactSolElasticity2D);
@@ -168,8 +166,8 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     val2[0] = 1.5; 
     L2Projection * matbc4 = new L2Projection(6,nstate,0,val1,val2);
     val2.setZero();
-    val2[1] = 1.;
-    L2Projection * matbc5 = new L2Projection(5,nstate,3,val1,val2);
+    L2Projection * matbc5 = new L2Projection(5,nstate,1,val1,val2);
+    val3[1] = 1.;
     L2Projection * matbc6 = new L2Projection(7,nstate,3,val1,val3);    
     fineModel->InsertMaterial(matbc4);
     fineModel->InsertMaterial(matbc5);
@@ -182,7 +180,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
-    Arlequin arl(meshvector,1.e-5,00.00);
+    Arlequin arl(meshvector,1.e0,00.00);
     arl.InvertSignaledDistance();
     arl.SetGlueIds(gluematids);
     arl.SetGlueZoneThichkess(0.5);
@@ -200,7 +198,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // an.Run();
     LinearAnalysis an(&arl,SolverType::ELDLt);
-    // NonLinearAnalysis an(&arl,SolverType::ELDLt,1.e-6,3);
+    // NonLinearAnalysis an(&arl,SolverType::ELDLt,1.e-6,1);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // NonLinearAnalysis an(coarseModel,SolverType::ELDLt);
     // NonLinearAnalysis an(coarseModel,SolverType::EKLU);

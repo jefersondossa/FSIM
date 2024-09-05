@@ -13,7 +13,9 @@ EigenSpMatrix::EigenSpMatrix(int64_t rows, int64_t cols) : MatrixType(rows,cols)
 
 EigenSpMatrix::~EigenSpMatrix()
 {
-
+    fMatrix.resize(0,0);
+    fRhs.resize(0,0);
+    fSolution.resize(0,0);
 }
 
 void EigenSpMatrix::ZeroMatrix(){

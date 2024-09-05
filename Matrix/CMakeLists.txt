@@ -11,6 +11,8 @@ file(GLOB matrix
     EigenSpMatrix.cpp
     Tensor.h
     Tensor.cpp
+    ArlequinMatRedEigen.h
+    ArlequinMatRedEigen.cpp
 )
 
 set(MATRIX ${matrix} PARENT_SCOPE)

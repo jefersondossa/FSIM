@@ -2,6 +2,7 @@
 #include "Assemble.h"
 #include "PETScSolver.h"
 #include "EigenLinearSolver.h"
+#include "ArlequinRedSolverEigen.h"
 #include "PETScMatrix.h"
 #include "EigenSpMatrix.h"
 
@@ -35,7 +36,11 @@ void Analysis::Solve(){
 #ifdef HAS_PETSC
     fSolver = new PETScSolver(this);
 #else
-    fSolver = new EigenLinearSolver(this);
+    if (fArlequin){
+        fSolver = new ArlequinRedSolverEigen(this);
+    } else {
+        fSolver = new EigenLinearSolver(this);
+    }
 #endif
     fSolver->Solve();
     delete fSolver;
@@ -85,19 +90,19 @@ void Analysis::AllocateArlequin(){
 #ifdef HAS_PETSC
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeq);
 #else 
-        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+        fGlobalMatrix = new ArlequinMatRedEigen(numDOFGlobal,numDOFLocal,numDOFLagMul);
 #endif
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
 #ifdef HAS_PETSC
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeqSym);
 #else
-        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+        fGlobalMatrix = new ArlequinMatRedEigen(numDOFGlobal,numDOFLocal,numDOFLagMul);
 #endif
     } else {
 #ifdef HAS_PETSC
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::EAij);
 #else
-        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+        fGlobalMatrix = new ArlequinMatRedEigen(numDOFGlobal,numDOFLocal,numDOFLagMul);
 #endif
     }
     for (int64_t i=0; i<numDOF; i++){
