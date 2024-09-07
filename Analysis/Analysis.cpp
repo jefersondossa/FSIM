@@ -3,6 +3,7 @@
 #include "PETScSolver.h"
 #include "EigenLinearSolver.h"
 #include "ArlequinRedSolverEigen.h"
+#include "ArlequinRedSolverPETSc.h"
 #include "PETScMatrix.h"
 #include "EigenSpMatrix.h"
 
@@ -13,7 +14,8 @@ Analysis::Analysis(CompMesh *cmesh, SolverType stype){
     AllocateMonomodel();
 };
 
-Analysis::Analysis(Arlequin *arl, SolverType stype){
+Analysis::Analysis(Arlequin *arl, SolverType stype, bool reduced){
+    fReducedArlequin = reduced;
     fArlequin = arl;
     fMeshVector = fArlequin->MeshVec();
     fSolverType = stype;
@@ -34,9 +36,13 @@ void Analysis::Solve(){
     std::cout << "Solving..." << std::endl;
 
 #ifdef HAS_PETSC
-    fSolver = new PETScSolver(this);
+    if (fArlequin && fReducedArlequin){
+        fSolver = new ArlequinRedSolverPETSc(this);
+    } else {
+        fSolver = new PETScSolver(this);
+    }
 #else
-    if (fArlequin){
+    if (fArlequin && fReducedArlequin){
         fSolver = new ArlequinRedSolverEigen(this);
     } else {
         fSolver = new EigenLinearSolver(this);
@@ -88,21 +94,45 @@ void Analysis::AllocateArlequin(){
     int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
     if (fSolverType == SolverType::EUmfpack){
 #ifdef HAS_PETSC
+    if (fReducedArlequin){
+        fGlobalMatrix = new ArlequinMatRedPETSc(numDOFGlobal,numDOFLocal,numDOFLagMul,PETScMatType::ESeq);
+    } else {
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeq);
+    }
 #else 
+    if (fReducedArlequin){
         fGlobalMatrix = new ArlequinMatRedEigen(numDOFGlobal,numDOFLocal,numDOFLagMul);
+    } else {
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+    }
 #endif
     } else if (fSolverType == SolverType::ECholmod || fSolverType == SolverType::EKLU || fSolverType == SolverType::ESPQR){
 #ifdef HAS_PETSC
+    if (fReducedArlequin){
+        fGlobalMatrix = new ArlequinMatRedPETSc(numDOFGlobal,numDOFLocal,numDOFLagMul,PETScMatType::ESeqSym);
+    } else {
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::ESeqSym);
+    }
 #else
+    if (fReducedArlequin){
         fGlobalMatrix = new ArlequinMatRedEigen(numDOFGlobal,numDOFLocal,numDOFLagMul);
+    } else {
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+    }
 #endif
     } else {
 #ifdef HAS_PETSC
+    if (fReducedArlequin){
+        fGlobalMatrix = new ArlequinMatRedPETSc(numDOFGlobal,numDOFLocal,numDOFLagMul,PETScMatType::EAij);
+    } else {
         fGlobalMatrix = new PETScMatrix(numDOF,numDOF,PETScMatType::EAij);
+    }
 #else
+    if (fReducedArlequin){
         fGlobalMatrix = new ArlequinMatRedEigen(numDOFGlobal,numDOFLocal,numDOFLagMul);
+    } else {
+        fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
+    }
 #endif
     }
     for (int64_t i=0; i<numDOF; i++){
@@ -162,6 +192,9 @@ void Analysis::Run(){
     Compute();
     std::clock_t t4 = std::clock();
     std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
+    fGlobalMatrix->PrintMatrix();
+    fGlobalMatrix->PrintRhs();
+    fGlobalMatrix->PrintSolution();
     Solve();
     std::clock_t t5 = std::clock();
     std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";

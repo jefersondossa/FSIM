@@ -180,7 +180,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     std::vector<CompMesh *> meshvector(2);
     meshvector[0] = coarseModel;
     meshvector[1] = fineModel;
-    Arlequin arl(meshvector,1.e0,00.00);
+    Arlequin arl(meshvector,1.e-4,00.0000);
     arl.InvertSignaledDistance();
     arl.SetGlueIds(gluematids);
     arl.SetGlueZoneThichkess(0.5);
@@ -197,7 +197,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 
     // LinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // an.Run();
-    LinearAnalysis an(&arl,SolverType::ELDLt);
+    LinearAnalysis an(&arl,SolverType::ELU,false);
     // NonLinearAnalysis an(&arl,SolverType::ELDLt,1.e-6,1);
     // NonLinearAnalysis an(coarseModel,SolverType::EUmfpack);
     // NonLinearAnalysis an(coarseModel,SolverType::ELDLt);

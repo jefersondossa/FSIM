@@ -13,6 +13,8 @@ file(GLOB matrix
     Tensor.cpp
     ArlequinMatRedEigen.h
     ArlequinMatRedEigen.cpp
+    ArlequinMatRedPETSc.h
+    ArlequinMatRedPETSc.cpp
 )
 
 set(MATRIX ${matrix} PARENT_SCOPE)

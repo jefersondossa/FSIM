@@ -24,6 +24,7 @@ protected:
     std::vector<CompMesh *> fMeshVector;
     SolverType fSolverType;
     Arlequin* fArlequin;
+    bool fReducedArlequin;
 
     //PetscVariable
     MatrixType       *fGlobalMatrix;
@@ -36,7 +37,7 @@ public:
 
     Analysis(CompMesh *cmesh, SolverType stype);
 
-    Analysis(Arlequin *arl, SolverType stype);
+    Analysis(Arlequin *arl, SolverType stype, bool reduced = true);
     
     int64_t NEquations();
 

@@ -8,7 +8,7 @@ class LinearAnalysis : public Analysis {
 public:
     LinearAnalysis() : Analysis(){};
     LinearAnalysis(CompMesh *cmesh, SolverType stype) : Analysis(cmesh,stype){};
-    LinearAnalysis(Arlequin* arl, SolverType stype) : Analysis(arl,stype){};
+    LinearAnalysis(Arlequin* arl, SolverType stype, bool reduced = true) : Analysis(arl,stype,reduced){};
 
     void Compute() override;
     void ComputeJacobian() override;

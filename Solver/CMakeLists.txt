@@ -8,6 +8,8 @@ file(GLOB solver
     EigenLinearSolver.cpp
     ArlequinRedSolverEigen.h
     ArlequinRedSolverEigen.cpp
+    ArlequinRedSolverPETSc.h
+    ArlequinRedSolverPETSc.cpp
 )
 
 set(SOLVER ${solver} PARENT_SCOPE)
