@@ -9,8 +9,8 @@ void WindowConstructor::fRunFoam(){
     system(cpMSH.c_str());
 
     //Mesh verification
-    string mesh = "cd GeneratedFiles && checkMesh";
-    system(mesh.c_str());
+    //string mesh = "cd GeneratedFiles && checkMesh";
+    //system(mesh.c_str());
 
     fstream RunFoam_file;
     string Line;
@@ -140,5 +140,16 @@ void WindowConstructor::fRunFoam(){
     string p_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func wallShearStress";
     system(p_cell.c_str()); //Calculates the Shear Stress
 
-    string courant = "cd GeneratedFiles && foamPostProcess -func CourantNo";
+
+    string vv_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func vorticity";
+    system(vv_cell.c_str());
+
+    string u_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func \"cellMaxMag(field = U)\"";
+    system(u_cell.c_str());
+
+    string um_cell = "cd GeneratedFiles && foamPostProcess -solver incompressibleFluid -func \"cellMinMag(field = U)\"";
+    system(um_cell.c_str());
+
+    
+
 }

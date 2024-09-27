@@ -61,8 +61,8 @@ Extrude {0, 0, 1} {
 //+
 Transfinite Curve {24, 28, 19, 46, 72, 68, 50, 20} = 2 Using Progression 1;
 //+
-cyl = 20;
-diag = 80;
+cyl = 10;
+diag = 30;
 transval=1.05;
 Transfinite Curve {17, 1, 2, 39, 59, 83, 4, 3, 61, 8, 81, 10, 12, 15, 5, 37} = cyl Using Progression 1;
 //+

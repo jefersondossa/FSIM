@@ -1,16 +1,16 @@
 // Gmsh project created on Tue Jul 09 21:41:58 2024
 SetFactory("OpenCASCADE");
-hmaior = 50;
-hmenor = 20;
+hmaior = 20;
+hmenor = 5;
 //pontos face inferior
-Point(1) = {0, 0, 0, hmaior};
-Point(2) = {50, 0, 0, hmaior};
-Point(3) = {50, 60, 0, hmaior};
-Point(4) = {0, 60, 0, hmaior};
-Point(5) = {20, 20, 0, hmaior};
-Point(6) = {30, 20, 0, hmaior};
-Point(7) = {30, 40, 0, hmaior};
-Point(8) = {20, 40, 0, hmaior};
+Point(1) = {15, 0, 0, hmaior};
+Point(2) = {35, 0, 0, hmaior};
+Point(3) = {35, 60, 0, hmaior};
+Point(4) = {15, 60, 0, hmaior};
+Point(5) = {20, 20, 0, hmenor};
+Point(6) = {30, 20, 0, hmenor};
+Point(7) = {30, 40, 0, hmenor};
+Point(8) = {20, 40, 0, hmenor};
 
 Line(1) = {1, 2};
 Line(2) = {2, 3};
@@ -29,10 +29,10 @@ Line(8) = {8,5 };
 //Plane Surface (1) = {1,2}; remover 1 e 2 e deixar esse (maior menos menor)
 
 //pontos face superior
-Point(9) = {0, 0, 20, hmaior};
-Point(10) = {50, 0, 20, hmaior};
-Point(11) = {50, 60, 20, hmaior};
-Point(12) = {0, 60, 20, hmaior};
+Point(9) = {15, 0, 20, hmaior};
+Point(10) = {35, 0, 20, hmaior};
+Point(11) = {35, 60, 20, hmaior};
+Point(12) = {15, 60, 20, hmaior};
 Point(13) = {20, 20, 10, hmenor};
 Point(14) = {30, 20, 10, hmenor};
 Point(15) = {30, 40, 10, hmenor};
@@ -133,11 +133,9 @@ Surface Loop(2) = {7, 6, 9, 8, 10, 11, 1, 5, 2, 4, 3};
 //+
 Physical Surface("edificio", 25) = {4, 2, 5, 3, 1};
 //+
-Physical Surface("entrada", 26) = {7};
-//+
-Physical Surface("saida", 27) = {9};
-//+
-Physical Surface("simetria", 28) = {6, 8};
+Physical Surface("simetria", 28) = {7, 9};
+Physical Surface("saida", 27) = {6};
+Physical Surface("entrada", 26) = {8};
 //+
 Physical Surface("topo", 29) = {10};
 //+

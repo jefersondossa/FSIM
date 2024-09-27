@@ -283,7 +283,7 @@ void WindowConstructor::fApply_Analysis_cb(){
 
             double Uref = pow((UX*UX + UY*UY + UZ*UZ),1/2);
             I = 0.16*pow(re, -0.125);
-            k = 1.5*pow((I*Uref),2);
+            k = 1.5*pow((I),2)*pow((Uref),2);
             er = pow(0.09,0.75)*pow(k,1.5)/l;
 
             string Re = to_string(re);

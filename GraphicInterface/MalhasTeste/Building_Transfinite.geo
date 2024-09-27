@@ -1,12 +1,12 @@
 h = 1;
 //+
-Point(1) = {0, -50, 0, h};
+Point(1) = {15, 0, 0, h};
 //+
-Point(2) = {50, -50, 0, h};
+Point(2) = {35, 0, 0, h};
 //+
-Point(3) = {50, 140, 0, h};
+Point(3) = {35, 100, 0, h};
 //+
-Point(4) = {0, 140, 0, h};
+Point(4) = {15, 100, 0, h};
 //+
 Point(5) = {20, 20, 0, h};
 //+
@@ -24,13 +24,13 @@ Point(11) = {30, 50, 30, h};
 //+
 Point(12) = {20, 50, 30, h};
 
-Point(13) = {0, -50, 50, h};
+Point(13) = {15, 0, 50, h};
 //+
-Point(14) = {50, -50, 50, h};
+Point(14) = {35, 0, 50, h};
 //+
-Point(15) = {50, 140, 50, h};
+Point(15) = {35, 100, 50, h};
 //+
-Point(16) = {0, 140, 50, h};
+Point(16) = {15, 100, 50, h};
 //+
 Line(1) = {1, 2};
 //+
@@ -213,9 +213,9 @@ Physical Surface("Down", 38) = {1, 2, 3, 4};
 Physical Volume("Fluid", 39) = {1, 2, 3, 4, 5};
 
 //+
-Transfinite Curve {4, 20, 3, 19, 18, 18, 17, 21, 1, 32, 22, 23, 2, 5, 7, 6, 14, 8, 9, 13, 15, 16, 10, 12, 11} = 10 Using Progression 1;
+Transfinite Curve {4, 20, 3, 19, 18, 18, 17, 21, 1, 32, 22, 23, 2, 5, 7, 6, 14, 8, 9, 13, 15, 16, 10, 12, 11} = 5 Using Progression 1;
 //+
-Transfinite Curve {26, 31, 28, 27, 30, 25, 24, 29} = 15 Using Progression 2;
+Transfinite Curve {26, 31, 28, 27, 30, 25, 24, 29} = 8 Using Progression 2;
 //+
 Transfinite Surface {21};
 //+

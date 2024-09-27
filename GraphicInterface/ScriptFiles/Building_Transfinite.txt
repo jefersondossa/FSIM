@@ -14,29 +14,6 @@ Weak Form: OpenFoam
 Velocity BC: slip
 Pressure BC: zeroGradient
 
-Physical Group: Inlet
-Weak Form: OpenFoam
-Velocity BC: fixedValue
-Uvector: (0.000000 30.000000 0.000000)
-Pressure BC: zeroGradient
-
-Analysis Type: OpenFoam Analysis
-Simulation Type: Incompressible Fluid
-Flow Type: Laminar
-Viscosity: 1.81e-05
-endTime: 0.1
-deltaT: 0.005
-writeInterval: 1
-writePrecision: 20
-timePrecision: 20
-Reynolds Number: 60900000.000000
-Reference Length: 30.000000 [m]
-Turbulent kinetic energy: 0.0004346872 [m2s-2]
-Turbulent kinetic energy dissipation rate: 0.0000000496 [m2s-3]
-
-geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.geo
-msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.msh
-
 Physical Group: frontAndBack
 Weak Form: OpenFoam
 Velocity BC: slip
@@ -45,5 +22,28 @@ Pressure BC: zeroGradient
 Physical Group: Building
 Weak Form: OpenFoam
 Velocity BC: noSlip
+Pressure BC: zeroGradient
+
+geo path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.geo
+msh path: /home/felipecosta/FSArl/GraphicInterface/MalhasTeste/Building_Transfinite.msh
+
+Analysis Type: OpenFoam Analysis
+Simulation Type: Incompressible Fluid
+Flow Type: Turbulent
+Viscosity: 1e-05
+endTime: 1
+deltaT: 0.0001
+writeInterval: 100
+writePrecision: 6
+timePrecision: 6
+Reynolds Number: 36363.600000
+Reference Length: 10.000000 [m]
+Turbulent kinetic energy: 0.0027807664 [m2s-2]
+Turbulent kinetic energy dissipation rate: 0.0000024095 [m2s-3]
+
+Physical Group: Inlet
+Weak Form: OpenFoam
+Velocity BC: fixedValue
+Uvector: (0.000000 1.000000 0.000000)
 Pressure BC: zeroGradient
 
