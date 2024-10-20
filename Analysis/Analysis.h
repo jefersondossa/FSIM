@@ -13,9 +13,12 @@ class CompMesh;
 class Arlequin;
 class LinearSolver;
 
-enum SolverType{
+enum class SolverType
+{
                 EMumps, EIterative, EUmfpack, ECholmod, EKLU, ESPQR, //PETSc supported solvers
-                ELU, ELLt, ELDLt, EQR, ECG, EBiCGStab, ELSCG}; //Eigen supported solvers
+                ELU, ELLt, ELDLt, EQR, ECG, EBiCGStab, ELSCG, //Eigen supported solvers
+                AMGCLEBiCGStab // AMGCL-Demidov solvers
+};
 
 class Analysis
 {

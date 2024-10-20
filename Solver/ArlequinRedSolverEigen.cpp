@@ -24,7 +24,7 @@ void ArlequinRedSolverEigen::Solve(){
 
     switch (fAnalysis->SType())
     {
-    case ELU:
+    case SolverType::ELU:
         {
             SparseLU<SparseMat,COLAMDOrdering<int>>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());
@@ -47,7 +47,7 @@ void ArlequinRedSolverEigen::Solve(){
             emat->U1() = solverU1.solve(emat->F1()-emat->L1()*emat->Lambda());
         }
         break;
-    case ELLt:
+    case SolverType::ELLt:
         {
             SimplicialLLT<SparseMat>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());
@@ -70,7 +70,7 @@ void ArlequinRedSolverEigen::Solve(){
             emat->U1() = solverU1.solve(emat->F1()-emat->L1()*emat->Lambda());
         }
         break;
-    case ELDLt:
+    case SolverType::ELDLt:
         {
             SimplicialLDLT<SparseMat>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());
@@ -93,7 +93,7 @@ void ArlequinRedSolverEigen::Solve(){
             emat->U1() = solverU1.solve(emat->F1()-emat->L1()*emat->Lambda()); 
         }
         break;
-    case EQR:
+    case SolverType::EQR:
         {
             SparseQR<SparseMat,COLAMDOrdering<int>>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());
@@ -116,7 +116,7 @@ void ArlequinRedSolverEigen::Solve(){
             emat->U1() = solverU1.solve(emat->F1()-emat->L1()*emat->Lambda());
         }
         break;
-    case ECG:
+    case SolverType::ECG:
         {
             ConjugateGradient<SparseMat>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());
@@ -139,7 +139,7 @@ void ArlequinRedSolverEigen::Solve(){
             emat->U1() = solverU1.solve(emat->F1()-emat->L1()*emat->Lambda());
         }
         break;
-    case EBiCGStab:
+    case SolverType::EBiCGStab:
         {
             BiCGSTAB<SparseMat>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());
@@ -162,7 +162,7 @@ void ArlequinRedSolverEigen::Solve(){
             emat->U1() = solverU1.solve(emat->F1()-emat->L1()*emat->Lambda());
         }
         break;
-    case ELSCG:
+    case SolverType::ELSCG:
         {
             LeastSquaresConjugateGradient<SparseMat>   solverLambda, solverU0, solverU1;
             solverU0.analyzePattern(emat->K0());

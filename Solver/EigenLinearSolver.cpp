@@ -24,7 +24,7 @@ void EigenLinearSolver::Solve(){
 
     switch (fAnalysis->SType())
     {
-    case ELU:
+    case SolverType::ELU:
         {
             SparseLU<SparseMat,COLAMDOrdering<int>>   solver;
             solver.analyzePattern(emat->Matrix());
@@ -33,7 +33,7 @@ void EigenLinearSolver::Solve(){
             std::cout << "Mat determinant = " << solver.determinant() << std::endl;
         }
         break;
-    case ELLt:
+    case SolverType::ELLt:
         {
             SimplicialLLT<SparseMat>   solver;
             solver.analyzePattern(emat->Matrix());
@@ -41,7 +41,7 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
-    case ELDLt:
+    case SolverType::ELDLt:
         {
             SimplicialLDLT<SparseMat>   solver;
             solver.analyzePattern(emat->Matrix());
@@ -49,7 +49,7 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
-    case EQR:
+    case SolverType::EQR:
         {
             SparseQR<SparseMat,COLAMDOrdering<int>>   solver;
             // SparseQR<SparseMat,AMDOrdering<int>>   solver;
@@ -60,7 +60,7 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
-    case ECG:
+    case SolverType::ECG:
         {
             ConjugateGradient<SparseMat>   solver;
             solver.analyzePattern(emat->Matrix());
@@ -68,7 +68,7 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
-    case EBiCGStab:
+    case SolverType::EBiCGStab:
         {
             BiCGSTAB<SparseMat>   solver;
             solver.analyzePattern(emat->Matrix());
@@ -76,7 +76,7 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
-    case ELSCG:
+    case SolverType::ELSCG:
         {
             LeastSquaresConjugateGradient<SparseMat>   solver;
             solver.analyzePattern(emat->Matrix());
