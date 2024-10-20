@@ -3,6 +3,14 @@
 
 #include "WeakForm.h"
 
+enum class BoundaryConditionType
+{
+    kDirichlet = 0,
+    kNeumann = 1,
+    kDirectionalHomogeneousDirichlet = 3,
+    kDirectionalNonHomogeneousDirichlet = 4,
+};
+
 /// @brief Implements the class to enforce boundary conditions
 class L2Projection : public WeakForm {
 protected:
@@ -11,7 +19,7 @@ protected:
     // 1 = Neumann (all directions)
     // 3 = Directional Homogeneous Dirichlet - apply Dirichlet BC in the non zero Val2 entry  
     // 4 = Directional Non-Homogeneous Dirichlet - apply Dirichlet BC in the non zero Val2 entry  
-    int BCType = 0;
+    BoundaryConditionType BCType{BoundaryConditionType::kDirichlet};
     
     // Boundary condition value - Set into the stiffness matrix
     MatrixDouble BCVal1;
@@ -26,7 +34,7 @@ public:
     /// @param bctype BC type
     /// @param val1 value set into the stiffness matrix
     /// @param val2 value set into the residual vector
-    L2Projection(int matid, int dim, int bctype, MatrixDouble &val1, VecDouble &val2);
+    L2Projection(int matid, int dim, BoundaryConditionType bctype, MatrixDouble &val1, VecDouble &val2);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

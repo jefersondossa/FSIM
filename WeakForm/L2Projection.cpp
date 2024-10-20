@@ -1,6 +1,6 @@
 #include "L2Projection.h"
 
-L2Projection::L2Projection(int matid, int dim, int bctype, MatrixDouble &val1, VecDouble &val2) : WeakForm() {
+L2Projection::L2Projection(int matid, int dim, BoundaryConditionType bctype, MatrixDouble &val1, VecDouble &val2) : WeakForm() {
     this->fDimension = dim;
     this->fMatId = matid;
     fNState = val2.size();
@@ -29,7 +29,7 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
 
     switch (BCType)
     {
-    case 0: // Dirichlet
+    case BoundaryConditionType::kDirichlet: // Dirichlet
         for (int i = 0; i < nphi; i++){
             for (int j = 0; j < nphi; j++){
                 for (int istate = 0; istate < fNState; istate++){
@@ -38,9 +38,9 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
             }
         }
         break;
-    case 1:
+    case BoundaryConditionType::kNeumann:
         break;
-    case 3: // Directional Null Dirichlet - displacement is set to null in the non-null vector component direction
+    case BoundaryConditionType::kDirectionalHomogeneousDirichlet: // Directional Null Dirichlet - displacement is set to null in the non-null vector component direction
         for(int i = 0 ; i < nphi; i++) {
             for (int j = 0 ; j < nphi; j++) {
                 for (int istate = 0; istate < fNState; istate++){
@@ -49,7 +49,7 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
             }//jn
         }//in
         break;
-    case 4: // Directional NonHomogeneous Dirichlet - displacement is set to null in the non-null vector component direction
+    case BoundaryConditionType::kDirectionalNonHomogeneousDirichlet: // Directional NonHomogeneous Dirichlet - displacement is set to null in the non-null vector component direction
         for(int i = 0 ; i < nphi; i++) {
             for (int j = 0 ; j < nphi; j++) {
                 for (int istate = 0; istate < fNState; istate++){
@@ -84,14 +84,14 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     result -= data.fSol;
     switch (BCType)
     {
-    case 0: // Dirichlet in all state variables
+    case BoundaryConditionType::kDirichlet: // Dirichlet in all state variables
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
                 Rhs(fNState*i+istate) +=  WeakForm::fBigNumber * WJ * data.fPhi[i] * result[istate];
             }
         }
         break;
-    case 1: // Neumann in all state variables
+    case BoundaryConditionType::kNeumann: // Neumann in all state variables
     {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
@@ -100,10 +100,10 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         }
     }
         break;
-    case 3:
+    case BoundaryConditionType::kDirectionalHomogeneousDirichlet:
         break;
     
-    case 4:
+    case BoundaryConditionType::kDirectionalNonHomogeneousDirichlet:
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
                 if (fabs(BCVal2[istate]) > 0 && fabs(result[istate])>1.e-10){
