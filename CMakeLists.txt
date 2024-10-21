@@ -71,6 +71,7 @@ endif() # CMAKE_BUILD_TYPE
  
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(dependencies)
 
 add_subdirectory(triangle)
 add_subdirectory(Util)
