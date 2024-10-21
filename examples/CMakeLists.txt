@@ -1,0 +1,3 @@
+add_executable(cantilever_3d_beam cantilever_3d_beam.cpp)
+
+target_link_libraries(cantilever_3d_beam PRIVATE fsarl_library)
