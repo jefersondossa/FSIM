@@ -2,6 +2,13 @@ cmake_minimum_required (VERSION 3.20.0)
 project (FSArl C CXX Fortran)
 enable_language( Fortran CXX )
 
+find_package(OpenMP REQUIRED)
+
+option(COMPILE_EXAMPLES "Compile examples" OFF)
+if(COMPILE_EXAMPLES)
+	add_subdirectory(examples)
+endif()
+
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
 option(ENABLE_MPI_PETSC "Compile MPI and PETSc packages " OFF)
@@ -93,7 +100,7 @@ endif()
 # add_subdirectory(main)
 
 #Specify where the headers files must be found
-include_directories(
+set(INCLUDE_DIRS_LIST 
 	"${PROJECT_SOURCE_DIR}/Analysis"
 	"${PROJECT_SOURCE_DIR}/GraphicInterface"
 	"${PROJECT_SOURCE_DIR}/Integral"
@@ -113,8 +120,9 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/WeakForm/Poisson"
 	"${PROJECT_SOURCE_DIR}/WeakForm/NavierStokes"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Stokes"
-	"${PROJECT_SOURCE_DIR}/WeakForm/UnitTest"
-)
+	"${PROJECT_SOURCE_DIR}/WeakForm/UnitTest")
+
+include_directories(${INCLUDE_DIRS_LIST})
 
 file(GLOB MY_MESH_FILES
   "*.msh" "*.geo" "*.txt"
@@ -126,7 +134,10 @@ set(FOR_FILES ${for_files})
 
 add_library(fsarl_library ${UTIL} ${ANALYSIS} ${GRAPHICINTERFACE} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries(fsarl_library PRIVATE Eigen3::Eigen ${FLTK_LIBRARIES})
+
+target_link_libraries(fsarl_library PUBLIC Eigen3::Eigen ${FLTK_LIBRARIES} amgcl::amgcl OpenMP::OpenMP_CXX)
+target_include_directories(fsarl_library PUBLIC ${INCLUDE_DIRS_LIST})
+
 target_compile_definitions(fsarl_library
                            PUBLIC
                            "$<$<CONFIG:RELEASE>:RELEASE_BUILD>"
