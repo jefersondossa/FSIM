@@ -1,0 +1,3 @@
+[submodule "dependencies/amgcl"]
+	path = dependencies/amgcl
+	url = https://github.com/ddemidov/amgcl
