@@ -145,10 +145,10 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     VecDouble val2(nstate);
     VecDouble val3(nstate);
     val2.setZero();val3.setZero();
-    L2Projection * matbc1 = new L2Projection(5,nstate,0,val1,val2);
-    L2Projection * matbc3 = new L2Projection(6,nstate,1,val1,val2);
+    L2Projection * matbc1 = new L2Projection(5,nstate,BoundaryConditionType::kDirichlet,val1,val2);
+    L2Projection * matbc3 = new L2Projection(6,nstate,BoundaryConditionType::kNeumann,val1,val2);
     val3[1] = 1.;
-    L2Projection * matbc2 = new L2Projection(7,nstate,3,val1,val3);
+    L2Projection * matbc2 = new L2Projection(7,nstate,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val3);
     // matbc1->SetForcingFunction(forcingFunctionElasticity2D);
     // matbc1->SetExactSolution(exactSolElasticity2D);
     // matbc2->SetForcingFunction(forcingFunctionElasticity2D);
@@ -164,11 +164,11 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     fineModel->InsertMaterial(matpoisson);
     val2.setZero();
     val2[0] = 1.5; 
-    L2Projection * matbc4 = new L2Projection(6,nstate,0,val1,val2);
+    L2Projection * matbc4 = new L2Projection(6,nstate,BoundaryConditionType::kDirichlet,val1,val2);
     val2.setZero();
-    L2Projection * matbc5 = new L2Projection(5,nstate,1,val1,val2);
+    L2Projection * matbc5 = new L2Projection(5,nstate,BoundaryConditionType::kNeumann,val1,val2);
     val3[1] = 1.;
-    L2Projection * matbc6 = new L2Projection(7,nstate,3,val1,val3);    
+    L2Projection * matbc6 = new L2Projection(7,nstate,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val3);    
     fineModel->InsertMaterial(matbc4);
     fineModel->InsertMaterial(matbc5);
     fineModel->InsertMaterial(matbc6);
