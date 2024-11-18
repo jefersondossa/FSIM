@@ -6,7 +6,8 @@ find_package(OpenMP REQUIRED)
 
 option(COMPILE_EXAMPLES "Compile examples" OFF)
 if(COMPILE_EXAMPLES)
-	add_subdirectory(examples)
+	find_package(AMGCL REQUIRED)
+	# add_subdirectory(examples)
 endif()
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
@@ -194,6 +195,9 @@ if(ENABLE_GRAPHINTERFACE)
 	target_link_libraries (window fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 endif()
 
+if (COMPILE_EXAMPLES)
+	add_subdirectory(examples)
+endif()
 
 #To enable unit test using Catch2 UnitTest framework
 option(BUILD_UNITTEST "Whether the Catch2 UnitTest will be linked in" OFF)
