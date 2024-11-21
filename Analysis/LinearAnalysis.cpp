@@ -8,10 +8,6 @@ void LinearAnalysis::Compute(){
         Assemble::Arlequin(this);
     }
     this->GlobalMatrix()->MatVecAssemble();
-
-    // this->GlobalMatrix()->PrintMatrix();
-    // this->GlobalMatrix()->PrintRhs();
-    // this->GlobalMatrix()->PrintSolution();
 } 
 
 void LinearAnalysis::ComputeJacobian(){
@@ -21,10 +17,6 @@ void LinearAnalysis::ComputeJacobian(){
         Assemble::ArlequinMatrix(this);
     }
     this->GlobalMatrix()->MatAssemble();
-    
-    // this->GlobalMatrix()->PrintMatrix();
-    // this->GlobalMatrix()->PrintRhs();
-    // this->GlobalMatrix()->PrintSolution();
 } 
 
 void LinearAnalysis::ComputeRhs(){
@@ -34,10 +26,6 @@ void LinearAnalysis::ComputeRhs(){
         Assemble::ArlequinVector(this);
     }
     this->GlobalMatrix()->VecAssemble();
-    
-    // this->GlobalMatrix()->PrintMatrix();
-    // this->GlobalMatrix()->PrintRhs();
-    // this->GlobalMatrix()->PrintSolution();
 } 
 
 void LinearAnalysis::UpdateSolution(){
@@ -56,10 +44,31 @@ void LinearAnalysis::UpdateSolution(){
                 Ii = nstartDOF + nstate*i+k;
                 val = this->GlobalMatrix()->GetValueSolution(Ii);
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
+                double sol = this->MeshVector()[imesh]->NodeVec()[i] -> Solution()[k];
+                this->MeshVector()[imesh]->NodeVec()[i] -> SetPreviousSolution(k,sol);
                 this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
             }
         };
     }
     this->GlobalMatrix()->ClearSolution();
 }
+
+void LinearAnalysis::Run(){
+    std::cout << "Allocating problem..." << std::endl;
+    std::clock_t t3 = std::clock();
+    Compute();
+    std::clock_t t4 = std::clock();
+    std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
+    // fGlobalMatrix->PrintMatrix();
+    // fGlobalMatrix->PrintRhs();
+    // fGlobalMatrix->PrintSolution();
+    Solve();
+    std::clock_t t5 = std::clock();
+    std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
+    std::cout << "Updating solution..." << std::endl;
+    LinearAnalysis::UpdateSolution();
+    // fGlobalMatrix->PrintMatrix();
+    // fGlobalMatrix->PrintRhs();
+    // fGlobalMatrix->PrintSolution();
+};
 

@@ -35,24 +35,27 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 
 {
     CompMesh* coarseModel = new CompMesh();
-    // NavierStokes * matns = new NavierStokes(10,2,1,1.0);
-    Stokes * matns = new Stokes(10,2,0.1,1.0);
+    NavierStokes * matns = new NavierStokes(10,2,1,1.e1);
+    // Poisson * matns = new Poisson(10,2,1);
+    // Stokes * matns = new Stokes(10,2,0.1,1.0);
     coarseModel->InsertMaterial(matns);
     
+    int nstate = matns->NState();
     //BC
-    MatrixDouble val1(3,3);
+    MatrixDouble val1(nstate,nstate);
     val1.setZero();
-    VecDouble val2(3);
-    VecDouble val3(3);
+    VecDouble val2(nstate);
+    VecDouble val3(nstate);
     val2.setZero();val3.setZero();
     val2[0] = 1.0;
-    val2[1] = 0.000001;
-    L2Projection * matbc3 = new L2Projection(6,2,4,val1,val2);
+    val2[1] = 0.000000001;
+    L2Projection * matbc3 = new L2Projection(6,2,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
     val2.setZero();
-    L2Projection * matbc1 = new L2Projection(7,2,1,val1,val2);
+    // val2[2]=1.;
+    L2Projection * matbc1 = new L2Projection(7,2,BoundaryConditionType::kNeumann,val1,val2);
     val3[1] = 1.0;
     val3[0] = 1.0;
-    L2Projection * matbc2 = new L2Projection(8,2,3,val1,val3);
+    L2Projection * matbc2 = new L2Projection(8,2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val3);
     // val3[0] = 1.0;
     // val3[1] = 1.0;
     // L2Projection * matbc4 = new L2Projection(9,2,3,val1,val3);
@@ -63,7 +66,7 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
 
     GmshTools::Read(*coarseModel,"../cylinder.msh");
 
-    NonLinearAnalysis an(coarseModel,SolverType::ELDLt);
+    NonLinearAnalysis an(coarseModel,SolverType::EUmfpack,1.e-6,1);
        
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Pressure"};

@@ -54,10 +54,10 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     auto matBT=matB.transpose();
 
     for (int j = 0; j < nphi; j++){
-        matB(0,2*j  ) = data.fDPhiX0(j,0);
-        matB(1,2*j+1) = data.fDPhiX0(j,1);
-        matB(2,2*j  ) = data.fDPhiX0(j,1);
-        matB(2,2*j+1) = data.fDPhiX0(j,0);
+        matB(0,2*j  ) = data.fDPhiX0(0,j);
+        matB(1,2*j+1) = data.fDPhiX0(1,j);
+        matB(2,2*j  ) = data.fDPhiX0(1,j);
+        matB(2,2*j+1) = data.fDPhiX0(0,j);
     }
     
     Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
@@ -81,10 +81,10 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     if (force) force(x_,forcingF);
     
     for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j  ) = data.fDPhiX0(j,0);
-        matB(1,fDimension*j+1) = data.fDPhiX0(j,1);
-        matB(2,fDimension*j  ) = data.fDPhiX0(j,1);
-        matB(2,fDimension*j+1) = data.fDPhiX0(j,0);
+        matB(0,fDimension*j  ) = data.fDPhiX0(0,j);
+        matB(1,fDimension*j+1) = data.fDPhiX0(1,j);
+        matB(2,fDimension*j  ) = data.fDPhiX0(1,j);
+        matB(2,fDimension*j+1) = data.fDPhiX0(0,j);
     }
     
     VecDouble strain(3);

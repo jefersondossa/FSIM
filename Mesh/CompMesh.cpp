@@ -30,3 +30,18 @@ void CompMesh::Integrate(std::set<int> &matIds, std::vector<std::string> &varNam
     
 
 }
+
+void CompMesh::SetSolution(VecDouble &sol){
+    if (sol.size() != fNState){
+        std::cout << "The solution vector size is different from the number of state variables. Please check it. \n";
+        PanicButton();
+    }
+    for (int64_t inode = 0; inode < NNodes(); inode++){
+        if (fNodeVector[inode]->HasBC()) continue;
+
+        for (int istate = 0; istate < fNState; istate++){
+            fNodeVector[inode]->SetSolution(istate,sol[istate]);
+            fNodeVector[inode]->SetPreviousSolution(istate,sol[istate]);
+        }
+    }
+}

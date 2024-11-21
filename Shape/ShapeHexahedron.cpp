@@ -26,36 +26,36 @@ void ShapeHexahedron::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     const double xsi3 = xi[2];
     
     dphi(0,0) = -0.125 * (1. - xsi2) * (1. - xsi3);
-    dphi(0,1) = -0.125 * (1. - xsi1) * (1. - xsi3);
-    dphi(0,2) = -0.125 * (1. - xsi1) * (1. - xsi2);
+    dphi(1,0) = -0.125 * (1. - xsi1) * (1. - xsi3);
+    dphi(2,0) = -0.125 * (1. - xsi1) * (1. - xsi2);
 
-    dphi(1,0) =  0.125 * (1. - xsi2) * (1. - xsi3);
+    dphi(0,1) =  0.125 * (1. - xsi2) * (1. - xsi3);
     dphi(1,1) = -0.125 * (1. + xsi1) * (1. - xsi3);
-    dphi(1,2) = -0.125 * (1. + xsi1) * (1. - xsi2);
+    dphi(2,1) = -0.125 * (1. + xsi1) * (1. - xsi2);
 
-    dphi(2,0) =  0.125 * (1. + xsi2) * (1. - xsi3);
-    dphi(2,1) =  0.125 * (1. + xsi1) * (1. - xsi3);
+    dphi(0,2) =  0.125 * (1. + xsi2) * (1. - xsi3);
+    dphi(1,2) =  0.125 * (1. + xsi1) * (1. - xsi3);
     dphi(2,2) = -0.125 * (1. + xsi1) * (1. + xsi2);
 
-    dphi(3,0) = -0.125 * (1. + xsi2) * (1. - xsi3);
-    dphi(3,1) =  0.125 * (1. - xsi1) * (1. - xsi3);
-    dphi(3,2) = -0.125 * (1. - xsi1) * (1. + xsi2);
+    dphi(0,3) = -0.125 * (1. + xsi2) * (1. - xsi3);
+    dphi(1,3) =  0.125 * (1. - xsi1) * (1. - xsi3);
+    dphi(2,3) = -0.125 * (1. - xsi1) * (1. + xsi2);
 
-    dphi(4,0) = -0.125 * (1. - xsi2) * (1. + xsi3);
-    dphi(4,1) = -0.125 * (1. - xsi1) * (1. + xsi3);
-    dphi(4,2) =  0.125 * (1. - xsi1) * (1. - xsi2);
+    dphi(0,4) = -0.125 * (1. - xsi2) * (1. + xsi3);
+    dphi(1,4) = -0.125 * (1. - xsi1) * (1. + xsi3);
+    dphi(2,4) =  0.125 * (1. - xsi1) * (1. - xsi2);
 
-    dphi(5,0) =  0.125 * (1. - xsi2) * (1. + xsi3);
-    dphi(5,1) = -0.125 * (1. + xsi1) * (1. + xsi3);
-    dphi(5,2) =  0.125 * (1. + xsi1) * (1. - xsi2);
+    dphi(0,5) =  0.125 * (1. - xsi2) * (1. + xsi3);
+    dphi(1,5) = -0.125 * (1. + xsi1) * (1. + xsi3);
+    dphi(2,5) =  0.125 * (1. + xsi1) * (1. - xsi2);
 
-    dphi(6,0) =  0.125 * (1. + xsi2) * (1. + xsi3);
-    dphi(6,1) =  0.125 * (1. + xsi1) * (1. + xsi3);
-    dphi(6,2) =  0.125 * (1. + xsi1) * (1. + xsi2);
+    dphi(0,6) =  0.125 * (1. + xsi2) * (1. + xsi3);
+    dphi(1,6) =  0.125 * (1. + xsi1) * (1. + xsi3);
+    dphi(2,6) =  0.125 * (1. + xsi1) * (1. + xsi2);
 
-    dphi(7,0) = -0.125 * (1. + xsi2) * (1. + xsi3);
-    dphi(7,1) =  0.125 * (1. - xsi1) * (1. + xsi3);
-    dphi(7,2) =  0.125 * (1. - xsi1) * (1. + xsi2);
+    dphi(0,7) = -0.125 * (1. + xsi2) * (1. + xsi3);
+    dphi(1,7) =  0.125 * (1. - xsi1) * (1. + xsi3);
+    dphi(2,7) =  0.125 * (1. - xsi1) * (1. + xsi2);
 }
 
 void ShapeHexahedron::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

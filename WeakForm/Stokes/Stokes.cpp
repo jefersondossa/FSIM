@@ -38,7 +38,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
         }
 
         // a1 = std::sqrt(a1);
-        for (int j = DIM; j--; ) r[j] += std::sqrt(a1) * dphi_dx(i,j);
+        for (int j = DIM; j--; ) r[j] += std::sqrt(a1) * dphi_dx(j,i);
     };
 
 
@@ -68,8 +68,8 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
     
     for (int i = nphi; i--; ){
         for (int j = DIM; j--; ){
-            hRGN_ += r[j] * dphi_dx(i,j);
-            hUGN_ += s[j] * dphi_dx(i,j);
+            hRGN_ += r[j] * dphi_dx(j,i);
+            hUGN_ += s[j] * dphi_dx(j,i);
         }
     };
     hRGN_ = std::fabs(hRGN_);
@@ -93,7 +93,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
         tSUGN1_ = hUGN_ / 2.e-10;
     };
               
-    tSUGN2_ = 100.1;//dTime_ / 2.;
+    tSUGN2_ =1e-1 ;//dTime_ / 2.;
 
     tSUGN3_ = hRGN_ * hRGN_ / (4. * fViscosity / fDensity);
    
@@ -110,7 +110,8 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
 
     tPSPG_ = tSUPG_;
     tLSIC_ = tSUPG_ * uNorm * uNorm;
-
+    // tSUPG_ = 0.;
+    // tLSIC_ = 0.;
 
     return;
 };
@@ -140,21 +141,21 @@ void Stokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stif
                 for (int l = DIM; l--; ){
 
                     //Diffusion matrix
-                    double K = dphi_dx(i,l) * dphi_dx(j,k) * fViscosity;
-                    if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m)* fViscosity;
+                    double K = dphi_dx(l,i) * dphi_dx(k,j) * fViscosity;
+                    if (k==l) for (int m = DIM; m--; ) K += dphi_dx(m,i) * dphi_dx(m,j)* fViscosity;
 
                     Stiffness((DIM+1)*i+k,(DIM+1)*j+l) += K * WJ;
                 }
                 //Gradient operator
                 //Divergent operator
-                double Q = dphi_dx(i,k) * shapeFj;
+                double Q = dphi_dx(k,i) * shapeFj;
 
                 Stiffness((DIM+1)*i+k,(DIM+1)*j+DIM) += -Q * WJ;
                 Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += Q * WJ;
             }
             //PSPG stabilization
             double Q = 0.;
-            for (int m = DIM; m--; ) Q += dphi_dx(i,m) * dphi_dx(j,m) * tPSPG_ / fDensity;
+            for (int m = DIM; m--; ) Q += dphi_dx(m,i) * dphi_dx(m,j) * tPSPG_ / fDensity;
             Stiffness((DIM+1)*j+DIM,(DIM+1)*i+DIM) += Q * WJ;
         };
     };
@@ -184,11 +185,11 @@ void Stokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
         for (int k = DIM; k--; ){
             //Viscosity
             double K = 0.;
-            for (int l=DIM; l--; ) K += dphi_dx(i,l) * data.fDSolDx(k,l) * fViscosity;
-            for (int l=DIM; l--; ) K += dphi_dx(i,l) * data.fDSolDx(l,k) * fViscosity;
+            for (int l=DIM; l--; ) K += dphi_dx(l,i) * data.fDSolDx(k,l) * fViscosity;
+            for (int l=DIM; l--; ) K += dphi_dx(l,i) * data.fDSolDx(l,k) * fViscosity;
 
             //Pressure + SUPG
-            double P = - (dphi_dx(i,k) * data.fSol[DIM]);
+            double P = - (dphi_dx(k,i) * data.fSol[DIM]);
 
             //External force
             double F = (forcingF[k]) * shapeFi;
@@ -197,8 +198,8 @@ void Stokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
         }
 
         double Q = divrU * shapeFi;
-        for (int l=DIM; l--; ) Q += dphi_dx(i,l) * data.fDSolDx(DIM,l) * tPSPG_ / fDensity
-                                  + dphi_dx(i,l) * (forcingF[l]/fDensity) * tPSPG_;
+        for (int l=DIM; l--; ) Q += dphi_dx(l,i) * data.fDSolDx(DIM,l) * tPSPG_ / fDensity
+                                  + dphi_dx(l,i) * (forcingF[l]/fDensity) * tPSPG_;
 
         Rhs[(DIM+1)*i+DIM] += -Q * WJ;
                             

@@ -16,7 +16,7 @@ protected:
     /// @brief Computes the PSPG, SUPG and LSIC stabilization parameters
     /// @param index integration point index
     /// @param data integration point data
-    void GetStabilizationParameter(int &index, IntPointData &data);
+    virtual void GetStabilizationParameter(int &index, IntPointData &data);
 
 public:
     /// @brief Stokes weak form constructor

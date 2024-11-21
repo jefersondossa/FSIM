@@ -40,7 +40,7 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
                     for (int k = DIM; k--;  ){
                         for (int l = DIM; l--; ){
                             double K = data.fDPhi(i,l) * data.fDPhi(j,k) * fK1;
-                            if (k==l) for (int m = DIM; m--; ) K += data.fDPhi(i,m) * data.fDPhi(j,m);
+                            if (k==l) for (int m = DIM; m--; ) K += data.fDPhiX0(m,i) * data.fDPhiX0(m,j);
                             Stiffness[0](DIM*i+k,DIM*j+l) -= K * WJ;
                         }
                     }
@@ -102,13 +102,13 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
             //Solution residual
             double L2u = u_[0] * data.fPhi[i] * fK0;
             double H1u = 0.;
-            for (int l=DIM; l--; ) H1u += data.fDPhiX0(i,l) * du_dx(0,l) * fK1;
+            for (int l=DIM; l--; ) H1u += data.fDPhiX0(l,i) * du_dx(0,l) * fK1;
             Rhs[0][nphi*fNState+i] += (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
             double L2 = data.fSol[0] * data.fPhi[i] * fK0;
             double H1 = 0.;
-            for (int l=DIM; l--; ) H1 += data.fDPhiX0(i,l) * data.fDSolDx(0,l) * fK1;
+            for (int l=DIM; l--; ) H1 += data.fDPhiX0(l,i) * data.fDSolDx(0,l) * fK1;
             Rhs[0][i] += (L2 + H1) * WJ;
         };
     // } else {

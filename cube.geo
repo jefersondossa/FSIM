@@ -26,9 +26,9 @@ Transfinite Volume{1};
 //+
 Physical Volume("Volume", 15) = {1};
 //+
-Physical Surface("Base", 16) = {3};
+Physical Surface("Base", 16) = {1};
 //+
-Physical Surface("Load", 17) = {4};
+Physical Surface("Load", 17) = {2};
 //+
 //Physical Surface("Free", 18) = {1, 5, 2, 6};
 //+
@@ -36,6 +36,6 @@ Physical Surface("Load", 17) = {4};
 //+
 //Physical Point("PointX", 20) = {2};
 //+
-Physical Surface("Xfixo", 18) = {1, 2};
+Physical Surface("Xfixo", 18) = {3,4};
 //+
 Physical Surface("zfixo", 19) = {6, 5};

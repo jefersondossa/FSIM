@@ -265,6 +265,9 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
             compel->ComputeSpatialDerivatives();
             compel->interpolateSolution();
             compel->interpolateSolDerivatives();
+            if (compel->IntegrationData().fNeedsDSol){
+                compel->interpolateSolDTimeDerivatives();
+            }
             
             for (int iscal = 0; iscal < scalnames.size(); iscal++){
                 int varindex = compel->GetWeakForm()->VariableIndex(scalnames[iscal]);

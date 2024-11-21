@@ -14,8 +14,8 @@ void ShapeOneDQua::Shape(VecDouble &xi, VecDouble &phi) {
 
 void ShapeOneDQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     dphi(0,0) = xi[0] - 0.5;
-    dphi(1,0) = xi[0] + 0.5;
-    dphi(2,0) = -2. * xi[0];
+    dphi(0,1) = xi[0] + 0.5;
+    dphi(0,2) = -2. * xi[0];
 }
 
 void ShapeOneDQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

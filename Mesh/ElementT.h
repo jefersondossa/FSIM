@@ -44,6 +44,7 @@ public:
     /// @param bounded_vector integration point adimensional coordinates
     void ComputeJacobian() override;
     void ComputeCurrentJacobian() override;
+    void ComputeJacobianSearch() override;
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates

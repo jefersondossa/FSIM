@@ -8,13 +8,27 @@ template<class tshape>
 ElementTransient<tshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
     int DIM = tshape::Dimension;
     this->fIntegData.fAdimCoord.resize(DIM);
+    this->fIntegData.fAdimCoord.setZero();
+
     this->fIntegData.fNeedsDSol = true;
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    this->fIntegData.fDSolDx.setZero();
+
+    this->fIntegData.fDSolDxPrev.resize(this->fWeakForm->NState(), DIM);
+    this->fIntegData.fDSolDxPrev.setZero();
+
     this->fIntegData.fNeedsSol = true;
     this->fIntegData.fSol.resize(this->fWeakForm->NState());
+    this->fIntegData.fSol.setZero();
+
     this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
+    this->fIntegData.fSolPrev.setZero();
+    
     this->fIntegData.fDSolDt.resize(this->fWeakForm->NState());
+    this->fIntegData.fDSolDt.setZero();
+
     this->fIntegData.fDSolDDt.resize(this->fWeakForm->NState());
+    this->fIntegData.fDSolDDt.setZero();
     this->fIntegData.fNeedsTimeDerivatives = true;
 };
 
@@ -104,7 +118,8 @@ void ElementTransient<tshape>::ComputeElContribution(std::vector<MatrixDouble> &
 
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
-
+        if (this->fIntegData.fNeedsTimeDerivatives) this->interpolateSolDTimeDerivatives();
+        
         //Computes the RHS vector
         this->fWeakForm->ComputeResidual(index, this->fIntegData, rhsVector); 
 

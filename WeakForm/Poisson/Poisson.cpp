@@ -16,10 +16,12 @@ void Poisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Sti
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
 
+    // Stiffness += data.fDPhiX0.transpose() * data.fDPhiX0 * WJ;
+
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){            
             for (int k = fDimension; k--;  ){
-                Stiffness(i,j) += data.fDPhiX0(i,k) * data.fDPhiX0(j,k) * WJ;
+                Stiffness(i,j) += data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
             }
         };
     };
@@ -42,7 +44,7 @@ void Poisson::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
         //Matrix residual
         double K = 0.;
-        for (int l=fDimension; l--; ) K += data.fDPhiX0(i,l) * data.fDSolDx(0,l);
+        for (int l=fDimension; l--; ) K += data.fDPhiX0(l,i) * data.fDSolDx(0,l);
 
         //Source term
         double F = (forcingF[0]) * shapeFi;
@@ -120,9 +122,10 @@ void Poisson::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Derivative
     if (var == 2){
-        Sol[0] = data.fDSolDx(0,0);
-        if (fDimension > 1) Sol[1] = data.fDSolDx(0,1);
-        if (fDimension == 3) Sol[2] = data.fDSolDx(0,2);
+        MatrixDouble aux = data.fAxes0 * data.fDSolDx.transpose();
+        Sol[0] = aux(0,0);
+        if (fDimension > 1) Sol[1] = aux(1,0);
+        if (fDimension == 3) Sol[2] = aux(2,0);
         return;
     };
 

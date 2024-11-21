@@ -32,7 +32,7 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     double check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
         // for (int i = 0; i < fDimension; i++){
-            matB(0,fDimension*j) = data.fDPhiX0(j,0);
+            matB(0,fDimension*j) = data.fDPhiX0(0,j);
         // }
         rotation(2*j  ,2*j  ) = cosa;
         rotation(2*j+1,2*j  ) = sina;
@@ -67,7 +67,7 @@ void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     double check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
         // for (int i = 0; i < fDimension; i++){
-            matB(0,fDimension*j) = data.fDPhiX0(j,0);
+            matB(0,fDimension*j) = data.fDPhiX0(0,j);
         // }
         rotation(2*j  ,2*j  ) = cosa;
         rotation(2*j+1,2*j  ) = sina;
@@ -170,8 +170,8 @@ int ElasticTruss::VariableIndex(const std::string &name) const{
     if(!strcmp("ExactStress",name.c_str()))      return 4;
     if(!strcmp("ExactForce",name.c_str()))             return 5;
 
-    std::cout << "Post Process variable not implemented \n";
-    PanicButton();
+    // std::cout << "Post Process variable not implemented \n";
+    // PanicButton();
     return -1;
 };
 
@@ -187,7 +187,7 @@ int ElasticTruss::NSolutionVariables(int var) const{
         return 1;
 
     default:
-        PanicButton();
+        // PanicButton();
         return -1;
     }
 };

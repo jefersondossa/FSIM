@@ -55,6 +55,7 @@ public:
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
     void UpdateTimeDerivatives(CompMesh *cmesh) override;
+    void GetStabilizationParameter(int &index, IntPointData &data) override;
 };
 
 

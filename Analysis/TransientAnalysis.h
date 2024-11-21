@@ -11,6 +11,7 @@ private:
     std::vector<std::string> fScalVars;
     std::vector<std::string> fVectVars;
     std::string fFilename;
+    int64_t fNSteps;
 
 public:
     TransientAnalysis() : NonLinearAnalysis(){};

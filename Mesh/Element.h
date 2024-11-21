@@ -80,6 +80,7 @@ public:
     /// @param bounded_vector integration point adimensional coordinates
     virtual void ComputeJacobian() = 0;
     virtual void ComputeCurrentJacobian() = 0;
+    virtual void ComputeJacobianSearch() = 0;
 
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates

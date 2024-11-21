@@ -22,7 +22,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     val2.setZero();
     //Left
     val2[1] = 0.;
-    L2Projection * matbc1 = new L2Projection(9,2,1,val1,val2);
+    L2Projection * matbc1 = new L2Projection(9,2,BoundaryConditionType::kNeumann,val1,val2);
 
     val2.setZero();
     val2[0] = 0.;
@@ -33,13 +33,13 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // val2[1] = 0.0005;
     val2[1] = 0.0;
     //Right
-    L2Projection * matbc3 = new L2Projection(12,2,1,val1,val2);
+    L2Projection * matbc3 = new L2Projection(12,2,BoundaryConditionType::kNeumann,val1,val2);
     val2.setZero();
     val2[1] = 1.;
-    L2Projection * matbc4 = new L2Projection(14,2,3,val1,val2);
+    L2Projection * matbc4 = new L2Projection(14,2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     val2.setZero();
     val2[0] = 1.;
-    L2Projection * matbc5 = new L2Projection(13,2,3,val1,val2);
+    L2Projection * matbc5 = new L2Projection(13,2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
     // cmesh->InsertMaterial(matbc2);

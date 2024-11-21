@@ -15,9 +15,9 @@ void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi) {
 
 void ShapeOneDCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     dphi(0,0) = (1. + 18. * xi[0] - 27. * xi[0]*xi[0])/16.;
-    dphi(1,0) = (-1. + 18. * xi[0] + 27. * xi[0]*xi[0])/16.;
-    dphi(2,0) = (-3. - 2. * xi[0] + 9. * xi[0]*xi[0])*9./16.;
-    dphi(3,0) = -(-3. + 2. * xi[0] + 9. * xi[0]*xi[0])*9./16.;
+    dphi(0,1) = (-1. + 18. * xi[0] + 27. * xi[0]*xi[0])/16.;
+    dphi(0,2) = (-3. - 2. * xi[0] + 9. * xi[0]*xi[0])*9./16.;
+    dphi(0,3) = -(-3. + 2. * xi[0] + 9. * xi[0]*xi[0])*9./16.;
 }
 
 void ShapeOneDCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

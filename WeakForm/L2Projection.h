@@ -72,6 +72,8 @@ public:
     /// @param var solution variable's index
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
+
+    BoundaryConditionType GetBCType() const { return BCType; }
     
 };
 

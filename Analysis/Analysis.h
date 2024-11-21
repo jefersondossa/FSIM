@@ -26,7 +26,7 @@ protected:
     
     std::vector<CompMesh *> fMeshVector;
     SolverType fSolverType;
-    Arlequin* fArlequin;
+    Arlequin* fArlequin = nullptr;
     bool fReducedArlequin;
 
     //PetscVariable

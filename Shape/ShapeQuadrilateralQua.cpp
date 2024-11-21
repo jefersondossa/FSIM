@@ -26,31 +26,23 @@ void ShapeQuadrilateralQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     const double xsi2 = xi[1];
 
     dphi(0,0) = 0.5 * (-0.5 + 1. * xsi1) * (-1. + xsi2) * xsi2;
-    dphi(0,1) = 0.5 * (-1. + xsi1) * xsi1 * (-0.5 + 1. * xsi2);
-
-    dphi(1,0) = 0.5 * (0.5 + 1. * xsi1) * (-1. + xsi2) * xsi2;
+    dphi(1,0) = 0.5 * (-1. + xsi1) * xsi1 * (-0.5 + 1. * xsi2);
+    dphi(0,1) = 0.5 * (0.5 + 1. * xsi1) * (-1. + xsi2) * xsi2;
     dphi(1,1) = 0.5 * xsi1 * (1. + xsi1) * (-0.5 + xsi2);
-
-    dphi(2,0) = 0.5 * (0.5 + 1. * xsi1) * xsi2 * (1. + xsi2);
-    dphi(2,1) = 0.5 * xsi1 * (1. + xsi1) * (0.5 + xsi2);
-
-    dphi(3,0) = 0.5 * (-0.5 + xsi1) * xsi2 * (1. + xsi2);
-    dphi(3,1) = 0.5 * (-1. + xsi1) * xsi1 * (0.5 + xsi2);
-
-    dphi(4,0) = -xsi1 * (-1. + xsi2) * xsi2;
-    dphi(4,1) = -0.5 + xsi1 * xsi1 * (0.5 - xsi2) + xsi2;
-
-    dphi(5,0) = 0.5 - 0.5 * xsi2 * xsi2 + xsi1 * (1. - xsi2 * xsi2);
-    dphi(5,1) = -xsi1 * (1. + xsi1) * xsi2;
-
-    dphi(6,0) = -xsi1 * xsi2 * (1. + xsi2);
-    dphi(6,1) = 0.5 + xsi1 * xsi1 * (-0.5 - xsi2) + xsi2;
-
-    dphi(7,0) = -0.5 + 0.5 * xsi2 * xsi2 + xsi1 * (1. - xsi2 * xsi2);
-    dphi(7,1) = -(-1. + xsi1) * xsi1 * xsi2;
-
-    dphi(8,0) = 2. * xsi1 * (-1. + xsi2 * xsi2);
-    dphi(8,1) = 2. * (-1. + xsi1 * xsi1) * xsi2;
+    dphi(0,2) = 0.5 * (0.5 + 1. * xsi1) * xsi2 * (1. + xsi2);
+    dphi(1,2) = 0.5 * xsi1 * (1. + xsi1) * (0.5 + xsi2);
+    dphi(0,3) = 0.5 * (-0.5 + xsi1) * xsi2 * (1. + xsi2);
+    dphi(1,3) = 0.5 * (-1. + xsi1) * xsi1 * (0.5 + xsi2);
+    dphi(0,4) = -xsi1 * (-1. + xsi2) * xsi2;
+    dphi(1,4) = -0.5 + xsi1 * xsi1 * (0.5 - xsi2) + xsi2;
+    dphi(0,5) = 0.5 - 0.5 * xsi2 * xsi2 + xsi1 * (1. - xsi2 * xsi2);
+    dphi(1,5) = -xsi1 * (1. + xsi1) * xsi2;
+    dphi(0,6) = -xsi1 * xsi2 * (1. + xsi2);
+    dphi(1,6) = 0.5 + xsi1 * xsi1 * (-0.5 - xsi2) + xsi2;
+    dphi(0,7) = -0.5 + 0.5 * xsi2 * xsi2 + xsi1 * (1. - xsi2 * xsi2);
+    dphi(1,7) = -(-1. + xsi1) * xsi1 * xsi2;
+    dphi(0,8) = 2. * xsi1 * (-1. + xsi2 * xsi2);
+    dphi(1,8) = 2. * (-1. + xsi1 * xsi1) * xsi2;
 }
 
 void ShapeQuadrilateralQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

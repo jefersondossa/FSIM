@@ -4,14 +4,20 @@ TransientElasticTruss::TransientElasticTruss(int matid, int dim, double young, d
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
+    fIntegScheme = tscheme;
 };
 
 
 void TransientElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
-    ElasticTruss::ComputeStiffness(index,data,Stiffness);
+    
+    MatrixDouble K(Stiffness.rows(),Stiffness.cols());
+    K.setZero();
+    ElasticTruss::ComputeStiffness(index,data,K);
     
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
+
+    //Compute the mass matrix
     MatrixDouble Mass(2*nphi,2*nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -22,9 +28,9 @@ void TransientElasticTruss::ComputeStiffness(int &index, IntPointData &data, Mat
     }
 
     switch (fIntegScheme)
-    {
+    {       
     case ENewmark:
-        Stiffness += (1./(fBeta*fTimeStep*fTimeStep) + fGamma*fDamping/(fBeta*fTimeStep)) * Mass;    
+        Stiffness += K+(1./(fBeta*fTimeStep*fTimeStep) + fGamma*fDamping/(fBeta*fTimeStep)) * Mass;    
         break;
     
     default:
@@ -34,14 +40,15 @@ void TransientElasticTruss::ComputeStiffness(int &index, IntPointData &data, Mat
 }
 
 void TransientElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
-    ElasticTruss::ComputeResidual(index,data,Rhs);
+    VecDouble Residual(Rhs.size());
+    Residual.setZero();
+    ElasticTruss::ComputeResidual(index,data,Residual);
     
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;
     auto disp = data.fSol;
-    auto dispPrev = data.fSolPrev;
 
     for (size_t i = 0; i < nphi; i++){
         Rhs[2*i  ] += (disp[0]/(fBeta * fTimeStep * fTimeStep) + 
@@ -66,12 +73,27 @@ void TransientElasticTruss::ComputeError(IntPointData &data, VecDouble &errors){
 }
 
 int TransientElasticTruss::VariableIndex(const std::string &name) const{
-    return ElasticTruss::VariableIndex(name);
+    int var = ElasticTruss::VariableIndex(name);
+
+    if (var != -1){
+        return var;
+    } else {
+        if(!strcmp("Velocity",name.c_str()))           return 10;
+        if(!strcmp("Acceleration",name.c_str()))       return 11;
+    } 
+
+    return -1;
     
 };
 
 int TransientElasticTruss::NSolutionVariables(int var) const{
-    return ElasticTruss::NSolutionVariables(var);
+    int nsol = ElasticTruss::NSolutionVariables(var);
+    if (nsol != -1){
+        return nsol;
+    } else {
+        if (var == 10 || var == 11) return 3;
+    }
+    return -1;
 
 };
 
@@ -79,6 +101,20 @@ void TransientElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol
 
     ElasticTruss::Solution(data,var,Sol);
 
+    //Velocity
+    if (var == 10){
+        Sol[0] = data.fDSolDt[0];
+        Sol[1] = data.fDSolDt[1];
+        Sol[2] = 0.;
+        return;
+    };
+    //Acceleration
+    if (var == 11){
+        Sol[0] = data.fDSolDDt[0];
+        Sol[1] = data.fDSolDDt[1];
+        Sol[2] = 0.;
+        return;
+    };
 }; 
 
 void TransientElasticTruss::UpdateTimeDerivatives(CompMesh *cmesh){
@@ -93,14 +129,12 @@ void TransientElasticTruss::UpdateTimeDerivatives(CompMesh *cmesh){
                 auto posiPrev = cmesh->NodeVec()[inode]->PrevSolution();
                 auto posi = cmesh->NodeVec()[inode]->Solution();
                 VecDouble acelUpdated(2), velUpdated(2);
-                auto qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
-                                (1./(2.*fBeta) - 1.) * acelPrev;
-                auto rs = velPrev + (1.-fGamma)*fTimeStep*acelPrev;
+                
                 //Update Acceleration
-                acelUpdated = posi/(fBeta*fTimeStep*fTimeStep) - qs;
+                acelUpdated = (posi-posiPrev)/(fBeta*fTimeStep*fTimeStep) - velPrev/(fBeta*fTimeStep) - acelPrev*(1./(2.*fBeta)-1.);
 
                 // //Update Velocity                
-                velUpdated = posi*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
+                velUpdated = velPrev + fTimeStep*((1.-fGamma)*acelPrev + fGamma*acelUpdated);
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
                 

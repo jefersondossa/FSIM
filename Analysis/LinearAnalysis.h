@@ -16,6 +16,8 @@ public:
 
     void UpdateSolution() override;
 
+    void Run() override;
+
     ~LinearAnalysis(){};
 };
 

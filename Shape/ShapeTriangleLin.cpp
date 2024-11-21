@@ -27,11 +27,11 @@ void ShapeTriangleLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     const double xsi3 = 1. - xsi1 - xsi2;
 
     dphi(0,0) = -1.;
-    dphi(0,1) = -1.;
-    dphi(1,0) = 1.;
+    dphi(1,0) = -1.;
+    dphi(0,1) = 1.;
     dphi(1,1) = 0.;
-    dphi(2,0) = 0.;
-    dphi(2,1) = 1.;
+    dphi(0,2) = 0.;
+    dphi(1,2) = 1.;
     // element conectivity
     //     2
     //     01

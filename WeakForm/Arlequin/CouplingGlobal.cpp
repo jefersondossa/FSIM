@@ -58,7 +58,7 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
                     for (int k = DIM; k--;  ){
                         for (int l = DIM; l--; ){
                             double K = dphi_dx(i,l) * dphi_dxGlobal(j,k) * fK1;
-                            if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dxGlobal(j,m);
+                            if (k==l) for (int m = DIM; m--; ) K += dphi_dx(m,i) * dphi_dxGlobal(m,j);
                             Stiffness[0](DIM*i+k,DIM*j+l) += K * WJ;
                         }
                     }
@@ -125,13 +125,13 @@ void CouplingGlobal::ComputeResidual(int &index, IntPointData &data, std::vector
             //Solution residual
             double L2u = u_[0] * data.fPhi[i] * fK0;
             double H1u = 0.;
-            for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(0,l) * fK1;
+            for (int l=DIM; l--; ) H1u += dphi_dx(l,i) * du_dx(0,l) * fK1;
             Rhs[0][nphi*fNState+i] -= (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
             double L2 = data.fSol[0] * dataglobal.fPhi[i] * fK0;
             double H1 = 0.;
-            for (int l=DIM; l--; ) H1 += dphi_dxGlobal(i,l) * data.fDSolDx(0,l) * fK1;
+            for (int l=DIM; l--; ) H1 += dphi_dxGlobal(l,i) * data.fDSolDx(0,l) * fK1;
             Rhs[0][i] -= (L2 + H1) * WJ;
         };
     // } else {

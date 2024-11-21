@@ -13,13 +13,17 @@ protected:
     TimeIntegScheme fIntegScheme;
 
     // Time Step
-    double fTimeStep;
+    double fTimeStep = 0;
 
 public:
     TransientWeakForm() = default;
     ~TransientWeakForm() = default;
 
     virtual void UpdateTimeDerivatives(CompMesh *cmesh) = 0;
+
+    void SetTimeStep(double dTime){
+        fTimeStep = dTime;
+    }
 };
 
 

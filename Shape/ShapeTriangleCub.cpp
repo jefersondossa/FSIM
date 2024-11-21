@@ -36,25 +36,25 @@ void ShapeTriangleCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     const double xsi3 = 1. - xsi1 - xsi2;
 
     dphi(0,0) = (27.0 * xsi1 * xsi1 - 18.0 * xsi1 + 2.0) / 2.0;
-    dphi(1,0) = 0.0;
-    dphi(2,0) = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
-    dphi(3,0) = (9.0 * xsi2 * (6.0 * xsi1 - 1.0)) / 2.0;
-    dphi(4,0) = (9.0 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
-    dphi(5,0) = -(9.0 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
-    dphi(6,0) = (9.0 * xsi2 * (6.0 * xsi2 + 6.0 * xsi1 - 5.0)) / 2.0;
-    dphi(7,0) = (9.0 * (3.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 5.0 * xsi2 + 9.0 * xsi1 * xsi1 - 10.0 * xsi1 + 2.0)) / 2.0;
-    dphi(8,0) = -(9.0 * (6.0 * xsi1 * xsi2 - xsi2 + 9.0 * xsi1 * xsi1 - 8.0 * xsi1 + 1.0)) / 2.0;
-    dphi(9,0) = -27.0 * xsi2 * (xsi2 + 2.0 * xsi1 - 1.0);
     dphi(0,1) = 0.0;
+    dphi(0,2) = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
+    dphi(0,3) = (9.0 * xsi2 * (6.0 * xsi1 - 1.0)) / 2.0;
+    dphi(0,4) = (9.0 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
+    dphi(0,5) = -(9.0 * xsi2 * (3.0 * xsi2 - 1.0)) / 2.0;
+    dphi(0,6) = (9.0 * xsi2 * (6.0 * xsi2 + 6.0 * xsi1 - 5.0)) / 2.0;
+    dphi(0,7) = (9.0 * (3.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 5.0 * xsi2 + 9.0 * xsi1 * xsi1 - 10.0 * xsi1 + 2.0)) / 2.0;
+    dphi(0,8) = -(9.0 * (6.0 * xsi1 * xsi2 - xsi2 + 9.0 * xsi1 * xsi1 - 8.0 * xsi1 + 1.0)) / 2.0;
+    dphi(0,9) = -27.0 * xsi2 * (xsi2 + 2.0 * xsi1 - 1.0);
+    dphi(1,0) = 0.0;
     dphi(1,1) = (27.0 * xsi2 * xsi2 - 18.0 * xsi2 + 2) / 2.0;
-    dphi(2,1) = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
-    dphi(3,1) = (9.0 * xsi1 * (3.0 * xsi1 - 1.0)) / 2.0;
-    dphi(4,1) = (9.0 * xsi1 * (6.0 * xsi2 - 1.0)) / 2.0;
-    dphi(5,1) = -(9.0 * (9.0 * xsi2 * xsi2 + 6.0 * xsi1 * xsi2 - 8.0 * xsi2 - xsi1 + 1.0)) / 2.0;
-    dphi(6,1) = (9.0 * (9.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 10.0 * xsi2 + 3.0 * xsi1 * xsi1 - 5.0 * xsi1 + 2.0)) / 2.0;
-    dphi(7,1) = (9.0 * xsi1 * (6.0 * xsi2 + 6.0 * xsi1 - 5.0)) / 2.0;
-    dphi(8,1) = -(9.0 * xsi1 * (3.0 * xsi1 - 1.0)) / 2.0;
-    dphi(9,1) = -27.0 * xsi1 * (2.0 * xsi2 + xsi1 - 1.0);
+    dphi(1,2) = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
+    dphi(1,3) = (9.0 * xsi1 * (3.0 * xsi1 - 1.0)) / 2.0;
+    dphi(1,4) = (9.0 * xsi1 * (6.0 * xsi2 - 1.0)) / 2.0;
+    dphi(1,5) = -(9.0 * (9.0 * xsi2 * xsi2 + 6.0 * xsi1 * xsi2 - 8.0 * xsi2 - xsi1 + 1.0)) / 2.0;
+    dphi(1,6) = (9.0 * (9.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 10.0 * xsi2 + 3.0 * xsi1 * xsi1 - 5.0 * xsi1 + 2.0)) / 2.0;
+    dphi(1,7) = (9.0 * xsi1 * (6.0 * xsi2 + 6.0 * xsi1 - 5.0)) / 2.0;
+    dphi(1,8) = -(9.0 * xsi1 * (3.0 * xsi1 - 1.0)) / 2.0;
+    dphi(1,9) = -27.0 * xsi1 * (2.0 * xsi2 + xsi1 - 1.0);
     // element conectivity
     //     2
     //     76

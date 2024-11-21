@@ -3,7 +3,7 @@
 #include <Eigen/SparseLU>
 #include <Eigen/SparseCholesky>
 #include <Eigen/SparseQR>
-#include<Eigen/IterativeLinearSolvers>
+#include <Eigen/IterativeLinearSolvers>
 #include <Eigen/OrderingMethods>
 
 #include <amgcl/make_solver.hpp>

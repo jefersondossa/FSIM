@@ -118,6 +118,8 @@ public:
     GraphMesh* GetGraphMesh();
 
     void Integrate(std::set<int> &matIds, std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result);
+
+    void SetSolution(VecDouble &sol);
 };
 
 #endif

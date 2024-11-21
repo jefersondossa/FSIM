@@ -1,6 +1,7 @@
 #include "ElementT.h"
 #include "PositionalTruss.h"
 #include "ElasticityPositional2D.h"
+#include "L2Projection.h"
 
 template<class tshape>
 ElementT<tshape>::ElementT() : Element(){
@@ -47,8 +48,19 @@ ElementT<tshape>::ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakF
     fIntegData.fPhi.resize(tshape::NElNodes);
     fIntegData.fPhi.setZero();
 
-    fIntegData.fDPhi.resize(tshape::NElNodes,tshape::Dimension);
+    fIntegData.fDPhi.resize(tshape::Dimension,tshape::NElNodes);
     fIntegData.fDPhi.setZero();
+
+    //Checks if it is a BC element and set the nodes as BC
+    L2Projection *bc = dynamic_cast<L2Projection*>(fWeakForm);
+    if (bc){
+        if (bc->GetBCType() == BoundaryConditionType::kDirectionalHomogeneousDirichlet || 
+            bc->GetBCType() == BoundaryConditionType::kDirichlet) {
+        for (int i = 0; i < tshape::NElNodes; i++){
+            fMesh->NodeVec()[fConnect[i]]->SetHasBC();
+        }
+            }
+    }
 };
 
 //------------------------------------------------------------------------------
@@ -190,10 +202,11 @@ void ElementT<tshape>::ComputeJacobian() {
         for (int j = 3; j--; ){
             // Approximate the integration space
             fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
+            // std::cout << "Coord " << i << " " << j << " = " << fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) << std::endl;
             xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
             
             for (int k = DIM; k--; ){
-                fIntegData.fAxes0(j,k) += xna[j] * fIntegData.fDPhi(i,k);
+                fIntegData.fAxes0(j,k) += xna[j] * fIntegData.fDPhi(k,i);
             };
         };
     };
@@ -237,9 +250,6 @@ void ElementT<tshape>::ComputeJacobian() {
             // v_1_til.setZero();
             // v_2_til.setZero();
 
-
-            // auto QR = fIntegData.fAxes0.householderQr();
-            // MatrixDouble aaa = QR.matrixQR();
             // for (int i = 0; i < 3; i++) {
             //     v_1[i] = fIntegData.fAxes0(i, 0);
             //     v_2[i] = fIntegData.fAxes0(i, 1);
@@ -269,11 +279,6 @@ void ElementT<tshape>::ComputeJacobian() {
             // fIntegData.fA0(0, 1) = v_1_dot_v_2 / norm_v_1_til;
             // fIntegData.fA0(1, 1) = norm_v_2_til;
 
-            // // fIntegData.fA0(0, 0) = aaa(0,0);
-            // // fIntegData.fA0(0, 1) = aaa(0,1);
-            // // fIntegData.fA0(1, 0) = aaa(1,0);
-            // // fIntegData.fA0(1, 1) = aaa(1,1);
-
             // fIntegData.fJacA0 = fIntegData.fA0(0, 0) * fIntegData.fA0(1, 1) - fIntegData.fA0(1, 0) * fIntegData.fA0(0, 1);
 
             // fIntegData.fA0Inv(0, 0) = +fIntegData.fA0(1, 1) / fIntegData.fJacA0;
@@ -282,7 +287,18 @@ void ElementT<tshape>::ComputeJacobian() {
             // fIntegData.fA0Inv(1, 0) = -fIntegData.fA0(1, 0) / fIntegData.fJacA0;
 
             // fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
-                //Computing the jacobian determinant and Inverse
+
+            // for (int i = 0; i < 3; i++) {
+            //     v_2_til[i] /= norm_v_2_til;
+            //     fIntegData.fAxes0(i,0) = v_1_til[i];
+            //     fIntegData.fAxes0(i,1) = v_2_til[i];
+            // }
+
+            // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << std::endl;
+            // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << std::endl;
+            // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << std::endl;
+            
+            // //Computing the jacobian determinant and Inverse
             fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
             fIntegData.fA0(0,1) = fIntegData.fAxes0(0,1);
             fIntegData.fA0(1,0) = fIntegData.fAxes0(1,0);
@@ -293,7 +309,15 @@ void ElementT<tshape>::ComputeJacobian() {
             fIntegData.fA0Inv(1,1) = fIntegData.fA0(0,0) / fIntegData.fJacA0;
             fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
             fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
+
+            // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << std::endl;
+            // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << std::endl;
+            // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << std::endl;
+
             fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
+#ifdef DEBUG_BUILD
+            if (fIntegData.fJacA0 < 1.e-6) PanicButton();
+#endif
         }
             break;
         case 3:
@@ -336,6 +360,71 @@ void ElementT<tshape>::ComputeJacobian() {
     return;
 };
 
+
+template<class tshape>
+void ElementT<tshape>::ComputeJacobianSearch() {
+
+    int DIM = tshape::Dimension;
+    fIntegData.fA0Inv.setZero();
+    fIntegData.fAxes0.setZero();
+    fIntegData.fA0.setZero();
+    fIntegData.fX.setZero();
+    fIntegData.fPhi.setZero();
+    fIntegData.fDPhi.setZero();
+
+    tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
+    tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
+   
+    fIntegData.fA0.setZero();
+    VecDouble xna(3);
+    for (int i = tshape::NElNodes; i--; ){
+        for (int j = 3; j--; ){
+            // Approximate the integration space
+            fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
+            xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
+            
+            for (int k = DIM; k--; ){
+                fIntegData.fAxes0(j,k) += xna[j] * fIntegData.fDPhi(k,i);
+            };
+        };
+    };
+
+    int ncols = DIM;
+    int dim = DIM;
+
+    switch (DIM) {
+        case 2:
+        {
+            // //Computing the jacobian determinant and Inverse
+            fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
+            fIntegData.fA0(0,1) = fIntegData.fAxes0(0,1);
+            fIntegData.fA0(1,0) = fIntegData.fAxes0(1,0);
+            fIntegData.fA0(1,1) = fIntegData.fAxes0(1,1);
+            fIntegData.fJacA0 = fIntegData.fA0(0,0) * fIntegData.fA0(1,1) - fIntegData.fA0(0,1) * fIntegData.fA0(1,0);
+
+            fIntegData.fA0Inv(0,0) = fIntegData.fA0(1,1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1,1) = fIntegData.fA0(0,0) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
+            fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
+
+            // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << std::endl;
+            // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << std::endl;
+            // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << std::endl;
+
+            fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
+#ifdef DEBUG_BUILD
+            if (fIntegData.fJacA0 < 1.e-6) PanicButton();
+#endif
+        }
+            break;
+        default:
+            PanicButton();
+            break;
+    }
+
+    return;
+};
+
 template<class tshape>
 void ElementT<tshape>::ComputeCurrentJacobian() {
 
@@ -366,9 +455,9 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
 
 
             for (int k = DIM; k--; ){
-                fIntegData.fAxes1(j,k) += yna[j] * fIntegData.fDPhi(i,k);
+                fIntegData.fAxes1(j,k) += yna[j] * fIntegData.fDPhi(k,i);
                 if (fIntegData.fAxes1Prev.size() != 0){
-                    fIntegData.fAxes1Prev(j,k) += yprev * fIntegData.fDPhi(i,k);
+                    fIntegData.fAxes1Prev(j,k) += yprev * fIntegData.fDPhi(k,i);
                 }
             };
         };
@@ -460,7 +549,7 @@ void ElementT<tshape>::ComputeSpatialDerivatives() {
     fIntegData.fDPhiX0.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX0 = fIntegData.fDPhi * fIntegData.fA0Inv;
+    fIntegData.fDPhiX0 = fIntegData.fA0Inv.transpose() * fIntegData.fDPhi;
 
     return;
 };
@@ -468,7 +557,7 @@ void ElementT<tshape>::ComputeSpatialDerivatives() {
 template<class tshape>
 void ElementT<tshape>::ComputeCurrentSpatialDerivatives() {
     
-    fIntegData.fDPhi.resize(tshape::NElNodes,tshape::Dimension);
+    fIntegData.fDPhi.resize(tshape::Dimension,tshape::NElNodes);
     fIntegData.fDPhi.setZero();
     
     tshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
@@ -477,7 +566,7 @@ void ElementT<tshape>::ComputeCurrentSpatialDerivatives() {
     fIntegData.fDPhiX1.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX1 = fIntegData.fDPhi * fIntegData.fA1.inverse().transpose();
+    fIntegData.fDPhiX1 = fIntegData.fA1.inverse().transpose() * fIntegData.fDPhi;
 
     return;
 };
@@ -683,7 +772,7 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
-                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(i,j);
+                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
             }
         }
     }
@@ -697,7 +786,7 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDou
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
-                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * dphidx(i,j);
+                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * dphidx(j,i);
             }
         }
     }
@@ -711,13 +800,12 @@ void ElementT<tshape>::interpolateSolDerivatives() {
         fIntegData.fDSolDxPrev.setZero(); 
         flag = true;
     }     
-    int DIM = tshape::Dimension;
     for (int i = tshape::NElNodes; i--; ){
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
-        for (int j = DIM; j--; ){
+        for (int j = tshape::Dimension; j--; ){
             for (int k = nstate; k--; ){
-                fIntegData.fDSolDx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(i,j);
-                if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(i,j);
+                fIntegData.fDSolDx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
+                if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,i);
 #ifdef DEBUG_BUILD
                 if (std::isnan(fIntegData.fDSolDx(k,j))){
                     PanicButton();
@@ -749,6 +837,10 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     if (!fWeakForm) return;
 
     int DIM = tshape::Dimension;
+    fIntegData.fNeedsDSol = true;
+    fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    fIntegData.fNeedsSol = true;
+    fIntegData.fSol.resize(this->fWeakForm->NState());
 
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);

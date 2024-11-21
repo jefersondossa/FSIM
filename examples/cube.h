@@ -66,10 +66,10 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     GmshTools::Read(*coarseModel,"../cube.msh");
 
     // NonLinearAnalysis an(coarseModel,SolverType::ELU);
-    // LinearAnalysis an(coarseModel,SolverType::ELU);
+    LinearAnalysis an(coarseModel,SolverType::ELU);
 
     std::vector<L2Projection *> bcIncrement = {matbc2};
-    NonLinearAnalysis an(coarseModel,SolverType::ELU, 1.e-7,100);
+    // NonLinearAnalysis an(coarseModel,SolverType::ELU, 1.e-7,100);
 #ifdef RELEASE_BUILD
     an.SType() = SolverType::EUmfpack;
     // an.SType() = SolverType::ECholmod;

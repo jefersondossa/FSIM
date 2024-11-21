@@ -71,17 +71,18 @@ int main(int argc, char **args) {
     PetscInitialize(&argc, &args, (char*)0, help);
 #endif
 
-    // #include "examples/airfoil.h"
+    #include "examples/airfoil.h"
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
     // #include "examples/rectangle.h"
     // #include "examples/rectangledyn.h"
     // #include "examples/poisson.h"
-    #include "examples/arlequin.h"
+    // #include "examples/arlequin.h"
     // #include "examples/cube.h"
     // #include "examples/truss.h"
     // #include "examples/mohrcoulombtest.h"
     // #include "examples/notched.h"
+    // #include "examples/beamPaulo.h"
     // #include "examples/stripfooting.h"
     // #include "examples/cantilever.h"
     // #include "examples/Beam.h"

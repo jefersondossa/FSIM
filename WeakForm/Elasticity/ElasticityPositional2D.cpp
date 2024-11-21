@@ -40,17 +40,17 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
     int nphi = data.fPhi.size();
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     
-    auto dphi_dx = data.fDPhiX0;
+    auto dphi_dx = data.fDPhiX0.transpose();
 
     //COMPUTE A1
-    auto dx_dxsi = data.fA0;
-    auto dy_dxsi = data.fA1;
-    auto j0 = data.fJacA0;
+    MatrixDouble dx_dxsi = data.fA0;
+    MatrixDouble dy_dxsi = data.fA1;
+    double j0 = data.fJacA0;
 
     //dy_dx
-    auto dy_dx = dy_dxsi * data.fA0Inv;
+    MatrixDouble dy_dx = dy_dxsi * data.fA0Inv;
     //jacobian
-    auto jac = dy_dx.determinant();
+    double jac = dy_dx.determinant();
 
     //Green-Lagrange strain tensor
     MatrixDouble E(fDimension,fDimension);
@@ -129,7 +129,7 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
 
 void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
-    auto dphi_dx = data.fDPhiX0;
+    auto dphi_dx = data.fDPhiX0.transpose();
     int nphi = data.fPhi.size();
     //COMPUTE A1
     auto dx_dxsi = data.fA0;

@@ -6,10 +6,11 @@
 void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     std::cout << "Assembling..." << std::endl;
 
-    for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
+    for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
+            if (!el) continue;
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
             int nElNodes = el->NElNodes(); 

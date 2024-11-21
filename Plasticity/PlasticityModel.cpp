@@ -214,24 +214,24 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
         matB.resize(3,2*nphi);
         matB.setZero();
         for (int j = 0; j < nphi; j++){
-            matB(0,2*j  ) = data.fDPhiX0(j,0);
-            matB(1,2*j+1) = data.fDPhiX0(j,1);
-            matB(2,2*j  ) = data.fDPhiX0(j,1);
-            matB(2,2*j+1) = data.fDPhiX0(j,0);
+            matB(0,2*j  ) = data.fDPhiX0(0,j);
+            matB(1,2*j+1) = data.fDPhiX0(1,j);
+            matB(2,2*j  ) = data.fDPhiX0(1,j);
+            matB(2,2*j+1) = data.fDPhiX0(0,j);
         }
     } else if (this->Dimension() == 3){
         matB.resize(6,3*nphi);
         matB.setZero();
         for (int j = 0; j < nphi; j++){
-            matB(0,3*j  ) = data.fDPhiX0(j,0);
-            matB(1,3*j+1) = data.fDPhiX0(j,1);
-            matB(2,3*j+2) = data.fDPhiX0(j,2);
-            matB(5,3*j  ) = data.fDPhiX0(j,1);
-            matB(5,3*j+1) = data.fDPhiX0(j,0);
-            matB(3,3*j+1) = data.fDPhiX0(j,2);
-            matB(3,3*j+2) = data.fDPhiX0(j,1);
-            matB(4,3*j  ) = data.fDPhiX0(j,2);
-            matB(4,3*j+2) = data.fDPhiX0(j,0);
+            matB(0,3*j  ) = data.fDPhiX0(0,j);
+            matB(1,3*j+1) = data.fDPhiX0(1,j);
+            matB(2,3*j+2) = data.fDPhiX0(2,j);
+            matB(5,3*j  ) = data.fDPhiX0(1,j);
+            matB(5,3*j+1) = data.fDPhiX0(0,j);
+            matB(3,3*j+1) = data.fDPhiX0(2,j);
+            matB(3,3*j+2) = data.fDPhiX0(1,j);
+            matB(4,3*j  ) = data.fDPhiX0(2,j);
+            matB(4,3*j+2) = data.fDPhiX0(0,j);
         }
     }
 

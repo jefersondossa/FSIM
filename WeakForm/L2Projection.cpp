@@ -53,7 +53,7 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         for(int i = 0 ; i < nphi; i++) {
             for (int j = 0 ; j < nphi; j++) {
                 for (int istate = 0; istate < fNState; istate++){
-                    if (fabs(BCVal2[istate]) > 0)
+                    if (fabs(BCVal2[istate]) > 0 && fabs(result[istate])>1.e-10)
                     Stiffness(fNState*i+istate,fNState*i+istate) += WJ * data.fPhi[i] * data.fPhi[j];
                 }
             }//jn

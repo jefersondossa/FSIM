@@ -377,7 +377,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     
     auto &integdata = elemsearch->IntegrationData();
     integdata.fAdimCoord = xsi;
-    elemsearch->ComputeJacobian();
+    elemsearch->ComputeJacobianSearch();
     int nElNodes = integdata.fPhi.size();
 
     for (int i = 0; i < nElNodes; i++){
@@ -397,7 +397,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
         for (int k = 0; k < DIM; k++) deltaX[k] = x[k] - x_[k];
         deltaXsi.setZero();
         
-        elemsearch -> ComputeJacobian();
+        elemsearch -> ComputeJacobianSearch();
 
         // for (int i = 0; i < DIM; i++)
         //     for (int j = 0; j < DIM; j++)
@@ -464,7 +464,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
 
             // shapeQuad.Shape(xsi,phi_);
             cmesh->ElementVec()[jel]->IntegrationData().fAdimCoord = xsi;
-            cmesh->ElementVec()[jel]->ComputeJacobian();
+            cmesh->ElementVec()[jel]->ComputeJacobianSearch();
 
             for (int i = 0; i < nElNodes; i++){
                 VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
@@ -484,7 +484,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
                     deltaXsi[k] = 0.;
                 }
                 
-                cmesh->ElementVec()[jel] -> ComputeJacobian();
+                cmesh->ElementVec()[jel] -> ComputeJacobianSearch();
                 auto ainv = cmesh->ElementVec()[jel]->IntegrationData().fA0Inv;
                 for (int i = 0; i < DIM; i++)
                     for (int j = 0; j < DIM; j++)
@@ -496,7 +496,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
                 }
             
                 cmesh->ElementVec()[jel]->IntegrationData().fAdimCoord = xsi;
-                cmesh->ElementVec()[jel] -> ComputeJacobian();
+                cmesh->ElementVec()[jel] -> ComputeJacobianSearch();
                 for (int i=0; i<nElNodes; i++){
                     VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
                     for (int k = DIM; k--; ) x_[k] += xint[k] * cmesh->ElementVec()[jel]->IntegrationData().fPhi[i];
@@ -519,7 +519,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
 
                     xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
                     elCorr = jel;
-                    break;
+                    return;
                 }
                 break;
             case EQuadrilateral:
@@ -528,7 +528,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
 
                     xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
                     elCorr = jel;
-                    break;
+                    return;
                 }
                 break;
 
@@ -543,6 +543,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
         std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
         PanicButton();
     }
+    if (elCorr == 150000) PanicButton();
     return;
 };
 
@@ -562,7 +563,7 @@ void Arlequin::setNodalCorrespondenceFine() {
         int elCorr = 0;
         VecDouble xsiCorr(DIM);
         searchNodeCorrespondence(x, fMeshVector[0],elCorr,xsiCorr,fNodeLocalToElementGlobal[inode]);
-        if (elCorr == 150000) PanicButton();
+        
         fNodeLocalToElementGlobal[inode]=elCorr;
         fNodeLocalToXsiGlobal[inode]=xsiCorr;
         // fMeshVector[2]->NodeVec()[inode] -> setNodalCorrespondence(elCorr,xsiCorr);             

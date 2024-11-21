@@ -15,16 +15,13 @@ void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi) {
 
 void ShapeQuadrilateralLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     dphi(0,0) = -0.25 * (1. - xi[1]);
-    dphi(0,1) = -0.25 * (1. - xi[0]);
-
-    dphi(1,0) =  0.25 * (1. - xi[1]);
+    dphi(1,0) = -0.25 * (1. - xi[0]);
+    dphi(0,1) =  0.25 * (1. - xi[1]);
     dphi(1,1) = -0.25 * (1. + xi[0]);
-
-    dphi(2,0) =  0.25 * (1. + xi[1]);
-    dphi(2,1) =  0.25 * (1. + xi[0]);
-
-    dphi(3,0) = -0.25 * (1. + xi[1]);
-    dphi(3,1) =  0.25 * (1. - xi[0]);
+    dphi(0,2) =  0.25 * (1. + xi[1]);
+    dphi(1,2) =  0.25 * (1. + xi[0]);
+    dphi(0,3) = -0.25 * (1. + xi[1]);
+    dphi(1,3) =  0.25 * (1. - xi[0]);
 }
 
 void ShapeQuadrilateralLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

@@ -5,7 +5,8 @@
     CompMesh* cmesh = new CompMesh(); 
 
     // Elasticity2D * matelas = new Elasticity2D(11,210.e9,.3,true,0.05);
-    ElasticityPositional2D * matelas = new ElasticityPositional2D(13,10.e6,.0,0.1,true);
+    // ElasticityPositional2D * matelas = new ElasticityPositional2D(13,10.e6,.0,0.1,true);
+    Elasticity2D * matelas = new Elasticity2D(13,10.e6,.0,0.1,true);
 
     //BC
     MatrixDouble val1(2,2);
@@ -14,12 +15,12 @@
     val2.setZero();
     //Encastre
     // val2[0] = 1.;
-    L2Projection * matbc1 = new L2Projection(11,2,0,val1,val2);
+    L2Projection * matbc1 = new L2Projection(11,2,BoundaryConditionType::kDirichlet,val1,val2);
 
     val2.setZero();
     //Encastre point
     val2[1] = -5.4e3;
-    L2Projection * matbc2 = new L2Projection(12,2,1,val1,val2);
+    L2Projection * matbc2 = new L2Projection(12,2,BoundaryConditionType::kNeumann,val1,val2);
 
     // //Load
     // val2[1] = 000.;
@@ -37,7 +38,7 @@
    
     GmshTools::Read(*cmesh,"../dam.msh");
 
-    IncrementalAnalysis an(cmesh,SolverType::ELU, 10, bcIncrement,1.e-7,300);
+    IncrementalAnalysis an(cmesh,SolverType::EUmfpack, 10, bcIncrement,1.e-7,300);
 
     // NonLinearAnalysis an(cmesh,SolverType::ELU, 1.e-7,300);
     // VecDouble increment(2);

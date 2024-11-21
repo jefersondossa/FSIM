@@ -126,12 +126,12 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     CompMesh* coarseModel = new CompMesh();
     CompMesh* fineModel = new CompMesh();  
 
-    // Poisson * matpoisson = new Poisson(8,2);
+    Poisson * matpoisson = new Poisson(8,2);
     // coarseModel->InsertMaterial(matpoisson);
     // matpoisson->SetForcingFunction(forcingFunctionPoisson);
     // matpoisson->SetExactSolution(exactSolPoisson);
 
-    Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
+    // Elasticity2D * matpoisson = new Elasticity2D(8,1.,.0);
     coarseModel->InsertMaterial(matpoisson);
     // ElasticityPositional2D * matpoisson = new ElasticityPositional2D(8,1.,.3);
     // coarseModel->InsertMaterial(matpoisson);
@@ -206,14 +206,14 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    // ScalarNames = {"Solution","ExactSolution","ForceFunction"};
+    ScalarNames = {"Solution","ExactSolution","ForceFunction"};
     // VectorNames = {"Derivative","ExactDerivative"};
     // ScalarNames = {};
-    VectorNames = {"Displacement"};
+    // VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(coarseModel,"resultCoarse",ScalarNames,VectorNames);
     VTUGenerator::PrintResults(fineModel,"resultFine",ScalarNames,VectorNames);
-    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
+    VTUGenerator::PrintResults(&arl,"resultCoupling");
 
 
     // VecDouble errors;

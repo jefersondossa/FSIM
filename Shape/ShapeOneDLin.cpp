@@ -13,7 +13,7 @@ void ShapeOneDLin::Shape(VecDouble &xi, VecDouble &phi) {
 
 void ShapeOneDLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     dphi(0,0) = -0.5;
-    dphi(1,0) =  0.5;
+    dphi(0,1) =  0.5;
 }
 
 void ShapeOneDLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

@@ -30,18 +30,18 @@ void ShapeTriangleQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
     const double xsi2 = xi[1];
     const double xsi3 = 1. - xsi1 - xsi2;
 
-    dphi(1,0) = 4. * xsi1 - 1.;
+    dphi(0,1) = 4. * xsi1 - 1.;
     dphi(1,1) = 0.;
-    dphi(2,0) = 0.;
-    dphi(2,1) = 4. * xsi2 - 1.;
+    dphi(0,2) = 0.;
+    dphi(1,2) = 4. * xsi2 - 1.;
     dphi(0,0) = -4. * xsi3 + 1.;
-    dphi(0,1) = -4. * xsi3 + 1.;
-    dphi(4,0) = 4. * xsi2;
-    dphi(4,1) = 4. * xsi1;
-    dphi(5,0) = -4. * xsi2;
-    dphi(5,1) = 4. * (xsi3 - xsi2);
-    dphi(3,0) = 4. * (xsi3 - xsi1);
-    dphi(3,1) = -4. * xsi1;
+    dphi(1,0) = -4. * xsi3 + 1.;
+    dphi(0,4) = 4. * xsi2;
+    dphi(1,4) = 4. * xsi1;
+    dphi(0,5) = -4. * xsi2;
+    dphi(1,5) = 4. * (xsi3 - xsi2);
+    dphi(0,3) = 4. * (xsi3 - xsi1);
+    dphi(1,3) = -4. * xsi1;
     // element conectivity
     //     2
     //     54

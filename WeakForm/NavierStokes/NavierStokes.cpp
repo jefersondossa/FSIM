@@ -19,14 +19,14 @@ void NavierStokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     for (int i = nphi; i-- ; ){        
         double shapeFi = data.fPhi[i];
         double wSUPGi = 0.;
-        for (int m=DIM; m--; ) wSUPGi += data.fSol[m] * dphi_dx(i,m);
+        for (int m=DIM; m--; ) wSUPGi += data.fSol[m] * dphi_dx(m,i);
  
         for (int j = nphi; j-- ; ){           
 
             double shapeFj = data.fPhi[j];
             double shapeFij = shapeFi * shapeFj;
             double wSUPGj = 0.;
-            for (int m=DIM; m--; ) wSUPGj += data.fSol[m] * dphi_dx(j,m);
+            for (int m=DIM; m--; ) wSUPGj += data.fSol[m] * dphi_dx(m,j);
             
             //Convection matrix
             double C = (wSUPGj * shapeFi + wSUPGi * wSUPGj * this->tSUPG_) * fDensity;
@@ -38,29 +38,29 @@ void NavierStokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
                 Stiffness((DIM+1)*i+k,(DIM+1)*j+k) += C * WJ;
                 double conv = 0.;
                 for (int m = DIM; m--; ) conv += data.fSol[m]*data.fDSolDx(k,m);
-
+    
                 for (int l = DIM; l--; ){
                     //Convection derivatives
                     double Cuu = (shapeFij * data.fDSolDx(k,l) + 
                                   aux1 * data.fDSolDx(k,l) +
-                                  aux2 * conv * data.fDPhiX0(i,l)) * fDensity;
+                                  aux2 * conv * data.fDPhiX0(l,i)) * fDensity;
 
                     //LSIC
-                    double KLS = data.fDPhiX0(i,k) * data.fDPhiX0(j,l) * this->tLSIC_ * fDensity;
+                    double KLS = data.fDPhiX0(k,i) * data.fDPhiX0(l,j) * this->tLSIC_ * fDensity;
 
                     Stiffness((DIM+1)*i+k,(DIM+1)*j+l) += (KLS + Cuu) * WJ;
                 }
                 //Gradient operator
-                double Q_SUPG = wSUPGi * data.fDPhiX0(j,k) * this->tSUPG_;
+                double Q_SUPG = wSUPGi * data.fDPhiX0(k,j) * this->tSUPG_;
 
                 Stiffness((DIM+1)*i+k,(DIM+1)*j+DIM) += Q_SUPG * WJ;
 
                 //PSPG stabilization
-                double G = data.fDPhiX0(i,k) * wSUPGj * this->tPSPG_;
+                double G = data.fDPhiX0(k,i) * wSUPGj * this->tPSPG_;
                 double Guu = 0.;
-                for (int m = DIM; m--; ) Guu += data.fDPhiX0(i,m) * data.fDSolDx(m,k) * shapeFj * this->tPSPG_;
+                for (int m = DIM; m--; ) Guu += data.fDPhiX0(m,i) * data.fDSolDx(m,k) * shapeFj * this->tPSPG_;
 
-                Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += (G + Guu) * WJ*0.;
+                Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += (G + Guu) * WJ;
             }
         };
     };
@@ -88,22 +88,22 @@ void NavierStokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         for (int k = DIM; k--; ){
             //Viscosity
             double K = 0.;
-            for (int l=DIM; l--; ) K += data.fDPhiX0(i,l) * data.fDSolDx(k,l) * fViscosity;
-            for (int l=DIM; l--; ) K += data.fDPhiX0(i,l) * data.fDSolDx(l,k) * fViscosity;
+            for (int l=DIM; l--; ) K += data.fDPhiX0(l,i) * data.fDSolDx(k,l) * fViscosity;
+            for (int l=DIM; l--; ) K += data.fDPhiX0(l,i) * data.fDSolDx(l,k) * fViscosity;
 
             //LSIC
-            double KLS = data.fDPhiX0(i,k) * divrU * this->tLSIC_ * fDensity;
+            double KLS = data.fDPhiX0(k,i) * divrU * this->tLSIC_ * fDensity;
 
             //Convection + SUPG
             double C = 0.;
             for (int l=DIM; l--; ) C += data.fDSolDx(k,l) * data.fSol[l] * shapeFi * fDensity;
             double conv = 0.;
-            for (int l=DIM; l--; ) conv += data.fSol[l] * data.fDPhiX0(i,l);
+            for (int l=DIM; l--; ) conv += data.fSol[l] * data.fDPhiX0(l,i);
             for (int l=DIM; l--; ) C += conv * data.fSol[l] * data.fDSolDx(k,l) * this->tSUPG_ * fDensity;
 
             //Pressure + SUPG
-            double P = - (data.fDPhiX0(i,k) * data.fSol[DIM]);
-            for (int l=DIM; l--; ) P += data.fDPhiX0(i,l) * data.fSol[l] * data.fDSolDx(DIM,k) * this->tSUPG_;
+            double P = - (data.fDPhiX0(k,i) * data.fSol[DIM]);
+            for (int l=DIM; l--; ) P += data.fDPhiX0(l,i) * data.fSol[l] * data.fDSolDx(DIM,k) * this->tSUPG_;
 
             //External force
             double F = (forcingF[k]) * shapeFi;
@@ -112,11 +112,11 @@ void NavierStokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         }
 
         double Q = divrU * shapeFi;
-        for (int l=DIM; l--; ) Q += data.fDPhiX0(i,l) * data.fDSolDx(DIM,l) * this->tPSPG_ / fDensity
-                                  + data.fDPhiX0(i,l) * (forcingF[l]/fDensity) * this->tPSPG_;
+        for (int l=DIM; l--; ) Q += data.fDPhiX0(l,i) * data.fDSolDx(DIM,l) * this->tPSPG_ / fDensity
+                                  + data.fDPhiX0(l,i) * (forcingF[l]/fDensity) * this->tPSPG_;
         for (int k=DIM; k--; )
             for (int l=DIM; l--; )
-                Q += data.fDPhiX0(i,k) * data.fSol[l] * data.fDSolDx(k,l) * this->tPSPG_;
+                Q += data.fDPhiX0(k,i) * data.fSol[l] * data.fDSolDx(k,l) * this->tPSPG_;
 
         Rhs[(DIM+1)*i+DIM] += -Q * WJ;
                             
@@ -134,8 +134,8 @@ int NavierStokes::VariableIndex(const std::string &name) const{
     if(!strcmp("Velocity",name.c_str()))           return 1;
     if(!strcmp("Pressure",name.c_str()))           return 2;
     
-    std::cout << "Post Process variable not implemented \n";
-    PanicButton();
+    // std::cout << "Post Process variable not implemented \n";
+    // PanicButton();
     return -1;
 };
 
@@ -148,7 +148,7 @@ int NavierStokes::NSolutionVariables(int var) const{
         return 1;
 
     default:
-        PanicButton();
+        // PanicButton();
         return -1;
     }
 };
