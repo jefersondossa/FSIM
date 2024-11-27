@@ -265,7 +265,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
             compel->ComputeSpatialDerivatives();
             compel->interpolateSolution();
             compel->interpolateSolDerivatives();
-            if (compel->IntegrationData().fNeedsDSol){
+            if (compel->IntegrationData().fNeedsTimeDerivatives){
                 compel->interpolateSolDTimeDerivatives();
             }
             

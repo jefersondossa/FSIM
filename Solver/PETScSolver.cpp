@@ -43,9 +43,9 @@ void PETScSolver::Solve(){
         PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
         break;
     case SolverType::EIterative:
-        KSPSetType(ksp,KSPFGMRES);
+        KSPSetType(ksp,KSPIBCGS);
         KSPGetPC(ksp, &pc);
-        PCSetType(pc,PCBJACOBI);
+        PCSetType(pc,PCJACOBI);
         KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
         break;
 

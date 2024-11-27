@@ -5,9 +5,15 @@
 #include <L2Projection.h>
 #include <Elasticity3D.h>
 #include <memory>
+static char help[] = "Solves a 3D cantilever beam problem";
 
-int main()
+int main(int argc, char **args)
 {
+#ifdef HAS_PETSC
+    // Starts main program invoking PETSc
+    PetscInitialize(&argc, &args, (char*)0, help);
+#endif
+
     std::unique_ptr<CompMesh> model = std::make_unique<CompMesh>();
 
     constexpr auto kVolumeMatId = 15;
@@ -44,7 +50,7 @@ int main()
 
     GmshTools::Read(*model, "../cantilever_3d_beam.msh");
 
-    LinearAnalysis an(model.get(), SolverType::ECholmod);
+    LinearAnalysis an(model.get(), SolverType::EIterative);
 
     an.Run();
 
@@ -52,5 +58,9 @@ int main()
     VectorNames = {"Displacement", "Stress"};
     VTUGenerator::PrintResults(model.get(), "cantilever_3d_beam", ScalarNames, VectorNames);
 
+#ifdef HAS_PETSC
+    //Finalize main program   
+    PetscFinalize();
+#endif
     return 0;
 }
