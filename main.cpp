@@ -62,6 +62,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "TransientNavierStokes.h"
 #include "LinearBeam.h"
 #include "LinearFrame.h"
+#include "PositionalFrame2D.h"
 #define USE_SNES
 
 int main(int argc, char **args) {
@@ -71,7 +72,7 @@ int main(int argc, char **args) {
     PetscInitialize(&argc, &args, (char*)0, help);
 #endif
 
-    #include "examples/airfoil.h"
+    // #include "examples/airfoil.h"
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
     // #include "examples/rectangle.h"
@@ -86,7 +87,7 @@ int main(int argc, char **args) {
     // #include "examples/stripfooting.h"
     // #include "examples/cantilever.h"
     // #include "examples/Beam.h"
-    // #include "examples/Frame.h"
+    #include "examples/Frame.h"
     // #include "examples/clamped_beam1.h"
     // #include "examples/beamArlequin.h"
     // #include "examples/building.h"

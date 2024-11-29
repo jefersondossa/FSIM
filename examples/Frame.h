@@ -11,8 +11,10 @@
 
     CompMesh* cmesh = new CompMesh(); 
 
-    LinearFrame * bhorizontal = new LinearFrame(5,1.,1.,3.);
-    LinearFrame * bvertical = new LinearFrame(4,1.,1.,3.);
+    // LinearFrame * bhorizontal = new LinearFrame(5,1.,1.,3.);
+    PositionalFrame2D * bhorizontal = new PositionalFrame2D(5,1.,1.,3.,1.);
+    // LinearFrame * bvertical = new LinearFrame(4,1.,1.,3.);
+    PositionalFrame2D * bvertical = new PositionalFrame2D(4,1.,1.,3.,1.);
     bvertical->SetForcingFunction(forcing); 
     //BC
     MatrixDouble val1(3,3);
@@ -20,7 +22,7 @@
     VecDouble val2(3);
     val2.setZero();
     //Left bottom
-    L2Projection * matbc1 = new L2Projection(3,1,0,val1,val2);
+    L2Projection * matbc1 = new L2Projection(3,1,BoundaryConditionType::kDirichlet,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
     
@@ -29,7 +31,7 @@
       
     GmshTools::Read(*cmesh,"../Portico.msh");
 
-    LinearAnalysis an(cmesh,SolverType::ELU);
+    LinearAnalysis an(cmesh,SolverType::EMumps);
    
     std::vector<std::string> ScalarNames, VectorNames;
     VectorNames = {"Displacement"};
