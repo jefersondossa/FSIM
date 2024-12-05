@@ -4,6 +4,8 @@ file(GLOB preprocess
     CompMeshTools.cpp
     GmshTools.h
     GmshTools.cpp
+    OpenFOAMWriter.h
+    OpenFOAMWriter.cpp
     # ProblemParameters.h
 )
 
