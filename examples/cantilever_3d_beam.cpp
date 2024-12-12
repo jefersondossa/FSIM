@@ -50,7 +50,7 @@ int main(int argc, char **args)
 
     GmshTools::Read(*model, "../cantilever_3d_beam.msh");
 
-    LinearAnalysis an(model.get(), SolverType::EIterative);
+    LinearAnalysis an(model.get(), SolverType::EMumps);
 
     an.Run();
 

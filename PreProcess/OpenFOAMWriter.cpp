@@ -1,19 +1,26 @@
 #include "OpenFOAMWriter.h"
 #include <filesystem> 
+#include <thread>
 
 OpenFOAMWriter::OpenFOAMWriter(std::string inputFile){
     fInputMsh = inputFile;
 
+    if (std::filesystem::exists("OpenFOAMRun")) {
+        // Delete the folder and its contents
+        std::filesystem::remove_all("OpenFOAMRun");
+        // std::cout << "Folder deleted successfully: " << folderPath << std::endl;
+    }
     std::filesystem::create_directory("OpenFOAMRun");
     std::filesystem::create_directory("OpenFOAMRun/constant");
     std::filesystem::create_directory("OpenFOAMRun/constant/geometry");
+    // std::filesystem::create_directory("OpenFOAMRun/constant/geometry/buildings.obj");
     std::filesystem::create_directory("OpenFOAMRun/0");
     std::filesystem::create_directory("OpenFOAMRun/system");
 
-    fOutputObj = "OpenFOAMRun/constant/geometry/buindings.obj";
+    fOutputObj = "OpenFOAMRun/constant/geometry/buildings.obj";
     //Delete the output file if it exists
     {
-        std::string command = "rm -f " + fOutputObj + ".gz"; 
+        std::string command = "rm -f OpenFOAMRun/constant/geometry/buildings.obj.gz"; 
         system(command.c_str());
     }
 }
@@ -138,7 +145,7 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
 
     //Compress obj file to .gz
     {
-        std::string command = "gzip " + fOutputObj; 
+        std::string command = "gzip -r OpenFOAMRun/constant/geometry/buildings.obj"; 
         system(command.c_str());
     }   
     
@@ -152,12 +159,21 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     double maxX, maxY, maxZ;
     double minX, minY, minZ;
     FindMaxMin(vertices, maxX, maxY, maxZ, minX, minY, minZ);
+    fMaxX = maxX;
+    fMaxY = maxY;
+    fMaxZ = maxZ;
+    fMinX = minX;
+    fMinY = minY;
+    fMinZ = minZ;
+    fDInlet = dInlet;
+    fDOutlet = dOutlet;
 
     minX -= dInlet;
     maxX += dInlet;
     minY -= dInlet;
     maxY += dOutlet;
     maxZ += dInlet;
+    
 
     int xCells = (maxX-minX)/cellSize;
     int yCells = (maxY-minY)/cellSize;
@@ -167,9 +183,9 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     outfile << "  =========                 |\n";
     outfile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
     outfile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
-    outfile << "    \\\\  /    A nd           | Version:  8\n";
+    outfile << "    \\\\  /    A nd           | Version:  11\n";
     outfile << "     \\\\/     M anipulation  |\n";
-    outfile << "\\*---------------------------------------------------------------------------*/\n";
+    outfile << "//---------------------------------------------------------------------------*/\n";
     outfile << "FoamFile\n";
     outfile << "{\n";
     outfile << "    format      ascii;\n";
@@ -285,16 +301,16 @@ bool OpenFOAMWriter::UInitial(VecDouble &internalField){
     UFile << "  =========                 |\n";
     UFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
     UFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
-    UFile << "    \\\\  /    A nd           | Version:  8\n";
+    UFile << "    \\\\  /    A nd           | Version:  11\n";
     UFile << "     \\\\/     M anipulation  |\n";
-    UFile << "\\*---------------------------------------------------------------------------*/\n";
+    UFile << "//---------------------------------------------------------------------------*/\n";
     UFile << "FoamFile\n";
     UFile << "{\n";
     UFile << "    format      ascii;\n";
     UFile << "    class       volVectorField;\n";
     UFile << "    object      U;\n";
     UFile << "}\n";
-    UFile << "\\*---------------------------------------------------------------------------*/\n";
+    UFile << "//---------------------------------------------------------------------------*/\n";
     UFile << "\n\n";
     UFile << "dimensions      [0 1 -1 0 0 0 0];\n";
     UFile << "internalField   uniform (" << internalField[0] << " " << internalField[1] << " " << internalField[2] << ");\n";
@@ -303,7 +319,7 @@ bool OpenFOAMWriter::UInitial(VecDouble &internalField){
     UFile << "    inlet\n";
     UFile << "    {\n";
     UFile << "        type            fixedValue;\n";
-    UFile << "        value           uniform uniform (" << internalField[0] << " " << internalField[1] << " " << internalField[2] << ");\n";
+    UFile << "        value           uniform (" << internalField[0] << " " << internalField[1] << " " << internalField[2] << ");\n";
     UFile << "    }\n";
     UFile << "\n";
     UFile << "    outlet\n";
@@ -336,16 +352,16 @@ bool OpenFOAMWriter::pInitial(double puniform){
     PFile << "  =========                 |\n";
     PFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
     PFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
-    PFile << "    \\\\  /    A nd           | Version:  8\n";
+    PFile << "    \\\\  /    A nd           | Version:  11\n";
     PFile << "     \\\\/     M anipulation  |\n";
-    PFile << "\\*---------------------------------------------------------------------------*/\n";
+    PFile << "//---------------------------------------------------------------------------*/\n";
     PFile << "FoamFile\n";
     PFile << "{\n";
     PFile << "    format      ascii;\n";
     PFile << "    class       volScalarField;\n";
     PFile << "    object      p;\n";
     PFile << "}\n";
-    PFile << "\\*---------------------------------------------------------------------------*/\n";
+    PFile << "//---------------------------------------------------------------------------*/\n";
     PFile << "\n\n";
     PFile << "dimensions      [0 2 -2 0 0 0 0];\n";
     PFile << "internalField   uniform " << puniform << ";\n";
@@ -388,16 +404,16 @@ bool OpenFOAMWriter::nutInitial(double  nutuniform){
     nutFile << "  =========                 |\n";
     nutFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
     nutFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
-    nutFile << "    \\\\  /    A nd           | Version:  8\n";
+    nutFile << "    \\\\  /    A nd           | Version:  11\n";
     nutFile << "     \\\\/     M anipulation  |\n";
-    nutFile << "\\*---------------------------------------------------------------------------*/\n";
+    nutFile << "//---------------------------------------------------------------------------*/\n";
     nutFile << "FoamFile\n";
     nutFile << "{\n";
     nutFile << "    format      ascii;\n";
     nutFile << "    class       volScalarField;\n";
     nutFile << "    object      nut;\n";
     nutFile << "}\n";
-    nutFile << "\\*---------------------------------------------------------------------------*/\n";
+    nutFile << "//---------------------------------------------------------------------------*/\n";
     nutFile << "\n\n";
     nutFile << "dimensions      [0 2 -1 0 0 0 0];\n";
     nutFile << "internalField   uniform " << nutuniform << ";\n";
@@ -438,16 +454,16 @@ bool OpenFOAMWriter::kInitial(double kuniform){
     kFile << "  =========                 |\n";
     kFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
     kFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
-    kFile << "    \\\\  /    A nd           | Version:  8\n";
+    kFile << "    \\\\  /    A nd           | Version:  11\n";
     kFile << "     \\\\/     M anipulation  |\n";
-    kFile << "\\*---------------------------------------------------------------------------*/\n";
+    kFile << "//---------------------------------------------------------------------------*/\n";
     kFile << "FoamFile\n";
     kFile << "{\n";
     kFile << "    format      ascii;\n";
     kFile << "    class       volScalarField;\n";
     kFile << "    object      k;\n";
     kFile << "}\n";
-    kFile << "\\*---------------------------------------------------------------------------*/\n";
+    kFile << "//---------------------------------------------------------------------------*/\n";
     kFile << "\n\n";
     kFile << "dimensions      [0 2 -2 0 0 0 0];\n";
     kFile << "internalField   uniform " << kuniform << ";\n";
@@ -490,16 +506,16 @@ bool OpenFOAMWriter::omegaInitial(double omegauniform){
     omegaFile << "  =========                 |\n";
     omegaFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
     omegaFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
-    omegaFile << "    \\\\  /    A nd           | Version:  8\n";
+    omegaFile << "    \\\\  /    A nd           | Version:  11\n";
     omegaFile << "     \\\\/     M anipulation  |\n";
-    omegaFile << "\\*---------------------------------------------------------------------------*/\n";
+    omegaFile << "//---------------------------------------------------------------------------*/\n";
     omegaFile << "FoamFile\n";
     omegaFile << "{\n";
     omegaFile << "    format      ascii;\n";
     omegaFile << "    class       volScalarField;\n";
     omegaFile << "    object      omega;\n";
     omegaFile << "}\n";
-    omegaFile << "\\*---------------------------------------------------------------------------*/\n";
+    omegaFile << "//---------------------------------------------------------------------------*/\n";
     omegaFile << "\n\n";
     omegaFile << "dimensions      [0 0 -1 0 0 0 0];\n";
     omegaFile << "internalField   uniform " << omegauniform << ";\n";
@@ -531,8 +547,729 @@ bool OpenFOAMWriter::omegaInitial(double omegauniform){
     return true;
 }
 
-bool OpenFOAMWriter::WriteConstant(){
+bool OpenFOAMWriter::WriteConstant(double density, double viscosity){
 
+    WriteMomentumTransport();
+    WritePhysicalProperties(density, viscosity);
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteMomentumTransport(){
+    std::ofstream outFile("OpenFOAMRun/constant/momentumTransport");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open constant/momentumTransport file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      momentumTransport;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------//\n";
+    outFile << "\n\n";
+    outFile << "simulationType  RAS;\n";
+    outFile << "RAS\n";
+    outFile << "{\n";
+    outFile << "    RASModel        kOmegaSST;\n";
+    outFile << "    turbulence      on;\n";
+    outFile << "    printCoeffs     on;\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WritePhysicalProperties(double density, double viscosity){
+
+    std::ofstream outFile("OpenFOAMRun/constant/physicalProperties");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open constant/physicalProperties file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      physicalProperties;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------//\n";
+    outFile << "\n\n";
+    outFile << "transportModel  Newtonian;\n";
+    outFile << "nu              nu [ 0 2 -1 0 0 0 0 ] " << viscosity << ";\n";
+    outFile << "rho             rho [ 1 -3 0 0 0 0 0 ] " << density << ";\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteSurfaceFeaturesDict(){
+    std::ofstream outFile("OpenFOAMRun/system/surfaceFeaturesDict");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/surfaceFeaturesDict file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      surfaceFeaturesDict;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------//\n";
+    outFile << "\n\n";
+    // outFile << "surfaceFeatures\n";
+    // outFile << "{\n";
+    outFile << "    surfaces (\"buildings.obj\");\n";
+    outFile << "    #includeEtc \"caseDicts/surface/surfaceFeaturesDict.cfg\"\n";
+    // outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteControlDict(double dt, double endTime, double writeInterval){
+    std::ofstream outFile("OpenFOAMRun/system/controlDict");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/controlDict file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      controlDict;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------//\n";
+    outFile << "\n\n";
+    outFile << "application     foamRun;\n";
+    outFile << "solver          incompressibleFluid;\n";
+
+    outFile << "startFrom       latestTime;\n";
+    outFile << "startTime       0;\n";
+    outFile << "stopAt          endTime;\n";
+    outFile << "endTime         " << endTime <<";\n";
+    outFile << "deltaT          " << dt << ";\n";
+    outFile << "writeControl    adjustableRunTime;\n";
+    outFile << "writeInterval   "<< writeInterval << ";\n";
+    outFile << "purgeWrite      0;\n";
+    outFile << "writeFormat     ascii;\n";
+    outFile << "writePrecision  8;\n";
+    outFile << "writeCompression off;\n";
+    outFile << "timeFormat      general;\n";
+    outFile << "timePrecision   6;\n";
+    outFile << "runTimeModifiable true;\n";
+    outFile << "adjustTimeStep  yes;\n";
+    outFile << "maxCo           20;\n";
+    
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+    outFile << "///////////////////////////////////////////////////////////////////////////\n";
+    outFile << "functions\n";
+    outFile << "{\n";
+    outFile << "minmaxdomain_scalar\n";
+    outFile << "{\n";
+    outFile << "    type            volFieldValue;\n";
+    outFile << "    libs            (\"libfieldFunctionObjects.so\");\n";
+    outFile << " \n";
+    outFile << "    enabled 	    true; 	//true or false\n";
+    outFile << "    log             true;	//write to screen\n";
+    outFile << "    writeControl    timeStep; \n";
+    outFile << "    writeInterval   1; \n\n";
+    outFile << "    writeFields     false;	//write solution to field value - Not needed when only reporting value to screen\n";
+    outFile << "    writeLocation   true;	//write location in the output file \n";
+    outFile << "    select      all; \n";
+    outFile << "    operation       none; \n\n";
+    outFile << "fields \n";
+    outFile << "( \n";
+    outFile << " p k omega nut\n";
+    outFile << " );\n";
+    outFile << "} \n\n";
+    outFile << "minmaxdomain_vector \n";
+    outFile << "{ \n";
+    outFile << "    type            volFieldValue; \n";
+    outFile << "    libs            (\"libfieldFunctionObjects.so\"); \n";
+    outFile << "    enabled 	    true; 	//true or false \n";
+    outFile << "    log             true;	//write to screen \n";
+    outFile << "    writeControl    timeStep; \n";
+    outFile << "    writeInterval   1; \n";
+    outFile << "    writeFields     false;	//write solution to field value - Not needed when only reporting value to screen \n";
+    outFile << "    writeLocation   true;	//write location in the output file \n";
+    outFile << "    select      all; \n";
+    outFile << "    operation       none; \n";
+    outFile << "    fields \n";
+    outFile << "    (U); \n";
+    outFile << "} \n";
+    outFile << "mindomain_scalar \n";
+    outFile << "{ \n";
+    outFile << "    $minmaxdomain_scalar \n";
+    outFile << "    operation       min; \n";
+    outFile << "} \n";
+    outFile << "mindomain_vector \n";
+    outFile << "{ \n";
+    outFile << "    $minmaxdomain_vector \n";
+    outFile << "    operation       minMag; \n";
+    outFile << "} \n";
+    outFile << "maxdomain_scalar \n";
+    outFile << "{ \n";
+    outFile << "    $minmaxdomain_scalar \n";
+    outFile << "    operation       max; \n";
+    outFile << "} \n";
+    outFile << "maxdomain_vector \n";
+    outFile << "{ \n";
+    outFile << "    $minmaxdomain_vector \n";
+    outFile << "    operation       maxMag; \n";
+    outFile << "} \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "forces_object \n";
+    outFile << "{ \n";
+    outFile << "    type forces; \n";
+    outFile << "    libs (\"libforces.so\"); \n\n";
+    outFile << "    enabled true;\n";
+    outFile << "    writeControl   timeStep; \n";
+    outFile << "    writeInterval  1; \n";
+    outFile << "    patches (\"square\"); \n";
+    outFile << "    pName p; \n";
+    outFile << "    Uname U; \n";
+    outFile << "    ////Density only for incompressible flows \n";
+    outFile << "    rho rhoInf; \n";
+    outFile << "    rhoInf 1; \n";
+    outFile << "    CofR (0 0 0);//Centre of rotation  \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "probes1 \n";
+    outFile << "{ \n";
+    outFile << "    type probes; \n";
+    outFile << "    libs (\"libsampling.so\"); \n";
+    outFile << "    probeLocations \n";
+    outFile << "    (\n        (0.025 0 0)\n        (0.05 0 0)\n        (0.075 0 0)\n        (0.1 0 0)\n        (0.15 0 0)\n        (0.3 0 0)\n        (0.5 0 0)\n); \n";
+    outFile << "    fields \n";
+    outFile << "    (p U); \n";
+    outFile << "    writeControl       timeStep; \n";
+    outFile << "    writeInterval      1; \n";
+    outFile << "} \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "//Saves yplus field at the given interval \n";
+    outFile << "    yplus_field \n";
+    outFile << "    { \n";
+    outFile << "         type yPlus;\n";
+    outFile << "        libs (\"libutilityFunctionObjects.so\"); \n";
+    outFile << "        enabled true; \n";
+    outFile << "        writeControl outputTime; \n";
+    outFile << "    } \n";
+    outFile << "///////////////////////////////////////////////////////////////////////////\n";
+    outFile << "//Print y+ stats every iteration without saving the field \n";
+    outFile << "    yplus_stats \n";
+    outFile << "    { \n";
+    outFile << "        type yPlus; \n";
+    outFile << "        libs (\"libutilityFunctionObjects.so\"); \n";
+    outFile << "        enabled true; \n";
+    outFile << "        writeControl timeStep; \n";
+    outFile << "        writeInterval 1; \n";
+    outFile << "        objects (); \n";
+    outFile << "        log true; \n";
+    outFile << "    } \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "Q\n{ \n";
+    outFile << "    type                Q; \n";
+    outFile << "    libs  (\"libutilityFunctionObjects.so\"); \n";
+    outFile << "    enabled true; \n";
+    outFile << "    writeControl outputTime; \n";
+    outFile << "} \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "cellVol\n{ \n";
+    outFile << "    type                writeCellVolumes; \n";
+    outFile << "    libs  (\"libutilityFunctionObjects.so\"); \n";
+    outFile << "    enabled true; \n";
+    outFile << "    writeControl outputTime; \n";
+    outFile << "} \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "wallShearStress1\n{ \n";
+    outFile << "    type                wallShearStress; \n";
+    outFile << "    libs  (\"libutilityFunctionObjects.so\"); \n";
+    outFile << "    enabled true; \n";
+    outFile << "    writeControl outputTime; \n";
+    outFile << "} \n";
+    outFile << "/////////////////////////////////////////////////////////////////////////// \n";
+    outFile << "    fieldAverage \n";
+    outFile << "    { \n";
+    outFile << "        type            fieldAverage; \n";
+    outFile << "        libs (\"libfieldFunctionObjects.so\"); \n";
+    outFile << "        enabled         true; \n";
+    outFile << "        writeControl   outputTime; \n";
+    outFile << "	    timeStart       2; \n";
+    outFile << "        fields \n";
+    outFile << "        ( \n";
+    outFile << "            U \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  on; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            p \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  on; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            nut \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  on; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            k \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  off; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            omega \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  off; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            Q \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  off; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            yPlus \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  off; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "            wallShearStress \n";
+    outFile << "            { \n";
+    outFile << "                mean        on; \n";
+    outFile << "                prime2Mean  off; \n";
+    outFile << "                base        time; \n";
+    outFile << "            } \n";
+    outFile << "        ); \n";
+    outFile << "    } \n";
+    outFile << "}; \n";
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteFvSchemes(){
+    std::ofstream outFile("OpenFOAMRun/system/fvSchemes");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/fvSchemes file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      fvSchemes;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "\n\n";
+    outFile << "ddtSchemes\n";
+    outFile << "{\n";
+    outFile << "    default         Euler;\n";
+    outFile << "}\n";
+    outFile << "\n";
+    outFile << "gradSchemes\n";
+    outFile << "{\n";
+    outFile << "    default         cellLimited Gauss linear 1;\n";
+    outFile << "    grad(p)         cellLimited Gauss linear 0.5;\n";
+    outFile << "}\n";
+    outFile << "\n";
+    outFile << "divSchemes\n";
+    outFile << "{\n";
+    outFile << "    default         none;\n";
+    outFile << "    div(phi,U)      Gauss linearUpwindV default;\n";
+    outFile << "    div(phi,k)      Gauss upwind;\n";
+    outFile << "    div(phi,omega)  Gauss upwind;\n";
+    outFile << "    div((nuEff*dev(T(grad(U))))) Gauss linear;\n";
+    outFile << "}\n";
+    outFile << "\n";
+    outFile << "laplacianSchemes\n";
+    outFile << "{\n";
+    outFile << "    default         Gauss linear limited 1;\n";
+    outFile << "}\n";
+    outFile << "\n";
+    outFile << "interpolationSchemes\n";
+    outFile << "{\n";
+    outFile << "    default         linear;\n";
+    outFile << "}\n";
+    outFile << "\n";
+    outFile << "snGradSchemes\n";
+    outFile << "{\n";
+    outFile << "    default         limited 1;\n";
+    outFile << "}\n";
+    outFile << "\n";
+    outFile << "wallDist\n";
+    outFile << "{\n";
+    outFile << "    method          meshWave;\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteFvSolution(){
+    std::ofstream outFile("OpenFOAMRun/system/fvSolution");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/fvSolution file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      fvSolution;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "\n\n";
+    outFile << "solvers\n";
+    outFile << "{\n";
+    outFile << "    p\n";
+    outFile << "    {\n";
+    outFile << "        solver          GAMG;\n";
+    outFile << "        tolerance       1e-6;\n";
+    outFile << "        relTol          0.01;\n";
+    outFile << "        smoother        GaussSeidel;\n";
+    outFile << "        nPreSweeps      0;\n";
+    outFile << "        nPostSweeps     2;\n";
+    outFile << "        cacheAgglomeration on;\n";
+    outFile << "        agglomerator    faceAreaPair;\n";
+    outFile << "        nCellsInCoarsestLevel 100;\n";
+    outFile << "        mergeLevels     1;\n";
+    outFile << "        minIter		 3;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "    pFinal\n";
+    outFile << "    {\n";
+    outFile << "        $p;\n";
+    outFile << "        tolerance       1e-6;\n";
+    outFile << "        relTol          0;\n";
+    outFile << "        minIter	        1;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "    \"(U|UFinal)\"\n";
+    outFile << "    {\n";
+    outFile << "        solver          PBiCGStab;\n";
+    outFile << "        preconditioner  DILU;\n";
+    outFile << "        tolerance       1e-8;\n";
+    outFile << "        relTol          0;\n";
+    outFile << "        minIter	        3;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "    k\n";
+    outFile << "    {\n";
+    outFile << "        solver          PBiCGStab;\n";
+    outFile << "        preconditioner  DILU;\n";
+    outFile << "        tolerance       1e-8;\n";
+    outFile << "        relTol          0.001;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "    kFinal\n";
+    outFile << "    {\n";
+    outFile << "        solver          PBiCGStab;\n";
+    outFile << "        preconditioner  DILU;\n";
+    outFile << "        tolerance       1e-8;\n";
+    outFile << "        relTol          0;\n";
+    outFile << "        minIter	        2;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "    omega\n";
+    outFile << "    {\n";
+    outFile << "        solver          PBiCG;\n";
+    outFile << "        preconditioner  DILU;\n";
+    outFile << "        tolerance       1e-8;\n";
+    outFile << "        relTol          0;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "    omegaFinal\n";
+    outFile << "    {\n";
+    outFile << "        solver          PBiCGStab;\n";
+    outFile << "        preconditioner  DILU;\n";
+    outFile << "        tolerance       1e-8;\n";
+    outFile << "        relTol          0;\n";
+    outFile << "        minIter	        2;\n";
+    outFile << "    }\n";
+    outFile << "\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "PIMPLE\n";
+    outFile << "{\n";
+    outFile << "    momentumPredictor yes;\n";
+    outFile << "    consistent yes;\n";
+    outFile << "    nOuterCorrectors 20;\n";
+    outFile << "    nCorrectors 2;\n";
+    outFile << "    nNonOrthogonalCorrectors 1;\n";
+    outFile << "    outerCorrectorResidualControl\n";
+    outFile << "    {\n";
+    outFile << "        \"(U|p)\"\n";
+    outFile << "        {\n";
+    outFile << "            tolerance 1e-3;\n";
+    outFile << "            relTol 0.01;\n";
+    outFile << "        }\n";
+    outFile << "    }\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "relaxationFactors";
+    outFile << "{\n";
+    outFile << "    fields\n";
+    outFile << "    {\n";
+    outFile << "        \".*\"	0.9;\n";
+    outFile << "    }\n";
+    outFile << "    equations\n";
+    outFile << "    {\n";
+    outFile << "        \".*\"	0.9;\n";
+    outFile << "    }\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteSnappyHexMeshDict(){
+    std::ofstream outFile("OpenFOAMRun/system/snappyHexMeshDict");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/snappyHexMeshDict file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      snappyHexMeshDict;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "\n\n";
+    outFile << "#includeEtc \"caseDicts/mesh/generation/snappyHexMeshDict.cfg\"\n\n\n";
+    outFile << "castellatedMesh on;\n";
+    outFile << "snap            on;\n";
+    outFile << "addLayers       off;\n";
+    outFile << "\n\n";
+    outFile << "geometry\n";
+    outFile << "{\n";
+    outFile << "    buildings\n";
+    outFile << "    {\n";
+    outFile << "        type triSurfaceMesh;\n";
+    outFile << "        file \"buildings.obj\";\n";
+    outFile << "    }\n";
+    outFile << "    refinementBox\n";
+    outFile << "    {\n";
+    outFile << "        type searchableBox;\n";
+    outFile << "        min  (" << fMinX-fRefProportion*fDInlet << " " << fMinY-fRefProportion*fDInlet << " " << fMinZ-fRefProportion*fDInlet << ");\n";
+    outFile << "        max  (" << fMaxX+fRefProportion*fDInlet << " " << fMaxY+fRefProportion*fDOutlet << " " << fMaxZ+fRefProportion*fDInlet << ");\n";
+    outFile << "    }\n";
+    outFile << "};\n";
+    outFile << "\n\n";
+    outFile << "castellatedMeshControls\n";
+    outFile << "{\n";
+    outFile << "    features\n";
+    outFile << "    (\n";
+    outFile << "        {file  \"buildings.eMesh\"; level 1; }\n";
+    outFile << "    );\n";
+    outFile << "    refinementSurfaces\n";
+    outFile << "    {\n";
+    outFile << "        buildings\n";
+    outFile << "        {\n";
+    outFile << "            level (3 3);\n";
+    outFile << "            patchInfo { type wall; }\n";
+    outFile << "        }\n";
+    outFile << "    }\n";
+    outFile << "    refinementRegions\n";
+    outFile << "    {\n";
+    outFile << "        refinementBox\n";
+    outFile << "        {\n";
+    outFile << "            mode inside;\n";
+    outFile << "            level 2;\n";
+    outFile << "        }\n";
+    outFile << "    }\n";
+    outFile << "    insidePoint (1 1 1);\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "snapControls\n";
+    outFile << "{\n";
+    outFile << "    explicitFeatureSnap    true;\n";
+    outFile << "    implicitFeatureSnap    false;\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "addLayersControls\n";
+    outFile << "{\n";
+    outFile << "    layers\n";
+    outFile << "    {\n";
+    outFile << "        \"CAD.*\"\n";
+    outFile << "        {\n";
+    outFile << "            nSurfaceLayers 2;\n";
+    outFile << "        }\n";
+    outFile << "    }\n";
+    outFile << "    relativeSizes       true;\n";
+    outFile << "    expansionRatio      1.2;\n";
+    outFile << "    finalLayerThickness 0.5;\n";
+    outFile << "    minThickness        0.001;\n";
+    outFile << "}\n";
+    outFile << "\n\n";
+    outFile << "meshQualityControls\n";
+    outFile << "{}\n";
+    outFile << "\n\n";
+    outFile << "writeFlags\n";
+    outFile << "();\n";
+    outFile << "\n\n";
+    outFile << "mergeTolerance 1e-6;\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteMeshQualityDict(){
+    std::ofstream outFile("OpenFOAMRun/system/meshQualityDict");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/meshQualityDict file." << std::endl;
+        return false;
+    }
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      meshQualityDict;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "\n\n";
+    outFile << "#includeEtc \"caseDicts/mesh/generation/meshQualityDict.cfg\"\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteDecomposeParDict(){
+    std::ofstream outFile("OpenFOAMRun/system/decomposeParDict");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/decomposeParDict file." << std::endl;
+        return false;
+    }
+    fNSubdomains = std::thread::hardware_concurrency()/2;
+
+    // fNSubdomains = sysconf(_SC_NPROCESSORS_ONLN);
+
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      decomposeParDict;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "\n\n";
+    outFile << "numberOfSubdomains " << fNSubdomains << ";\n";
+    outFile << "\n\n";
+    outFile << "method          scotch;\n";
+    outFile << "\n\n";
+    outFile << "// ************************************************************************* //\n";
+
+
+    return true;
+}
+
+bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSize, double refproportion, double dt, double endTime, double writeInterval){
+    fRefProportion = refproportion;
+    WriteBlockMeshDict(dInlet, dOutlet, cellSize);
+    WriteControlDict(dt, endTime, writeInterval);
+    WriteFvSchemes();
+    WriteFvSolution();
+    WriteSurfaceFeaturesDict();
+    WriteSnappyHexMeshDict();
+    WriteMeshQualityDict();
+    WriteDecomposeParDict();
 
     return true;
 }

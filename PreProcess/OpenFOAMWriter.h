@@ -23,7 +23,11 @@ class OpenFOAMWriter {
 protected:
     std::string fInputMsh;
     std::string fOutputObj;
-
+    double fMaxX, fMaxY, fMaxZ;
+    double fMinX, fMinY, fMinZ;
+    double fDInlet, fDOutlet;
+    double fRefProportion;
+    int fNSubdomains;
 
 public:
     //Default constructor and destructor
@@ -43,8 +47,7 @@ public:
     //Find Max and Min coordinates of the building
     void FindMaxMin(const std::vector<Vertex> &vertices, double &maxX, double &maxY, double &maxZ, double &minX, double &minY, double &minZ);
 
-    bool WriteBlockMeshDict(double dInlet, double dOutlet, double cellSize);
-
+    //folder 0
     bool WriteInitialConditions(VecDouble &internalField, double puniform, double nutuniform, double kuniform, double omegauniform);
     bool UInitial(VecDouble &internalField);
     bool pInitial(double puniform);
@@ -52,8 +55,24 @@ public:
     bool kInitial(double kuniform);
     bool omegaInitial(double omegauniform);
 
-    bool WriteConstant();
-    
+    //folder constant
+    bool WriteConstant(double density, double viscosity);
+    bool WriteMomentumTransport();
+    bool WritePhysicalProperties(double density, double viscosity); 
+
+    //folder system
+    bool WriteSystem(double dInlet, double dOutlet, double cellSize, double refproportion, double dt, double endTime, double writeInterval);
+    bool WriteBlockMeshDict(double dInlet, double dOutlet, double cellSize);
+    bool WriteSurfaceFeaturesDict();
+    bool WriteControlDict(double dt, double endTime, double writeInterval);
+    bool WriteFvSchemes();
+    bool WriteFvSolution();
+    bool WriteSnappyHexMeshDict();
+    bool WriteMeshQualityDict();
+    bool WriteDecomposeParDict();
+
+    int GetNSubdomains() {return fNSubdomains;};
+
 };
 
 #endif

@@ -7,6 +7,8 @@ EigenSpMatrix::EigenSpMatrix(int64_t rows, int64_t cols) : MatrixType(rows,cols)
     fMatrix.reserve(VectorXi::Constant(cols, 128));
     fRhs.resize(rows, 1);
     fSolution.resize(rows, 1);
+    fRhs.setZero();
+    fSolution.setZero();
 }
 
 EigenSpMatrix::~EigenSpMatrix()
