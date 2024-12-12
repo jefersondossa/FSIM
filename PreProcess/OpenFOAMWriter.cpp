@@ -169,9 +169,9 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     fDOutlet = dOutlet;
 
     minX -= dInlet;
-    maxX += dInlet;
+    maxX += dOutlet;
     minY -= dInlet;
-    maxY += dOutlet;
+    maxY += dInlet;
     maxZ += dInlet;
     
 
@@ -1128,7 +1128,7 @@ bool OpenFOAMWriter::WriteSnappyHexMeshDict(){
     outFile << "    {\n";
     outFile << "        type searchableBox;\n";
     outFile << "        min  (" << fMinX-fRefProportion*fDInlet << " " << fMinY-fRefProportion*fDInlet << " " << fMinZ-fRefProportion*fDInlet << ");\n";
-    outFile << "        max  (" << fMaxX+fRefProportion*fDInlet << " " << fMaxY+fRefProportion*fDOutlet << " " << fMaxZ+fRefProportion*fDInlet << ");\n";
+    outFile << "        max  (" << fMaxX+fRefProportion*fDOutlet << " " << fMaxY+fRefProportion*fDInlet << " " << fMaxZ+fRefProportion*fDInlet << ");\n";
     outFile << "    }\n";
     outFile << "};\n";
     outFile << "\n\n";
