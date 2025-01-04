@@ -10,8 +10,9 @@
 Analysis::Analysis(CompMesh *cmesh, SolverType stype){
     fMeshVector.resize(1);
     fMeshVector[0] = cmesh;
+    fReducedArlequin = false;
+    fArlequin = nullptr;
     fSolverType = stype;
-    AllocateMonomodel();
 };
 
 Analysis::Analysis(Arlequin *arl, SolverType stype, bool reduced){
@@ -19,7 +20,6 @@ Analysis::Analysis(Arlequin *arl, SolverType stype, bool reduced){
     fArlequin = arl;
     fMeshVector = fArlequin->MeshVec();
     fSolverType = stype;
-    AllocateArlequin();        
 };
 
 
@@ -50,6 +50,7 @@ void Analysis::Solve(){
 #endif
     fSolver->Solve();
     delete fSolver;
+    fSolver = nullptr;
 }
 
 void Analysis::AllocateMonomodel(){
@@ -57,7 +58,11 @@ void Analysis::AllocateMonomodel(){
     int numDOF = fMeshVector[0]->NGlobalDOF();
     std::cout << "Number of DOF = " << numDOF << std::endl;
 
-
+    if(fGlobalMatrix)
+    {
+        delete fGlobalMatrix;
+        fGlobalMatrix = nullptr;
+    }
 
     if (fSolverType == SolverType::EUmfpack){
 #ifdef HAS_PETSC
@@ -87,6 +92,11 @@ void Analysis::AllocateMonomodel(){
 
 
 void Analysis::AllocateArlequin(){
+    if(fGlobalMatrix)
+    {
+        delete fGlobalMatrix;
+        fGlobalMatrix = nullptr;
+    }
 
     int64_t numDOFGlobal = fMeshVector[0]->NGlobalDOF();
     int64_t numDOFLocal = fMeshVector[1]->NGlobalDOF();
@@ -189,6 +199,11 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
 void Analysis::Run(){
     std::cout << "Allocating problem..." << std::endl;
     std::clock_t t3 = std::clock();
+    if(fArlequin) {
+        AllocateArlequin();
+    } else {
+        AllocateMonomodel();
+    }
     Compute();
     std::clock_t t4 = std::clock();
     std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";

@@ -10,7 +10,7 @@ class CompMesh;
 
 class Element{
 protected:
-    CompMesh *fMesh;
+    CompMesh *fMesh = nullptr;
     VecInt        fConnect; //Velocity mesh connectivity 
     int64_t       fIndex;             //Element index
 
@@ -23,7 +23,7 @@ protected:
 
     std::vector<int64_t> fNeighborElements;
     /// The weak form associated with the element
-    WeakForm *fWeakForm;
+    WeakForm *fWeakForm = nullptr;
     IntPointData  fIntegData;
 
     int fPrintType;  
@@ -31,7 +31,7 @@ protected:
 public:
     Element() = default;
 
-    ~Element() = default;
+    virtual ~Element() = default;
 
     int &NLocDOF() {
         return nLocDOF;

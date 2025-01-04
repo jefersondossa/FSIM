@@ -3,80 +3,89 @@
 
 #include "DataTypes.h"
 #include "Tensor.h"
+#include <optional>
 
 class IntPointData {
 
 public:
     int fIndex;
     /// @brief Jacobian transform related to the initial mesh
-    MatrixDouble fA0;
+    MatrixDouble fA0 = {};
     /// @brief Inverse Jacobian transform related to the initial mesh
-    MatrixDouble fA0Inv;
+    MatrixDouble fA0Inv = {};
     /// @brief Element local axes related to the initial mesh
-    MatrixDouble fAxes0;
+    MatrixDouble fAxes0 = {};
    
     /// @brief Jacobian transform related to the current mesh
-    MatrixDouble fA1;
-    MatrixDouble fA1Prev;
+    MatrixDouble fA1 = {};
+    MatrixDouble fA1Prev = {};
     /// @brief Element local axes related to the current mesh
-    MatrixDouble fAxes1;
-    MatrixDouble fAxes1Prev;
+    MatrixDouble fAxes1 = {};
+    MatrixDouble fAxes1Prev = {};
 
     /// @brief Initial element Jacobian determinant
-    double fJacA0;
+    double fJacA0 = {};
     /// @brief Current element Jacobian determinant
-    double fJacA1;
+    double fJacA1 = {};
 
     /// @brief Integration weight
-    double fWeight;
+    double fWeight = {};
     /// @brief Integration point coordinates in local axes
-    VecDouble fAdimCoord;
+    VecDouble fAdimCoord = {};
 
     /// @brief Integration point in the initial mesh
-    VecDouble fX;
+    VecDouble fX = {};
     /// @brief Integration point in the current mesh
-    VecDouble fX1;
+    VecDouble fX1 = {};
     
     /// @brief Shape functions
-    VecDouble    fPhi;
+    VecDouble    fPhi = {};
     /// @brief Shape functions derivatives related to the local axes
-    MatrixDouble fDPhi;
+    MatrixDouble fDPhi = {};
     /// @brief Shape function derivatives related to the initial mesh
-    MatrixDouble fDPhiX0;
+    MatrixDouble fDPhiX0 = {};
     /// @brief Shape function derivatives related to the current mesh
-    MatrixDouble fDPhiX1;
+    MatrixDouble fDPhiX1 = {};
 
     /// @brief Arlequin Weight function
-    VecDouble fWeightFunction;
+    VecDouble fWeightFunction = {};
     /// @brief Previous time step Arlequin weight function
-    VecDouble fPrevWeightFunction;
+    VecDouble fPrevWeightFunction = {};
     /// @brief Signaled distance
-    VecDouble fDistFunction;
+    VecDouble fDistFunction = {};
 
     /// @brief Solution
-    VecDouble fSol;
+    VecDouble fSol = {};
+    /// @brief Solution in each node
+    VecDouble fSolNodes = {};
     /// @brief Solution gradient
-    MatrixDouble fDSolDx;
+    MatrixDouble fDSolDx = {};
     /// @brief Solution first time derivative
-    VecDouble fDSolDt;
+    VecDouble fDSolDt = {};
     /// @brief Solution second time derivative
-    VecDouble fDSolDDt;
+    VecDouble fDSolDDt = {};
     /// @brief Previous time/load step Solution
-    VecDouble fSolPrev;
+    VecDouble fSolPrev = {};
     /// @brief Solution gradient
-    MatrixDouble fDSolDxPrev;
+    MatrixDouble fDSolDxPrev = {};
 
     /// @brief Flags implemented to compute or not the solution and its derivatives
     bool fNeedsSol = false;
     bool fNeedsDSol = false;
     bool fNeedsTimeDerivatives = false;
 
-    VecDouble fYieldFunction;
-    VecDouble fEffectivePlasticStrain;
-    std::vector<Tensor> fElasticStrain;
-    std::vector<Tensor> fElasticStress;
-    std::vector<Tensor> fElasticStrainIncrement;
-    VecDouble fPlasticMultiplier;
+    VecDouble fYieldFunction = {};
+    VecDouble fEffectivePlasticStrain = {};
+    std::vector<Tensor> fElasticStrain = {};
+    std::vector<Tensor> fElasticStress = {};
+    std::vector<Tensor> fElasticStrainIncrement = {};
+    VecDouble fPlasticMultiplier = {};
+
+    /// @brief Element contribution to the global stiffness matrix
+    std::optional<MatrixDouble> fStiffnessMatrix = {};
+
+    /// @brief Element contribution to the global rhs
+    VecDouble fRHS = {};
 };
 
 

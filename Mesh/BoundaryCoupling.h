@@ -7,7 +7,7 @@ private:
     /* data */
 public:
     BoundaryCoupling(/* args */);
-    ~BoundaryCoupling();
+    virtual ~BoundaryCoupling();
 };
 
 
