@@ -166,6 +166,7 @@ int Elasticity3D::VariableIndex(const std::string &name) const{
     if(!strcmp("Stress",name.c_str()))           return 16;
     if(!strcmp("Strain",name.c_str()))           return 17;
     if(!strcmp("DeltaStrain",name.c_str()))      return 19;
+    if(!strcmp("Compliance",name.c_str()))       return 20;
 
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
@@ -193,6 +194,7 @@ int Elasticity3D::NSolutionVariables(int var) const{
     case 12:
     case 13:
     case 14:
+    case 20:
         return 1;
     case 19:
         return 6;
@@ -371,6 +373,17 @@ void Elasticity3D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         return;
     };
 
+    //Compliance
+    if (var == 20){
+        if(!data.fStiffnessMatrix.has_value()){
+            Sol[0] = std::numeric_limits<float>::max();
+            PanicButton();
+            return;
+        }
+        const auto compliance = data.fSolNodes.transpose() * (*data.fStiffnessMatrix) * data.fSolNodes;
+        Sol[0] = compliance(0, 0);
+        return;
+    }
 }; 
 
 
