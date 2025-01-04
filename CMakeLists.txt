@@ -4,12 +4,6 @@ enable_language( Fortran CXX )
 
 find_package(OpenMP REQUIRED)
 
-option(COMPILE_EXAMPLES "Compile examples" OFF)
-if(COMPILE_EXAMPLES)
-	include(cmake-modules/EnableAMGCL.cmake)
-	enable_amgcl()
-endif()
-
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
 option(ENABLE_MPI_PETSC "Compile MPI and PETSc packages " OFF)
@@ -62,6 +56,10 @@ enable_catch2()
 # Eigen
 include(cmake-modules/EnableEigen.cmake)
 enable_eigen()
+
+# AMGCL
+include(cmake-modules/EnableAMGCL.cmake)
+enable_amgcl()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #[[
@@ -197,6 +195,7 @@ if(ENABLE_GRAPHINTERFACE)
 	target_link_libraries (window fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 endif()
 
+option(COMPILE_EXAMPLES "Compile examples" OFF)
 if (COMPILE_EXAMPLES)
 	add_subdirectory(examples)
 endif()
