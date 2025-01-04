@@ -3,6 +3,7 @@ project (FSArl C CXX Fortran)
 enable_language( Fortran CXX )
 
 find_package(OpenMP REQUIRED)
+find_package(Boost REQUIRED)
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
