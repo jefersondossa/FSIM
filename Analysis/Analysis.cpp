@@ -13,6 +13,7 @@ Analysis::Analysis(CompMesh *cmesh, SolverType stype){
     fReducedArlequin = false;
     fArlequin = nullptr;
     fSolverType = stype;
+    AllocateMonomodel();
 };
 
 Analysis::Analysis(Arlequin *arl, SolverType stype, bool reduced){
@@ -20,6 +21,7 @@ Analysis::Analysis(Arlequin *arl, SolverType stype, bool reduced){
     fArlequin = arl;
     fMeshVector = fArlequin->MeshVec();
     fSolverType = stype;
+    AllocateArlequin();
 };
 
 
@@ -199,11 +201,6 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
 void Analysis::Run(){
     std::cout << "Allocating problem..." << std::endl;
     std::clock_t t3 = std::clock();
-    if(fArlequin) {
-        AllocateArlequin();
-    } else {
-        AllocateMonomodel();
-    }
     Compute();
     std::clock_t t4 = std::clock();
     std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
