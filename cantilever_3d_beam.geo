@@ -1,12 +1,13 @@
 // Cantilever 3D beam.
 SetFactory("OpenCASCADE");
 
-Box(1) = {0, 0, 0, 1, 1, 10};
+Box(1) = {0, 0, 0, 0.1, 1, 5};
 
 // Beam Top-Bottom-Left-Right
-Transfinite Curve {11, 4, 9, 2, 10, 8, 12, 6} = 6 Using Progression 1;
+Transfinite Curve {9, 10, 11, 12} = 1 Using Progression 1;
+Transfinite Curve {4, 2, 8, 6} = 21 Using Progression 1;
 // Beam Ends Front-Back
-Transfinite Curve {3, 7, 5, 1} = 51 Using Progression 1;
+Transfinite Curve {3, 7, 5, 1} = 101 Using Progression 1;
 
 Transfinite Surface {1, 2, 3, 4, 5, 6};
 
