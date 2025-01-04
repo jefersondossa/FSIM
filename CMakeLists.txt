@@ -94,6 +94,7 @@ add_subdirectory(PreProcess)
 add_subdirectory(Shape)
 add_subdirectory(Solver)
 add_subdirectory(WeakForm)
+add_subdirectory(topology_optimization)
 if(ENABLE_GRAPHINTERFACE)
 	add_subdirectory(GraphicInterface)
 endif()
@@ -169,6 +170,7 @@ if(ENABLE_METIS)
 		PUBLIC
 		"$<$<CONFIG:RELEASE>:HAS_METIS>"
 		"$<$<CONFIG:DEBUG>:HAS_METIS>")
+	target_link_libraries(fsarl_library PRIVATE metis)
 endif()
 
 if (ENABLE_MATPLOTLIBCPP)
