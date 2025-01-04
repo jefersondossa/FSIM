@@ -6,8 +6,8 @@ find_package(OpenMP REQUIRED)
 
 option(COMPILE_EXAMPLES "Compile examples" OFF)
 if(COMPILE_EXAMPLES)
-	find_package(AMGCL REQUIRED)
-	# add_subdirectory(examples)
+	include(cmake-modules/EnableAMGCL.cmake)
+	enable_amgcl()
 endif()
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
