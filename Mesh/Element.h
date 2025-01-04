@@ -181,6 +181,8 @@ public:
         PanicButton();
     }
 
+    VecDouble GetGeometricCenter(CompMesh& mesh);
+
 };
 
 
