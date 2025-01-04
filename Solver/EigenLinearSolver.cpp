@@ -165,9 +165,12 @@ namespace
         std::cout << "Condition number: " << norm_k_matrix * norm_inverse << std::endl;
 #endif
 
-        std::vector<double> v_U_f{};
+        static std::vector<double> v_U_f{};
         const auto ndofs = kMatrix.cols();
-        v_U_f.resize(ndofs);
+        if(v_U_f.size() != ndofs)
+        {
+            v_U_f.resize(ndofs);
+        }
 
         Solver solve{std::tie(ndofs, ptr_k_f, col_k_f, val_k_f), prm};
 
