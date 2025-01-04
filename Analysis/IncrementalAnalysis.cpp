@@ -75,7 +75,7 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
         // std::ofstream output("plasticity.txt",std::ios::app);
         // output << "\n\n------------------STEP = " << iStep << " ------------------" << std::endl;
         NonLinearAnalysis::Run();
-        VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,iStep);
+        VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,{},iStep);
         {
             // std::ofstream output("integral.txt",std::ios::app);
             // std::vector<std::string> integrate = {"Solution","DerivativeX","DerivativeY"};

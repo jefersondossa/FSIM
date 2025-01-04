@@ -176,7 +176,7 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
 
 }
 
-void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step){
+void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, const std::vector<CustomCellField>& custom_cel_fields, int step){
 
     //    std::cout << "Printing Velocity Results" << std::endl;
     std::string s = filename + std::to_string(step) + ".vtu";
@@ -197,7 +197,16 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
 
     for (int i=0; i<cmesh->NNodes(); i++){
         auto x = cmesh->NodeVec()[i]->getCoordinates();
-        output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
+        for(std::size_t i = 0; i < 3; i++) {
+            if(i < cmesh->Dimension())
+            {
+                output_v << x[i] << " ";    
+            }
+            else {
+                output_v << 0.0 << " ";
+            }
+        }
+        output_v << std::endl;
     };
 
     output_v << "      </DataArray>" << std::endl
@@ -348,6 +357,19 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
         output_v << matid << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;
+
+    for(const auto& custom_cell_field : custom_cel_fields) {
+        if(custom_cell_field.data.size() != cmesh->NElements()) {
+            // Custom field does not apply to all elements!
+            PanicButton();
+        }
+        output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
+                << "Name=\""<< custom_cell_field.name <<"\" format=\"ascii\">" << std::endl;
+        for (int i=0; i<cmesh->NElements(); i++){
+            output_v << custom_cell_field.data[i] << std::endl;
+        };
+        output_v << "      </DataArray> " << std::endl;
+    }
     
     output_v << "    </CellData>" << std::endl; 
 
