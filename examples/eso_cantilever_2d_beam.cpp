@@ -45,7 +45,7 @@ int main()
 
     GmshTools::Read(*model, "../cantilever_2d_beam.msh");
 
-    auto an = std::make_unique<LinearAnalysis>(model.get(), SolverType::AMGCLBiCGStab);
+    auto an = std::make_unique<LinearAnalysis>(model.get(), SolverType::ELU);
 
     RunEso(*model, *an, 0.7);
 

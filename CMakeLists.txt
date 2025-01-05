@@ -2,9 +2,6 @@ cmake_minimum_required (VERSION 3.20.0)
 project (FSArl C CXX Fortran)
 enable_language( Fortran CXX )
 
-find_package(OpenMP REQUIRED)
-find_package(Boost REQUIRED)
-
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
 option(ENABLE_MPI_PETSC "Compile MPI and PETSc packages " OFF)
@@ -29,6 +26,15 @@ add_definitions(-w)
 option(ENABLE_METIS "Compile METIS package " OFF)
 if (ENABLE_METIS)
 	find_package (METIS REQUIRED)
+endif()
+
+option(ENABLE_AMGCL "Compile AMGCL package " OFF)
+if(ENABLE_AMGCL)
+	find_package(OpenMP REQUIRED)
+	find_package(Boost REQUIRED)
+
+	include(cmake-modules/EnableAMGCL.cmake)
+	enable_amgcl()
 endif()
 
 option(ENABLE_HDF5 "Compile HDF5 package" OFF)
@@ -57,10 +63,6 @@ enable_catch2()
 # Eigen
 include(cmake-modules/EnableEigen.cmake)
 enable_eigen()
-
-# AMGCL
-include(cmake-modules/EnableAMGCL.cmake)
-enable_amgcl()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #[[
@@ -136,7 +138,7 @@ set(FOR_FILES ${for_files})
 add_library(fsarl_library ${UTIL} ${ANALYSIS} ${GRAPHICINTERFACE} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
 set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 
-target_link_libraries(fsarl_library PUBLIC Eigen3::Eigen ${FLTK_LIBRARIES} amgcl::amgcl OpenMP::OpenMP_CXX)
+target_link_libraries(fsarl_library PUBLIC Eigen3::Eigen ${FLTK_LIBRARIES})
 target_include_directories(fsarl_library PUBLIC ${INCLUDE_DIRS_LIST})
 
 target_compile_definitions(fsarl_library
@@ -155,6 +157,15 @@ if(ENABLE_HDF5)
 		PUBLIC
 		"$<$<CONFIG:RELEASE>:HAS_HDF5>"
 		"$<$<CONFIG:DEBUG>:HAS_HDF5>")
+endif()
+
+if(ENABLE_AMGCL)
+	target_compile_definitions(fsarl_library
+		PUBLIC
+		"$<$<CONFIG:RELEASE>:HAS_AMGCL>"
+		"$<$<CONFIG:DEBUG>:HAS_AMGCL>")
+
+	target_link_libraries(fsarl_library PRIVATE amgcl::amgcl OpenMP::OpenMP_CXX)
 endif()
 
 if(ENABLE_GRAPHINTERFACE)

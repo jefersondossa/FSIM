@@ -44,7 +44,7 @@ int main()
 
     GmshTools::Read(*model, "../cantilever_2d_beam.msh");
 
-    LinearAnalysis an(model.get(), SolverType::AMGCLBiCGStab);
+    LinearAnalysis an(model.get(), SolverType::ELU);
 
     an.Run();
 

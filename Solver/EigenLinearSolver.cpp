@@ -6,6 +6,7 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <Eigen/OrderingMethods>
 
+#ifdef HAS_AMGCL
 #include <amgcl/make_solver.hpp>
 #include <amgcl/solver/bicgstab.hpp>
 #include <amgcl/amg.hpp>
@@ -185,6 +186,7 @@ namespace
         return CRSSolutionToEigen(v_U_f);
     }
 }
+#endif
 
 EigenLinearSolver::EigenLinearSolver(Analysis *an) : LinearSolver(an){
     
@@ -263,12 +265,13 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
+#ifdef HAS_AMGCL
         case SolverType::AMGCLBiCGStab:
         {
             emat->Solution() = SolveUsingAMGCL(emat->Matrix(), emat->Rhs());
         }
         break;
-
+#endif
         default:
             std::cout << "Please select an Eigen supported solver\n";
             PanicButton();
