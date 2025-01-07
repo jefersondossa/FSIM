@@ -21,6 +21,8 @@ protected:
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> fExactSol = 0; 
     // Lambda function returning the forcing function
     std::function<void (const VecDouble &coord, VecDouble &force)> fForceFunction = 0; 
+    // If elemental stiffness matrix can be reused accross multiple runs.
+    bool fHasMemory = true;
 
 public:
 
@@ -28,7 +30,7 @@ public:
     WeakForm() = default;
 
     /// @brief Default destructor
-    ~WeakForm() = default;
+    virtual ~WeakForm() = default;
 
     /// @brief Returns the weak form stiffness matrix. It should never be called in this class
     /// @param index integration point index
@@ -135,6 +137,14 @@ public:
 
     void SetNStateVariables(int nst){
         fNState = nst;
+    }
+
+    bool GetHasMemory() const {
+        return fHasMemory;
+    }
+
+    void SetHasMemory(bool new_has_memory) {
+        fHasMemory = new_has_memory;
     }
 };
 

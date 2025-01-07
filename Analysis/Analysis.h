@@ -27,11 +27,11 @@ protected:
     std::vector<CompMesh *> fMeshVector;
     SolverType fSolverType;
     Arlequin* fArlequin = nullptr;
-    bool fReducedArlequin;
+    bool fReducedArlequin = false;
 
     //PetscVariable
-    MatrixType       *fGlobalMatrix;
-    LinearSolver     *fSolver;
+    MatrixType       *fGlobalMatrix = nullptr;
+    LinearSolver     *fSolver = nullptr;
 
 public:
     
@@ -67,7 +67,7 @@ public:
 
     void PostProcessError(VecDouble &errorsTotal);
     
-    ~Analysis() = default;
+    virtual ~Analysis() = default;
 
     LinearSolver *Solver(){return fSolver;}
 };

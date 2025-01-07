@@ -33,7 +33,14 @@ void TransientAnalysis::Run(int64_t nsteps){
             }
         }
         
-        VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,i);
+        VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,{},i);
+        fGlobalMatrix->ZeroMatrix();
+        fGlobalMatrix->ZeroRhs();
+        fGlobalMatrix->ZeroSolution();
+        for (int64_t i=0; i<NEquations(); i++){
+            double val = 1.e-20;
+            fGlobalMatrix->AddValueMatrix(i,i,val);
+        }
     }
 }
 

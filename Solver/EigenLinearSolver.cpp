@@ -6,6 +6,7 @@
 #include <Eigen/IterativeLinearSolvers>
 #include <Eigen/OrderingMethods>
 
+#ifdef HAS_AMGCL
 #include <amgcl/make_solver.hpp>
 #include <amgcl/solver/bicgstab.hpp>
 #include <amgcl/amg.hpp>
@@ -165,9 +166,12 @@ namespace
         std::cout << "Condition number: " << norm_k_matrix * norm_inverse << std::endl;
 #endif
 
-        std::vector<double> v_U_f{};
+        static std::vector<double> v_U_f{};
         const auto ndofs = kMatrix.cols();
-        v_U_f.resize(ndofs);
+        if(v_U_f.size() != ndofs)
+        {
+            v_U_f.resize(ndofs);
+        }
 
         Solver solve{std::tie(ndofs, ptr_k_f, col_k_f, val_k_f), prm};
 
@@ -182,6 +186,7 @@ namespace
         return CRSSolutionToEigen(v_U_f);
     }
 }
+#endif
 
 EigenLinearSolver::EigenLinearSolver(Analysis *an) : LinearSolver(an){
     
@@ -260,12 +265,13 @@ void EigenLinearSolver::Solve(){
             emat->Solution() = solver.solve(emat->Rhs()); 
         }
         break;
+#ifdef HAS_AMGCL
         case SolverType::AMGCLBiCGStab:
         {
             emat->Solution() = SolveUsingAMGCL(emat->Matrix(), emat->Rhs());
         }
         break;
-
+#endif
         default:
             std::cout << "Please select an Eigen supported solver\n";
             PanicButton();

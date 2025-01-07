@@ -752,6 +752,19 @@ void ElementT<tshape>::interpolateSolution() {
             }
         }
     }
+
+    // Store solution for nodes only in case the weakForm has no memory (used by topology optimization only) 
+    if (fWeakForm && !fWeakForm->GetHasMemory()) {
+        const size_t n_state = fMesh->NodeVec()[fConnect[0]]->GetNStateVariables();
+
+        fIntegData.fSolNodes.resize(tshape::NElNodes * n_state);
+        fIntegData.fSolNodes.setZero();
+        for (int i = 0; i < tshape::NElNodes; i++){
+            for (int j = 0; j < n_state; j++ ){
+                fIntegData.fSolNodes[(n_state*i) + j] = fMesh->NodeVec()[fConnect[i]]->GetSolution(j);
+            }
+        }
+    }
 }
 
 template<class tshape>
@@ -841,6 +854,13 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 
     if (!fWeakForm) return;
 
+    // Already calculated before, re-use it.
+    if(fIntegData.fStiffnessMatrix.has_value() && !fWeakForm->GetHasMemory()) {
+        jacobianNRMatrix = *fIntegData.fStiffnessMatrix;
+        rhsVector = fIntegData.fRHS;
+        return;
+    }
+
     int DIM = tshape::Dimension;
     fIntegData.fNeedsDSol = true;
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
@@ -886,6 +906,9 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 
     // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
     // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // Set stiffness matrix to cache.
+    fIntegData.fStiffnessMatrix = jacobianNRMatrix;
+    fIntegData.fRHS = rhsVector;
 
     return;
 };

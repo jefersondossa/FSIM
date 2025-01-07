@@ -32,7 +32,7 @@ private:
 
     std::map<int,WeakForm *> fMaterialVector;
 
-    GraphMesh *fGraphMesh;
+    GraphMesh *fGraphMesh = nullptr;
     
 public:
     int* part_elem;      //Domain Decomposition - Elements
