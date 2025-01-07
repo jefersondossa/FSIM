@@ -753,12 +753,16 @@ void ElementT<tshape>::interpolateSolution() {
         }
     }
 
-    const size_t nstate = fMesh->NodeVec()[fConnect[0]]->GetNStateVariables();
-    fIntegData.fSolNodes.resize(tshape::NElNodes * nstate);
-    fIntegData.fSolNodes.setZero();
-    for (int i = 0; i < tshape::NElNodes; i++){
-        for (int j = 0; j < nstate; j++ ){
-            fIntegData.fSolNodes[(nstate*i) + j] = fMesh->NodeVec()[fConnect[i]]->GetSolution(j);
+    // Store solution for nodes only in case the weakForm has no memory (used by topology optimization only) 
+    if (fWeakForm && !fWeakForm->GetHasMemory()) {
+        const size_t n_state = fMesh->NodeVec()[fConnect[0]]->GetNStateVariables();
+
+        fIntegData.fSolNodes.resize(tshape::NElNodes * n_state);
+        fIntegData.fSolNodes.setZero();
+        for (int i = 0; i < tshape::NElNodes; i++){
+            for (int j = 0; j < n_state; j++ ){
+                fIntegData.fSolNodes[(n_state*i) + j] = fMesh->NodeVec()[fConnect[i]]->GetSolution(j);
+            }
         }
     }
 }
