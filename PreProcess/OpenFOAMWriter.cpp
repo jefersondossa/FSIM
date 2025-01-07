@@ -23,6 +23,95 @@ OpenFOAMWriter::OpenFOAMWriter(std::string inputFile){
         std::string command = "rm -f OpenFOAMRun/constant/geometry/buildings.obj.gz"; 
         system(command.c_str());
     }
+
+}
+
+void OpenFOAMWriter::VelocityNBR6123(){
+
+    double dx = fMaxX-fMinX;
+    double dy = fMaxY-fMinY;
+    double dz = fMaxZ-fMinZ;
+
+    double dmax = std::max({dx, dy, dz});
+    double bm;
+    double Fr;
+    double p;
+    double zg = fMaxZ + fDInlet;
+    
+    //Table 1 and 2 - NBR 6123
+    if (dmax <= 20.){
+        fClass = "A";
+        Fr = 1.;
+        if (zg<=250.){
+            bm = 1.1;
+            p = 0.06;
+        } else if (zg<=300.){
+            bm = 1.0;
+            p = 0.085;
+        } else if (zg<=350.){
+            bm = 0.94;
+            p = 0.10;
+        } else if (zg<=420.){
+            bm = 0.86;
+            p = 0.12;
+        } else if (zg<=500.){
+            bm = 0.74;
+            p = 0.15;
+        } else{
+            std::cout << "Not provided by NBR 6123\n";
+            PanicButton();
+        }
+    } else if (dmax <= 50.){
+        fClass = "B";
+        Fr = 0.98;
+        if (zg<=250.){
+            bm = 1.11;
+            p = 0.065;
+        } else if (zg<=300.){
+            bm = 1.0;
+            p = 0.09;
+        } else if (zg<=350.){
+            bm = 0.94;
+            p = 0.105;
+        } else if (zg<=420.){
+            bm = 0.85;
+            p = 0.125;
+        } else if (zg<=500.){
+            bm = 0.73;
+            p = 0.16;
+        } else{
+            std::cout << "Not provided by NBR 6123\n";
+            PanicButton();
+        }
+    } else {
+        fClass = "C";
+        Fr = 0.95;
+        if (zg<=250.){
+            bm = 1.12;
+            p = 0.07;
+        } else if (zg<=300.){
+            bm = 1.0;
+            p = 0.1;
+        } else if (zg<=350.){
+            bm = 0.93;
+            p = 0.115;
+        } else if (zg<=420.){
+            bm = 0.84;
+            p = 0.135;
+        } else if (zg<=500.){
+            bm = 0.71;
+            p = 0.175;
+        } else{
+            std::cout << "Not provided by NBR 6123\n";
+            PanicButton();
+        }
+    }
+
+    
+    
+    
+
+
 }
 
 bool OpenFOAMWriter::ParseMSH(const std::string &inputFile, std::vector<Vertex> &vertices, std::vector<Face> &faces) {
@@ -167,7 +256,7 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     fMinZ = minZ;
     fDInlet = dInlet;
     fDOutlet = dOutlet;
-
+    
     minX -= dInlet;
     maxX += dOutlet;
     minY -= dInlet;

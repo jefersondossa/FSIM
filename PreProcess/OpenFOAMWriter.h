@@ -28,6 +28,7 @@ protected:
     double fDInlet, fDOutlet;
     double fRefProportion;
     int fNSubdomains;
+    std::string fClass;//NBR 6123 - Building Class
 
 public:
     //Default constructor and destructor
@@ -54,6 +55,7 @@ public:
     bool nutInitial(double nutuniform);
     bool kInitial(double kuniform);
     bool omegaInitial(double omegauniform);
+    void VelocityNBR6123();
 
     //folder constant
     bool WriteConstant(double density, double viscosity);
