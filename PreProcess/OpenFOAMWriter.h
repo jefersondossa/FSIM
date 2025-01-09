@@ -29,6 +29,7 @@ protected:
     double fRefProportion;
     int fNSubdomains;
     std::string fClass;//NBR 6123 - Building Class
+    int fNRefinements;
 
 public:
     //Default constructor and destructor
@@ -38,6 +39,9 @@ public:
     //Constructor
     OpenFOAMWriter(std::string inputFile);
 
+    void ClearAllFiles();
+
+    void StartFromPreviousResults(double dt, double endTime, double writeInterval);
 
     //Read the msh file
     bool ParseMSH(const std::string &inputFile, std::vector<Vertex> &vertices, std::vector<Face> &faces);
@@ -63,8 +67,8 @@ public:
     bool WritePhysicalProperties(double density, double viscosity); 
 
     //folder system
-    bool WriteSystem(double dInlet, double dOutlet, double cellSize, double refproportion, double dt, double endTime, double writeInterval);
-    bool WriteBlockMeshDict(double dInlet, double dOutlet, double cellSize);
+    bool WriteSystem(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ, double refproportion, int nref, double dt, double endTime, double writeInterval);
+    bool WriteBlockMeshDict(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ);
     bool WriteSurfaceFeaturesDict();
     bool WriteControlDict(double dt, double endTime, double writeInterval);
     bool WriteFvSchemes();

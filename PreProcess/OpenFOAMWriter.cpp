@@ -4,6 +4,10 @@
 
 OpenFOAMWriter::OpenFOAMWriter(std::string inputFile){
     fInputMsh = inputFile;
+}
+
+void OpenFOAMWriter::ClearAllFiles(){
+    system("cd OpenFOAMRun && foamCleanTutorials");
 
     if (std::filesystem::exists("OpenFOAMRun")) {
         // Delete the folder and its contents
@@ -217,7 +221,7 @@ void OpenFOAMWriter::FindMaxMin(const std::vector<Vertex> &vertices, double &max
 }
 
 // Function to write blockMeshDict file
-bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double cellSize) {
+bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ) {
     
     std::vector<Vertex> vertices;
     std::vector<Face> faces;
@@ -264,9 +268,9 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     maxZ += dInlet;
     
 
-    int xCells = (maxX-minX)/cellSize;
-    int yCells = (maxY-minY)/cellSize;
-    int zCells = (maxZ-minZ)/cellSize;
+    int xCells = (maxX-minX)/cellSizeX;
+    int yCells = (maxY-minY)/cellSizeY;
+    int zCells = (maxZ-minZ)/cellSizeZ;
 
     outfile << "/*--------------------------------*- C++ -*----------------------------------*\n";
     outfile << "  =========                 |\n";
@@ -401,14 +405,35 @@ bool OpenFOAMWriter::UInitial(VecDouble &internalField){
     UFile << "}\n";
     UFile << "//---------------------------------------------------------------------------*/\n";
     UFile << "\n\n";
+   
     UFile << "dimensions      [0 1 -1 0 0 0 0];\n";
     UFile << "internalField   uniform (" << internalField[0] << " " << internalField[1] << " " << internalField[2] << ");\n";
     UFile << "boundaryField\n";
     UFile << "{\n";
     UFile << "    inlet\n";
     UFile << "    {\n";
-    UFile << "        type            fixedValue;\n";
-    UFile << "        value           uniform (" << internalField[0] << " " << internalField[1] << " " << internalField[2] << ");\n";
+    UFile << "        type            codedFixedValue;\n";
+    UFile << "        value           uniform ( 0 0 0 );\n";
+    UFile << "        redirectType    codedFixedValue;\n";
+    UFile << "        name            parabolicVelocity;\n";
+    UFile << "        code\n";
+    UFile << "        #{\n";
+    UFile << "              const vectorField& Cf = patch().Cf();\n";
+    UFile << "              vectorField& field = *this;\n\n";
+    UFile << "              const scalar V0 = " << internalField[0] << ";\n";
+    UFile << "              const scalar S1 = 1.;\n";
+    UFile << "              const scalar S3 = 1.;\n";
+    UFile << "              const scalar bm = 1.;\n";
+    UFile << "              const scalar Fr = 0.16;\n";
+    UFile << "              const scalar p = 0.65;\n\n";
+    UFile << "              forAll(Cf, faceI)\n";
+    UFile << "              {\n";
+    UFile << "                  const scalar x = Cf[faceI][0];\n";
+    UFile << "                  const scalar y = Cf[faceI][1];\n";
+    UFile << "                  const scalar z = Cf[faceI][2];\n";
+    UFile << "                  field[faceI] = vector(V0*S1*S3*bm*Fr*pow(z/10,p),0,0);\n";
+    UFile << "              }\n";
+    UFile << "        #};\n";
     UFile << "    }\n";
     UFile << "\n";
     UFile << "    outlet\n";
@@ -1240,7 +1265,7 @@ bool OpenFOAMWriter::WriteSnappyHexMeshDict(){
     outFile << "        refinementBox\n";
     outFile << "        {\n";
     outFile << "            mode inside;\n";
-    outFile << "            level 2;\n";
+    outFile << "            level 3;\n";
     outFile << "        }\n";
     outFile << "    }\n";
     outFile << "    insidePoint (1 1 1);\n";
@@ -1349,9 +1374,10 @@ bool OpenFOAMWriter::WriteDecomposeParDict(){
     return true;
 }
 
-bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSize, double refproportion, double dt, double endTime, double writeInterval){
+bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ, double refproportion, int nref, double dt, double endTime, double writeInterval){
     fRefProportion = refproportion;
-    WriteBlockMeshDict(dInlet, dOutlet, cellSize);
+    fNRefinements = nref;
+    WriteBlockMeshDict(dInlet, dOutlet, cellSizeX, cellSizeY, cellSizeZ);
     WriteControlDict(dt, endTime, writeInterval);
     WriteFvSchemes();
     WriteFvSolution();
@@ -1361,4 +1387,10 @@ bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSize,
     WriteDecomposeParDict();
 
     return true;
+}
+
+
+void OpenFOAMWriter::StartFromPreviousResults(double dt, double endTime, double writeInterval){
+    WriteControlDict(dt, endTime, writeInterval);
+
 }
