@@ -121,6 +121,7 @@ set(INCLUDE_DIRS_LIST
 	"${PROJECT_SOURCE_DIR}/WeakForm/Arlequin"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Elasticity"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Poisson"
+	"${PROJECT_SOURCE_DIR}/WeakForm/PhaseField"
 	"${PROJECT_SOURCE_DIR}/WeakForm/NavierStokes"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Stokes"
 	"${PROJECT_SOURCE_DIR}/WeakForm/UnitTest")

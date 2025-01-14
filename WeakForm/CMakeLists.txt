@@ -13,7 +13,8 @@ add_subdirectory(NavierStokes)
 add_subdirectory(Elasticity)
 add_subdirectory(Arlequin)
 add_subdirectory(Poisson)
+add_subdirectory(PhaseField)
 
-set(WEAKFORM ${weakform} ${STOKES} ${NAVIERSTOKES} ${POISSON} ${ELASTICITY} ${ARLEQUIN} PARENT_SCOPE)
+set(WEAKFORM ${weakform} ${STOKES} ${NAVIERSTOKES} ${POISSON} ${PHASE_FIELD} ${ELASTICITY} ${ARLEQUIN} PARENT_SCOPE)
 
 
