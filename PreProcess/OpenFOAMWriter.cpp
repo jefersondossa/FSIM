@@ -374,7 +374,8 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
 
 bool OpenFOAMWriter::WriteInitialConditions(VecDouble &internalField, double puniform, double nutuniform, double kuniform, double omegauniform){
 
-    UInitial(internalField);
+    fInternalField = internalField;
+    UInitial();
     pInitial(puniform);
     nutInitial(nutuniform);
     kInitial(kuniform);
@@ -382,7 +383,7 @@ bool OpenFOAMWriter::WriteInitialConditions(VecDouble &internalField, double pun
     return true;
 }
 
-bool OpenFOAMWriter::UInitial(VecDouble &internalField){
+bool OpenFOAMWriter::UInitial(){
 
     std::ofstream UFile("OpenFOAMRun/0/U");
     if (!UFile.is_open()) {
@@ -407,7 +408,7 @@ bool OpenFOAMWriter::UInitial(VecDouble &internalField){
     UFile << "\n\n";
    
     UFile << "dimensions      [0 1 -1 0 0 0 0];\n";
-    UFile << "internalField   uniform (" << internalField[0] << " " << internalField[1] << " " << internalField[2] << ");\n";
+    UFile << "internalField   uniform (" << fInternalField[0] << " " << fInternalField[1] << " " << fInternalField[2] << ");\n";
     UFile << "boundaryField\n";
     UFile << "{\n";
     UFile << "    inlet\n";
@@ -420,7 +421,7 @@ bool OpenFOAMWriter::UInitial(VecDouble &internalField){
     UFile << "        #{\n";
     UFile << "              const vectorField& Cf = patch().Cf();\n";
     UFile << "              vectorField& field = *this;\n\n";
-    UFile << "              const scalar V0 = " << internalField[0] << ";\n";
+    UFile << "              const scalar V0 = " << fInternalField[0] << ";\n";
     UFile << "              const scalar S1 = 1.;\n";
     UFile << "              const scalar S3 = 1.;\n";
     UFile << "              const scalar bm = 1.;\n";
@@ -1374,6 +1375,50 @@ bool OpenFOAMWriter::WriteDecomposeParDict(){
     return true;
 }
 
+bool OpenFOAMWriter::WriteInitialFields(){
+    std::ofstream outFile("OpenFOAMRun/system/funkySetFieldsDict");
+    if (!outFile.is_open()) {
+        std::cerr << "Error: Unable to open system/funkySetFieldsDict file." << std::endl;
+        return false;
+    }
+    const double V0 = fInternalField[0];
+    const double S1 = 1.;
+    const double S3 = 1.;
+    const double bm = 1.;
+    const double Fr = 0.16;
+    const double p = 0.65;
+
+    outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
+    outFile << "  =========                 |\n";
+    outFile << "  \\\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox\n";
+    outFile << "   \\\\    /   O peration     | Website:  https://openfoam.org\n";
+    outFile << "    \\\\  /    A nd           | Version:  11\n";
+    outFile << "     \\\\/     M anipulation  |\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "FoamFile\n";
+    outFile << "{\n";
+    outFile << "    version     2.0;;\n";
+    outFile << "    format      ascii;\n";
+    outFile << "    class       dictionary;\n";
+    outFile << "    object      funkySetFieldsDict;\n";
+    outFile << "}\n";
+    outFile << "//---------------------------------------------------------------------------*/\n";
+    outFile << "\n\n";
+    outFile << "expressions\n";
+    outFile << "(\n";
+    outFile << "    setVelocity\n";
+    outFile << "    {\n";
+    outFile << "        field U; \n";
+    outFile << "        expression \"vector("<<V0*S1*S3*bm*Fr<<"*pow(pos().z/10,"<<p<<"), 0, 0)\";\n";
+    outFile << "        verbose true; \n";
+    outFile << "        regionName defaultRegion; \n";
+    outFile << "    }\n";
+    outFile << ");\n";
+   
+
+    return true;
+}
+
 bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ, double refproportion, int nref, double dt, double endTime, double writeInterval){
     fRefProportion = refproportion;
     fNRefinements = nref;
@@ -1385,6 +1430,7 @@ bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSizeX
     WriteSnappyHexMeshDict();
     WriteMeshQualityDict();
     WriteDecomposeParDict();
+    WriteInitialFields();
 
     return true;
 }

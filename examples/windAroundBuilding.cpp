@@ -149,7 +149,7 @@ bool RunBuildingRafaelTCC(){
     double refProportion = 0.2; 
     //Time variables  - must be given in seconds
     double dt = 0.01;
-    double endTime = 10.;
+    double endTime = 1.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
@@ -163,13 +163,13 @@ bool RunBuildingRafaelTCC(){
     //Create volume mesh
     system("cd OpenFOAMRun && blockMesh");
 
-    std::string snappy = "cd OpenFOAMRun && snappyHexMesh -overwrite ";
-
     //Create mesh with building refinement
-    // std::string snappy = "cd OpenFOAMRun && mpirun -np " + std::to_string(openFOAMWriter.GetNSubdomains())+ " snappyHexMesh -overwrite -parallel";
+    std::string snappy = "cd OpenFOAMRun && snappyHexMesh -overwrite ";
     system(snappy.c_str());
-    // system("cd OpenFOAMRun && reconstructParMesh -latestTime");
-    // system("cd OpenFOAMRun && paraFoam");
+
+    //Write initial velocity field
+    system("cd OpenFOAMRun && funkySetFields -time 0");
+
     //Decompose mesh into processors
     system("cd OpenFOAMRun && decomposePar");
 
@@ -181,4 +181,5 @@ bool RunBuildingRafaelTCC(){
     system(run.c_str());
     //Reconstruct the parallel mesh and results to view in ParaView
     system("cd OpenFOAMRun && reconstructPar");
+    system("cd OpenFOAMRun && paraFoam");
 }

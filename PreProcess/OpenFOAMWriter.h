@@ -30,6 +30,7 @@ protected:
     int fNSubdomains;
     std::string fClass;//NBR 6123 - Building Class
     int fNRefinements;
+    VecDouble fInternalField;
 
 public:
     //Default constructor and destructor
@@ -54,7 +55,7 @@ public:
 
     //folder 0
     bool WriteInitialConditions(VecDouble &internalField, double puniform, double nutuniform, double kuniform, double omegauniform);
-    bool UInitial(VecDouble &internalField);
+    bool UInitial();
     bool pInitial(double puniform);
     bool nutInitial(double nutuniform);
     bool kInitial(double kuniform);
@@ -76,7 +77,8 @@ public:
     bool WriteSnappyHexMeshDict();
     bool WriteMeshQualityDict();
     bool WriteDecomposeParDict();
-
+    bool WriteInitialFields();
+    
     int GetNSubdomains() {return fNSubdomains;};
 
 };
