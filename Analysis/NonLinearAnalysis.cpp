@@ -1,6 +1,7 @@
 #include "NonLinearAnalysis.h"
 #include "Assemble.h"
 #include "L2Projection.h"
+#include "VTUGenerator.h"
 #ifdef HAS_PETSC
 #include "PETScSolver.h"
 #endif
@@ -166,6 +167,7 @@ void NonLinearAnalysis::Run(){
     // this->GlobalMatrix()->ZeroSolution();
 
 #else
+    int i = 0;
     //Iterative Process
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
@@ -176,6 +178,12 @@ void NonLinearAnalysis::Run(){
         std::clock_t t4 = std::clock();
         std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
         Solve();
+        std::vector<std::string> ScalarNames, VectorNames;
+        ScalarNames = {"Solution"};
+        VectorNames = {"Derivative"};
+        VTUGenerator::PrintResults(fMeshVector[0], "basic_2d_phase_field", ScalarNames, VectorNames, {}, i);
+        i++;
+
         std::clock_t t5 = std::clock();
         std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
         UpdateSolution();

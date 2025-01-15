@@ -6,6 +6,28 @@
 #include <PhaseField.h>
 #include <memory>
 
+const auto exactSolPoisson = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    // u[0] = x * x * (x-1.) * y * y * (y-1.);
+    // gradU(0,0) = x*(3*x-2.)*(y-1.)*y*y;
+    // gradU(1,0) = x*x*(x-1.)*y*(3.*y-2.);
+    // u[0] = x;
+    // gradU(0,0) = 0.;
+    // gradU(1,0) = 0.;
+
+    u[0] = y - sinh(y)/sinh(1);
+};
+
+auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    force[0] = y;
+    // force[0] = 1.-x*x;
+    // force[0] = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
+};
+
 int main()
 {
     std::unique_ptr<CompMesh> model = std::make_unique<CompMesh>();
@@ -13,6 +35,8 @@ int main()
     constexpr auto kInternalMatId = 15;
 
     auto *govEquation = new PhaseField(kInternalMatId, 2);
+    govEquation->SetForcingFunction([](const VecDouble &, VecDouble &){});
+    // govEquation->SetExactSolution(exactSolPoisson);
     model->InsertMaterial(govEquation);
 
     MatrixDouble val1(1, 1);
@@ -49,14 +73,14 @@ int main()
 
     GmshTools::Read(*model, "../rectangle.msh");
 
-    NonLinearAnalysis an(model.get(), SolverType::ELU, 1e-3, 1000);
+    NonLinearAnalysis an(model.get(), SolverType::AMGCLBiCGStab, 1e-6, 1000);
 
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"Solution"};
+    ScalarNames = {"Solution", "ExactSolution"};
     VectorNames = {"Derivative"};
-    VTUGenerator::PrintResults(model.get(), "basic_2d_phase_field", ScalarNames, VectorNames);
+    VTUGenerator::PrintResults(model.get(), "basic_2d_phase_field", ScalarNames, VectorNames, {}, 1000);
 
     return 0;
 }

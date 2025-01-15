@@ -13,18 +13,24 @@ void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &
         data.fDSolDx.resize(fNState,fDimension);
     }
 
+    if (!data.fNeedsSol){
+        data.fNeedsSol = true;
+        data.fSol.resize(fNState);
+    }
+
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
 
     // Stiffness += data.fDPhiX0.transpose() * data.fDPhiX0 * WJ;
 
+    const auto sol = data.fSol(0, 0);
+    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0 * (1-sol)*sol);
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){            
             for (int k = fDimension; k--;  ){
                 Stiffness(i,j) += data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
             }
-            // const auto y = (1.0 - data.fSol(0, 0)) * (data.fSol(0, 0) - 0.5); 
-            // Stiffness(i,j) += data.fPhi(i,0) * data.fPhi(j,0) * y * WJ;
+            Stiffness(i,j) += data.fPhi[i] * data.fPhi[j] * y * WJ;
         };
     };
     // 
@@ -41,6 +47,9 @@ void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
 
+    const auto sol = data.fSol(0, 0);
+    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0 * (1-sol)*sol);
+
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
 
@@ -48,10 +57,12 @@ void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
         double K = 0.;
         for (int l=fDimension; l--; ) K += data.fDPhiX0(l,i) * data.fDSolDx(0,l);
 
+        double phaseFieldRes = shapeFi * y * sol;
+
         //Source term
         double F = (forcingF[0]) * shapeFi;
 
-        Rhs[i] += (-K + F) * WJ;
+        Rhs[i] += (-phaseFieldRes -K + F) * WJ;
     };
 };
 
