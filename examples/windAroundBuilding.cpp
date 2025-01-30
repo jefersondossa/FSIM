@@ -8,12 +8,14 @@
 
 bool RunChamine();
 bool RunBuildingRafaelTCC();
+bool RunBuildingMestrado();
 
 int main() {
    
     //Create the mesh using the plane xy as the ground
 
-    RunBuildingRafaelTCC();
+    // RunBuildingRafaelTCC();
+    RunBuildingMestrado();
     // RunChamine();
 
     std::cout << "Successfully run simmulation with OpenFOAM." << std::endl;
@@ -33,7 +35,7 @@ bool RunChamine(){
     // Input velocity
     VecDouble internalField(3);
     internalField.setZero();
-    internalField[0] = 30.;//m/s
+    internalField[0] = 42.5;//m/s
     
     //"standard" turbulence model parameters
     double puniform = 0.0;
@@ -56,18 +58,18 @@ bool RunChamine(){
 
     //Distance from inlet and outlet boundaries to the building - must be given in meters
     double dInlet = 3.;
-    double dOutlet = 10.;
+    double dOutlet = 30.;
     //Cell size must be given in meters - this represents the max size of elements.
     double cellSizex = 0.5;
     double cellSizey = 0.5;
     double cellSizez = 4.;
     //Refinement levels from boundary to the building - default is 2 levels
-    int nRefinements = 2;
+    int nRefinements = 4;
     //Proportion of inlet and outlet distances to be refined from the building [0,1]
     double refProportion = 0.2; 
     //Time variables  - must be given in seconds
     double dt = 0.01;
-    double endTime = 30.;
+    double endTime = 60.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
@@ -86,7 +88,7 @@ bool RunChamine(){
     std::string snappy = "cd OpenFOAMRun && snappyHexMesh -overwrite ";
     system(snappy.c_str());
     // system("cd OpenFOAMRun && reconstructParMesh -constant");
-    // system("cd OpenFOAMRun && paraFoam");
+    system("cd OpenFOAMRun && paraFoam");
 
     //Decompose mesh into processors
     system("cd OpenFOAMRun && decomposePar");
