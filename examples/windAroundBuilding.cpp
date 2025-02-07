@@ -16,7 +16,7 @@ int main() {
 
     // RunBuildingRafaelTCC();
     // RunBuildingMestrado();
-    // RunChamine();
+    RunChamine();
 
     std::cout << "Successfully run simmulation with OpenFOAM." << std::endl;
     return 0;
@@ -50,7 +50,7 @@ bool RunChamine(){
 
     //Values for 300 Kelvin air
     double visc = 1.85e-5;//kg/m-s
-    double dens = 1.1774;//kg/m^3
+    double dens = 1.226;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
         std::cerr << "Failed to write the constant folder." << std::endl;
         return 1;
@@ -58,7 +58,7 @@ bool RunChamine(){
 
     //Distance from inlet and outlet boundaries to the building - must be given in meters
     double dInlet = 3.;
-    double dOutlet = 30.;
+    double dOutlet = 20.;
     //Cell size must be given in meters - this represents the max size of elements.
     double cellSizex = 0.5;
     double cellSizey = 0.5;
@@ -69,7 +69,7 @@ bool RunChamine(){
     double refProportion = 0.2; 
     //Time variables  - must be given in seconds
     double dt = 0.01;
-    double endTime = 60.;
+    double endTime = 150.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
@@ -99,7 +99,7 @@ bool RunChamine(){
     std::string run = "cd OpenFOAMRun && mpirun -np " + std::to_string(openFOAMWriter.GetNSubdomains())+ " foamRun -parallel";
     system(run.c_str());
     //Reconstruct the parallel mesh and results to view in ParaView
-    system("cd OpenFOAMRun && reconstructPar");
+    system("cd OpenFOAMRun && reconstructPar -fields '(p)'");
 
 }
 
@@ -132,7 +132,7 @@ bool RunBuildingRafaelTCC(){
 
     //Values for 300 Kelvin air
     double visc = 1.85e-5;//kg/m-s
-    double dens = 1.1774;//kg/m^3
+    double dens = 1.226;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
         std::cerr << "Failed to write the constant folder." << std::endl;
         return 1;
@@ -151,7 +151,7 @@ bool RunBuildingRafaelTCC(){
     double refProportion = 0.2; 
     //Time variables  - must be given in seconds
     double dt = 0.01;
-    double endTime = 10.;
+    double endTime = 160.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
@@ -213,7 +213,7 @@ bool RunBuildingMestrado(){
 
     //Values for 300 Kelvin air
     double visc = 1.85e-5;//kg/m-s
-    double dens = 1.1774;//kg/m^3
+    double dens = 1.226;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
         std::cerr << "Failed to write the constant folder." << std::endl;
         return 1;
@@ -223,16 +223,16 @@ bool RunBuildingMestrado(){
     double dInlet = 40.;
     double dOutlet = 200.;
     //Cell size must be given in meters - this represents the max size of elements.
-    double cellSizex = 5.;
-    double cellSizey = 5.;
-    double cellSizez = 5.;
+    double cellSizex = 4;
+    double cellSizey = 4;
+    double cellSizez = 4;
     //Refinement levels from boundary to the building - default is 2 levels
     int nRefinements = 2;
     //Proportion of inlet and outlet distances to be refined from the building [0,1]
     double refProportion = 0.2; 
     //Time variables  - must be given in seconds
     double dt = 0.01;
-    double endTime = 420.;
+    double endTime = 160.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
@@ -260,7 +260,7 @@ bool RunBuildingMestrado(){
     std::string run = "cd OpenFOAMRun && mpirun -np " + std::to_string(openFOAMWriter.GetNSubdomains())+ " foamRun -parallel";
     system(run.c_str());
     //Reconstruct the parallel mesh and results to view in ParaView
-    system("cd OpenFOAMRun && reconstructPar");
+    system("cd OpenFOAMRun && reconstructPar -fields '(p)'");
     system("cd OpenFOAMRun && paraFoam");
 
 }
