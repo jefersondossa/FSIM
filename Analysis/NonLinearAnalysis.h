@@ -27,6 +27,10 @@ public:
         fMaxIterations = maxiter;
     }
 
+    void SetTolerance(double newtol){
+        fTolerance = newtol;
+    }
+
     void UpdateSolution() override;
 
     void Run() override;

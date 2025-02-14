@@ -1,16 +1,25 @@
 #ifndef POISSON_H
 #define POISSON_H
 
+#include "TransientWeakForm.h"
 #include "WeakForm.h"
 
 /// @brief Implements the PhaseField's equation weak form
-class PhaseField : public WeakForm{
+class PhaseField : public TransientWeakForm, public WeakForm{
+private:
+    double fKappa = 1e-5;
+    double fEta = 20.0;
+
+private:
+    void ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDouble &Stiffness);
+
+    void ComputeResidualStatic(int &index, IntPointData &data, VecDouble &Rhs);
 public:
     /// @brief PhaseField weak for constructor
     /// @param matid physical tag
     /// @param dim problem dimension
     /// @param nState number of state variables
-    PhaseField(int matid, int dim, int nState = 1);
+    PhaseField(int matid, int dim, double dTime = 0.001);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -45,6 +54,7 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
+    void UpdateTimeDerivatives(CompMesh *cmesh) override;
 };
 
 

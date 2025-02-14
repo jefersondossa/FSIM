@@ -1,46 +1,74 @@
 #include "PhaseField.h"
 
 //Class constructor
-PhaseField::PhaseField(int matid, int dim, int nState) : WeakForm() {
+PhaseField::PhaseField(int matid, int dim, double dTime) : WeakForm()
+{
+    fTimeStep = dTime;
+    fIntegScheme = EEuler;
     fMatId = matid;
     fDimension = dim;
-    fNState = nState;
+    fNState = 1;
 };
 
-void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
+void PhaseField::ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDouble &Stiffness)
+{
     if (!data.fNeedsDSol){
         data.fNeedsDSol = true;
-        data.fDSolDx.resize(fNState,fDimension);
+        data.fDSolDx.resize(1,fDimension);
     }
 
     if (!data.fNeedsSol){
         data.fNeedsSol = true;
-        data.fSol.resize(fNState);
+        data.fSol.resize(1);
     }
 
+    // TODO: Remove fWeightFunction.
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
 
-    // Stiffness += data.fDPhiX0.transpose() * data.fDPhiX0 * WJ;
-
+    // TODO: Use fWeightFunction instead of data.fJ.
     const auto sol = data.fSol(0, 0);
-    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0 * (1-sol)*sol);
+    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
     for (int i = nphi; i-- ; ){
-        for (int j = nphi; j-- ; ){            
+        for (int j = nphi; j-- ; ){
             for (int k = fDimension; k--;  ){
-                Stiffness(i,j) += data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
+                Stiffness(i,j) += fKappa*data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
             }
             Stiffness(i,j) += data.fPhi[i] * data.fPhi[j] * y * WJ;
         };
     };
-    // 
 }
 
-void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
+void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
+    ComputeStiffnessStatic(index, data, Stiffness);
 
+    const int nphi = data.fPhi.size();
+    const double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    MatrixDouble Mass(nphi,nphi);
+    Mass.setZero();
+    for (size_t i = 0; i < nphi; i++){
+        for (size_t j = 0; j < nphi; j++){
+            Mass(i,j) += data.fPhi[i] * data.fPhi[j] *  WJ;
+        }
+    }
+
+    switch (fIntegScheme)
+    {
+    case EEuler:
+        Stiffness += (1./(fTimeStep)) * Mass;    
+        break;
+    default:
+        PanicButton();
+        break;
+    }
+}
+
+void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble &Rhs)
+{
     auto force = fForceFunction;
     int nphi = data.fPhi.size();
 
+    // TODO: Remove fWeightFunction.
     double WJ = data.fWeight * data.fJacA0  * data.fWeightFunction[index];
 
     VecDouble forcingF(1);
@@ -48,22 +76,41 @@ void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     if (force) force(x_,forcingF);
 
     const auto sol = data.fSol(0, 0);
-    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0 * (1-sol)*sol);
+
+    // TODO: Use fWeightFunction instead of data.fJ.
+    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
 
         //Matrix residual
         double K = 0.;
-        for (int l=fDimension; l--; ) K += data.fDPhiX0(l,i) * data.fDSolDx(0,l);
+        for (int l=fDimension; l--; ) K += fKappa*data.fDPhiX0(l,i) * data.fDSolDx(0,l);
 
-        double phaseFieldRes = shapeFi * y * sol;
+        double phaseFieldRes = 0.0;
+
+        phaseFieldRes = shapeFi * y * sol;
 
         //Source term
         double F = (forcingF[0]) * shapeFi;
 
         Rhs[i] += (-phaseFieldRes -K + F) * WJ;
     };
+}
+
+void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
+    ComputeResidualStatic(index, data, Rhs);
+    
+    const auto vel = data.fDSolDt;
+    const int nphi = data.fPhi.size();
+    const double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+
+    // int (R) -> int (w[dphi/dt + ...])
+    // R_i+1 = R_i + grad(R) * delta_phi
+    // dphi/dt -> int(w * dphi/dt)
+    for (size_t i = 0; i < nphi; i++){
+        Rhs[i] += vel[0] * data.fPhi[i] * WJ;
+    }
 };
 
 void PhaseField::ComputeError(IntPointData &data, VecDouble &errors){
@@ -169,5 +216,24 @@ void PhaseField::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = forcingF[0];
         return;
     };
+};
 
-}; 
+void PhaseField::UpdateTimeDerivatives(CompMesh *cmesh)
+{
+    switch (fIntegScheme)
+    {
+    case EEuler:
+        for (int64_t inode = 0; inode < cmesh->NNodes(); inode++)
+        {
+            auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
+            auto disp = cmesh->NodeVec()[inode]->Solution();
+            auto velUpdated = (disp - dispPrev)/fTimeStep;
+
+            cmesh->NodeVec()[inode]->SetDSolutionDTime(0, velUpdated[0]);
+        }
+        break;
+    default:
+        PanicButton();
+        break;
+    }
+}

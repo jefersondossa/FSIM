@@ -151,28 +151,29 @@ void Elasticity2D::ComputeError(IntPointData &data, VecDouble &errors){
 
 int Elasticity2D::VariableIndex(const std::string &name) const{
     
-    if(!strcmp("Displacement",name.c_str()))     return 1;
-    if(!strcmp("SigmaX",name.c_str()))           return 2;
-    if(!strcmp("SigmaY",name.c_str()))           return 3;
-    if(!strcmp("TauXY",name.c_str()))            return 4;
-    if(!strcmp("EpsilonX",name.c_str()))         return 5;
-    if(!strcmp("EpsilonY",name.c_str()))         return 6;
-    if(!strcmp("EpsilonXY",name.c_str()))        return 7;
-    if(!strcmp("ExactDisplacement",name.c_str()))return 8;
-    if(!strcmp("ExactSigmaX",name.c_str()))      return 9;
-    if(!strcmp("ExactSigmaY",name.c_str()))      return 10;
-    if(!strcmp("ExactTauXY",name.c_str()))       return 11;
-    if(!strcmp("ExactEpsilonX",name.c_str()))    return 12;
-    if(!strcmp("ExactEpsilonY",name.c_str()))    return 13;
-    if(!strcmp("ExactEpsilonXY",name.c_str()))   return 14;
-    if(!strcmp("ExactForce",name.c_str()))       return 15;
-    if(!strcmp("Stress",name.c_str()))           return 16;
-    if(!strcmp("Strain",name.c_str()))           return 17;
-    if(!strcmp("SigmaZ",name.c_str()))           return 18;
-    if(!strcmp("DeltaStrain",name.c_str()))      return 19;
-    if(!strcmp("Pressure",name.c_str()))         return 20;
-    if(!strcmp("J2",name.c_str()))               return 21;
-    if(!strcmp("Compliance",name.c_str()))       return 22;
+    if(!strcmp("Displacement",name.c_str()))            return 1;
+    if(!strcmp("SigmaX",name.c_str()))                  return 2;
+    if(!strcmp("SigmaY",name.c_str()))                  return 3;
+    if(!strcmp("TauXY",name.c_str()))                   return 4;
+    if(!strcmp("EpsilonX",name.c_str()))                return 5;
+    if(!strcmp("EpsilonY",name.c_str()))                return 6;
+    if(!strcmp("EpsilonXY",name.c_str()))               return 7;
+    if(!strcmp("ExactDisplacement",name.c_str()))       return 8;
+    if(!strcmp("ExactSigmaX",name.c_str()))             return 9;
+    if(!strcmp("ExactSigmaY",name.c_str()))             return 10;
+    if(!strcmp("ExactTauXY",name.c_str()))              return 11;
+    if(!strcmp("ExactEpsilonX",name.c_str()))           return 12;
+    if(!strcmp("ExactEpsilonY",name.c_str()))           return 13;
+    if(!strcmp("ExactEpsilonXY",name.c_str()))          return 14;
+    if(!strcmp("ExactForce",name.c_str()))              return 15;
+    if(!strcmp("Stress",name.c_str()))                  return 16;
+    if(!strcmp("Strain",name.c_str()))                  return 17;
+    if(!strcmp("SigmaZ",name.c_str()))                  return 18;
+    if(!strcmp("DeltaStrain",name.c_str()))             return 19;
+    if(!strcmp("Pressure",name.c_str()))                return 20;
+    if(!strcmp("J2",name.c_str()))                      return 21;
+    if(!strcmp("Compliance",name.c_str()))              return 22;
+    if(!strcmp("ComplianceSensibility",name.c_str()))   return 23;
 
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
@@ -205,6 +206,7 @@ int Elasticity2D::NSolutionVariables(int var) const{
     case 20:
     case 21:
     case 22:
+    case 23:
         return 1;
 
     default:
@@ -496,6 +498,43 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
             return;
         }
         const auto compliance = data.fSolNodes.transpose() * (*data.fStiffnessMatrix) * data.fSolNodes;
+        Sol[0] = compliance(0, 0);
+        return;
+    }
+
+    // ComplianceSensibility
+    if(var == 23) {
+        if(!data.fStiffnessMatrix.has_value()){
+            Sol[0] = std::numeric_limits<float>::max();
+            PanicButton();
+            return;
+        }
+
+        VecDouble epsilon(3);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        VecDouble stress(3);
+        if (fPlaneStress){
+            double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+            double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+            double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+            MatrixDouble MatAux(3,3);
+            MatAux.setZero();
+            MatAux(0,0) = MatAux(1,1) = 1. + alpha;
+            MatAux(0,1) = MatAux(1,0) = alpha;
+            MatAux(2,2) = 0.5;
+            MatAux *= 2.*fShearModulus;
+            stress = MatAux*epsilon;
+        } else {
+            double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+            double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+            stress[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
+            stress[1] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
+            stress[2] = G * epsilon[2];
+        }
+
+        const auto compliance = stress.transpose()*epsilon;
         Sol[0] = compliance(0, 0);
         return;
     }

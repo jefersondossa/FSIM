@@ -1,12 +1,12 @@
 SetFactory("OpenCASCADE");
 
-Rectangle(1) = {0, 0, 0, 1, 1};
+Rectangle(1) = {0, 0, 0, 2, 1};
 
 // Beam Top-Bottom-Left-Right
 // LEFT-RIGHT
 Transfinite Curve {4, 2} = 21 Using Progression 1;
 // TOP-BOTTOM
-Transfinite Curve {3, 1} = 21 Using Progression 1;
+Transfinite Curve {3, 1} = 41 Using Progression 1;
 
 Recombine Surface{1,2,3,4};
 

@@ -84,6 +84,8 @@ public:
     /// @brief Element contribution to the global stiffness matrix
     std::optional<MatrixDouble> fStiffnessMatrix = {};
 
+    double fJ = 1.0;
+
     /// @brief Element contribution to the global rhs
     VecDouble fRHS = {};
 };

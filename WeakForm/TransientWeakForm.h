@@ -7,7 +7,7 @@
 class TransientWeakForm
 {
 public:
-    enum TimeIntegScheme {ENewmark, EGeneralizedAlpha};
+    enum TimeIntegScheme {ENewmark, EGeneralizedAlpha, EEuler};
 protected:
 
     TimeIntegScheme fIntegScheme;
