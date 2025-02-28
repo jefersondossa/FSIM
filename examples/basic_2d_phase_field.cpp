@@ -48,7 +48,7 @@ void SetupBoundaryConditionsElasticity2D(CompMesh& modelElasticity2D)
     auto *El2D = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(El2D);
     
-    GmshTools::Read(modelElasticity2D, "../rectangle.msh");
+    GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
 
     // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
     // Disables memory on elements
@@ -65,7 +65,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     val1.setZero();
     val2.setZero();
     constexpr auto kPhaseFieldInternalMatId = 15;
-    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1e-3);
+    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1.e-5, 20, 1e-1);
     modelPhaseField.InsertMaterial(govEquationPF);
 
     constexpr auto kPhaseFieldLeftMatId = 16;
@@ -84,7 +84,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     auto *bottomBCPF = new L2Projection(kPhaseFieldBotttomMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelPhaseField.InsertMaterial(bottomBCPF);
     
-    GmshTools::Read(modelPhaseField, "../rectangle.msh");
+    GmshTools::Read(modelPhaseField, "../../rectangle.msh");
 }
 
 int main()
@@ -95,7 +95,7 @@ int main()
 
     std::unique_ptr<CompMesh> modelPhaseField = std::make_unique<CompMesh>();
     SetupBoundaryConditionsPhaseField(*modelPhaseField);
-    TransientAnalysis anPhaseField(modelPhaseField.get(), SolverType::AMGCLBiCGStab, false);
+    TransientAnalysis anPhaseField(modelPhaseField.get(), SolverType::AMGCLBiCGStab);
     anPhaseField.SetMaxIter(1000);
     anPhaseField.SetTolerance(1e-6);
 
@@ -141,7 +141,7 @@ int main()
         bool has_void = false;
         for(const auto& hole : hole_positions)
         {
-            if((node_pos - hole).norm() < 0.8*diam/2.0)
+            if((node_pos - hole).norm() <= 0.8*diam/2.0)
             {
                 has_void = true;
                 break;
@@ -171,11 +171,11 @@ int main()
 
     // TODO: Solve one time before saving the stiffness matrix.
 
-    for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
-    {
-        auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
-        original_stiffness.push_back(*elemElas2D->IntegrationData().fStiffnessMatrix);
-    }
+    // for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
+    // {
+    //     auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
+    //     original_stiffness.push_back(*elemElas2D->IntegrationData().fStiffnessMatrix);
+    // }
 
     int i = 0;
     std::vector<std::string> ScalarNamesElasticity2D, VectorNamesElasticity2D;
@@ -195,31 +195,58 @@ int main()
         VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
         VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
 
+        for (int64_t inode = 0; inode < modelElasticity2D->NNodes(); inode++)
+        {
+            auto nodeelas = modelElasticity2D->NodeVec()[inode];
+            auto nodephasefield = modelPhaseField->NodeVec()[inode];
+
+            const auto& sol_phase_field = nodephasefield->Solution();
+            const auto phi = sol_phase_field[0];
+
+            nodeelas->setWeightFunction(std::max(phi*phi*phi, min_val));
+        }
+
         for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
         {
             auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
             auto elemPhaseField = modelPhaseField->ElementVec()[i_el];
-
+            
             if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
             {
                 continue;
             }
-
-            const auto sol_phase_field_var_idx = elemPhaseField->GetWeakForm()->VariableIndex("Solution");
-            elemPhaseField->GetWeakForm()->VariableIndex("Solution");
-            const auto nvar_sol = elemPhaseField->GetWeakForm()->NSolutionVariables(sol_phase_field_var_idx);
-            VecDouble sol(nvar_sol);
-            elemPhaseField->Solution(sol_phase_field_var_idx, sol);
+            elemElas2D->setIntegPointWeightFunction();
+            // const auto sol_phase_field_var_idx = elemPhaseField->GetWeakForm()->VariableIndex("Solution");
+            // elemPhaseField->GetWeakForm()->VariableIndex("Solution");
+            // const auto nvar_sol = elemPhaseField->GetWeakForm()->NSolutionVariables(sol_phase_field_var_idx);
+            // VecDouble sol(nvar_sol);
+            // elemPhaseField->Solution(sol_phase_field_var_idx, sol);
             
-            //dynamic_cast<ElementT<element_type/geometry>>(elemPhaseField);
-            // TODO: Use fIntRule to calculate the solution on the nodes. See/use void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_);
+            // //dynamic_cast<ElementT<element_type/geometry>>(elemPhaseField);
+            // // TODO: Use fIntRule to calculate the solution on the nodes. See/use void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_);
+            // //Interpolate phase field solution at the integration points
+            // for (int i = 0; i < elemPhaseField->getNumberOfIntegrationPoints(); i++)
+            // {
+            //     elemPhaseField->SetIntPointCoordAndWeight(i);
+    
+            //     //Computes the Shape functions matrix
+            //     elemPhaseField->GetShapeFunction();
+                
+            //     //Interpolates Solution
+            //     elemPhaseField->interpolateSolution();
+            //     auto &solphi = elemPhaseField->IntegrationData().fSol[0];
 
-            const auto phi = sol[0];
+            //     elemElas2D->setIntegPointWeightFunction(i,std::max(solphi*solphi*solphi, min_val));
+            // }
+            
 
-            // TODO: Set fWeightFunction for each element using phi calculated on the nodes.
-            // So we don't need to keep the old stiffness matrix.
-            elemElas2D->IntegrationData().fStiffnessMatrix = 
-                original_stiffness[i_el] * std::max(phi*phi*phi, min_val);
+
+            // const auto phi = sol[0];
+
+            // // TODO: Set fWeightFunction for each element using phi calculated on the nodes.
+            // // So we don't need to keep the old stiffness matrix.
+            // elemElas2D->IntegrationData().fStiffnessMatrix = 
+            //     original_stiffness[i_el] * std::max(phi*phi*phi, min_val);
 
             const auto compliance_var_idx = elemElas2D->GetWeakForm()->VariableIndex("ComplianceSensibility");
             const auto nvar = elemElas2D->GetWeakForm()->NSolutionVariables(compliance_var_idx);
@@ -229,8 +256,11 @@ int main()
             elemPhaseField->IntegrationData().fJ = (compl_vec[0] > 0 ? 1.0 : -1.0);
         }
 
+        
+        
+
         anElasticity2D.Run();
-        anPhaseField.Run(500);
+        anPhaseField.Run(20);
 
         i++;
     }

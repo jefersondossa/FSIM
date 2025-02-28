@@ -61,6 +61,8 @@ public:
 
     virtual void ComputeIntPointDistFunction(VecDouble &nodalval) = 0;
     virtual int getNumberOfIntegrationPoints() = 0;
+    virtual void SetIntPointCoordAndWeight(int index) = 0;
+    virtual VecDouble GetShapeFunction() = 0;
 
     /// Sets the element connectivity
     /// @param int* element connectivity

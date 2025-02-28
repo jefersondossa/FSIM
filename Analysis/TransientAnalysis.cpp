@@ -48,4 +48,6 @@ void TransientAnalysis::PrintVariables(std::string filename, std::vector<std::st
     fScalVars = scal;
     fVectVars = vec;
     fFilename = filename;
+    VTUGenerator::PrintResults(this->MeshVector()[0],filename,fScalVars,fVectVars,{},0);
+
 }

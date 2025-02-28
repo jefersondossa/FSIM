@@ -17,12 +17,7 @@
 #include "Element.h"
 #include "Node.h"
 #include "PanicButton.h"
-#include "IntegrationQuadrature.h"
-#include "IntegrationQuadrature11.h"
-#include "DomainIntegration.h"
 #include "IntPointData.h"
-// #include "PartitionedQuadrature.hpp"
-
 
 /// Defines the fluid element object and all the element information
 template<class tshape>
@@ -105,6 +100,9 @@ public:
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
     int getNumberOfIntegrationPoints(){return fIntRule.NPoints();};
+
+    void SetIntPointCoordAndWeight(int index) override;
+    VecDouble GetShapeFunction() override;
 
     int Dimension() const{
         return tshape::Dimension;

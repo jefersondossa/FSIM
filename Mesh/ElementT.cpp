@@ -757,7 +757,6 @@ void ElementT<tshape>::interpolateSolution() {
     if (fWeakForm && !fWeakForm->GetHasMemory()) {
         const size_t n_state = fMesh->NodeVec()[fConnect[0]]->GetNStateVariables();
 
-        fIntegData.fSolNodes.resize(tshape::NElNodes * n_state);
         fIntegData.fSolNodes.setZero();
         for (int i = 0; i < tshape::NElNodes; i++){
             for (int j = 0; j < n_state; j++ ){
@@ -866,6 +865,7 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     fIntegData.fNeedsSol = true;
     fIntegData.fSol.resize(this->fWeakForm->NState());
+    fIntegData.fSolNodes.resize(tshape::NElNodes * this->fWeakForm->NState());
 
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
@@ -967,6 +967,7 @@ void ElementT<tshape>::ComputeElContribution(VecDouble &rhsVector){
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     fIntegData.fNeedsSol = true;
     fIntegData.fSol.resize(this->fWeakForm->NState());
+    fIntegData.fSolNodes.resize(tshape::NElNodes*this->fWeakForm->NState());
 
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
@@ -1023,6 +1024,7 @@ void ElementT<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobian
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     fIntegData.fNeedsSol = true;
     fIntegData.fSol.resize(this->fWeakForm->NState());
+    fIntegData.fSolNodes.resize(tshape::NElNodes * this->fWeakForm->NState());
 
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
@@ -1186,6 +1188,7 @@ void ElementT<tshape>::ComputeError(VecDouble &errors){
     fIntegData.fAdimCoord.resize(DIM);
     fIntegData.fSol.resize(fWeakForm->NState());
     fIntegData.fDSolDx.resize(fWeakForm->NState(),fWeakForm->Dimension());
+    
 
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
@@ -1235,7 +1238,7 @@ void ElementT<tshape>::Integrate(std::vector<std::string> &varNames, std::map<st
     fIntegData.fAdimCoord.resize(DIM);
     fIntegData.fSol.resize(fWeakForm->NState());
     fIntegData.fDSolDx.resize(fWeakForm->NState(),fWeakForm->Dimension());
-
+    fIntegData.fSolNodes.resize(tshape::NElNodes * this->fWeakForm->NState());
     
     for (int ivar = 0; ivar < varNames.size(); ivar++){
         int varindex = fWeakForm->VariableIndex(varNames[ivar]);
@@ -1277,6 +1280,24 @@ void ElementT<tshape>::Integrate(std::vector<std::string> &varNames, std::map<st
         }
     }
 }
+
+
+template<class tshape >
+void ElementT<tshape>::SetIntPointCoordAndWeight(int index) {
+    int DIM = tshape::Dimension;
+    fIntegData.fAdimCoord.resize(DIM);
+    fIntegData.fWeight = fIntRule.WeightList(index);
+    for (int k = 0; k < DIM; k++) fIntegData.fAdimCoord[k] = fIntRule.PointList(index,k);
+};
+
+
+template<class tshape >
+VecDouble ElementT<tshape>::GetShapeFunction() {
+    tshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
+    return fIntegData.fPhi;
+};
+
+
 
 #include "ShapeHexahedron.h"
 #include "ShapeOneDLin.h"

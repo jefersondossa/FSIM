@@ -1,8 +1,10 @@
 #include "PhaseField.h"
 
 //Class constructor
-PhaseField::PhaseField(int matid, int dim, double dTime) : WeakForm()
+PhaseField::PhaseField(int matid, int dim, double kappa, double eta, double dTime) : WeakForm()
 {
+    fKappa = kappa;
+    fEta = eta;
     fTimeStep = dTime;
     fIntegScheme = EEuler;
     fMatId = matid;
