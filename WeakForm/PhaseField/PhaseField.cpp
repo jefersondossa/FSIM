@@ -42,6 +42,7 @@ void PhaseField::ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDo
 }
 
 void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
+
     ComputeStiffnessStatic(index, data, Stiffness);
 
     const int nphi = data.fPhi.size();
@@ -87,7 +88,7 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
 
         //Matrix residual
         double K = 0.;
-        for (int l=fDimension; l--; ) K += fKappa*data.fDPhiX0(l,i) * data.fDSolDx(0,l);
+        for (int l=fDimension; l--; ) K += fKappa * data.fDPhiX0(l,i) * data.fDSolDx(0,l);
 
         double phaseFieldRes = 0.0;
 
@@ -110,8 +111,9 @@ void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     // int (R) -> int (w[dphi/dt + ...])
     // R_i+1 = R_i + grad(R) * delta_phi
     // dphi/dt -> int(w * dphi/dt)
+
     for (size_t i = 0; i < nphi; i++){
-        Rhs[i] += vel[0] * data.fPhi[i] * WJ;
+        Rhs[i] -= ((data.fSol[0]-data.fSolPrev[0])/fTimeStep) * data.fPhi[i] * WJ;
     }
 };
 
@@ -151,6 +153,7 @@ int PhaseField::VariableIndex(const std::string &name) const{
     if(!strcmp("ExactSolution",name.c_str()))   return 3;
     if(!strcmp("ExactDerivative",name.c_str())) return 4;
     if(!strcmp("ForceFunction",name.c_str()))   return 5;
+    if(!strcmp("TimeDerivative",name.c_str()))  return 6;
     
     std::cout << "Post Process variable not implemented \n";
     PanicButton();
@@ -163,6 +166,7 @@ int PhaseField::NSolutionVariables(int var) const{
     case 1:
     case 3:
     case 5:
+    case 6:
         return 1;
     case 2:
     case 4:
@@ -218,6 +222,14 @@ void PhaseField::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = forcingF[0];
         return;
     };
+
+    //Velocity
+    if (var == 6){
+        Sol[0] = data.fDSolDt[0];
+        return;
+    };
+    
+    
 };
 
 void PhaseField::UpdateTimeDerivatives(CompMesh *cmesh)
@@ -227,11 +239,12 @@ void PhaseField::UpdateTimeDerivatives(CompMesh *cmesh)
     case EEuler:
         for (int64_t inode = 0; inode < cmesh->NNodes(); inode++)
         {
-            auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
-            auto disp = cmesh->NodeVec()[inode]->Solution();
-            auto velUpdated = (disp - dispPrev)/fTimeStep;
+            VecDouble dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
+            VecDouble disp = cmesh->NodeVec()[inode]->Solution();
+            VecDouble velUpdated = (disp - dispPrev)/fTimeStep;
 
             cmesh->NodeVec()[inode]->SetDSolutionDTime(0, velUpdated[0]);
+            cmesh->NodeVec()[inode]->SetPreviousSolution(0, disp[0]);
         }
         break;
     default:
