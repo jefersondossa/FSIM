@@ -5,7 +5,15 @@
 #include <L2Projection.h>
 #include <PhaseField.h>
 #include <Elasticity2D.h>
+#include <ElementTransient.h>
+#include <ShapePoint.h>
+#include <Node.h>
 #include <memory>
+#include <LagrangeMultiplier.h>
+#include <ElementLagrangeMultiplier.h>
+#include <ShapeQuadrilateralLin.h>
+#include <ShapeTriangleLin.h>
+#include <NullWeakForm.h>
 
 void SetupBoundaryConditionsElasticity2D(CompMesh& modelElasticity2D)
 {
@@ -86,6 +94,74 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     modelPhaseField.InsertMaterial(bottomBCPF);
     
     GmshTools::Read(modelPhaseField, "../../rectangle.msh");
+
+    //For the phase field implementation, we also need to impose an additional restrain to the final volume.
+    //To do so, we create a new node, which serves to store the additional Lagrange multiplier variable.
+    //However, the LM has the contribution of all elements. Thus, the new node need to be set as a new connectivity for all elements.
+    //Note that this completely changes the data structure, and additional care is needed to handle it.
+    //For instance, changes in the shape functions and assemble algorithm may be needed.
+    //First, create a new node and a new element to store the LM.
+    VecDouble Coor(3);
+    Coor[0] = 0.0;
+    Coor[1] = 0.0;
+    Coor[2] = 0.0;
+    Node *newNode = new Node(Coor,modelPhaseField.NodeVec().size(),1);
+    newNode->AllocateTimeDerivatives();
+    modelPhaseField.NodeVec().push_back(newNode);
+    int64_t index = newNode->Index();
+    VecInt connect(1);
+    connect[0] = index;
+    // Point
+    Element* gel = nullptr;
+    int matnull = modelPhaseField.GetNewMaterialId();
+    NullWeakForm *nullwf = new NullWeakForm(matnull, 1);
+    gel = new ElementTransient<ShapePoint>(index,connect,&modelPhaseField,nullwf);
+    modelPhaseField.InsertElement(gel);
+    
+
+    // Creates the Lagrange multiplier material
+    int matlagmult = modelPhaseField.GetNewMaterialId();
+    LagrangeMultiplier *lagmult = new LagrangeMultiplier(matlagmult, 1);
+    modelPhaseField.InsertMaterial(lagmult);
+    //Now, create new elements of the type LagrangeMultiplier, which will be used to impose the additional constrain.
+    // Here, the point element will always be the second and the volumetric element, the first.
+    std::cout << "NElements before LagrangeMultiplier: " << modelPhaseField.NElements() << std::endl;
+    for (auto &element : modelPhaseField.ElementVec())
+    {
+        if (element->Dimension() != modelPhaseField.Dimension()) continue;
+
+        Element* gelmult = nullptr;
+        auto *wf = modelPhaseField.Material(matlagmult);
+        auto newindex = modelPhaseField.NElements();
+        auto type = element->Type();
+
+        switch (type)
+        {
+        case ElementType::EQuadrilateral:
+            if (modelPhaseField.GetDefaultOrder()==1){
+                gelmult = new ElementLagrangeMultiplier<ShapeQuadrilateralLin>(newindex, element, gel, &modelPhaseField, wf);
+            } else {
+                PanicButton();
+            }
+            break;
+        case ElementType::ETriangle:
+            if (modelPhaseField.GetDefaultOrder()==1){
+                gelmult = new ElementLagrangeMultiplier<ShapeTriangleLin>(newindex, element, gel, &modelPhaseField, wf);
+            } else {
+                PanicButton();
+            }
+            break;
+        
+        default:
+            PanicButton();
+            break;
+        }
+        modelPhaseField.InsertElement(gelmult);
+    }
+    std::cout << "NElements after LagrangeMultiplier: " << modelPhaseField.NElements() << std::endl;
+    delete [] modelPhaseField.part_elem;
+    modelPhaseField.part_elem = new int[modelPhaseField.NElements()]();
+
 }
 
 int main()
@@ -170,9 +246,10 @@ int main()
     anPhaseField.PrintVariables("basic_2d_phase_field_dt", ScalarNamesPhaseField, VectorNamesPhaseField);
 
     if(modelElasticity2D->NElements() != modelPhaseField->NElements())
-    {
+    {   
         // We assume that we are using the same mesh for phase field and elasticity!
-        PanicButton();
+        //Yes, but the check need to be different since now we have elements corresponding to the Lagrange multiplier
+        // PanicButton();
     }
 
     // anElasticity2D.Run();

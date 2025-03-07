@@ -58,6 +58,17 @@ public:
     std::map<int,WeakForm *> &MaterialVector(){
         return fMaterialVector;
     }
+
+    int GetNewMaterialId(){
+        if (!fMaterialVector.empty()) {
+            int maxKey = fMaterialVector.rbegin()->first;
+            return maxKey + 1;
+        } else {
+            std::cout << "There is no material in the mesh!" << std::endl;
+            PanicButton();
+        }
+        return 0;
+    }
     
     /// Gets the fluid model nodes and export for solving the overlapping
     /// mesh problem with the Arlequin method
@@ -69,9 +80,10 @@ public:
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
-    std::vector<Element *> &ElementVec(){return fElementVector;}
+    std::vector<Element *> &ElementVec(){return fElementVector;} 
     int64_t NElements(){return fElementVector.size();}
     void SetNumElements(int64_t nelements){fElementVector.resize(nelements);}
+    void InsertElement(Element *el){fElementVector.push_back(el);}
 
     void SetDefaultOrder(int order){
         fOrder = order;

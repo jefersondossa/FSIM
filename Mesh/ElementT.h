@@ -100,7 +100,7 @@ public:
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
     int getNumberOfIntegrationPoints(){return fIntRule.NPoints();};
-
+    
     void SetIntPointCoordAndWeight(int index) override;
     VecDouble GetShapeFunction() override;
 
@@ -141,6 +141,19 @@ public:
     ElementType Type() override{
         return tshape::ElType;
     }
+
+    VecDouble GetIntPointCoord(int index) override{
+        int dim = tshape::Dimension;
+        VecDouble coords(dim);
+        for (int i = 0; i < dim; i++){
+            coords[i] = fIntRule.PointList(index,i);
+        }
+        return coords;
+    };
+
+    double GetIntPointWeight(int index) override{
+        return fIntRule.WeightList(index);
+    };
 
 };
 

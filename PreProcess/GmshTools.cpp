@@ -1173,6 +1173,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeOneDLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(1);
             gel->PrintType() = 3;
         }
             break;
@@ -1186,6 +1187,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeTriangleLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(1);
             gel->PrintType() = 5;           
             break;
         }
@@ -1199,6 +1201,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(1);
             gel->PrintType() = 9;
             break;
         }
@@ -1212,6 +1215,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeTetrahedronLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(1);
             gel->PrintType() = 10;
             break;
         }
@@ -1225,6 +1229,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeHexahedron>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(1);
             gel->PrintType() = 12;
             break;
         }
@@ -1238,6 +1243,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(2);
             gel->PrintType() = 21;           
             break;
         }
@@ -1251,6 +1257,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeTriangleQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(2);
             gel->PrintType() = 22;           
             break;
         }
@@ -1264,6 +1271,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(2);
             gel->PrintType() = 28;           
             break;
         }
@@ -1277,6 +1285,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapePoint>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(0);
             gel->PrintType() = 1;           
             break;
         }
@@ -1290,6 +1299,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeTriangleCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(3);
             gel->PrintType() = 69;           
             break;
         }
@@ -1303,6 +1313,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
             } else {
                 gel = new ElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
             }
+            gmesh->SetDefaultOrder(3);
             gel->PrintType() = 35;           
             break;
         }

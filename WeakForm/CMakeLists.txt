@@ -6,6 +6,10 @@ file(GLOB weakform
     L2Projection.cpp
     TransientWeakForm.h
     TransientWeakForm.cpp
+    LagrangeMultiplier.h
+    LagrangeMultiplier.cpp
+    NullWeakForm.h 
+    NullWeakForm.cpp
 )
 
 add_subdirectory(Stokes)

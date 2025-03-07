@@ -23,6 +23,8 @@ file(GLOB mesh
     BndCondCoupling.cpp
     LagrangeMultCoupling.h
     LagrangeMultCoupling.cpp
+    ElementLagrangeMultiplier.h
+    ElementLagrangeMultiplier.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)

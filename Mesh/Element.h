@@ -5,6 +5,7 @@
 #include "CompMesh.h"
 #include "IntPointData.h"
 #include "WeakForm.h"
+#include "IntRule.h"
 
 class CompMesh;
 
@@ -26,7 +27,8 @@ protected:
     WeakForm *fWeakForm = nullptr;
     IntPointData  fIntegData;
 
-    int fPrintType;  
+    int fPrintType;
+    IntRule* fIntRule = 0;
 
 public:
     Element() = default;
@@ -185,6 +187,13 @@ public:
 
     VecDouble GetGeometricCenter(CompMesh& mesh);
 
+    virtual VecDouble GetIntPointCoord(int index) = 0;
+    virtual double GetIntPointWeight(int index) = 0;
+
+    virtual void GetInterfaceData(Element* &leftel, Element* &rightel){
+        //Should only be called in LagrangeMultiplierElements
+        PanicButton();
+    };
 };
 
 

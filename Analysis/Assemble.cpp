@@ -2,15 +2,22 @@
 #include "CouplingLocal.h"
 #include "CouplingGlobal.h"
 #include "Arlequin.h"
+#include "LagrangeMultiplier.h"
 
 void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     std::cout << "Assembling..." << std::endl;
-
+    bool HasLagrange = false;
     for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             if (!el) continue;
+            LagrangeMultiplier *lagrange = dynamic_cast<LagrangeMultiplier*>(el->GetWeakForm());
+            if (lagrange) {
+                HasLagrange = true;   
+                continue;
+            }
+
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
             int nElNodes = el->NElNodes(); 
@@ -49,13 +56,21 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
         // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
         // fAnalysis->GlobalMatrix()->PrintRhs();
     }; //Elements
+    if (HasLagrange) LagrangeMultiplierDOF(fAnalysis,mesh,startDOF);
 }
 
 void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
+    bool HasLagrange = false;
     for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
+            if (!el) continue;
+            LagrangeMultiplier *lagrange = dynamic_cast<LagrangeMultiplier*>(el->GetWeakForm());
+            if (lagrange) {
+                HasLagrange = true;   
+                continue;
+            }
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
             int nElNodes = el->NElNodes(); 
@@ -84,13 +99,22 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
             };
         };
     }; //Elements
+    if (HasLagrange) LagrangeMultiplierDOFMatrix(fAnalysis,mesh,startDOF);
 }
 
 void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
+    bool HasLagrange = false;
     for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
+            if (!el) continue;
+            LagrangeMultiplier *lagrange = dynamic_cast<LagrangeMultiplier*>(el->GetWeakForm());
+            if (lagrange) {
+                HasLagrange = true;   
+                continue;
+            }
+
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
             int nElNodes = el->NElNodes(); 
@@ -113,6 +137,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
             };
         };
     }; //Elements
+    if (HasLagrange) LagrangeMultiplierDOFVector(fAnalysis,mesh,startDOF);
 }
 
 
@@ -570,4 +595,80 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
         break;
     }
 
+}
+
+void Assemble::LagrangeMultiplierDOF(Analysis *fAnalysis, int mesh, int64_t startDOF){
+    std::cout << "Assembling..." << std::endl;
+
+    for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
+        if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
+            //Compute Element matrix
+            Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
+            if (!el) continue;
+            LagrangeMultiplier *lagrange = dynamic_cast<LagrangeMultiplier*>(el->GetWeakForm());
+            if (!lagrange) continue;
+
+            Element *elLeft, *elRight;
+            el->GetInterfaceData(elLeft,elRight);
+
+
+            VecInt connecLeft = elLeft->getConnectivity();
+            VecInt connecRight = elRight->getConnectivity();
+            int nLocDOFL = elLeft->NLocDOF(); 
+            int nLocDOFR = elRight->NLocDOF(); 
+            int nElNodesL = elLeft->NElNodes(); 
+            int nElNodesR = elRight->NElNodes(); 
+
+            if (nLocDOFL == 0 || nLocDOFR == 0) continue;
+
+            MatrixDouble matrix(nLocDOFL,nLocDOFR);
+            matrix.setZero();
+            VecDouble rhs(nLocDOFL+nLocDOFR);
+            rhs.setZero();
+
+            fAnalysis->MeshVector()[mesh]->ElementVec()[jel] -> ComputeElContribution(matrix,rhs);
+
+            //Disperse local contributions into the global matrix
+            //Stiffness matrix
+            for (int i=0; i<nElNodesL; i++){
+                int nstatei = fAnalysis->MeshVector()[mesh]->NodeVec()[connecLeft[i]]->GetNStateVariables();
+                for (int j=0; j<nElNodesR; j++){
+                    int nstatej = fAnalysis->MeshVector()[mesh]->NodeVec()[connecRight[j]]->GetNStateVariables();
+                    for (int istate = 0; istate < nstatei; istate++){
+                        for (int jstate = 0; jstate < nstatej; jstate++){
+                            int64_t dof_i = startDOF + nstatei * connecLeft[i] + istate;
+                            int64_t dof_j = startDOF + nstatej * connecRight[j] + jstate; 
+                            fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*i+istate,nstatej*j+jstate));
+                            fAnalysis->GlobalMatrix()->AddValueMatrix(dof_j,dof_i,matrix(nstatei*i+istate,nstatej*j+jstate));
+                        }
+                    }
+                };
+                
+                //Rhs vector
+                for (int istate = 0; istate < nstatei; istate++){
+                    int64_t dof_i = startDOF + nstatei * connecLeft[i] + istate;
+                    fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*i+istate]);
+                }
+            };
+            for (int i=0; i<nElNodesR; i++){
+                int nstatei = fAnalysis->MeshVector()[mesh]->NodeVec()[connecRight[i]]->GetNStateVariables();
+                for (int istate = 0; istate < nstatei; istate++){
+                    int64_t dof_i = startDOF + nstatei * connecRight[i] + istate;
+                    fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nLocDOFL+istate]);
+                }
+            }
+        };
+        // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
+        // fAnalysis->GlobalMatrix()->PrintRhs();
+    }; //Elements
+}
+
+void Assemble::LagrangeMultiplierDOFMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
+    std::cout << "Please Implement me!" << std::endl;
+    PanicButton();
+}
+
+void Assemble::LagrangeMultiplierDOFVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
+    std::cout << "Please Implement me!" << std::endl;
+    PanicButton();
 }
