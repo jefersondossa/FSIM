@@ -1,5 +1,6 @@
 #include "VTUGenerator.h"
 #include "LagrangeMultiplier.h"
+#include "NullWeakForm.h"
 
 void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, int step){
 
@@ -78,6 +79,10 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
         auto compel = cmesh->ElementVec()[iel];
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
+        auto wf = compel->GetWeakForm();
+        auto lagm = dynamic_cast<LagrangeMultiplier*>(wf);
+        auto null = dynamic_cast<NullWeakForm*>(wf);
+        if (lagm || null) continue;
 
         for (int inode = 0; inode < compel->NElNodes(); inode++){
             auto xparametric = compel->NodeCoord(inode);
@@ -125,11 +130,11 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
             << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << std::endl;
         for (int i=0; i<graphmesh->NNodes(); i++){
-            // if (scalSol[i].size()==0){
-                // output_v <<std::scientific<< "0" << std::endl;
-            // }else{
+            if (scalSol[i].size()==0){
+                output_v <<std::scientific<< "0" << std::endl;
+            }else{
                 output_v <<std::scientific<< scalSol[i][iscal][0] << std::endl;
-            // }
+            }
         }
         output_v << "      </DataArray> " << std::endl;
     }
@@ -138,11 +143,11 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
         for (int i=0; i<graphmesh->NNodes(); i++){
-            // if (vectSol[i].size()==0){
-                // output_v <<std::scientific<< "0,0,0" << std::endl;
-            // }else{
+            if (vectSol[i].size()==0){
+                output_v <<std::scientific<< "0 0 0" << std::endl;
+            }else{
                 output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
-            // }
+            }
         }
         output_v << "      </DataArray> " << std::endl;
     }
@@ -262,7 +267,8 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
         if (compel->Dimension() != cmesh->Dimension()) continue;
         auto wf = compel->GetWeakForm();
         auto lagm = dynamic_cast<LagrangeMultiplier*>(wf);
-        if (lagm) continue;
+        auto null = dynamic_cast<NullWeakForm*>(wf);
+        if (lagm || null) continue;
 
         for (int inode = 0; inode < compel->NElNodes(); inode++){
             auto xparametric = compel->NodeCoord(inode);
@@ -333,7 +339,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
             << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
         for (int i=0; i<cmesh->NNodes(); i++){
             if (vectSol[i].size()==0){
-                output_v <<std::scientific<< "0,0,0" << std::endl;
+                output_v <<std::scientific<< "0 0 0" << std::endl;
             }else{
                 output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
             }

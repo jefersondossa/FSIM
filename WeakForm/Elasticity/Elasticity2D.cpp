@@ -174,6 +174,7 @@ int Elasticity2D::VariableIndex(const std::string &name) const{
     if(!strcmp("J2",name.c_str()))                      return 21;
     if(!strcmp("Compliance",name.c_str()))              return 22;
     if(!strcmp("ComplianceSensibility",name.c_str()))   return 23;
+    if(!strcmp("WeightFunction",name.c_str()))          return 24;
 
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
@@ -207,6 +208,7 @@ int Elasticity2D::NSolutionVariables(int var) const{
     case 21:
     case 22:
     case 23:
+    case 24:
         return 1;
 
     default:
@@ -536,6 +538,12 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
         const auto compliance = stress.transpose()*epsilon;
         Sol[0] = compliance(0, 0);
+        return;
+    }
+
+    //Weight Function
+    if (var == 24){
+        Sol[0] = data.fWeightFunction[0];
         return;
     }
 };

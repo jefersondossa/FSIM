@@ -19,7 +19,10 @@ void ElementLagrangeMultiplier<tshape>::ComputeElContribution(MatrixDouble &jaco
     if (!this->fWeakForm) return;
 
     LagrangeMultiplier *lagrange = dynamic_cast<LagrangeMultiplier*>(this->fWeakForm);
-    if (!lagrange) return;
+    if (!lagrange) {
+        PanicButton();
+        return;
+    }
 
     int DIM = tshape::Dimension;
     int index = 0;

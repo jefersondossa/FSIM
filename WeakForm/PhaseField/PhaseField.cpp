@@ -72,7 +72,7 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
     int nphi = data.fPhi.size();
 
     // TODO: Remove fWeightFunction.
-    double WJ = data.fWeight * data.fJacA0  * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
 
     VecDouble forcingF(1);
     VecDouble x_ = data.fX;

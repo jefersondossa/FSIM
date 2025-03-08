@@ -854,7 +854,7 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
     if (!fWeakForm) return;
 
     // Already calculated before, re-use it.
-    if(fIntegData.fStiffnessMatrix.has_value() && !fWeakForm->GetHasMemory()) {
+    if(fIntegData.fStiffnessMatrix.has_value() && !fWeakForm->GetHasMemory()){
         jacobianNRMatrix = *fIntegData.fStiffnessMatrix;
         rhsVector = fIntegData.fRHS;
         return;

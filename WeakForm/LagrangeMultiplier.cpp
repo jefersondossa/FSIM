@@ -27,12 +27,15 @@ void LagrangeMultiplier::ComputeResidual(int &index, IntPointData &leftdata, Int
     double WJ = leftdata.fWeight * leftdata.fJacA0 * leftdata.fWeightFunction[index];
     double nphiL = leftdata.fPhi.size();
     double nphiR = rightdata.fPhi.size();
+    VecDouble forcingF(1);
+    VecDouble x_ = leftdata.fX;
+    if (fForceFunction) fForceFunction(x_,forcingF);
 
     for (int i = 0; i < nphiL; i++){
         Rhs[i] -= WJ * leftdata.fPhi[i] * rightdata.fSol[0];
     }
     for (int i = 0; i < nphiR; i++){
-        Rhs[nphiL+i] -= WJ * rightdata.fPhi[i] * leftdata.fSol[0] - 1.* WJ * rightdata.fPhi[i];
+        Rhs[nphiL+i] += (forcingF[0] * rightdata.fPhi[i] - rightdata.fPhi[i] * leftdata.fSol[0]) * WJ;
     }
 };
 
