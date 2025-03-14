@@ -8,7 +8,7 @@ TransientAnalysis::TransientAnalysis(CompMesh *cmesh, SolverType stype, bool lin
 
 
 void TransientAnalysis::Run(int64_t nsteps){
-
+    static size_t steps_run = 0;
     for (int64_t i = 0; i < nsteps; i++){
         
         std::cout << "Time Step = " << i << std::endl;
@@ -33,7 +33,7 @@ void TransientAnalysis::Run(int64_t nsteps){
             }
         }
         
-        VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,{},i);
+        VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,{},i + steps_run);
         fGlobalMatrix->ZeroMatrix();
         fGlobalMatrix->ZeroRhs();
         fGlobalMatrix->ZeroSolution();
@@ -42,6 +42,8 @@ void TransientAnalysis::Run(int64_t nsteps){
             fGlobalMatrix->AddValueMatrix(i,i,val);
         }
     }
+
+    steps_run+= nsteps;
 }
 
 void TransientAnalysis::PrintVariables(std::string filename, std::vector<std::string> &scal, std::vector<std::string> &vec){

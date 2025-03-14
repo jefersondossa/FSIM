@@ -73,7 +73,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     val1.setZero();
     val2.setZero();
     constexpr auto kPhaseFieldInternalMatId = 15;
-    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1.e-4, 20.00, 1e-3);
+    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1.e-4, 20.00, 1e-1);
     modelPhaseField.InsertMaterial(govEquationPF);
 
     constexpr auto kPhaseFieldLeftMatId = 16;
@@ -124,8 +124,12 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     //Sets the initial/final volume constraint as a forcing function
     // const auto diam = 2*100.0/700;
     // double finalVol = 2.-12.*M_PI*diam*diam/4.0;
+    static constexpr auto diam = 2*100.0/700;
+    static constexpr auto holesVol = 12.*M_PI*diam*diam/4.0;
+    static constexpr auto finalVol = 2.-holesVol;
+    static constexpr auto finalVolRel = finalVol / 2.0;
     auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
-        force[0] = 2.-1.2306303705;
+        force[0] = finalVolRel;
         // force[0] = 0.0;
     };
     lagmult->SetForcingFunction(forcingFunction);
@@ -238,7 +242,7 @@ int main()
         fSol.resize(1);
         fSolPrev.resize(1);
 
-        fSol[0] = (has_void) ? min_val : max_val;
+        fSol[0] = min_val;//(has_void) ? 0.0 : max_val;
         fSolPrev[0] = fSol[0];
     }
 
@@ -256,15 +260,6 @@ int main()
     }
 
     anElasticity2D.Run();
-    std::vector<MatrixDouble> original_stiffness;
-
-    // TODO: Solve one time before saving the stiffness matrix.
-
-    // for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
-    // {
-    //     auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
-    //     original_stiffness.push_back(*elemElas2D->IntegrationData().fStiffnessMatrix);
-    // }
 
     int i = 0;
     std::vector<std::string> ScalarNamesElasticity2D, VectorNamesElasticity2D;
@@ -279,21 +274,20 @@ int main()
     }
 
     VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, 1);
-
     
     // Solving
     while(true)
     {
-        
         // For the elasticity problem, transfer phase field solution to the weightFunction data structure.
         for (size_t inode = 0; inode < modelElasticity2D->NNodes(); inode++){
-            modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::max(min_val, pow(modelPhaseField->NodeVec()[inode]->Solution()[0],3)));
+            modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::max(min_val, pow(modelPhaseField->NodeVec()[inode]->Solution()[0], 3)));
         }
         // For each elasticity element, compute the compliance and then transfer the information
         // to the phase field corresponding element. The value of J need to be computed for each integration point.
         // Thus the //J data structure need to be a vector with lenght equal to the number of integration points.
         // Otherwhise, the value of J can also be stored in the weight function data structure.
-        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
+        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements() 
+            && i_el < modelPhaseField->NElements(); i_el++)
         {
             auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
             auto elemPhaseField = modelPhaseField->ElementVec()[i_el];
@@ -310,11 +304,8 @@ int main()
             VecDouble compl_vec(nvar);
             elemElas2D->Solution(compliance_var_idx, compl_vec);
 
-            elemPhaseField->IntegrationData().fJ = (compl_vec[0] > 0 ? 1.0 : -1.0);
+            elemPhaseField->IntegrationData().fJ = compl_vec[0];//(compl_vec[0] > 0 ? 1.0 : -1.0);// ;
         }
-
-        
-        
 
         anElasticity2D.Run();
         VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);

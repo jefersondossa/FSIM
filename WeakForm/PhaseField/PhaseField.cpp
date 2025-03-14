@@ -30,11 +30,12 @@ void PhaseField::ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDo
 
     // TODO: Use fWeightFunction instead of data.fJ.
     const auto sol = data.fSol(0, 0);
-    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
+
+    const auto y = -fM * (data.fJ + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){
             for (int k = fDimension; k--;  ){
-                Stiffness(i,j) += fKappa*data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
+                Stiffness(i,j) += fM*fGamma*fKsi*data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
             }
             Stiffness(i,j) += data.fPhi[i] * data.fPhi[j] * y * WJ;
         };
@@ -81,7 +82,7 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
     const auto sol = data.fSol(0, 0);
 
     // TODO: Use fWeightFunction instead of data.fJ.
-    const auto y = (1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
+    const auto y = -fM * (data.fJ + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];

@@ -536,7 +536,9 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
             stress[2] = G * epsilon[2];
         }
 
-        const auto compliance = stress.transpose()*epsilon;
+        // 1 because we are extracting phi to be used as the "common denominator".
+        // In the phase field equation.
+        const auto compliance = 3*pow(pow(data.fWeightFunction[0], 1.0/3.0), 1) * stress.transpose()*epsilon;
         Sol[0] = compliance(0, 0);
         return;
     }
