@@ -741,10 +741,13 @@ void ElementT<tshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDoubl
 template<class tshape>
 void ElementT<tshape>::interpolateSolution() {
     fIntegData.fSol.setZero();
+    fIntegData.fInterpWeightFunction = 0.;
     if (fIntegData.fSolPrev.size() != 0) fIntegData.fSolPrev.setZero();
+    
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        fIntegData.fInterpWeightFunction += fMesh->NodeVec()[fConnect[i]] -> getWeightFunction() * shapeFi;
         for (int j = 0; j < nstate; j++ ){
             fIntegData.fSol[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
             if (fIntegData.fSolPrev.size() != 0) {

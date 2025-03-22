@@ -25,13 +25,13 @@ void PhaseField::ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDo
     }
 
     // TODO: Remove fWeightFunction.
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0;
     int nphi = data.fPhi.size();
 
     // TODO: Use fWeightFunction instead of data.fJ.
     const auto sol = data.fSol(0, 0);
 
-    const auto y = -fM * (data.fJ + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
+    const auto y = -fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){
             for (int k = fDimension; k--;  ){
@@ -47,7 +47,7 @@ void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &
     ComputeStiffnessStatic(index, data, Stiffness);
 
     const int nphi = data.fPhi.size();
-    const double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    const double WJ = data.fWeight * data.fJacA0;
     MatrixDouble Mass(nphi,nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -73,7 +73,7 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
     int nphi = data.fPhi.size();
 
     // TODO: Remove fWeightFunction.
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0;
 
     VecDouble forcingF(1);
     VecDouble x_ = data.fX;
@@ -82,14 +82,14 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
     const auto sol = data.fSol(0, 0);
 
     // TODO: Use fWeightFunction instead of data.fJ.
-    const auto y = -fM * (data.fJ + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
+    const auto y = -fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
 
         //Matrix residual
         double K = 0.;
-        for (int l=fDimension; l--; ) K += fKappa * data.fDPhiX0(l,i) * data.fDSolDx(0,l);
+        for (int l=fDimension; l--; ) K += fM*fGamma*fKsi*data.fDPhiX0(l,i) * data.fDSolDx(0,l);
 
         double phaseFieldRes = 0.0;
 
@@ -107,7 +107,7 @@ void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     
     const auto vel = data.fDSolDt;
     const int nphi = data.fPhi.size();
-    const double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    const double WJ = data.fWeight * data.fJacA0;
 
     // int (R) -> int (w[dphi/dt + ...])
     // R_i+1 = R_i + grad(R) * delta_phi
@@ -155,6 +155,7 @@ int PhaseField::VariableIndex(const std::string &name) const{
     if(!strcmp("ExactDerivative",name.c_str())) return 4;
     if(!strcmp("ForceFunction",name.c_str()))   return 5;
     if(!strcmp("TimeDerivative",name.c_str()))  return 6;
+    if(!strcmp("WeightFunction",name.c_str()))  return 7;
     
     std::cout << "Post Process variable not implemented \n";
     PanicButton();
@@ -168,6 +169,7 @@ int PhaseField::NSolutionVariables(int var) const{
     case 3:
     case 5:
     case 6:
+    case 7:
         return 1;
     case 2:
     case 4:
@@ -227,6 +229,12 @@ void PhaseField::Solution(IntPointData &data, int var, VecDouble &Sol) {
     //Velocity
     if (var == 6){
         Sol[0] = data.fDSolDt[0];
+        return;
+    };
+
+    //WeightFunction
+    if (var == 7){
+        Sol[0] = data.fInterpWeightFunction;
         return;
     };
     

@@ -47,7 +47,7 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fSol.resize(fNState);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
+    double WJ = data.fWeight * data.fJacA0 * data.fInterpWeightFunction * fThickness;
     int nphi = data.fPhi.size();
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
@@ -69,7 +69,7 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
+    double WJ = data.fWeight * data.fJacA0 * data.fInterpWeightFunction * fThickness;
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
    
@@ -538,14 +538,15 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
         // 1 because we are extracting phi to be used as the "common denominator".
         // In the phase field equation.
-        const auto compliance = 3*pow(pow(data.fWeightFunction[0], 1.0/3.0), 1) * stress.transpose()*epsilon;
-        Sol[0] = compliance(0, 0);
+        // double compliance = 3*pow(pow(data.fInterpWeightFunction, 1.0/3.0), 1) * stress.transpose()*epsilon;
+        double compliance = stress.transpose()*epsilon;
+        Sol[0] = compliance;
         return;
     }
 
     //Weight Function
     if (var == 24){
-        Sol[0] = data.fWeightFunction[0];
+        Sol[0] = data.fInterpWeightFunction;
         return;
     }
 };

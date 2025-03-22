@@ -88,6 +88,8 @@ public:
 
     /// @brief Element contribution to the global rhs
     VecDouble fRHS = {};
+
+    double fInterpWeightFunction = {};
 };
 
 
