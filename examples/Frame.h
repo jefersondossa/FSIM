@@ -31,7 +31,7 @@
       
     GmshTools::Read(*cmesh,"../Portico.msh");
 
-    LinearAnalysis an(cmesh,SolverType::EMumps);
+    NonLinearAnalysis an(cmesh,SolverType::ELDLt,1e-6,1);
    
     std::vector<std::string> ScalarNames, VectorNames;
     VectorNames = {"Displacement"};

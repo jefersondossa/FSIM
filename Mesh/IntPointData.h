@@ -60,6 +60,8 @@ public:
     VecDouble fSolNodes = {};
     /// @brief Solution gradient
     MatrixDouble fDSolDx = {};
+    /// @brief Solution gradient in the parametric space
+    MatrixDouble fDSolDAdim = {};
     /// @brief Solution first time derivative
     VecDouble fDSolDt = {};
     /// @brief Solution second time derivative
@@ -73,6 +75,7 @@ public:
     bool fNeedsSol = false;
     bool fNeedsDSol = false;
     bool fNeedsTimeDerivatives = false;
+    bool fNeedsDSolDAdim = false;
 
     VecDouble fYieldFunction = {};
     VecDouble fEffectivePlasticStrain = {};

@@ -2,6 +2,7 @@
 #include "PositionalTruss.h"
 #include "ElasticityPositional2D.h"
 #include "L2Projection.h"
+#include "PositionalFrame2D.h"
 
 template<class tshape>
 ElementT<tshape>::ElementT() : Element(){
@@ -813,6 +814,7 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDou
 template<class tshape>
 void ElementT<tshape>::interpolateSolDerivatives() {
     fIntegData.fDSolDx.setZero();
+    fIntegData.fDSolDAdim.setZero();
     bool flag = false;
     if (fIntegData.fDSolDxPrev.size() != 0){
         fIntegData.fDSolDxPrev.setZero(); 
@@ -824,6 +826,8 @@ void ElementT<tshape>::interpolateSolDerivatives() {
             for (int k = nstate; k--; ){
                 fIntegData.fDSolDx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
                 if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,i);
+
+                if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhi(j,i);
 #ifdef DEBUG_BUILD
                 if (std::isnan(fIntegData.fDSolDx(k,j))){
                     PanicButton();
@@ -869,6 +873,12 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
 
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
+    auto *frame2d = dynamic_cast<PositionalFrame2D *> (fWeakForm);
+
+    if (frame2d){
+        fIntegData.fDSolDAdim.resize(this->fWeakForm->NState(), DIM);
+        fIntegData.fNeedsDSolDAdim = true;
+    }
     
     int index = 0;
     double val = 0.;
@@ -887,7 +897,7 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (pos2d || truss || frame2d){
             ComputeCurrentJacobian();
             ComputeCurrentSpatialDerivatives();
         }
@@ -904,8 +914,8 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         index++;        
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    std::cout << "Rhs \n" << rhsVector << std::endl;
     // Set stiffness matrix to cache.
     fIntegData.fStiffnessMatrix = jacobianNRMatrix;
     fIntegData.fRHS = rhsVector;
