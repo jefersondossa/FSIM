@@ -532,10 +532,10 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
     // Renumber nodes - start
     std::vector<int > neighborNodes;
 
-    int* xadj;
-    int numNd = numNodes;
-    std::vector<int> adjncy;
-    xadj = new int[numNd+1]();
+    idx_t* xadj;
+    idx_t numNd = numNodes;
+    std::vector<idx_t> adjncy;
+    xadj = new idx_t[numNd+1]();
     adjncy.reserve(10*numNodes);
 
     for (int iNode = 0; iNode < numNodes; iNode++){
@@ -569,17 +569,17 @@ void Fluid<DIM,DEG>::renumberConnectivity(){
     }
 
     //Save a second adjacency vector in idx_t format
-    int *adjncy2;
-    int adj_size = adjncy.size();
-    adjncy2 = new int[adj_size];
+    idx_t *adjncy2;
+    idx_t adj_size = adjncy.size();
+    adjncy2 = new idx_t[adj_size];
     for (int i = 0; i < adjncy.size(); i++) adjncy2[i] = adjncy[i];
     
     adjncy.clear(); adjncy.shrink_to_fit();
 
-    int* perm;
-    int* iperm;
-    perm = new int[numNd];
-    iperm = new int[numNd];
+    idx_t* perm;
+    idx_t* iperm;
+    perm = new idx_t[numNd];
+    iperm = new idx_t[numNd];
 
     // Call METIS for node renumbering
 
@@ -772,9 +772,9 @@ void Fluid<DIM,DEG>::domainDecompositionMETIS() {
     idx_t numNd = numNodes;
     idx_t ssize = size;
     idx_t one = 1;
-    int elem_start[numElem+1], elem_connec[nElNodes*numElem];
-    part_elem = new int[numElem];
-    part_nodes = new int[numNodes];
+    PetscInt elem_start[numElem+1], elem_connec[nElNodes*numElem];
+    part_elem = new PetscInt[numElem];
+    part_nodes = new PetscInt[numNodes];
 
 
     for (int i = 0; i < numElem+1; i++){
@@ -1036,35 +1036,35 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
             for (int i=0; i<nElNodes; i++){
                 for (int j=0; j<nElNodes; j++){
                     if (fabs(matrix(2*i  ,2*j  )) >= 1.e-8){
-                        int dof_i = 2*connec[i];
-                        int dof_j = 2*connec[j];
+                        PetscInt dof_i = 2*connec[i];
+                        PetscInt dof_j = 2*connec[j];
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(2*i  ,2*j  ),ADD_VALUES);
                     };
                     if (fabs(matrix(2*i+1,2*j  )) >= 1.e-8){
-                        int dof_i = 2*connec[i]+1;
-                        int dof_j = 2*connec[j];
+                        PetscInt dof_i = 2*connec[i]+1;
+                        PetscInt dof_j = 2*connec[j];
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(2*i+1,2*j  ),ADD_VALUES);
                     };
                     if (fabs(matrix(2*i  ,2*j+1)) >= 1.e-8){
-                        int dof_i = 2*connec[i];
-                        int dof_j = 2*connec[j]+1;
+                        PetscInt dof_i = 2*connec[i];
+                        PetscInt dof_j = 2*connec[j]+1;
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(2*i  ,2*j+1),ADD_VALUES);
                     };
                     if (fabs(matrix(2*i+1,2*j+1)) >= 1.e-8){
-                        int dof_i = 2*connec[i]+1;
-                        int dof_j = 2*connec[j]+1;
+                        PetscInt dof_i = 2*connec[i]+1;
+                        PetscInt dof_j = 2*connec[j]+1;
                         ierr = MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(2*i+1,2*j+1),ADD_VALUES);
                     };
                 };
                                     
                 //Rhs vector
                 if (fabs(rhs[2*i  ]) >= 1.e-8){
-                    int dof_i = 2*connec[i];
+                    PetscInt dof_i = 2*connec[i];
                     ierr = VecSetValues(b,1,&dof_i,&rhs[2*i  ],ADD_VALUES);
                 };
                 
                 if (fabs(rhs[2*i+1]) >= 1.e-8){
-                    int dof_i = 2*connec[i]+1;
+                    PetscInt dof_i = 2*connec[i]+1;
                     ierr = VecSetValues(b,1,&dof_i,&rhs[2*i+1],ADD_VALUES);
                 };
             };
@@ -1335,8 +1335,8 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
                 //Matrix K and C
                 for (int i=0; i<6; i++){
                     for (int j=0; j<6; j++){
-                        int dof_i = 2 * connec[i];
-                        int dof_j = 2 * connec[j];
+                        PetscInt dof_i = 2 * connec[i];
+                        PetscInt dof_j = 2 * connec[j];
                         MatSetValues(A, 1, &dof_i,1, &dof_j, &matrix(2*i  ,2*j  ), ADD_VALUES);
                         
                         dof_i = 2 * connec[i] + 1;
@@ -1374,7 +1374,7 @@ int Fluid<DIM,DEG>::solveFSIFluid(int iterNumber, double tolerance, int problem_
                     };
                     
                     //Rhs vector
-                    int dof_i = 2 * connec[i];
+                    PetscInt dof_i = 2 * connec[i];
                     VecSetValues(b, 1, &dof_i, &rhs[2*i  ], ADD_VALUES);
                     
                     dof_i = 2 * connec[i]+1;
@@ -1584,13 +1584,13 @@ int Fluid<DIM,DEG>::solvePoisson(){
                 //Matrix K and C
                 for (int i=0; i<nElNodes; i++){
                     for (int j=0; j<nElNodes; j++){
-                        int dof_i = connec[i];
-                        int dof_j = connec[j];
+                        PetscInt dof_i = connec[i];
+                        PetscInt dof_j = connec[j];
                         MatSetValues(A, 1, &dof_i,1, &dof_j, &matrix(i,j), ADD_VALUES);
                     };
                     
                     //Rhs vector
-                    int dof_i = connec[i];
+                    PetscInt dof_i = connec[i];
                     VecSetValues(b, 1, &dof_i, &rhs[i], ADD_VALUES);
                 };
             };

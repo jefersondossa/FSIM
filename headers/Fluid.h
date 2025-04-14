@@ -74,8 +74,8 @@ private:
     double ktermInf;       //Thermal condutivity
     VecDouble velocityInf; //Undisturbed velocity
     VecDouble fieldForces; //Field forces (constant)
-    int* part_elem;      //Fluid Domain Decomposition - Elements
-    int* part_nodes;     //Fluid Domain Decomposition - Nodes
+    PetscInt* part_elem;      //Fluid Domain Decomposition - Elements
+    PetscInt* part_nodes;     //Fluid Domain Decomposition - Nodes
     int numTimeSteps;      //Number of Time Steps
     int printFreq;         //Printing frequence of output files
     double dTime;          //Time Step

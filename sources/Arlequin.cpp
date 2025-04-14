@@ -1795,8 +1795,8 @@ void Arlequin<DIM,DEG>::setFluidModels(FluidMesh& coarse, FluidMesh& fine){
 
     Vec  b;
     PetscErrorCode    ierr;
-    int start[size], end[size];
-    int numDOF = (DIM+1)*numNodesCoarse + (DIM+1)*numNodesFine + DIM*numNodesGlueZoneFine;
+    PetscInt start[size], end[size];
+    PetscInt numDOF = (DIM+1)*numNodesCoarse + (DIM+1)*numNodesFine + DIM*numNodesGlueZoneFine;
 
     ierr = VecCreate(PETSC_COMM_WORLD,&b);
     ierr = VecSetSizes(b,PETSC_DECIDE,numDOF);
@@ -1955,27 +1955,27 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDoub
             for (int k = 0; k < DIM; k++){
                 for (int l = 0; l < DIM; l++){
                     //Matrix K and C            
-                    int dof_i = (DIM+1) * connec[i] + k;
-                    int dof_j = (DIM+1) * connec[j] + l;
+                    PetscInt dof_i = (DIM+1) * connec[i] + k;
+                    PetscInt dof_j = (DIM+1) * connec[j] + l;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*j+l),ADD_VALUES);
                 }
                 //Matrix G and Gt
-                int dof_i = (DIM+1) * connec[i] + k;
-                int dof_j = (DIM+1) * connec[j] + DIM;
+                PetscInt dof_i = (DIM+1) * connec[i] + k;
+                PetscInt dof_j = (DIM+1) * connec[j] + DIM;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*nElNodes+j),ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+j,DIM*i+k),ADD_VALUES);
             }
             // Matrix Q
-            int dof_i = (DIM+1) * connec[i] + DIM;
-            int dof_j = (DIM+1) * connec[j] + DIM;
+            PetscInt dof_i = (DIM+1) * connec[i] + DIM;
+            PetscInt dof_j = (DIM+1) * connec[j] + DIM;
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+i,DIM*nElNodes+j),ADD_VALUES);
         };
         for (int k = 0; k < DIM; k++){          
             //Rhs vector
-            int dof_i = (DIM+1) * connec[i] + k;
+            PetscInt dof_i = (DIM+1) * connec[i] + k;
             VecSetValues(b,1,&dof_i,&rhs[DIM*i+k],ADD_VALUES);
         }
-        int dof_i = (DIM+1) * connec[i] + DIM;
+        PetscInt dof_i = (DIM+1) * connec[i] + DIM;
         VecSetValues(b,1,&dof_i,&rhs[DIM*nElNodes+i],ADD_VALUES);
     };
 
@@ -1990,10 +1990,10 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, 
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
-        int dof_i = connec[i];
+        PetscInt dof_i = connec[i];
         for (int j = 0; j < nElNodes; j++){
             //Matrix K
-            int dof_j = connec[j];
+            PetscInt dof_j = connec[j];
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(i,j),ADD_VALUES);
         };
         //Rhs vector
@@ -2015,27 +2015,27 @@ void Arlequin<DIM,DEG>::setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble
             for (int k = 0; k < DIM; k++){
                 for (int l = 0; l < DIM; l++){
                     //Matrix K and C
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
-                    int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + l;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
+                    PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + l;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*j+l),ADD_VALUES);
                 }          
                 //Matrix G and Gt
-                int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
-                int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
+                PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
+                PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
                 MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(DIM*i+k,DIM*nElNodes+j),ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+j,DIM*i+k),ADD_VALUES);
             }
             //Matrix Q
-            int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
-            int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
+            PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
+            PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
             MatSetValues(A,1,&dof_j,1,&dof_i,&matrix(DIM*nElNodes+i,DIM*nElNodes+j),ADD_VALUES);
         };
         for (int k = 0; k < DIM; k++){  
             ///Rhs vector
-            int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
+            PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
             VecSetValues(b,1,&dof_i,&rhs[DIM*i+k],ADD_VALUES);
         }
-        int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
+        PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
         VecSetValues(b,1,&dof_i,&rhs[DIM*nElNodes+i],ADD_VALUES);
     }; 
 
@@ -2050,10 +2050,10 @@ void Arlequin<DIM,DEG>::setMatVecValuesFineModelPoisson(MatrixDouble &matrix, Ve
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
-        int dof_i = numNodesCoarse + connec[i];
+        PetscInt dof_i = numNodesCoarse + connec[i];
         for (int j = 0; j < nElNodes; j++){
             //Matrix K
-            int dof_j = numNodesCoarse + connec[j];
+            PetscInt dof_j = numNodesCoarse + connec[j];
             MatSetValues(A,1,&dof_i,1,&dof_j,&matrix(i,j),ADD_VALUES);
         };
         ///Rhs vector
@@ -2085,8 +2085,8 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
                 for (int l = 0; l < DIM; l++){
                     //COUPLING OPERATOR
                     if (fabs(Ajac2(DIM*i+k,DIM*j+l)) >= 1.e-15){
-                        int d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                        int d_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + l;
+                        PetscInt d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                        PetscInt d_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + l;
                         double value = Ajac2(DIM*i+k,DIM*j+l)*integ;
                         MatSetValues(A,1,&d_i,1,&d_j,&value,ADD_VALUES);
                         MatSetValues(A,1,&d_j,1,&d_i,&Ajac2(DIM*i+k,DIM*j+l),ADD_VALUES);
@@ -2094,30 +2094,30 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
                 }
                 //SUPG STABILIZATION
                 if (fabs(localMV_mat(DIM*i+k,DIM*j+k)) >= 1.e-15){
-                    int d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM*connecL[i] + k;
-                    int d_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + k;
+                    PetscInt d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM*connecL[i] + k;
+                    PetscInt d_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + k;
                     MatSetValues(A,1,&d_j,1,&d_i,&localMV_mat(2*i  ,2*j  ),ADD_VALUES);
                 };
                 //PSPG STABILIZATION
                 if (fabs(localMV_mat(DIM*i+k,DIM*nElNodes+j)) >= 1.e-15){
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
-                    int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + connecL[j] + k;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
+                    PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + connecL[j] + k;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_mat(DIM*i+k,DIM*nElNodes+j),ADD_VALUES);
                 };
                 //ARLEQUIN STABILIZATION
                 if (fabs(ArlequinA2(DIM*i+k,DIM*j+k)) >= 1.e-15){
-                    int d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                    int d_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + k;
+                    PetscInt d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                    PetscInt d_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + k;
                     MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2(DIM*i+k,DIM*j+k),ADD_VALUES);
                 };
                 if (fabs(ArlequinA2(DIM*nElNodes+i,DIM*j+k)) >= 1.e-15){
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                    int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                    PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * connec[j] + DIM;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(DIM*nElNodes+i,DIM*j+k),ADD_VALUES);
                 };
                 if (fabs(ArlequinA1(DIM*i+k,DIM*j+k)) >= 1.e-15){
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                    int dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[j] + k;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                    PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[j] + k;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(DIM*i+k,DIM*j+k),ADD_VALUES);
                 };      
             }                      
@@ -2125,7 +2125,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
         //RHS VECTOR
         for (int k = 0; k < DIM; k++){
             //COUPLING OPERATOR
-            int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+            PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
             VecSetValues(b,1,&dof_i,&Rhs2[DIM*i+k],ADD_VALUES);
 
             dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + k;
@@ -2140,7 +2140,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
             VecSetValues(b,1,&dof_i,&RhsArlequin2[DIM*i+k],ADD_VALUES);
         }
         //PSPG STABILIZATION
-        int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
+        PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * connec[i] + DIM;
         VecSetValues(b,1,&dof_i,&localMV_vec[DIM*nElNodes+i],ADD_VALUES);
     };
 
@@ -2162,26 +2162,26 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac
         for (int j = 0; j < nElNodes; j++){
             //COUPLING OPERATOR
             if (fabs(Ajac2(i,j)) >= 1.e-15){
-                int d_i = numNodesCoarse + numNodesFine + connecL[i];
-                int d_j = numNodesCoarse + connec[j];
+                PetscInt d_i = numNodesCoarse + numNodesFine + connecL[i];
+                PetscInt d_j = numNodesCoarse + connec[j];
                 MatSetValues(A,1,&d_i,1,&d_j,&Ajac2(i,j),ADD_VALUES);
                 MatSetValues(A,1,&d_j,1,&d_i,&Ajac2(i,j),ADD_VALUES);
             };
             // ARLEQUIN STABILIZATION
             if (fabs(ArlequinA2(i,j)) >= 1.e-15){
-                int dof_i = numNodesCoarse + numNodesFine + connecL[i];
-                int dof_j = numNodesCoarse + connec[j];
+                PetscInt dof_i = numNodesCoarse + numNodesFine + connecL[i];
+                PetscInt dof_j = numNodesCoarse + connec[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(i,j),ADD_VALUES);
             };
             if (fabs(ArlequinA1(i,j)) >= 1.e-15){
-                int dof_i = numNodesCoarse + numNodesFine + connecL[i];
-                int dof_j = numNodesCoarse + numNodesFine + connecL[j];
+                PetscInt dof_i = numNodesCoarse + numNodesFine + connecL[i];
+                PetscInt dof_j = numNodesCoarse + numNodesFine + connecL[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(i,j),ADD_VALUES);
             };                   
         };
         //RHS VECTOR
         //COUPLING OPERATOR
-        int dof_i = numNodesCoarse + numNodesFine + connecL[i];
+        PetscInt dof_i = numNodesCoarse + numNodesFine + connecL[i];
         VecSetValues(b,1,&dof_i,&Rhs2[i],ADD_VALUES);
 
         dof_i = numNodesCoarse + connec[i];
@@ -2218,8 +2218,8 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
                 for (int l = 0; l < DIM; l++){
                     //COUPLING OPERATOR
                     if (fabs(Ajac2(DIM*i+k,DIM*j+l)) >= 1.e-15){
-                        int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                        int dof_j = (DIM+1) * connecC[j] + l;
+                        PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                        PetscInt dof_j = (DIM+1) * connecC[j] + l;
                         double value = Ajac2(DIM*i+k,DIM*j+l) * integ;
                         MatSetValues(A,1,&dof_i,1,&dof_j,&value,ADD_VALUES);
                         MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2(DIM*i+k,DIM*j+l),ADD_VALUES);
@@ -2227,30 +2227,30 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
                 }
                 //SUPG STABILIZATION
                 if (fabs(localMV_mat(DIM*i+k,DIM*j+k)) >= 1.e-15){
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                    int dof_j = (DIM+1) * connecC[j] + k;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                    PetscInt dof_j = (DIM+1) * connecC[j] + k;
                     MatSetValues(A,1,&dof_j,1,&dof_i,&localMV_mat(DIM*i+k,DIM*j+k),ADD_VALUES);
                 };
                 //PSPG STABILIZATION
                 if (fabs(localMV_mat(DIM*i+k,DIM*nElNodes+j)) >= 1.e-15){
-                    int dof_i = (DIM+1) * connecC[i] + DIM;
-                    int dof_j = (DIM+1) * numNodesCoarse + DIM * numNodesFine + connecL[j] + k;
+                    PetscInt dof_i = (DIM+1) * connecC[i] + DIM;
+                    PetscInt dof_j = (DIM+1) * numNodesCoarse + DIM * numNodesFine + connecL[j] + k;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&localMV_mat(DIM*i+k,DIM*nElNodes+j),ADD_VALUES);
                 };
                 //ARLEQUIN STABILIZATION
                 if (fabs(ArlequinA2(DIM*i+k,DIM*j+k)) >= 1.e-15){
-                    int d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
-                    int d_j = (DIM+1) * connecC[j] + k;
+                    PetscInt d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+                    PetscInt d_j = (DIM+1) * connecC[j] + k;
                     MatSetValues(A,1,&d_i,1,&d_j,&ArlequinA2(2*i  ,2*j  ),ADD_VALUES);
                 };
                 if (fabs(ArlequinA2(DIM*nElNodes+i,DIM*j+k)) >= 1.e-15){
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + 1;
-                    int dof_j = (DIM+1) * connecC[j] + DIM;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + 1;
+                    PetscInt dof_j = (DIM+1) * connecC[j] + DIM;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(DIM*nElNodes+i,DIM*j+k),ADD_VALUES);
                 };
                 if (fabs(ArlequinA1(DIM*i+k,DIM*j+k)) >= 1.e-15){
-                    int dof_i = (DIM+1) * numNodesCoarse + (DIM+1)*numNodesFine + DIM * connecL[i] + k;
-                    int dof_j = (DIM+1) * numNodesCoarse + (DIM+1)*numNodesFine + DIM * connecL[j] + k;
+                    PetscInt dof_i = (DIM+1) * numNodesCoarse + (DIM+1)*numNodesFine + DIM * connecL[i] + k;
+                    PetscInt dof_j = (DIM+1) * numNodesCoarse + (DIM+1)*numNodesFine + DIM * connecL[j] + k;
                     MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(DIM*i+k,DIM*j+k),ADD_VALUES);
                 };
             }
@@ -2264,10 +2264,10 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
         for (int k = 0; k < DIM; k++){
             //RHS VECTOR
             //COUPLING OPERATOR
-            int d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
+            PetscInt d_i = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * connecL[i] + k;
             VecSetValues(b,1,&d_i,&Rhs2[DIM*i+k],ADD_VALUES);
 
-            int dof_i = (DIM+1) * connecC[i] + k;
+            PetscInt dof_i = (DIM+1) * connecC[i] + k;
             VecSetValues(b,1,&dof_i,&rhsLagMult2[DIM*i+k],ADD_VALUES);
 
             //SUPG STABILIZATION
@@ -2278,7 +2278,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
             VecSetValues(b,1,&dof_i,&RhsArlequin2[DIM*i+k],ADD_VALUES);
         }
         //PSPG STABILIZATION
-        int dof_i = (DIM+1) * connecC[i] + DIM;
+        PetscInt dof_i = (DIM+1) * connecC[i] + DIM;
         VecSetValues(b,1,&dof_i,&localMV_vec[DIM*nElNodes+i],ADD_VALUES);
     };
     return;
@@ -2298,31 +2298,31 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarsePoisson(MatrixDouble &Aj
         for (int j = 0; j < nElNodes; j++){
             //COUPLING OPERATOR
             if (fabs(Ajac2(i,j)) >= 1.e-15){
-                int dof_i = numNodesCoarse + numNodesFine + connecL[i];
-                int dof_j = connecC[j];
+                PetscInt dof_i = numNodesCoarse + numNodesFine + connecL[i];
+                PetscInt dof_j = connecC[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&Ajac2(i,j),ADD_VALUES);
                 MatSetValues(A,1,&dof_j,1,&dof_i,&Ajac2(i,j),ADD_VALUES);
             }
              
             //ARLEQUIN STABILIZATION
             if (fabs(ArlequinA2(i,j)) >= 1.e-15){
-                int dof_i = numNodesCoarse + numNodesFine + connecL[i];
-                int dof_j = connecC[j];
+                PetscInt dof_i = numNodesCoarse + numNodesFine + connecL[i];
+                PetscInt dof_j = connecC[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA2(i,j),ADD_VALUES);
             };
             if (fabs(ArlequinA1(i,j)) >= 1.e-15){
-                int dof_i = numNodesCoarse + numNodesFine + connecL[i];
-                int dof_j = numNodesCoarse + numNodesFine + connecL[j];
+                PetscInt dof_i = numNodesCoarse + numNodesFine + connecL[i];
+                PetscInt dof_j = numNodesCoarse + numNodesFine + connecL[j];
                 MatSetValues(A,1,&dof_i,1,&dof_j,&ArlequinA1(i,j),ADD_VALUES);
             };
         };
         
         //RHS VECTOR
         //COUPLING OPERATOR
-        int d_i = numNodesCoarse + numNodesFine + connecL[i];
+        PetscInt d_i = numNodesCoarse + numNodesFine + connecL[i];
         VecSetValues(b,1,&d_i,&Rhs2[i],ADD_VALUES);
 
-        int dof_i = connecC[i];
+        PetscInt dof_i = connecC[i];
         VecSetValues(b,1,&dof_i,&rhsLagMult2[i],ADD_VALUES);
 
 
@@ -2804,7 +2804,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
                                 sysSize, sysSize,400,NULL,600,NULL,&A); 
             }
 
-            for (int i=0; i<sysSize; i++){
+            for (PetscInt i=0; i<sysSize; i++){
                 double val = 1.e-10;
                 ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
             }  
