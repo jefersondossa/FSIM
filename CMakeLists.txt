@@ -4,6 +4,9 @@ enable_language( Fortran CXX )
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
+#hide warnings
+add_definitions(-w) 
+
 find_package (MPI REQUIRED)
 find_package (PETSc REQUIRED)   
 find_package (METIS REQUIRED)

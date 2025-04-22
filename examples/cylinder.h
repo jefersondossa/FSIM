@@ -120,12 +120,20 @@
 //==============================PROBLEM MESHES==============================
 //==========================================================================
 
-	MPI_Barrier(PETSC_COMM_WORLD);   
+	MPI_Barrier(PETSC_COMM_WORLD);
     
-    coarseModel.meshReading(fluid1,"../data_cylinder.txt","../coarse.msh","mirror.txt",0);
-    fineModel.meshReading(fluid2,"../data_cylinder.txt","../fine.msh","mirror_fine.txt",0);
+    
+    coarseModel.meshReading(fluid1,"problem_data.txt","coarse.msh","mirror.txt",0);
+    fineModel.meshReading(fluid2,"problem_data.txt","fine.msh","mirror_fine.txt",0);
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
+
+    coarseModel.getFluidParameters().setSolver(SolverType::EMumps);
+    fineModel.getFluidParameters().setSolver(SolverType::EMumps);
+
+
+    coarseModel.setProblemType(ProblemType::ENavierStokes);
+    fineModel.setProblemType(ProblemType::ENavierStokes);
 
     arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
 

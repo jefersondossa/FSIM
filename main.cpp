@@ -54,7 +54,8 @@ int main(int argc, char **args) {
 
     // #include "examples/turbine.h"
     // #include "examples/cylinder.h"
-    #include "examples/rectangle.h"
+    #include "examples/flapping_flag.h"
+    // #include "examples/rectangle.h"
      
     //Finalize main program   
     PetscFinalize();

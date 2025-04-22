@@ -467,9 +467,9 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
                 }
             }; //if bf is the glue boundary
         }; //
-        if(dist < 0) dist = 0;
-        dist = x[0] - 0.5;
-        (*nodesFine_)[ino] -> setDistFunction(dist);
+        // if(dist < 0) dist = 0;
+        // dist = x[0];
+        (*nodesFine_)[ino] -> setDistFunction(-dist);
      };
 
     //Coarse mesh
@@ -556,10 +556,10 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
         }; //
     
         if (fabs((*nodesCoarse_)[ino] -> getDistFunction()) < 1.e-2){
-            (*nodesCoarse_)[ino] -> setDistFunction(dist); 
+            (*nodesCoarse_)[ino] -> setDistFunction(-dist); 
         };
-        dist = x[0] - 0.5;
-        (*nodesCoarse_)[ino] -> setDistFunction(dist); 
+        // dist = x[0] - 0.5;
+        (*nodesCoarse_)[ino] -> setDistFunction(-dist); 
      };
 
 
@@ -2747,7 +2747,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
                                   << " ---------------------------"
                                   << std::endl;}
         PetscMemoryGetCurrentUsage(&bytes);
-        PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
+        PetscPrintf(PETSC_COMM_WORLD,"Memory used22 %g M\n",bytes/(1024*1024));
 
         //Updates velocity and acceleration
         for (int i = 0; i < numNodesCoarse; i++){
@@ -3176,7 +3176,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
                                   << iTimeStep << " -------------------------"
                                   << std::endl;}
         PetscMemoryGetCurrentUsage(&bytes);
-        PetscPrintf(PETSC_COMM_WORLD,"Memory used %g M\n",bytes/(1024*1024));
+        PetscPrintf(PETSC_COMM_WORLD,"Memory used33 %g M\n",bytes/(1024*1024));
         
         //Updates velocity and acceleration
         for (int i = 0; i < numNodesCoarse; i++){
@@ -3554,7 +3554,7 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         std::cout << "WRONG PROBLEM TYPE." << std::endl;
         return 0;
     };
-
+    
     // Computes the system size
     int sysSize = 3 * numNodesCoarse + 3 * numNodesFine + 2 * numNodesGlueZoneFine;
     
@@ -3573,7 +3573,12 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         
         // Preallocates the matrix
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            sysSize, sysSize, 400, NULL, 600, NULL, &A); 
+                            sysSize, sysSize, 500, NULL, 700, NULL, &A);
+        for (int i=0; i<sysSize; i++){
+            double val = 1.e-20;
+            ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
+            
+        }
         
         CHKERRQ(ierr);
         

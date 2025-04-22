@@ -1443,7 +1443,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
             // MPI_Barrier(PETSC_COMM_WORLD);
 
             //  if (iTimeStep > 3){
-            // if (rank == 0) solveframestructure_(&iTimeStep);
+            if (rank == 0) solveframestructure_(&iTimeStep);
             // };
             // std::cout << "AQUI6 " << rank << std::endl;
             // std::cout << "AQUI11 " << rank << std::endl;

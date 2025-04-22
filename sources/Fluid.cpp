@@ -100,6 +100,7 @@ void Fluid<DIM,DEG>::readInputFile(const std::string& inputFile, std::ofstream& 
     fluidParameters.setVelocityInf(velocityInf);
 
     //Drag and lift
+    system("pwd");
     inputData >> computeDragAndLift >> numberOfLines; 
     dragAndLiftBoundary.reserve(numberOfLines);
     for (int i = 0; i < numberOfLines; ++i)
