@@ -29,7 +29,7 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
     normalVersor[0] = -data.fAxes0(1,0)/normTangent;
     normalVersor[1] =  data.fAxes0(0,0)/normTangent;
     double theta0 = atan2(normalVersor[1],normalVersor[0]);
-    double theta1 = data.fSol[2];
+    double theta1 = theta0+data.fSol[2];
 
     int nphi = data.fPhi.size();
 
@@ -50,13 +50,14 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
         double coordEta = ruleEta.PointList(0,eta);
         double weightEta = ruleEta.WeightList(eta);
         
-        //Initial configuration mapping gradient
+
+        //Initial configuration mapping gradient (Equation 6.35 to 6.38)
         A0(0,0) = data.fA0(0, 0) - 0.5 * fHeight * coordEta * sin(theta0) * dTheta0Dxi;
         A0(0,1) = 0.5 * fHeight * cos(theta0);
         A0(1,0) = data.fA0(0, 0) + 0.5 * fHeight * coordEta * cos(theta0) * dTheta0Dxi;
         A0(1,1) = 0.5 * fHeight * sin(theta0);
 
-        //Current configuration mapping gradient
+        //Current configuration mapping gradient (Equation 6.39 to 6.42)
         A1(0,0) = data.fA1(0, 0) - 0.5 * fHeight * coordEta * sin(theta1) * data.fDSolDAdim(2,0);
         A1(0,1) = 0.5 * fHeight * cos(theta1);
         A1(1,0) = data.fA1(0, 0) + 0.5 * fHeight * coordEta * cos(theta0) * data.fDSolDAdim(2,0);
@@ -64,7 +65,7 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
 
         MatrixDouble A0inv = A0.inverse();
 
-        //Cauchy_Green Stretching
+        //Cauchy_Green Stretching (Equation 6.46)
         MatrixDouble C = A0inv.transpose() * A1.transpose() * A1 * A0inv;
         
         //Green Deformation
@@ -73,12 +74,13 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
 
         E = 0.5 * (C - Identity);
 
-        //Jacobian value
+        //Jacobian value (Equation 6.50)
         double J0 = A0.determinant();
 
         //Saint-Venant_Kirchhoff Stress
         MatrixDouble S(2,2);
 
+        //Equation 6.62 to 6.65)
         S = fYoungModulus * E;
         
         // Variable initialization
@@ -100,6 +102,7 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
 
         for (int beta = 0; beta < nphi; beta++){
 
+            //Equation 6.69, 6.71 and 6.72
             DA1DYbeta[0][beta].resize(2,2);
             DA1DYbeta[1][beta].resize(2,2);
             DA1DYbeta[2][beta].resize(2,2);
@@ -113,9 +116,9 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
             
             DA1DYbeta[2][beta](0,0) = -0.5 * fHeight * coordEta * (cos(theta1) * data.fPhi[beta] * data.fPhi[beta] * data.fDSolDx(0,0) + sin(theta1) * data.fDPhi(0, beta));
             DA1DYbeta[2][beta](1,0) = 0.5 * fHeight * coordEta * (-sin(theta1) * data.fPhi[beta] * data.fPhi[beta] * data.fDSolDx(0,0) + cos(theta1) * data.fDPhi(0, beta));
-            DA1DYbeta[2][beta](0,1) += -0.5 * fHeight * coordEta * (sin(theta1) * data.fPhi[beta]); 
-            DA1DYbeta[2][beta](1,1) += 0.5 * fHeight * coordEta * (cos(theta1) * data.fPhi[beta]);
-
+            DA1DYbeta[2][beta](0,1) = -0.5 * fHeight * (sin(theta1) * data.fPhi[beta]); 
+            DA1DYbeta[2][beta](1,1) = 0.5 * fHeight * (cos(theta1) * data.fPhi[beta]);
+            //6.70 or 6.67
             DEDy[0][beta] = 0.5 * (A0inv.transpose() * DA1DYbeta[0][beta].transpose() * A1 * A0inv + A0inv.transpose() *  A1.transpose() *DA1DYbeta[0][beta] * A0inv);
             DEDy[1][beta] = 0.5 * (A0inv.transpose() * DA1DYbeta[1][beta].transpose() * A1 * A0inv + A0inv.transpose() *  A1.transpose() *DA1DYbeta[1][beta] * A0inv);
             DEDy[2][beta] = 0.5 * (A0inv.transpose() * DA1DYbeta[2][beta].transpose() * A1 * A0inv + A0inv.transpose() *  A1.transpose() *DA1DYbeta[2][beta] * A0inv);          
