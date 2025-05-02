@@ -58,7 +58,8 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
         rotation(3*j+1,3*j+1) = cosa;
         rotation(3*j+2,3*j+2) = 1.;
     }
-
+    std::cout << "Stiffness before rotation: \n" << Stiffness << std::endl; 
+    std::cout << "Rotation matrix: \n" << rotation << std::endl;
     Stiffness = rotation.transpose() * Stiffness * rotation;
 
 }

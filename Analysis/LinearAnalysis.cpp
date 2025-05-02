@@ -67,8 +67,8 @@ void LinearAnalysis::Run(){
     std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
     std::cout << "Updating solution..." << std::endl;
     LinearAnalysis::UpdateSolution();
-    // fGlobalMatrix->PrintMatrix();
-    // fGlobalMatrix->PrintRhs();
-    // fGlobalMatrix->PrintSolution();
+    fGlobalMatrix->PrintMatrix();
+    fGlobalMatrix->PrintRhs();
+    fGlobalMatrix->PrintSolution();
 };
 

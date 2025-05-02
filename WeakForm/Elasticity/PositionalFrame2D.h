@@ -8,10 +8,8 @@ class PositionalFrame2D : public WeakForm
 protected:
     // Material Young modulus
     double       fYoungModulus;
-    // Cross section inertia
-    double       fInertia;
-    // Cross section area
-    double       fArea;
+    // Cross section depth
+    double       fDepth;
     // Cross section height
     double       fHeight;
 
@@ -19,8 +17,7 @@ public:
     /// @brief Elastic truss class constructor
     /// @param matid physical tag
     /// @param young material Young modulus
-    /// @param inertia cross section inertia
-    PositionalFrame2D(int matid, double young, double inertia, double area, double height);
+    PositionalFrame2D(int matid, double young, double base, double height);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

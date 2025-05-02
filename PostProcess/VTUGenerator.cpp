@@ -195,16 +195,10 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
              << "      <DataArray type=\"Float64\" "
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<cmesh->NNodes(); i++){
-        auto x = cmesh->NodeVec()[i]->getCoordinates();
+    for (int inode=0; inode<cmesh->NNodes(); inode++){
+        auto x = cmesh->NodeVec()[inode]->getCoordinates();
         for(std::size_t i = 0; i < 3; i++) {
-            if(i < cmesh->Dimension())
-            {
-                output_v << x[i] << " ";    
-            }
-            else {
-                output_v << 0.0 << " ";
-            }
+            output_v << x[i] << " ";    
         }
         output_v << std::endl;
     };

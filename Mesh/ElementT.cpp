@@ -914,8 +914,8 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         index++;        
     };  
 
-    std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    std::cout << "Rhs \n" << rhsVector << std::endl;
+    std::cout << std::fixed << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    std::cout << std::fixed << "Rhs \n" << rhsVector << std::endl;
     // Set stiffness matrix to cache.
     fIntegData.fStiffnessMatrix = jacobianNRMatrix;
     fIntegData.fRHS = rhsVector;
