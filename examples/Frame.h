@@ -12,7 +12,7 @@
     CompMesh* cmesh = new CompMesh(); 
 
     // LinearFrame * bhorizontal = new LinearFrame(5,1.,1./12.,1.);
-    PositionalFrame2D * bhorizontal = new PositionalFrame2D(5,1.,1.,1.);
+    PositionalFrame2D * bhorizontal = new PositionalFrame2D(5,1.,1.,2.);
     // LinearFrame * bvertical = new LinearFrame(4,1.,1.,1.);
     // PositionalFrame2D * bvertical = new PositionalFrame2D(4,1.,1.,1.);
     // bvertical->SetForcingFunction(forcing); 
@@ -26,7 +26,7 @@
 
     cmesh->InsertMaterial(matbc1);
 
-    val2[1] = 1.;
+    val2[1] = 0.1;
     L2Projection * matbc2 = new L2Projection(4,1,BoundaryConditionType::kNeumann,val1,val2);
 
     cmesh->InsertMaterial(matbc2);
@@ -36,8 +36,8 @@
       
     GmshTools::Read(*cmesh,"../1bar.msh");
 
-    // NonLinearAnalysis an(cmesh,SolverType::ELDLt,1e-6,1);
-    LinearAnalysis an(cmesh,SolverType::ELDLt);
+    NonLinearAnalysis an(cmesh,SolverType::ELDLt,1e-6,2);
+    // LinearAnalysis an(cmesh,SolverType::ELDLt);
    
     std::vector<std::string> ScalarNames, VectorNames;
     VectorNames = {"Displacement"};

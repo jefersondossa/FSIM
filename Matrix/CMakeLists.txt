@@ -1,6 +1,7 @@
 
 file(GLOB matrix 
     DenseEigen.h
+    DenseEigen.cpp
     PETScDataTypes.h
     SparseEigen.h
     MatrixType.h

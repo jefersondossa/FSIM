@@ -24,7 +24,7 @@ ElementT<tshape>::ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakF
     int increase = 0;
     if(wf->GetExactSolution()) increase = 2;
 
-    fIntRule.SetOrder(2*tshape::Order+increase);
+    fIntRule.SetOrder(5*tshape::Order+increase);
     // fIntRule.SetOrder(2);
 
     fIntegData.fWeightFunction.resize(fIntRule.NPoints());
@@ -447,6 +447,7 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     }
 
     VecDouble yna(3);
+    yna.setZero();
     
     fIntegData.fA1.setZero();
     for (int i = tshape::NElNodes; i--; ){
@@ -914,8 +915,8 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         index++;        
     };  
 
-    std::cout << std::fixed << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    std::cout << std::fixed << "Rhs \n" << rhsVector << std::endl;
+    std::cout << std::scientific << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    std::cout << std::scientific << "Rhs \n" << rhsVector << std::endl;
     // Set stiffness matrix to cache.
     fIntegData.fStiffnessMatrix = jacobianNRMatrix;
     fIntegData.fRHS = rhsVector;

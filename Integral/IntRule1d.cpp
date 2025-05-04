@@ -13,6 +13,24 @@ IntRule1d::IntRule1d(int order) : IntRule(order) {
     SetOrder(order);
 }
 
+IntRule1d::IntRule1d(int npoints, int order) : IntRule(order) {
+    fOrder = order;
+    int nPoints = npoints;
+    if (order == 0 || nPoints == 0) {
+        nPoints = 1;
+    }
+    fPoints.resize(nPoints,1);
+    fWeights.resize(nPoints);
+    
+    VecDouble coordAux(nPoints);
+    gauleg(-1,1,coordAux,fWeights);
+
+    for (int i = 0; i < nPoints; i++)
+    {
+        fPoints(i,0) = coordAux[i];
+    }
+}
+
 void IntRule1d::SetOrder(int order) {
     fOrder = order;
 

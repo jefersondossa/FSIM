@@ -6,6 +6,7 @@
 #include <vector>
 #include <functional>
 #include <Eigen/Dense>
+#include <iostream>
 
 using namespace Eigen;
 
@@ -20,5 +21,8 @@ typedef Eigen::Matrix<int64_t, Dynamic, 1> VecInt;
 typedef Eigen::VectorXd VecDouble;
 /// @brief Vector (1d tensor) of booleans
 typedef Eigen::Matrix<bool, Dynamic, 1>  VecBool;
+
+void PrintMathematica(MatrixDouble &mat);
+void PrintMathematica(VecDouble &vec);
 
 #endif
