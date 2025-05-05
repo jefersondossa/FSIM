@@ -24,7 +24,7 @@ ElementT<tshape>::ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakF
     int increase = 0;
     if(wf->GetExactSolution()) increase = 2;
 
-    fIntRule.SetOrder(5*tshape::Order+increase);
+    fIntRule.SetOrder(2*tshape::Order+increase);
     // fIntRule.SetOrder(2);
 
     fIntegData.fWeightFunction.resize(fIntRule.NPoints());

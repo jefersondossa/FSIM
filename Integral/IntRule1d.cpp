@@ -44,6 +44,7 @@ void IntRule1d::SetOrder(int order) {
     if (order == 0) {
         nPoints = 1;
     }
+    nPoints = 4;
     fPoints.resize(nPoints,1);
     fWeights.resize(nPoints);
     

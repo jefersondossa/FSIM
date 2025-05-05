@@ -26,7 +26,7 @@
 
     cmesh->InsertMaterial(matbc1);
 
-    val2[1] = 0.1;
+    val2[1] = 1.;
     L2Projection * matbc2 = new L2Projection(4,1,BoundaryConditionType::kNeumann,val1,val2);
 
     cmesh->InsertMaterial(matbc2);
@@ -36,7 +36,7 @@
       
     GmshTools::Read(*cmesh,"../1bar.msh");
 
-    NonLinearAnalysis an(cmesh,SolverType::ELDLt,1e-6,2);
+    NonLinearAnalysis an(cmesh,SolverType::ELU,1e-6,2);
     // LinearAnalysis an(cmesh,SolverType::ELDLt);
    
     std::vector<std::string> ScalarNames, VectorNames;

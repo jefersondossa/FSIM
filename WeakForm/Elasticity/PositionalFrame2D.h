@@ -52,8 +52,13 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    void HermiteFunction(double &ksi, VecDouble &phi, VecDouble &dphi,  VecDouble &d2phi, VecDouble &d3phi);
+    void ComputeA0A1(IntPointData &data, double coordEta, double &theta0, double &theta1, MatrixDouble &A0, MatrixDouble &A1);
+    void ComputeGreenStrain(IntPointData &data, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &E);
+    void ComputeDA1_DY(IntPointData &data, int &direction, double &theta1, double &coordEta, int &beta, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY);
+    void ComputeDE_DY(MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY, MatrixDouble &DE_DY);
+    double DoubleContraction(const MatrixDouble &A, const MatrixDouble &B);
 };
+
 
 
 
