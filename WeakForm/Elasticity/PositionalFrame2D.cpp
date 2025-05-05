@@ -20,7 +20,7 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
         data.fSol.resize(fNState);
     }
 
-    IntRule1d ruleEta(6,3);
+    IntRule1d ruleEta(4,3);
 
     //Tangent vector
     VecDouble normalVersor(2), normalVersorUp(2);
@@ -80,14 +80,17 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
                         
                         MatrixDouble D2DA1_DY2(2,2);
                         D2DA1_DY2.setZero();
-                        //Equation 6.83 to 6.86
-                        D2DA1_DY2(0,0) = 0.5 * fHeight * coordEta * (sin(theta1) * data.fPhi[zeta] * data.fPhi[beta] * data.fDSolDAdim(2,0) 
-                                                               - cos(theta1) * (data.fPhi[zeta] * data.fDPhi(0,beta) + data.fPhi[beta] * data.fDPhi(0,zeta)));
-                        D2DA1_DY2(1,0) =-0.5 * fHeight * coordEta * (cos(theta1) * data.fPhi[zeta] * data.fPhi[beta] * data.fDSolDAdim(2,0) 
-                                                               + sin(theta1) * (data.fPhi[zeta] * data.fDPhi(0,beta) + data.fPhi[beta] * data.fDPhi(0,zeta)));
-                        D2DA1_DY2(0,1) = -0.5 * fHeight * (cos(theta1) * data.fPhi[zeta] * data.fPhi[beta]); 
-                        D2DA1_DY2(1,1) = -0.5 * fHeight * (sin(theta1) * data.fPhi[zeta] * data.fPhi[beta]);
+                        if (alpha==2 && gama==2){
+                            //Equation 6.83 to 6.86
+                            D2DA1_DY2(0,0) = 0.5 * fHeight * coordEta * (sin(theta1) * data.fPhi[zeta] * data.fPhi[beta] * data.fDSolDAdim(2,0) 
+                                                    - cos(theta1) * (data.fPhi[zeta] * data.fDPhi(0,beta) + data.fPhi[beta] * data.fDPhi(0,zeta)));
+                            D2DA1_DY2(1,0) =-0.5 * fHeight * coordEta * (cos(theta1) * data.fPhi[zeta] * data.fPhi[beta] * data.fDSolDAdim(2,0) 
+                                                    + sin(theta1) * (data.fPhi[zeta] * data.fDPhi(0,beta) + data.fPhi[beta] * data.fDPhi(0,zeta)));
+                            D2DA1_DY2(0,1) = -0.5 * fHeight * (cos(theta1) * data.fPhi[zeta] * data.fPhi[beta]); 
+                            D2DA1_DY2(1,1) = -0.5 * fHeight * (sin(theta1) * data.fPhi[zeta] * data.fPhi[beta]);
 
+                        }
+                        
                         //Equation 6.81
                         MatrixDouble temp1 = A0inv.transpose() * DA1DY_beta.transpose() * DA1DY_zeta* A0inv;
                         MatrixDouble temp2 = A0inv.transpose() * D2DA1_DY2.transpose() * A1 * A0inv;
@@ -119,7 +122,7 @@ void PositionalFrame2D::ComputeResidual(int &index, IntPointData &data, VecDoubl
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
 
-    IntRule1d ruleEta(6,3);
+    IntRule1d ruleEta(4,3);
 
     //Tangent vector
     VecDouble normalVersor(2);
@@ -170,7 +173,7 @@ void PositionalFrame2D::ComputeResidual(int &index, IntPointData &data, VecDoubl
                 int i = 3 * (beta) + alpha;
                 double ScDEDY = DoubleContraction(S,DEDy);
 
-                Rhs[i] += (-ScDEDY - forcingF[alpha]) * weightEta * J0 * data.fWeight * fDepth;
+                Rhs[i] -= (ScDEDY + forcingF[alpha]) * weightEta * J0 * data.fWeight * fDepth;
             }
         } 
     }

@@ -24,6 +24,8 @@ file(GLOB elasticity
     LinearFrame.cpp
     PositionalFrame2D.h
     PositionalFrame2D.cpp
+    TransientPositionalFrame2D.h
+    TransientPositionalFrame2D.cpp
 )
 
 set(ELASTICITY ${elasticity} PARENT_SCOPE)

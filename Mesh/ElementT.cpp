@@ -902,21 +902,21 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
             ComputeCurrentJacobian();
             ComputeCurrentSpatialDerivatives();
         }
-        
-        //Computes the element diffusion/viscosity matrix
-        fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
-        
+
         if (fIntegData.fNeedsSol) interpolateSolution();
         if (fIntegData.fNeedsDSol) interpolateSolDerivatives();
 
+        //Computes the element diffusion/viscosity matrix
+        fWeakForm->ComputeStiffness(index, fIntegData, jacobianNRMatrix);
+        
         //Computes the RHS vector
         fWeakForm->ComputeResidual(index, fIntegData, rhsVector); 
 
         index++;        
     };  
 
-    std::cout << std::scientific << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    std::cout << std::scientific << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << std::scientific << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << std::scientific << "Rhs \n" << rhsVector << std::endl;
     // Set stiffness matrix to cache.
     fIntegData.fStiffnessMatrix = jacobianNRMatrix;
     fIntegData.fRHS = rhsVector;
