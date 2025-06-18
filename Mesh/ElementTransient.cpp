@@ -3,6 +3,7 @@
 #include "ElasticityPositional2D.h"
 #include "ElasticTruss.h"
 #include "PositionalTruss.h"
+#include "TransientPositionalFrame2D.h"
 
 template<class tshape>
 ElementTransient<tshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
@@ -43,7 +44,13 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
     
     
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (this->fWeakForm);
+    auto *pos2dt = dynamic_cast<TransientPositionalFrame2D *> (this->fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (this->fWeakForm);
+
+    if (pos2dt){
+        this->fIntegData.fDSolDAdim.resize(this->fWeakForm->NState(), DIM);
+        this->fIntegData.fNeedsDSolDAdim = true;
+    }
 
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
 
@@ -60,7 +67,7 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
         this->ComputeSpatialDerivatives();
 
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (pos2d || pos2dt || truss){
             this->ComputeCurrentJacobian();
             this->ComputeCurrentSpatialDerivatives();
         }

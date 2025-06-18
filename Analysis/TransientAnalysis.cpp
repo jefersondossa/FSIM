@@ -28,7 +28,7 @@ void TransientAnalysis::Run(int64_t nsteps){
                 TransientWeakForm *twf = dynamic_cast<TransientWeakForm*> (val);
                 if(twf) {
                     twf->UpdateTimeDerivatives(fMeshVector[i]);
-                    twf->SetTimeStep(i+1);
+                    twf->SetTimeInstant(i+1);
                 };
             }
         }

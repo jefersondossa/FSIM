@@ -262,6 +262,8 @@ void PositionalFrame2D::ComputeA0A1(IntPointData &data, double coordEta, double 
     A1(1,0) = data.fAxes1(1,0) + 0.5 * fHeight * coordEta * cos(theta1) * data.fDSolDAdim(2,0);
     A1(1,1) = 0.5 * fHeight * sin(theta1);
 
+    data.fJacA0 = A0.determinant();
+
 }
 
 void PositionalFrame2D::ComputeGreenStrain(IntPointData &data, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &E){
