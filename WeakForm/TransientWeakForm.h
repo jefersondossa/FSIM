@@ -14,6 +14,7 @@ protected:
 
     // Time Step
     double fTimeStep = 0;
+    int fTimeInstant = 0;
 
 public:
     TransientWeakForm() = default;
@@ -23,6 +24,9 @@ public:
 
     void SetTimeStep(double dTime){
         fTimeStep = dTime;
+    }
+    void SetTimeInstant(int instant){
+        fTimeInstant = instant;
     }
 };
 

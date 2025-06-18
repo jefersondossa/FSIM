@@ -11,15 +11,15 @@ void TransientPositionalFrame2D::ComputeStiffness(int &index, IntPointData &data
     PositionalFrame2D::ComputeStiffness(index,data,Stiffness);
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0;
     
     double initLenght = 2.*data.fJacA0;
-    MatrixDouble Mass(2*nphi,2*nphi);
+    MatrixDouble Mass(3*nphi,3*nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
         for (size_t j = 0; j < nphi; j++){
-            Mass(2*i  ,2*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fDepth;
-            Mass(2*i+1,2*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fDepth;
+            Mass(3*i  ,3*j  ) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fDepth;
+            Mass(3*i+1,3*j+1) += data.fPhi[i] * data.fPhi[j] *  WJ * fDensity * fDepth;
         }
     }
 
@@ -39,20 +39,21 @@ void TransientPositionalFrame2D::ComputeResidual(int &index, IntPointData &data,
 
     PositionalFrame2D::ComputeResidual(index,data,Rhs);
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fDepth * fDensity;
+    double WJ = data.fWeight * data.fJacA0 * fDepth * fDensity;
     
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;
     auto posi = data.fSol;
     auto posiPrev = data.fSolPrev;
-
-    VecDouble qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + vel/(fBeta*fTimeStep) +
-                    (1./(2.*fBeta) - 1.) * acel;
+    VecDouble Rhs2(3*nphi);
+    Rhs2.setZero();
     for (size_t i = 0; i < nphi; i++){
-        Rhs[2*i  ] -= (posi[0]/(fBeta * fTimeStep * fTimeStep) - qs[0]) * data.fPhi[i] * WJ;
-        Rhs[2*i+1] -= (posi[1]/(fBeta * fTimeStep * fTimeStep) - qs[1]) * data.fPhi[i] * WJ;
+        Rhs[3*i  ] += ((posi[0]) * (1/(fBeta * fTimeStep * fTimeStep) + fDamping * fGamma / (fBeta * fTimeStep))) * data.fPhi[i] * WJ
+                    + data.fPhi[i] * WJ * ( 1/(fTimeStep * fBeta) * vel[i] + 1/(2 * fBeta) * acel[i] ) +  data.fPhi[i] * WJ*fDamping * (fGamma/fBeta * vel[i] + fTimeStep * (fGamma/(2 *fBeta) - 1) * acel[i]);
+        Rhs[3*i+1] += ((posi[1]) * (1/(fBeta * fTimeStep * fTimeStep) + fDamping * fGamma / (fBeta * fTimeStep))) * data.fPhi[i] * WJ
+                    + data.fPhi[i] * WJ * ( 1/(fTimeStep * fBeta) * vel[i+1] + 1/(2 * fBeta) * acel[i+1] ) +  data.fPhi[i] * WJ*fDamping * (fGamma/fBeta * vel[i+1] + fTimeStep * (fGamma/(2 *fBeta) - 1) * acel[i+1]);
     }
-    
+    std::cout << "rhs " << Rhs[3] << ", Rhs2 " << Rhs2[3] << std::endl; 
 };
 
 void TransientPositionalFrame2D::ComputeError(IntPointData &data, VecDouble &errors){
@@ -89,15 +90,19 @@ void TransientPositionalFrame2D::UpdateTimeDerivatives(CompMesh *cmesh){
                 auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
                 auto posiPrev = cmesh->NodeVec()[inode]->PrevSolution();
                 auto posi = cmesh->NodeVec()[inode]->Solution();
+               
+               
                 VecDouble acelUpdated(2), velUpdated(2);
-                auto qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
-                                (1./(2.*fBeta) - 1.) * acelPrev;
-                auto rs = velPrev + (1.-fGamma)*fTimeStep*acelPrev;
-                //Update Acceleration
-                acelUpdated = posi/(fBeta*fTimeStep*fTimeStep) - qs;
 
-                // //Update Velocity                
-                velUpdated = posi*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
+                // //Update Velocity    
+                velUpdated = velPrev + (fGamma/(fBeta * fTimeStep)) * posi
+                             - (fGamma / fBeta) * velPrev 
+                             - fTimeStep * (fGamma / (2 * fBeta) - 1) * acelPrev;
+                
+                //Update Acceleration
+                acelUpdated = acelPrev + (1 / (fBeta * fTimeStep * fTimeStep)) * posi
+                              - 1 / (fBeta * fTimeStep) * velPrev
+                              - 1 / (2 * fBeta) * acelPrev;
 
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
