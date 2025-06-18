@@ -85,8 +85,8 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
         index++;        
     };  
 
-    std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    // std::cout << "Rhs \n" << rhsVector << std::endl;
 
     return;
 };

@@ -26,7 +26,7 @@
 
     cmesh->InsertMaterial(matbc1);
 
-    val2[0] = 1e-3;
+    val2[1] = -1e-2;
     L2Projection * matbc2 = new L2Projection(4,1,BoundaryConditionType::kNeumann,val1,val2);
 
     cmesh->InsertMaterial(matbc2);
@@ -38,12 +38,13 @@
 
     TransientAnalysis an(cmesh,SolverType::ELU,false);
     // LinearAnalysis an(cmesh,SolverType::ELDLt);
-   
+    
     std::vector<std::string> ScalarNames, VectorNames;
     VectorNames = {"Displacement"};
     ScalarNames = {"Rotation"};
-    an.Run(100);
+    an.PrintVariables("result",ScalarNames,VectorNames);
+    an.Run(300);
 
-    VTUGenerator::PrintResults(cmesh,"result",ScalarNames,VectorNames);    
+    // VTUGenerator::PrintResults(cmesh,"result",ScalarNames,VectorNames);    
         
 }           
