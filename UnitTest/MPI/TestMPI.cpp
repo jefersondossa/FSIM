@@ -4,7 +4,7 @@
 
 TEST_CASE("reduce")
 {
-    std::cout << "Hello World" << std::endl;
+    std::cout << "Hello World" << '\n';
     // int size;
     // MPI_Comm_size(MPI_COMM_WORLD, &size);
     // int rank;

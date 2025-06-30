@@ -22,7 +22,7 @@ Tensor::Tensor(MatrixDouble &tensor){
     fData.setZero();
 #ifdef DEBUG_BUILD
     if (tensor.rows() != tensor.cols() || tensor.rows() == 0){
-        std::cout << "Please provide a symmetric tensor" << std::endl;
+        std::cout << "Please provide a symmetric tensor" << '\n';
         PanicButton();
     }
 #endif
@@ -39,7 +39,7 @@ Tensor::Tensor(VecDouble &tensor){
     fData.setZero();
 #ifdef DEBUG_BUILD
     if (tensor.size() != 6){
-        std::cout << "Please provide a proper tensor" << std::endl;
+        std::cout << "Please provide a proper tensor" << '\n';
         PanicButton();
     }
 #endif
@@ -49,7 +49,7 @@ Tensor::Tensor(VecDouble &tensor){
 void Tensor::SetData(MatrixDouble &tensor){
 #ifdef DEBUG_BUILD
     if (tensor.rows() != tensor.cols() || tensor.rows() == 0){
-        std::cout << "Please provide a symmetric tensor" << std::endl;
+        std::cout << "Please provide a symmetric tensor" << '\n';
         PanicButton();
     }
 #endif

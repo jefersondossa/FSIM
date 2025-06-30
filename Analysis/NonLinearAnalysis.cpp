@@ -79,7 +79,7 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     an->GlobalMatrix()->ZeroRhs();
     an->ComputeRhs();
     
-    // std::cout << "FORM FUNCTION Before \n "<< std::endl;
+    // std::cout << "FORM FUNCTION Before \n "<< '\n';
     // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
     
     PETScMatrix *petscmat = dynamic_cast<PETScMatrix *> (an->GlobalMatrix());
@@ -88,9 +88,9 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     // VecCopy(petscmat->Rhs(),b);
     // VecCopy(petscmat->Rhs(),b);
     VecCopy(u,petscmat->Solution());
-    // std::cout << "FORM FUNCTION RHS \n "<< std::endl;
+    // std::cout << "FORM FUNCTION RHS \n "<< '\n';
     // an->GlobalMatrix()->PrintRhs();
-    // std::cout << "FORM FUNCTION B \n "<< std::endl;
+    // std::cout << "FORM FUNCTION B \n "<< '\n';
     // VecView(b,PETSC_VIEWER_STDOUT_WORLD);
     
 
@@ -171,8 +171,8 @@ void NonLinearAnalysis::Run(){
     //Iterative Process
     while (NRL2norm > fTolerance && iteration < fMaxIterations)
     {   
-        std::ofstream output("plasticity.txt",std::ios::app);
-        output << "ITERATION = " << iteration << std::endl;
+        // std::ofstream output("plasticity.txt",std::ios::app);
+        // output << "ITERATION = " << iteration << '\n';
         std::clock_t t3 = std::clock();
         Compute();
         std::clock_t t4 = std::clock();
@@ -181,7 +181,7 @@ void NonLinearAnalysis::Run(){
         std::vector<std::string> ScalarNames, VectorNames;
         ScalarNames = {"Solution"};
         VectorNames = {"Derivative"};
-        VTUGenerator::PrintResults(fMeshVector[0], "basic_2d_phase_field", ScalarNames, VectorNames, {}, i);
+        // VTUGenerator::PrintResults(fMeshVector[0], "basic_2d_phase_field", ScalarNames, VectorNames, {}, i);
         i++;
 
         std::clock_t t5 = std::clock();
@@ -191,7 +191,7 @@ void NonLinearAnalysis::Run(){
         // this->GlobalMatrix()->PrintRhs();
         // this->GlobalMatrix()->PrintSolution();
         NRL2norm = this->GlobalMatrix()->SolutionNorm();
-        std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << std::endl;
+        std::cout << "Iteration " << iteration++ << ", Newton-Raphson residual = " << NRL2norm << '\n';
         this->GlobalMatrix()->ZeroMatrix();
         this->GlobalMatrix()->ZeroRhs();
         this->GlobalMatrix()->ZeroSolution();

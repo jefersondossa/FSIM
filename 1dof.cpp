@@ -16,8 +16,8 @@ int main (){
     float aceleracao = 0.;//(forca - k*posicao) / m;
     float klinha = k + ((4*m)/(passo*passo));
 
-    std::cout << "Klinha: " << klinha << std::endl;
-    std::cout << "Sem amortecimento: " << std::endl;   
+    std::cout << "Klinha: " << klinha << '\n';
+    std::cout << "Sem amortecimento: " << '\n';   
 
     for (float i = 0.; i <= tempo; i = i + passo){
         flinha = forca + m*(aceleracao+ 4*velocidade/passo + 4*posicao/(passo*passo));
@@ -27,10 +27,10 @@ int main (){
         aceleracao = aceleracaoaux;
         velocidade = velocidadeaux;
         posicao = posicaoaux;
-        std::cout << posicao <<  " " << velocidade << " " << aceleracao << " " << flinha << std::endl;    
+        std::cout << posicao <<  " " << velocidade << " " << aceleracao << " " << flinha << '\n';    
     }
 
-    std::cout << "Com amorteciemnto: " << std::endl;   
+    std::cout << "Com amorteciemnto: " << '\n';   
 
     posicao = 0.;
     velocidade = 0.;
@@ -47,7 +47,7 @@ int main (){
         aceleracao = aceleracaoaux;
         velocidade = velocidadeaux;
         posicao = posicaoaux;
-        std::cout << posicao << std::endl;    
+        std::cout << posicao << '\n';    
     }
 
     return 0;

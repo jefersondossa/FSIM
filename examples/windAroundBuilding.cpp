@@ -16,7 +16,7 @@ int main() {
     RunBuildingRafaelTCC();
     // RunChamine();
 
-    std::cout << "Successfully run simmulation with OpenFOAM." << std::endl;
+    std::cout << "Successfully run simmulation with OpenFOAM." << '\n';
     return 0;
 }
 
@@ -42,7 +42,7 @@ bool RunChamine(){
     double omegauniform = 100.0;
     
     if (!openFOAMWriter.WriteInitialConditions(internalField,puniform,nutuniform,kuniform,omegauniform)) {
-        std::cerr << "Failed to write initial conditions." << std::endl;
+        std::cerr << "Failed to write initial conditions." << '\n';
         return 1;
     };
 
@@ -50,7 +50,7 @@ bool RunChamine(){
     double visc = 1.85e-5;//kg/m-s
     double dens = 1.1774;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
-        std::cerr << "Failed to write the constant folder." << std::endl;
+        std::cerr << "Failed to write the constant folder." << '\n';
         return 1;
     };
 
@@ -70,7 +70,7 @@ bool RunChamine(){
     double endTime = 30.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
-        std::cerr << "Failed to write the system folder." << std::endl;
+        std::cerr << "Failed to write the system folder." << '\n';
         return 1;
     };
 
@@ -124,7 +124,7 @@ bool RunBuildingRafaelTCC(){
     double omegauniform = 100.0;
     
     if (!openFOAMWriter.WriteInitialConditions(internalField,puniform,nutuniform,kuniform,omegauniform)) {
-        std::cerr << "Failed to write initial conditions." << std::endl;
+        std::cerr << "Failed to write initial conditions." << '\n';
         return 1;
     };
 
@@ -132,7 +132,7 @@ bool RunBuildingRafaelTCC(){
     double visc = 1.85e-5;//kg/m-s
     double dens = 1.1774;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
-        std::cerr << "Failed to write the constant folder." << std::endl;
+        std::cerr << "Failed to write the constant folder." << '\n';
         return 1;
     };
 
@@ -152,7 +152,7 @@ bool RunBuildingRafaelTCC(){
     double endTime = 10.;
     double writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
-        std::cerr << "Failed to write the system folder." << std::endl;
+        std::cerr << "Failed to write the system folder." << '\n';
         return 1;
     };
 

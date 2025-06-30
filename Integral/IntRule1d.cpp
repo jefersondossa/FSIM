@@ -36,8 +36,8 @@ void IntRule1d::SetOrder(int order) {
     {
         fPoints(i,0) = coordAux[i];
     }
-    // std::cout << "fPoints = " << fPoints << std::endl;
-    // std::cout << "fWeights = " << fWeights << std::endl;
+    // std::cout << "fPoints = " << fPoints << '\n';
+    // std::cout << "fWeights = " << fWeights << '\n';
 }
 
 void IntRule1d::gauleg(const double x1, const double x2, VecDouble &co, VecDouble &w){

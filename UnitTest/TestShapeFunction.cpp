@@ -13,7 +13,7 @@
 // // #include "hdf5.h"
 
 // using std::cout;
-// using std::endl;
+// using '\n';
 // using std::cin;
 
 
@@ -32,7 +32,7 @@
 //         MatDouble coord(1,1);
 //         double weig = 0.;
 //         integ.Point(i,coord,weig);
-//         // std::cout << "Point " << i << "; Coord = " << coord << " , Weight = " << weig << std::endl; 
+//         // std::cout << "Point " << i << "; Coord = " << coord << " , Weight = " << weig << '\n'; 
     
 //         VecDouble phi;
 //         MatDouble DPhi;
@@ -40,7 +40,7 @@
 //         xi(0) = coord(0,0);
         
 //         shape::Shape(xi,order,phi,DPhi,SLagrange);
-//         // std::cout <<"Shape = \n" << phi << " , \n DShape = \n" << DPhi << std::endl;
+//         // std::cout <<"Shape = \n" << phi << " , \n DShape = \n" << DPhi << '\n';
 
 //         double sumPhi = 0.;
 //         double sumDPhi = 0.;
@@ -80,7 +80,7 @@
 //         MatDouble coord(1,1);
 //         double weig = 0.;
 //         integ.Point(i,coord,weig);
-//         // std::cout << "Point " << i << "; Coord = " << coord << " , Weight = " << weig << std::endl; 
+//         // std::cout << "Point " << i << "; Coord = " << coord << " , Weight = " << weig << '\n'; 
 
 //         VecDouble phi;
 //         MatDouble DPhi;
@@ -88,7 +88,7 @@
 //         xi(0) = coord(0,0);
         
 //         shape::Shape(xi,order,phi,DPhi,SChebyshev);
-//         // std::cout <<"Shape = \n" << phi << " , \n DShape = \n" << DPhi << std::endl;
+//         // std::cout <<"Shape = \n" << phi << " , \n DShape = \n" << DPhi << '\n';
 
 //         for (int i = 0; i < nshape; i++){
 //             for (int j = 0; j < nshape; j++){
@@ -97,8 +97,8 @@
 //             }
 //         }
 //     }//Integration
-//     // std::cout << "Mass (" << order << ") =\n " << mass << std::endl;
-//     // std::cout << "Stiff (" << order << ") =\n " << stiff << std::endl;
+//     // std::cout << "Mass (" << order << ") =\n " << mass << '\n';
+//     // std::cout << "Stiff (" << order << ") =\n " << stiff << '\n';
 // }
 
 // TEST_CASE("shape_test","[functionspace]")

@@ -104,8 +104,8 @@ void TransientPositionalTruss::UpdateTimeDerivatives(CompMesh *cmesh){
                 
                 cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
                 cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
-                // std::cout << "Acel = " << acelUpdated[0] << std::endl;
-                // std::cout << "Vel = " << velUpdated[0] << std::endl;
+                // std::cout << "Acel = " << acelUpdated[0] << '\n';
+                // std::cout << "Vel = " << velUpdated[0] << '\n';
             }           
         }
         break;

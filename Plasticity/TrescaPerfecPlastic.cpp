@@ -92,7 +92,7 @@ void TrescaPerfectPlastic::ComputeTangentStiffness(int &index, IntPointData &dat
         }
         // fElasticModel->ConstitutiveMatrix() = fTangent2D;
     } else if (fElasticModel->Dimension() == 3) {
-        std::cout << "Please check this implementation" << std::endl;
+        std::cout << "Please check this implementation" << '\n';
         PanicButton();
         fElasticModel->ConstitutiveMatrix() = fTangentTensor;
     } else {
@@ -154,7 +154,7 @@ double TrescaPerfectPlastic::PlasticMultiplier(int &index, IntPointData &data, T
             //Is in the main plane
             data.fEffectivePlasticStrain[index] += dGamma;
         } else {
-            // std::cout << "Probably there is a bug here. Please debug me." << std::endl;
+            // std::cout << "Probably there is a bug here. Please debug me." << '\n';
             // PanicButton();
             //Return to corner - Box 8.3
             VecDouble PhiTilAB(2);

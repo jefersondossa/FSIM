@@ -65,7 +65,7 @@ double EigenSpMatrix::SolutionNorm(){
 }
 
 void EigenSpMatrix::PrintMatrix(){
-    // std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
+    // std::cout << "Global Matrix = \n"<< fMatrix << '\n';
     std::cout << "GlobalMatrix = {\n";
     for (int64_t i = 0; i < fMatrix.rows(); i++){
         std::cout << "{";
@@ -80,7 +80,7 @@ void EigenSpMatrix::PrintMatrix(){
 }
 
 void EigenSpMatrix::PrintRhs(){
-    // std::cout << "Global RHS = \n"<< fRhs << std::endl;
+    // std::cout << "Global RHS = \n"<< fRhs << '\n';
     std::cout << "RHS = {\n";
     for (int64_t i = 0; i < fRhs.rows(); i++){
         std::cout << "{" << fRhs(i,0) << "}";
@@ -91,7 +91,7 @@ void EigenSpMatrix::PrintRhs(){
 }
 
 void EigenSpMatrix::PrintSolution(){
-    // std::cout << "Solution = \n"<< fSolution << std::endl;
+    // std::cout << "Solution = \n"<< fSolution << '\n';
     std::cout << "Solution = {\n";
     for (int64_t i = 0; i < fSolution.rows(); i++){
         std::cout << "{" << fSolution(i,0) << "}";

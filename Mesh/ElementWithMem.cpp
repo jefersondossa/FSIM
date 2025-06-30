@@ -180,8 +180,8 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         index++;
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };
@@ -259,8 +259,8 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         index++;
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };
@@ -338,8 +338,8 @@ void ElementWithMem<tshape>::ComputeElContribution(VecDouble &rhsVector){
         index++;
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };

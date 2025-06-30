@@ -35,7 +35,7 @@ int64_t Analysis::NEquations(){
 }
 
 void Analysis::Solve(){
-    std::cout << "Solving..." << std::endl;
+    std::cout << "Solving..." << '\n';
 
 #ifdef HAS_PETSC
     if (fArlequin && fReducedArlequin){
@@ -58,7 +58,7 @@ void Analysis::Solve(){
 void Analysis::AllocateMonomodel(){
 
     int numDOF = fMeshVector[0]->NGlobalDOF();
-    std::cout << "Number of DOF = " << numDOF << std::endl;
+    std::cout << "Number of DOF = " << numDOF << '\n';
 
     if(fGlobalMatrix)
     {
@@ -199,7 +199,7 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
 }
 
 void Analysis::Run(){
-    std::cout << "Allocating problem..." << std::endl;
+    std::cout << "Allocating problem..." << '\n';
     std::clock_t t3 = std::clock();
     Compute();
     std::clock_t t4 = std::clock();
@@ -207,6 +207,6 @@ void Analysis::Run(){
     Solve();
     std::clock_t t5 = std::clock();
     std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
-    std::cout << "Updating solution..." << std::endl;
+    std::cout << "Updating solution..." << '\n';
     UpdateSolution();
 };

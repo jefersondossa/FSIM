@@ -14,7 +14,7 @@ using namespace Catch::literals;
 
 void CheckInvariants(Tensor &tensor)
 {
-    // std::cout << tensor.MatrixForm() << std::endl;
+    // std::cout << tensor.MatrixForm() << '\n';
     
     //Check I2
     double I2 = tensor.I2();

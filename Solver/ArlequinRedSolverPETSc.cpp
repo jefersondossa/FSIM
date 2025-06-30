@@ -114,7 +114,7 @@ void ArlequinRedSolverPETSc::Solve(){
     MatAssemblyEnd(pmat->E(),MAT_FINAL_ASSEMBLY);
     
 
-    // std::cout << is[0] << std::endl;
+    // std::cout << is[0] << '\n';
 
     //Compute Lambda problem Rhs
     PETScVec aF0, aF1, aG;

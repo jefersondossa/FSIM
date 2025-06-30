@@ -62,7 +62,7 @@ void Elasticity2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     
     Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
 
-    // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
+    // std::cout << "Stiffness =\n"<< Stiffness << '\n';
 }
 
 void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){

@@ -45,7 +45,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
             if (!cmesh->ElementVec()[elem]) continue;
             VecInt connec = cmesh->ElementVec()[elem] -> getConnectivity();
 
-            // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
+            // std::cout << "COMM " << connec[0] << " " << connec[4] << '\n';
             bool flag = false;
             for (int i = 0; i < connec.size(); i++){
                 for (int iNeig = 0; iNeig < neighborNodes.size(); iNeig++){
@@ -147,7 +147,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     //     for (int j = 0; j < ElementVec()[i] -> getNumberOfNeighborElements(); j++){
     //         std::cout << ElementVec()[i] -> getNeighborElement(j) << " ";
     //     }
-    //     std::cout << std::endl;
+    //     std::cout << '\n';
     // }
 
     delete [] perm;
@@ -272,7 +272,7 @@ int GetNumberofNodes(int & el_type){
             break;
         default:
         {
-            std::cout << "Element not impelemented." << std::endl;
+            std::cout << "Element not impelemented." << '\n';
             n_nodes = 0;
             PanicButton();
         }
@@ -288,7 +288,7 @@ int GetNumberofNodes(int & el_type){
 
 void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
 {   
-    std::cout << "Need refactor!\n " << std::endl;
+    std::cout << "Need refactor!\n " << '\n';
     PanicButton();
      /** @brief MaterialVec */
     /** Structure of both, physical entities dimension and names */
@@ -312,7 +312,7 @@ void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
     //         {
     //             read.getline(buf, 1024);
     //             std::string str(buf);
-    //             std::cout << "Reading mesh format = " << str << std::endl;
+    //             std::cout << "Reading mesh format = " << str << '\n';
                 
     //         }
             
@@ -348,7 +348,7 @@ void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
     //             std::string str_end(buf_end);
     //             if(str_end == "$EndPhysicalNames" || str_end == "$EndPhysicalNames\r")
     //             {
-    //                 std::cout << "Read mesh physical entities = " << n_entities << std::endl;
+    //                 std::cout << "Read mesh physical entities = " << n_entities << '\n';
     //             }
     //             continue;
     //         }
@@ -384,7 +384,7 @@ void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
     //             std::string str_end(buf_end);
     //             if(str_end == "$EndNodes" || str_end == "$EndNodes\r")
     //             {
-    //                 std::cout << "Read mesh nodes = " <<  gmesh.NumNodes() << std::endl;
+    //                 std::cout << "Read mesh nodes = " <<  gmesh.NumNodes() << '\n';
     //             }
     //             continue;
     //         }
@@ -406,7 +406,7 @@ void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
     //             std::string str_end(buf_end);
     //             if(str_end == "$EndElements" || str_end == "$EndElements\r")
     //             {
-    //                 std::cout << "Read mesh elements = " << gmesh.NumElements() << std::endl;
+    //                 std::cout << "Read mesh elements = " << gmesh.NumElements() << '\n';
     //             }
     //             continue;
     //         }
@@ -415,11 +415,11 @@ void GmshTools::Read3(CompMesh &gmesh, const std::string &file_name)
         
     // }
     
-    // std::cout << "Read General Mesh Data -> done!" << std::endl;
+    // std::cout << "Read General Mesh Data -> done!" << '\n';
     // gmesh.BuildConnectivity();
     
     
-    // std::cout << "Geometric Mesh Connectivity -> done!" << std::endl;
+    // std::cout << "Geometric Mesh Connectivity -> done!" << '\n';
 
     
 }
@@ -429,8 +429,8 @@ static std::string GetFileVersion(const std::string& file_name){
     std::ifstream read(file_name.c_str());
     if(!read)
     {
-        std::cout << "Couldn't open the file " << file_name << std::endl;
-        std::cout << "Maybe you have a wrong relative path. Check the current work directory you're running this executable from." << std::endl;
+        std::cout << "Couldn't open the file " << file_name << '\n';
+        std::cout << "Maybe you have a wrong relative path. Check the current work directory you're running this executable from." << '\n';
         PanicButton();
     }
 
@@ -447,7 +447,7 @@ static std::string GetFileVersion(const std::string& file_name){
         } // Mesh Format
     }
 
-    std::cerr << "Could not determine .msh file format version." << std::endl;
+    std::cerr << "Could not determine .msh file format version." << '\n';
     PanicButton();
     return "void";
 }
@@ -470,8 +470,8 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
     std::ifstream read(file_name.c_str());
     if(!read)
     {
-        std::cout << "Couldn't open the file " << file_name << std::endl;
-        std::cout << "Maybe you have a wrong relative path. Check the current work directory you're running this executable from." << std::endl;
+        std::cout << "Couldn't open the file " << file_name << '\n';
+        std::cout << "Maybe you have a wrong relative path. Check the current work directory you're running this executable from." << '\n';
         PanicButton();
     }
 
@@ -484,10 +484,10 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
         {
             read.getline(buf, 1024);
             std::string str(buf);
-            std::cout << "Reading mesh format = " << str << std::endl;
+            std::cout << "Reading mesh format = " << str << '\n';
             if(str[0] != '4'){
                 std::cerr << __PRETTY_FUNCTION__ << '\n'
-                        << "Was intended for .msh format 4.1" << std::endl;
+                        << "Was intended for .msh format 4.1" << '\n';
                 PanicButton();
             }
             read.getline(buf, 1024); //<- Skip $EndMeshFormat
@@ -527,7 +527,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
             std::string str_end(buf_end);
             if(str_end == "$EndPhysicalNames" || str_end == "$EndPhysicalNames\r")
             {
-                std::cout << "Read mesh number of physical names = " << n_physical_names << std::endl;
+                std::cout << "Read mesh number of physical names = " << n_physical_names << '\n';
             }            
             continue;
         } // Physical Names
@@ -608,8 +608,8 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
             std::string str_end(buf_end);
             if(str_end == "$EndEntities" || str_end == "$EndEntities\r")
             {
-                std::cout << "Read mesh entities = " <<  m_n_points + m_n_curves + m_n_surfaces + m_n_volumes << std::endl;
-                std::cout << "Read mesh entities with physical tags = " <<  m_n_physical_points + m_n_physical_curves + m_n_physical_surfaces + m_n_physical_volumes << std::endl;
+                std::cout << "Read mesh entities = " <<  m_n_points + m_n_curves + m_n_surfaces + m_n_volumes << '\n';
+                std::cout << "Read mesh entities with physical tags = " <<  m_n_physical_points + m_n_physical_curves + m_n_physical_surfaces + m_n_physical_volumes << '\n';
             }
             continue;
         }
@@ -637,7 +637,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                 read >> entity_nodes;
                 
                 if (entity_parametric != 0) {
-                    std::cout << "GmshTools:: Characteristic not implemented." << std::endl;
+                    std::cout << "GmshTools:: Characteristic not implemented." << '\n';
                     PanicButton();
                 }
                 
@@ -662,7 +662,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
             std::string str_end(buf_end);
             if(str_end == "$EndNodes" || str_end == "$EndNodes\r")
             {
-                std::cout << "Read mesh nodes = " <<  gmesh.NNodes() << std::endl;
+                std::cout << "Read mesh nodes = " <<  gmesh.NNodes() << '\n';
             }
             continue;
         } // Nodes
@@ -689,7 +689,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                 read >> entity_elements;
                 
                 if(entity_elements == 0){
-                    std::cout << "The entity with tag " << entity_tag << " does not have elements to insert" << std::endl;
+                    std::cout << "The entity with tag " << entity_tag << " does not have elements to insert" << '\n';
                 }
                 
                 for (int64_t iel = 0; iel < entity_elements; iel++) {
@@ -705,13 +705,13 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                         int gmsh_physical_identifier = m_dim_entity_tag_and_physical_tag[entity_dim][entity_tag][0];
                         physical_identifier = m_dim_physical_tag_and_physical_tag[entity_dim][gmsh_physical_identifier];
                         if(n_physical_identifier !=1){
-                            std::cout << "The entity with tag " << entity_tag << std::endl;
-                            std::cout << "Has associated the following physical tags : " << std::endl;
+                            std::cout << "The entity with tag " << entity_tag << '\n';
+                            std::cout << "Has associated the following physical tags : " << '\n';
                             for (int i_data = 0; i_data < n_physical_identifier; i_data++) {
-                                std::cout << m_dim_entity_tag_and_physical_tag[entity_dim][entity_tag][i_data] << std::endl;
+                                std::cout << m_dim_entity_tag_and_physical_tag[entity_dim][entity_tag][i_data] << '\n';
                             }
                             
-                            std::cout << "Automatically, the assigned pz physical tag = " << physical_identifier << " is used.  The other ones are dropped out." << std::endl;
+                            std::cout << "Automatically, the assigned pz physical tag = " << physical_identifier << " is used.  The other ones are dropped out." << '\n';
                         }
                         
                         
@@ -736,7 +736,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                         for (int i_node = 0; i_node < n_el_nodes; i_node++) {
                             read >> node_identifiers[i_node];
                         }
-                        std::cout << "The entity with tag " << entity_tag << " does not have a physical tag, element " << el_identifier << " skipped " << std::endl;
+                        std::cout << "The entity with tag " << entity_tag << " does not have a physical tag, element " << el_identifier << " skipped " << '\n';
                     }
 
                 }
@@ -748,7 +748,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
             std::string str_end(buf_end);
             if(str_end == "$EndElements" || str_end == "$EndElements\r")
             {
-                std::cout << "Read mesh elements = " << gmesh.NElements() << std::endl;
+                std::cout << "Read mesh elements = " << gmesh.NElements() << '\n';
             }
             continue;
         } // Elements
@@ -795,7 +795,7 @@ void InsertElement(CompMesh &gmesh, int elindex, std::ifstream & line){
     line >> elementary_id;
     
     if (div_id != 2 || type_id > 15) {
-        std::cout << "div_id " << div_id << " type_id " << type_id << std::endl;
+        std::cout << "div_id " << div_id << " type_id " << type_id << '\n';
         PanicButton();
     }
     int matid = physical_id;
@@ -1108,7 +1108,7 @@ void InsertElement(CompMesh &gmesh, int elindex, std::ifstream & line){
     //         break;
     //     default:
     //     {
-    //         std::cout << "Element not impelemented." << std::endl;
+    //         std::cout << "Element not impelemented." << '\n';
     //         PanicButton();
     //     }
     //         break;
@@ -1125,7 +1125,7 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
         default: 
             std::cout << "GmshTools:: Latest version supported 4.1 \n"
                       << "GmshTools:: Reader not available for the msh file version = " << format_version << '\n'
-                      << "GmshTools:: Gmsh can probably export meshes in different legacy versions. Check their documentation for an up-to-date tutorial." << std::endl;
+                      << "GmshTools:: Gmsh can probably export meshes in different legacy versions. Check their documentation for an up-to-date tutorial." << '\n';
             PanicButton();
     }
 
@@ -1333,7 +1333,7 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         
         default:
         {
-            std::cout << "Element not implemented." << std::endl;
+            std::cout << "Element not implemented." << '\n';
             PanicButton();
         }
             break;

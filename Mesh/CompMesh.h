@@ -64,7 +64,7 @@ public:
             int maxKey = fMaterialVector.rbegin()->first;
             return maxKey + 1;
         } else {
-            std::cout << "There is no material in the mesh!" << std::endl;
+            std::cout << "There is no material in the mesh!" << '\n';
             PanicButton();
         }
         return 0;

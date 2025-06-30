@@ -120,7 +120,7 @@
 
 //     //     // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
-//     //     // std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
+//     //     // std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << '\n';
 
 
 //     // };
@@ -244,7 +244,7 @@
 //     //         };
 //     //     };
 
-//     //     // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << std::endl;
+//     //     // if (rank == 0) std::cout << "isolid " << isolid << " " << interface << " " << elemC << " " << x_[0] << " " << x_[1] << " " << xsiC[0] << " " << xsiC[1] << '\n';
 //     // };
 // };
 
@@ -269,11 +269,11 @@
 //     //             VecDouble xsi(DIM);
 //     //             xsi[0] = xsiC;
 
-//     //             // std::cout << "asdasd " << elemC << " " << xsiC << std::endl; 
+//     //             // std::cout << "asdasd " << elemC << " " << xsiC << '\n'; 
 
 //     //             // nodesFluid_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
                 
-//     //             // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
+//     //             // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << '\n';
 //     //         };
 //     //     };        
 //     // };
@@ -303,11 +303,11 @@
 //     //             VecDouble xsi(DIM);
 //     //             xsi[0] = xsiC;
 
-//     //             // if (rank == 0) std::cout << "asdasd " << elemC << " " << xsiC << " " << " " << connec[inode] << " " << interface << " " << numElemArlequinFine << " " << flag << std::endl; 
+//     //             // if (rank == 0) std::cout << "asdasd " << elemC << " " << xsiC << " " << " " << connec[inode] << " " << interface << " " << numElemArlequinFine << " " << flag << '\n'; 
 
 //     //             // nodesArlequinFine_[connec[inode]] -> setNodalCorrespondence(elemC,xsi);
                 
-//     //             // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << std::endl;
+//     //             // std::cout << "isolid " << connec(inode) << " " << elemC << " " << xsi(0) << '\n';
 //     //         };
 //     //     };        
 //     // };
@@ -353,7 +353,7 @@
 //     // numInterfaces = fluidModel->getNumberofFSIInterfaces();
     
 //     // if(rank==0) std::cout << "Number of interfaces " 
-//     //                       << numInterfaces << std::endl;
+//     //                       << numInterfaces << '\n';
 
 //     // groupInterfaces.reserve(numInterfaces);
 //     // nodesSolid_.reserve(numInterfaces);
@@ -473,7 +473,7 @@
 //     //     PanicButton();
 //     //     // elementsFluid_[i] -> setMeshMovingParameter(eta);
 
-//     //     // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
+//     //     // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << '\n';
 //     // };
        
 //     // domDecompFluid = fluidModel->getDomainDecomposition();
@@ -488,7 +488,7 @@
         
 //     // numInterfaces = arlequinModel->MeshVec()[1]->getNumberofFSIInterfaces();
 //     PanicButton();
-//     std::cout << "Number of interfaces " << numInterfaces << std::endl;
+//     std::cout << "Number of interfaces " << numInterfaces << '\n';
 
 //     groupInterfaces.reserve(numInterfaces);
 //     nodesSolid_.reserve(numInterfaces);
@@ -563,7 +563,7 @@
 //         PanicButton();
 //         // elementsArlequinFine_[i] -> setMeshMovingParameter(eta);
 
-//         // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << std::endl;
+//         // std::cout << "MESH MOVING PARAMETER " << i << " " << eta << " " << vMin << " " << vMax << '\n';
 //     };
 
 //     PanicButton();
@@ -598,7 +598,7 @@
 
 //     dTime = fluidModel->getProblemParameters().GetTimeStep();
 
-//     if(rank == 0) std::cout << "NumElemSolid " << numElemSolid << std::endl;
+//     if(rank == 0) std::cout << "NumElemSolid " << numElemSolid << '\n';
 
 //     //Pre Processing data
 //     preProcessFluid();
@@ -634,7 +634,7 @@
 
 //     dTime = arlequinModel->MeshVec()[1]->getProblemParameters().GetTimeStep();
 
-//     if(rank == 0) std::cout << "NumElemSolid " << numElemSolid << std::endl;
+//     if(rank == 0) std::cout << "NumElemSolid " << numElemSolid << '\n';
 
 //     //Pre Processing data
 //     preProcessArlequin();
@@ -675,7 +675,7 @@
 //                     // nodesFluid_[connec[k]] -> setUpdatedCoordinates(x);
 //                     nodesFluid_[connec[k]] -> setCoordinates(x);
 
-//                     //if(connec(k) == 29)std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
+//                     //if(connec(k) == 29)std::cout << "Updated Coord " << x(0) << " " << x(1) << '\n';
 //                 };
                 
 //             };//if interface
@@ -707,7 +707,7 @@
 // template<int DIM, int DEG>
 // void FSInteraction<DIM,DEG>::updateArlequinMesh(){
 
-//     // std::cout << "AQUI6.1 " << rank << std::endl;
+//     // std::cout << "AQUI6.1 " << rank << '\n';
 //     // MPI_Barrier(PETSC_COMM_WORLD);
 
 //     for (int i = 0; i < numInterfaces; i++){
@@ -726,28 +726,28 @@
 //                     // int elem = nodesArlequinFine_[connec[k]] -> getNodalElemCorrespondence();
 //                     // VecDouble xsi = nodesArlequinFine_[connec[k]] -> getNodalXsiCorrespondence();
 
-//                     // // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
+//                     // // if (rank == 0) std::cout << "AQUI6.1.1 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << '\n';
                     
 //                     // if (rank == 0) getupdatedcoordinates_(&x[0],&x[1],&elem,&xsi[0]);
 
 //                     MPI_Bcast(&x[0],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //                     MPI_Bcast(&x[1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 
-//                     // if (rank == 0) std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << std::endl;
+//                     // if (rank == 0) std::cout << "AQUI6.1.2 " << rank << " " << elem << " " << xsi << " " << x(0) << " " << x(1) << '\n';
 //                     MPI_Barrier(PETSC_COMM_WORLD);
 
 //                     PanicButton();
 //                     // nodesArlequinFine_[connec[k]] -> setUpdatedCoordinates(x);
 //                     nodesArlequinFine_[connec[k]] -> setCoordinates(x);
 
-//                     // std::cout << "Updated Coord " << x(0) << " " << x(1) << std::endl;
+//                     // std::cout << "Updated Coord " << x(0) << " " << x(1) << '\n';
 //                 };
                 
 //             };//if interface
 //         // };//ibound
 //     };//i
 
-//     // std::cout << "AQUI6.2 " << rank << std::endl;
+//     // std::cout << "AQUI6.2 " << rank << '\n';
 //     // MPI_Barrier(PETSC_COMM_WORLD);
 
 
@@ -755,7 +755,7 @@
 //     PanicButton();
 //     // arlequinModel->MeshVec()[1]->solveSteadyLaplaceProblem(1,1.e-4);
    
-//     // std::cout << "AQUI6.3 " << rank << std::endl;
+//     // std::cout << "AQUI6.3 " << rank << '\n';
 //     // MPI_Barrier(PETSC_COMM_WORLD);
 
 //     for (int i = 0; i < numNodesArlequinFine; i++){
@@ -810,7 +810,7 @@
 //                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
 //                     // Acc(1) = nodesFluid_[connec(k)] -> getAcceleration(1);
 
-//                     //if(rank == 0) std::cout << "Accel " << u[0] << " " << u[1] << " " << std::endl; 
+//                     //if(rank == 0) std::cout << "Accel " << u[0] << " " << u[1] << " " << '\n'; 
 //                 };
 //             };
 //         // };
@@ -854,7 +854,7 @@
 //                     // Acc(0) = nodesFluid_[connec(k)] -> getAcceleration(0);
 //                     // Acc(1) = nodesFluid_[connec(k)] -> getAcceleration(1);
 
-//                     //if(rank == 0) std::cout << "Accel " << u[0] << " " << u[1] << " " << std::endl; 
+//                     //if(rank == 0) std::cout << "Accel " << u[0] << " " << u[1] << " " << '\n'; 
 //                 };
 //             };
 //         // };
@@ -895,18 +895,18 @@
 // void FSInteraction<DIM,DEG>::transferArlequinLoad(){
     
 //     clearcouplingloads_();
-//     // std::cout << "AAAAA 1 "<< std::endl;
+//     // std::cout << "AAAAA 1 "<< '\n';
 //     for (int iInterf = 0; iInterf < numInterfaces; iInterf++){
 //         for (int isolid = 0; isolid < numNodesSolid; isolid++){
-//             // std::cout << "AAAAA 2 "<< std::endl;
+//             // std::cout << "AAAAA 2 "<< '\n';
 //             PanicButton();
 //             // int ielem = nodesSolid_[iInterf][isolid] -> getNodalElemCorrespondence();
-//             // std::cout << "AAAAA 3 " << ielem << " " << isolid << " " << std::endl;
+//             // std::cout << "AAAAA 3 " << ielem << " " << isolid << " " << '\n';
 //             // VecDouble xsi = nodesSolid_[iInterf][isolid] -> getNodalXsiCorrespondence();
-//             // std::cout << "AAAAA 4 "<< ielem << " " << xsi[0] << " " << xsi[1] << " " << std::sqrt(std::inner_product(xsi,xsi,xsi,0.0L)) << std::endl;
+//             // std::cout << "AAAAA 4 "<< ielem << " " << xsi[0] << " " << xsi[1] << " " << std::sqrt(std::inner_product(xsi,xsi,xsi,0.0L)) << '\n';
 //             VecDouble load(DIM);
 //             // if (xsi[0] < 3) elementsArlequinFine_[ielem] -> getBoundaryLoad(xsi,load);
-//             // std::cout << "AAAAA 5 "<< std::endl;
+//             // std::cout << "AAAAA 5 "<< '\n';
 //             int inode = isolid+1;
 //             setcouplingload_(&load[0],&load[1],&inode);
                        
@@ -951,13 +951,13 @@
 //         std::clock_t t1 = std::clock();
 
 //         if (rank == 0) {
-//             std::cout << std::endl;
+//             std::cout << '\n';
 //             std::cout << "****************************************"
 //                       << "****************************************"
-//                       << std::endl;
+//                       << '\n';
 //             std::cout << 
 //                 "                               TIME STEP = "
-//                       << iTimeStep << std::endl;
+//                       << iTimeStep << '\n';
 //         };
 
 //         // if (iTimeStep == 20){
@@ -1023,7 +1023,7 @@
 //             MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //         };
       
-//         saidaOmega << std::endl << "Passo de tempo " << iTimeStep << std::endl;
+//         saidaOmega << '\n' << "Passo de tempo " << iTimeStep << '\n';
 
 //         //COMPUTING PREDICTOR
 //         for (int i = 0; i < numNodesSolid; i++){
@@ -1128,15 +1128,15 @@
 //                 MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //             };
        
-//             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << std::endl;
+//             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << '\n';
 
 //             iterations++;
 
 //             if(rank == 0) std::cout << "GAUSS-SEIDEL OMEGA = " 
-//                                     << omega <<  std::endl;
+//                                     << omega <<  '\n';
 
 //             if(rank == 0) std::cout << "GAUSS-SEIDEL RESIDUAL = " 
-//                                     << std::scientific << residual << std::endl;
+//                                     << std::scientific << residual << '\n';
 
 //         };
         
@@ -1152,14 +1152,14 @@
 //         if (rank == 0) {
 //             std::cout << "****************************************"
 //                       << "****************************************"
-//                       << std::endl;
+//                       << '\n';
 //             std::cout << "********************** PROCESSING TIME = " << 
 //                 std::fixed << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000.
 //                       << " seconds **********************" 
-//                        << std::endl;
+//                        << '\n';
 //             std::cout << "****************************************"
 //                       << "****************************************"
-//                       << std::endl;
+//                       << '\n';
 //         };
 
 //         // Printing Results
@@ -1224,13 +1224,13 @@
 //         std::clock_t t1 = std::clock();
 
 //         if (rank == 0) {
-//             std::cout << std::endl;
+//             std::cout << '\n';
 //             std::cout << "****************************************"
 //                       << "****************************************"
-//                       << std::endl;
+//                       << '\n';
 //             std::cout << 
 //                 "                               TIME STEP = "
-//                       << iTimeStep << std::endl;
+//                       << iTimeStep << '\n';
 //         };
         
 //         // //SOMENTE PARA EXEMPLO DA CAVIDADE - INICIO
@@ -1256,14 +1256,14 @@
 //         // };
 //         // //SOMENTE PARA EXEMPLO DA CAVIDADE - FIM
 
-//         // std::cout << "AQUI1 " << rank << " " << gamma << std::endl;
+//         // std::cout << "AQUI1 " << rank << " " << gamma << '\n';
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 
 //         // if (iTimeStep == 10){
 //         //     double spec = 0.0;
 //         //     arlequinModel->MeshVec()[1]->ProblemParameters.setSpectralRadius(spec);
 //         //     arlequinModel->MeshVec()[0]->ProblemParameters.setSpectralRadius(spec);
-//         //     std::cout << "AQUI " << rank << std::endl;
+//         //     std::cout << "AQUI " << rank << '\n';
 //         // }
 //         PanicButton();
 //         // for (int i = 0; i < numNodesArlequinCoarse; i++){
@@ -1306,12 +1306,12 @@
 //         //     nodesArlequinFine_[i] -> setAcceleration(accel);
 //         // };
 
-//         // std::cout << "AQUI2 " << rank << std::endl;
+//         // std::cout << "AQUI2 " << rank << '\n';
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 
 //         if (rank == 0) updateqsrs_();
 
-//         // std::cout << "AQUI3 " << rank << std::endl;
+//         // std::cout << "AQUI3 " << rank << '\n';
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 
 //         //Compute Qs and Rs for mesh moving problem
@@ -1346,7 +1346,7 @@
 //         };
 
 
-//         // std::cout << "AQUI4 " << rank << std::endl;
+//         // std::cout << "AQUI4 " << rank << '\n';
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 
 //         for (int i = 0; i < numNodesSolid; i++){
@@ -1358,9 +1358,9 @@
 //             MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //         };
       
-//         saidaOmega << std::endl << "Passo de tempo " << iTimeStep << std::endl;
+//         saidaOmega << '\n' << "Passo de tempo " << iTimeStep << '\n';
 
-//         // std::cout << "AQUI5 " << rank << std::endl;
+//         // std::cout << "AQUI5 " << rank << '\n';
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 //         //COMPUTING PREDICTOR
 //         for (int i = 0; i < numNodesSolid; i++){
@@ -1390,7 +1390,7 @@
 //             MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //         };
            
-//         // std::cout << "AQUI6 " << rank << std::endl;
+//         // std::cout << "AQUI6 " << rank << '\n';
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 //         //X_k = Y_k;
 
@@ -1406,30 +1406,30 @@
 
 //             for (int i=0; i<sizeSolid; i++) X_k[i] = Y_k[i];
         
-//             // std::cout << "AQUI-2 " << rank << std::endl;            
+//             // std::cout << "AQUI-2 " << rank << '\n';            
 //             //     MPI_Barrier(PETSC_COMM_WORLD);
 //             updateArlequinMesh();
             
-//             // std::cout << "AQUI7 " << rank << std::endl;
+//             // std::cout << "AQUI7 " << rank << '\n';
 //             // MPI_Barrier(PETSC_COMM_WORLD); 
-//             // std::cout << "AQUI-1 " << rank << std::endl;            
+//             // std::cout << "AQUI-1 " << rank << '\n';            
 //             //     MPI_Barrier(PETSC_COMM_WORLD);
 //             transferSolidVelocityArlequin();
 
-//             // std::cout << "AQUI8 " << rank << std::endl;
+//             // std::cout << "AQUI8 " << rank << '\n';
 //             // MPI_Barrier(PETSC_COMM_WORLD);
-//                 // std::cout << "AQUI0 " << rank << std::endl;            
+//                 // std::cout << "AQUI0 " << rank << '\n';            
 //                 // MPI_Barrier(PETSC_COMM_WORLD);
 //             // if (iTimeStep < 50){
 //             arlequinModel->solveFSIArlequin(4, 1.e-3, 2, iTimeStep);
 
-//                 // std::cout << "AQUI4 " << rank << std::endl;
+//                 // std::cout << "AQUI4 " << rank << '\n';
 //                 // MPI_Barrier(PETSC_COMM_WORLD);
 //             // }else{
 //             //     arlequinModel->solveFSIArlequin(5, 1.e-3, 2, iTimeStep);
 //             // }
             
-//             // std::cout << "AQUI9 " << rank << std::endl;
+//             // std::cout << "AQUI9 " << rank << '\n';
 //             // MPI_Barrier(PETSC_COMM_WORLD);
 
 //             if (rank == 0) transferArlequinLoad();
@@ -1443,15 +1443,15 @@
 //             //     load[1] = -500;
 //             //     setcouplingload_(&load[0],&load[1],&inode);
 //             // }
-//             // std::cout << "AQUI5 " << rank << std::endl;
-//             // std::cout << "AQUI10 " << rank << std::endl;
+//             // std::cout << "AQUI5 " << rank << '\n';
+//             // std::cout << "AQUI10 " << rank << '\n';
 //             // MPI_Barrier(PETSC_COMM_WORLD);
 
 //             //  if (iTimeStep > 3){
 //             // if (rank == 0) solveframestructure_(&iTimeStep);
 //             // };
-//             // std::cout << "AQUI6 " << rank << std::endl;
-//             // std::cout << "AQUI11 " << rank << std::endl;
+//             // std::cout << "AQUI6 " << rank << '\n';
+//             // std::cout << "AQUI11 " << rank << '\n';
 //             // MPI_Barrier(PETSC_COMM_WORLD);
             
 //             for (int i = 0; i < numNodesSolid; i++){
@@ -1459,12 +1459,12 @@
 //                 if (rank == 0) getposition_(&dof,&Y_k[3*i  ]);
 //                 dof++;
 //                 if (rank == 0) getposition_(&dof,&Y_k[3*i+1]);
-//                 // std::cout << "SASDASD " << Y_k[3*i  ] << " " << Y_k[3*i+1] << " " << rank << std::endl;
+//                 // std::cout << "SASDASD " << Y_k[3*i  ] << " " << Y_k[3*i+1] << " " << rank << '\n';
 //                 MPI_Bcast(&Y_k[3*i  ],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //                 MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //             };
-// // std::cout << "AQUI7 " << rank << std::endl;
-//             // std::cout << "AQUI12 " << rank << std::endl;
+// // std::cout << "AQUI7 " << rank << '\n';
+//             // std::cout << "AQUI12 " << rank << '\n';
 //             // MPI_Barrier(PETSC_COMM_WORLD);
             
 //             for (int i=0; i<sizeSolid; i++) deltaXii[i] = X_k[i] - Y_k[i];
@@ -1478,7 +1478,7 @@
 //                     aux1 += (deltaXi[i]-deltaXii[i]) * deltaXii[i];
 //                     aux2 += (deltaXi[i]-deltaXii[i]) * (deltaXi[i]-deltaXii[i]);
 //                 }
-//                 // std::cout << "AASDASD " << aux1 << " " << aux2 << std::endl;
+//                 // std::cout << "AASDASD " << aux1 << " " << aux2 << '\n';
 //                 mu = mu + (mu - 1.0) * aux1 / sqrt(aux2);
 //             };        
             
@@ -1507,15 +1507,15 @@
 //                 MPI_Bcast(&Y_k[3*i+1],1,MPI_DOUBLE,0,PETSC_COMM_WORLD);
 //             };
        
-//             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << std::endl;
+//             saidaOmega << std::scientific << omega << " " << std::scientific << residual << " " << iterations << '\n';
 
 //             iterations++;
-// // std::cout << "AQUI8 " << rank << std::endl;
+// // std::cout << "AQUI8 " << rank << '\n';
 //             if(rank == 0) std::cout << "GAUSS-SEIDEL OMEGA = " 
-//                                     << omega <<  std::endl;
+//                                     << omega <<  '\n';
 
 //             if(rank == 0) std::cout << "GAUSS-SEIDEL RESIDUAL = " 
-//                                     << std::scientific << residual << std::endl;
+//                                     << std::scientific << residual << '\n';
 
 //         };
         
@@ -1531,14 +1531,14 @@
 //         if (rank == 0) {
 //             std::cout << "****************************************"
 //                       << "****************************************"
-//                       << std::endl;
+//                       << '\n';
 //             std::cout << "********************** PROCESSING TIME = " << 
 //                 std::fixed << 1000.*(t2-t1)/CLOCKS_PER_SEC/1000.
 //                       << " seconds **********************" 
-//                        << std::endl;
+//                        << '\n';
 //             std::cout << "****************************************"
 //                       << "****************************************"
-//                       << std::endl;
+//                       << '\n';
 //         };
 
 //         // Printing Results

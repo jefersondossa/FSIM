@@ -6,7 +6,7 @@ PhaseField::PhaseField(int matid, int dim, double kappa, double eta, double dTim
     fKappa = kappa;
     fEta = eta;
     fTimeStep = dTime;
-    fIntegScheme = EEuler;
+    fIntegScheme = IEuler;
     fMatId = matid;
     fDimension = dim;
     fNState = 1;
@@ -31,7 +31,7 @@ void PhaseField::ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDo
     // TODO: Use fWeightFunction instead of data.fJ.
     const auto sol = data.fSol(0, 0);
 
-    const auto y = -fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
+    const auto y = 1e-1*-fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){
             for (int k = fDimension; k--;  ){
@@ -58,8 +58,8 @@ void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &
 
     switch (fIntegScheme)
     {
-    case EEuler:
-        Stiffness += (1./(fTimeStep)) * Mass;    
+    case IEuler:
+        Stiffness += (1. / (fTimeStep)) * Mass;
         break;
     default:
         PanicButton();
@@ -82,7 +82,7 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
     const auto sol = data.fSol(0, 0);
 
     // TODO: Use fWeightFunction instead of data.fJ.
-    const auto y = -fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
+    const auto y = 1e-1*-fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
@@ -113,9 +113,19 @@ void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     // R_i+1 = R_i + grad(R) * delta_phi
     // dphi/dt -> int(w * dphi/dt)
 
-    for (size_t i = 0; i < nphi; i++){
-        Rhs[i] -= ((data.fSol[0]-data.fSolPrev[0])/fTimeStep) * data.fPhi[i] * WJ;
-    }
+    switch (fIntegScheme)
+    {
+    case IEuler:
+        for (size_t i = 0; i < nphi; i++)
+        {
+            Rhs[i] -= ((data.fSol[0] - data.fSolPrev[0]) / fTimeStep) * data.fPhi[i] * WJ;
+        }
+        break;
+
+    default:
+        PanicButton();
+        break;
+        }
 };
 
 void PhaseField::ComputeError(IntPointData &data, VecDouble &errors){
@@ -245,7 +255,7 @@ void PhaseField::UpdateTimeDerivatives(CompMesh *cmesh)
 {
     switch (fIntegScheme)
     {
-    case EEuler:
+    case IEuler:
         for (int64_t inode = 0; inode < cmesh->NNodes(); inode++)
         {
             VecDouble dispPrev = cmesh->NodeVec()[inode]->PrevSolution();

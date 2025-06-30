@@ -100,7 +100,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
     if (std::fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
     if (std::fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
 
-    //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << std::endl;
+    //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << '\n';
     //Computing tSUPG parameter
     tSUPG_ = 1. / std::sqrt(1. / (tSUGN1_ * tSUGN1_) + 
                        1. / (tSUGN2_ * tSUGN2_) + 
@@ -179,7 +179,7 @@ void Stokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     for (int l=DIM; l--; ) divrU += data.fDSolDx(l,l);
 
     for (int i = nphi; i--; ){
-        // std::cout << "Sol = " << this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetSolution(0) << std::endl;
+        // std::cout << "Sol = " << this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetSolution(0) << '\n';
         double shapeFi = data.fPhi[i];
 
         for (int k = DIM; k--; ){

@@ -6,35 +6,35 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
 
     auto graphmesh = cmesh->GetGraphMesh();
 
-    //    std::cout << "Printing Velocity Results" << std::endl;
+    //    std::cout << "Printing Velocity Results" << '\n';
     std::string s = filename + std::to_string(step) + ".vtu";
     
     std::fstream output_v(s.c_str(), std::ios_base::out);
 
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
+    output_v << "<?xml version=\"1.0\"?>" << '\n'
+             << "<VTKFile type=\"UnstructuredGrid\">" << '\n'
+             << "  <UnstructuredGrid>" << '\n'
              << "  <Piece NumberOfPoints=\"" << graphmesh->NNodes()
              << "\"  NumberOfCells=\"" << graphmesh->NElements()
-             << "\">" << std::endl;
+             << "\">" << '\n';
 
     //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
+    output_v << "    <Points>" << '\n'
              << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+             << "NumberOfComponents=\"3\" format=\"ascii\">" << '\n';
 
     for (int i=0; i<graphmesh->NNodes(); i++){
         auto x = graphmesh->Node(i);
-        output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
+        output_v << x[0] << " " << x[1] << " " << x[2] << '\n';        
     };
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
+    output_v << "      </DataArray>" << '\n'
+             << "    </Points>" << '\n';
     
     //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
+    output_v << "    <Cells>" << '\n'
              << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+             << "Name=\"connectivity\" format=\"ascii\">" << '\n';
     
     for (int i=0; i<graphmesh->NElements(); i++){
         auto connec=graphmesh->Connect(i);
@@ -42,34 +42,34 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
         {
             output_v << connec[k] << " ";
         }
-        output_v << std::endl;
+        output_v << '\n';
     };
-    output_v << "      </DataArray>" << std::endl;
+    output_v << "      </DataArray>" << '\n';
   
     //WRITE OFFSETS IN DATA ARRAY
     output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+             << " Name=\"offsets\" format=\"ascii\">" << '\n';
     
     int aux = 0;
     for (int i=0; i<graphmesh->NElements(); i++){
         aux += graphmesh->Connect(i).size();
-        output_v << aux << std::endl;
+        output_v << aux << '\n';
     };
-    output_v << "      </DataArray>" << std::endl;
+    output_v << "      </DataArray>" << '\n';
   
     //WRITE ELEMENT TYPES
     output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
+             << "format=\"ascii\">" << '\n';
 
     for (int i=0; i<graphmesh->NElements(); i++){
-        output_v << graphmesh->ElType(i) << std::endl;
+        output_v << graphmesh->ElType(i) << '\n';
     };
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
+    output_v << "      </DataArray>" << '\n'
+             << "    </Cells>" << '\n';
 
     //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
+    output_v << "    <PointData>" << '\n';
 
     //Scalar values
     std::map<int64_t,std::vector<VecDouble>> scalSol;
@@ -128,28 +128,28 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
     
     for (int iscal = 0; iscal < scalnames.size(); iscal++){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << std::endl;
+            << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << '\n';
         for (int i=0; i<graphmesh->NNodes(); i++){
             if (scalSol[i].size()==0){
-                output_v <<std::scientific<< "0" << std::endl;
+                output_v <<std::scientific<< "0" << '\n';
             }else{
-                output_v <<std::scientific<< scalSol[i][iscal][0] << std::endl;
+                output_v <<std::scientific<< scalSol[i][iscal][0] << '\n';
             }
         }
-        output_v << "      </DataArray> " << std::endl;
+        output_v << "      </DataArray> " << '\n';
     }
     
     for (int iscal = 0; iscal < vecnames.size(); iscal++){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-            << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
+            << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << '\n';
         for (int i=0; i<graphmesh->NNodes(); i++){
             if (vectSol[i].size()==0){
-                output_v <<std::scientific<< "0 0 0" << std::endl;
+                output_v <<std::scientific<< "0 0 0" << '\n';
             }else{
-                output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
+                output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << '\n';    
             }
         }
-        output_v << "      </DataArray> " << std::endl;
+        output_v << "      </DataArray> " << '\n';
     }
     
     
@@ -157,48 +157,48 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
 
 
 
-    output_v << "    </PointData>" << std::endl; 
+    output_v << "    </PointData>" << '\n'; 
 
     //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
+    output_v << "    <CellData>" << '\n';
     
     //Some element wise result
     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Material\" format=\"ascii\">" << std::endl;
+                << "Name=\"Material\" format=\"ascii\">" << '\n';
     for (int i=0; i<graphmesh->NElements(); i++){
         auto compel = cmesh->ElementVec()[i];
         int matid = compel->GetWeakForm()->Id();
-        output_v << matid << std::endl;
+        output_v << matid << '\n';
     };
-    output_v << "      </DataArray> " << std::endl;
+    output_v << "      </DataArray> " << '\n';
     
-    output_v << "    </CellData>" << std::endl; 
+    output_v << "    </CellData>" << '\n'; 
 
     //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl;
-    output_v << "  </UnstructuredGrid>" << std::endl
-             << "</VTKFile>" << std::endl;
+    output_v << "  </Piece>" << '\n';
+    output_v << "  </UnstructuredGrid>" << '\n'
+             << "</VTKFile>" << '\n';
 
 }
 
 void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vector<std::string> &scalnames, std::vector<std::string> &vecnames, const std::vector<CustomCellField>& custom_cel_fields, int step){
 
-    //    std::cout << "Printing Velocity Results" << std::endl;
+    //    std::cout << "Printing Velocity Results" << '\n';
     std::string s = filename + std::to_string(step) + ".vtu";
     
     std::fstream output_v(s.c_str(), std::ios_base::out);
 
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
+    output_v << "<?xml version=\"1.0\"?>" << '\n'
+             << "<VTKFile type=\"UnstructuredGrid\">" << '\n'
+             << "  <UnstructuredGrid>" << '\n'
              << "  <Piece NumberOfPoints=\"" << cmesh->NNodes()
              << "\"  NumberOfCells=\"" << cmesh->NElements()
-             << "\">" << std::endl;
+             << "\">" << '\n';
 
     //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
+    output_v << "    <Points>" << '\n'
              << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+             << "NumberOfComponents=\"3\" format=\"ascii\">" << '\n';
 
     for (int i=0; i<cmesh->NNodes(); i++){
         auto x = cmesh->NodeVec()[i]->getCoordinates();
@@ -211,16 +211,16 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
                 output_v << 0.0 << " ";
             }
         }
-        output_v << std::endl;
+        output_v << '\n';
     };
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
+    output_v << "      </DataArray>" << '\n'
+             << "    </Points>" << '\n';
     
     //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
+    output_v << "    <Cells>" << '\n'
              << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+             << "Name=\"connectivity\" format=\"ascii\">" << '\n';
     
     for (int i=0; i<cmesh->NElements(); i++){
         auto connec=cmesh->ElementVec()[i]->getConnectivity();
@@ -228,34 +228,34 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
         {
             output_v << connec[k] << " ";
         }
-        output_v << std::endl;
+        output_v << '\n';
     };
-    output_v << "      </DataArray>" << std::endl;
+    output_v << "      </DataArray>" << '\n';
   
     //WRITE OFFSETS IN DATA ARRAY
     output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+             << " Name=\"offsets\" format=\"ascii\">" << '\n';
     
     int aux = 0;
     for (int i=0; i<cmesh->NElements(); i++){
         aux += cmesh->ElementVec()[i]->getConnectivity().size();
-        output_v << aux << std::endl;
+        output_v << aux << '\n';
     };
-    output_v << "      </DataArray>" << std::endl;
+    output_v << "      </DataArray>" << '\n';
   
     //WRITE ELEMENT TYPES
     output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
+             << "format=\"ascii\">" << '\n';
 
     for (int i=0; i<cmesh->NElements(); i++){
-        output_v << cmesh->ElementVec()[i]->PrintType() << std::endl;
+        output_v << cmesh->ElementVec()[i]->PrintType() << '\n';
     };
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
+    output_v << "      </DataArray>" << '\n'
+             << "    </Cells>" << '\n';
 
     //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
+    output_v << "    <PointData>" << '\n';
 
     //Scalar values
     std::map<int64_t,std::vector<VecDouble>> scalSol;
@@ -323,28 +323,28 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
     
     for (int iscal = 0; iscal < scalnames.size(); iscal++){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-            << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << std::endl;
+            << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << '\n';
         for (int i=0; i<cmesh->NNodes(); i++){
             if (scalSol[i].size()==0){
-                output_v <<std::scientific<< "0" << std::endl;
+                output_v <<std::scientific<< "0" << '\n';
             }else{
-                output_v <<std::scientific<< scalSol[i][iscal][0] << std::endl;
+                output_v <<std::scientific<< scalSol[i][iscal][0] << '\n';
             }
         }
-        output_v << "      </DataArray> " << std::endl;
+        output_v << "      </DataArray> " << '\n';
     }
     
     for (int iscal = 0; iscal < vecnames.size(); iscal++){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
-            << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
+            << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << '\n';
         for (int i=0; i<cmesh->NNodes(); i++){
             if (vectSol[i].size()==0){
-                output_v <<std::scientific<< "0 0 0" << std::endl;
+                output_v <<std::scientific<< "0 0 0" << '\n';
             }else{
-                output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
+                output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << '\n';    
             }
         }
-        output_v << "      </DataArray> " << std::endl;
+        output_v << "      </DataArray> " << '\n';
     }
     
     
@@ -352,20 +352,20 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
 
 
 
-    output_v << "    </PointData>" << std::endl; 
+    output_v << "    </PointData>" << '\n'; 
 
     //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
+    output_v << "    <CellData>" << '\n';
     
     //Some element wise result
     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Material\" format=\"ascii\">" << std::endl;
+                << "Name=\"Material\" format=\"ascii\">" << '\n';
     for (int i=0; i<cmesh->NElements(); i++){
         auto compel = cmesh->ElementVec()[i];
         int matid = compel->GetWeakForm()->Id();
-        output_v << matid << std::endl;
+        output_v << matid << '\n';
     };
-    output_v << "      </DataArray> " << std::endl;
+    output_v << "      </DataArray> " << '\n';
 
     for(const auto& custom_cell_field : custom_cel_fields) {
         if(custom_cell_field.data.size() != cmesh->NElements()) {
@@ -373,53 +373,53 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
             PanicButton();
         }
         output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\""<< custom_cell_field.name <<"\" format=\"ascii\">" << std::endl;
+                << "Name=\""<< custom_cell_field.name <<"\" format=\"ascii\">" << '\n';
         for (int i=0; i<cmesh->NElements(); i++){
-            output_v << custom_cell_field.data[i] << std::endl;
+            output_v << custom_cell_field.data[i] << '\n';
         };
-        output_v << "      </DataArray> " << std::endl;
+        output_v << "      </DataArray> " << '\n';
     }
     
-    output_v << "    </CellData>" << std::endl; 
+    output_v << "    </CellData>" << '\n'; 
 
     //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl;
-    output_v << "  </UnstructuredGrid>" << std::endl
-             << "</VTKFile>" << std::endl;
+    output_v << "  </Piece>" << '\n';
+    output_v << "  </UnstructuredGrid>" << '\n'
+             << "</VTKFile>" << '\n';
 
 }
 
 void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
 
-    //    std::cout << "Printing Velocity Results" << std::endl;
+    //    std::cout << "Printing Velocity Results" << '\n';
     std::string s = filename + "Coarse.vtu";
     
     std::fstream output_v(s.c_str(), std::ios_base::out);
 
-    output_v << "<?xml version=\"1.0\"?>" << std::endl
-             << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-             << "  <UnstructuredGrid>" << std::endl
+    output_v << "<?xml version=\"1.0\"?>" << '\n'
+             << "<VTKFile type=\"UnstructuredGrid\">" << '\n'
+             << "  <UnstructuredGrid>" << '\n'
              << "  <Piece NumberOfPoints=\"" << arl->MeshVec()[0]->NNodes()
              << "\"  NumberOfCells=\"" << arl->MeshVec()[0]->NElements()
-             << "\">" << std::endl;
+             << "\">" << '\n';
 
     //WRITE NODAL COORDINATES
-    output_v << "    <Points>" << std::endl
+    output_v << "    <Points>" << '\n'
              << "      <DataArray type=\"Float64\" "
-             << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+             << "NumberOfComponents=\"3\" format=\"ascii\">" << '\n';
 
     for (int i=0; i<arl->MeshVec()[0]->NNodes(); i++){
         auto x = arl->MeshVec()[0]->NodeVec()[i]->getCoordinates();
-        output_v << x[0] << " " << x[1] << " " << x[2] << std::endl;        
+        output_v << x[0] << " " << x[1] << " " << x[2] << '\n';        
     };
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
+    output_v << "      </DataArray>" << '\n'
+             << "    </Points>" << '\n';
     
     //WRITE ELEMENT CONNECTIVITY
-    output_v << "    <Cells>" << std::endl
+    output_v << "    <Cells>" << '\n'
              << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+             << "Name=\"connectivity\" format=\"ascii\">" << '\n';
     
     for (int i=0; i<arl->MeshVec()[0]->NElements(); i++){
         auto connec=arl->MeshVec()[0]->ElementVec()[i]->getConnectivity();
@@ -427,105 +427,105 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
         {
             output_v << connec[k] << " ";
         }
-        output_v << std::endl;
+        output_v << '\n';
     };
-    output_v << "      </DataArray>" << std::endl;
+    output_v << "      </DataArray>" << '\n';
   
     //WRITE OFFSETS IN DATA ARRAY
     output_v << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+             << " Name=\"offsets\" format=\"ascii\">" << '\n';
     
     int aux = 0;
     for (int i=0; i<arl->MeshVec()[0]->NElements(); i++){
         aux += arl->MeshVec()[0]->ElementVec()[i]->getConnectivity().size();
-        output_v << aux << std::endl;
+        output_v << aux << '\n';
     };
-    output_v << "      </DataArray>" << std::endl;
+    output_v << "      </DataArray>" << '\n';
   
     //WRITE ELEMENT TYPES
     output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
+             << "format=\"ascii\">" << '\n';
 
     for (int i=0; i<arl->MeshVec()[0]->NElements(); i++){
-        output_v << arl->MeshVec()[0]->ElementVec()[i]->PrintType() << std::endl;
+        output_v << arl->MeshVec()[0]->ElementVec()[i]->PrintType() << '\n';
     };
 
-    output_v << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
+    output_v << "      </DataArray>" << '\n'
+             << "    </Cells>" << '\n';
 
     //WRITE NODAL RESULTS
-    output_v << "    <PointData>" << std::endl;
+    output_v << "    <PointData>" << '\n';
 
     output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-        << "Name=\"" << "Signaled Distance" << "\" format=\"ascii\">" << std::endl;
+        << "Name=\"" << "Signaled Distance" << "\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[0]->NNodes(); i++){
-        output_v << arl->GlobalNodeSignaledDistance(i) << std::endl;
+        output_v << arl->GlobalNodeSignaledDistance(i) << '\n';
     }
-    output_v << "      </DataArray> " << std::endl;
+    output_v << "      </DataArray> " << '\n';
 
     output_v << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-        << "Name=\"" << "Weight Function" << "\" format=\"ascii\">" << std::endl;
+        << "Name=\"" << "Weight Function" << "\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[0]->NNodes(); i++){
-        output_v << arl->MeshVec()[0]->NodeVec()[i]->getWeightFunction() << std::endl;
+        output_v << arl->MeshVec()[0]->NodeVec()[i]->getWeightFunction() << '\n';
     }
-    output_v << "      </DataArray> " << std::endl;
+    output_v << "      </DataArray> " << '\n';
 
 
-    output_v << "    </PointData>" << std::endl; 
+    output_v << "    </PointData>" << '\n'; 
 
     //WRITE ELEMENT RESULTS
-    output_v << "    <CellData>" << std::endl;
+    output_v << "    <CellData>" << '\n';
     
     //Some element wise result
     output_v <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Material\" format=\"ascii\">" << std::endl;
+                << "Name=\"Material\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[0]->NElements(); i++){
         auto compel = arl->MeshVec()[0]->ElementVec()[i];
         int matid = compel->GetWeakForm()->Id();
-        output_v << matid << std::endl;
+        output_v << matid << '\n';
     };
-    output_v << "      </DataArray> " << std::endl;
+    output_v << "      </DataArray> " << '\n';
     
-    output_v << "    </CellData>" << std::endl; 
+    output_v << "    </CellData>" << '\n'; 
 
     //FINALIZE OUTPUT FILE
-    output_v << "  </Piece>" << std::endl;
-    output_v << "  </UnstructuredGrid>" << std::endl
-             << "</VTKFile>" << std::endl;
+    output_v << "  </Piece>" << '\n';
+    output_v << "  </UnstructuredGrid>" << '\n'
+             << "</VTKFile>" << '\n';
 
 
 
 
     //Fine 
-    //    std::cout << "Printing Velocity Results" << std::endl;
+    //    std::cout << "Printing Velocity Results" << '\n';
     std::string sfine = filename + "Fine.vtu";
     
     std::fstream output_fine(sfine.c_str(), std::ios_base::out);
 
-    output_fine << "<?xml version=\"1.0\"?>" << std::endl
-                << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
-                << "  <UnstructuredGrid>" << std::endl
+    output_fine << "<?xml version=\"1.0\"?>" << '\n'
+                << "<VTKFile type=\"UnstructuredGrid\">" << '\n'
+                << "  <UnstructuredGrid>" << '\n'
                 << "  <Piece NumberOfPoints=\"" << arl->MeshVec()[1]->NNodes()
                 << "\"  NumberOfCells=\"" << arl->MeshVec()[1]->NElements()
-                << "\">" << std::endl;
+                << "\">" << '\n';
 
     //WRITE NODAL COORDINATES
-    output_fine << "    <Points>" << std::endl
+    output_fine << "    <Points>" << '\n'
                 << "      <DataArray type=\"Float64\" "
-                << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
+                << "NumberOfComponents=\"3\" format=\"ascii\">" << '\n';
 
     for (int i=0; i<arl->MeshVec()[1]->NNodes(); i++){
         auto x = arl->MeshVec()[1]->NodeVec()[i]->getCoordinates();
-        output_fine << x[0] << " " << x[1] << " " << x[2] << std::endl;        
+        output_fine << x[0] << " " << x[1] << " " << x[2] << '\n';        
     };
 
-    output_fine << "      </DataArray>" << std::endl
-             << "    </Points>" << std::endl;
+    output_fine << "      </DataArray>" << '\n'
+             << "    </Points>" << '\n';
     
     //WRITE ELEMENT CONNECTIVITY
-    output_fine << "    <Cells>" << std::endl
+    output_fine << "    <Cells>" << '\n'
              << "      <DataArray type=\"Int32\" "
-             << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
+             << "Name=\"connectivity\" format=\"ascii\">" << '\n';
     
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
         auto connec=arl->MeshVec()[1]->ElementVec()[i]->getConnectivity();
@@ -533,80 +533,80 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
         {
             output_fine << connec[k] << " ";
         }
-        output_fine << std::endl;
+        output_fine << '\n';
     };
-    output_fine << "      </DataArray>" << std::endl;
+    output_fine << "      </DataArray>" << '\n';
   
     //WRITE OFFSETS IN DATA ARRAY
     output_fine << "      <DataArray type=\"Int32\""
-             << " Name=\"offsets\" format=\"ascii\">" << std::endl;
+             << " Name=\"offsets\" format=\"ascii\">" << '\n';
     
     aux = 0;
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
         aux += arl->MeshVec()[1]->ElementVec()[i]->getConnectivity().size();
-        output_fine << aux << std::endl;
+        output_fine << aux << '\n';
     };
-    output_fine << "      </DataArray>" << std::endl;
+    output_fine << "      </DataArray>" << '\n';
   
     //WRITE ELEMENT TYPES
     output_fine << "      <DataArray type=\"UInt8\" Name=\"types\" "
-             << "format=\"ascii\">" << std::endl;
+             << "format=\"ascii\">" << '\n';
 
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
-        output_fine << arl->MeshVec()[1]->ElementVec()[i]->PrintType() << std::endl;
+        output_fine << arl->MeshVec()[1]->ElementVec()[i]->PrintType() << '\n';
     };
 
-    output_fine << "      </DataArray>" << std::endl
-             << "    </Cells>" << std::endl;
+    output_fine << "      </DataArray>" << '\n'
+             << "    </Cells>" << '\n';
 
     //WRITE NODAL RESULTS
-    output_fine << "    <PointData>" << std::endl;
+    output_fine << "    <PointData>" << '\n';
 
     output_fine << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-        << "Name=\"" << "Signaled Distance" << "\" format=\"ascii\">" << std::endl;
+        << "Name=\"" << "Signaled Distance" << "\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[1]->NNodes(); i++){
-        output_fine << arl->LocalNodeSignaledDistance(i) << std::endl;
+        output_fine << arl->LocalNodeSignaledDistance(i) << '\n';
     }
-    output_fine << "      </DataArray> " << std::endl;
+    output_fine << "      </DataArray> " << '\n';
 
     output_fine << "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-        << "Name=\"" << "Weight Function" << "\" format=\"ascii\">" << std::endl;
+        << "Name=\"" << "Weight Function" << "\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[1]->NNodes(); i++){
-        output_fine << arl->MeshVec()[1]->NodeVec()[i]->getWeightFunction() << std::endl;
+        output_fine << arl->MeshVec()[1]->NodeVec()[i]->getWeightFunction() << '\n';
     }
-    output_fine << "      </DataArray> " << std::endl;
+    output_fine << "      </DataArray> " << '\n';
 
 
-    output_fine << "    </PointData>" << std::endl; 
+    output_fine << "    </PointData>" << '\n'; 
 
     //WRITE ELEMENT RESULTS
-    output_fine << "    <CellData>" << std::endl;
+    output_fine << "    <CellData>" << '\n';
     
     //Some element wise result
     output_fine <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Material\" format=\"ascii\">" << std::endl;
+                << "Name=\"Material\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
         auto compel = arl->MeshVec()[1]->ElementVec()[i];
         int matid = compel->GetWeakForm()->Id();
-        output_fine << matid << std::endl;
+        output_fine << matid << '\n';
     };
-    output_fine << "      </DataArray> " << std::endl;
+    output_fine << "      </DataArray> " << '\n';
 
     output_fine <<"      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
-                << "Name=\"Gluing Zone\" format=\"ascii\">" << std::endl;
+                << "Name=\"Gluing Zone\" format=\"ascii\">" << '\n';
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
         int isgluing = 0;
         if (arl->fGluingElementIndex.find(i) != arl->fGluingElementIndex.end())isgluing = 1;
-        output_fine << isgluing << std::endl;
+        output_fine << isgluing << '\n';
     };
-    output_fine << "      </DataArray> " << std::endl;
+    output_fine << "      </DataArray> " << '\n';
     
-    output_fine << "    </CellData>" << std::endl; 
+    output_fine << "    </CellData>" << '\n'; 
 
     //FINALIZE OUTPUT FILE
-    output_fine << "  </Piece>" << std::endl;
-    output_fine << "  </UnstructuredGrid>" << std::endl
-             << "</VTKFile>" << std::endl;
+    output_fine << "  </Piece>" << '\n';
+    output_fine << "  </UnstructuredGrid>" << '\n'
+             << "</VTKFile>" << '\n';
 
 
 }

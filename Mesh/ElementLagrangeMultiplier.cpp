@@ -66,8 +66,8 @@ void ElementLagrangeMultiplier<tshape>::ComputeElContribution(MatrixDouble &jaco
         index++;        
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };

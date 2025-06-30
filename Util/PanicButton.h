@@ -14,7 +14,7 @@ class PanicButton
 public:
     //Error 
     PanicButton(){
-        std::cout << "Put a break point here!" << std::endl;
+        std::cout << "Put a break point here!" << '\n';
 
         void* callstack[128];
         int i, frames = backtrace(callstack, 128);

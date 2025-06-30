@@ -62,14 +62,14 @@ public:
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
     double getJacobian() override {
-        // std::cout << "AAA 1 "<< std::endl;
+        // std::cout << "AAA 1 "<< '\n';
         //Computes the jacobian matrix
         int index = 0;
         ComputeJacobian();
-        // std::cout << "AAA 2 "<< std::endl;        
+        // std::cout << "AAA 2 "<< '\n';        
         //Computes spatial derivatives
         // ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
-        // std::cout << "AAA 3 "<< std::endl;
+        // std::cout << "AAA 3 "<< '\n';
 
         return fIntegData.fJacA0;
     };

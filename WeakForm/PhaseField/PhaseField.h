@@ -11,9 +11,9 @@ private:
     double fEta;
 
     static constexpr double fM = 1e-4;
-    static constexpr double fGamma = 1e-2;
+    static constexpr double fGamma = 1e-1;
     static constexpr double h = 1.0/20.0;
-    static constexpr double fKsi = 3*h;
+    static constexpr double fKsi = 5*h;
 
 private:
     void ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDouble &Stiffness);

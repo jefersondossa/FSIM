@@ -467,7 +467,7 @@ int ComputingSymmetricCubatureRule(int order, MatrixDouble &Points, VecDouble &W
             TransformBarycentricCoordInCartesianCoord(QUAD_TETRA_P14_pts, QUAD_TETRA_P14_wts, Points, Weights);
             break;
         default:
-            std::cout << "TPZIntRuleT3D not implemented by order " << order << std::endl;
+            std::cout << "TPZIntRuleT3D not implemented by order " << order << '\n';
     }
 
     return order;

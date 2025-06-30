@@ -123,7 +123,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
         if (n_eles_to_be_removed == 1)
             break;
 
-        std::cout << "Will remove " << n_eles_to_be_removed << " elements!" << std::endl;
+        std::cout << "Will remove " << n_eles_to_be_removed << " elements!" << '\n';
 
         for (size_t i = 0; i < compliances.size() && n_eles_to_be_removed > 0; i++)
         {

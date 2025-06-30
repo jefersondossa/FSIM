@@ -54,7 +54,7 @@ void LinearAnalysis::UpdateSolution(){
 }
 
 void LinearAnalysis::Run(){
-    std::cout << "Allocating problem..." << std::endl;
+    std::cout << "Allocating problem..." << '\n';
     std::clock_t t3 = std::clock();
     Compute();
     std::clock_t t4 = std::clock();
@@ -65,7 +65,7 @@ void LinearAnalysis::Run(){
     Solve();
     std::clock_t t5 = std::clock();
     std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
-    std::cout << "Updating solution..." << std::endl;
+    std::cout << "Updating solution..." << '\n';
     LinearAnalysis::UpdateSolution();
     // fGlobalMatrix->PrintMatrix();
     // fGlobalMatrix->PrintRhs();

@@ -11,7 +11,7 @@ void TransientAnalysis::Run(int64_t nsteps){
     static size_t steps_run = 0;
     for (int64_t i = 0; i < nsteps; i++){
         
-        std::cout << "Time Step = " << i << std::endl;
+        std::cout << "Time Step = " << i << '\n';
         if (IsLinear){
             fGlobalMatrix->ZeroMatrix();
             fGlobalMatrix->ZeroRhs();
@@ -32,8 +32,10 @@ void TransientAnalysis::Run(int64_t nsteps){
                 };
             }
         }
-        
-        VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,{},i + steps_run);
+
+        if(steps_run % 200 == 0) {
+            VTUGenerator::PrintResults(this->MeshVector()[0],fFilename,fScalVars,fVectVars,{},i + steps_run);
+        }        
         fGlobalMatrix->ZeroMatrix();
         fGlobalMatrix->ZeroRhs();
         fGlobalMatrix->ZeroSolution();

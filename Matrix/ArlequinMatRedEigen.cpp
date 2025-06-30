@@ -209,7 +209,7 @@ double ArlequinMatRedEigen::SolutionNorm(){
 }
 
 void ArlequinMatRedEigen::PrintMatrix(){
-    // std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
+    // std::cout << "Global Matrix = \n"<< fMatrix << '\n';
     std::cout << "K0 = {\n";
     for (int64_t i = 0; i < fK0.rows(); i++){
         std::cout << "{";
@@ -272,7 +272,7 @@ void ArlequinMatRedEigen::PrintMatrix(){
 }
 
 void ArlequinMatRedEigen::PrintRhs(){
-    // std::cout << "Global RHS = \n"<< fRhs << std::endl;
+    // std::cout << "Global RHS = \n"<< fRhs << '\n';
     std::cout << "F0 = {\n";
     for (int64_t i = 0; i < fF0.rows(); i++){
         std::cout << "{" << fF0(i,0) << "}";
@@ -297,7 +297,7 @@ void ArlequinMatRedEigen::PrintRhs(){
 }
 
 void ArlequinMatRedEigen::PrintSolution(){
-    // std::cout << "Solution = \n"<< fSolution << std::endl;
+    // std::cout << "Solution = \n"<< fSolution << '\n';
     std::cout << "U0 = {\n";
     for (int64_t i = 0; i < fU0.rows(); i++){
         std::cout << "{" << fU0(i,0) << "}";

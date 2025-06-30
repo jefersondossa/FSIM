@@ -22,7 +22,7 @@
 class DomainIntegration{
 public:
     DomainIntegration(int DIM, int DEG){
-        std::cout << "This method is deprecated." << std::endl;
+        std::cout << "This method is deprecated." << '\n';
         PanicButton();
         // IntegQuadrature quad(DIM,DEG);
         // ShapeFunction shapeFunction(DIM,DEG);

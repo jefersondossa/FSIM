@@ -5,7 +5,7 @@
 #include "LagrangeMultiplier.h"
 
 void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
-    std::cout << "Assembling..." << std::endl;
+    std::cout << "Assembling..." << '\n';
     bool HasLagrange = false;
     for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
@@ -53,7 +53,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 }
             };
         };
-        // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
+        // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << '\n';
         // fAnalysis->GlobalMatrix()->PrintRhs();
     }; //Elements
     if (HasLagrange) LagrangeMultiplierDOF(fAnalysis,mesh,startDOF);
@@ -447,41 +447,41 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
 }
 
 void Assemble::Arlequin(Analysis *fAnalysis){
-    std::cout << "Assembling Global model..." << std::endl;
+    std::cout << "Assembling Global model..." << '\n';
     int64_t numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
     Monomodel(fAnalysis,0,0);
 
-    std::cout << "Assembling Local model..." << std::endl;
+    std::cout << "Assembling Local model..." << '\n';
     int64_t numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
     Monomodel(fAnalysis,1,numDOFGlobal);
 
-    std::cout << "Assembling Coupling operator..." << std::endl;
+    std::cout << "Assembling Coupling operator..." << '\n';
     Coupling(fAnalysis,numDOFGlobal+numDOFLocal);
 }
 
 void Assemble::ArlequinMatrix(Analysis *fAnalysis){
-    std::cout << "Assembling Global model..." << std::endl;
+    std::cout << "Assembling Global model..." << '\n';
     int64_t numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
     MonomodelMatrix(fAnalysis,0,0);
 
-    std::cout << "Assembling Local model..." << std::endl;
+    std::cout << "Assembling Local model..." << '\n';
     int64_t numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
     MonomodelMatrix(fAnalysis,1,numDOFGlobal);
 
-    std::cout << "Assembling Coupling operator..." << std::endl;
+    std::cout << "Assembling Coupling operator..." << '\n';
     CouplingMatrix(fAnalysis,numDOFGlobal+numDOFLocal);
 }
 
 void Assemble::ArlequinVector(Analysis *fAnalysis){
-    std::cout << "Assembling Global model..." << std::endl;
+    std::cout << "Assembling Global model..." << '\n';
     int64_t numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
     MonomodelVector(fAnalysis,0,0);
 
-    std::cout << "Assembling Local model..." << std::endl;
+    std::cout << "Assembling Local model..." << '\n';
     int64_t numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
     MonomodelVector(fAnalysis,1,numDOFGlobal);
 
-    std::cout << "Assembling Coupling operator..." << std::endl;
+    std::cout << "Assembling Coupling operator..." << '\n';
     CouplingVector(fAnalysis,numDOFGlobal+numDOFLocal);
 }
 
@@ -598,7 +598,7 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
 }
 
 void Assemble::LagrangeMultiplierDOF(Analysis *fAnalysis, int mesh, int64_t startDOF){
-    std::cout << "Assembling..." << std::endl;
+    std::cout << "Assembling..." << '\n';
 
     for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
@@ -658,17 +658,17 @@ void Assemble::LagrangeMultiplierDOF(Analysis *fAnalysis, int mesh, int64_t star
                 }
             }
         };
-        // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
+        // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << '\n';
         // fAnalysis->GlobalMatrix()->PrintRhs();
     }; //Elements
 }
 
 void Assemble::LagrangeMultiplierDOFMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
-    std::cout << "Please Implement me!" << std::endl;
+    std::cout << "Please Implement me!" << '\n';
     PanicButton();
 }
 
 void Assemble::LagrangeMultiplierDOFVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
-    std::cout << "Please Implement me!" << std::endl;
+    std::cout << "Please Implement me!" << '\n';
     PanicButton();
 }

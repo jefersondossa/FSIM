@@ -39,9 +39,9 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         rotation(2*j  ,2*j+1) = -sina;
         rotation(2*j+1,2*j+1) = cosa;
     }
-    // std::cout << "matB =\n"<< matB << std::endl;
-    // std::cout << "rotation =\n"<< rotation << std::endl;
-    // std::cout << "K =\n"<< matB.transpose() * matB << std::endl;
+    // std::cout << "matB =\n"<< matB << '\n';
+    // std::cout << "rotation =\n"<< rotation << '\n';
+    // std::cout << "K =\n"<< matB.transpose() * matB << '\n';
     Stiffness += rotation * matB.transpose() * matB * rotation.transpose() * WJ * elementLenght * K;
 
 }
@@ -79,7 +79,7 @@ void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     sol[0] = -data.fDSolDx(1,0)*sina;
     sol[1] = +data.fDSolDx(0,0)*cosa;
 
-    // std::cout << "rotation =\n"<< rotation << std::endl;
+    // std::cout << "rotation =\n"<< rotation << '\n';
     Rhs += rotation * matB.transpose() * sol * WJ * elementLenght * K;
 
     for (int i = nphi; i--; ){
@@ -90,7 +90,7 @@ void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         Rhs[2*i  ] += Fx * WJ;
         Rhs[2*i+1] += Fy * WJ;
     };
-    // std::cout << "RHS = " << Rhs << std::endl;
+    // std::cout << "RHS = " << Rhs << '\n';
     
 };
 

@@ -12,7 +12,7 @@ void OpenFOAMWriter::ClearAllFiles(){
     if (std::filesystem::exists("OpenFOAMRun")) {
         // Delete the folder and its contents
         std::filesystem::remove_all("OpenFOAMRun");
-        // std::cout << "Folder deleted successfully: " << folderPath << std::endl;
+        // std::cout << "Folder deleted successfully: " << folderPath << '\n';
     }
     std::filesystem::create_directory("OpenFOAMRun");
     std::filesystem::create_directory("OpenFOAMRun/constant");
@@ -121,7 +121,7 @@ void OpenFOAMWriter::VelocityNBR6123(){
 bool OpenFOAMWriter::ParseMSH(const std::string &inputFile, std::vector<Vertex> &vertices, std::vector<Face> &faces) {
     std::ifstream infile(inputFile);
     if (!infile.is_open()) {
-        std::cerr << "Error: Unable to open the .msh file." << std::endl;
+        std::cerr << "Error: Unable to open the .msh file." << '\n';
         return false;
     }
 
@@ -187,7 +187,7 @@ bool OpenFOAMWriter::ParseMSH(const std::string &inputFile, std::vector<Vertex> 
 bool OpenFOAMWriter::WriteOBJ(const std::string &outputFile, const std::vector<Vertex> &vertices, const std::vector<Face> &faces) {
     std::ofstream outfile(outputFile);
     if (!outfile.is_open()) {
-        std::cerr << "Error: Unable to open the .obj file." << std::endl;
+        std::cerr << "Error: Unable to open the .obj file." << '\n';
         return false;
     }
 
@@ -227,12 +227,12 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     std::vector<Face> faces;
 
     if (!ParseMSH(fInputMsh, vertices, faces)) {
-        std::cerr << "Failed to parse the .msh file." << std::endl;
+        std::cerr << "Failed to parse the .msh file." << '\n';
         return 1;
     }
 
     if (!WriteOBJ(fOutputObj, vertices, faces)) {
-        std::cerr << "Failed to write the .obj file." << std::endl;
+        std::cerr << "Failed to write the .obj file." << '\n';
         return 1;
     }
 
@@ -245,7 +245,7 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     std::string outputFile = "OpenFOAMRun/system/blockMeshDict";
     std::ofstream outfile(outputFile);
     if (!outfile.is_open()) {
-        std::cerr << "Error: Unable to open the .obj file." << std::endl;
+        std::cerr << "Error: Unable to open the .obj file." << '\n';
         return false;
     }
 
@@ -386,7 +386,7 @@ bool OpenFOAMWriter::UInitial(VecDouble &internalField){
 
     std::ofstream UFile("OpenFOAMRun/0/U");
     if (!UFile.is_open()) {
-        std::cerr << "Error: Unable to open 0/U file." << std::endl;
+        std::cerr << "Error: Unable to open 0/U file." << '\n';
         return false;
     }
 
@@ -458,7 +458,7 @@ bool OpenFOAMWriter::pInitial(double puniform){
 
     std::ofstream PFile("OpenFOAMRun/0/p");
     if (!PFile.is_open()) {
-        std::cerr << "Error: Unable to open 0/p file." << std::endl;
+        std::cerr << "Error: Unable to open 0/p file." << '\n';
         return false;
     }
 
@@ -510,7 +510,7 @@ bool OpenFOAMWriter::nutInitial(double  nutuniform){
 
     std::ofstream nutFile("OpenFOAMRun/0/nut");
     if (!nutFile.is_open()) {
-        std::cerr << "Error: Unable to open 0/nut file." << std::endl;
+        std::cerr << "Error: Unable to open 0/nut file." << '\n';
         return false;
     }
 
@@ -560,7 +560,7 @@ bool OpenFOAMWriter::nutInitial(double  nutuniform){
 bool OpenFOAMWriter::kInitial(double kuniform){
     std::ofstream kFile("OpenFOAMRun/0/k");
     if (!kFile.is_open()) {
-        std::cerr << "Error: Unable to open 0/k file." << std::endl;
+        std::cerr << "Error: Unable to open 0/k file." << '\n';
         return false;
     }
 
@@ -612,7 +612,7 @@ bool OpenFOAMWriter::kInitial(double kuniform){
 bool OpenFOAMWriter::omegaInitial(double omegauniform){
     std::ofstream omegaFile("OpenFOAMRun/0/omega");
     if (!omegaFile.is_open()) {
-        std::cerr << "Error: Unable to open 0/omega file." << std::endl;
+        std::cerr << "Error: Unable to open 0/omega file." << '\n';
         return false;
     }
 
@@ -672,7 +672,7 @@ bool OpenFOAMWriter::WriteConstant(double density, double viscosity){
 bool OpenFOAMWriter::WriteMomentumTransport(){
     std::ofstream outFile("OpenFOAMRun/constant/momentumTransport");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open constant/momentumTransport file." << std::endl;
+        std::cerr << "Error: Unable to open constant/momentumTransport file." << '\n';
         return false;
     }
 
@@ -709,7 +709,7 @@ bool OpenFOAMWriter::WritePhysicalProperties(double density, double viscosity){
 
     std::ofstream outFile("OpenFOAMRun/constant/physicalProperties");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open constant/physicalProperties file." << std::endl;
+        std::cerr << "Error: Unable to open constant/physicalProperties file." << '\n';
         return false;
     }
 
@@ -740,7 +740,7 @@ bool OpenFOAMWriter::WritePhysicalProperties(double density, double viscosity){
 bool OpenFOAMWriter::WriteSurfaceFeaturesDict(){
     std::ofstream outFile("OpenFOAMRun/system/surfaceFeaturesDict");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/surfaceFeaturesDict file." << std::endl;
+        std::cerr << "Error: Unable to open system/surfaceFeaturesDict file." << '\n';
         return false;
     }
 
@@ -774,7 +774,7 @@ bool OpenFOAMWriter::WriteSurfaceFeaturesDict(){
 bool OpenFOAMWriter::WriteControlDict(double dt, double endTime, double writeInterval){
     std::ofstream outFile("OpenFOAMRun/system/controlDict");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/controlDict file." << std::endl;
+        std::cerr << "Error: Unable to open system/controlDict file." << '\n';
         return false;
     }
 
@@ -1009,7 +1009,7 @@ bool OpenFOAMWriter::WriteControlDict(double dt, double endTime, double writeInt
 bool OpenFOAMWriter::WriteFvSchemes(){
     std::ofstream outFile("OpenFOAMRun/system/fvSchemes");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/fvSchemes file." << std::endl;
+        std::cerr << "Error: Unable to open system/fvSchemes file." << '\n';
         return false;
     }
 
@@ -1077,7 +1077,7 @@ bool OpenFOAMWriter::WriteFvSchemes(){
 bool OpenFOAMWriter::WriteFvSolution(){
     std::ofstream outFile("OpenFOAMRun/system/fvSolution");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/fvSolution file." << std::endl;
+        std::cerr << "Error: Unable to open system/fvSolution file." << '\n';
         return false;
     }
 
@@ -1207,7 +1207,7 @@ bool OpenFOAMWriter::WriteFvSolution(){
 bool OpenFOAMWriter::WriteSnappyHexMeshDict(){
     std::ofstream outFile("OpenFOAMRun/system/snappyHexMeshDict");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/snappyHexMeshDict file." << std::endl;
+        std::cerr << "Error: Unable to open system/snappyHexMeshDict file." << '\n';
         return false;
     }
 
@@ -1311,7 +1311,7 @@ bool OpenFOAMWriter::WriteSnappyHexMeshDict(){
 bool OpenFOAMWriter::WriteMeshQualityDict(){
     std::ofstream outFile("OpenFOAMRun/system/meshQualityDict");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/meshQualityDict file." << std::endl;
+        std::cerr << "Error: Unable to open system/meshQualityDict file." << '\n';
         return false;
     }
 
@@ -1341,7 +1341,7 @@ bool OpenFOAMWriter::WriteMeshQualityDict(){
 bool OpenFOAMWriter::WriteDecomposeParDict(){
     std::ofstream outFile("OpenFOAMRun/system/decomposeParDict");
     if (!outFile.is_open()) {
-        std::cerr << "Error: Unable to open system/decomposeParDict file." << std::endl;
+        std::cerr << "Error: Unable to open system/decomposeParDict file." << '\n';
         return false;
     }
     fNSubdomains = std::thread::hardware_concurrency()/2;

@@ -89,8 +89,8 @@ void IntRuleHexahedron::SetOrder(int order) {
     //     fPoints(i,1) = coordAux[i+nPoints*nPoints*nPoints];
     //     fPoints(i,2) = coordAux[i+2*nPoints*nPoints*nPoints];
     // }
-    // std::cout << "fPoints" << fPoints << std::endl;
-    // std::cout << "fWeights" << fWeights << std::endl;
+    // std::cout << "fPoints" << fPoints << '\n';
+    // std::cout << "fWeights" << fWeights << '\n';
 }
 
 void IntRuleHexahedron::gaulegHexa(const double x1, const double x2, VecDouble &co, VecDouble &w) {

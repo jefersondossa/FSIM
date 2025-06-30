@@ -73,7 +73,7 @@ public:
 
 
     friend std::ostream &operator<<(std::ostream &out, const Tensor &tens){
-        out << tens.fData << std::endl;
+        out << tens.fData << '\n';
         return out;
     };
     

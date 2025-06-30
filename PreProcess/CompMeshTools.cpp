@@ -48,18 +48,18 @@ void CompMeshTools::DomainDecompositionMETIS(CompMesh *cmesh){
     //                             &objval, cmesh->part_elem, cmesh->part_nodes);
     // }
     
-    // mirrorData << std::endl \
-    //            << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << std::endl;
+    // mirrorData << '\n' \
+    //            << "FLUID MESH DOMAIN DECOMPOSITION - ELEMENTS" << '\n';
     // for(int i = 0; i < numEl; i++){
     //     mirrorData << "process = " << cmesh->part_elem[i] \
-    //                << ", element = " << i << std::endl;
+    //                << ", element = " << i << '\n';
     // };
 
-    // mirrorData << std::endl \
-    //            << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << std::endl;
+    // mirrorData << '\n' \
+    //            << "FLUID MESH DOMAIN DECOMPOSITION - NODES" << '\n';
     // for(int i = 0; i < numNd; i++){
     //     mirrorData << "process = " << cmesh->part_nodes[i] \
-    //                << ", node = " << i << std::endl;
+    //                << ", node = " << i << '\n';
     // };
 
 

@@ -100,7 +100,7 @@ void TransientNavierStokes::GetStabilizationParameter(int &index, IntPointData &
     if (std::fabs(tSUGN1_) <= 1.e-10) tSUGN1_ = 1.e-10;
     if (std::fabs(tSUGN3_) <= 1.e-10) tSUGN3_ = 1.e-10;
 
-    //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << std::endl;
+    //if(model == false) std::cout << "SUPG " << tSUGN1_ << " " << tSUGN3_ << '\n';
     //Computing tSUPG parameter
     tSUPG_ = 1. / std::sqrt(1. / (tSUGN1_ * tSUGN1_) + 
                        1. / (tSUGN2_ * tSUGN2_) + 

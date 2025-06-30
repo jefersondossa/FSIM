@@ -41,8 +41,8 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
     
     
     // auto elast = fElasticModel->ConstitutiveMatrix();
-    // std::cout << "Elastic - \n" << elast << std::endl;
-    // std::cout << "Tangent - \n" << fTangentTensor << std::endl;
+    // std::cout << "Elastic - \n" << elast << '\n';
+    // std::cout << "Tangent - \n" << fTangentTensor << '\n';
 
     if (!fPlaneStress){
     if (fElasticModel->Dimension() == 2){
@@ -58,7 +58,7 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
         }
         fElasticModel->ConstitutiveMatrix() = fTangent2D;
         if (fTangent2D.determinant() < 1.e-10){
-            std::cout << "Elastoplastic operator with problem " << std::endl;
+            std::cout << "Elastoplastic operator with problem " << '\n';
             PanicButton();
         }
     } else if (fElasticModel->Dimension() == 3) {

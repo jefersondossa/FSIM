@@ -27,7 +27,7 @@ void IncrementalAnalysis::Run(){
     
     int iStep = 0;
     while (iStep <= fNSteps){
-        std::cout << "Computing step... " << iStep << std::endl;
+        std::cout << "Computing step... " << iStep << '\n';
         
         for (int i = 0; i < fIncrementBC.size(); i++){
             fIncrementBC[i]->BCValue() += increments[i] * iStep;
@@ -61,7 +61,7 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
     int iStep = 0;
     
     while (iStep < fNSteps+1){
-        std::cout << "Computing step... " << iStep << std::endl;
+        std::cout << "Computing step... " << iStep << '\n';
         
         if (fIncrementValue.size() == 0){
             for (int i = 0; i < fIncrementBC.size(); i++){
@@ -73,7 +73,7 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
             }
         }
         // std::ofstream output("plasticity.txt",std::ios::app);
-        // output << "\n\n------------------STEP = " << iStep << " ------------------" << std::endl;
+        // output << "\n\n------------------STEP = " << iStep << " ------------------" << '\n';
         NonLinearAnalysis::Run();
         VTUGenerator::PrintResults(MeshVector()[0],filename,scalnames,vecnames,{},iStep);
         {

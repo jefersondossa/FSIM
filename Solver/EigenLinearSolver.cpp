@@ -163,7 +163,7 @@ namespace
 
         const auto norm_inverse = get_norm_dense_infinity(MatrixXd(kMatrix).inverse());
 
-        std::cout << "Condition number: " << norm_k_matrix * norm_inverse << std::endl;
+        std::cout << "Condition number: " << norm_k_matrix * norm_inverse << '\n';
 #endif
 
         static std::vector<double> v_U_f{};
@@ -179,9 +179,9 @@ namespace
         double errorOut;
         std::tie(nItOut, errorOut) = solve(rhs_v, std::move(v_U_f));
 
-        std::cout << "Solved using AMGCL." << std::endl;
-        std::cout << "    # iterations: " << nItOut << std::endl;
-        std::cout << "    Final error: " << errorOut << std::endl;
+        std::cout << "Solved using AMGCL." << '\n';
+        std::cout << "    # iterations: " << nItOut << '\n';
+        std::cout << "    Final error: " << errorOut << '\n';
 
         return CRSSolutionToEigen(v_U_f);
     }
@@ -211,7 +211,7 @@ void EigenLinearSolver::Solve(){
             solver.analyzePattern(emat->Matrix());
             solver.factorize(emat->Matrix());
             emat->Solution() = solver.solve(emat->Rhs()); 
-            std::cout << "Mat determinant = " << solver.determinant() << std::endl;
+            std::cout << "Mat determinant = " << solver.determinant() << '\n';
         }
         break;
     case SolverType::ELLt:

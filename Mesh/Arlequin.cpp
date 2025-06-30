@@ -275,7 +275,7 @@ void Arlequin::CreateGlobalCouplingElements(){
         }
     }
     
-    std::cout <<" Testsd " << std::endl;
+    std::cout <<" Testsd " << '\n';
 
 }
 
@@ -540,7 +540,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     };
 
     if (fabs(xsi[0]) > 2.) {
-        std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
+        std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << '\n';
         PanicButton();
     }
     if (elCorr == 150000) PanicButton();
@@ -569,16 +569,16 @@ void Arlequin::setNodalCorrespondenceFine() {
         // fMeshVector[2]->NodeVec()[inode] -> setNodalCorrespondence(elCorr,xsiCorr);             
         // }
 
-        // std::cout << "INODE " << nodesGlueZoneFine_[inode] << " " << elCorr << " " << xsiCorr[0] << " " << xsiCorr[1] << std::endl;
+        // std::cout << "INODE " << nodesGlueZoneFine_[inode] << " " << elCorr << " " << xsiCorr[0] << " " << xsiCorr[1] << '\n';
    
-        // std::cout << "CORRESP " << elCorr << " " << corresp.first << std::endl 
-                  // << xsiCorr[0] << " " << xsiCorr[1] << " " << corresp.second[0] << " " << corresp.second[1] << std::endl;
+        // std::cout << "CORRESP " << elCorr << " " << corresp.first << '\n' 
+                  // << xsiCorr[0] << " " << xsiCorr[1] << " " << corresp.second[0] << " " << corresp.second[1] << '\n';
 
         
             
         // std::cout << "corresp " << corresp.first 
         //           << " " << corresp.second(0) << " " << corresp.second(1)
-        //           << std::endl;
+        //           << '\n';
 
     };
 
@@ -586,12 +586,12 @@ void Arlequin::setNodalCorrespondenceFine() {
     //     int elem = fMeshVector[1]->NodeVec()[i] -> getNodalElemCorrespondence();
     //     xsi = fMeshVector[1]->NodeVec()[i] -> getNodalXsiCorrespondence();
     //     std::cout << "node " << i << " elem " << elem 
-    //               << " " << xsi(0) << " " << xsi(1) << std::endl;
+    //               << " " << xsi(0) << " " << xsi(1) << '\n';
     // };
 
     //Compute correspondence of integration points
     //int numberIntPoints = fMeshVector[1]->ElementVec()[0] -> getNumberOfIntegrationPoints();
-    //if (rank == 0) std::cout << "Int Points " << numberIntPoints << std::endl;
+    //if (rank == 0) std::cout << "Int Points " << numberIntPoints << '\n';
 
     for (int ielem = 0; ielem < fMeshVector[2]->NElements(); ielem++) {
         auto *el = fMeshVector[2]->ElementVec()[ielem];
@@ -609,7 +609,7 @@ void Arlequin::setNodalCorrespondenceFine() {
             if (DIM == 3) x3[i] = x[2];//alpha_f * x[2] + (1. - alpha_f) * xp[2];
         };
 
-        // std::cout << "XX1 " << x2 << " " << x22 << " " << x222 << std::endl;
+        // std::cout << "XX1 " << x2 << " " << x22 << " " << x222 << '\n';
 
         int numberIntPoints = fMeshVector[2]->ElementVec()[ielem] -> getNumberOfIntegrationPoints();
         for (int i = 0; i < numberIntPoints; i++){
@@ -926,7 +926,7 @@ void Arlequin::setCouplingZone(){
         for (int ino = 0; ino < nElNodes; ino++){
             VecDouble x = fMeshVector[1]->NodeVec()[connec[ino]] -> getCoordinates();
             double dist = fLocalSignaledDistance[connec[ino]];
-            //  std::cout << "DIST " << dist << std::endl;
+            //  std::cout << "DIST " << dist << '\n';
             if (fabs(dist) <= fGlueZoneThickness + 0.001) flag++;
             
         };
@@ -972,7 +972,7 @@ void Arlequin::setCouplingZone(){
     std::cout << "GLUE ZONE - Number of Nodes = " 
               << fMeshVector[2]->NNodes() 
               << " - Number of Elements = " 
-              << fMeshVector[2]->NElements() << std::endl;
+              << fMeshVector[2]->NElements() << '\n';
     
 
     for (int i = 0; i < fMeshVector[2]->NElements(); i++){

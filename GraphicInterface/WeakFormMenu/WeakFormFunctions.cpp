@@ -36,7 +36,7 @@ void WindowConstructor::fWF_free_cb_cb(){
     for (const auto& pair : PhysGroup2){
 
       int index = WeakForm->find_index("OpenFoam");
-      std::cout << "Name: " << pair.first << ", Phisycal Group Type: " << pair.second << std::endl;
+      std::cout << "Name: " << pair.first << ", Phisycal Group Type: " << pair.second << '\n';
 
       if(Dimension == 3 && PhysicalGroups->text() == pair.first && pair.second == "Surface"){
 

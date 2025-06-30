@@ -73,7 +73,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     val1.setZero();
     val2.setZero();
     constexpr auto kPhaseFieldInternalMatId = 15;
-    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1.e-4, 20.00, 1e2);
+    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1.e-4, 2.00, 1e1);
     modelPhaseField.InsertMaterial(govEquationPF);
 
     constexpr auto kPhaseFieldLeftMatId = 16;
@@ -136,7 +136,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
     modelPhaseField.InsertMaterial(lagmult);
     //Now, create new elements of the type LagrangeMultiplier, which will be used to impose the additional constrain.
     // Here, the point element will always be the second and the volumetric element, the first.
-    std::cout << "NElements before LagrangeMultiplier: " << modelPhaseField.NElements() << std::endl;
+    // std::cout << "NElements before LagrangeMultiplier: " << modelPhaseField.NElements() << '\n';
     for (auto &element : modelPhaseField.ElementVec())
     {
         if (element->Dimension() != modelPhaseField.Dimension()) continue;
@@ -169,7 +169,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
         }
         modelPhaseField.InsertElement(gelmult);
     }
-    std::cout << "NElements after LagrangeMultiplier: " << modelPhaseField.NElements() << std::endl;
+    // std::cout << "NElements after LagrangeMultiplier: " << modelPhaseField.NElements() << '\n';
     delete [] modelPhaseField.part_elem;
     modelPhaseField.part_elem = new int[modelPhaseField.NElements()]();
 
@@ -279,32 +279,30 @@ int main()
     // Solving
     while(true)
     {
-        std::cout << "********** OPTIMIZATION STEP " << step << " **********" << std::endl;
+        // std::cout << "********** OPTIMIZATION STEP " << step << " **********\n";
         // For the elasticity problem, transfer phase field solution to the weightFunction data structure.
         for (size_t inode = 0; inode < modelElasticity2D->NNodes(); inode++){
-            if (step == 0){
+            // if (step == 0){
                 modelElasticity2D->NodeVec()[inode]->setWeightFunction(1.0);
-            } else {
-                modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::max(min_val, pow(2.*modelPhaseField->NodeVec()[inode]->Solution()[0], 3)));
-            }
+            // } else {
+            //     modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::max(min_val, pow(modelPhaseField->NodeVec()[inode]->Solution()[0], 3)));
+            // }
         }
         for (int64_t i_el = 0; i_el < modelElasticity2D->NElements() && i_el < modelPhaseField->NElements(); i_el++){
-           
             auto &elemElas2D = modelElasticity2D->ElementVec()[i_el];            
             if (elemElas2D->Dimension() != modelElasticity2D->Dimension()) continue;
             elemElas2D->setIntegPointWeightFunction();
         }
         step++;
-        std::cout << "Solving Solid Mechanics" << std::endl;
+        // std::cout << "Solving Solid Mechanics\n";
         anElasticity2D.Run();
-        VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
+        // VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
 
         // For each elasticity element, compute the compliance and then transfer the information
         // to the phase field corresponding element. The value of J need to be computed for each integration point.
         // Thus the //J data structure need to be a vector with lenght equal to the number of integration points.
         // Otherwhise, the value of J can also be stored in the weight function data structure.
         for (int64_t i_el = 0; i_el < modelElasticity2D->NElements() && i_el < modelPhaseField->NElements(); i_el++){
-           
             auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
             auto elemPhaseField = modelPhaseField->ElementVec()[i_el];
             
@@ -336,82 +334,19 @@ int main()
                 VecDouble compl_vec(nvar);
                 elemElas2D->Solution(compliance_var_idx, compl_vec);
 
-                //Trasfer complience to the phase field element
+                //Trasfer compliance to the phase field element
                 // elemPhaseField->IntegrationData().fJ = compl_vec[0];//(compl_vec[0] > 0 ? 1.0 : -1.0);// ;
                 modelPhaseField->NodeVec()[connect[inode]]->setWeightFunction(compl_vec[0]);
                 // elemPhaseField->IntegrationData().fJ = compl_vec[0];//(compl_vec[0] > 0 ? 1.0 : -1.0);// ;
-
             }
-
-
-            
-
         }
-
         
-        std::cout << "Solving Phase-Field" << std::endl;
-        anPhaseField.Run(10);    
-        VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
-        std::cout << "LAGRANGE MULTIPLIER = " << modelPhaseField->NodeVec().back()->Solution()[0] << std::endl;
+        // std::cout << "Solving Phase-Field\n";
+        anPhaseField.Run(1);    
+        // VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
+        // std::cout << "LAGRANGE MULTIPLIER = " << modelPhaseField->NodeVec().back()->Solution()[0] << '\n';
         i++;
     }
 
-
     return 0;
 }
-
-
-
-
-
-
-
-        // for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
-        // {
-        //     auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
-        //     auto elemPhaseField = modelPhaseField->ElementVec()[i_el];
-            
-        //     if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
-        //     {
-        //         continue;
-        //     }
-        //     elemElas2D->setIntegPointWeightFunction();
-        //     // const auto sol_phase_field_var_idx = elemPhaseField->GetWeakForm()->VariableIndex("Solution");
-        //     // elemPhaseField->GetWeakForm()->VariableIndex("Solution");
-        //     // const auto nvar_sol = elemPhaseField->GetWeakForm()->NSolutionVariables(sol_phase_field_var_idx);
-        //     // VecDouble sol(nvar_sol);
-        //     // elemPhaseField->Solution(sol_phase_field_var_idx, sol);
-            
-        //     //dynamic_cast<ElementT<element_type/geometry>>(elemPhaseField);
-        //     // TODO: Use fIntRule to calculate the solution on the nodes. See/use void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_);
-        //     //Interpolate phase field solution at the integration points
-        //     for (int i = 0; i < elemPhaseField->getNumberOfIntegrationPoints(); i++)
-        //     {
-        //         elemPhaseField->SetIntPointCoordAndWeight(i);
-    
-        //         //Computes the Shape functions matrix
-        //         elemPhaseField->GetShapeFunction();
-                
-        //         //Interpolates Solution
-        //         elemPhaseField->interpolateSolution();
-        //         auto &solphi = elemPhaseField->IntegrationData().fSol[0];
-
-        //         elemElas2D->setIntegPointWeightFunction(i,std::max(solphi*solphi*solphi, min_val));
-        //     }
-            
-
-
-        //     // const auto phi = sol[0];
-
-        //     // // TODO: Set fWeightFunction for each element using phi calculated on the nodes.
-        //     // // So we don't need to keep the old stiffness matrix.
-        //     // elemElas2D->IntegrationData().fStiffnessMatrix = 
-        //     //     original_stiffness[i_el] * std::max(phi*phi*phi, min_val);
-
-        //     const auto compliance_var_idx = elemElas2D->GetWeakForm()->VariableIndex("ComplianceSensibility");
-        //     const auto nvar = elemElas2D->GetWeakForm()->NSolutionVariables(compliance_var_idx);
-        //     VecDouble compl_vec(nvar);
-        //     elemElas2D->Solution(compliance_var_idx, compl_vec);
-
-        //     elemPhaseField->IntegrationData().fJ = (compl_vec[0] > 0 ? 1.0 : -1.0);
-        // }

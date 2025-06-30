@@ -46,7 +46,7 @@ void ShapeQuadrilateralQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
 }
 
 void ShapeQuadrilateralQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    std::cout << "Please implement me " << std::endl;
+    std::cout << "Please implement me " << '\n';
     PanicButton();
     return;
 }

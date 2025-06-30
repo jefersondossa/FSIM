@@ -51,7 +51,7 @@ void Elasticity3D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     
     Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
 
-    // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
+    // std::cout << "Stiffness =\n"<< Stiffness << '\n';
 }
 
 void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){

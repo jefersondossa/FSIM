@@ -188,10 +188,10 @@ auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     arl.SetUp();
 
     // for (int i = 0; i < coarseModel->NNodes(); i++){
-    //     std::cout << "node " << i << "\ncoord = " << coarseModel->NodeVec()[i]->getCoordinates() << std::endl;
+    //     std::cout << "node " << i << "\ncoord = " << coarseModel->NodeVec()[i]->getCoordinates() << '\n';
     // }
     // for (int i = 0; i < coarseModel->NElements(); i++){
-    //     std::cout << "element " << i << "\nconnect = " << coarseModel->ElementVec()[i]->getConnectivity() << std::endl;
+    //     std::cout << "element " << i << "\nconnect = " << coarseModel->ElementVec()[i]->getConnectivity() << '\n';
     // }
     
 

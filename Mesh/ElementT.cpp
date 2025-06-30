@@ -202,7 +202,7 @@ void ElementT<tshape>::ComputeJacobian() {
         for (int j = 3; j--; ){
             // Approximate the integration space
             fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
-            // std::cout << "Coord " << i << " " << j << " = " << fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) << std::endl;
+            // std::cout << "Coord " << i << " " << j << " = " << fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) << '\n';
             xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
             
             for (int k = DIM; k--; ){
@@ -297,9 +297,9 @@ void ElementT<tshape>::ComputeJacobian() {
                     fIntegData.fAxes0(i,1) = v_2_til[i];
                 }
 
-                // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << std::endl;
-                // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << std::endl;
-                // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << std::endl;
+                // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << '\n';
+                // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << '\n';
+                // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << '\n';
             } else {
                 //Computing the jacobian determinant and Inverse
                 fIntegData.fA0(0,0) = fIntegData.fAxes0(0,0);
@@ -313,9 +313,9 @@ void ElementT<tshape>::ComputeJacobian() {
                 fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
                 fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
 
-                // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << std::endl;
-                // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << std::endl;
-                // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << std::endl;
+                // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << '\n';
+                // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << '\n';
+                // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << '\n';
 
                 fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
             }
@@ -412,9 +412,9 @@ void ElementT<tshape>::ComputeJacobianSearch() {
             fIntegData.fA0Inv(0,1) = -fIntegData.fA0(0,1) / fIntegData.fJacA0;
             fIntegData.fA0Inv(1,0) = -fIntegData.fA0(1,0) / fIntegData.fJacA0;
 
-            // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << std::endl;
-            // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << std::endl;
-            // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << std::endl;
+            // std::cout << "fIntegData.fJacA0 = " << fIntegData.fJacA0 << '\n';
+            // std::cout << "fIntegData.fA0 = \n" << fIntegData.fA0 << '\n';
+            // std::cout << "fIntegData.fA0Inv = \n" << fIntegData.fA0Inv << '\n';
 
             fIntegData.fJacA0 = fabs(fIntegData.fJacA0);
 #ifdef DEBUG_BUILD
@@ -907,8 +907,8 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, Vec
         index++;        
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
     // Set stiffness matrix to cache.
     fIntegData.fStiffnessMatrix = jacobianNRMatrix;
     fIntegData.fRHS = rhsVector;
@@ -954,8 +954,8 @@ void ElementT<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
         index++;        
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };
@@ -1006,8 +1006,8 @@ void ElementT<tshape>::ComputeElContribution(VecDouble &rhsVector){
         index++;        
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };
@@ -1181,7 +1181,7 @@ void ElementT<tshape>::ComputeError(VecDouble &errors){
 #ifdef DEBUG_BUILD
     if (!fWeakForm || (fWeakForm->Dimension() != Mesh()->Dimension())) return;
     if (!fWeakForm->GetExactSolution()){
-        std::cout << "Exact solution not set for material " << fWeakForm->Id() << std::endl;
+        std::cout << "Exact solution not set for material " << fWeakForm->Id() << '\n';
         PanicButton();
     }
 #endif
