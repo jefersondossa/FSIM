@@ -1,6 +1,7 @@
 #include "TransientAnalysis.h"
 #include "TransientWeakForm.h"
 #include "VTUGenerator.h"
+#include "L2Projection.h"
 
 TransientAnalysis::TransientAnalysis(CompMesh *cmesh, SolverType stype, bool linear) : NonLinearAnalysis(cmesh,stype){
     IsLinear = linear;
@@ -20,14 +21,19 @@ void TransientAnalysis::Run(int64_t nsteps){
         } else {
             NonLinearAnalysis::Run();
         }
-        for (int i = 0; i < fMeshVector.size(); i++){
+        for (int imesh = 0; imesh < fMeshVector.size(); imesh++){
             // Loop over all weak forms in the mesh. If it is a transient weak form
             // update the time derivatives
-            auto matvec = fMeshVector[i]->MaterialVector();
+            auto matvec = fMeshVector[imesh]->MaterialVector();
             for (auto const& [key, val] : matvec){
+                L2Projection *l2p = dynamic_cast<L2Projection*> (val);
+                if (l2p){
+                    l2p->SetTimeInstant(i+1);
+                    continue; // Skip L2Projection, it does not have time derivatives
+                } 
                 TransientWeakForm *twf = dynamic_cast<TransientWeakForm*> (val);
                 if(twf) {
-                    twf->UpdateTimeDerivatives(fMeshVector[i]);
+                    twf->UpdateTimeDerivatives(fMeshVector[imesh]);
                     twf->SetTimeInstant(i+1);
                 };
             }

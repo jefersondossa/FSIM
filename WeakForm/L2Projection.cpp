@@ -82,6 +82,27 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
         fExactSol(data.fX, result, deriv);
     }
     result -= data.fSol;
+    
+    auto force = fForceFunction;
+    VecDouble forcingF(3);
+    forcingF.setZero();
+    VecDouble x_ = data.fX;
+    if (force) force(x_,forcingF);
+
+    auto forceT = fForceFunctionTransient;
+    VecDouble forcingFT(3);
+    forcingFT.setZero();
+    double time = fTimeInstant * fTimeStep;
+    if (forceT) forceT(x_, time, forcingFT);
+
+    for (int i = 0; i < fNState; i++){
+        result[i] += forcingF[i] + forcingFT[i];
+        if (this->BCType == BoundaryConditionType::kNeumann){
+            BCVal2[i] -= forcingF[i] + forcingFT[i]; // Add time derivative contribution
+        }
+    }
+    
+
     switch (BCType)
     {
     case BoundaryConditionType::kDirichlet: // Dirichlet in all state variables

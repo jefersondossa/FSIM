@@ -2,6 +2,7 @@
 #define L2Projection_H
 
 #include "WeakForm.h"
+#include "TransientWeakForm.h"
 
 enum class BoundaryConditionType
 {
@@ -12,7 +13,7 @@ enum class BoundaryConditionType
 };
 
 /// @brief Implements the class to enforce boundary conditions
-class L2Projection : public WeakForm {
+class L2Projection : public WeakForm, public TransientWeakForm{
 protected:
     // Boundary condition ID
     // 0 = Dirichlet (all directions)

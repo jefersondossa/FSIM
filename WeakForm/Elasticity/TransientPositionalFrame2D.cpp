@@ -48,6 +48,13 @@ void TransientPositionalFrame2D::ComputeResidual(int &index, IntPointData &data,
     VecDouble Rhs2(3*nphi);
     Rhs2.setZero();
 
+    auto force = fForceFunctionTransient;
+    VecDouble forcingF(3);
+    forcingF.setZero();
+    VecDouble x_ = data.fX;
+    double time = fTimeInstant * fTimeStep;
+    if (force) force(x_, time, forcingF);
+
     double a0 = 1./(fBeta * fTimeStep * fTimeStep);
     double a1 = fGamma / (fBeta * fTimeStep);
     double a2 = 1./(fTimeStep * fBeta);
@@ -56,11 +63,13 @@ void TransientPositionalFrame2D::ComputeResidual(int &index, IntPointData &data,
     double a5 = fTimeStep * (fGamma / (2. * fBeta) - 1);
     
     for (size_t i = 0; i < nphi; i++){
-        Rhs[3*i  ] += -((posi[0]-posiPrev[0]) * (1/(fBeta * fTimeStep * fTimeStep) + fDamping * fGamma / (fBeta * fTimeStep))) * data.fPhi[i] * WJ
-                    + data.fPhi[i] * WJ * (a2 * vel[0] + a3 * acel[0] ) +  data.fPhi[i] * WJ*fDamping * (a4 * vel[0] + a5 * acel[0]);
+        Rhs[3*i  ] += forcingF[0] * data.fPhi[i] * WJ
+                      -((posi[0]-posiPrev[0]) * (1/(fBeta * fTimeStep * fTimeStep) + fDamping * fGamma / (fBeta * fTimeStep))) * data.fPhi[i] * WJ
+                      + data.fPhi[i] * WJ * (a2 * vel[0] + a3 * acel[0] ) +  data.fPhi[i] * WJ*fDamping * (a4 * vel[0] + a5 * acel[0]);
                     
-        Rhs[3*i+1] += -((posi[1]-posiPrev[1]) * (1/(fBeta * fTimeStep * fTimeStep) + fDamping * fGamma / (fBeta * fTimeStep))) * data.fPhi[i] * WJ
-                    + data.fPhi[i] * WJ * (a2 * vel[1] + a3 * acel[1] ) +  data.fPhi[i] * WJ*fDamping * (a4 * vel[1] + a5 * acel[1]);
+        Rhs[3*i+1] += forcingF[1] * data.fPhi[i] * WJ
+                      -((posi[1]-posiPrev[1]) * (1/(fBeta * fTimeStep * fTimeStep) + fDamping * fGamma / (fBeta * fTimeStep))) * data.fPhi[i] * WJ
+                      + data.fPhi[i] * WJ * (a2 * vel[1] + a3 * acel[1] ) +  data.fPhi[i] * WJ*fDamping * (a4 * vel[1] + a5 * acel[1]);
     }
     // std::cout << "rhs " << Rhs[3] << ", Rhs2 " << Rhs2[3] << std::endl; 
 };

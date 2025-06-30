@@ -307,7 +307,7 @@ void TransientNavierStokes::ComputeResidual(int &index, IntPointData &data, VecD
     //     NavierStokes::ComputeResidual(index,data,Rhs);
     //     return;
     // }
-
+    
     auto force = fForceFunction;
     int DIM = fDimension;
 
