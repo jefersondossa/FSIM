@@ -15,6 +15,173 @@
 #include <ShapeTriangleLin.h>
 #include <NullWeakForm.h>
 
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <fstream>
+
+using namespace std;
+
+const auto mult_steps = 100;
+
+const int Nx = 100, Ny = 100;
+const double Lx = 1.0, Ly = 1.0;
+const double dx = Lx / (Nx - 1);
+const double dy = Ly / (Ny - 1);
+const double dt = 1e-4;
+const int steps = 50000 * mult_steps;
+
+const double M = 1.0;
+const double gamma_ = dx*2;
+const double ksi = 1e-4;
+
+const double beta_ = 1e-5;
+
+using Grid = vector<vector<double>>;
+using GridStress = vector<vector<double>>;
+
+void write_vtu(const Grid &phi, const std::string &filename) {
+    const int Nx = phi.size();
+    const int Ny = phi[0].size();
+    const int numPoints = Nx * Ny;
+    const int numCells = (Nx - 1) * (Ny - 1);
+
+    std::ofstream out(filename);
+    out << "<?xml version=\"1.0\"?>\n";
+    out << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    out << "  <UnstructuredGrid>\n";
+    out << "    <Piece NumberOfPoints=\"" << numPoints << "\" NumberOfCells=\"" << numCells << "\">\n";
+
+    // Point coordinates
+    out << "      <Points>\n";
+    out << "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    for (int j = 0; j < Ny; ++j) {
+        for (int i = 0; i < Nx; ++i) {
+            out << i * dx << " " << j * dy << " 0.0\n";
+        }
+    }
+    out << "        </DataArray>\n";
+    out << "      </Points>\n";
+
+    // Cell connectivity
+    out << "      <Cells>\n";
+    // Connectivity
+    out << "        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n";
+    for (int j = 0; j < Ny - 1; ++j) {
+        for (int i = 0; i < Nx - 1; ++i) {
+            int p0 =  i      +  j      * Nx;
+            int p1 = (i + 1) +  j      * Nx;
+            int p2 = (i + 1) + (j + 1) * Nx;
+            int p3 =  i      + (j + 1) * Nx;
+            out << p0 << " " << p1 << " " << p2 << " " << p3 << "\n";
+        }
+    }
+    out << "        </DataArray>\n";
+    // Offsets
+    out << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n";
+    for (int c = 1; c <= numCells; ++c) {
+        out << 4 * c << "\n";
+    }
+    out << "        </DataArray>\n";
+    // Cell types: 9 = VTK_QUAD
+    out << "        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n";
+    for (int c = 0; c < numCells; ++c) {
+        out << "9\n";
+    }
+    out << "        </DataArray>\n";
+    out << "      </Cells>\n";
+
+    // Point data: phase field
+    out << "      <PointData Scalars=\"phi\">\n";
+    out << "        <DataArray type=\"Float32\" Name=\"phi\" format=\"ascii\">\n";
+    for (int j = 0; j < Ny; ++j) {
+        for (int i = 0; i < Nx; ++i) {
+            out << phi[i][j] << "\n";
+        }
+    }
+    out << "        </DataArray>\n";
+    out << "      </PointData>\n";
+
+    out << "    </Piece>\n";
+    out << "  </UnstructuredGrid>\n";
+    out << "</VTKFile>\n";
+}
+
+double w_prime(double phi) {
+    return 2.0 * phi * (1.0 - phi) * (1.0 - 2.0 * phi);
+}
+
+void initialize(Grid &phi) {
+    for (int i = 0; i < Nx; ++i) {
+        for (int j = 0; j < Ny; ++j) {
+            double x = i * dx - 0.5;
+            double y = j * dy - 0.5;
+            phi[i][j] = 0.75 + 0.1 * sin(4 * M_PI * x) * sin(4 * M_PI * y);
+        }
+    }
+}
+
+double dC_dphi(double phi) {
+    const double C0 = 1.0;   // stiffness of phase 0
+    const double C1 = 10.0;  // stiffness of phase 1
+    return C1 - C0;
+}
+
+double compute_lagrange_multiplier(const Grid &phi, const Grid &strain_energy) {
+    double sum = 0.0;
+    for (int i = 1; i < Nx - 1; ++i) {
+        for (int j = 1; j < Ny - 1; ++j) {
+            // Compute Laplacian
+            double lap_phi = (phi[i+1][j] + phi[i-1][j] + phi[i][j+1] + phi[i][j-1] - 4.0 * phi[i][j]) / (dx * dx);
+
+            // w'(phi)
+            double wphi = w_prime(phi[i][j]);
+
+            // Mechanical coupling
+            double mech = beta_*dC_dphi(phi[i][j]) * strain_energy[i][j];
+
+            // Sum the full RHS (except Mγ and dt)
+            sum += ksi * lap_phi - wphi + (1.0 / gamma_) * mech;
+        }
+    }
+
+    // Normalize by domain area
+    double domain_area = (Nx - 2) * (Ny - 2);  // inner domain
+    return sum / domain_area;
+}
+
+void update(Grid &phi, Grid &phi_new, Grid strain_energy, int step) {    
+    double lambda = compute_lagrange_multiplier(phi, strain_energy);
+
+    for (int i = 1; i < Nx - 1; ++i) {
+        for (int j = 1; j < Ny - 1; ++j) {
+
+            const double x = i * dx;
+            const double y = j * dy;
+
+            const double lap_phi = (phi[i+1][j] + phi[i-1][j] + phi[i][j+1] + phi[i][j-1] - 4.0 * phi[i][j]) / (dx * dx);
+            const double wphi = w_prime(phi[i][j]);
+
+            const double mech_coupling = beta_*dC_dphi(phi[i][j]) * strain_energy[i][j];
+
+            const auto rhs = ksi * lap_phi - wphi + (1.0 / gamma_) * mech_coupling - lambda;
+            phi_new[i][j] = phi[i][j] + dt * M * gamma_ * rhs;
+
+            // phi_new[i][j] = std::min(1.0, std::max(0.0, phi_new[i][j]));
+        }
+    }
+
+    // simple Neumann BC (zero gradient)
+    for (int i = 0; i < Nx; ++i) {
+        phi_new[i][0] = phi_new[i][1];
+        phi_new[i][Ny-1] = phi_new[i][Ny-2];
+    }
+    for (int j = 0; j < Ny; ++j) {
+        phi_new[0][j] = phi_new[1][j];
+        phi_new[Nx-1][j] = phi_new[Nx-2][j];
+    }
+}
+
 void SetupBoundaryConditionsElasticity2D(CompMesh& modelElasticity2D)
 {
     MatrixDouble val1(2, 2);
@@ -22,40 +189,42 @@ void SetupBoundaryConditionsElasticity2D(CompMesh& modelElasticity2D)
     constexpr auto kVolumeMatId = 15;
     auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
     modelElasticity2D.InsertMaterial(govEquationElasticity2D);
-
     val1.setZero();
     val2.setZero();
-    val2[0] = 0.;
-
+    val2[0] = 1.;
     constexpr auto kEngasteMatId = 16;
-
-    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
+    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(engasteBC);
-
+    {
+        val1.setZero();
+        val2.setZero();
+        constexpr auto kEngasteMatId = 22;
+        auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
+        modelElasticity2D.InsertMaterial(engasteBC);
+    }
     val1.setZero();
     val2.setZero();
     val2[0] = 0.;
-
     constexpr auto kFreeMatTopId = 18;
-
     auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBC);
-
     val1.setZero();
     val2.setZero();
     val2[0] = 0.;
-
     constexpr auto kFreeMatBottomId = 19;
-
     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBCEl2D);
-
+    val1.setZero();
+    val2.setZero();
+    val2[0] = 0.;
+    constexpr auto kExLoadMatId = 21;
+    auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D);
     val2.setZero();
     val2[1] = -10;
     constexpr auto kLoadMatId = 17;
-    auto *El2D = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(El2D);
-    
+    auto *El2D2 = new L2Projection(kLoadMatId, 17, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D2);
     GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
 
     // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
@@ -66,251 +235,53 @@ void SetupBoundaryConditionsElasticity2D(CompMesh& modelElasticity2D)
     // }
 }
 
-void SetupBoundaryConditionsPhaseField(CompMesh& modelPhaseField)
-{
-    MatrixDouble val1(1, 1);
-    VecDouble val2(1);
-    val1.setZero();
-    val2.setZero();
-    constexpr auto kPhaseFieldInternalMatId = 15;
-    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2, 1.e-4, 2.00, 1e1);
-    modelPhaseField.InsertMaterial(govEquationPF);
-
-    constexpr auto kPhaseFieldLeftMatId = 16;
-    auto *leftBCPF = new L2Projection(kPhaseFieldLeftMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(leftBCPF);
-
-    constexpr auto kPhaseFieldRightMatId = 17;
-    auto *rightBCPF = new L2Projection(kPhaseFieldRightMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(rightBCPF);
-
-    constexpr auto kPhaseFieldTopMatId = 18;
-    auto *topBCPF = new L2Projection(kPhaseFieldTopMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(topBCPF);
-
-    // val2[0] = 1.0;
-    constexpr auto kPhaseFieldBotttomMatId = 19;
-    auto *bottomBCPF = new L2Projection(kPhaseFieldBotttomMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(bottomBCPF);
-    
-    GmshTools::Read(modelPhaseField, "../../rectangle.msh");
-    // return;
-    //For the phase field implementation, we also need to impose an additional restrain to the final volume.
-    //To do so, we create a new node, which serves to store the additional Lagrange multiplier variable.
-    //However, the LM has the contribution of all elements. Thus, the new node need to be set as a new connectivity for all elements.
-    //Note that this completely changes the data structure, and additional care is needed to handle it.
-    //For instance, changes in the shape functions and assemble algorithm may be needed.
-    //First, create a new node and a new element to store the LM.
-    VecDouble Coor(3);
-    Coor[0] = 0.0;
-    Coor[1] = 0.0;
-    Coor[2] = 0.0;
-    Node *newNode = new Node(Coor,modelPhaseField.NodeVec().size(),1);
-    newNode->AllocateTimeDerivatives();
-    modelPhaseField.NodeVec().push_back(newNode);
-    int64_t index = newNode->Index();
-    VecInt connect(1);
-    connect[0] = index;
-    // Point
-    Element* gel = nullptr;
-    int matnull = modelPhaseField.GetNewMaterialId();
-    NullWeakForm *nullwf = new NullWeakForm(matnull, 1);
-    gel = new ElementTransient<ShapePoint>(index,connect,&modelPhaseField,nullwf);
-    modelPhaseField.InsertElement(gel);
-    
-    // Creates the Lagrange multiplier material
-    int matlagmult = modelPhaseField.GetNewMaterialId();
-    LagrangeMultiplier *lagmult = new LagrangeMultiplier(matlagmult, 1);
-    //Sets the initial/final volume constraint as a forcing function
-    // const auto diam = 2*100.0/700;
-    // double finalVol = 2.-12.*M_PI*diam*diam/4.0;
-    static constexpr auto diam = 2*100.0/700;
-    static constexpr auto holesVol = 12.*M_PI*diam*diam/4.0;
-    static constexpr auto finalVol = 2.-holesVol;
-    static constexpr auto finalVolRel = finalVol / 2.0;
-    auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
-        force[0] = finalVolRel;
-        // force[0] = 0.0;
-    };
-    lagmult->SetForcingFunction(forcingFunction);
-    modelPhaseField.InsertMaterial(lagmult);
-    //Now, create new elements of the type LagrangeMultiplier, which will be used to impose the additional constrain.
-    // Here, the point element will always be the second and the volumetric element, the first.
-    // std::cout << "NElements before LagrangeMultiplier: " << modelPhaseField.NElements() << '\n';
-    for (auto &element : modelPhaseField.ElementVec())
-    {
-        if (element->Dimension() != modelPhaseField.Dimension()) continue;
-
-        Element* gelmult = nullptr;
-        auto *wf = modelPhaseField.Material(matlagmult);
-        auto newindex = modelPhaseField.NElements();
-        auto type = element->Type();
-
-        switch (type)
-        {
-        case ElementType::EQuadrilateral:
-            if (modelPhaseField.GetDefaultOrder()==1){
-                gelmult = new ElementLagrangeMultiplier<ShapeQuadrilateralLin>(newindex, element, gel, &modelPhaseField, wf);
-            } else {
-                PanicButton();
-            }
-            break;
-        case ElementType::ETriangle:
-            if (modelPhaseField.GetDefaultOrder()==1){
-                gelmult = new ElementLagrangeMultiplier<ShapeTriangleLin>(newindex, element, gel, &modelPhaseField, wf);
-            } else {
-                PanicButton();
-            }
-            break;
-        
-        default:
-            PanicButton();
-            break;
-        }
-        modelPhaseField.InsertElement(gelmult);
-    }
-    // std::cout << "NElements after LagrangeMultiplier: " << modelPhaseField.NElements() << '\n';
-    delete [] modelPhaseField.part_elem;
-    modelPhaseField.part_elem = new int[modelPhaseField.NElements()]();
-
-}
-
 int main()
 {
+    Grid phi(Nx, vector<double>(Ny)), phi_new(Nx, vector<double>(Ny));
+    initialize(phi);
+
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     SetupBoundaryConditionsElasticity2D(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
-
-    std::unique_ptr<CompMesh> modelPhaseField = std::make_unique<CompMesh>();
-    SetupBoundaryConditionsPhaseField(*modelPhaseField);
-    TransientAnalysis anPhaseField(modelPhaseField.get(), SolverType::ELU,false);
-    // NonLinearAnalysis anPhaseField(modelPhaseField.get(), SolverType::ELU);
-    anPhaseField.SetMaxIter(10);
-    anPhaseField.SetTolerance(1e-6);
-
-    const auto diam = 2*100.0/700;
-    const auto espacamento_horizontal = 10.0/700;
-    const auto espacamento_vertical = 70.0/700;
-    
-    const std::vector<VecDouble> hole_positions = {
-        Eigen::Vector3d({diam + espacamento_horizontal, 0.0, 0.0}),
-        Eigen::Vector3d({3.3*(diam + espacamento_horizontal), 0.0, 0.0}),
-        Eigen::Vector3d({5.5*(diam + espacamento_horizontal), 0.0, 0.0}),
-
-        Eigen::Vector3d({0, 1.0*diam, 0.0}),
-        Eigen::Vector3d({0.0, 2.5*diam, 0.0}),
-
-        Eigen::Vector3d({diam + espacamento_horizontal, espacamento_vertical + 1.5*diam, 0.0}),
-        Eigen::Vector3d({3.3*(diam + espacamento_horizontal), espacamento_vertical + 1.5*diam, 0.0}),
-        Eigen::Vector3d({5.5*(diam + espacamento_horizontal), espacamento_vertical + 1.5*diam, 0.0}),
-
-        Eigen::Vector3d({2.0*(diam + espacamento_horizontal), 1.0*diam, 0.0}),
-        Eigen::Vector3d({2.0*(diam + espacamento_horizontal), 2.5*diam, 0.0}),
-
-        Eigen::Vector3d({diam + espacamento_horizontal, espacamento_vertical + 3*diam, 0.0}),
-        Eigen::Vector3d({3.3*(diam + espacamento_horizontal), espacamento_vertical + 3*diam, 0.0}),
-        Eigen::Vector3d({5.5*(diam + espacamento_horizontal), espacamento_vertical + 3*diam, 0.0}),
-
-        Eigen::Vector3d({4.3*(diam + espacamento_horizontal), 1.0*diam, 0.0}),
-        Eigen::Vector3d({4.3*(diam + espacamento_horizontal), 2.5*diam, 0.0}),
-
-        Eigen::Vector3d({2.0, 1.0*diam, 0.0}),
-        Eigen::Vector3d({2.0, 2.5*diam, 0.0}),
-    };
-
-    constexpr auto min_val = 1e-3;
-    constexpr auto max_val = 1.0;
-
-    for(size_t i = 0; i < anPhaseField.MeshVector()[0]->NNodes(); i++)
-    {
-        auto& node = anPhaseField.MeshVector()[0]->NodeVec()[i];
-
-        const auto& node_pos = node->getCoordinates();
-
-        bool has_void = false;
-        for(const auto& hole : hole_positions)
-        {
-            if((node_pos - hole).norm() <= 0.8*diam/2.0)
-            {
-                has_void = true;
-                break;
-            }
-        }
-
-        auto& fSol = node->Solution();
-        auto& fSolPrev = node->PrevSolution();
-        fSol.resize(1);
-        fSolPrev.resize(1);
-
-        fSol[0] = min_val;//(has_void) ? 0.0 : max_val;
-        fSolPrev[0] = fSol[0];
-    }
-
-    std::vector<std::string> ScalarNamesPhaseField, VectorNamesPhaseField;
-    ScalarNamesPhaseField = {"Solution","TimeDerivative","WeightFunction"};
-    VectorNamesPhaseField = {"Derivative"};
-
-    anPhaseField.PrintVariables("basic_2d_phase_field_dt", ScalarNamesPhaseField, VectorNamesPhaseField);
-
-    if(modelElasticity2D->NElements() != modelPhaseField->NElements())
-    {   
-        // We assume that we are using the same mesh for phase field and elasticity!
-        //Yes, but the check need to be different since now we have elements corresponding to the Lagrange multiplier
-        // PanicButton();
-    }
-
-    // anElasticity2D.Run();
 
     int i = 0;
     std::vector<std::string> ScalarNamesElasticity2D, VectorNamesElasticity2D;
     ScalarNamesElasticity2D = {"Compliance", "ComplianceSensibility","WeightFunction"};
     VectorNamesElasticity2D = {"Displacement", "Stress","Strain"};
 
-    for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
-    {
-        auto elemPhaseField = modelPhaseField->ElementVec()[i_el];
-
-        elemPhaseField->IntegrationData().fJ = 0;
-    }
-
-    // VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, 1);
-    
     int step = 0;
-    // Solving
+    Grid strain_energy(Nx, vector<double>(Ny));
+    Grid mech_coupling(Nx, vector<double>(Ny));
     while(true)
     {
         // std::cout << "********** OPTIMIZATION STEP " << step << " **********\n";
-        // For the elasticity problem, transfer phase field solution to the weightFunction data structure.
         for (size_t inode = 0; inode < modelElasticity2D->NNodes(); inode++){
-            // if (step == 0){
-                modelElasticity2D->NodeVec()[inode]->setWeightFunction(1.0);
-            // } else {
-            //     modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::max(min_val, pow(modelPhaseField->NodeVec()[inode]->Solution()[0], 3)));
-            // }
+            const auto nodeVector = modelElasticity2D->NodeVec()[inode]->getCoordinates();
+            const int i = nodeVector.x()/dx;
+            const int j = nodeVector.y()/dy;
+            if(i < 0 || i > Nx || j < 0 || i> Ny) {
+                PanicButton();
+            }
+            modelElasticity2D->NodeVec()[inode]->setWeightFunction(phi[i][j]);
         }
-        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements() && i_el < modelPhaseField->NElements(); i_el++){
+        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++){
             auto &elemElas2D = modelElasticity2D->ElementVec()[i_el];            
             if (elemElas2D->Dimension() != modelElasticity2D->Dimension()) continue;
             elemElas2D->setIntegPointWeightFunction();
         }
         step++;
-        // std::cout << "Solving Solid Mechanics\n";
         anElasticity2D.Run();
-        // VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
+        VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
 
-        // For each elasticity element, compute the compliance and then transfer the information
-        // to the phase field corresponding element. The value of J need to be computed for each integration point.
-        // Thus the //J data structure need to be a vector with lenght equal to the number of integration points.
-        // Otherwhise, the value of J can also be stored in the weight function data structure.
-        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements() && i_el < modelPhaseField->NElements(); i_el++){
+        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++){
             auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
-            auto elemPhaseField = modelPhaseField->ElementVec()[i_el];
+
+            const auto geoCenter = elemElas2D->GetGeometricCenter(*modelElasticity2D);
             
             if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
             {
                 continue;
             }
-            // elemElas2D->setIntegPointWeightFunction();
                     
             for (int inode = 0; inode < elemElas2D->NElNodes(); inode++){
                 auto xparametric = elemElas2D->NodeCoord(inode);
@@ -325,26 +296,37 @@ int main()
                 elemElas2D->ComputeJacobian();
                 elemElas2D->ComputeSpatialDerivatives();
                 elemElas2D->interpolateSolution();
-                // elemElas2D->interpolateSolDerivatives();
-                // if (compel->IntegrationData().fNeedsTimeDerivatives){
-                //     compel->interpolateSolDTimeDerivatives();
-                // }
                 const auto compliance_var_idx = elemElas2D->GetWeakForm()->VariableIndex("ComplianceSensibility");
                 const auto nvar = elemElas2D->GetWeakForm()->NSolutionVariables(compliance_var_idx);
                 VecDouble compl_vec(nvar);
                 elemElas2D->Solution(compliance_var_idx, compl_vec);
-
-                //Trasfer compliance to the phase field element
-                // elemPhaseField->IntegrationData().fJ = compl_vec[0];//(compl_vec[0] > 0 ? 1.0 : -1.0);// ;
-                modelPhaseField->NodeVec()[connect[inode]]->setWeightFunction(compl_vec[0]);
-                // elemPhaseField->IntegrationData().fJ = compl_vec[0];//(compl_vec[0] > 0 ? 1.0 : -1.0);// ;
             }
-        }
+
+            const auto compliance_var_idx = elemElas2D->GetWeakForm()->VariableIndex("ComplianceSensibility");
+            const auto nvar = elemElas2D->GetWeakForm()->NSolutionVariables(compliance_var_idx);
+            VecDouble compl_vec(nvar);
+            elemElas2D->Solution(compliance_var_idx, compl_vec);
         
-        // std::cout << "Solving Phase-Field\n";
-        anPhaseField.Run(1);    
-        // VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
-        // std::cout << "LAGRANGE MULTIPLIER = " << modelPhaseField->NodeVec().back()->Solution()[0] << '\n';
+            const int i = geoCenter.x()/dx;
+            const int j = geoCenter.y()/dy;
+            elemElas2D->Solution(compliance_var_idx, compl_vec);
+            if(i < 0 || i > Nx || j < 0 || i> Ny) {
+                PanicButton();
+            }
+            strain_energy[i][j] = compl_vec[0];
+        }
+
+        for(int i = 0; i < (100 * mult_steps); i++) {
+            update(phi, phi_new, strain_energy, step);
+            phi.swap(phi_new);
+
+            if (step % (100 * mult_steps) == 0) {
+                cout << "Step " << step << endl;
+                write_vtu(phi, "phi_" + std::to_string(step) + ".vtu");
+            }
+            step++;
+        }
+
         i++;
     }
 
