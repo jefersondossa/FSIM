@@ -10,8 +10,8 @@ file(GLOB matrix
     PETScMatrix.cpp
     EigenSpMatrix.h
     EigenSpMatrix.cpp
-    Tensor.h
-    Tensor.cpp
+    Tensor3D.h
+    Tensor3D.cpp
     ArlequinMatRedEigen.h
     ArlequinMatRedEigen.cpp
     ArlequinMatRedPETSc.h

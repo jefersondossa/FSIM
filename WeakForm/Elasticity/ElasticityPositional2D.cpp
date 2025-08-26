@@ -162,7 +162,7 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
 };
 
 
-void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress){
+void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor3D &Stress){
 
     auto dphi_dx = data.fDPhiX0;
     int nphi = data.fPhi.size();

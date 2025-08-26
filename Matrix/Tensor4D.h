@@ -2,7 +2,7 @@
 #define TENSOR4D_H
 
 #include "DenseEigen.h"
-#include "Tensor.h"
+#include "Tensor3D.h"
 
 class Tensor4D
 {

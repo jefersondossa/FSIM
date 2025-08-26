@@ -55,7 +55,7 @@ public:
     virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) {
         PanicButton();
     };
-    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) {
+    virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor3D &Stress) {
         PanicButton();
     };
 

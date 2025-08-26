@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.20.0)
-project (FSArl C CXX Fortran)
-enable_language( Fortran CXX )
+project (FSArl C CXX)
+enable_language(CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
@@ -54,8 +54,6 @@ set (FSArl_LIBRARIES FSArl ${FSArl_DEPENDENT_LIBRARIES})
 include_directories (${HDF5_INCLUDE_DIRS} ${HDF5_DEFINITIONS} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 include_directories(${MPI_INCLUDE_PATH})
 
-include(FortranCInterface)
-
 # Catch2
 include(cmake-modules/EnableCatch2.cmake)
 enable_catch2()
@@ -82,7 +80,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(dependencies)
 
-add_subdirectory(triangle)
 add_subdirectory(Util)
 add_subdirectory(Analysis)
 add_subdirectory(Integral)
@@ -117,7 +114,6 @@ set(INCLUDE_DIRS_LIST
 	"${PROJECT_SOURCE_DIR}/Solver"
 	"${PROJECT_SOURCE_DIR}/WeakForm"
 	"${PROJECT_SOURCE_DIR}/Util"
-	"${PROJECT_SOURCE_DIR}/triangle"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Arlequin"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Elasticity"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Poisson"
@@ -132,11 +128,7 @@ file(GLOB MY_MESH_FILES
 )
 file(COPY ${MY_MESH_FILES} DESTINATION .)
 
-file(GLOB for_files *.for)
-set(FOR_FILES ${for_files})
-
 add_library(fsarl_library ${UTIL} ${ANALYSIS} ${GRAPHICINTERFACE} ${INTEGRAL} ${MATRIX} ${MESH} ${PLASTICITY} ${POSTPROCESS} ${PREPROCESS} ${SHAPE} ${SOLVER} ${WEAKFORM})
-set_property(TARGET fsarl_library PROPERTY LINKER_LANGUAGE Fortran)
 
 target_link_libraries(fsarl_library PUBLIC Eigen3::Eigen ${FLTK_LIBRARIES})
 target_include_directories(fsarl_library PUBLIC ${INCLUDE_DIRS_LIST})
@@ -198,12 +190,10 @@ if (ENABLE_MATPLOTLIBCPP)
 endif()
 
 add_executable(f main.cpp )
-set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries (f fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
 if(ENABLE_GRAPHINTERFACE)
 	add_executable(window Window.cpp )
-	set_property(TARGET window PROPERTY LINKER_LANGUAGE Fortran)
 	target_link_libraries (window fsarl_library Eigen3::Eigen ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES} ${FLTK_LIBRARIES} ${OPENGL_LIBRARIES})
 endif()
 

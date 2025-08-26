@@ -36,7 +36,7 @@ public:
     // void ComputeElContribution(std::vector<MatrixDouble> &Stiffness) override;
     // void ComputeElContribution(std::vector<VecDouble> &Rhs) override;
 
-    void ComputeTrialStress(int &index,Tensor &ElasStress);
+    void ComputeTrialStress(int &index,Tensor3D &ElasStress);
 
 };
 

@@ -34,7 +34,7 @@ public:
     /// @param data integration point data
     /// @param Rhs residual vector
     void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) override;
-    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress) override;
+    void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor3D &Stress) override;
     
     /// @brief Computes the element error. The exact solution shoul be provided.
     /// @param data integration point data

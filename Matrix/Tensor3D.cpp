@@ -1,4 +1,4 @@
-#include "Tensor.h"
+#include "Tensor3D.h"
 #include "PanicButton.h"
 
 
@@ -8,16 +8,16 @@ bool compare_head(const double& lhs, const double& rhs)
 }
 
 
-Tensor::Tensor(){
+Tensor3D::Tensor3D(){
     fData.resize(6);
     fData.setZero();
 }
 
-Tensor::Tensor(const Tensor &tensor){
+Tensor3D::Tensor3D(const Tensor3D &tensor){
     fData = tensor.fData;
 }
 
-Tensor::Tensor(MatrixDouble &tensor){
+Tensor3D::Tensor3D(MatrixDouble &tensor){
     fData.resize(6);
     fData.setZero();
 #ifdef DEBUG_BUILD
@@ -34,7 +34,7 @@ Tensor::Tensor(MatrixDouble &tensor){
     fData[ZZ] = tensor(2,2);
 }
 
-Tensor::Tensor(VecDouble &tensor){
+Tensor3D::Tensor3D(VecDouble &tensor){
     fData.resize(6);
     fData.setZero();
 #ifdef DEBUG_BUILD
@@ -46,7 +46,7 @@ Tensor::Tensor(VecDouble &tensor){
     fData = tensor;
 }
 
-void Tensor::SetData(MatrixDouble &tensor){
+void Tensor3D::SetData(MatrixDouble &tensor){
 #ifdef DEBUG_BUILD
     if (tensor.rows() != tensor.cols() || tensor.rows() == 0){
         std::cout << "Please provide a symmetric tensor" << std::endl;
@@ -61,12 +61,12 @@ void Tensor::SetData(MatrixDouble &tensor){
     fData[ZZ] = tensor(2,2);
 }
 
-void Tensor::Zero(){
+void Tensor3D::Zero(){
     fData.setZero();
 }
 
-Tensor Tensor::Hydrostatic(){
-    Tensor fHydrostatic(*this);
+Tensor3D Tensor3D::Hydrostatic(){
+    Tensor3D fHydrostatic(*this);
     fHydrostatic.Zero();
     double val = Trace() / 3.;
     fHydrostatic.fData[XX] = val;
@@ -76,8 +76,8 @@ Tensor Tensor::Hydrostatic(){
 }
 
 
-Tensor Tensor::Deviatory(){ 
-    Tensor fDeviatory = *this;
+Tensor3D Tensor3D::Deviatory(){ 
+    Tensor3D fDeviatory = *this;
     double val = I1() / 3.;
     fDeviatory.fData[XX] -= val;
     fDeviatory.fData[YY] -= val;
@@ -85,11 +85,11 @@ Tensor Tensor::Deviatory(){
     return fDeviatory;
 }
 
-double Tensor::I1() const{
+double Tensor3D::I1() const{
     return fData[XX] + fData[YY] + fData[ZZ];
 }
 
-double Tensor::I2() const{
+double Tensor3D::I2() const{
     return -(fData[XY] * fData[XY] +
              fData[XZ] * fData[XZ] +
              fData[YZ] * fData[YZ])
@@ -98,7 +98,7 @@ double Tensor::I2() const{
              fData[XX] * fData[ZZ]);
 }
 
-double Tensor::I3() const{
+double Tensor3D::I3() const{
     return fData[XX] * fData[YY] * fData[ZZ]
          +(fData[XY] * fData[XZ] * fData[YZ]) * 2.
          -(fData[XX] * fData[YZ] * fData[YZ] +
@@ -106,24 +106,24 @@ double Tensor::I3() const{
            fData[ZZ] * fData[XY] * fData[XY]);
 }
 
-double Tensor::J1(){
+double Tensor3D::J1(){
     auto dev = Deviatory();
     return dev.fData[XX] + dev.fData[YY] + dev.fData[ZZ];
 }
 
-double Tensor::J2() const{
+double Tensor3D::J2() const{
     double i1 = I1();
     double j2 = i1*i1 / 3. - I2();
     return j2;
 }
 
-double Tensor::Determinant(){
+double Tensor3D::Determinant(){
     return fData[XX] * fData[YY] * fData[ZZ] + fData[XY] * fData[XZ] * fData[YZ]*2. - fData[XZ] * fData[YY] * fData[XZ] -
            fData[XY] * fData[XY] * fData[ZZ] - fData[YZ] * fData[YZ] * fData[XX];
 }
 
 
-double Tensor::J3(){
+double Tensor3D::J3(){
     auto fDeviatory = Deviatory();
     double det = fDeviatory.fData[XX] * fDeviatory.fData[YY] * fDeviatory.fData[ZZ] +
                  fDeviatory.fData[XY] * fDeviatory.fData[XZ] * fDeviatory.fData[YZ]*2. - 
@@ -133,7 +133,7 @@ double Tensor::J3(){
     return det;
 }
 
-double Tensor::Norm(){
+double Tensor3D::Norm(){
     double norm = 0.;
     for (unsigned int i = 0; i < 6; i++) {
         norm += fData[i] * fData[i];
@@ -144,7 +144,7 @@ double Tensor::Norm(){
     return sqrt(norm);
 }
 
-double Tensor::DeviatoryNorm(){
+double Tensor3D::DeviatoryNorm(){
     auto fDeviatory = Deviatory();
     double norm = 0.;
     for (unsigned int i = 0; i < 6; i++) {
@@ -156,79 +156,79 @@ double Tensor::DeviatoryNorm(){
     return sqrt(norm);
 }
 
-double Tensor::DoubleContraction(Tensor &t){
+double Tensor3D::DoubleContraction(Tensor3D &t){
     return fData[XX]*t.fData[XX] + fData[YY]*t.fData[YY] + fData[ZZ]*t.fData[ZZ] + 
            2.*(fData[XY]*t.fData[XY] + fData[XZ]*t.fData[XZ] + fData[YZ]*t.fData[YZ]);
 }
 
-void Tensor::Identity(){
+void Tensor3D::Identity(){
     fData.setZero();
     fData[XX] = 1.;
     fData[YY] = 1.;
     fData[ZZ] = 1.;
 }
 
-const Tensor & Tensor::operator*=(const double &multipl) {
+const Tensor3D & Tensor3D::operator*=(const double &multipl) {
     int i;
     for (i = 0; i < 6; i++)fData[i] *= multipl;
     return *this;
 }
 
-Tensor Tensor::operator*(const double &multipl) const {
-    Tensor temp(*this);
+Tensor3D Tensor3D::operator*(const double &multipl) const {
+    Tensor3D temp(*this);
     return temp *= multipl;
 }
 
-const Tensor & Tensor::operator/=(const double &multipl) {
+const Tensor3D & Tensor3D::operator/=(const double &multipl) {
     int i;
     for (i = 0; i < 6; i++)fData[i] /= multipl;
     return *this;
 }
 
-Tensor Tensor::operator/(const double &multipl) const {
-    Tensor temp(*this);
+Tensor3D Tensor3D::operator/(const double &multipl) const {
+    Tensor3D temp(*this);
     return temp /= multipl;
 }
 
-const Tensor & Tensor::operator+=(const Tensor &sum) {
+const Tensor3D & Tensor3D::operator+=(const Tensor3D &sum) {
     int i;
     for (i = 0; i < 6; i++)fData[i] += sum.fData[i];
     return *this;
 }
 
-Tensor Tensor::operator+(const Tensor &sum) const {
-    Tensor temp(*this);
+Tensor3D Tensor3D::operator+(const Tensor3D &sum) const {
+    Tensor3D temp(*this);
     return temp += sum;
 }
 
-const Tensor & Tensor::operator-=(const Tensor &sum) {
+const Tensor3D & Tensor3D::operator-=(const Tensor3D &sum) {
     int i;
     for (i = 0; i < 6; i++)fData[i] -= sum.fData[i];
     return *this;
 }
 
-Tensor Tensor::operator-(const Tensor &sum) const {
-    Tensor temp(*this);
+Tensor3D Tensor3D::operator-(const Tensor3D &sum) const {
+    Tensor3D temp(*this);
     return temp -= sum;
 }
 
-Tensor Tensor::Normalized(){
-    Tensor temp(*this);
+Tensor3D Tensor3D::Normalized(){
+    Tensor3D temp(*this);
     temp *= 1./Norm();
     return temp;
 }
 
-Tensor Tensor::NormalizedDeviatory(){
-    Tensor temp = Deviatory();
+Tensor3D Tensor3D::NormalizedDeviatory(){
+    Tensor3D temp = Deviatory();
     temp *= 1./DeviatoryNorm();
     return temp;
 }
 
-double Tensor::Trace() const{
+double Tensor3D::Trace() const{
     return fData[XX] + fData[YY] + fData[ZZ];
 }
 
-VecDouble Tensor::Eigenvalues(){    
+VecDouble Tensor3D::Eigenvalues(){    
     MatrixDouble aux = MatrixForm();
     EigenSolver<MatrixDouble> solver(aux,EigenvaluesOnly);
     VecDouble eigval = solver.eigenvalues().real();
@@ -236,7 +236,7 @@ VecDouble Tensor::Eigenvalues(){
     return eigval;
 }
 
-MatrixDouble Tensor::Eigenvectors(){    
+MatrixDouble Tensor3D::Eigenvectors(){    
     MatrixDouble aux = MatrixForm();
     
     EigenSolver<MatrixDouble> solver(aux);
@@ -245,7 +245,7 @@ MatrixDouble Tensor::Eigenvectors(){
     return eigvec;
 }
 
-void Tensor::SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDouble> &eigenprojections){ 
+void Tensor3D::SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDouble> &eigenprojections){ 
     eigenvalues.resize(3); 
     eigenprojections.resize(3);
 
@@ -362,8 +362,8 @@ void Tensor::SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDou
 
 }
 
-Tensor Tensor::Multiply(MatrixDouble &mat){
-    Tensor temp(*this);
+Tensor3D Tensor3D::Multiply(MatrixDouble &mat){
+    Tensor3D temp(*this);
 #ifdef DEBUG_BUILD
     if(mat.rows() != 6 || mat.cols() != 6){
         std::cout << "Matrix with wrong size\n";
@@ -382,7 +382,7 @@ Tensor Tensor::Multiply(MatrixDouble &mat){
     return temp;
 }
 
-MatrixDouble Tensor::MatrixForm(){
+MatrixDouble Tensor3D::MatrixForm(){
     MatrixDouble mat(3,3);
     mat.setZero();
 
@@ -396,7 +396,7 @@ MatrixDouble Tensor::MatrixForm(){
     return mat;
 }
 
-MatrixDouble Tensor::TensorProduct(Tensor &tensor){
+MatrixDouble Tensor3D::TensorProduct(Tensor3D &tensor){
     MatrixDouble tensor1 = this->MatrixForm();
     MatrixDouble tensor2 = tensor.MatrixForm();
     //Based on this reference: https://wiki.seg.org/wiki/Voigt_notation

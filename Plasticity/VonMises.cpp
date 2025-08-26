@@ -13,7 +13,7 @@ VonMises::VonMises(WeakForm *elast) : PlasticityModel(elast){
     }
 }
 
-void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress){
+void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress){
     
     MatrixDouble fTangentTensor(6,6);
 
@@ -34,15 +34,15 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
         fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
         //Elastoplastic tensor
         //Continuum operator
-        // fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2 - 6.*fShearModulus*fShearModulus/(3*fShearModulus+fHardening)*NxN;
+        // fTangentTensor3D = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2 - 6.*fShearModulus*fShearModulus/(3*fShearModulus+fHardening)*NxN;
         //Consistent operator
-        // fTangentTensor = Afactor*fIdentity4Dev + Bfactor*NxN + fBulkModulus*fId2xId2;  
+        // fTangentTensor3D = Afactor*fIdentity4Dev + Bfactor*NxN + fBulkModulus*fId2xId2;  
     }
     
     
     // auto elast = fElasticModel->ConstitutiveMatrix();
     // std::cout << "Elastic - \n" << elast << std::endl;
-    // std::cout << "Tangent - \n" << fTangentTensor << std::endl;
+    // std::cout << "Tangent - \n" << fTangentTensor3D << std::endl;
 
     if (!fPlaneStress){
     if (fElasticModel->Dimension() == 2){
@@ -76,7 +76,7 @@ void VonMises::ComputeError(IntPointData &data, VecDouble &errors){
 };
 
 
-double VonMises::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
+double VonMises::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
     double YF = 0.;
     if (fPlaneStress){
         //Box 9.3
@@ -96,7 +96,7 @@ double VonMises::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
     return YF;
 }
 
-Tensor VonMises::FlowVector(Tensor &Stress){
+Tensor3D VonMises::FlowVector(Tensor3D &Stress){
     //Eq (7.117)
     double devnorm = Stress.DeviatoryNorm();
     auto temp = Stress.Deviatory();
@@ -105,7 +105,7 @@ Tensor VonMises::FlowVector(Tensor &Stress){
     return temp;
 }
 
-double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
+double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
     double DGAMA = 0.;
     if (fPlaneStress){//Box 9.5
@@ -228,7 +228,7 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stres
     return DGAMA;
 }
 
-void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
+void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress){
     
     if (fPlaneStress){
         return;
@@ -275,14 +275,14 @@ void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stre
         fDeviatory *= (1. - data.fPlasticMultiplier[index] * 3. * fShearModulus / fVonMisesStress);
         Stress = fDeviatory + hydrostatic;
         
-        Tensor epsilonUpdated(fDeviatory);
+        Tensor3D epsilonUpdated(fDeviatory);
         epsilonUpdated /= (2. * fShearModulus);
         epsilonUpdated.fXY() *= 2.;
         epsilonUpdated.fXZ() *= 2.;
         epsilonUpdated.fYZ() *= 2.;
         
         
-        Tensor Ident;
+        Tensor3D Ident;
         double epslion_e_trial = (data.fElasticStrain[index]).Trace();
         Ident.Identity();
         Ident *= epslion_e_trial / 3.;

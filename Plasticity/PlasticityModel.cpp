@@ -49,7 +49,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
         fPlaneStress = pos2d->PlaneState();
     }
 
-    Tensor Id2;
+    Tensor3D Id2;
     Id2.Identity();
     fId2xId2 = Id2.TensorProduct(Id2);
     
@@ -85,7 +85,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
     MatrixDouble fIdentity4S(6,6);
     fIdentity4S.setZero();
     
-    //Transform 4th order tensor into matrix: https://wiki.seg.org/wiki/Voigt_notation
+    //Transform 4th order Tensor3D into matrix: https://wiki.seg.org/wiki/Voigt_notation
     //Diagonal
     fIdentity4S(0,0) = fIdSymmetric[0][0][0][0];
     fIdentity4S(1,1) = fIdSymmetric[1][1][1][1];
@@ -201,7 +201,7 @@ void PlasticityModel::VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt){
 
 };
 
-void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor &Stress){
+void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor3D &Stress){
 
     // fElasticModel->ComputeResidual(index,data,Rhs);
     // return;

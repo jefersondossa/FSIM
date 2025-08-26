@@ -457,7 +457,7 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         } else {
             double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
             double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
-            Tensor Stress;
+            Tensor3D Stress;
             Stress.fXX() = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
             Stress.fYY() = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
             Stress.fZZ() = k * (fPoissonRatio * epsilon[0] + fPoissonRatio * epsilon[1]);
@@ -478,7 +478,7 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         } else {
             double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
             double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
-            Tensor Stress;
+            Tensor3D Stress;
             Stress.fXX() = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
             Stress.fYY() = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
             Stress.fZZ() = k * (fPoissonRatio * epsilon[0] + fPoissonRatio * epsilon[1]);

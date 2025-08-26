@@ -2,7 +2,7 @@
 #define INTPOINTDATA
 
 #include "DataTypes.h"
-#include "Tensor.h"
+#include "Tensor3D.h"
 #include <optional>
 
 class IntPointData {
@@ -79,9 +79,9 @@ public:
 
     VecDouble fYieldFunction = {};
     VecDouble fEffectivePlasticStrain = {};
-    std::vector<Tensor> fElasticStrain = {};
-    std::vector<Tensor> fElasticStress = {};
-    std::vector<Tensor> fElasticStrainIncrement = {};
+    std::vector<Tensor3D> fElasticStrain = {};
+    std::vector<Tensor3D> fElasticStress = {};
+    std::vector<Tensor3D> fElasticStrainIncrement = {};
     VecDouble fPlasticMultiplier = {};
 
     /// @brief Element contribution to the global stiffness matrix

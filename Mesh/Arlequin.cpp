@@ -24,13 +24,12 @@
 #define TRILIBRARY
 #endif
 
-#include "triangle.h"
 
-extern "C"
-{
-	void triangulate(char *, struct triangulateio *, struct triangulateio *,struct triangulateio *);
-	void trifree(void *);
-}
+// extern "C"
+// {
+// 	void triangulate(char *, struct triangulateio *, struct triangulateio *,struct triangulateio *);
+// 	void trifree(void *);
+// }
 
 Arlequin::Arlequin(std::vector<CompMesh *> &meshvec, double k0, double k1, ArlequinStabType stab){
     fMeshVector = meshvec;
@@ -208,8 +207,8 @@ void Arlequin::ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIn
         //     PanicButton();
         // }
         //Creating the containers for the input and output
-        struct triangulateio in;
-        struct triangulateio out;
+        // struct triangulateio in;
+        // struct triangulateio out;
         // clearTrianglesList(out);
 
         // buildInput(nodes, param, in);

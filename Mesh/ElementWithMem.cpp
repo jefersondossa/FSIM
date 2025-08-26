@@ -56,7 +56,7 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
 };
 
 template<class tshape>
-void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor &ElasStress){
+void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor3D &ElasStress){
     
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
     
@@ -155,7 +155,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
         
-        // Tensor ElasStress;
+        // Tensor3D ElasStress;
         ComputeTrialStress(index,this->fIntegData.fElasticStress[index]);        
 
         //Check the Yield crieterion
@@ -235,7 +235,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
         // if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         // if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
         
-        // Tensor ElasStress;
+        // Tensor3D ElasStress;
         // ComputeTrialStress(index,ElasStress);        
 
         // //Check the Yield crieterion
@@ -315,7 +315,7 @@ void ElementWithMem<tshape>::ComputeElContribution(VecDouble &rhsVector){
         if (this->fIntegData.fNeedsSol) this->interpolateSolution();
         if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
         
-        // Tensor ElasStress;
+        // Tensor3D ElasStress;
         ComputeTrialStress(index,this->fIntegData.fElasticStress[index]);        
 
         //Check the Yield crieterion

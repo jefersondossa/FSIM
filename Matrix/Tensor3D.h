@@ -1,5 +1,5 @@
-#ifndef TENSOR_H
-#define TENSOR_H
+#ifndef TENSOR3D_H
+#define TENSOR3D_H
 
 #include "DenseEigen.h"
 #include "Tensor4D.h"
@@ -13,18 +13,18 @@
 
 class Tensor4D;
 
-class Tensor{
+class Tensor3D{
 public:
     VecDouble    fData;
 
 public:
-    Tensor();
+    Tensor3D();
 
-    Tensor(MatrixDouble &tensor);
-    Tensor(VecDouble &tensor);
-    Tensor(const Tensor &tensor);
-    
-    ~Tensor() = default;
+    Tensor3D(MatrixDouble &tensor);
+    Tensor3D(VecDouble &tensor);
+    Tensor3D(const Tensor3D &tensor);
+
+    ~Tensor3D() = default;
 
     void SetData(MatrixDouble &tensor);
 
@@ -39,40 +39,40 @@ public:
 
     double Trace() const;
 
-    Tensor Deviatory();
+    Tensor3D Deviatory();
 
-    Tensor Hydrostatic();
+    Tensor3D Hydrostatic();
 
     double Determinant();
 
     double Norm();
     double DeviatoryNorm();
 
-    double DoubleContraction(Tensor &t);
+    double DoubleContraction(Tensor3D &t);
     void Identity();
-    Tensor Normalized();
-    Tensor NormalizedDeviatory();
-    Tensor Multiply(MatrixDouble &mat);
+    Tensor3D Normalized();
+    Tensor3D NormalizedDeviatory();
+    Tensor3D Multiply(MatrixDouble &mat);
 
-    Tensor operator+(const Tensor &sum) const;
-    const Tensor & operator+=(const Tensor &sum);
+    Tensor3D operator+(const Tensor3D &sum) const;
+    const Tensor3D & operator+=(const Tensor3D &sum);
 
-    Tensor operator-(const Tensor &sum) const;
-    const Tensor & operator-=(const Tensor &sum);
+    Tensor3D operator-(const Tensor3D &sum) const;
+    const Tensor3D & operator-=(const Tensor3D &sum);
 
-    Tensor operator*(const double &multipl) const;
-    const Tensor & operator*=(const double &multipl);
+    Tensor3D operator*(const double &multipl) const;
+    const Tensor3D & operator*=(const double &multipl);
 
-    Tensor operator/(const double &multipl) const;
-    const Tensor & operator/=(const double &multipl);
+    Tensor3D operator/(const double &multipl) const;
+    const Tensor3D & operator/=(const double &multipl);
 
-    Tensor & operator=(const Tensor &source){
+    Tensor3D & operator=(const Tensor3D &source){
         fData = source.fData;
         return *this;
     };
 
 
-    friend std::ostream &operator<<(std::ostream &out, const Tensor &tens){
+    friend std::ostream &operator<<(std::ostream &out, const Tensor3D &tens){
         out << tens.fData << std::endl;
         return out;
     };
@@ -107,8 +107,8 @@ public:
     }
 
     MatrixDouble MatrixForm();
-    
-    MatrixDouble TensorProduct(Tensor &tensor);
+
+    MatrixDouble TensorProduct(Tensor3D &tensor);
 
 };
 

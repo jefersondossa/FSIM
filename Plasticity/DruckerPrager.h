@@ -17,7 +17,7 @@ protected:
     double fBeta;
     bool fApex = false;
     double fUpdatedPressure;
-    Tensor fTrialDevStrain;
+    Tensor3D fTrialDevStrain;
     double fK;
     double fAlpha2;
 
@@ -37,18 +37,18 @@ public:
     /// @param index integration point index
     /// @param data integration point data
     /// @param Stiffness vector of stiffness matrices
-    void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress) override;
+    void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress) override;
     
     /// @brief Computes the element error. The exact solution shoul be provided.
     /// @param data integration point data
     /// @param errors vector storing all errors
     void ComputeError(IntPointData &data, VecDouble &errors) override;
 
-    double YieldFunction(int &index, IntPointData &data, Tensor &Stress) override;
+    double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
 
-    double PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress) override;
+    double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
 
-    void UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress) override;
+    void UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress) override;
 };
 
 

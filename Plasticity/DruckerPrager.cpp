@@ -31,7 +31,7 @@ DruckerPrager::DruckerPrager(WeakForm *elast, double phi, double psi, bool oe) :
 
 }
 
-void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress){
+void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress){
     
     MatrixDouble fTangentTensor(6,6);
     fTangentTensor.setZero();
@@ -43,7 +43,7 @@ void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, Matr
         //Elastic Tensor
         fTangentTensor = 2.*fShearModulus*fIdentity4Dev + fBulkModulus*fId2xId2;
         // if (fApex){
-        //     fTangentTensor = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
+        //     fTangentTensor3D = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
         // }else{
         //     double A = 1./(fShearModulus + fBulkModulus*fEta*fEtaBar + fXi*fXi*fHardening);
         //     double sq2 = sqrt(2.);
@@ -54,13 +54,13 @@ void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, Matr
         //         fTrialDevStrain.Zero();
         //     }
         //     // fTrialDevStrain.Zero();
-        //     Tensor Ident;
+        //     Tensor3D Ident;
         //     Ident.Identity();
         //     auto DxD = fTrialDevStrain.TensorProduct(fTrialDevStrain);
         //     auto DxI = fTrialDevStrain.TensorProduct(Ident);
         //     auto IxD = Ident.TensorProduct(fTrialDevStrain);
             
-        //     fTangentTensor = 2. * fShearModulus * (1. - data.fPlasticMultiplier[index]/(sq2 * devstrainnorm)) * fIdentity4Dev
+        //     fTangentTensor3D = 2. * fShearModulus * (1. - data.fPlasticMultiplier[index]/(sq2 * devstrainnorm)) * fIdentity4Dev
         //                    + 2. * fShearModulus * (data.fPlasticMultiplier[index]/(sq2 * devstrainnorm) - fShearModulus*A) * DxD
         //                    - sq2*fShearModulus*A*fBulkModulus*(fEta*DxI + fEtaBar*IxD)
         //                    + fBulkModulus * (1. - fBulkModulus * fEta * fEtaBar * A)*fId2xId2;
@@ -93,7 +93,7 @@ void DruckerPrager::ComputeError(IntPointData &data, VecDouble &errors){
 };
 
 
-double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
+double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
     double YF = 0.;
     double fCohesion = 0.;
     if (fPlaneStress){
@@ -112,7 +112,7 @@ double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor &Stre
     return YF;
 }
 
-double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
+double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
 
     // fEtaBar criasdo no .h
@@ -188,7 +188,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     double EPBARN = data.fEffectivePlasticStrain[index];
     double PT = EETV * fBulkModulus;
     double EEVD3=EETV / 3.;
-    Tensor strial;
+    Tensor3D strial;
     strial.Zero();
     double P,EPBAR;
 
@@ -281,12 +281,12 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor &
     return dGamma;
 }
 
-void DruckerPrager::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
+void DruckerPrager::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress){
     
     return;
     auto strial = Stress.Deviatory();
-    Tensor epsilonUpdated(strial);
-    Tensor Ident;
+    Tensor3D epsilonUpdated(strial);
+    Tensor3D Ident;
     
     if(fApex){
         Ident.Identity();

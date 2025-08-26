@@ -25,15 +25,15 @@ public:
     /// @param index integration point index
     /// @param data integration point data
     /// @param Stiffness vector of stiffness matrices
-    void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress) override;
+    void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress) override;
     
-    double YieldFunction(int &index, IntPointData &data, Tensor &Stress) override;
+    double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
 
-    Tensor FlowVector(Tensor &Stress);
+    Tensor3D FlowVector(Tensor3D &Stress);
 
-    double PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress) override;
+    double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
 
-    void UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress) override;
+    void UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress) override;
     
 };
 

@@ -9,7 +9,7 @@ MohrCoulomb::MohrCoulomb(WeakForm *elast, double intfriction) : PlasticityModel(
 }
 
 
-void MohrCoulomb::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress){
+void MohrCoulomb::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress){
     
     MatrixDouble fTangentTensor(6,6);
     fTangentTensor.setZero();
@@ -48,7 +48,7 @@ void MohrCoulomb::ComputeError(IntPointData &data, VecDouble &errors){
 };
 
 
-double MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
+double MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
     double YF = 0.;
     double j2 = Stress.J2();
     double j3 = Stress.J3();
@@ -69,7 +69,7 @@ double MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor &Stress
     return YF;
 }
 
-double MohrCoulomb::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
+double MohrCoulomb::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
 
     // fEtaBar criasdo no .h
@@ -77,6 +77,6 @@ double MohrCoulomb::PlasticMultiplier(int &index, IntPointData &data, Tensor &St
     return dGamma;
 }
 
-void MohrCoulomb::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
+void MohrCoulomb::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress){
     
 }   

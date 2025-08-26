@@ -10,7 +10,7 @@ Tresca::Tresca(WeakForm *elast) : PlasticityModel(elast){
 }
 
 
-void Tresca::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor &Stress){
+void Tresca::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress){
     
     MatrixDouble fTangentTensor(3,3);
     fTangentTensor.setZero();
@@ -102,7 +102,7 @@ void Tresca::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDoubl
     fElasticModel->ComputeStiffness(index,data,Stiffness);
 };
 
-double Tresca::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
+double Tresca::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
     double YF = 0.;
 
     if (fPlaneStress){
@@ -121,7 +121,7 @@ double Tresca::YieldFunction(int &index, IntPointData &data, Tensor &Stress){
     return YF;
 }
 
-double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress){
+double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
     double dGamma = 0.;
     double s1 = 0.;
@@ -215,14 +215,14 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor &Stress)
     return dGamma;
 }
 
-void Tresca::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress){
+void Tresca::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress){
     //Box 8.1
     double pressure = Stress.Trace() / 3.;
 
     MatrixDouble sn1 = (pressure + fS1) * fEigenprojections[0]
                      +(pressure + fS2) * fEigenprojections[1]
                      +(pressure + fS3) * fEigenprojections[2];
-    Tensor StressN1(sn1);
+    Tensor3D StressN1(sn1);
     Stress = StressN1;
 
 
@@ -232,12 +232,12 @@ void Tresca::UpdateStateVariables(int &index, IntPointData &data, Tensor &Stress
     }
 #endif
 
-    Tensor epsilonUpdated(StressN1.Deviatory());
+    Tensor3D epsilonUpdated(StressN1.Deviatory());
     epsilonUpdated /= (2. * fShearModulus);
     epsilonUpdated.fXY() *= 2.;
     epsilonUpdated.fXZ() *= 2.;
     epsilonUpdated.fYZ() *= 2.;
-    Tensor Ident;
+    Tensor3D Ident;
     double epslion_e_trial = data.fElasticStrain[index].Trace() / 3.;
     Ident.Identity();
     Ident *= epslion_e_trial;
