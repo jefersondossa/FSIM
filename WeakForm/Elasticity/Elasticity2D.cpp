@@ -263,10 +263,10 @@ void Elasticity2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         if (fPlaneStress){
             double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
-            Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
+            Sol[0] = k * (1.-fPoissonRatio) * epsilon[2];
         } else {
             double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
-            Sol[2] = k * (1.-2.*fPoissonRatio) * epsilon[2];
+            Sol[0] = k * (1.-2.*fPoissonRatio) * epsilon[2];
         }      
         return;
     };
