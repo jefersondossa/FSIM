@@ -650,7 +650,7 @@ void GmshTools::Read4(CompMesh &gmesh, const std::string &file_name){
                     read >> coord[1];
                     read >> coord[2];
                     
-                    Node *node = new Node(coord,nodeids[inode]-GMSH_SHIFT,gmesh.NState());
+                    Node *node = new Node(coord,nodeids[inode]-GMSH_SHIFT);
                     gmesh.NodeVec()[nodeids[inode]-GMSH_SHIFT] = node;
                     // gmesh.Node(nodeids[inode] - GMSH_SHIFT).SetCo(coord);                    
                 }
@@ -1137,6 +1137,7 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
     // gmesh.ElementVec().shrink_to_fit();
 
     RenumberConnectivity(&gmesh);
+    gmesh.BuildMesh();
 
     gmesh.part_elem= new int[gmesh.NElements()]();
 }
@@ -1327,13 +1328,5 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         }
             break;
     }
-    if(transientmaterial){
-        for (int i = 0; i < gel->getConnectivity().size(); i++){
-            auto connect = gel->getConnectivity();
-            gmesh->NodeVec()[connect[i]]->AllocateTimeDerivatives();
-        }
-        
-    }
-
     return gel;
 };

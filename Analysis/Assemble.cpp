@@ -27,9 +27,9 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             //Disperse local contributions into the global matrix
             //Stiffness matrix
             for (int i=0; i<nElNodes; i++){
-                int nstatei = fAnalysis->MeshVector()[mesh]->NodeVec()[connec[i]]->GetNStateVariables();
+                int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
                 for (int j=0; j<nElNodes; j++){
-                    int nstatej = fAnalysis->MeshVector()[mesh]->NodeVec()[connec[j]]->GetNStateVariables();
+                    int nstatej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNStateVariables();
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
                             int64_t dof_i = startDOF + nstatei * connec[i] + istate;
@@ -70,9 +70,9 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
             //Disperse local contributions into the global matrix
             //Stiffness matrix
             for (int i=0; i<nElNodes; i++){
-                int nstatei = fAnalysis->MeshVector()[mesh]->NodeVec()[connec[i]]->GetNStateVariables();
+                int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
                 for (int j=0; j<nElNodes; j++){
-                    int nstatej = fAnalysis->MeshVector()[mesh]->NodeVec()[connec[j]]->GetNStateVariables();
+                    int nstatej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNStateVariables();
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
                             int64_t dof_i = startDOF + nstatei * connec[i] + istate;
@@ -104,7 +104,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
             //Disperse local contributions into the global matrix
             //Stiffness matrix
             for (int i=0; i<nElNodes; i++){
-                int nstatei = fAnalysis->MeshVector()[mesh]->NodeVec()[connec[i]]->GetNStateVariables();
+                int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
                     int64_t dof_i = startDOF + nstatei * connec[i] + istate;

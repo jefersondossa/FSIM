@@ -1,4 +1,6 @@
 #include "CompMesh.h"
+#include "Connect.h"
+#include "TransientWeakForm.h"
 
 GraphMesh* CompMesh::GetGraphMesh(){
     if (!fGraphMesh){
@@ -40,8 +42,47 @@ void CompMesh::SetSolution(VecDouble &sol){
         if (fNodeVector[inode]->HasBC()) continue;
 
         for (int istate = 0; istate < fNState; istate++){
-            fNodeVector[inode]->SetSolution(istate,sol[istate]);
-            fNodeVector[inode]->SetPreviousSolution(istate,sol[istate]);
+            fConnectVector[inode]->SetSolution(istate,sol[istate]);
+            fConnectVector[inode]->SetPreviousSolution(istate,sol[istate]);
         }
     }
+}
+
+void CompMesh::BuildMesh(){
+    BuildConnects();
+    
+    //If there is any transient material, allocate the time derivatives for all connects
+    for (int i = 0; i < fMaterialVector.size(); i++)
+    {
+        TransientWeakForm *transientmaterial = dynamic_cast<TransientWeakForm * > (fMaterialVector[i]);
+        if (transientmaterial){
+            for (int j = 0; j < fConnectVector.size(); j++){
+                fConnectVector[j]->AllocateTimeDerivatives();
+            }
+            break;
+        }
+    }
+    
+}
+
+void CompMesh::BuildConnects(){
+    int nconnects = 0;
+
+    if (fApproxType == ApproxType::EIsogeometric){
+        std::cout << "The Isogeometric Analysis is not implemented yet. Please choose another approximation type. \n";
+        PanicButton();
+    } else if (fApproxType == ApproxType::EHierarquic){
+        std::cout << "The Hierarquic basis functions are not implemented yet. Please choose another approximation type. \n";
+        PanicButton();
+    } else if (fApproxType == ApproxType::EIsoparametric){
+        int nconnects = NNodes();
+        fConnectVector.resize(nconnects);
+        for (int64_t i = 0; i < NNodes(); i++){
+            fConnectVector[i] = new Connect(fNState,1,fOrder,i);
+        }
+    } else {
+        std::cout << "Unknown approximation type. Please check it. \n";
+        PanicButton();
+    }
+    
 }

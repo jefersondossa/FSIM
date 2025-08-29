@@ -85,10 +85,10 @@ void TransientPositionalTruss::UpdateTimeDerivatives(CompMesh *cmesh){
         {
             for (int64_t inode = 0; inode < cmesh->NNodes(); inode++){
                 //Update Acceleration
-                auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
-                auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
-                auto posiPrev = cmesh->NodeVec()[inode]->PrevSolution();
-                auto posi = cmesh->NodeVec()[inode]->Solution();
+                auto acelPrev = cmesh->ConnectVec()[inode]->SolutionDDTime();
+                auto velPrev = cmesh->ConnectVec()[inode]->SolutionDTime();
+                auto posiPrev = cmesh->ConnectVec()[inode]->PrevSolution();
+                auto posi = cmesh->ConnectVec()[inode]->Solution();
                 VecDouble acelUpdated(2), velUpdated(2);
                 auto qs = posiPrev/(fBeta*fTimeStep*fTimeStep) + velPrev/(fBeta*fTimeStep) +
                                 (1./(2.*fBeta) - 1.) * acelPrev;
@@ -99,11 +99,11 @@ void TransientPositionalTruss::UpdateTimeDerivatives(CompMesh *cmesh){
                 // //Update Velocity                
                 velUpdated = posi*fGamma/(fBeta*fTimeStep) + rs -fGamma*fTimeStep*qs;
 
-                cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
-                cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
-                
-                cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
-                cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
+                cmesh->ConnectVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
+                cmesh->ConnectVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
+
+                cmesh->ConnectVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
+                cmesh->ConnectVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
                 // std::cout << "Acel = " << acelUpdated[0] << std::endl;
                 // std::cout << "Vel = " << velUpdated[0] << std::endl;
             }           

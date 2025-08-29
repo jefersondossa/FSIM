@@ -12,6 +12,14 @@
 #include <vector>
 #include <set>
 #include "GraphMesh.h"
+#include "Connect.h"
+
+enum class ApproxType
+{
+    EIsoparametric = 0,
+    EHierarquic = 1,
+    EIsogeometric = 2
+};
 
 class Element;
 class Analysis;
@@ -21,8 +29,9 @@ class CompMesh{
 private:
     int fDimension = 2;
     int fNState = 0;
+
+    /// @brief Default polynomial order
     int fOrder = 1;
-    int nBdNodes = 0;
 
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
@@ -30,9 +39,14 @@ private:
     /// Defines the vector of fluid elements
     std::vector<Element *>    fElementVector;
 
+    /// Connect vector
+    std::vector<Connect *>    fConnectVector;
+
     std::map<int,WeakForm *> fMaterialVector;
 
     GraphMesh *fGraphMesh = nullptr;
+
+    ApproxType fApproxType = ApproxType::EIsoparametric;
     
 public:
     int* part_elem;      //Domain Decomposition - Elements
@@ -63,8 +77,15 @@ public:
     /// mesh problem with the Arlequin method
     /// @return fluid model nodes information
     std::vector<Node *> &NodeVec(){return fNodeVector;}
+
+
     int64_t NNodes(){return fNodeVector.size();}
     void SetNumNodes(int64_t nnodes){fNodeVector.resize(nnodes);}
+
+
+    std::vector<Connect *> &ConnectVec(){return fConnectVector;}
+    int64_t NConnects(){return fConnectVector.size();}
+    void SetNumConnects(int64_t nconnects){fConnectVector.resize(nconnects);}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
@@ -101,12 +122,6 @@ public:
         return fNState;
     }
 
-    /// @brief Returns the number of boundary nodes
-    /// @return element boundary nodes
-    int &NBdNodes() {
-        return nBdNodes;
-    }
-
     /// @brief returns the number of global DOF's
     /// @return number of DOF's
     int64_t NGlobalDOF() {
@@ -120,6 +135,13 @@ public:
     void Integrate(std::set<int> &matIds, std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result);
 
     void SetSolution(VecDouble &sol);
+
+    void SetApproxType(ApproxType type){
+        fApproxType = type;
+    }
+
+    void BuildMesh();
+    void BuildConnects();
 };
 
 #endif

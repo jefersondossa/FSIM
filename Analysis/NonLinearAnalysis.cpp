@@ -23,7 +23,7 @@ void NonLinearAnalysis::UpdateSolution(){
                 Ii = nstartDOF + nstate*i+k;
                 val = this->GlobalMatrix()->GetValueSolution(Ii);
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
-                this->MeshVector()[imesh]->NodeVec()[i] -> IncrementSolution(k,val);
+                this->MeshVector()[imesh]->ConnectVec()[i] -> IncrementSolution(k,val);
             }
             // std::cout << "Solution mesh " << imesh << " " << i <<" " << val <<"\n";
         };

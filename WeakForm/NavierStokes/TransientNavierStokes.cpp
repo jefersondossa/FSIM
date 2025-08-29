@@ -471,15 +471,15 @@ void TransientNavierStokes::UpdateTimeDerivatives(CompMesh *cmesh){
     
     for (int64_t inode = 0; inode < cmesh->NNodes(); inode++){
         for (int j = fDimension; j--; ){
-            double u_ = cmesh->NodeVec()[inode] -> GetSolution(j);
-            double uprev = cmesh->NodeVec()[inode] -> GetPreviousSolution(j);
+            double u_ = cmesh->ConnectVec()[inode] -> GetSolution(j);
+            double uprev = cmesh->ConnectVec()[inode] -> GetPreviousSolution(j);
             // cmesh->NodeVec()[inode] -> SetPreviousSolution(j,u_);
 
-            double accel = cmesh->NodeVec()[inode] -> GetDSolutionDTime(j);
+            double accel = cmesh->ConnectVec()[inode] -> GetDSolutionDTime(j);
             // cmesh->NodeVec()[inode] -> setPreviousAccelerationComponent(j,accel);
              
             double accelUpdated = (u_- uprev)/(fGamma * fTimeStep) + accel * (fGamma - 1.) / fGamma;
-            cmesh->NodeVec()[inode] -> SetDSolutionDTime(j,accelUpdated);
+            cmesh->ConnectVec()[inode] -> SetDSolutionDTime(j,accelUpdated);
 
             // int dof_i = (fDimension+1)*inode + j;
             // VecSetValues(u, 1, &dof_i, &accel,INSERT_VALUES);
