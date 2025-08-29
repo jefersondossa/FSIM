@@ -39,14 +39,14 @@ void LinearAnalysis::UpdateSolution(){
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
         for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
-            int nstate = this->MeshVector()[imesh]->NodeVec()[i]->GetNStateVariables();
+            int nstate = this->MeshVector()[imesh]->ConnectVec()[i]->GetNStateVariables();
             for (int k = 0; k<nstate; k++){
                 Ii = nstartDOF + nstate*i+k;
                 val = this->GlobalMatrix()->GetValueSolution(Ii);
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
-                double sol = this->MeshVector()[imesh]->NodeVec()[i] -> Solution()[k];
-                this->MeshVector()[imesh]->NodeVec()[i] -> SetPreviousSolution(k,sol);
-                this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
+                double sol = this->MeshVector()[imesh]->ConnectVec()[i] -> Solution()[k];
+                this->MeshVector()[imesh]->ConnectVec()[i] -> SetPreviousSolution(k,sol);
+                this->MeshVector()[imesh]->ConnectVec()[i] -> SetSolution(k,val);
             }
         };
     }

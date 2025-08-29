@@ -960,7 +960,7 @@ void Arlequin::setCouplingZone(){
         if(nodesCZ[i] > 0) {
             // numNodesGlueZoneFine++;
             auto x = fMeshVector[1]->NodeVec()[i]->getCoordinates();
-            Node *node = new Node(x,nodeindex,fMeshVector[1]->NState());
+            Node *node = new Node(x,nodeindex);
             fMeshVector[2]->NodeVec().push_back(node);
             FineToGluing[i] = nodeindex;
             nodeindex++;

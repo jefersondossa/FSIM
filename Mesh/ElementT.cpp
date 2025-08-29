@@ -453,11 +453,11 @@ void ElementT<tshape>::ComputeCurrentJacobian() {
     for (int i = tshape::NElNodes; i--; ){
         for (int j = fWeakForm->NState(); j--; ){
             // Approximate the integration space
-            fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
-            yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetSolution(j);
+            fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
+            yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j);
             double yprev = 0.;
             if (fIntegData.fAxes1Prev.size() != 0){
-                yprev = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(j);
+                yprev = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fConnect[i]] -> GetPreviousSolution(j);
             }
 
 
@@ -688,9 +688,9 @@ void ElementT<tshape>::interpolateSolution(int &index, VecDouble &u_) {
     u_.setZero();
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            u_[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+            u_[j] += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
         }
     }
 }
@@ -715,10 +715,10 @@ void ElementT<tshape>::interpolateSolDTimeDerivatives() {
     fIntegData.fDSolDDt.setZero();
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            fIntegData.fDSolDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
-            fIntegData.fDSolDDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
+            fIntegData.fDSolDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
+            fIntegData.fDSolDDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
         }
     }
 }
@@ -729,10 +729,10 @@ void ElementT<tshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDoubl
     fIntegData.fDSolDDt.setZero();
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            fIntegData.fDSolDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
-            fIntegData.fDSolDDt[j] += fMesh->NodeVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
+            fIntegData.fDSolDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
+            fIntegData.fDSolDDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
         }
     }
     du_dt = fIntegData.fDSolDt;
@@ -746,24 +746,24 @@ void ElementT<tshape>::interpolateSolution() {
     if (fIntegData.fSolPrev.size() != 0) fIntegData.fSolPrev.setZero();
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            fIntegData.fSol[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+            fIntegData.fSol[j] += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
             if (fIntegData.fSolPrev.size() != 0) {
-                fIntegData.fSolPrev[j] += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(j) * shapeFi;
+                fIntegData.fSolPrev[j] += fMesh->ConnectVec()[fConnect[i]] -> GetPreviousSolution(j) * shapeFi;
             }
         }
     }
 
     // Store solution for nodes only in case the weakForm has no memory (used by topology optimization only) 
     if (fWeakForm && !fWeakForm->GetHasMemory()) {
-        const size_t n_state = fMesh->NodeVec()[fConnect[0]]->GetNStateVariables();
+        const size_t n_state = fMesh->ConnectVec()[fConnect[0]]->GetNStateVariables();
 
         fIntegData.fSolNodes.resize(tshape::NElNodes * n_state);
         fIntegData.fSolNodes.setZero();
         for (int i = 0; i < tshape::NElNodes; i++){
             for (int j = 0; j < n_state; j++ ){
-                fIntegData.fSolNodes[(n_state*i) + j] = fMesh->NodeVec()[fConnect[i]]->GetSolution(j);
+                fIntegData.fSolNodes[(n_state*i) + j] = fMesh->ConnectVec()[fConnect[i]]->GetSolution(j);
             }
         }
     }
@@ -774,9 +774,9 @@ void ElementT<tshape>::interpolateSolution(VecDouble &phi, VecDouble &u_) {
     u_.setZero();
     for (int i = tshape::NElNodes; i--; ){
         double shapeFi = phi(i);
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            u_[j] += fMesh->NodeVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+            u_[j] += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
         }
     }
 }
@@ -789,10 +789,10 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
     du_dx.setZero();    
     int DIM = tshape::Dimension;
     for (int i = tshape::NElNodes; i--; ){
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
-                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
+                du_dx(k,j) += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
             }
         }
     }
@@ -803,10 +803,10 @@ void ElementT<tshape>::interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDou
     du_dx.setZero();    
     int DIM = tshape::Dimension;
     for (int i = tshape::NElNodes; i--; ){
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
-                du_dx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * dphidx(j,i);
+                du_dx(k,j) += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(k) * dphidx(j,i);
             }
         }
     }
@@ -822,13 +822,13 @@ void ElementT<tshape>::interpolateSolDerivatives() {
         flag = true;
     }     
     for (int i = tshape::NElNodes; i--; ){
-        int nstate = fMesh->NodeVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = tshape::Dimension; j--; ){
             for (int k = nstate; k--; ){
-                fIntegData.fDSolDx(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
-                if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,i);
+                fIntegData.fDSolDx(k,j) += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhiX0(j,i);
+                if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->ConnectVec()[fConnect[i]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,i);
 
-                if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fMesh->NodeVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhi(j,i);
+                if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(k) * fIntegData.fDPhi(j,i);
 #ifdef DEBUG_BUILD
                 if (std::isnan(fIntegData.fDSolDx(k,j))){
                     PanicButton();

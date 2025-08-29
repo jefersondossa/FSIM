@@ -5,41 +5,17 @@
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
 
-Node::Node(VecDouble &coor, int64_t index, int nState){
-    fNStateVariables = nState;
+Node::Node(VecDouble &coor, int64_t index){
     fIndex = index;
     fDimension = coor.size();
-
-    fSolution.resize(fNStateVariables);
     fCoord.resize(fDimension);
-    fSolution.setZero();
 
     fCoord = coor;
-    fPrevSolution = fSolution;
     // fPrevCoord = coor;
     fInitialCoord = coor;
 
     fWeightFunction = 0.;   fPrevWeightFunction = 0.;
     fInverseIncidence.clear();
-}
-
-
-void Node::SetNStateVariables(int nstate){
-    fNStateVariables = nstate;
-    fSolution.resize(fNStateVariables);
-    // fDTimeSolution.resize(fNStateVariables);
-    // fDDTimeSolution.resize(fNStateVariables);
-    // fPrevSolution.resize(fNStateVariables);
-}
-
-
-void Node::SetSolution(int istate, double sol){
-    // fPrevSolution[istate] = fSolution[istate];
-    fSolution[istate] = sol;
-}
-
-void Node::IncrementSolution(int istate, double sol){
-    fSolution[istate] += sol;
 }
 
 void Node::incrementCoordinate(int dir, double u){
@@ -79,22 +55,3 @@ void Node::setWeightFunction(double val) {
     fPrevWeightFunction = fWeightFunction; 
     fWeightFunction = val;
 };
-
-void Node::SetDSolutionDTime(int istate, double val){
-    fDTimeSolution[istate] = val;
-};
-
-void Node::SetDSolutionDDTime(int istate, double val){
-    fDDTimeSolution[istate] = val;
-};
-
-void Node::SetPreviousSolution(int istate, double val){
-    fPrevSolution[istate] = val;
-};
-
-void Node::AllocateTimeDerivatives(){
-    fDTimeSolution.resize(fNStateVariables);
-    fDDTimeSolution.resize(fNStateVariables);
-    fDTimeSolution.setZero();
-    fDDTimeSolution.setZero();
-}

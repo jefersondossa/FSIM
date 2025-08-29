@@ -144,9 +144,9 @@ void IncrementalAnalysis::UpdateSolution(){
                 Ii = nstartDOF + nstate*i+k;
                 val = this->GlobalMatrix()->GetValueSolution(Ii);
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
-                double prevsol = this->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
-                this->MeshVector()[imesh]->NodeVec()[i] -> SetPreviousSolution(k,prevsol);
-                this->MeshVector()[imesh]->NodeVec()[i] -> IncrementSolution(k,val);
+                double prevsol = this->MeshVector()[imesh]->ConnectVec()[i] -> GetSolution(k);
+                this->MeshVector()[imesh]->ConnectVec()[i] -> SetPreviousSolution(k,prevsol);
+                this->MeshVector()[imesh]->ConnectVec()[i] -> IncrementSolution(k,val);
             }
             // std::cout << "Solution mesh " << imesh << " " << i <<" " << val <<"\n";
         };

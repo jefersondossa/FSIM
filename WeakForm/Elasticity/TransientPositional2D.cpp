@@ -86,10 +86,10 @@ void TransientPositional2D::UpdateTimeDerivatives(CompMesh *cmesh){
         {
             for (int64_t inode = 0; inode < cmesh->NNodes(); inode++){
                 //Update Acceleration
-                auto acelPrev = cmesh->NodeVec()[inode]->SolutionDDTime();
-                auto velPrev = cmesh->NodeVec()[inode]->SolutionDTime();
-                auto dispPrev = cmesh->NodeVec()[inode]->PrevSolution();
-                auto disp = cmesh->NodeVec()[inode]->Solution();
+                auto acelPrev = cmesh->ConnectVec()[inode]->SolutionDDTime();
+                auto velPrev = cmesh->ConnectVec()[inode]->SolutionDTime();
+                auto dispPrev = cmesh->ConnectVec()[inode]->PrevSolution();
+                auto disp = cmesh->ConnectVec()[inode]->Solution();
                 VecDouble acelUpdated(2), velUpdated(2);
                 acelUpdated = (disp-dispPrev)/(fBeta*fTimeStep*fTimeStep) -
                                 velPrev/(fBeta*fTimeStep) -
@@ -98,12 +98,12 @@ void TransientPositional2D::UpdateTimeDerivatives(CompMesh *cmesh){
                 //Update Velocity
                 velUpdated = velPrev + (1.-fGamma)*fTimeStep*acelPrev + fGamma*fTimeStep*acelUpdated;
 
-                cmesh->NodeVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
-                cmesh->NodeVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
-                
-                cmesh->NodeVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
-                cmesh->NodeVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
-            }           
+                cmesh->ConnectVec()[inode]->SetDSolutionDTime(0,velUpdated[0]);
+                cmesh->ConnectVec()[inode]->SetDSolutionDTime(1,velUpdated[1]);
+
+                cmesh->ConnectVec()[inode]->SetDSolutionDDTime(0,acelUpdated[0]);
+                cmesh->ConnectVec()[inode]->SetDSolutionDDTime(1,acelUpdated[1]);
+            }
         }
         break;
     case EGeneralizedAlpha:

@@ -11,7 +11,7 @@
 
     CompMesh* cmesh = new CompMesh(); 
 
-    LinearFrame * matelas = new LinearFrame(4,1.,1.,1.);
+    PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
     matelas->SetForcingFunction(forcing); 
     //BC
     MatrixDouble val1(3,3);
@@ -21,12 +21,12 @@
     //Left
     val2[0] = 1.;
     val2[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(2,1,3,val1,val2);
+    L2Projection * matbc1 = new L2Projection(2,1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
 
     val2[0] = 0.;
     //Right
-    L2Projection * matbc3 = new L2Projection(3,1,3,val1,val2);
-    
+    L2Projection * matbc3 = new L2Projection(3,1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc3);
  
@@ -41,6 +41,6 @@
     ScalarNames = {"Rotation","BendingMoment","ShearForce"};
     an.Run();
 
-    VTUGenerator::PrintResults(cmesh,"result",ScalarNames,VectorNames);    
+    VTUGenerator::PrintResults(cmesh,"resultbeam",ScalarNames,VectorNames);    
         
 }           
