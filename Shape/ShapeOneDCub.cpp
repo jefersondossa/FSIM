@@ -1,7 +1,7 @@
 #include "ShapeOneDCub.h"
 
 const int ShapeOneDCub::Dimension;
-const int ShapeOneDCub::Order;
+const int ShapeOneDCub::NSides;
 const int ShapeOneDCub::NElNodes;
 const int ShapeOneDCub::NCornerNodes;
 const ElementType ShapeOneDCub::ElType;

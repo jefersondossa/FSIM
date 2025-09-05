@@ -55,6 +55,9 @@ public:
     /// @brief Default constructor
     CompMesh() = default;
 
+    /// @brief Constructor
+    CompMesh(ApproxType approxType) : fApproxType(approxType) {}
+
     /// @brief Default destructor
     ~CompMesh() = default;
 
@@ -138,6 +141,10 @@ public:
 
     void SetApproxType(ApproxType type){
         fApproxType = type;
+    }
+
+    ApproxType &GetApproxType(){
+        return fApproxType;
     }
 
     void BuildMesh();

@@ -1,7 +1,7 @@
 #include "ShapeTriangleQua.h"
 
 const int ShapeTriangleQua::Dimension;
-const int ShapeTriangleQua::Order;
+const int ShapeTriangleQua::NSides;
 const int ShapeTriangleQua::NElNodes;
 const int ShapeTriangleQua::NCornerNodes;
 const ElementType ShapeTriangleQua::ElType;

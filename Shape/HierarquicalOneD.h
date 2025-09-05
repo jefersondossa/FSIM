@@ -25,6 +25,12 @@ public:
     // Local node index of a node associated with a side
     static int SideNodeLocIndex(int side, int node);
 
+    // Returns the number of shape functions associated with a side
+    static int NShapeFunctions(int side, int order);
+    
+    // Returns the total number of shape functions
+    static int NShapeFunctions(VecInt &orders);
+
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values

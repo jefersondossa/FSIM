@@ -1,7 +1,7 @@
 #include "ShapeTetrahedronQua.h"
 
 const int ShapeTetrahedronQua::Dimension;
-const int ShapeTetrahedronQua::Order;
+const int ShapeTetrahedronQua::NSides;
 const int ShapeTetrahedronQua::NElNodes;
 const int ShapeTetrahedronQua::NCornerNodes;
 const ElementType ShapeTetrahedronQua::ElType;

@@ -21,11 +21,49 @@ int HierarquicalOneD::SideNodeLocIndex(int side, int node) {
     return -1;
 }
 
+/// returns the total number of shape functions
+int HierarquicalOneD::NShapeFunctions(VecInt &orders) {
+    
+    int nsf_tot = 0;
+    for (int is=0; is<3; is++) {
+        nsf_tot += NShapeFunctions(is, orders[is]);
+    }
+    
+    return nsf_tot;
+}
+
+/// returns the number of shape functions associated with a side
+int HierarquicalOneD::NShapeFunctions(int side, int order){
+
+    if(order < 1 ) PanicButton();
+    switch (side)
+    {
+    case 0:
+        return 1;
+        break;
+    case 1:
+        return 1;
+        break;
+    case 2:
+        return order-1;
+        break;
+    
+    default:
+        std::cout << "Shape1d::NShapeFunctions : Wrong side " << side << "\n";
+        PanicButton();
+        return -1;
+        break;
+    }
+    return -1;
+}
 
 
 void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi) {
     phi[0] = (1 - xi[0]) / 2.;
     phi[1] = (1 + xi[0]) / 2.;
+
+    
+
 }
 
 void HierarquicalOneD::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {

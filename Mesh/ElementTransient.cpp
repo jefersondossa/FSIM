@@ -5,9 +5,9 @@
 #include "PositionalTruss.h"
 #include "TransientPositionalFrame2D.h"
 
-template<class tshape>
-ElementTransient<tshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
-    int DIM = tshape::Dimension;
+template<class geoshape, class compshape>
+ElementTransient<geoshape,compshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<geoshape,compshape>(index,connect,mesh,wf){
+    int DIM = compshape::Dimension;
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fAdimCoord.setZero();
 
@@ -33,13 +33,13 @@ ElementTransient<tshape>::ElementTransient(int64_t index, VecInt &connect, CompM
     this->fIntegData.fNeedsTimeDerivatives = true;
 };
 
-template<class tshape>
-void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+template<class geoshape, class compshape>
+void ElementTransient<geoshape,compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     if (!this->fWeakForm) return;
 
-    int DIM = tshape::Dimension;
-    
+    int DIM = compshape::Dimension;
+
     int index = 0;
     
     
@@ -95,12 +95,12 @@ void ElementTransient<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMat
 //------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
-template<class tshape>
-void ElementTransient<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
+template<class geoshape, class compshape>
+void ElementTransient<geoshape,compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
     PanicButton();
     if (!this->fWeakForm) return;
 
-    int DIM = tshape::Dimension;
+    int DIM = compshape::Dimension;
     this->fIntegData.fA0Inv.resize(DIM,DIM);
     this->fIntegData.fAdimCoord.resize(DIM);
 
@@ -154,17 +154,21 @@ void ElementTransient<tshape>::ComputeElContribution(std::vector<MatrixDouble> &
 #include "ShapeTriangleLin.h"
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
+#include "HierarquicalOneD.h"
 
-template class ElementTransient<ShapePoint>;
-template class ElementTransient<ShapeOneDLin>;
-template class ElementTransient<ShapeOneDQua>;
-template class ElementTransient<ShapeOneDCub>;
-template class ElementTransient<ShapeTriangleLin>;
-template class ElementTransient<ShapeTriangleQua>;
-template class ElementTransient<ShapeTriangleCub>;
-template class ElementTransient<ShapeQuadrilateralLin>;
-template class ElementTransient<ShapeQuadrilateralQua>;
-template class ElementTransient<ShapeTetrahedronLin>;
-template class ElementTransient<ShapeTetrahedronQua>;
-template class ElementTransient<ShapeTetrahedronCub>;
-template class ElementTransient<ShapeHexahedron>;
+template class ElementTransient<ShapePoint,ShapePoint>;
+template class ElementTransient<ShapeOneDLin,ShapeOneDLin>;
+template class ElementTransient<ShapeOneDQua,ShapeOneDQua>;
+template class ElementTransient<ShapeOneDCub,ShapeOneDCub>;
+template class ElementTransient<ShapeOneDLin,HierarquicalOneD>;
+template class ElementTransient<ShapeOneDQua,HierarquicalOneD>;
+template class ElementTransient<ShapeOneDCub,HierarquicalOneD>;
+template class ElementTransient<ShapeTriangleLin,ShapeTriangleLin>;
+template class ElementTransient<ShapeTriangleQua,ShapeTriangleQua>;
+template class ElementTransient<ShapeTriangleCub,ShapeTriangleCub>;
+template class ElementTransient<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
+template class ElementTransient<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
+template class ElementTransient<ShapeTetrahedronLin,ShapeTetrahedronLin>;
+template class ElementTransient<ShapeTetrahedronQua,ShapeTetrahedronQua>;
+template class ElementTransient<ShapeTetrahedronCub,ShapeTetrahedronCub>;
+template class ElementTransient<ShapeHexahedron,ShapeHexahedron>;

@@ -12,8 +12,8 @@ public:
     // Element dimension
     const static int Dimension = 2;
 
-    // Element polynomial order
-    const static int Order = 1;
+    // Element number of sides - For Lagrangian elements, this is the same as the number of nodes
+    const static int NSides = 4;
 
     // Number of element nodes
     const static int NElNodes = 4;

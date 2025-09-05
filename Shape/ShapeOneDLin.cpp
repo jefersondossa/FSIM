@@ -1,7 +1,7 @@
 #include "ShapeOneDLin.h"
 
 const int ShapeOneDLin::Dimension;
-const int ShapeOneDLin::Order;
+const int ShapeOneDLin::NSides;
 const int ShapeOneDLin::NElNodes;
 const int ShapeOneDLin::NCornerNodes;
 const ElementType ShapeOneDLin::ElType;

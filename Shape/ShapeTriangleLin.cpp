@@ -1,7 +1,7 @@
 #include "ShapeTriangleLin.h"
 
 const int ShapeTriangleLin::Dimension;
-const int ShapeTriangleLin::Order;
+const int ShapeTriangleLin::NSides;
 const int ShapeTriangleLin::NElNodes;
 const int ShapeTriangleLin::NCornerNodes;
 const ElementType ShapeTriangleLin::ElType;
