@@ -1,7 +1,7 @@
 #include "ShapeTriangleCub.h"
 
 const int ShapeTriangleCub::Dimension;
-const int ShapeTriangleCub::Order;
+const int ShapeTriangleCub::NSides;
 const int ShapeTriangleCub::NElNodes;
 const int ShapeTriangleCub::NCornerNodes;
 const ElementType ShapeTriangleCub::ElType;

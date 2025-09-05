@@ -1,7 +1,7 @@
 #include "ShapeOneDQua.h"
 
 const int ShapeOneDQua::Dimension;
-const int ShapeOneDQua::Order;
+const int ShapeOneDQua::NSides;
 const int ShapeOneDQua::NElNodes;
 const int ShapeOneDQua::NCornerNodes;
 const ElementType ShapeOneDQua::ElType;

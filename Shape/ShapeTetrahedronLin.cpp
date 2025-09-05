@@ -1,7 +1,7 @@
 #include "ShapeTetrahedronLin.h"
 
 const int ShapeTetrahedronLin::Dimension;
-const int ShapeTetrahedronLin::Order;
+const int ShapeTetrahedronLin::NSides;
 const int ShapeTetrahedronLin::NElNodes;
 const int ShapeTetrahedronLin::NCornerNodes;
 const ElementType ShapeTetrahedronLin::ElType;

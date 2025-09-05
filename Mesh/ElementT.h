@@ -25,11 +25,11 @@
 
 
 /// Defines the fluid element object and all the element information
-template<class tshape>
+template<class geoshape, class compshape>
 class ElementT : public Element{
 protected:
     // Integration rule object
-    typename tshape::LocIntRule fIntRule;
+    typename compshape::LocIntRule fIntRule;
 
 public:
     ElementT();
@@ -89,7 +89,7 @@ public:
 
     
 
-    int Dimension() override {return tshape::Dimension;}  
+    int Dimension() override {return geoshape::Dimension;}  
 
     //.................Element intersection and correspondence..................
     /// Gets the element intersection parameters 
@@ -106,13 +106,9 @@ public:
     /// @retunr number of integration point of the special quadrature rule
     int getNumberOfIntegrationPoints(){return fIntRule.NPoints();};
 
-    int Dimension() const{
-        return tshape::Dimension;
-    }
-
     void ComputeError(VecDouble &errors) override;
     
-    const int &NElNodes() override {return tshape::NElNodes;}
+    const int &NElNodes() override {return geoshape::NElNodes;}
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(MatrixDouble &Stiffness) override;
@@ -121,7 +117,7 @@ public:
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness) override;
     void ComputeElContribution(std::vector<VecDouble> &Rhs) override;
 
-    int NCornerNodes() override {return tshape::NCornerNodes;}
+    int NCornerNodes() override {return geoshape::NCornerNodes;}
 
     void setIntegPointWeightFunction() override;
 
@@ -130,8 +126,8 @@ public:
 
     VecDouble NodeCoord(int inode) override{
         VecDouble xnode(3);
-        MatrixDouble coords(3,tshape::NElNodes);
-        tshape::getCoordinates(coords);
+        MatrixDouble coords(3,geoshape::NElNodes);
+        geoshape::getCoordinates(coords);
         for (int i = 0; i < 3; i++){
             xnode[i] = coords(i,inode);
         }
@@ -141,7 +137,7 @@ public:
     void Integrate(std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result) override;
 
     ElementType Type() override{
-        return tshape::ElType;
+        return geoshape::ElType;
     }
 
 };

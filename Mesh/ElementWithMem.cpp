@@ -5,8 +5,8 @@
 #include "ElasticTruss.h"
 #include "PositionalTruss.h"
 
-template<class tshape>
-ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<tshape>(index,connect,mesh,wf){
+template<class geoshape, class compshape>
+ElementWithMem<geoshape,compshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<geoshape,compshape>(index,connect,mesh,wf){
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
     if (fPlasticityModel){
         this->fIntegData.fYieldFunction.resize(this->fIntRule.NPoints());
@@ -45,7 +45,7 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
     } else {
         PanicButton();
     }
-    int DIM = tshape::Dimension;
+    int DIM = geoshape::Dimension;
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fNeedsDSol = true;
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
@@ -55,9 +55,9 @@ ElementWithMem<tshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh*
     this->fIntegData.fSolPrev.resize(this->fWeakForm->NState());
 };
 
-template<class tshape>
-void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor3D &ElasStress){
-    
+template<class geoshape, class compshape>
+void ElementWithMem<geoshape,compshape>::ComputeTrialStress(int &index,Tensor3D &ElasStress){
+
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
     
     //Assemble the trial stress tensor
@@ -107,8 +107,8 @@ void ElementWithMem<tshape>::ComputeTrialStress(int &index,Tensor3D &ElasStress)
 }
 
 
-template<class tshape>
-void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+template<class geoshape, class compshape>
+void ElementWithMem<geoshape,compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     if (!this->fWeakForm) return;
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
@@ -116,7 +116,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-    int DIM = tshape::Dimension;
+    int DIM = geoshape::Dimension;
     
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
@@ -187,8 +187,8 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
 };
 
 
-template<class tshape>
-void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
+template<class geoshape, class compshape>
+void ElementWithMem<geoshape,compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
 
     if (!this->fWeakForm) return;
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
@@ -196,7 +196,7 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-    int DIM = tshape::Dimension;
+    int DIM = geoshape::Dimension;
     
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
@@ -267,8 +267,8 @@ void ElementWithMem<tshape>::ComputeElContribution(MatrixDouble &jacobianNRMatri
 
 
 
-template<class tshape>
-void ElementWithMem<tshape>::ComputeElContribution(VecDouble &rhsVector){
+template<class geoshape, class compshape>
+void ElementWithMem<geoshape,compshape>::ComputeElContribution(VecDouble &rhsVector){
 
     if (!this->fWeakForm) return;
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (this->fWeakForm);
@@ -276,7 +276,7 @@ void ElementWithMem<tshape>::ComputeElContribution(VecDouble &rhsVector){
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-    int DIM = tshape::Dimension;
+    int DIM = geoshape::Dimension;
     
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
@@ -347,12 +347,12 @@ void ElementWithMem<tshape>::ComputeElContribution(VecDouble &rhsVector){
 //------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
-template<class tshape>
-void ElementWithMem<tshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
+template<class geoshape, class compshape>
+void ElementWithMem<geoshape,compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
 
     if (!this->fWeakForm) return;
 
-    int DIM = tshape::Dimension;
+    int DIM = geoshape::Dimension;
     
 
     int index = 0;
@@ -408,17 +408,21 @@ void ElementWithMem<tshape>::ComputeElContribution(std::vector<MatrixDouble> &ja
 #include "ShapeTriangleLin.h"
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
+#include "HierarquicalOneD.h"
 
-template class ElementWithMem<ShapePoint>;
-template class ElementWithMem<ShapeOneDLin>;
-template class ElementWithMem<ShapeOneDQua>;
-template class ElementWithMem<ShapeOneDCub>;
-template class ElementWithMem<ShapeTriangleLin>;
-template class ElementWithMem<ShapeTriangleQua>;
-template class ElementWithMem<ShapeTriangleCub>;
-template class ElementWithMem<ShapeQuadrilateralLin>;
-template class ElementWithMem<ShapeQuadrilateralQua>;
-template class ElementWithMem<ShapeTetrahedronLin>;
-template class ElementWithMem<ShapeTetrahedronQua>;
-template class ElementWithMem<ShapeTetrahedronCub>;
-template class ElementWithMem<ShapeHexahedron>;
+template class ElementWithMem<ShapePoint,ShapePoint>;
+template class ElementWithMem<ShapeOneDLin,ShapeOneDLin>;
+template class ElementWithMem<ShapeOneDQua,ShapeOneDQua>;
+template class ElementWithMem<ShapeOneDCub,ShapeOneDCub>;
+template class ElementWithMem<ShapeOneDLin,HierarquicalOneD>;
+template class ElementWithMem<ShapeOneDQua,HierarquicalOneD>;
+template class ElementWithMem<ShapeOneDCub,HierarquicalOneD>;
+template class ElementWithMem<ShapeTriangleLin,ShapeTriangleLin>;
+template class ElementWithMem<ShapeTriangleQua,ShapeTriangleQua>;
+template class ElementWithMem<ShapeTriangleCub,ShapeTriangleCub>;
+template class ElementWithMem<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
+template class ElementWithMem<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
+template class ElementWithMem<ShapeTetrahedronLin,ShapeTetrahedronLin>;
+template class ElementWithMem<ShapeTetrahedronQua,ShapeTetrahedronQua>;
+template class ElementWithMem<ShapeTetrahedronCub,ShapeTetrahedronCub>;
+template class ElementWithMem<ShapeHexahedron,ShapeHexahedron>;

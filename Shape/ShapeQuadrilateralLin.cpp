@@ -1,7 +1,7 @@
 #include "ShapeQuadrilateralLin.h"
 
 const int ShapeQuadrilateralLin::Dimension;
-const int ShapeQuadrilateralLin::Order;
+const int ShapeQuadrilateralLin::NSides;
 const int ShapeQuadrilateralLin::NElNodes;
 const int ShapeQuadrilateralLin::NCornerNodes;
 const ElementType ShapeQuadrilateralLin::ElType;
