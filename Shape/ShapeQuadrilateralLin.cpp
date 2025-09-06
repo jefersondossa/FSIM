@@ -2,7 +2,7 @@
 
 const int ShapeQuadrilateralLin::Dimension;
 const int ShapeQuadrilateralLin::NSides;
-const int ShapeQuadrilateralLin::NElNodes;
+const int ShapeQuadrilateralLin::NShape;
 const int ShapeQuadrilateralLin::NCornerNodes;
 const ElementType ShapeQuadrilateralLin::ElType;
 

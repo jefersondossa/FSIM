@@ -9,21 +9,25 @@ ElementT<geoshape,compshape>::ElementT() : Element(){
 };
 
 template<class geoshape, class compshape>
-ElementT<geoshape,compshape>::ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : Element(){
+ElementT<geoshape,compshape>::ElementT(int64_t index, VecInt &geonodes, CompMesh* mesh, WeakForm *wf) : Element(){
     int DIM = compshape::Dimension;
     fMesh = mesh;
+    fGeoNodes.resize(geoshape::NSides);
     fConnect.resize(compshape::NSides);
     fIndex = index;
-    for (int i = compshape::NShape; i--; ) fConnect[i] = connect[i];
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ) fGeoNodes[i] = geonodes[i];
+    if (this->Mesh()->GetApproxType() == ApproxType::EIsoparametric){
+        fConnect = fGeoNodes;
+    }
     DEG = fMesh->GetDefaultOrder();
     fWeakForm = wf;
-    if (fWeakForm) nLocDOF = compshape::NShape * fWeakForm->NState();
+    if (fWeakForm) nLocDOF = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()) * fWeakForm->NState();
 
     fNeighborElements.clear();
     int increase = 0;
     if(wf->GetExactSolution()) increase = 2;
 
-    fIntRule.SetOrder(2*compshape::Order+increase);
+    fIntRule.SetOrder(2*this->fMesh->GetDefaultOrder()+increase);
     // fIntRule.SetOrder(2);
 
     fIntegData.fWeightFunction.resize(fIntRule.NPoints());
@@ -45,10 +49,10 @@ ElementT<geoshape,compshape>::ElementT(int64_t index, VecInt &connect, CompMesh*
     fIntegData.fX.resize(3);
     fIntegData.fX.setZero();
 
-    fIntegData.fPhi.resize(compshape::NElNodes);
+    fIntegData.fPhi.resize(compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
     fIntegData.fPhi.setZero();
 
-    fIntegData.fDPhi.resize(geoshape::Dimension,compshape::NElNodes);
+    fIntegData.fDPhi.resize(geoshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
     fIntegData.fDPhi.setZero();
 
     //Checks if it is a BC element and set the nodes as BC
@@ -56,8 +60,8 @@ ElementT<geoshape,compshape>::ElementT(int64_t index, VecInt &connect, CompMesh*
     if (bc){
         if (bc->GetBCType() == BoundaryConditionType::kDirectionalHomogeneousDirichlet || 
             bc->GetBCType() == BoundaryConditionType::kDirichlet) {
-        for (int i = 0; i < compshape::NElNodes; i++){
-            fMesh->NodeVec()[fConnect[i]]->SetHasBC();
+        for (int i = 0; i < compshape::NSides; i++){
+            fMesh->NodeVec()[fGeoNodes[i]]->SetHasBC();
         }
             }
     }
@@ -84,8 +88,10 @@ void ElementT<geoshape,compshape>::setIntegPointWeightFunction() {
        xsi[0] = fIntRule.PointList(index,0);
        xsi[1] = fIntRule.PointList(index,1);
 
-       for (int j=0; j<compshape::NElNodes; j++){
-           fIntegData.fWeightFunction[index] += fIntegData.fPhi[j] * fMesh->NodeVec()[fConnect[j]] -> getWeightFunction();
+       for (int j=0; j<compshape::NSides; j++){
+        std::cout << "alterar armazenamento do weightfunction para vector de connects" << std::endl;
+        PanicButton();
+           fIntegData.fWeightFunction[index] += fIntegData.fPhi[j] * fMesh->NodeVec()[fGeoNodes[j]] -> getWeightFunction();
        };
        // fIntegData.fWeightFunction(index) = 1.;
        index++;
@@ -105,7 +111,7 @@ void ElementT<geoshape,compshape>::ComputeIntPointDistFunction(VecDouble &nodalv
     
     int DIM = geoshape::Dimension;
     fIntegData.fAdimCoord.resize(DIM);
-    fIntegData.fPhi.resize(compshape::NElNodes);
+    fIntegData.fPhi.resize(geoshape::NShape);
     
     // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
     //     intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
@@ -120,7 +126,7 @@ void ElementT<geoshape,compshape>::ComputeIntPointDistFunction(VecDouble &nodalv
            
         compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
 
-        for (int j=0; j<compshape::NElNodes; j++){
+        for (int j=0; j<geoshape::NShape; j++){
                 fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
         };
 
@@ -142,9 +148,10 @@ void ElementT<geoshape,compshape>::getIntegPointCoordinates(){
 
     fIntPointCoordinates.resize(fIntRule.NPoints(),2);
     fIntPointCoordinates.setZero();
-    
+
+    int nshape = geoshape::NShape;
     VecDouble xsi(DIM);
-    VecDouble phi_(compshape::NElNodes);
+    VecDouble phi_(nshape);
     fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
     for (int i = 0; i < fIntRule.NPoints(); i++){
@@ -156,9 +163,9 @@ void ElementT<geoshape,compshape>::getIntegPointCoordinates(){
 
         for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
 
-        for (int j = 0; j < compshape::NElNodes; j++)
+        for (int j = 0; j < nshape; j++)
             for (int k = DIM; k--; )
-                fIntPointCoordinates(i,k) += fMesh->NodeVec()[fConnect[j]] -> getCoordinateValue(k) * phi_[j];
+                fIntPointCoordinates(i,k) += fMesh->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
         
     };
 
@@ -185,7 +192,7 @@ void ElementT<geoshape,compshape>::setIntersectionParameters(VecDouble &x, VecDo
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeJacobian() {
 
-    int DIM = compshape::Dimension;
+    int DIM = geoshape::Dimension;
     fIntegData.fA0Inv.setZero();
     fIntegData.fAxes0.setZero();
     fIntegData.fA0.setZero();
@@ -193,17 +200,17 @@ void ElementT<geoshape,compshape>::ComputeJacobian() {
     fIntegData.fPhi.setZero();
     fIntegData.fDPhi.setZero();
 
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
-    compshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
+    geoshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
+    geoshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
    
     fIntegData.fA0.setZero();
     VecDouble xna(3);
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = geoshape::NShape; i--; ){
         for (int j = 3; j--; ){
             // Approximate the integration space
-            fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
+            fIntegData.fX[j] += fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
             // std::cout << "Coord " << i << " " << j << " = " << fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) << std::endl;
-            xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
+            xna[j] = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j);
             
             for (int k = DIM; k--; ){
                 fIntegData.fAxes0(j,k) += xna[j] * fIntegData.fDPhi(k,i);
@@ -369,7 +376,7 @@ void ElementT<geoshape,compshape>::ComputeJacobian() {
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeJacobianSearch() {
 
-    int DIM = compshape::Dimension;
+    int DIM = geoshape::Dimension;
     fIntegData.fA0Inv.setZero();
     fIntegData.fAxes0.setZero();
     fIntegData.fA0.setZero();
@@ -377,16 +384,16 @@ void ElementT<geoshape,compshape>::ComputeJacobianSearch() {
     fIntegData.fPhi.setZero();
     fIntegData.fDPhi.setZero();
 
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
-    compshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
-   
+    geoshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
+    geoshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);   
+
     fIntegData.fA0.setZero();
     VecDouble xna(3);
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = geoshape::NShape; i--; ){
         for (int j = 3; j--; ){
             // Approximate the integration space
-            fIntegData.fX[j] += fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
-            xna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
+            fIntegData.fX[j] += fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) * fIntegData.fPhi(i);
+            xna[j] = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j);
             
             for (int k = DIM; k--; ){
                 fIntegData.fAxes0(j,k) += xna[j] * fIntegData.fDPhi(k,i);
@@ -433,7 +440,7 @@ void ElementT<geoshape,compshape>::ComputeJacobianSearch() {
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeCurrentJacobian() {
 
-    int DIM = compshape::Dimension;
+    int DIM = geoshape::Dimension;
     fIntegData.fA1.resize(DIM,DIM);
     fIntegData.fA1.setZero();
     fIntegData.fX1.resize(3);
@@ -449,14 +456,14 @@ void ElementT<geoshape,compshape>::ComputeCurrentJacobian() {
     yna.setZero();
     
     fIntegData.fA1.setZero();
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = geoshape::NShape; i--; ){
         for (int j = fWeakForm->NState(); j--; ){
             // Approximate the integration space
-            fIntegData.fX1[j] += (fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
-            yna[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j);
+            fIntegData.fX1[j] += (fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fGeoNodes[i]] -> GetSolution(j)) * fIntegData.fPhi(i);
+            yna[j] = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fGeoNodes[i]] -> GetSolution(j);
             double yprev = 0.;
             if (fIntegData.fAxes1Prev.size() != 0){
-                yprev = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fConnect[i]] -> GetPreviousSolution(j);
+                yprev = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) + fMesh->ConnectVec()[fGeoNodes[i]] -> GetPreviousSolution(j);
             }
 
 
@@ -547,15 +554,13 @@ void ElementT<geoshape,compshape>::ComputeCurrentJacobian() {
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeSpatialDerivatives() {
     
-    
-        
-    compshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
+    MatrixDouble DphiComp(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
+
+    compshape::ShapeGradient(fIntegData.fAdimCoord,DphiComp);
     // shapeQuad.ShapeHessian(xsi,ddphi);
-    
-    fIntegData.fDPhiX0.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX0 = fIntegData.fA0Inv.transpose() * fIntegData.fDPhi;
+    fIntegData.fDPhiX0 = fIntegData.fA0Inv.transpose() * DphiComp;
 
     return;
 };
@@ -563,16 +568,16 @@ void ElementT<geoshape,compshape>::ComputeSpatialDerivatives() {
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeCurrentSpatialDerivatives() {
     
-    fIntegData.fDPhi.resize(compshape::Dimension,compshape::NElNodes);
-    fIntegData.fDPhi.setZero();
     
-    compshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi);
+    MatrixDouble DphiComp(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
+
+    compshape::ShapeGradient(fIntegData.fAdimCoord,DphiComp);
     // shapeQuad.ShapeHessian(xsi,ddphi);
     
     fIntegData.fDPhiX1.setZero();
 
     //Shape functions spatial first derivatives
-    fIntegData.fDPhiX1 = fIntegData.fA1.inverse().transpose() * fIntegData.fDPhi;
+    fIntegData.fDPhiX1 = fIntegData.fA1.inverse().transpose() * DphiComp;
 
     return;
 };
@@ -583,9 +588,12 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx) {
     
     int DIM = compshape::Dimension;
+        
+    int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+
     dDphi_dx.setZero();
-    std::vector<MatrixDouble> ddphi(compshape::NElNodes,MatrixDouble(DIM,DIM));
-    for (int i = 0; i < compshape::NElNodes; i++)
+    std::vector<MatrixDouble> ddphi(nshape,MatrixDouble(DIM,DIM));
+    for (int i = 0; i < nshape; i++)
     {
         ddphi[i].setZero();
     }
@@ -627,11 +635,11 @@ void ElementT<geoshape,compshape>::getHighOrderSpatialDerivatives(VecDouble &xsi
     double ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
     VecDouble xna_(DIM);
 
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = nshape; i--; ){
         xna_.setZero();
         for (int j = DIM; j--; ){
             // Approximate the integration space
-            xna_[j] = fMesh->NodeVec()[fConnect[i]] -> getCoordinateValue(j);
+            xna_[j] = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j);
         }
         ddx_dxsi += xna_[0] * ddphi[i](0,0);
         ddx_deta += xna_[0] * ddphi[i](1,1);
@@ -643,7 +651,7 @@ void ElementT<geoshape,compshape>::getHighOrderSpatialDerivatives(VecDouble &xsi
 
     if (DIM == 2){
         VecDouble vecAux2(3);
-        for (int i = compshape::NElNodes; i--; ){
+        for (int i = nshape; i--; ){
             vecAux[0] = ddphi[i](0,0) - dphi_dx(i,0)*ddx_dxsi - dphi_dx(i,1)*ddy_dxsi;
             vecAux[1] = ddphi[i](1,1) - dphi_dx(i,0)*ddx_deta - dphi_dx(i,1)*ddy_deta;
             vecAux[2] = ddphi[i](0,1) - dphi_dx(i,0)*ddx_dxsideta - dphi_dx(i,1)*ddy_dxsideta;
@@ -672,10 +680,10 @@ void ElementT<geoshape,compshape>::interpolateMeshVelocity(int &index, VecDouble
     umesh_.setZero();
     umeshPrev_.setZero();
     
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = geoshape::NShape; i--; ){
         double shapeFi = fIntegData.fPhi[i];
         for (int j = DIM; j--; ){
-            umesh_[j] += fMesh->NodeVec()[fConnect[i]] -> getMeshVelocity(j) * shapeFi;
+            umesh_[j] += fMesh->NodeVec()[fGeoNodes[i]] -> getMeshVelocity(j) * shapeFi;
         }
     }
 
@@ -685,7 +693,8 @@ void ElementT<geoshape,compshape>::interpolateMeshVelocity(int &index, VecDouble
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolution(int &index, VecDouble &u_) {
     u_.setZero();
-    for (int i = compshape::NElNodes; i--; ){
+
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
@@ -696,12 +705,13 @@ void ElementT<geoshape,compshape>::interpolateSolution(int &index, VecDouble &u_
 template<class geoshape, class compshape>
 double ElementT<geoshape,compshape>::InterpolateVariable(VecDouble &nValues, int point) {
     double val = 0.;
-    fIntegData.fPhi.resize(compshape::NElNodes);
+    int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+    fIntegData.fPhi.resize(nshape);
     fIntegData.fPhi.setZero();
     fIntegData.fAdimCoord.resize(compshape::Dimension);
     for (int i=0; i<compshape::Dimension; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(point,i);
     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi);
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = nshape; i--; ){
         double shapeFi = fIntegData.fPhi[i];
         val += nValues[i] * shapeFi;
     }
@@ -712,7 +722,7 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolDTimeDerivatives() {
     fIntegData.fDSolDt.setZero();
     fIntegData.fDSolDDt.setZero();
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
@@ -726,7 +736,7 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDouble &du_ddt) {
     fIntegData.fDSolDt.setZero();
     fIntegData.fDSolDDt.setZero();
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
@@ -743,7 +753,7 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolution() {
     fIntegData.fSol.setZero();
     if (fIntegData.fSolPrev.size() != 0) fIntegData.fSolPrev.setZero();
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = fIntegData.fPhi[i];
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
@@ -758,9 +768,9 @@ void ElementT<geoshape,compshape>::interpolateSolution() {
     if (fWeakForm && !fWeakForm->GetHasMemory()) {
         const size_t n_state = fMesh->ConnectVec()[fConnect[0]]->GetNStateVariables();
 
-        fIntegData.fSolNodes.resize(compshape::NElNodes * n_state);
+        fIntegData.fSolNodes.resize(geoshape::NShape * n_state);
         fIntegData.fSolNodes.setZero();
-        for (int i = 0; i < compshape::NElNodes; i++){
+        for (int i = 0; i < geoshape::NShape; i++){
             for (int j = 0; j < n_state; j++ ){
                 fIntegData.fSolNodes[(n_state*i) + j] = fMesh->ConnectVec()[fConnect[i]]->GetSolution(j);
             }
@@ -771,7 +781,7 @@ void ElementT<geoshape,compshape>::interpolateSolution() {
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolution(VecDouble &phi, VecDouble &u_) {
     u_.setZero();
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = phi(i);
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
@@ -787,7 +797,7 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
     du_dx.setZero();    
     int DIM = compshape::Dimension;
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
@@ -801,7 +811,7 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolDerivatives(MatrixDouble &dphidx, MatrixDouble &du_dx) {
     du_dx.setZero();    
     int DIM = compshape::Dimension;
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = DIM; j--; ){
             for (int k = nstate; k--; ){
@@ -820,7 +830,7 @@ void ElementT<geoshape,compshape>::interpolateSolDerivatives() {
         fIntegData.fDSolDxPrev.setZero(); 
         flag = true;
     }     
-    for (int i = compshape::NElNodes; i--; ){
+    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
         for (int j = compshape::Dimension; j--; ){
             for (int k = nstate; k--; ){

@@ -2,7 +2,7 @@
 
 const int ShapeTriangleQua::Dimension;
 const int ShapeTriangleQua::NSides;
-const int ShapeTriangleQua::NElNodes;
+const int ShapeTriangleQua::NShape;
 const int ShapeTriangleQua::NCornerNodes;
 const ElementType ShapeTriangleQua::ElType;
 

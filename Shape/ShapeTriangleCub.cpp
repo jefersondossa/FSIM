@@ -2,7 +2,7 @@
 
 const int ShapeTriangleCub::Dimension;
 const int ShapeTriangleCub::NSides;
-const int ShapeTriangleCub::NElNodes;
+const int ShapeTriangleCub::NShape;
 const int ShapeTriangleCub::NCornerNodes;
 const ElementType ShapeTriangleCub::ElType;
 

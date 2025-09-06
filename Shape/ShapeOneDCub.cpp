@@ -2,7 +2,7 @@
 
 const int ShapeOneDCub::Dimension;
 const int ShapeOneDCub::NSides;
-const int ShapeOneDCub::NElNodes;
+const int ShapeOneDCub::NShape;
 const int ShapeOneDCub::NCornerNodes;
 const ElementType ShapeOneDCub::ElType;
 

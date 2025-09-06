@@ -108,7 +108,7 @@ public:
 
     void ComputeError(VecDouble &errors) override;
     
-    const int &NElNodes() override {return geoshape::NElNodes;}
+    const int &NElNodes() override {return geoshape::NShape;}
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(MatrixDouble &Stiffness) override;
@@ -118,6 +118,7 @@ public:
     void ComputeElContribution(std::vector<VecDouble> &Rhs) override;
 
     int NCornerNodes() override {return geoshape::NCornerNodes;}
+    int NSides() override {return compshape::NSides;}
 
     void setIntegPointWeightFunction() override;
 
@@ -126,7 +127,7 @@ public:
 
     VecDouble NodeCoord(int inode) override{
         VecDouble xnode(3);
-        MatrixDouble coords(3,geoshape::NElNodes);
+        MatrixDouble coords(3,geoshape::NShape);
         geoshape::getCoordinates(coords);
         for (int i = 0; i < 3; i++){
             xnode[i] = coords(i,inode);

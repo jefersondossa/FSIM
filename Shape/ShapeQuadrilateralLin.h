@@ -16,12 +16,15 @@ public:
     const static int NSides = 4;
 
     // Number of element nodes
-    const static int NElNodes = 4;
+    const static int NShape = 4;
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 4;
 
     const static ElementType ElType = ElementType::EQuadrilateral;
+    
+    static int NShapeFunctions(int side, int order){return NShape;};
+    static int NShapeFunctions(int order){return NShape;};
     
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 

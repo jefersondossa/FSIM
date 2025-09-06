@@ -68,21 +68,57 @@ void CompMesh::BuildMesh(){
 void CompMesh::BuildConnects(){
     int nconnects = 0;
 
-    if (fApproxType == ApproxType::EIsogeometric){
-        std::cout << "The Isogeometric Analysis is not implemented yet. Please choose another approximation type. \n";
-        PanicButton();
-    } else if (fApproxType == ApproxType::EHierarquic){
-        std::cout << "The Hierarquic basis functions are not implemented yet. Please choose another approximation type. \n";
-        PanicButton();
-    } else if (fApproxType == ApproxType::EIsoparametric){
-        int nconnects = NNodes();
+    switch (fApproxType)
+    {
+    case ApproxType::EHierarquic:
+        BuildHierarquicConnects();
+        break;
+    case ApproxType::EIsoparametric:
+        nconnects = NNodes();
         fConnectVector.resize(nconnects);
         for (int64_t i = 0; i < NNodes(); i++){
             fConnectVector[i] = new Connect(fNState,1,fOrder,i);
         }
-    } else {
+        break;
+    default:
         std::cout << "Unknown approximation type. Please check it. \n";
         PanicButton();
+        break;
+    }
+
+    
+}
+
+void CompMesh::BuildHierarquicConnects(){
+    int nconnects = 0;
+    fConnectVector.reserve(NNodes()+NElements());
+    std::map<int,int> node_to_connect;
+    std::map<int,int> edge_to_connect;
+    std::map<int,int> face_to_connect;
+    std::map<int,int> volume_to_connect;
+
+    for (auto iel = 0; iel < NElements(); iel++){
+        Element *el = fElementVector[iel];
+        VecInt &geoNodes = el->getGeometricNodes();
+        int ncorner = el->NCornerNodes();
+        int nsides = el->NSides();
+        VecInt connect(nsides);
+        connect.setZero();
+
+        //Start the connectivity with the corner nodes
+        for (int i = 0; i < ncorner; i++){
+            if (node_to_connect.find(geoNodes[i]) == node_to_connect.end()){
+                fConnectVector.push_back(new Connect(fNState,1,1,nconnects));
+                node_to_connect[geoNodes[i]] = nconnects;
+                nconnects++;
+            }
+            connect[i] = node_to_connect[geoNodes[i]];
+        }
+
+        //Create connects for the edges
+    
     }
     
+
+
 }

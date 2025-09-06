@@ -27,6 +27,7 @@ public:
 
     // Returns the number of shape functions associated with a side
     static int NShapeFunctions(int side, int order);
+    static int NShapeFunctions(int order){return -1;};
     
     // Returns the total number of shape functions
     static int NShapeFunctions(VecInt &orders);

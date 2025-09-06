@@ -59,8 +59,8 @@ void LinearAnalysis::Run(){
     Compute();
     std::clock_t t4 = std::clock();
     std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
-    // fGlobalMatrix->PrintMatrix();
-    // fGlobalMatrix->PrintRhs();
+    fGlobalMatrix->PrintMatrix();
+    fGlobalMatrix->PrintRhs();
     // fGlobalMatrix->PrintSolution();
     Solve();
     std::clock_t t5 = std::clock();

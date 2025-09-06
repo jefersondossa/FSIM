@@ -2,7 +2,7 @@
 
 const int ShapeTriangleLin::Dimension;
 const int ShapeTriangleLin::NSides;
-const int ShapeTriangleLin::NElNodes;
+const int ShapeTriangleLin::NShape;
 const int ShapeTriangleLin::NCornerNodes;
 const ElementType ShapeTriangleLin::ElType;
 

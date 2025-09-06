@@ -14,6 +14,8 @@ namespace GmshTools{
     /// @param cmesh Computational mesh
     void RenumberConnectivity(CompMesh * cmesh);
 
+    void BuildNeighbourInformation(CompMesh * cmesh);
+
     /** @brief Reads geometric mesh file from GMsh (.msh)
      * @param gmesh [output] Reference to a geometric mesh to be filled with elements from msh file
      * @param file_name Relative path to the .msh file you want to read
