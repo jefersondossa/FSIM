@@ -2,7 +2,7 @@
 
 const int ShapeTetrahedronLin::Dimension;
 const int ShapeTetrahedronLin::NSides;
-const int ShapeTetrahedronLin::NElNodes;
+const int ShapeTetrahedronLin::NShape;
 const int ShapeTetrahedronLin::NCornerNodes;
 const ElementType ShapeTetrahedronLin::ElType;
 

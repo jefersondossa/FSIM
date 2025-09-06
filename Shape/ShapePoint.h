@@ -16,13 +16,16 @@ public:
     const static int NSides = 1;
 
     // Number of element nodes
-    const static int NElNodes = 1;
+    const static int NShape = 1;
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 1;
 
     const static ElementType ElType = ElementType::EPoint;
 
+    static int NShapeFunctions(int side, int order){return NShape;};
+    static int NShapeFunctions(int order){return NShape;};
+    
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values

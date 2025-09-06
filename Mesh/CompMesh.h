@@ -149,6 +149,7 @@ public:
 
     void BuildMesh();
     void BuildConnects();
+    void BuildHierarquicConnects();
 };
 
 #endif

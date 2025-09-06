@@ -11,8 +11,9 @@ class CompMesh;
 class Element{
 protected:
     CompMesh *fMesh = nullptr;
-    VecInt        fConnect; //Velocity mesh connectivity 
-    int64_t       fIndex;             //Element index
+    VecInt        fConnect;  // element connectivity
+    VecInt        fGeoNodes; // geometric nodes  
+    int64_t       fIndex;    //Element index
 
     int nLocDOF = 0;
 
@@ -70,6 +71,14 @@ public:
     /// @return element connectivity
     VecInt &getConnectivity(){return fConnect;};
     
+    /// Sets the element geometric nodes
+    /// @param int* elenodes geometric Nodes
+    void setGeometricNodes(VecInt &geonodes){fGeoNodes = geonodes;};
+
+    /// GetGeometric nodes geometric nodes
+    /// @return element geonodes
+    VecInt &getGeometricNodes(){return fGeoNodes;};
+
     CompMesh* Mesh() {return fMesh;}
     
     void SetMesh(CompMesh* mesh){fMesh = mesh;}
@@ -155,6 +164,7 @@ public:
     }
 
     virtual int NCornerNodes() = 0;
+    virtual int NSides() = 0;
 
     double &GetIntPointDistFunction(int index){
         return  fIntegData.fDistFunction[index];

@@ -44,7 +44,7 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
         for (int j = 0; j < cmesh->NodeVec()[iNode] -> getNumberOfElements(); j++){
             int elem = cmesh->NodeVec()[iNode] -> getInverseIncidenceElement(j);
             if (!cmesh->ElementVec()[elem]) continue;
-            VecInt connec = cmesh->ElementVec()[elem] -> getConnectivity();
+            VecInt connec = cmesh->ElementVec()[elem] -> getGeometricNodes();
 
             // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
             bool flag = false;
@@ -102,18 +102,18 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     // Update connectivity
     for (int i = 0; i < cmesh->NElements(); i++){
         if (!cmesh->ElementVec()[i]) continue;
-        VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
+        VecInt connect = cmesh->ElementVec()[i] -> getGeometricNodes();
 
         //Reorder connectivity
         for (int k = 0; k < connect.size(); k++) connect[k] = iperm[connect[k]];
-        cmesh->ElementVec()[i] -> setConnectivity(connect);
+        cmesh->ElementVec()[i] -> setGeometricNodes(connect);
     }
     
     for (int i = 0; i < cmesh->NNodes(); i++) cmesh->NodeVec()[i] -> clearInverseIncidence();
 
     for (int i = 0; i < cmesh->NElements(); i++){
         if (!cmesh->ElementVec()[i]) continue;
-        VecInt connect = cmesh->ElementVec()[i] -> getConnectivity();
+        VecInt connect = cmesh->ElementVec()[i] -> getGeometricNodes();
 
         for (int k = 0; k < connect.size(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
     }
@@ -157,6 +157,60 @@ void GmshTools::RenumberConnectivity(CompMesh *cmesh){
     delete [] xadj;
     // Renumber nodes - end
 #endif
+
+}
+
+void GmshTools::BuildNeighbourInformation(CompMesh *cmesh){
+    // Renumber nodes - start
+
+    std::vector<int > neighborNodes;
+    int numNd = cmesh->NNodes();
+    
+    for (int iNode = 0; iNode < numNd; iNode++){
+        neighborNodes.reserve(cmesh->NodeVec()[iNode] -> getNumberOfElements()*3);
+        neighborNodes.push_back(iNode);
+
+        for (int j = 0; j < cmesh->NodeVec()[iNode] -> getNumberOfElements(); j++){
+            int elem = cmesh->NodeVec()[iNode] -> getInverseIncidenceElement(j);
+            if (!cmesh->ElementVec()[elem]) continue;
+            VecInt connec = cmesh->ElementVec()[elem] -> getGeometricNodes();
+
+            // std::cout << "COMM " << connec[0] << " " << connec[4] << std::endl;
+            bool flag = false;
+            for (int i = 0; i < connec.size(); i++){
+                for (int iNeig = 0; iNeig < neighborNodes.size(); iNeig++){
+                    if (connec[i] == neighborNodes[iNeig]){
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag == false) neighborNodes.push_back(connec[i]);
+                flag = false;
+            }
+        }
+        //Save nodal adjacency for domain partitioning
+        neighborNodes.clear();
+        neighborNodes.shrink_to_fit();
+    }
+    
+    for (int i = 0; i < cmesh->NNodes(); i++) cmesh->NodeVec()[i] -> clearInverseIncidence();
+
+    for (int i = 0; i < cmesh->NElements(); i++){
+        if (!cmesh->ElementVec()[i]) continue;
+        VecInt connect = cmesh->ElementVec()[i] -> getGeometricNodes();
+
+        for (int k = 0; k < connect.size(); k++) cmesh->NodeVec()[connect[k]] -> pushInverseIncidence(i);
+    }
+
+    for (int i = 0; i < cmesh->NNodes(); i++){
+        for (int j = 0; j < cmesh->NodeVec()[i] -> getNumberOfElements(); j++){
+            int elJ = cmesh->NodeVec()[i] -> getInverseIncidenceElement(j);
+            for (int k = 0; k <cmesh-> NodeVec()[i] -> getNumberOfElements(); k++)
+                cmesh->ElementVec()[elJ] -> pushNeighborElement(cmesh->NodeVec()[i] -> getInverseIncidenceElement(k)); 
+        }
+    }
+
+    for (int i = 0; i < cmesh->NElements(); i++) cmesh->ElementVec()[i] -> sortEraseNeighborElements();
 
 }
 
@@ -1136,8 +1190,11 @@ void GmshTools::Read(CompMesh& gmesh, const std::string& file_name){
     //     gmesh.ElementVec().end()
     // );
     // gmesh.ElementVec().shrink_to_fit();
-
+#ifdef HAS_METIS
     RenumberConnectivity(&gmesh);
+#else
+    BuildNeighbourInformation(&gmesh);
+#endif
     gmesh.BuildMesh();
 
     gmesh.part_elem= new int[gmesh.NElements()]();

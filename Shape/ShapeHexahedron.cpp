@@ -1,7 +1,7 @@
 #include "ShapeHexahedron.h"
 const int ShapeHexahedron::Dimension;
 const int ShapeHexahedron::NSides;
-const int ShapeHexahedron::NElNodes;
+const int ShapeHexahedron::NShape;
 const int ShapeHexahedron::NCornerNodes;
 const ElementType ShapeHexahedron::ElType;
 

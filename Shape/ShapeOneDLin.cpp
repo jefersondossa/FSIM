@@ -2,7 +2,7 @@
 
 const int ShapeOneDLin::Dimension;
 const int ShapeOneDLin::NSides;
-const int ShapeOneDLin::NElNodes;
+const int ShapeOneDLin::NShape;
 const int ShapeOneDLin::NCornerNodes;
 const ElementType ShapeOneDLin::ElType;
 

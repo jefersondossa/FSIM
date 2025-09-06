@@ -9,7 +9,8 @@
 
 {
 
-    CompMesh* cmesh = new CompMesh(); 
+    CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
+    cmesh->SetDefaultOrder(1);
 
     PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
     matelas->SetForcingFunction(forcing); 

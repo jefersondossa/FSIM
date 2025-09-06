@@ -2,7 +2,7 @@
 
 const int ShapeTetrahedronCub::Dimension;
 const int ShapeTetrahedronCub::NSides;
-const int ShapeTetrahedronCub::NElNodes;
+const int ShapeTetrahedronCub::NShape;
 const int ShapeTetrahedronCub::NCornerNodes;
 const ElementType ShapeTetrahedronCub::ElType;
 

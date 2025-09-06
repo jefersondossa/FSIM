@@ -2,7 +2,7 @@
 
 const int ShapeTetrahedronQua::Dimension;
 const int ShapeTetrahedronQua::NSides;
-const int ShapeTetrahedronQua::NElNodes;
+const int ShapeTetrahedronQua::NShape;
 const int ShapeTetrahedronQua::NCornerNodes;
 const ElementType ShapeTetrahedronQua::ElType;
 

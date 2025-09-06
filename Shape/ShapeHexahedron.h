@@ -15,12 +15,15 @@ public:
     const static int NSides = 8;
 
     // Number of element nodes
-    const static int NElNodes = 8;
+    const static int NShape = 8;
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 8;
 
     const static ElementType ElType = ElementType::EHexahedron;
+
+    static int NShapeFunctions(int side, int order){return NShape;};
+    static int NShapeFunctions(int order){return NShape;};
 
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
