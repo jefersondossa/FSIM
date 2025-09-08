@@ -36,7 +36,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
     std::vector<double> elemental_compliances;
     elemental_compliances.resize(model.NElements());
 
-    const double filter_radius = 0.1;
+    const double filter_radius = 0.05;
 
     while (vol_percentage > min_percentage_vol)
     {
