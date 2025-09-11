@@ -19,6 +19,9 @@ public:
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 8;
+    const static int NEdges = 12;
+    const static int NFaces = 6;
+    const static int NVolumes = 1;
 
     const static ElementType ElType = ElementType::EHexahedron;
 

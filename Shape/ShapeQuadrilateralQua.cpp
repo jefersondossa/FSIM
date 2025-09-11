@@ -4,6 +4,9 @@ const int ShapeQuadrilateralQua::Dimension;
 const int ShapeQuadrilateralQua::NSides;
 const int ShapeQuadrilateralQua::NShape;
 const int ShapeQuadrilateralQua::NCornerNodes;
+const int ShapeQuadrilateralQua::NEdges;
+const int ShapeQuadrilateralQua::NFaces;
+const int ShapeQuadrilateralQua::NVolumes;
 const ElementType ShapeQuadrilateralQua::ElType;
 
 void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi) {

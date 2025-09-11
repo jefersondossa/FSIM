@@ -3,6 +3,9 @@ const int ShapeHexahedron::Dimension;
 const int ShapeHexahedron::NSides;
 const int ShapeHexahedron::NShape;
 const int ShapeHexahedron::NCornerNodes;
+const int ShapeHexahedron::NEdges;
+const int ShapeHexahedron::NFaces;
+const int ShapeHexahedron::NVolumes;
 const ElementType ShapeHexahedron::ElType;
 
 void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi) {

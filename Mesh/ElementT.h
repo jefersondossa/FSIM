@@ -118,6 +118,9 @@ public:
     void ComputeElContribution(std::vector<VecDouble> &Rhs) override;
 
     int NCornerNodes() override {return geoshape::NCornerNodes;}
+    int NEdges() override {return geoshape::NEdges;}
+    int NFaces() override {return geoshape::NFaces;}
+    int NVolumes() override {return geoshape::NVolumes;}
     int NSides() override {return compshape::NSides;}
 
     void setIntegPointWeightFunction() override;

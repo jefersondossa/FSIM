@@ -20,6 +20,9 @@ public:
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 3;
+    const static int NEdges = 3;
+    const static int NFaces = 1;
+    const static int NVolumes = 0;
 
     const static ElementType ElType = ElementType::ETriangle;
 

@@ -4,6 +4,9 @@ const int ShapeOneDCub::Dimension;
 const int ShapeOneDCub::NSides;
 const int ShapeOneDCub::NShape;
 const int ShapeOneDCub::NCornerNodes;
+const int ShapeOneDCub::NEdges;
+const int ShapeOneDCub::NFaces;
+const int ShapeOneDCub::NVolumes;
 const ElementType ShapeOneDCub::ElType;
 
 void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi) {

@@ -5,7 +5,6 @@ const int HierarquicalOneD::NCornerNodes;
 const int HierarquicalOneD::NSides;
 const ElementType HierarquicalOneD::ElType;
 
-
 int HierarquicalOneD::NSideNodes(int side) {
     if(side < 0 || side > 2) PanicButton();
     static int nsidenodes[3] = {1, 1, 2};

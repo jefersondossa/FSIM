@@ -4,6 +4,9 @@ const int ShapeQuadrilateralLin::Dimension;
 const int ShapeQuadrilateralLin::NSides;
 const int ShapeQuadrilateralLin::NShape;
 const int ShapeQuadrilateralLin::NCornerNodes;
+const int ShapeQuadrilateralLin::NEdges;
+const int ShapeQuadrilateralLin::NFaces;
+const int ShapeQuadrilateralLin::NVolumes;
 const ElementType ShapeQuadrilateralLin::ElType;
 
 void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi) {

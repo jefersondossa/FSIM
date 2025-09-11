@@ -18,7 +18,17 @@ public:
     const static int NSides = 3;
 
     const static ElementType ElType = ElementType::EOneD;
-    
+
+    constexpr static int EdgePermutation[2][2] = {{0,1},{1,0}};
+
+    static VecInt GetEdgePermutation(int side){
+        if(side < 0 || side > 1) PanicButton();
+        VecInt perm(2);
+        perm[0] = EdgePermutation[side][0];
+        perm[1] = EdgePermutation[side][1];
+        return perm;
+    };
+
     // Number of nodes associated with a side
     static int NSideNodes(int side);
     

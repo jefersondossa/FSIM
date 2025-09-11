@@ -4,6 +4,9 @@ const int ShapeTetrahedronLin::Dimension;
 const int ShapeTetrahedronLin::NSides;
 const int ShapeTetrahedronLin::NShape;
 const int ShapeTetrahedronLin::NCornerNodes;
+const int ShapeTetrahedronLin::NEdges;
+const int ShapeTetrahedronLin::NFaces;
+const int ShapeTetrahedronLin::NVolumes;
 const ElementType ShapeTetrahedronLin::ElType;
 
 void ShapeTetrahedronLin::Shape(VecDouble &xi, VecDouble &phi) {

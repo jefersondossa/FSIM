@@ -4,6 +4,9 @@ const int ShapeTetrahedronCub::Dimension;
 const int ShapeTetrahedronCub::NSides;
 const int ShapeTetrahedronCub::NShape;
 const int ShapeTetrahedronCub::NCornerNodes;
+const int ShapeTetrahedronCub::NEdges;
+const int ShapeTetrahedronCub::NFaces;
+const int ShapeTetrahedronCub::NVolumes;
 const ElementType ShapeTetrahedronCub::ElType;
 
 void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi) {

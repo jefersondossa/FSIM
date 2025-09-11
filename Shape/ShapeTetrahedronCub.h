@@ -20,6 +20,9 @@ public:
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 4;
+    const static int NEdges = 6;
+    const static int NFaces = 4;
+    const static int NVolumes = 1;
 
     const static ElementType ElType = ElementType::ETetrahedron;
     

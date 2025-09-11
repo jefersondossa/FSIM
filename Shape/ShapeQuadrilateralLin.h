@@ -20,6 +20,10 @@ public:
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 4;
+    const static int NEdges = 4;
+    const static int NFaces = 1;
+    const static int NVolumes = 0;
+
 
     const static ElementType ElType = ElementType::EQuadrilateral;
     

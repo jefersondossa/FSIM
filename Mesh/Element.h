@@ -164,6 +164,9 @@ public:
     }
 
     virtual int NCornerNodes() = 0;
+    virtual int NEdges() = 0;
+    virtual int NFaces() = 0;
+    virtual int NVolumes() = 0;
     virtual int NSides() = 0;
 
     double &GetIntPointDistFunction(int index){

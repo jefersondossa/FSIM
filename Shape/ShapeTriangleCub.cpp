@@ -4,6 +4,9 @@ const int ShapeTriangleCub::Dimension;
 const int ShapeTriangleCub::NSides;
 const int ShapeTriangleCub::NShape;
 const int ShapeTriangleCub::NCornerNodes;
+const int ShapeTriangleCub::NEdges;
+const int ShapeTriangleCub::NFaces;
+const int ShapeTriangleCub::NVolumes;
 const ElementType ShapeTriangleCub::ElType;
 
 void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi) {

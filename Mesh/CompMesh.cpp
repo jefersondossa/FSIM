@@ -93,14 +93,20 @@ void CompMesh::BuildHierarquicConnects(){
     int nconnects = 0;
     fConnectVector.reserve(NNodes()+NElements());
     std::map<int,int> node_to_connect;
-    std::map<int,int> edge_to_connect;
-    std::map<int,int> face_to_connect;
-    std::map<int,int> volume_to_connect;
+    std::map<std::vector<int>,int> edge_to_connect;
+    std::map<std::vector<int>,int> face_to_connect;
+    std::map<std::vector<int>,int> volume_to_connect;
 
+    int edgecount = 0;
+    int facecount = 0;
+    int volumecount = 0;
     for (auto iel = 0; iel < NElements(); iel++){
         Element *el = fElementVector[iel];
         VecInt &geoNodes = el->getGeometricNodes();
         int ncorner = el->NCornerNodes();
+        int nedges = el->NEdges();
+        int nfaces = el->NFaces();
+        int nvolumes = el->NVolumes();
         int nsides = el->NSides();
         VecInt connect(nsides);
         connect.setZero();
@@ -110,13 +116,52 @@ void CompMesh::BuildHierarquicConnects(){
             if (node_to_connect.find(geoNodes[i]) == node_to_connect.end()){
                 fConnectVector.push_back(new Connect(fNState,1,1,nconnects));
                 node_to_connect[geoNodes[i]] = nconnects;
+                connect[i] = node_to_connect[geoNodes[i]];
                 nconnects++;
+            } else {
+                connect[i] = node_to_connect[geoNodes[i]];
             }
-            connect[i] = node_to_connect[geoNodes[i]];
+            
         }
 
         //Create connects for the edges
-    
+        for (int i = ncorner; i < ncorner + nedges; i++){
+            std::vector<int> sideNodes(2);
+            sideNodes[0] = geoNodes[0];
+            sideNodes[1] = geoNodes[1];
+
+            //Varrer todos os elementos vizinhos e verificar se os dois nos participam
+            //do vetor geo nodes. Se sim, então há um connect comum para os dois.
+            // Caso contrário, criar um novo connect de aresta.
+            int numNeig=el->getNumberOfNeighborElements(); 
+            for (int ineig = 0; ineig < numNeig; ineig++){
+                auto neig = el->getNeighborElement(ineig);
+
+                VecInt &neigNodes = fElementVector[ineig]->getGeometricNodes();
+                std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
+                if (neighNodesVec.find(sideNodes[0])!= neighNodesVec.end() &&
+                    neighNodesVec.find(sideNodes[1])!= neighNodesVec.end()){
+                    //achou um elemento vizinho que tem os dois nos da aresta
+                    //verificar se ja existe um connect para essa aresta
+                    if (edge_to_connect.find(sideNodes) == edge_to_connect.end()){
+                        fConnectVector.push_back(new Connect(fNState,1,fOrder,nconnects));
+                        edge_to_connect[sideNodes] = nconnects;
+                        connect[i] = nconnects;
+                        nconnects++;
+                    } else {
+                        //ja existe um connect para essa aresta
+                        connect[i] = edge_to_connect[sideNodes];
+                    }
+                }
+            }
+        }
+
+        //Create connects for the faces
+        for (int i=ncorner+nedges; i < ncorner+nedges+nfaces; i++){
+            PanicButton();
+        }
+        
+
     }
     
 
