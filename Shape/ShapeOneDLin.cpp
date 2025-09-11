@@ -4,6 +4,9 @@ const int ShapeOneDLin::Dimension;
 const int ShapeOneDLin::NSides;
 const int ShapeOneDLin::NShape;
 const int ShapeOneDLin::NCornerNodes;
+const int ShapeOneDLin::NEdges;
+const int ShapeOneDLin::NFaces;
+const int ShapeOneDLin::NVolumes;
 const ElementType ShapeOneDLin::ElType;
 
 void ShapeOneDLin::Shape(VecDouble &xi, VecDouble &phi) {

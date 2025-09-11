@@ -12,12 +12,13 @@
     CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
     cmesh->SetDefaultOrder(1);
 
-    PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
+    //PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
+    ElasticTruss * matelas = new ElasticTruss(4,2,10000.,1.);
     matelas->SetForcingFunction(forcing); 
     //BC
-    MatrixDouble val1(3,3);
+    MatrixDouble val1(2,2);
     val1.setZero();
-    VecDouble val2(3);
+    VecDouble val2(2);
     val2.setZero();
     //Left
     val2[0] = 1.;
@@ -39,7 +40,7 @@
    
     std::vector<std::string> ScalarNames, VectorNames;
     VectorNames = {"Displacement"};
-    ScalarNames = {"Rotation","BendingMoment","ShearForce"};
+    //ScalarNames = {"Rotation","BendingMoment","ShearForce"};
     an.Run();
 
     VTUGenerator::PrintResults(cmesh,"resultbeam",ScalarNames,VectorNames);    

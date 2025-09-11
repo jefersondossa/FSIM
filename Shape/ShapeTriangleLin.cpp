@@ -4,6 +4,9 @@ const int ShapeTriangleLin::Dimension;
 const int ShapeTriangleLin::NSides;
 const int ShapeTriangleLin::NShape;
 const int ShapeTriangleLin::NCornerNodes;
+const int ShapeTriangleLin::NEdges;
+const int ShapeTriangleLin::NFaces;
+const int ShapeTriangleLin::NVolumes;
 const ElementType ShapeTriangleLin::ElType;
 
 void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi) {

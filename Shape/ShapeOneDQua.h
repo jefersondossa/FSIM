@@ -20,6 +20,9 @@ public:
 
     // Number of corner (vertex) nodes
     const static int NCornerNodes = 2;
+    const static int NEdges = 1;
+    const static int NFaces = 0;
+    const static int NVolumes = 0;
 
     const static ElementType ElType = ElementType::EOneD;
 

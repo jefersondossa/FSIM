@@ -4,6 +4,9 @@ const int ShapeOneDQua::Dimension;
 const int ShapeOneDQua::NSides;
 const int ShapeOneDQua::NShape;
 const int ShapeOneDQua::NCornerNodes;
+const int ShapeOneDQua::NEdges;
+const int ShapeOneDQua::NFaces;
+const int ShapeOneDQua::NVolumes;
 const ElementType ShapeOneDQua::ElType;
 
 void ShapeOneDQua::Shape(VecDouble &xi, VecDouble &phi) {
