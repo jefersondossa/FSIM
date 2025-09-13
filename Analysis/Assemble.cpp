@@ -13,7 +13,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             if (!el) continue;
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
-            int nElNodes = el->NElNodes(); 
+            int nElNodes = el->NElNodes();
 
             if (nLocDOF == 0) continue;
 

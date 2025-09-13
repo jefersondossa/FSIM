@@ -10,7 +10,7 @@
 {
 
     CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(1);
+    cmesh->SetDefaultOrder(3);
 
     //PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
     ElasticTruss * matelas = new ElasticTruss(4,2,10000.,1.);
@@ -36,6 +36,8 @@
       
     GmshTools::Read(*cmesh,"../Beam.msh");
 
+
+    cmesh->Print("cmesh.txt");
     LinearAnalysis an(cmesh,SolverType::ELU);
    
     std::vector<std::string> ScalarNames, VectorNames;

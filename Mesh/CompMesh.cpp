@@ -1,6 +1,7 @@
 #include "CompMesh.h"
 #include "Connect.h"
 #include "TransientWeakForm.h"
+#include "HierarquicalOneD.h"
 
 GraphMesh* CompMesh::GetGraphMesh(){
     if (!fGraphMesh){
@@ -79,6 +80,11 @@ void CompMesh::BuildConnects(){
         for (int64_t i = 0; i < NNodes(); i++){
             fConnectVector[i] = new Connect(fNState,1,fOrder,i);
         }
+        for (int64_t iel=0; iel < NElements(); iel++){
+            Element *el = fElementVector[iel];
+            VecInt &geoNodes = el->getGeometricNodes();
+            el->setConnectivity(geoNodes);
+        }
         break;
     default:
         std::cout << "Unknown approximation type. Please check it. \n";
@@ -136,15 +142,18 @@ void CompMesh::BuildHierarquicConnects(){
             int numNeig=el->getNumberOfNeighborElements(); 
             for (int ineig = 0; ineig < numNeig; ineig++){
                 auto neig = el->getNeighborElement(ineig);
+                if (!fElementVector[neig]) continue;
+                if (fElementVector[neig]->Dimension() == 0) continue;
 
-                VecInt &neigNodes = fElementVector[ineig]->getGeometricNodes();
+                VecInt &neigNodes = fElementVector[neig]->getGeometricNodes();
                 std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
                 if (neighNodesVec.find(sideNodes[0])!= neighNodesVec.end() &&
                     neighNodesVec.find(sideNodes[1])!= neighNodesVec.end()){
                     //achou um elemento vizinho que tem os dois nos da aresta
                     //verificar se ja existe um connect para essa aresta
                     if (edge_to_connect.find(sideNodes) == edge_to_connect.end()){
-                        fConnectVector.push_back(new Connect(fNState,1,fOrder,nconnects));
+                        int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
+                        fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects));
                         edge_to_connect[sideNodes] = nconnects;
                         connect[i] = nconnects;
                         nconnects++;
@@ -160,10 +169,78 @@ void CompMesh::BuildHierarquicConnects(){
         for (int i=ncorner+nedges; i < ncorner+nedges+nfaces; i++){
             PanicButton();
         }
-        
+        el->setConnectivity(connect);
 
     }
     
 
 
+}
+
+void CompMesh::Print(std::string filename){
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    // Create a map for ApproxType to string conversion
+    static const std::map<ApproxType, std::string> approxTypeNames = {
+        {ApproxType::EIsoparametric, "Isoparametric"},
+        {ApproxType::EHierarquic, "Hierarquic"},
+        {ApproxType::EIsogeometric, "Isogeometric"}
+    };
+
+    file << "Computational Mesh Information\n";
+    file << "===============================\n";
+    file << "Number of Nodes: " << NNodes() << "\n";
+    file << "Number of Elements: " << NElements() << "\n";
+    file << "Number of Connects: " << NConnects() << "\n";
+    file << "Approximation Type: " << approxTypeNames.at(fApproxType) << "\n";
+    file << "Polynomial Order: " << fOrder << "\n";
+    file << "--------------------------------\n";
+
+
+    file << "Connects Information:\n";
+    for (int64_t i = 0; i < NConnects(); i++)
+    {
+        Connect *c = fConnectVector[i];
+        file << "Connect " << i << ": ";
+        file << "NState = " << c->GetNStateVariables() << ", ";
+        file << "NShapeFunctions = " << c->GetNShapeFunctions() << ", ";
+        file << "Order = " << c->GetOrder() << ", ";
+        file << "Solution = [";
+        VecDouble &sol = c->Solution();
+        for (size_t j = 0; j < sol.size(); j++) {
+            file << sol[j];
+            if (j < sol.size() - 1) file << ", ";
+        }
+        file << "]\n";
+    }
+
+    file << "--------------------------------\n";
+    file << "Elements Information:\n";
+    for (int64_t i = 0; i < NElements(); i++)
+    {
+        Element *el = fElementVector[i];
+        file << "Element " << i << ": ";
+        file << "Material ID = " << el->GetWeakForm()->Id() << ", ";
+        file << "Geometric Nodes = [";
+        VecInt &geoNodes = el->getGeometricNodes();
+        for (size_t j = 0; j < geoNodes.size(); j++) {
+            file << geoNodes[j];
+            if (j < geoNodes.size() - 1) file << ", ";
+        }
+        file << "], Connects = [";
+        VecInt &connects = el->getConnectivity();
+        for (size_t j = 0; j < connects.size(); j++) {
+            file << connects[j];
+            if (j < connects.size() - 1) file << ", ";
+        }
+        file << "]\n";
+    }  
+
+    
+
+    file.close();
 }

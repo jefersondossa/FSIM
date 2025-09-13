@@ -21,6 +21,7 @@ enum class ApproxType
     EIsogeometric = 2
 };
 
+
 class Element;
 class Analysis;
 class GraphMesh;
@@ -150,6 +151,11 @@ public:
     void BuildMesh();
     void BuildConnects();
     void BuildHierarquicConnects();
+
+    void Print(std::string filename);
+
+    
 };
+
 
 #endif
