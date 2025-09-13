@@ -15,16 +15,16 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes,
         double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
         double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
         double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
-        // fConstitutiveMatrix(0,0) = k;
-        // fConstitutiveMatrix(0,1) = k * fPoissonRatio;
-        // fConstitutiveMatrix(1,0) = k * fPoissonRatio;
-        // fConstitutiveMatrix(1,1) = k;
-        // fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
-        double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
-        fConstitutiveMatrix(0,0) = fConstitutiveMatrix(1,1) = 1. + alpha;
-        fConstitutiveMatrix(0,1) = fConstitutiveMatrix(1,0) = alpha;
-        fConstitutiveMatrix(2,2) = 0.5;
-        fConstitutiveMatrix *= 2.*fShearModulus;
+        fConstitutiveMatrix(0,0) = k;
+        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,1) = k;
+        fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;
+        // double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+        // fConstitutiveMatrix(0,0) = fConstitutiveMatrix(1,1) = 1. + alpha;
+        // fConstitutiveMatrix(0,1) = fConstitutiveMatrix(1,0) = alpha;
+        // fConstitutiveMatrix(2,2) = 0.5;
+        // fConstitutiveMatrix *= 2.*fShearModulus;
     } else {//Plane Strain Matrix
         double fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
         double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));

@@ -29,6 +29,14 @@ public:
         return fNState;
     };
 
+    int GetNShapeFunctions(){
+        return fNShape;
+    };
+
+    int GetOrder(){
+        return fOrder;
+    };
+
     /// @brief Sets the solution
     /// @param istate state variable index
     /// @param sol solution

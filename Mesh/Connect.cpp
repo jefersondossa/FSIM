@@ -6,22 +6,22 @@
 
 Connect::Connect(int nstate, int nshape, int order, int64_t index){
     fNState = nstate;
-    fNShape = nshape*fNState;
+    fNShape = nshape;
     fOrder = order;
     fIndex = index; 
 
-    fSolution.resize(fNShape);
+    fSolution.resize(fNShape*fNState);
     fSolution.setZero();
-    fPrevSolution.resize(fNShape);
+    fPrevSolution.resize(fNShape*fNState);
     fPrevSolution.setZero();
     // fDTimeSolution.resize(fNShape);
     // fDDTimeSolution.resize(fNShape);
 }
 
 void Connect::AllocateTimeDerivatives(){
-    fDTimeSolution.resize(fNShape);
+    fDTimeSolution.resize(fNShape*fNState);
     fDTimeSolution.setZero();
-    fDDTimeSolution.resize(fNShape);
+    fDDTimeSolution.resize(fNShape*fNState);
     fDDTimeSolution.setZero();
 }
 

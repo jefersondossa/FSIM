@@ -15,10 +15,7 @@ ElementT<geoshape,compshape>::ElementT(int64_t index, VecInt &geonodes, CompMesh
     fGeoNodes.resize(geoshape::NSides);
     fConnect.resize(compshape::NSides);
     fIndex = index;
-    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ) fGeoNodes[i] = geonodes[i];
-    if (this->Mesh()->GetApproxType() == ApproxType::EIsoparametric){
-        fConnect = fGeoNodes;
-    }
+    for (int i = geoshape::NSides; i--; ) fGeoNodes[i] = geonodes[i];
     DEG = fMesh->GetDefaultOrder();
     fWeakForm = wf;
     if (fWeakForm) nLocDOF = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()) * fWeakForm->NState();
