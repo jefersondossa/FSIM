@@ -9,7 +9,7 @@ const int ShapeTriangleCub::NFaces;
 const int ShapeTriangleCub::NVolumes;
 const ElementType ShapeTriangleCub::ElType;
 
-void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi) {
+void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -33,7 +33,7 @@ void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi) {
         
 }
 
-void ShapeTriangleCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void ShapeTriangleCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
     const double xsi3 = 1. - xsi1 - xsi2;

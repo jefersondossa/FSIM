@@ -45,17 +45,21 @@ public:
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values
-    static void Shape(VecDouble &xi, VecDouble &phi);
+    static void Shape(VecDouble &xi, VecDouble &phi, int order);
     
     /// Shapes the values of the shape funtion derivatives
     /// @param VecDouble Parametric coordinates 
     /// @param MatrixDouble Shape function derivatives values
-    static void ShapeGradient(VecDouble &xi, MatrixDouble &dphi);
+    static void ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order);
 
     /// Shapes the values of the shape funtion second derivatives    
     /// @param VecDouble Parametric coordinates 
     /// @param std::vector<MatrixDouble> Shape function second derivatives values
     static void ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi);  
+
+
+
+    static void Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
 };
 
 #endif

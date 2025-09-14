@@ -9,7 +9,7 @@ const int ShapeTetrahedronCub::NFaces;
 const int ShapeTetrahedronCub::NVolumes;
 const ElementType ShapeTetrahedronCub::ElType;
 
-void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi) {
+void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -49,7 +49,7 @@ void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi) {
 
 }
 
-void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];

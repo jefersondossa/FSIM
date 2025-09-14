@@ -11,6 +11,7 @@
 
     CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
     cmesh->SetDefaultOrder(3);
+    // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
 
     //PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
     ElasticTruss * matelas = new ElasticTruss(4,2,10000.,1.);

@@ -9,14 +9,14 @@ const int ShapeQuadrilateralLin::NFaces;
 const int ShapeQuadrilateralLin::NVolumes;
 const ElementType ShapeQuadrilateralLin::ElType;
 
-void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi) {
+void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[0] = 0.25 * (1 - xi[0])*(1 - xi[1]);
     phi[1] = 0.25 * (1 + xi[0])*(1 - xi[1]);
     phi[2] = 0.25 * (1 + xi[0])*(1 + xi[1]);
     phi[3] = 0.25 * (1 - xi[0])*(1 + xi[1]);
 }
 
-void ShapeQuadrilateralLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void ShapeQuadrilateralLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     dphi(0,0) = -0.25 * (1. - xi[1]);
     dphi(1,0) = -0.25 * (1. - xi[0]);
     dphi(0,1) =  0.25 * (1. - xi[1]);
