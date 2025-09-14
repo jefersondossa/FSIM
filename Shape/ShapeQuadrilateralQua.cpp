@@ -9,7 +9,7 @@ const int ShapeQuadrilateralQua::NFaces;
 const int ShapeQuadrilateralQua::NVolumes;
 const ElementType ShapeQuadrilateralQua::ElType;
 
-void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi) {
+void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
     
@@ -24,7 +24,7 @@ void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi) {
     phi[8] =  (1. - xsi1*xsi1) * (1. - xsi2*xsi2);
 }
 
-void ShapeQuadrilateralQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void ShapeQuadrilateralQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
 

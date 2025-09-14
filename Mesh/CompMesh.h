@@ -34,6 +34,9 @@ private:
     /// @brief Default polynomial order
     int fOrder = 1;
 
+    ///Number of DOFS
+    int64_t fNGlobalDOF = 0;
+
     /// Defines the vector of fluid nodes
     std::vector<Node *>       fNodeVector;
 
@@ -129,7 +132,7 @@ public:
     /// @brief returns the number of global DOF's
     /// @return number of DOF's
     int64_t NGlobalDOF() {
-        return fNodeVector.size()*fNState;
+        return fNGlobalDOF;
     }
 
     /// @brief Returns the graphycal mesh to print results.

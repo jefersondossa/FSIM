@@ -57,17 +57,30 @@ int HierarquicalOneD::NShapeFunctions(int side, int order){
 }
 
 
-void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi) {
+void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[0] = (1 - xi[0]) / 2.;
     phi[1] = (1 + xi[0]) / 2.;
 
-    
+    if (order > 2) {
+        MatrixDouble phih(order+1,1);
+        MatrixDouble dphih(1,order+1);
+        Chebyshev(xi[0],order+1,phih,dphih);
+        for(int i=2;i<order+1;i++) phi[i] = phih(i,0);
+    }
 
 }
 
-void HierarquicalOneD::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void HierarquicalOneD::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     dphi(0,0) = -0.5;
     dphi(0,1) =  0.5;
+
+    if (order > 2) {
+        MatrixDouble phih(order+1,1);
+        MatrixDouble dphih(1,order+1);
+        Chebyshev(xi[0],order+1,phih,dphih);
+        for(int i=2;i<order+1;i++) dphi(0,i) = dphih(0,i);
+    }
+
 }
 
 void HierarquicalOneD::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
@@ -75,7 +88,7 @@ void HierarquicalOneD::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &d
     return;
 }
 
-void Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalOneD::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();

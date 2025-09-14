@@ -27,18 +27,18 @@ public:
 
     const static ElementType ElType = ElementType::EQuadrilateral;
     
-    static int NShapeFunctions(int side, int order){return NShape;};
+    static int NShapeFunctions(int side, int order){return 1;};
     static int NShapeFunctions(int order){return NShape;};
     
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values
-    static void Shape(VecDouble &xi, VecDouble &phi);
+    static void Shape(VecDouble &xi, VecDouble &phi, int order = 1);
     
     /// Shapes the values of the shape funtion derivatives
     /// @param VecDouble Parametric coordinates 
     /// @param MatrixDouble Shape function derivatives values
-    static void ShapeGradient(VecDouble &xi, MatrixDouble &dphi);
+    static void ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order = 1);
 
     /// Shapes the values of the shape funtion second derivatives    
     /// @param VecDouble Parametric coordinates 

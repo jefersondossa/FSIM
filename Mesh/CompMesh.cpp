@@ -85,6 +85,7 @@ void CompMesh::BuildConnects(){
             VecInt &geoNodes = el->getGeometricNodes();
             el->setConnectivity(geoNodes);
         }
+        fNGlobalDOF = nconnects * fNState;
         break;
     default:
         std::cout << "Unknown approximation type. Please check it. \n";
@@ -173,6 +174,10 @@ void CompMesh::BuildHierarquicConnects(){
 
     }
     
+    fNGlobalDOF = 0;
+    for (int64_t i = 0; i < fConnectVector.size(); i++){
+        fNGlobalDOF += fConnectVector[i]->GetNShapeFunctions() * fNState;
+    }
 
 
 }

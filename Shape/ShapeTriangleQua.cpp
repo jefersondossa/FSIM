@@ -9,7 +9,7 @@ const int ShapeTriangleQua::NFaces;
 const int ShapeTriangleQua::NVolumes;
 const ElementType ShapeTriangleQua::ElType;
 
-void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi) {
+void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -28,7 +28,7 @@ void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi) {
 
 }
 
-void ShapeTriangleQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void ShapeTriangleQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
     const double xsi3 = 1. - xsi1 - xsi2;

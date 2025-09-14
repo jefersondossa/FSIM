@@ -8,7 +8,7 @@ const int ShapeHexahedron::NFaces;
 const int ShapeHexahedron::NVolumes;
 const ElementType ShapeHexahedron::ElType;
 
-void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi) {
+void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi, int order) {
     double xsi1 = xi[0];
     double xsi2 = xi[1];
     double xsi3 = xi[2];
@@ -23,7 +23,7 @@ void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi) {
     phi[7] = 0.125 * (1. - xsi1)*(1. + xsi2)*(1. + xsi3);
 }
 
-void ShapeHexahedron::ShapeGradient(VecDouble &xi, MatrixDouble &dphi) {
+void ShapeHexahedron::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
     const double xsi3 = xi[2];
