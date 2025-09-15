@@ -13,7 +13,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             if (!el) continue;
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
-            int nElNodes = el->NElNodes();
+            int nConnects = connec.size();
 
             if (nLocDOF == 0) continue;
 
@@ -26,23 +26,33 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
 
             //Disperse local contributions into the global matrix
             //Stiffness matrix
-            for (int i=0; i<nElNodes; i++){
+            for (int i=0; i<nConnects; i++){
                 int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
-                for (int j=0; j<nElNodes; j++){
+                int nshapei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNShapeFunctions();
+                if (nstatei*nshapei == 0) continue;
+                for (int j=0; j<nConnects; j++){
                     int nstatej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNStateVariables();
+                    int nshapej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNShapeFunctions();
+                    if (nstatej*nshapej == 0) continue;
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
-                            int64_t dof_i = startDOF + nstatei * connec[i] + istate;
-                            int64_t dof_j = startDOF + nstatej * connec[j] + jstate; 
-                            fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*i+istate,nstatej*j+jstate));
+                            for (int ishape = 0; ishape < nshapei; ishape++){
+                                for (int jshape = 0; jshape < nshapej; jshape++){
+                                    int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                                    int64_t dof_j = startDOF + nstatej * (connec[j]+jshape) + jstate; 
+                                    fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+ishape)+istate,nstatej*(j+jshape)+jstate)); 
+                                }
+                            } 
                         }
                     }
                 };
                 
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
-                    int64_t dof_i = startDOF + nstatei * connec[i] + istate;
-                    fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*i+istate]);
+                    for (int ishape = 0; ishape < nshapei; ishape++){
+                        int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                        fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*(i+ishape)+istate]);
+                    }
                 }
             };
         };
@@ -58,7 +68,7 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
-            int nElNodes = el->NElNodes(); 
+            int nConnects = connec.size();
 
             if (nLocDOF == 0) continue;
 
@@ -69,15 +79,23 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
 
             //Disperse local contributions into the global matrix
             //Stiffness matrix
-            for (int i=0; i<nElNodes; i++){
+            for (int i=0; i<nConnects; i++){
                 int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
-                for (int j=0; j<nElNodes; j++){
+                int nshapei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNShapeFunctions();
+                if (nstatei*nshapei == 0) continue;
+                for (int j=0; j<nConnects; j++){
                     int nstatej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNStateVariables();
+                    int nshapej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNShapeFunctions();
+                    if (nstatej*nshapej == 0) continue;
                     for (int istate = 0; istate < nstatei; istate++){
-                        for (int jstate = 0; jstate < nstatej; jstate++){
-                            int64_t dof_i = startDOF + nstatei * connec[i] + istate;
-                            int64_t dof_j = startDOF + nstatej * connec[j] + jstate; 
-                            fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*i+istate,nstatej*j+jstate));
+                        for (int ishape = 0; ishape < nshapei; ishape++){
+                            for (int jshape = 0; jshape < nshapej; jshape++){
+                                for (int jstate = 0; jstate < nstatej; jstate++){
+                                    int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                                    int64_t dof_j = startDOF + nstatej * (connec[j]+jshape) + jstate; 
+                                    fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+ishape)+istate,nstatej*(j+jshape)+jstate)); 
+                                }
+                            } 
                         }
                     }
                 };
@@ -93,7 +111,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             VecInt connec = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
-            int nElNodes = el->NElNodes(); 
+            int nConnects = connec.size();
 
             if (nLocDOF == 0) continue;
             VecDouble rhs(nLocDOF);
@@ -103,12 +121,16 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
         
             //Disperse local contributions into the global matrix
             //Stiffness matrix
-            for (int i=0; i<nElNodes; i++){
+            for (int i=0; i<nConnects; i++){
                 int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
+                int nshapei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNShapeFunctions();
+                if (nstatei*nshapei == 0) continue;
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
-                    int64_t dof_i = startDOF + nstatei * connec[i] + istate;
-                    fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*i+istate]);
+                    for (int ishape = 0; ishape < nshapei; ishape++){
+                        int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                        fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*i+istate]);
+                    }
                 }
             };
         };
@@ -122,6 +144,10 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
     // int rank=0;
     // MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 #endif
+
+    std::cout << "Needs refactor to account hierarquic elements..." << std::endl;
+    PanicButton();
+    
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
     int64_t GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();

@@ -22,7 +22,7 @@ typedef Eigen::VectorXd VecDouble;
 /// @brief Vector (1d tensor) of booleans
 typedef Eigen::Matrix<bool, Dynamic, 1>  VecBool;
 
-void PrintMathematica(MatrixDouble &mat);
-void PrintMathematica(VecDouble &vec);
+void PrintMathematica(MatrixDouble &mat, std::string name);
+void PrintMathematica(VecDouble &vec, std::string name);
 
 #endif
