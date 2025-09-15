@@ -69,6 +69,6 @@ void LinearAnalysis::Run(){
     LinearAnalysis::UpdateSolution();
     // fGlobalMatrix->PrintMatrix();
     // fGlobalMatrix->PrintRhs();
-    // fGlobalMatrix->PrintSolution();
+    fGlobalMatrix->PrintSolution();
 };
 

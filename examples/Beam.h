@@ -4,7 +4,7 @@
     auto forcing = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[1] = -1;
+    force[0] = -1;
 };
 
 {
@@ -13,22 +13,20 @@
     cmesh->SetDefaultOrder(3);
     // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
 
-    //PositionalFrame2D * matelas = new PositionalFrame2D(4,1.,1.,1.);
-    ElasticTruss * matelas = new ElasticTruss(4,2,10000.,1.);
+    Poisson * matelas = new Poisson(4,1,1);
     matelas->SetForcingFunction(forcing); 
     //BC
-    MatrixDouble val1(2,2);
+    MatrixDouble val1(1,1);
     val1.setZero();
-    VecDouble val2(2);
+    VecDouble val2(1);
     val2.setZero();
     //Left
-    val2[0] = 1.;
-    val2[1] = 1.;
-    L2Projection * matbc1 = new L2Projection(2,1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    val2[0] = 0.;
+    L2Projection * matbc1 = new L2Projection(2,1,BoundaryConditionType::kDirichlet,val1,val2);
 
     val2[0] = 0.;
     //Right
-    L2Projection * matbc3 = new L2Projection(3,1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    L2Projection * matbc3 = new L2Projection(3,1,BoundaryConditionType::kDirichlet,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc3);
@@ -42,8 +40,8 @@
     LinearAnalysis an(cmesh,SolverType::ELU);
    
     std::vector<std::string> ScalarNames, VectorNames;
-    VectorNames = {"Displacement"};
-    //ScalarNames = {"Rotation","BendingMoment","ShearForce"};
+    // VectorNames = {"Solution"};
+    ScalarNames = {"Solution"};
     an.Run();
 
     VTUGenerator::PrintResults(cmesh,"resultbeam",ScalarNames,VectorNames);    
