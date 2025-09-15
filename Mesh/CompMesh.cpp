@@ -97,6 +97,14 @@ void CompMesh::BuildConnects(){
 }
 
 void CompMesh::BuildHierarquicConnects(){
+
+    // TODO: Decidir como os connects serão criados. Uma opção é criar os connects
+    // de nós primeiro e depois os demais. Isso faz com que a banda da matriz aumente,
+    // mas possibilita que não sejam realizadas mudanças na implementação da impressão dos
+    // resultados. Outra opção é sempre criar uma graph mesh, que teria conectividade
+    // própria e não necessariamente coincidente com a do comp mesh. Isso pode ser mais trabalhoso
+    // para implementar, mas manteria a banda da matriz menor.
+
     int nconnects = 0;
     fConnectVector.reserve(NNodes()+NElements());
     std::map<int,int> node_to_connect;

@@ -213,7 +213,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
     
     for (int i=0; i<cmesh->NElements(); i++){
         auto connec=cmesh->ElementVec()[i]->getConnectivity();
-        for (int k = 0; k < connec.size(); k++)
+        for (int k = 0; k < cmesh->ElementVec()[i]->NElNodes(); k++)
         {
             output_v << connec[k] << " ";
         }
@@ -227,7 +227,7 @@ void VTUGenerator::PrintResults(CompMesh *cmesh, std::string filename, std::vect
     
     int aux = 0;
     for (int i=0; i<cmesh->NElements(); i++){
-        aux += cmesh->ElementVec()[i]->getConnectivity().size();
+        aux += cmesh->ElementVec()[i]->NElNodes();
         output_v << aux << std::endl;
     };
     output_v << "      </DataArray>" << std::endl;
@@ -408,7 +408,7 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
     
     for (int i=0; i<arl->MeshVec()[0]->NElements(); i++){
         auto connec=arl->MeshVec()[0]->ElementVec()[i]->getConnectivity();
-        for (int k = 0; k < connec.size(); k++)
+        for (int k = 0; k < arl->MeshVec()[0]->ElementVec()[i]->NElNodes(); k++)
         {
             output_v << connec[k] << " ";
         }
@@ -422,7 +422,7 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
     
     int aux = 0;
     for (int i=0; i<arl->MeshVec()[0]->NElements(); i++){
-        aux += arl->MeshVec()[0]->ElementVec()[i]->getConnectivity().size();
+        aux += arl->MeshVec()[0]->ElementVec()[i]->NElNodes();
         output_v << aux << std::endl;
     };
     output_v << "      </DataArray>" << std::endl;
@@ -514,7 +514,7 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
     
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
         auto connec=arl->MeshVec()[1]->ElementVec()[i]->getConnectivity();
-        for (int k = 0; k < connec.size(); k++)
+        for (int k = 0; k < arl->MeshVec()[1]->ElementVec()[i]->NElNodes(); k++)
         {
             output_fine << connec[k] << " ";
         }
@@ -528,7 +528,7 @@ void VTUGenerator::PrintResults(Arlequin *arl, std::string filename){
     
     aux = 0;
     for (int i=0; i<arl->MeshVec()[1]->NElements(); i++){
-        aux += arl->MeshVec()[1]->ElementVec()[i]->getConnectivity().size();
+        aux += arl->MeshVec()[1]->ElementVec()[i]->NElNodes();
         output_fine << aux << std::endl;
     };
     output_fine << "      </DataArray>" << std::endl;
