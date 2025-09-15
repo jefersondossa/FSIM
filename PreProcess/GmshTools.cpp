@@ -1326,11 +1326,44 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         {
             // Quadratic Line
             if (plasticmaterial){
-                gel = new ElementWithMem<ShapeOneDQua,ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementWithMem<ShapeOneDQua,ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementWithMem<ShapeOneDQua,HierarquicalOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else if (transientmaterial){
-                gel = new ElementTransient<ShapeOneDQua,ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementTransient<ShapeOneDQua,ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementTransient<ShapeOneDQua,HierarquicalOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else {
-                gel = new ElementT<ShapeOneDQua,ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementT<ShapeOneDQua,ShapeOneDQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementT<ShapeOneDQua,HierarquicalOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }          
             }
             gel->PrintType() = 21;           
             break;
@@ -1391,11 +1424,44 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         {
             // Cubic Line
             if (plasticmaterial){
-                gel = new ElementWithMem<ShapeOneDCub,ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementWithMem<ShapeOneDCub,ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementWithMem<ShapeOneDCub,HierarquicalOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else if (transientmaterial){
-                gel = new ElementTransient<ShapeOneDCub,ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementTransient<ShapeOneDCub,ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementTransient<ShapeOneDCub,HierarquicalOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else {
-                gel = new ElementT<ShapeOneDCub,ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementT<ShapeOneDCub,ShapeOneDCub>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementT<ShapeOneDCub,HierarquicalOneD>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }          
             }
             gel->PrintType() = 35;           
             break;

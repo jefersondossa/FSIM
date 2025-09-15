@@ -983,11 +983,11 @@ void ElementT<geoshape,compshape>::ComputeElContribution(MatrixDouble &jacobianN
         index++;        
     };  
 
-    // std::cout << std::scientific << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << std::scientific << "Rhs \n" << rhsVector << std::endl;
+    PrintMathematica(jacobianNRMatrix, "Stiffness");
+    PrintMathematica(rhsVector, "Rhs");
     // Set stiffness matrix to cache.
-    fIntegData.fStiffnessMatrix = jacobianNRMatrix;
-    fIntegData.fRHS = rhsVector;
+    // fIntegData.fStiffnessMatrix = jacobianNRMatrix;
+    // fIntegData.fRHS = rhsVector;
 
     return;
 };
