@@ -785,7 +785,7 @@
     fineModel.setProblemType(ProblemType::ENavierStokes);
 
 
-    for (int i = 0; i < fineModel.numNodesFine; i++){
+    for (int i = 0; i < fineModel.numNodes; i++){
         VecDouble xn(2);
         VecDouble xi = fineModel.nodes_[i] -> getInitialCoordinates();       
         VecDouble x = fineModel.nodes_[i] -> getCoordinates();       

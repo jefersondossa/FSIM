@@ -4068,14 +4068,14 @@ void Arlequin<DIM,DEG>::stabilizeArlequinNew(VecDouble &Ml1, VecDouble &t1,
 
     
 
-    tArleq = 10.*pow((1/(tauA*tauA) + 1/(tauB*tauB) + 1/(tauC*tauC) + 1/(tauD*tauD)), -0.5);
+    tArleq = 1000.*pow((1/(tauA*tauA) + 1/(tauB*tauB) + 1/(tauC*tauC) + 1/(tauD*tauD)), -0.5);
     // std::cout << "Ml1 " << Ml1 << std::endl;
     // std::cout << "t1 " << t1 << std::endl;
     // std::cout << "j1 " << j1 << std::endl;
     // std::cout << "k1 " << k1 << std::endl;
     // std::cout << "p1 " << p1 << std::endl;
     // std::cout << "tauA = " << tauA << " , tauB = " << tauB << " , tauC = " << tauC << " , tauD = " << tauD << std::endl;
-    // std::cout << "tArleq = " << tArleq << std::endl;
+    std::cout << "tArleq = " << tArleq << std::endl;
 };
 
 
