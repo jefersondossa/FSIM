@@ -74,7 +74,7 @@ public:
     PetscScalar       val;
     PetscLogDouble bytes = 0;
 
-private:
+public:
     int numElemCoarse;
     int numElemFine;
     int numBoundElemCoarse;

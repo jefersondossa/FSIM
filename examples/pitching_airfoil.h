@@ -97,11 +97,11 @@
         PlaneSurface* s008 = fluid1 -> addPlaneSurface({ll008});
         PlaneSurface* s009 = fluid1 -> addPlaneSurface({ll009});
 
-        double prog1 = 1.07;
-        double prog2 = 1.1;
+        double prog1 = 1.03;
+        double prog2 = 1.05;
 
         fluid1 -> transfiniteLine({l001}, h1, 1/prog2);
-        fluid1 -> transfiniteLine({l002}, 4);
+        fluid1 -> transfiniteLine({l002}, 7);
         fluid1 -> transfiniteLine({l003}, h3, prog1);
         fluid1 -> transfiniteLine({l004}, v1, 1/prog1);
         fluid1 -> transfiniteLine({l005}, v1, 1/prog1);
@@ -109,20 +109,20 @@
         fluid1 -> transfiniteLine({l007}, v1, 1/prog1);
         fluid1 -> transfiniteLine({l008}, h1, 1/prog2);
         fluid1 -> transfiniteLine({l009}, h2);
-        fluid1 -> transfiniteLine({l010}, 50, 1.04);
-        fluid1 -> transfiniteLine({l011}, 4);
+        fluid1 -> transfiniteLine({l010}, 80, 1.02);
+        fluid1 -> transfiniteLine({l011}, 7);
         fluid1 -> transfiniteLine({l012}, v2);
         fluid1 -> transfiniteLine({l013}, v2);
-        fluid1 -> transfiniteLine({l014}, 4);
+        fluid1 -> transfiniteLine({l014}, 7);
         fluid1 -> transfiniteLine({l015}, h1, 1/prog2);
         fluid1 -> transfiniteLine({l016}, h2);
-        fluid1 -> transfiniteLine({l017}, 50, 1.04);
+        fluid1 -> transfiniteLine({l017}, 80, 1.02);
         fluid1 -> transfiniteLine({l018}, v1, prog1);
         fluid1 -> transfiniteLine({l019}, v1, prog1);
         fluid1 -> transfiniteLine({l020}, v1, prog1);
         fluid1 -> transfiniteLine({l021}, v1, prog1);
         fluid1 -> transfiniteLine({l022}, h1, 1/prog2); 
-        fluid1 -> transfiniteLine({l023}, 4);
+        fluid1 -> transfiniteLine({l023}, 7);
         fluid1 -> transfiniteLine({l024}, h3, prog1);
     
         // fluid1 -> transfiniteSurface({s001}, "Alternated", {p001,p002,p006,p005});
@@ -756,7 +756,7 @@
   
         FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s20,s21,s22,s23 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh(T3, DELAUNAY, "coarse", "", false, true);
+        problem -> generateMesh(T3, DELAUNAY, "coarse", "", true, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
@@ -795,6 +795,25 @@
 
     bool noPitch=true;
     if (noPitch) {
+        for (int i = 0; i < arlequinProblem.numNodesFine; i++){
+            VecDouble xn(2);
+            VecDouble xi = arlequinProblem.fineModel.nodes_[i] -> getInitialCoordinates();       
+            VecDouble x = arlequinProblem.fineModel.nodes_[i] -> getCoordinates();       
+
+            double a = -20 * M_PI / 180 + 10 * M_PI / 180 * std::cos(2.*M_PI*0);// + 10 * M_PI / 180;
+
+            // std::cout << " AAA " << a << std::endl;
+
+            xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
+            xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
+
+            arlequinProblem.fineModel.nodes_[i] -> setPreviousCoordinates(0,x[0]);
+            arlequinProblem.fineModel.nodes_[i] -> setPreviousCoordinates(1,x[1]);
+
+            arlequinProblem.fineModel.nodes_[i] -> setCoordinates(xn);
+        };
+
+
         arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1);
     } else {
         arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1);
