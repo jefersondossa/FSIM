@@ -1,7 +1,7 @@
 
     // Defines the problem dimension
     const int dimension = 2;
-    const int degree = 1;
+    const int degree = 2;
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
@@ -161,11 +161,11 @@
   
         FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s20,s21,s22,s23 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh(T3, DELAUNAY, "coarse", "", false, true);
+        problem -> generateMesh(T6, DELAUNAY, "coarse", "", false, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T3, DELAUNAY, "fine", "", false, true);
+        problem2 -> generateMesh(T6, DELAUNAY, "fine", "", false, true);
 
         //problem -> readInput("exemplo.msh",0);
 	};
