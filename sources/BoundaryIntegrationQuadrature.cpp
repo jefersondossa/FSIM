@@ -142,3 +142,14 @@ void BoundaryIntegQuadrature<3,2>::setQuadrature(){
 
     return;
 }
+
+
+template<>
+void BoundaryIntegQuadrature<2,3>::setQuadrature(){
+
+}
+
+template<>
+void BoundaryIntegQuadrature<3,3>::setQuadrature(){
+
+}

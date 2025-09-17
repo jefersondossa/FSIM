@@ -850,7 +850,7 @@ void Fluid<2,2>::dragAndLiftCoefficients(std::ofstream& dragLift){
             if (boundary_[jel] -> getBoundaryGroup() == dragAndLiftBoundary[i]){
                 //std::cout << "AQUI " << numberOfLines<< " " << i << " " << dragAndLiftBoundary[i] << std::endl;
                 int iel = boundary_[jel] -> getElement();
-                // elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
+                elements_[iel] -> computeDragAndLiftForces(pDForce, pLForce, fDForce, fLForce, dForce, lForce, aux_Mom, aux_Per);
                 // elements_[iel] -> computeSeparationAngle();
             };
         };
