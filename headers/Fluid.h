@@ -59,7 +59,7 @@ public:
     /// Defines the vector of fluid boundaries mesh nodes
     std::vector<Boundaries *> boundary_;
 
-private:
+public:
     //FLUID VARIABLES
     std::string inputFile; //Fluid input file
     int numElem;           //Number of elements in fluid mesh 

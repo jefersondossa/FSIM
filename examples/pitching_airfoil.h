@@ -1,7 +1,7 @@
 
     // Defines the problem dimension
     const int dimension = 2;
-    const int degree = 1;
+    const int degree = 2;
 
     //Type definition
     typedef Fluid<dimension,degree>         FluidModel;
@@ -31,8 +31,8 @@
         double y3 = 0.85;
         double y4 = 10;
     
-        double h1 = 25; double h2 = 51; double h3 = 41;
-        double v1 = 25; double v2 = 29;
+        double h1 = 13; double h2 = 25; double h3 = 20;
+        double v1 = 13; double v2 = 15;
 
         Point* p001 = fluid1 -> addPoint({x1,y1},0.5,false);
         Point* p002 = fluid1 -> addPoint({x2,y1},0.5,false);
@@ -97,11 +97,11 @@
         PlaneSurface* s008 = fluid1 -> addPlaneSurface({ll008});
         PlaneSurface* s009 = fluid1 -> addPlaneSurface({ll009});
 
-        double prog1 = 1.03;
-        double prog2 = 1.05;
+        double prog1 = 1.07;
+        double prog2 = 1.1;
 
         fluid1 -> transfiniteLine({l001}, h1, 1/prog2);
-        fluid1 -> transfiniteLine({l002}, 7);
+        fluid1 -> transfiniteLine({l002}, 4);
         fluid1 -> transfiniteLine({l003}, h3, prog1);
         fluid1 -> transfiniteLine({l004}, v1, 1/prog1);
         fluid1 -> transfiniteLine({l005}, v1, 1/prog1);
@@ -109,20 +109,20 @@
         fluid1 -> transfiniteLine({l007}, v1, 1/prog1);
         fluid1 -> transfiniteLine({l008}, h1, 1/prog2);
         fluid1 -> transfiniteLine({l009}, h2);
-        fluid1 -> transfiniteLine({l010}, 80, 1.02);
-        fluid1 -> transfiniteLine({l011}, 7);
+        fluid1 -> transfiniteLine({l010}, 50, 1.04);
+        fluid1 -> transfiniteLine({l011}, 4);
         fluid1 -> transfiniteLine({l012}, v2);
         fluid1 -> transfiniteLine({l013}, v2);
-        fluid1 -> transfiniteLine({l014}, 7);
+        fluid1 -> transfiniteLine({l014}, 4);
         fluid1 -> transfiniteLine({l015}, h1, 1/prog2);
         fluid1 -> transfiniteLine({l016}, h2);
-        fluid1 -> transfiniteLine({l017}, 80, 1.02);
+        fluid1 -> transfiniteLine({l017}, 50, 1.04);
         fluid1 -> transfiniteLine({l018}, v1, prog1);
         fluid1 -> transfiniteLine({l019}, v1, prog1);
         fluid1 -> transfiniteLine({l020}, v1, prog1);
         fluid1 -> transfiniteLine({l021}, v1, prog1);
         fluid1 -> transfiniteLine({l022}, h1, 1/prog2); 
-        fluid1 -> transfiniteLine({l023}, 7);
+        fluid1 -> transfiniteLine({l023}, 4);
         fluid1 -> transfiniteLine({l024}, h3, prog1);
     
         // fluid1 -> transfiniteSurface({s001}, "Alternated", {p001,p002,p006,p005});
@@ -166,7 +166,7 @@
         
         // Fine
         Geometry* fluid2 = new Geometry(1);
-        double elSize = 1.e-2;
+        double elSize = 2.e-2;
 
         Point* p1001 = fluid2 -> addPoint({1.000000000000000E+00,0.000000000000000E+00},elSize,false);
         Point* p1002 = fluid2 -> addPoint({9.970300197601318E-01,-4.207300080452114E-04},elSize,false);
@@ -620,9 +620,9 @@
         LineLoop* ll1003 = fluid2 -> addLineLoop({ l1011 -> operator-(), l1007 -> operator-(), l1012, l1003 });
         LineLoop* ll1004 = fluid2 -> addLineLoop({ l1012 -> operator-(), l1008 -> operator-(), l1013, l1004 });
 
-        double elSize2 = 0.075/2.;
-        double elSize3 = 0.03/2.;
-        double elSize4 = 0.075/2.;
+        double elSize2 = 0.075;
+        double elSize3 = 0.03;
+        double elSize4 = 0.075;
 
         Point* p1386 = fluid2 -> addPoint({1.25,0.0},elSize2,false);
         Point* p1387 = fluid2 -> addPoint({.4,0.},elSize2,false);
@@ -671,7 +671,7 @@
         
 
         //Transfinite lines 
-        int t1 = 40; int t2 = 130; int t3 = 70; int t4 = 7;
+        int t1 = 20; int t2 = 65; int t3 = 35; int t4 = 4;
         //corners
         fluid2 -> transfiniteLine({ l1001 }, t2, 1.02);
         fluid2 -> transfiniteLine({ l1002 -> operator-()}, t3, 1.05);
@@ -694,8 +694,8 @@
         // fluid2 -> transfiniteLine({ l1017 }, r2);
         // fluid2 -> transfiniteLine({ l1018 }, r2);
         // fluid2 -> transfiniteLine({ l1019 }, r2);
-        fluid2 -> transfiniteLine({ l1020 }, 50,1.03);
-        fluid2 -> transfiniteLine({ l1021 }, 30,1.03);
+        fluid2 -> transfiniteLine({ l1020 }, 25,1.03);
+        fluid2 -> transfiniteLine({ l1021 }, 15,1.03);
 
         PlaneSurface* s1001 = fluid2 -> addPlaneSurface({ll1001});
         PlaneSurface* s1002 = fluid2 -> addPlaneSurface({ll1002});
@@ -756,11 +756,11 @@
   
         FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s20,s21,s22,s23 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem -> generateMesh(T3, DELAUNAY, "coarse", "", true, true);
+        problem -> generateMesh(T6, DELAUNAY, "coarse", "", false, true);
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T3, DELAUNAY, "fine", "", false, true);
+        problem2 -> generateMesh(T6, DELAUNAY, "fine", "", false, true);
 
         //problem -> readInput("exemplo.msh",0);
 	};
@@ -784,6 +784,25 @@
     coarseModel.setProblemType(ProblemType::ENavierStokes);
     fineModel.setProblemType(ProblemType::ENavierStokes);
 
+
+    for (int i = 0; i < fineModel.numNodesFine; i++){
+        VecDouble xn(2);
+        VecDouble xi = fineModel.nodes_[i] -> getInitialCoordinates();       
+        VecDouble x = fineModel.nodes_[i] -> getCoordinates();       
+
+        double a = -20 * M_PI / 180 + 10 * M_PI / 180 * std::cos(2.*M_PI*0);// + 10 * M_PI / 180;
+
+        // std::cout << " AAA " << a << std::endl;
+
+        xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
+        xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
+
+        fineModel.nodes_[i] -> setPreviousCoordinates(0,x[0]);
+        fineModel.nodes_[i] -> setPreviousCoordinates(1,x[1]);
+
+        fineModel.nodes_[i] -> setCoordinates(xn);
+    };
+
     arlequinProblem.setArlequinStabilization(ArlequinStabType::EOption2);
     arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
 
@@ -795,25 +814,6 @@
 
     bool noPitch=true;
     if (noPitch) {
-        for (int i = 0; i < arlequinProblem.numNodesFine; i++){
-            VecDouble xn(2);
-            VecDouble xi = arlequinProblem.fineModel.nodes_[i] -> getInitialCoordinates();       
-            VecDouble x = arlequinProblem.fineModel.nodes_[i] -> getCoordinates();       
-
-            double a = -20 * M_PI / 180 + 10 * M_PI / 180 * std::cos(2.*M_PI*0);// + 10 * M_PI / 180;
-
-            // std::cout << " AAA " << a << std::endl;
-
-            xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
-            xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
-
-            arlequinProblem.fineModel.nodes_[i] -> setPreviousCoordinates(0,x[0]);
-            arlequinProblem.fineModel.nodes_[i] -> setPreviousCoordinates(1,x[1]);
-
-            arlequinProblem.fineModel.nodes_[i] -> setCoordinates(xn);
-        };
-
-
         arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1);
     } else {
         arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1);

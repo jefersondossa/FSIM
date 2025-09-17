@@ -486,7 +486,7 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
         }; //
         // if(dist < 0) dist = 0;
         // dist = x[0];
-        (*nodesFine_)[ino] -> setDistFunction(-dist);
+        (*nodesFine_)[ino] -> setDistFunction(dist);
      };
 
     //Coarse mesh
@@ -573,10 +573,10 @@ void Arlequin<DIM,DEG>::setSignaledDistance(){
         }; //
     
         if (fabs((*nodesCoarse_)[ino] -> getDistFunction()) < 1.e-2){
-            (*nodesCoarse_)[ino] -> setDistFunction(-dist); 
+            (*nodesCoarse_)[ino] -> setDistFunction(dist); 
         };
         // dist = x[0] - 0.5;
-        (*nodesCoarse_)[ino] -> setDistFunction(-dist); 
+        (*nodesCoarse_)[ino] -> setDistFunction(dist); 
      };
 
 
