@@ -219,6 +219,9 @@ public:
                            MatrixDouble &E, VecDouble &b0, 
                            VecDouble &b1, double &tArlq0, double &tArlq1);
 
+    void stabilizeArlequinNew(VecDouble &Ml1, VecDouble &t1, 
+                             VecDouble &j1, VecDouble &k1, VecDouble &p1, double &tArleq);
+
 };
 
 

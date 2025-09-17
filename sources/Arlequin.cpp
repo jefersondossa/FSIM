@@ -135,19 +135,19 @@ void Arlequin<DIM,DEG>::searchNodeCorrespondence(VecDouble &x,std::vector<Nodes 
     } else {
 
         int nEl;
-        if (iTimeStep == 0){
+        // if (iTimeStep < 2){
             nEl = numElem;
-        } else {
-            nEl = elements[elSearch] -> getNumberOfNeighborElements(); 
-        }   
+        // } else {
+        //     nEl = elements[elSearch] -> getNumberOfNeighborElements(); 
+        // }   
 
         for (int jel = 0; jel < nEl; jel++){
 
-            if (iTimeStep == 0){
+            // if (iTimeStep < 2){
                 connec = elements[jel] -> getConnectivity();
-            } else {
-                connec = elements[elements[elSearch] -> getNeighborElement(jel)] -> getConnectivity();
-            }   
+            // } else {
+            //     connec = elements[elements[elSearch] -> getNeighborElement(jel)] -> getConnectivity();
+            // }   
 
             //get boxes information        
             XK = elements[jel] -> getXIntersectionParameter();
@@ -265,7 +265,11 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
         // std::cout << "CORRESP " << elCorr << " " << corresp.first << std::endl 
                   // << xsiCorr[0] << " " << xsiCorr[1] << " " << corresp.second[0] << " " << corresp.second[1] << std::endl;
 
-        
+        if (elCorr == 150000) {
+            std::cout << "PROBLEM IN NODAL CORRESPONDENCE OF FINE NODE 1" 
+                      << nodesGlueZoneFine_[inode] << std::endl;
+            exit(0);
+        };
             
         // std::cout << "corresp " << corresp.first 
         //           << " " << corresp.second(0) << " " << corresp.second(1)
@@ -315,8 +319,21 @@ void Arlequin<DIM,DEG>::setNodalCorrespondenceFine() {
             searchNodeCorrespondence(x,(*nodesCoarse_),elementsCoarse_,
                                      elementsCoarse_.size(),elCorr,xsiCorr,elementsFine_[elementsGlueZoneFine_[ielem]] -> getIntegPointCorrespondenceElement(i));
                 
-            elementsFine_[elementsGlueZoneFine_[ielem]] -> 
-                setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
+            elementsFine_[elementsGlueZoneFine_[ielem]] -> setIntegrationPointCorrespondence(i,elCorr,xsiCorr);
+
+            if (elCorr == 150000) {
+                std::cout << "PROBLEM IN NODAL CORRESPONDENCE OF FINE NODE " 
+                       << std::endl;
+                std::cout << "INODE " << nodesGlueZoneFine_[ielem] << std::endl;
+                std::cout << "elsglue " << ielem << " " <<  elementsGlueZoneFine_[ielem] << std::endl;
+                       std::cout << elementsFine_[elementsGlueZoneFine_[ielem]] -> getIntegPointCorrespondenceElement(i) << std::endl;
+                       std::cout << x1 << " " << x2 << std::endl;
+                       std::cout << x[0] << " " << x[1] << std::endl;
+                       std::cout << "CORRESP " << elCorr << std::endl
+                                 << xsiCorr[0] << " " << xsiCorr[1]  << std::endl;
+
+                exit(0);
+            };
         };
 
     };
@@ -2400,6 +2417,12 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
             localMV_vec.setZero();
             RhsArlequin2.setZero();
 
+            //Stabilization 
+            double tArlequin;
+            VecDouble Ml1(nLocDOF), t1(nLocDOF), j1(nLocDOF), 
+                      k1(nLocDOF), p1(nLocDOF);
+            Ml1.setZero(); t1.setZero(); j1.setZero(); k1.setZero(); p1.setZero();
+
             // FINE MESH
             //Computes element matrix
 
@@ -2410,9 +2433,14 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
                 elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMesh(localMV_mat,localMV_vec);
             
                 //Arlequin Stabilization
-                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2);
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMesh(ArlequinA1, ArlequinA2, RhsArlequin2, Ml1, t1, j1, 
+                                                                           k1, p1);
+
             }
-            
+            stabilizeArlequinNew(Ml1, t1, j1, k1, p1, tArlequin);
+            ArlequinA1 *= tArlequin;
+            ArlequinA2 *= tArlequin;
+            RhsArlequin2 *= tArlequin;
             
             setMatVecValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
                                            Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
@@ -2460,7 +2488,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
                 
                 int iElemCoarse = diffElem[ielem];
                 double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
-                VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes);
+                VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes), acelX_(nElNodes), acelY_(nElNodes), acelXPrev_(nElNodes), acelYPrev_(nElNodes);
 
                 connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
 
@@ -2470,6 +2498,10 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
                     velY_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(1);
                     velXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(0);
                     velYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(1);
+                    acelX_[k] = (*nodesCoarse_)[connecC[k]] -> getAcceleration(0);
+                    acelY_[k] = (*nodesCoarse_)[connecC[k]] -> getAcceleration(1);
+                    acelXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousAcceleration(0);
+                    acelYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousAcceleration(1);
                 }
                 
                 Ajac2.setZero();
@@ -2487,9 +2519,14 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
 
                 if (fArlequinStab != ArlequinStabType::ENoStab){
                     elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat,localMV_vec);
-            
-                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,ArlequinA1,ArlequinA2,RhsArlequin2);
+
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMesh(iElemCoarse,pspg,press_,velX_,velY_,acelX_,acelY_,
+                                                                                      acelXPrev_,acelYPrev_,ArlequinA1,ArlequinA2,RhsArlequin2);
                 }
+
+                ArlequinA1 *= tArlequin;
+                ArlequinA2 *= tArlequin;
+                RhsArlequin2 *= tArlequin;
 
                 setMatVecValuesLagMultFineCoarse(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
                                                  Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
@@ -2724,10 +2761,12 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         sysSize = numNodesCoarse + numNodesFine + numNodesGlueZoneFine;
     }
     double integScheme = fineModel.integScheme;
-
+ 
     alpha_f = 1. / (1. + integScheme);
     alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
     gamma = 0.5 + alpha_m - alpha_f;
+
+    std::cout << "Time integration parameters = " << alpha_f << ", " << alpha_m << ", " << gamma <<std::endl; 
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
@@ -2801,7 +2840,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
                 ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
             } else {
                 ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize,400,NULL,600,NULL,&A); 
+                                sysSize, sysSize,600,NULL,1500,NULL,&A); 
             }
 
             for (PetscInt i=0; i<sysSize; i++){
@@ -3160,15 +3199,18 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
 
     double integScheme = fineModel.integScheme;
 
+  
+    // Computes the system size
+    int sysSize;
+    if (fProbType == ProblemType::ENavierStokes){
+        sysSize = (DIM+1)*numNodesCoarse + (DIM+1)*numNodesFine + DIM*numNodesGlueZoneFine;
+    } else if (fProbType == ProblemType::EPoisson){
+        sysSize = numNodesCoarse + numNodesFine + numNodesGlueZoneFine;
+    }
+
     alpha_f = 1. / (1. + integScheme);
     alpha_m = 0.5 * (3. - integScheme) / (1. + integScheme);
     gamma = 0.5 + alpha_m - alpha_f;
-    if (rank == 0) std::cout << "Time integ parameters: " << alpha_f << " " << alpha_m << " " << gamma << std::endl;
-
-    // Computes the system size
-    int sysSize = 3 * numNodesCoarse + 3 * numNodesFine + 2 * numNodesGlueZoneFine;
-    
-    numTimeSteps = 2000;
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
         
@@ -3178,6 +3220,9 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         PetscMemoryGetCurrentUsage(&bytes);
         PetscPrintf(PETSC_COMM_WORLD,"Memory used33 %g M\n",bytes/(1024*1024));
         
+        parametersCoarse -> setTimeInstant(iTimeStep);
+        parametersFine -> setTimeInstant(iTimeStep);
+
         //Updates velocity and acceleration
         for (int i = 0; i < numNodesCoarse; i++){
             VecDouble accel(DIM), u(DIM), uprev(DIM);
@@ -3204,7 +3249,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         // double w = 2 * pi * f;
 
         for (int i = 0; i < numNodesFine; i++){
-            VecDouble accel(DIM), u(DIM), uprev(DIM);
+            VecDouble accel(DIM), u(DIM), uprev(DIM), lag(DIM);
             
             //Compute acceleration
             u[0] = (*nodesFine_)[i] -> getVelocity(0);
@@ -3257,9 +3302,16 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             std::clock_t t1 = std::clock();
             
             // Preallocates the matrix
-            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize, 400, NULL, 600, NULL, &A); 
-            
+            if (parametersFine->getSolverType() == SolverType::ESuiteSparse){
+                ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
+            } else {
+                ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                                sysSize, sysSize,400,NULL,600,NULL,&A); 
+            }
+            for (PetscInt i=0; i<sysSize; i++){
+                double val = 1.e-10;
+                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
+            }  
             CHKERRQ(ierr);
             
             // Divides the matrix between the processes
@@ -3271,7 +3323,11 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
             ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
                         
-            assembleArlequinSystem();
+            if (fProbType == ProblemType::ENavierStokes){
+                assembleArlequinSystem();
+            } else if (fProbType == ProblemType::EPoisson){
+                assembleArlequinSystemPoisson();
+            }
             
             //Assemble matrices and vectors
             ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -3289,74 +3345,30 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
             
 
+            switch (parametersFine->getSolverType())
+            {
+            case SolverType::ESuiteSparse:
+                KSPGetPC(ksp, &pc);
+                PCSetType(pc, PCLU);
+                PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+                break;
+            case SolverType::EMumps:
+                KSPGetPC(ksp, &pc);
+                PCSetType(pc, PCLU);
+                PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+                break;
 
+            case SolverType::EIterative:
+                KSPSetType(ksp,KSPFGMRES);
+                KSPGetPC(ksp, &pc);
+                PCSetType(pc,PCBJACOBI);
+                KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+                break;
 
-            // ierr = MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE,0, NULL, &nullsp);
-            // ierr = MatSetNullSpace(A, nullsp);
-            // ierr = MatNullSpaceDestroy(&nullsp);
-
-
-
-
-            // ierr = KSPSetTolerances(ksp,1.e-7,1.e-10,PETSC_DEFAULT,
-            //                         1000);CHKERRQ(ierr);
-            
-            // //ierr = KSPGMRESSetRestart(ksp, 10); CHKERRQ(ierr);
-            
-            // ierr = KSPGetPC(ksp,&pc);CHKERRQ(ierr);
-            
-            // ierr = PCSetType(pc,PCNONE);CHKERRQ(ierr);
-            
-            // //ierr = KSPSetPCSide(ksp, PC_RIGHT);
-            // ierr = KSPSetType(ksp,KSPLSQR); CHKERRQ(ierr);
-            
-            // ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-            // // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-
-
-#if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
-
-        ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-        PCFactorSetUpMatSolverType(pc);
-        PCFactorGetMatrix(pc,&F);
-
-        PetscInt ival,icntl;
-        icntl = 14; ival = 60;
-        MatMumpsSetIcntl(F,icntl,ival);
-        
-#endif
-        
-        
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
-        
-        
-#if defined(PETSC_HAVE_MUMPS)
-        PetscInt  info1,info2,icntl14;
-
-        MatMumpsGetInfo(F,1,&info1);
-        MatMumpsGetInfo(F,2,&info2);
-        MatMumpsGetIcntl(F,14,&icntl14);
-        if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-                                                      << " " << info2 << " " 
-                                                      << icntl14 << std::endl;
-#endif
-            
-// #if defined(PETSC_HAVE_MUMPS)
-//             ierr = KSPSetType(ksp,KSPPREONLY);
-//             ierr = KSPGetPC(ksp,&pc);
-//             ierr = PCSetType(pc, PCLU);
-// #endif
-            
-//             ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-//             ierr = KSPSetUp(ksp);
-            
-
-
-
+            default:
+                PanicButton();
+                break;
+            }
 
            // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 
@@ -3388,46 +3400,80 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             double p_;
             Ione = 1;
 
-            for (int i = 0; i < numNodesCoarse; ++i){
-                for (int k = 0; k < DIM; k++){
-                    Ii = (DIM+1) * i + k;
+            if (fProbType == ProblemType::ENavierStokes){
+                for (int i = 0; i < numNodesCoarse; ++i){
+                    double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
+                    for (int k = 0; k < DIM; k++){
+                        Ii = (DIM+1) * i + k;
+                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+                        // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+                        u_[k] = val;
+                        normU += val*w_*val*w_;
+                        (*nodesCoarse_)[i] -> incrementAcceleration(k,u_[k]);
+                        (*nodesCoarse_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
+                    }
+                    Ii = (DIM+1) * i + DIM;
+                    ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+                    p_ = val;
+                    normP += val*w_*val*w_;
+                    (*nodesCoarse_)[i] -> incrementPressure(p_);
+                };
+                
+                for (int i = 0; i < numNodesFine; ++i){
+                    double w_ = (*nodesFine_)[i] -> getWeightFunction();
+                    for (int k = 0; k < DIM; k++){
+                        Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + k;
+                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+                        u_[k] = val;
+                        normU += val*w_*val*w_;
+                        (*nodesFine_)[i] -> incrementAcceleration(k,u_[k]);
+                        (*nodesFine_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
+                    }        
+                    Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + DIM;
+                    ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
+                    p_ = val;
+                    normP += val*w_*val*w_;
+                    (*nodesFine_)[i] -> incrementPressure(p_);
+                };
+                
+                for (int i = 0; i < numNodesGlueZoneFine; ++i){
+                    for (int k = 0; k < DIM; k++){
+                        Ii = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * i + k;
+                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
+                        u_[k] = val;
+                        (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+                        normL += val*val;
+                    }
+                };
+            } else if (fProbType == ProblemType::EPoisson){
+                for (int i = 0; i < numNodesCoarse; ++i){
+                    double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
+                    Ii = i;
                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
                     // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                    u_[k] = val;
-                    normU += val*val;
-                    (*nodesCoarse_)[i] -> incrementAcceleration(k,u_[k]);
-                    (*nodesCoarse_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
-                }
-                Ii = (DIM+1) * i + DIM;
-                ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                p_ = val;
-                normP += val*val;
-                (*nodesCoarse_)[i] -> incrementPressure(p_);
-            };
-            for (int i = 0; i < numNodesFine; ++i){
-                for (int k = 0; k < DIM; k++){
-                    Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + k;
+                    u_[0] = val;
+                    normU += val*w_*val*w_;
+                    (*nodesCoarse_)[i] -> incrementVelocity(0,u_[0]);
+                };
+                
+                for (int i = 0; i < numNodesFine; ++i){
+                    double w_ = (*nodesFine_)[i] -> getWeightFunction();
+                    Ii = numNodesCoarse + i;
                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[k] = val;
-                    normU += val*val;
-                    (*nodesFine_)[i] -> incrementAcceleration(k,u_[k]);
-                    (*nodesFine_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
-                }        
-                Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + DIM;
-                ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                p_ = val;
-                normP += val*val;
-                (*nodesFine_)[i] -> incrementPressure(p_);
-            };
-            for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                for (int k = 0; k < DIM; k++){
-                    Ii = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * i + k;
+                    u_[0] = val;
+                    normU += val*w_*val*w_;
+                    (*nodesFine_)[i] -> incrementVelocity(0,u_[0]);
+                };
+                
+                for (int i = 0; i < numNodesGlueZoneFine; ++i){
+                    Ii = numNodesCoarse + numNodesFine + i;
                     ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[k] = val;
-                    (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+                    u_[0] = val;
+                    (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
                     normL += val*val;
-                }
-            };
+
+                };
+            }
 
             //Computes the solution vector norm
             ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
@@ -3465,13 +3511,12 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
         };
 
         //Compute real velocity
-        
-        ShapeFunction<DIM,DEG> shapeQuad;
+        ShapeFunction<DIM,DEG>                       shapeQuad;
         VecDouble phi_(nElNodes);
         
         for (int i = 0; i<numNodesFine; i++){
-            (*nodesFine_)[i] -> setVelocityArlequin(0,(*nodesFine_)[i] -> getVelocity(0));
-            (*nodesFine_)[i] -> setVelocityArlequin(1,(*nodesFine_)[i] -> getVelocity(1));
+            for (int k = 0; k < DIM; k++) 
+                (*nodesFine_)[i] -> setVelocityArlequin(k,(*nodesFine_)[i] -> getVelocity(k));
             (*nodesFine_)[i] -> setPressureArlequin((*nodesFine_)[i] ->getPressure());
         };
         
@@ -3484,10 +3529,10 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             
             int elCoarse = (*nodesFine_)[nodesGlueZoneFine_[i]] -> getNodalElemCorrespondence();
             VecDouble xsi = (*nodesFine_)[nodesGlueZoneFine_[i]] -> getNodalXsiCorrespondence();
-            
+                        
             VecInt connecCoarse = elementsCoarse_[elCoarse] -> getConnectivity();
             
-            for (int j = 0; j < nElNodes; j++){
+            for (int j=0; j<nElNodes; j++){
                 u_coarse[j] = (*nodesCoarse_)[connecCoarse[j]] -> getVelocity(0);
                 v_coarse[j] = (*nodesCoarse_)[connecCoarse[j]] -> getVelocity(1);
                 p_coarse[j] = (*nodesCoarse_)[connecCoarse[j]] -> getPressure();
@@ -3495,7 +3540,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             
             shapeQuad.evaluate(xsi,phi_);
             
-            for (int j = 0; j < nElNodes; j++){
+            for (int j=0; j<nElNodes; j++){
                 u += u_coarse[j] * phi_[j];
                 v += v_coarse[j] * phi_[j];
                 p += p_coarse[j] * phi_[j];
@@ -3999,6 +4044,39 @@ void Arlequin<DIM,DEG>::stabilizeArlequin(MatrixDouble &A0, MatrixDouble &A1,
     }
 
 }
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::stabilizeArlequinNew(VecDouble &Ml1, VecDouble &t1, 
+                             VecDouble &j1, VecDouble &k1, VecDouble &p1, double &tArleq){
+    
+    double mnorm = Ml1.norm();
+    double tnorm = t1.norm();
+    double jnorm = j1.norm();
+    double knorm = k1.norm();
+    double pnorm = p1.norm();
+
+    if (fabs(mnorm) < 1.e-20) mnorm = 1.e3;
+    if (fabs(tnorm) < 1.e-20) tnorm = 1.e3;
+    if (fabs(jnorm) < 1.e-20) jnorm = 1.e3;
+    if (fabs(knorm) < 1.e-20) knorm = 1.e3;
+    if (fabs(pnorm) < 1.e-20) pnorm = 1.e3;
+
+    double tauA = mnorm/tnorm;
+    double tauB = mnorm/jnorm;
+    double tauC = mnorm/knorm;
+    double tauD = mnorm/pnorm;
+
+    
+
+    tArleq = 10.*pow((1/(tauA*tauA) + 1/(tauB*tauB) + 1/(tauC*tauC) + 1/(tauD*tauD)), -0.5);
+    // std::cout << "Ml1 " << Ml1 << std::endl;
+    // std::cout << "t1 " << t1 << std::endl;
+    // std::cout << "j1 " << j1 << std::endl;
+    // std::cout << "k1 " << k1 << std::endl;
+    // std::cout << "p1 " << p1 << std::endl;
+    // std::cout << "tauA = " << tauA << " , tauB = " << tauB << " , tauC = " << tauC << " , tauD = " << tauD << std::endl;
+    // std::cout << "tArleq = " << tArleq << std::endl;
+};
 
 
 template class Arlequin<2,1>;

@@ -193,6 +193,7 @@ public:
     /// @param double** shape function spatial derivatives @param double** velocity derivatives
     /// @param double** previous time step velocity derivatives
     void interpolateVelDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx);
+    void interpolateAccelDerivatives(MatrixDouble &dphi_dx, MatrixDouble &du_dx, MatrixDouble &duprev_dx);
 
     /// Compute and store the SUPG, PSPG and LSIC stabilization parameters
     void getParameterSUPG(int &index, double &tSUPG_, double &tPSPG_, double &tLSIC_, MatrixDouble &dphi_dx);
@@ -413,7 +414,9 @@ public:
     void getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
     void getLagrangeMultipliersSameMeshPoisson(MatrixDouble &lagrMultMatrix, VecDouble &lagrMultVector, VecDouble &rhsVector);
     void getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
-    void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
+    void getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector, 
+                                                VecDouble &ML1, VecDouble &t1, VecDouble &j1, 
+                                                VecDouble &k1, VecDouble &p1);
     void getLagrangeMultipliersArlequinSameMeshPoisson(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
 
     /// Compute and store the Lagrange multiplier operator when integrationg
@@ -427,6 +430,7 @@ public:
     void getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &ely,
                                                        MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
     void getLagrangeMultipliersArlequinDifferentMesh(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                     VecDouble &acelx, VecDouble &acely, VecDouble &acelxPrev, VecDouble &acelyPrev,
                                                      MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
     void getLagrangeMultipliersArlequinDifferentMeshPoisson(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
                                                             MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector);
