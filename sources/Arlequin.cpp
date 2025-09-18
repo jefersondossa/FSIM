@@ -3617,13 +3617,17 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         std::clock_t t1 = std::clock();
         
         // Preallocates the matrix
-        ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                            sysSize, sysSize, 500, NULL, 700, NULL, &A);
-        for (int i=0; i<sysSize; i++){
-            double val = 1.e-20;
-            ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
-            
+        if (parametersFine->getSolverType() == SolverType::ESuiteSparse){
+            ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
+        } else {
+            ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                            sysSize, sysSize,600,NULL,1500,NULL,&A); 
         }
+
+        for (PetscInt i=0; i<sysSize; i++){
+            double val = 1.e-10;
+            ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
+        }  
         
         CHKERRQ(ierr);
         
@@ -3673,67 +3677,32 @@ int Arlequin<DIM,DEG>::solveFSIArlequin(int iterNumber, double tolerance,
         //     // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
         // // }else{
        
-#if defined(PETSC_HAVE_MUMPS)
-        ierr = KSPSetType(ksp,KSPPREONLY);
-        ierr = KSPGetPC(ksp,&pc);
-        ierr = PCSetType(pc, PCLU);
-        
-        // ierr = PCFactorSetMatSolverType(pc,MATSOLVERMUMPS);
-        // PCFactorSetUpMatSolverType(pc);
-        // PCFactorGetMatrix(pc,&F);
-        
-        // PetscInt ival,icntl;
-        // icntl = 14; ival = 80;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 28; ival = 2;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 29; ival = 2;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 16; ival = 0;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 4; ival = 3;
-        // MatMumpsSetIcntl(F,icntl,ival);
-        // icntl = 11; ival = 1;
-        // MatMumpsSetIcntl(F,11,1);
 
-        //MatMumpsSetIcntl(F,21,0);
+        switch (parametersFine->getSolverType())
+        {
+        case SolverType::ESuiteSparse:
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc, PCLU);
+            PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+            break;
+        case SolverType::EMumps:
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc, PCLU);
+            PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+            break;
 
-        
-#endif
-        ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
-        ierr = KSPSetUp(ksp);
-        
-// #if defined(PETSC_HAVE_MUMPS)
-//         PetscInt  info1,info2,icntl14;
-        
-//         MatMumpsGetInfo(F,1,&info1);
-//         MatMumpsGetInfo(F,2,&info2);
+        case SolverType::EIterative:
+            KSPSetType(ksp,KSPFGMRES);
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc,PCBJACOBI);
+            KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+            break;
 
-        // PetscReal info5,info6,info7,info8,info9,info10,info11;
-        // MatMumpsGetRinfog(F,5,&info5);
-        // MatMumpsGetRinfog(F,6,&info6);
-        // MatMumpsGetRinfog(F,7,&info7);
-        // MatMumpsGetRinfog(F,8,&info8);
-        // MatMumpsGetRinfog(F,9,&info9);
-        // MatMumpsGetRinfog(F,10,&info10);
-        // MatMumpsGetRinfog(F,11,&info11);
+        default:
+            PanicButton();
+            break;
+        }
 
-        // PetscInt info21,info32;
-        // MatMumpsGetIcntl(F,32,&info32);
-        // MatMumpsGetIcntl(F,21,&info21);
-
-        
-        // if(rank==0) std::cout << "ICNTL = " << info21 << " " << info32 << std::endl;
-      
-        // // if(rank==0) std::cout << "INFOG = " << info5 << " " << info6 << " " << info7 << " " << info8 << " " << info9 << " " << info10 << " " << info11 << std::endl;
-        // MatMumpsGetIcntl(F,14,&icntl14);    
-        // if((rank == 0) && (info1 != 0)) std::cout << " INFO(1) = " << info1
-        //                                           << " " << info2 << " " 
-        //                                           << icntl14 << std::endl;
-// #endif
-        // }
-        // ierr = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-        
         ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
         
         ierr = KSPGetTotalIterations(ksp, &iterations);
@@ -4068,7 +4037,7 @@ void Arlequin<DIM,DEG>::stabilizeArlequinNew(VecDouble &Ml1, VecDouble &t1,
 
     
 
-    tArleq = 1.e2*pow((1/(tauA*tauA) + 1/(tauB*tauB) + 1/(tauC*tauC) + 1/(tauD*tauD)), -0.5);
+    tArleq = 1.e-4*pow((1/(tauA*tauA) + 1/(tauB*tauB) + 1/(tauC*tauC) + 1/(tauD*tauD)), -0.5);
     // std::cout << "Ml1 " << Ml1 << std::endl;
     // std::cout << "t1 " << t1 << std::endl;
     // std::cout << "j1 " << j1 << std::endl;
