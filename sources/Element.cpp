@@ -2642,7 +2642,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
 
         getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
         
-        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+        getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
         
@@ -2694,10 +2694,10 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
                 double Lpx = 0.; double Lpy = 0.;
                 double LC = 0.; double LL = 0.;
 
-                AM = DI->phi_(i,index) * DI->phi_(j,index) * wna_* alpha_m;
+                AM = DI->phi_(i,index) * DI->phi_(j,index) *  tARLQ_ * wna_* alpha_m;
 
                 // LL = -2 * phi_[i] * phi_[j] * tARLQ_ / dens_;
-                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) / dens_;
+                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m)  * tARLQ_ / dens_;
 
                 // Lpx = -(dphi_dx[0][i] * dp_dxx + dphi_dx[1][i] * dp_dxy) * intPointWeightFunction(index)
                 //      * tARLQ_ / dens_;
@@ -2741,9 +2741,9 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
 
             for (int k = DIM; k--; ){
                 double LLx = 0.;
-                for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ / dens_;
+                for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
                 double Amx = - DI->phi_(i,index) * am_[k] ;
-                arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
+                arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * tARLQ_ * wna_;
 
             }
 
@@ -3416,7 +3416,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
             getJacobianMatrix(xsi, ainv_, djac_);
             getSpatialDerivatives(xsi, ainv_, dphi_dx);
 
-            // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+            getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
 
             double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
@@ -3471,7 +3471,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
 
                     // LL = phiLM_(i) * phi_[j] * tARLQ_ / dens_;
 
-                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) / dens_;
+                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tARLQ_ / dens_;
 
                     for (int k = DIM; k--; )
                         arlequinStab(DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
@@ -3524,7 +3524,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
 
                 for (int k = DIM; k--; ){
                     double LLx = 0.;
-                    for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(k,m)/wna_ / dens_;
+                    for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
 
                     arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
 

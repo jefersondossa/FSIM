@@ -21,15 +21,15 @@
         //Coarse
         Geometry* fluid1 = new Geometry(0);
 
-        double x1 = -9.5;
+        double x1 = -6.;
         double x2 = -0.6;
         double x3 = 1.6;
         double x4 = 20.5;
 
-        double y1 = -10;
+        double y1 = -6;
         double y2 = -0.85;
         double y3 = 0.85;
-        double y4 = 10;
+        double y4 = 6;
     
         double h1 = 13; double h2 = 25; double h3 = 20;
         double v1 = 13; double v2 = 15;

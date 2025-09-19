@@ -2437,10 +2437,10 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
                                                                            k1, p1);
 
             }
-            stabilizeArlequinNew(Ml1, t1, j1, k1, p1, tArlequin);
-            ArlequinA1 *= tArlequin;
-            ArlequinA2 *= tArlequin;
-            RhsArlequin2 *= tArlequin;
+            // stabilizeArlequinNew(Ml1, t1, j1, k1, p1, tArlequin);
+            // ArlequinA1 *= tArlequin;
+            // ArlequinA2 *= tArlequin;
+            // RhsArlequin2 *= tArlequin;
             
             setMatVecValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
                                            Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
@@ -2524,9 +2524,9 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
                                                                                       acelXPrev_,acelYPrev_,ArlequinA1,ArlequinA2,RhsArlequin2);
                 }
 
-                ArlequinA1 *= tArlequin;
-                ArlequinA2 *= tArlequin;
-                RhsArlequin2 *= tArlequin;
+                // ArlequinA1 *= tArlequin;
+                // ArlequinA2 *= tArlequin;
+                // RhsArlequin2 *= tArlequin;
 
                 setMatVecValuesLagMultFineCoarse(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
                                                  Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
