@@ -16,3 +16,9 @@ target_link_libraries(eso_cantilever_2d_beam PRIVATE fsarl_library ESO triangle 
 
 add_executable(basic_2d_phase_field basic_2d_phase_field.cpp)
 target_link_libraries(basic_2d_phase_field PRIVATE fsarl_library ESO triangle ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(basic_2d_phase_field_fem basic_2d_phase_field_fem.cpp)
+target_link_libraries(basic_2d_phase_field_fem PRIVATE fsarl_library ESO triangle ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(basic_2d_phase_field_fem2 basic_2d_phase_field_fem2.cpp)
+target_link_libraries(basic_2d_phase_field_fem2 PRIVATE fsarl_library ESO triangle ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
