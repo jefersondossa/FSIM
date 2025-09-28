@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <bits/stdc++.h>
 
+#include <fenv.h>
+
 static double neumann_g(double x, double y, double t) { return 0.0; }
 static double u0(double x, double y)
 {
@@ -39,8 +41,9 @@ struct Mesh
     std::vector<std::pair<double, double>> nodes;
     std::vector<std::array<int, 4>> elems;
     double minH;
-    
-    Mesh(const std::string& filename) {
+
+    Mesh(const std::string &filename)
+    {
         minH = 1e30;
         std::unique_ptr<CompMesh> meshData = std::make_unique<CompMesh>();
         MatrixDouble val1(1, 1);
@@ -52,10 +55,16 @@ struct Mesh
         meshData->InsertMaterial(new L2Projection(18, 2, BoundaryConditionType::kNeumann, val1, val2));
         meshData->InsertMaterial(new L2Projection(19, 2, BoundaryConditionType::kNeumann, val1, val2));
         meshData->InsertMaterial(new L2Projection(45, 2, BoundaryConditionType::kNeumann, val1, val2));
+        meshData->InsertMaterial(new L2Projection(21, 2, BoundaryConditionType::kNeumann, val1, val2));
+
         GmshTools::Read(*meshData, filename);
 
         nodes.resize(meshData->NNodes());
         elems.resize(meshData->NElements());
+
+        std::fill(nodes.begin(), nodes.end(), std::make_pair(0.0, 0.0));
+        std::fill(elems.begin(), elems.end(), std::array{0, 0, 0, 0});
+
         numNodes = meshData->NNodes();
         numElems = meshData->NElements();
 
@@ -64,6 +73,11 @@ struct Mesh
         for (int64_t iEle = 0; iEle < meshData->NElements(); iEle++)
         {
             auto elem = meshData->ElementVec()[iEle];
+
+            if (elem->NElNodes() != elemNodesIds.size())
+            {
+                continue;
+            }
 
             assert(elem->NElNodes() == elemNodesIds.size());
             const auto connect = meshData->ElementVec()[iEle]->getConnectivity();
@@ -78,7 +92,7 @@ struct Mesh
                 elemNodesIds[iNode] = connect[iNode];
             }
 
-            minH = std::min(std::fabs( - nodes[connect[1]].first), minH);
+            minH = std::min(std::fabs(-nodes[connect[1]].first), minH);
             const double x0 = nodes[connect[0]].first;
             const double y0 = nodes[connect[0]].second;
 
@@ -92,9 +106,7 @@ struct Mesh
             const double y3 = nodes[connect[3]].second;
 
             const double area = 0.5 * fabs(
-                x0*y1 + x1*y2 + x2*y3 + x3*y0
-            - y0*x1 - y1*x2 - y2*x3 - y3*x0
-            );
+                                          x0 * y1 + x1 * y2 + x2 * y3 + x3 * y0 - y0 * x1 - y1 * x2 - y2 * x3 - y3 * x0);
 
             minH = std::min(minH, std::sqrt(area));
 
@@ -203,7 +215,7 @@ void write_vtu(const Mesh &mesh, const std::vector<double> &u, int step, double 
     std::cerr << "Wrote " << fname.str() << " at time=" << time << "\n";
 }
 
-void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelElasticity2D)
+void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh &modelElasticity2D)
 {
     MatrixDouble val1(2, 2);
     VecDouble val2(2);
@@ -238,7 +250,7 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBCEl2D);
     {
-        val2[0] = 10.;
+        val2[0] = 0.;
         constexpr auto kRightMatBottomId = 45;
         auto *freeBCEl2D = new L2Projection(kRightMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
         modelElasticity2D.InsertMaterial(freeBCEl2D);
@@ -249,12 +261,12 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     //     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
     //     modelElasticity2D.InsertMaterial(freeBCEl2D);
     // }
-    // val1.setZero();
-    // val2.setZero();
-    // val2[0] = 0.;
-    // constexpr auto kExLoadMatId = 21;
-    // auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    // modelElasticity2D.InsertMaterial(El2D);
+    val1.setZero();
+    val2.setZero();
+    val2[1] = -10.;
+    constexpr auto kExLoadMatId = 21;
+    auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D);
     // val1.setZero();
     // val2.setZero();
     // // val2[0] = -10;
@@ -268,21 +280,23 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     // Disables memory on elements
     // (makes sure elemental stiffness is not recalculated)
     // for(auto& [_, pWeakForm] : modelElasticity2D.Materialstd::Vector()) {
-        // govEquationElasticity2D->SetHasMemory(false);
+    // govEquationElasticity2D->SetHasMemory(false);
     // }
 }
 
 int main()
 {
+    feenableexcept(FE_DIVBYZERO | FE_INVALID);
+
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     SetupBoundaryConditionsElasticity2DCantileverRightBottom(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     Mesh mesh("../../rectangle.msh");
-    double h = mesh.minH;//min(mesh.hx, mesh.hy);
+    double h = mesh.minH;     // min(mesh.hx, mesh.hy);
     double dt = 0.25 * h * h; // conservative for stability
     double T = 0.5;
-    double kappa = 0.05; // example diffusivity
+    double kappa = 0.01; // example diffusivity
     int numSteps = std::max(1, (int)ceil(T / dt));
     dt = T / numSteps;
 
@@ -300,6 +314,12 @@ int main()
     double gp[nq] = {-1.0 / sqrt(3.0), 1.0 / sqrt(3.0)}, gw[nq] = {1.0, 1.0};
     for (int e = 0; e < mesh.numElems; ++e)
     {
+        auto elemElas2D = modelElasticity2D->ElementVec()[e];
+
+        if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
+        {
+            continue;
+        }
         auto enodes = mesh.elems[e];
         double x[4], y[4];
         for (int i = 0; i < 4; ++i)
@@ -341,6 +361,12 @@ int main()
     std::vector<std::array<double, 16>> Ke_list(mesh.numElems);
     for (int e = 0; e < mesh.numElems; ++e)
     {
+        auto elemElas2D = modelElasticity2D->ElementVec()[e];
+
+        if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
+        {
+            continue;
+        }
         auto enodes = mesh.elems[e];
         double x[4], y[4];
         for (int i = 0; i < 4; ++i)
@@ -397,152 +423,180 @@ int main()
     double t = 0.0;
     write_vtu(mesh, u, 0, t);
 
+    std::vector<std::string> ScalarNamesElasticity2D, VectorNamesElasticity2D;
+    ScalarNamesElasticity2D = {"Compliance", "ComplianceSensibility", "WeightFunction"};
+    VectorNamesElasticity2D = {"Displacement", "Stress","Strain"};
+
     // time loop with explicit Euler + global Lagrange multiplier (enforced as constant correction)
     for (int step = 0; step < numSteps; ++step)
     {
         for (size_t inode = 0; inode < modelElasticity2D->NNodes(); inode++)
         {
             const auto solutionPhaseField = u_new[inode];
-            modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::min(std::max(std::pow(solutionPhaseField, 3), 1e-2), 1.0));
+            const auto v = std::pow(solutionPhaseField, 3);
+            modelElasticity2D->NodeVec()[inode]->setWeightFunction(std::min(std::max(v, 1e-2), 1.0));
         }
 
-        for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++){
-            auto &elemElas2D = modelElasticity2D->ElementVec()[i_el];            
-            if (elemElas2D->Dimension() != modelElasticity2D->Dimension()) continue;
-            elemElas2D->setIntegPointWeightFunction();
-        }
-        std::vector<double> compliances;
         for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
         {
-            auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
-            auto elemPhaseField = mesh.elems[i_el];
-
+            auto &elemElas2D = modelElasticity2D->ElementVec()[i_el];
             if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
-            {
                 continue;
-            }
+            elemElas2D->setIntegPointWeightFunction();
+        }
 
-            for (int inode = 0; inode < elemElas2D->NElNodes(); inode++)
+        anElasticity2D.Run();
+        VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, step);
+
+        for (size_t i = 0; i < 10; i++)
+        {
+            auto compliances = std::vector<double>(u.size(), 0.0);
+            for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
             {
-                auto xparametric = elemElas2D->NodeCoord(inode);
-                auto connect = modelElasticity2D->ElementVec()[i_el]->getConnectivity();
-                elemElas2D->IntegrationData().fAdimCoord = xparametric;
-                if (!elemElas2D->IntegrationData().fNeedsSol || !elemElas2D->IntegrationData().fNeedsDSol)
+                auto elemElas2D = modelElasticity2D->ElementVec()[i_el];
+                auto elemPhaseField = mesh.elems[i_el];
+
+                if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
                 {
-                    elemElas2D->IntegrationData().fNeedsSol = true;
-                    elemElas2D->IntegrationData().fNeedsDSol = true;
-                    elemElas2D->IntegrationData().fSol.resize(elemElas2D->GetWeakForm()->NState());
-                    elemElas2D->IntegrationData().fDSolDx.resize(elemElas2D->GetWeakForm()->NState(), elemElas2D->Dimension());
+                    continue;
                 }
-                elemElas2D->ComputeJacobian();
-                elemElas2D->ComputeSpatialDerivatives();
-                elemElas2D->interpolateSolution();
-                const auto compliance_var_idx = elemElas2D->GetWeakForm()->VariableIndex("ComplianceSensibility");
-                const auto nvar = elemElas2D->GetWeakForm()->NSolutionVariables(compliance_var_idx);
-                VecDouble compl_vec(nvar);
-                elemElas2D->Solution(compliance_var_idx, compl_vec);
-                compliances.push_back(compl_vec[0]);
+
+                for (int inode = 0; inode < elemElas2D->NElNodes(); inode++)
+                {
+                    auto xparametric = elemElas2D->NodeCoord(inode);
+                    auto connect = modelElasticity2D->ElementVec()[i_el]->getConnectivity();
+                    elemElas2D->IntegrationData().fAdimCoord = xparametric;
+                    if (!elemElas2D->IntegrationData().fNeedsSol || !elemElas2D->IntegrationData().fNeedsDSol)
+                    {
+                        elemElas2D->IntegrationData().fNeedsSol = true;
+                        elemElas2D->IntegrationData().fNeedsDSol = true;
+                        elemElas2D->IntegrationData().fSol.resize(elemElas2D->GetWeakForm()->NState());
+                        elemElas2D->IntegrationData().fDSolDx.resize(elemElas2D->GetWeakForm()->NState(), elemElas2D->Dimension());
+                    }
+                    elemElas2D->ComputeJacobian();
+                    elemElas2D->ComputeSpatialDerivatives();
+                    elemElas2D->interpolateSolution();
+                    const auto compliance_var_idx = elemElas2D->GetWeakForm()->VariableIndex("ComplianceSensibility");
+                    const auto nvar = elemElas2D->GetWeakForm()->NSolutionVariables(compliance_var_idx);
+                    VecDouble compl_vec(nvar);
+                    elemElas2D->Solution(compliance_var_idx, compl_vec);
+                    // compliances.push_back(compl_vec[0]);
+                    compliances[connect[inode]] += compl_vec[0]/4;
+                }
             }
-        }
 
-        const auto maxCompliance = *std::max_element(compliances.begin(), compliances.end());
+            const auto maxCompliance = *std::max_element(compliances.begin(), compliances.end());
 
-        for(auto& compliance : compliances)
-        {
-            compliance /= maxCompliance;
-        }
-
-        assert(compliances.size() == u.size());
-
-        const auto f_source = [&compliances](int64_t iNode, double u) -> double
-        {
-            double res = 15 * 2 * u * (1.0 * u) * (1.0 - u);
-            res += compliances[iNode];
-            return res;
-        };
-
-        fill(rhs.begin(), rhs.end(), 0.0);
-        // K*u contribution
-        for (int e = 0; e < mesh.numElems; ++e)
-        {
-            auto enodes = mesh.elems[e];
-            auto Kflat = Ke_list[e];
-            double u_local[4];
-            for (int a = 0; a < 4; ++a)
-                u_local[a] = u[enodes[a]];
-            double Ku[4] = {0, 0, 0, 0};
-            for (int a = 0; a < 4; ++a)
-                for (int b = 0; b < 4; ++b)
-                    Ku[a] += Kflat[a * 4 + b] * u_local[b];
-            for (int a = 0; a < 4; ++a)
-                rhs[enodes[a]] -= Ku[a];
-        }
-        // source term (note: evaluate u at quadrature point by interpolation)
-        for (int e = 0; e < mesh.numElems; ++e)
-        {
-            auto enodes = mesh.elems[e];
-            double x[4], y[4];
-            for (int i = 0; i < 4; ++i)
+            for (auto &compliance : compliances)
             {
-                auto [xx, yy] = mesh.nodes[enodes[i]];
-                x[i] = xx;
-                y[i] = yy;
+                compliance /= maxCompliance;
             }
-            for (int ig = 0; ig < nq; ++ig)
-                for (int jg = 0; jg < nq; ++jg)
+
+            assert(compliances.size() == u.size());
+
+            const auto f_source = [&compliances](int64_t iNode, double u) -> double
+            {
+                double res = 32 * 2 * u * (1.0 * u) * (1.0 - u);
+                res += 10*compliances[iNode];
+                return res;
+            };
+
+            fill(rhs.begin(), rhs.end(), 0.0);
+            // K*u contribution
+            for (int e = 0; e < mesh.numElems; ++e)
+            {
+                auto elemElas2D = modelElasticity2D->ElementVec()[e];
+
+                if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
                 {
-                    double xi = gp[ig], eta = gp[jg], w = gw[ig] * gw[jg];
-                    double N[4], dNdxi[4], dNdeta[4];
-                    shape_functions(xi, eta, N, dNdxi, dNdeta);
-                    double J11 = 0, J12 = 0, J21 = 0, J22 = 0;
-                    for (int a = 0; a < 4; ++a)
-                    {
-                        J11 += dNdxi[a] * x[a];
-                        J12 += dNdxi[a] * y[a];
-                        J21 += dNdeta[a] * x[a];
-                        J22 += dNdeta[a] * y[a];
-                    }
-                    double detJ = J11 * J22 - J12 * J21;
-                    double X = 0, Y = 0, uq = 0;
-                    for (int a = 0; a < 4; ++a)
-                    {
-                        X += N[a] * x[a];
-                        Y += N[a] * y[a];
-                        uq += N[a] * u[enodes[a]];
-                    }
-                    for (int a = 0; a < 4; ++a) {
-                        const double fval = f_source(enodes[a], uq);
-                        rhs[enodes[a]] += N[a] * fval * detJ * w;
-                    }
+                    continue;
                 }
-            // Neumann flux (as before) -- omitted here for brevity (zero flux in current setup)
+                auto enodes = mesh.elems[e];
+                auto Kflat = Ke_list[e];
+                double u_local[4];
+                for (int a = 0; a < 4; ++a)
+                    u_local[a] = u[enodes[a]];
+                double Ku[4] = {0, 0, 0, 0};
+                for (int a = 0; a < 4; ++a)
+                    for (int b = 0; b < 4; ++b)
+                        Ku[a] += Kflat[a * 4 + b] * u_local[b];
+                for (int a = 0; a < 4; ++a)
+                    rhs[enodes[a]] -= Ku[a];
+            }
+            // source term (note: evaluate u at quadrature point by interpolation)
+            for (int e = 0; e < mesh.numElems; ++e)
+            {
+                auto elemElas2D = modelElasticity2D->ElementVec()[e];
+
+                if (elemElas2D->Dimension() != modelElasticity2D->Dimension())
+                {
+                    continue;
+                }
+                auto enodes = mesh.elems[e];
+                double x[4], y[4];
+                for (int i = 0; i < 4; ++i)
+                {
+                    auto [xx, yy] = mesh.nodes[enodes[i]];
+                    x[i] = xx;
+                    y[i] = yy;
+                }
+                for (int ig = 0; ig < nq; ++ig)
+                    for (int jg = 0; jg < nq; ++jg)
+                    {
+                        double xi = gp[ig], eta = gp[jg], w = gw[ig] * gw[jg];
+                        double N[4], dNdxi[4], dNdeta[4];
+                        shape_functions(xi, eta, N, dNdxi, dNdeta);
+                        double J11 = 0, J12 = 0, J21 = 0, J22 = 0;
+                        for (int a = 0; a < 4; ++a)
+                        {
+                            J11 += dNdxi[a] * x[a];
+                            J12 += dNdxi[a] * y[a];
+                            J21 += dNdeta[a] * x[a];
+                            J22 += dNdeta[a] * y[a];
+                        }
+                        double detJ = J11 * J22 - J12 * J21;
+                        double X = 0, Y = 0, uq = 0;
+                        for (int a = 0; a < 4; ++a)
+                        {
+                            X += N[a] * x[a];
+                            Y += N[a] * y[a];
+                            uq += N[a] * u[enodes[a]];
+                        }
+                        for (int a = 0; a < 4; ++a)
+                        {
+                            const double fval = f_source(enodes[a], uq);
+                            rhs[enodes[a]] += N[a] * fval * detJ * w;
+                        }
+                    }
+                // Neumann flux (as before) -- omitted here for brevity (zero flux in current setup)
+            }
+            // explicit Euler provisional update
+            for (int a = 0; a < mesh.numNodes; ++a)
+            {
+                double m = Mdiag[a];
+                if (m <= 0)
+                    m = 1e-16;
+                u_new[a] = u[a] + dt * (rhs[a] / m);
+            }
+
+            // Enforce global mass conservation using a single Lagrange multiplier that acts as a constant correction
+            // We look for constant c such that sum_i M_i*(u_new_i + c) = V0  --> c = (V0 - mass_new)/sumM
+            double mass_new = compute_total_mass(u_new);
+            double c = (V0 - mass_new) / sumM; // this is the constant correction added to all nodal values
+            for (int a = 0; a < mesh.numNodes; ++a)
+                u_new[a] += c;
+
+            // swap and advance
+            u.swap(u_new);
+            t += dt;
+
+            // diagnostics
+            double mass_after = compute_total_mass(u);
+            std::cerr << "step " << step + 1 << " t=" << t << " mass(after)=" << mass_after << " c=" << c << " max(u)=" << (*max_element(u.begin(), u.end())) << "\n";
+
+            // write vtu
+            write_vtu(mesh, u, step + 1, t);
         }
-        // explicit Euler provisional update
-        for (int a = 0; a < mesh.numNodes; ++a)
-        {
-            double m = Mdiag[a];
-            if (m <= 0)
-                m = 1e-16;
-            u_new[a] = u[a] + dt * (rhs[a] / m);
-        }
-
-        // Enforce global mass conservation using a single Lagrange multiplier that acts as a constant correction
-        // We look for constant c such that sum_i M_i*(u_new_i + c) = V0  --> c = (V0 - mass_new)/sumM
-        double mass_new = compute_total_mass(u_new);
-        double c = (V0 - mass_new) / sumM; // this is the constant correction added to all nodal values
-        for (int a = 0; a < mesh.numNodes; ++a)
-            u_new[a] += c;
-
-        // swap and advance
-        u.swap(u_new);
-        t += dt;
-
-        // diagnostics
-        double mass_after = compute_total_mass(u);
-        std::cerr << "step " << step + 1 << " t=" << t << " mass(after)=" << mass_after << " c=" << c << " max(u)=" << (*max_element(u.begin(), u.end())) << "\n";
-
-        // write vtu
-        write_vtu(mesh, u, step + 1, t);
     }
 
     return 0;
