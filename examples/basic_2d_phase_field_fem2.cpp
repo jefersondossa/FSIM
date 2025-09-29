@@ -19,6 +19,10 @@
 
 #include <fenv.h>
 
+static constexpr double beta_ = 1.5;
+static constexpr double gamma_ = 0.16;
+static constexpr double ksi_ = 3e-4;
+
 static double neumann_g(double x, double y, double t) { return 0.0; }
 static double u0(double x, double y)
 {
@@ -51,11 +55,17 @@ struct Mesh
         val1.setZero();
         val2.setZero();
         meshData->InsertMaterial(new PhaseField(15, 2));
-        meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kDirichlet, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kDirichlet, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(18, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(19, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(45, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(21, 2, BoundaryConditionType::kNeumann, val1, val2));
+
+        meshData->InsertMaterial(new L2Projection(17, 2, BoundaryConditionType::kNeumann, val1, val2));
+        meshData->InsertMaterial(new L2Projection(23, 2, BoundaryConditionType::kNeumann, val1, val2));
+        meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kNeumann, val1, val2));
         meshData->InsertMaterial(new L2Projection(18, 2, BoundaryConditionType::kNeumann, val1, val2));
         meshData->InsertMaterial(new L2Projection(19, 2, BoundaryConditionType::kNeumann, val1, val2));
-        meshData->InsertMaterial(new L2Projection(45, 2, BoundaryConditionType::kNeumann, val1, val2));
-        meshData->InsertMaterial(new L2Projection(21, 2, BoundaryConditionType::kNeumann, val1, val2));
 
         GmshTools::Read(*meshData, filename);
 
@@ -159,7 +169,7 @@ inline void shape_functions(double xi, double eta, double N[4], double dN_dxi[4]
     dN_deta[3] = 0.25 * (1.0 - xi);
 }
 
-void write_vtu(const Mesh &mesh, const std::vector<double> &u, int step, double time)
+void write_vtu(const Mesh &mesh, const std::vector<double> &u, const std::vector<double> &compliance, int step, double time)
 {
     std::ostringstream fname;
     fname << "solution_" << std::setw(5) << std::setfill('0') << step << ".vtu";
@@ -201,12 +211,19 @@ void write_vtu(const Mesh &mesh, const std::vector<double> &u, int step, double 
     out << "</DataArray>\n";
     out << "</Cells>\n";
 
-    // Point data (solution)
+    // Point data (solution + compliance)
     out << "<PointData Scalars=\"u\">\n";
+
     out << "<DataArray type=\"Float64\" Name=\"u\" format=\"ascii\">\n";
     for (double val : u)
         out << val << "\n";
     out << "</DataArray>\n";
+
+    out << "<DataArray type=\"Float64\" Name=\"compliance\" format=\"ascii\">\n";
+    for (double val : compliance)
+        out << val << "\n";
+    out << "</DataArray>\n";
+
     out << "</PointData>\n";
 
     out << "</Piece>\n";
@@ -224,19 +241,24 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh &modelEla
     modelElasticity2D.InsertMaterial(govEquationElasticity2D);
     val1.setZero();
     val2.setZero();
+    val2[0] = 1.0;
     // val2[0] = 1.;
     // constexpr auto kEngasteMatId = 22;
     constexpr auto kEngasteMatId = 16;
     // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
-    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
+    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(engasteBC);
-    // {
-    //     val1.setZero();
-    //     val2.setZero();
-    //     constexpr auto kEngasteMatId = 22;
-    //     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
-    //     modelElasticity2D.InsertMaterial(engasteBC);
-    // }
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = 1.0;
+    // val2[0] = 1.;
+    // constexpr auto kEngasteMatId = 22;
+    constexpr auto kBottomRight = 17;
+    // auto *engasteBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(bottomRightBC);
+
     val1.setZero();
     val2.setZero();
     val2[0] = 0.;
@@ -249,39 +271,89 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh &modelEla
     constexpr auto kFreeMatBottomId = 19;
     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBCEl2D);
-    {
-        val2[0] = 0.;
-        constexpr auto kRightMatBottomId = 45;
-        auto *freeBCEl2D = new L2Projection(kRightMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-        modelElasticity2D.InsertMaterial(freeBCEl2D);
-    }
-
-    // {
-    //     constexpr auto kFreeMatBottomId = 23;
-    //     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    //     modelElasticity2D.InsertMaterial(freeBCEl2D);
-    // }
-    val1.setZero();
-    val2.setZero();
-    val2[1] = -10.;
-    constexpr auto kExLoadMatId = 21;
-    auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(El2D);
     // val1.setZero();
     // val2.setZero();
-    // // val2[0] = -10;
-    // val2[1] = -10;
-    // constexpr auto kLoadMatId = 17;
-    // auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    // modelElasticity2D.InsertMaterial(El2D2);
+    // val2[0] = 0.;
+    // constexpr auto kExLoadMatId = 21;
+    // auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(El2D);
+    val1.setZero();
+    val2.setZero();
+    // val2[0] = -10;
+    val2[1] = -10;
+    constexpr auto kLoadMatId = 23;
+    auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D2);
     GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
 
-    // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
-    // Disables memory on elements
-    // (makes sure elemental stiffness is not recalculated)
-    // for(auto& [_, pWeakForm] : modelElasticity2D.Materialstd::Vector()) {
-    // govEquationElasticity2D->SetHasMemory(false);
+    return;
+
+    // MatrixDouble val1(2, 2);
+    // VecDouble val2(2);
+    // constexpr auto kVolumeMatId = 15;
+    // auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
+    // modelElasticity2D.InsertMaterial(govEquationElasticity2D);
+    // val1.setZero();
+    // val2.setZero();
+    // val2[0] = 1.0;
+    // // constexpr auto kEngasteMatId = 22;
+    // constexpr auto kEngasteMatId = 16;
+    // // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    // // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
+    // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    // modelElasticity2D.InsertMaterial(engasteBC);
+    // // {
+    // //     val1.setZero();
+    // //     val2.setZero();
+    // //     constexpr auto kEngasteMatId = 22;
+    // //     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
+    // //     modelElasticity2D.InsertMaterial(engasteBC);
+    // // }
+    // val1.setZero();
+    // val2.setZero();
+    // val2[0] = 0.;
+    // constexpr auto kFreeMatTopId = 18;
+    // auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(freeBC);
+    // val1.setZero();
+    // val2.setZero();
+    // val2[0] = 0.;
+    // constexpr auto kFreeMatBottomId = 19;
+    // auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(freeBCEl2D);
+    // {
+    //     val2[0] = 0.;
+    //     constexpr auto kRightMatBottomId = 45;
+    //     auto *freeBCEl2D = new L2Projection(kRightMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    //     modelElasticity2D.InsertMaterial(freeBCEl2D);
     // }
+
+    // // {
+    // //     constexpr auto kFreeMatBottomId = 23;
+    // //     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // //     modelElasticity2D.InsertMaterial(freeBCEl2D);
+    // // }
+    // val1.setZero();
+    // val2.setZero();
+    // val2[1] = -10.;
+    // constexpr auto kExLoadMatId = 21;
+    // auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(El2D);
+    // // val1.setZero();
+    // // val2.setZero();
+    // // // val2[0] = -10;
+    // // val2[1] = -10;
+    // // constexpr auto kLoadMatId = 17;
+    // // auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // // modelElasticity2D.InsertMaterial(El2D2);
+    // GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
+
+    // // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
+    // // Disables memory on elements
+    // // (makes sure elemental stiffness is not recalculated)
+    // // for(auto& [_, pWeakForm] : modelElasticity2D.Materialstd::Vector()) {
+    // // govEquationElasticity2D->SetHasMemory(false);
+    // // }
 }
 
 int main()
@@ -293,10 +365,10 @@ int main()
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     Mesh mesh("../../rectangle.msh");
-    double h = mesh.minH;     // min(mesh.hx, mesh.hy);
-    double dt = 0.25 * h * h; // conservative for stability
-    double T = 0.5;
-    double kappa = 0.01; // example diffusivity
+    double h = mesh.minH;                     // min(mesh.hx, mesh.hy);
+    double kappa = gamma_ * ksi_;             // example diffusivity
+    double dt = 0.25 * (h * h) / (4 * kappa); // conservative for stability
+    double T = dt * 2500;
     int numSteps = std::max(1, (int)ceil(T / dt));
     dt = T / numSteps;
 
@@ -421,11 +493,11 @@ int main()
 
     // write initial
     double t = 0.0;
-    write_vtu(mesh, u, 0, t);
+    write_vtu(mesh, u, std::vector<double>(u.size(), 1.0), 0, t);
 
     std::vector<std::string> ScalarNamesElasticity2D, VectorNamesElasticity2D;
     ScalarNamesElasticity2D = {"Compliance", "ComplianceSensibility", "WeightFunction"};
-    VectorNamesElasticity2D = {"Displacement", "Stress","Strain"};
+    VectorNamesElasticity2D = {"Displacement", "Stress", "Strain"};
 
     // time loop with explicit Euler + global Lagrange multiplier (enforced as constant correction)
     for (int step = 0; step < numSteps; ++step)
@@ -481,7 +553,7 @@ int main()
                     VecDouble compl_vec(nvar);
                     elemElas2D->Solution(compliance_var_idx, compl_vec);
                     // compliances.push_back(compl_vec[0]);
-                    compliances[connect[inode]] += compl_vec[0]/4;
+                    compliances[connect[inode]] += compl_vec[0] / 4;
                 }
             }
 
@@ -490,14 +562,15 @@ int main()
             for (auto &compliance : compliances)
             {
                 compliance /= maxCompliance;
+                compliance = std::min(1.0, compliance * 1);
             }
 
             assert(compliances.size() == u.size());
 
             const auto f_source = [&compliances](int64_t iNode, double u) -> double
             {
-                double res = 32 * 2 * u * (1.0 * u) * (1.0 - u);
-                res += 10*compliances[iNode];
+                double res = -gamma_ * 2 * u * (1.0 - u) * (1.0 - 2 * u);
+                res += beta_ * compliances[iNode];
                 return res;
             };
 
@@ -592,10 +665,11 @@ int main()
 
             // diagnostics
             double mass_after = compute_total_mass(u);
-            std::cerr << "step " << step + 1 << " t=" << t << " mass(after)=" << mass_after << " c=" << c << " max(u)=" << (*max_element(u.begin(), u.end())) << "\n";
+            std::cerr << "step " << step + 1 << " t=" << t << " mass(after)=" << mass_after << " c=" << c
+                      << " max(u)=" << (*max_element(u.begin(), u.end())) << " min(u)=" << (*std::min_element(u.begin(), u.end())) << "\n";
 
             // write vtu
-            write_vtu(mesh, u, step + 1, t);
+            write_vtu(mesh, u, compliances, step + 1, t);
         }
     }
 
