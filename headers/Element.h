@@ -71,6 +71,7 @@ private:
     MatrixDouble intPointCorrespXsi;
     bool isSecondDerivativeInverted = false;
     MatrixDouble invSecDeriv;
+    double tauAlequin = 0.0;
 
     bool          glueZone;
     bool          model; //true for local and false for global
@@ -382,6 +383,8 @@ public:
 
     /// Sets the boundary conditions for the incompressible flow problem
     void setBoundaryConditions(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void setBoundaryConditionsMatrix(MatrixDouble &jacobianNRMatrix);
+    void setBoundaryConditionsVector(VecDouble &rhsVector);
     void setBoundaryConditionsPoisson(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
 
     /// Sets the boundary conditions for the Laplace/Poisson problem
@@ -438,6 +441,8 @@ public:
     //...............................Problem type...............................
     /// Compute the Transient Navier-Stokes problem matrices and vectors
     void getTransientNavierStokes(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector);
+    void getTransientNavierStokesMatrix(MatrixDouble &jacobianNRMatrix);
+    void getTransientNavierStokesVector(VecDouble &rhsVector);
     
     /// Compute the Transient Navier-Stokes problem matrices and vectors
     void getPoisson(MatrixDouble &matrix, VecDouble &rhsVector);

@@ -16,6 +16,7 @@
 
 #include "Fluid.h"
 #include "Glue.h"
+#include <petscsnes.h>
 
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 
@@ -73,6 +74,7 @@ public:
     VecScatter        ctx;
     PetscScalar       val;
     PetscLogDouble bytes = 0;
+    SNES              snes;
 
 public:
     int numElemCoarse;
@@ -179,14 +181,25 @@ public:
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setVecValuesFineModel(VecDouble &rhs, VecInt &connec);
+    void setMatValuesFineModel(MatrixDouble &matrix, VecInt &connec);
     void setMatVecValuesFineModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
+    void setVecValuesCoarseModel(VecDouble &rhs, VecInt &connec);
+    void setMatValuesCoarseModel(MatrixDouble &matrix, VecInt &connec);
     void setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                         MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                         VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                         VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                         VecInt &connec, VecInt &connecL);
+    void setVecValuesLagMultFineFine(VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                     VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                     VecInt &connec, VecInt &connecL);
+    void setMatValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                     MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                     VecInt &connec, VecInt &connecL);
+
     void setMatVecValuesLagMultFineFinePoisson(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                                MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                                VecDouble &Rhs2, VecDouble &rhsLagMult2,
@@ -198,6 +211,13 @@ public:
                                           VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                           VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                           VecInt &connecC, VecInt &connecL);
+    void setVecValuesLagMultFineCoarse(VecDouble &Rhs2, VecDouble &rhsLagMult2,
+                                       VecDouble &localMV_vec, VecDouble &RhsArlequin2,
+                                       VecInt &connecC, VecInt &connecL);
+    void setMatValuesLagMultFineCoarse(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+                                       MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
+                                       VecInt &connecC, VecInt &connecL);
+    
     void setMatVecValuesLagMultFineCoarsePoisson(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                                  MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                                  VecDouble &Rhs2, VecDouble &rhsLagMult2,
@@ -205,6 +225,8 @@ public:
                                                  VecInt &connecC, VecInt &connecL);
 
     void assembleArlequinSystem();
+    void assembleArlequinMatrix();
+    void assembleArlequinVector();
     void assembleArlequinSystemPoisson();
 
     /// Print the results for Paraview post-processing
@@ -221,6 +243,9 @@ public:
 
     void stabilizeArlequinNew(VecDouble &Ml1, VecDouble &t1, 
                              VecDouble &j1, VecDouble &k1, VecDouble &p1, double &tArleq);
+
+    static PetscErrorCode FormFunction(SNES snes, Vec vecU,Vec vecB, void *ptr);
+    static PetscErrorCode FormJacobian(SNES snes,Vec vecU,Mat matA, Mat matB, void *ptr);
 
 };
 
