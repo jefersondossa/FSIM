@@ -19,9 +19,9 @@
 
 #include <fenv.h>
 
-static constexpr double beta_ = 1.5;
+static constexpr double beta_ = 0.5;
 static constexpr double gamma_ = 0.16;
-static constexpr double ksi_ = 3e-4;
+static constexpr double ksi_ = 1e-4;
 
 static double neumann_g(double x, double y, double t) { return 0.0; }
 static double u0(double x, double y)
@@ -31,7 +31,7 @@ static double u0(double x, double y)
     // return exp(-r2 / (2 * sigma * sigma));
     constexpr auto A = 0.2;
     const double V = 0.55;
-    return V + A * sin(8 * M_PI * x) * sin(8 * M_PI * y);
+    return V; //+ A * sin(8 * M_PI * x) * sin(8 * M_PI * y);
 }
 
 // Utilities -----------------------------------------------------------------
@@ -55,17 +55,17 @@ struct Mesh
         val1.setZero();
         val2.setZero();
         meshData->InsertMaterial(new PhaseField(15, 2));
-        // meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kDirichlet, val1, val2));
-        // meshData->InsertMaterial(new L2Projection(18, 2, BoundaryConditionType::kNeumann, val1, val2));
-        // meshData->InsertMaterial(new L2Projection(19, 2, BoundaryConditionType::kNeumann, val1, val2));
-        // meshData->InsertMaterial(new L2Projection(45, 2, BoundaryConditionType::kNeumann, val1, val2));
-        // meshData->InsertMaterial(new L2Projection(21, 2, BoundaryConditionType::kNeumann, val1, val2));
-
-        meshData->InsertMaterial(new L2Projection(17, 2, BoundaryConditionType::kNeumann, val1, val2));
-        meshData->InsertMaterial(new L2Projection(23, 2, BoundaryConditionType::kNeumann, val1, val2));
-        meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kNeumann, val1, val2));
+        meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kDirichlet, val1, val2));
         meshData->InsertMaterial(new L2Projection(18, 2, BoundaryConditionType::kNeumann, val1, val2));
         meshData->InsertMaterial(new L2Projection(19, 2, BoundaryConditionType::kNeumann, val1, val2));
+        meshData->InsertMaterial(new L2Projection(45, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(21, 2, BoundaryConditionType::kNeumann, val1, val2));
+
+        // meshData->InsertMaterial(new L2Projection(17, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(23, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(16, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(18, 2, BoundaryConditionType::kNeumann, val1, val2));
+        // meshData->InsertMaterial(new L2Projection(19, 2, BoundaryConditionType::kNeumann, val1, val2));
 
         GmshTools::Read(*meshData, filename);
 
@@ -102,7 +102,6 @@ struct Mesh
                 elemNodesIds[iNode] = connect[iNode];
             }
 
-            minH = std::min(std::fabs(-nodes[connect[1]].first), minH);
             const double x0 = nodes[connect[0]].first;
             const double y0 = nodes[connect[0]].second;
 
@@ -253,10 +252,17 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh &modelEla
     val2.setZero();
     val2[1] = 1.0;
     // val2[0] = 1.;
+    // // constexpr auto kEngasteMatId = 22;
+    // constexpr auto kBottomRight = 17;
+    // // auto *engasteBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    // auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    // modelElasticity2D.InsertMaterial(bottomRightBC);
+    val2.setZero();
+    val2[1] = -10;
     // constexpr auto kEngasteMatId = 22;
-    constexpr auto kBottomRight = 17;
+    constexpr auto kBottomRight = 45;
     // auto *engasteBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
-    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(bottomRightBC);
 
     val1.setZero();
@@ -280,7 +286,7 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh &modelEla
     val1.setZero();
     val2.setZero();
     // val2[0] = -10;
-    val2[1] = -10;
+    val2[0] = 10;
     constexpr auto kLoadMatId = 23;
     auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(El2D2);
@@ -365,10 +371,10 @@ int main()
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     Mesh mesh("../../rectangle.msh");
-    double h = mesh.minH;                     // min(mesh.hx, mesh.hy);
-    double kappa = gamma_ * ksi_;             // example diffusivity
-    double dt = 0.25 * (h * h) / (4 * kappa); // conservative for stability
-    double T = dt * 2500;
+    double h = mesh.minH;
+    double kappa = gamma_ * ksi_;
+    double dt = 0.25 * (h * h) / (4 * kappa) * 0.05;
+    double T = dt * 500000;
     int numSteps = std::max(1, (int)ceil(T / dt));
     dt = T / numSteps;
 
@@ -518,7 +524,9 @@ int main()
         }
 
         anElasticity2D.Run();
-        VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, step);
+        if(step % 20 == 0) {
+            VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, step);
+        }
 
         for (size_t i = 0; i < 10; i++)
         {
@@ -669,7 +677,9 @@ int main()
                       << " max(u)=" << (*max_element(u.begin(), u.end())) << " min(u)=" << (*std::min_element(u.begin(), u.end())) << "\n";
 
             // write vtu
-            write_vtu(mesh, u, compliances, step + 1, t);
+            if(step % 20 == 0) {
+                write_vtu(mesh, u, compliances, step + 1, t);
+            }
         }
     }
 

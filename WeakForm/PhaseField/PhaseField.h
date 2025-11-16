@@ -7,13 +7,12 @@
 /// @brief Implements the PhaseField's equation weak form
 class PhaseField : public TransientWeakForm, public WeakForm{
 private:
-    double fKappa;
-    double fEta;
-
-    static constexpr double fM = 1e-4;
-    static constexpr double fGamma = 1e-1;
-    static constexpr double h = 1.0/20.0;
-    static constexpr double fKsi = 5*h;
+    static constexpr double dx = 0.02;
+    static constexpr double fM = 1.0;
+    static constexpr double fGamma = 0.16;
+    static constexpr double fKsi = 1e-4;
+    static constexpr double fBeta = 0.5;
+    static constexpr double fDt = 0.25 * (dx * dx) / (4 * fGamma * fKsi) * 0.05;//5e-3;
 
 private:
     void ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDouble &Stiffness);
@@ -24,7 +23,7 @@ public:
     /// @param matid physical tag
     /// @param dim problem dimension
     /// @param nState number of state variables
-    PhaseField(int matid, int dim, double kappa = 1e-5, double eta = 20.0, double dTime = 0.001);
+    PhaseField(int matid, int dim);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

@@ -15,6 +15,9 @@ public:
     virtual ~LinearSolver() {};
 
     virtual void Solve() = 0;
+    virtual void SolveLumped() {
+        PanicButton();
+    };
 };
 
 

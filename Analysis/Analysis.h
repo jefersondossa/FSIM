@@ -64,6 +64,7 @@ public:
     }
     
     virtual void Run();
+    virtual void RunLumped();
 
     void PostProcessError(VecDouble &errorsTotal);
     

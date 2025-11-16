@@ -196,12 +196,111 @@ EigenLinearSolver::~EigenLinearSolver(){
 
 }
 
+#include <iostream>
+#include <Eigen/Sparse>
+
+void printSparseMatrixDense(const Eigen::SparseMatrix<double>& mat) {
+    for (int i = 0; i < mat.rows(); ++i) {
+        for (int j = 0; j < mat.cols(); ++j) {
+            double val = mat.coeff(i, j); // safe accessor (0 if absent)
+            std::cout << val << "\t";
+        }
+        std::cout << "\n";
+    }
+}
+
+#include <iomanip>
+#include <Eigen/Dense>
+
+void printMatrixXd(const Eigen::MatrixXd& mat, int width = 10, int precision = 4) {
+    for (int i = 0; i < mat.rows(); ++i) {
+        for (int j = 0; j < mat.cols(); ++j) {
+            std::cout << std::setw(width) 
+                      << std::setprecision(precision) 
+                      << std::fixed 
+                      << mat(i, j);
+        }
+        std::cout << "\n";
+    }
+}
+
+Eigen::SparseMatrix<double> LumpMatrix(const Eigen::SparseMatrix<double> &K)
+{
+    // Make sure the matrix is compressed for efficient iteration
+    Eigen::SparseMatrix<double> Kc = K;
+    Kc.makeCompressed();
+
+    const int n = Kc.rows();
+    Eigen::VectorXd rowSum = Eigen::VectorXd::Zero(n);
+
+    // Iterate through nonzero entries
+    for (int k = 0; k < Kc.outerSize(); ++k)
+        for (Eigen::SparseMatrix<double>::InnerIterator it(Kc, k); it; ++it)
+            rowSum[it.row()] += it.value();
+
+    // Build diagonal lumped matrix
+    Eigen::SparseMatrix<double> Klumped(n, n);
+    Klumped.reserve(Eigen::VectorXi::Constant(n, 1));
+    for (int i = 0; i < n; ++i)
+        Klumped.insert(i, i) = rowSum[i];
+
+    Klumped.makeCompressed();
+    return Klumped;
+}
+
+Eigen::SparseMatrix<double> LumpMatrixExceptLastKeepBoundary(const Eigen::SparseMatrix<double> &K)
+{
+    Eigen::SparseMatrix<double> Kc = K;
+    Kc.makeCompressed();
+
+    const int n = Kc.rows();
+    Eigen::VectorXd rowSum = Eigen::VectorXd::Zero(n);
+
+    // Compute row sums for all but the last row
+    for (int k = 0; k < Kc.outerSize(); ++k)
+        for (Eigen::SparseMatrix<double>::InnerIterator it(Kc, k); it; ++it)
+            if (it.row() < n - 1)
+                rowSum[it.row()] += it.value();
+
+    // Start building result matrix
+    Eigen::SparseMatrix<double> Klumped(n, n);
+    Klumped.reserve(Kc.nonZeros());
+
+    // Insert lumped diagonal entries for all but last row
+    for (int i = 0; i < n - 1; ++i)
+        Klumped.insert(i, i) = rowSum[i];
+
+    // Copy last row and last column from K
+    for (int k = 0; k < Kc.outerSize(); ++k)
+        for (Eigen::SparseMatrix<double>::InnerIterator it(Kc, k); it; ++it)
+            if (it.row() == n - 1 || it.col() == n - 1)
+                Klumped.insert(it.row(), it.col()) = it.value();
+
+    Klumped.makeCompressed();
+    return Klumped;
+}
+
+void EigenLinearSolver::SolveLumped(){
+    auto * emat = dynamic_cast<EigenSpMatrix*> (fAnalysis->GlobalMatrix());
+#ifdef DEBUG_BUILD
+    if (!emat) PanicButton();
+#endif
+
+    emat->Matrix() = LumpMatrixExceptLastKeepBoundary(emat->Matrix());
+    Solve();
+}
+
 void EigenLinearSolver::Solve(){
     
     auto * emat = dynamic_cast<EigenSpMatrix*> (fAnalysis->GlobalMatrix());
 #ifdef DEBUG_BUILD
     if (!emat) PanicButton();
 #endif
+
+    // std::cout << "--------------------\n";
+    // printSparseMatrixDense(emat->Matrix());
+    // std::cout << "--------------------\n";
+    // printMatrixXd(emat->Rhs());
 
     switch (fAnalysis->SType())
     {
@@ -211,6 +310,9 @@ void EigenLinearSolver::Solve(){
             solver.analyzePattern(emat->Matrix());
             solver.factorize(emat->Matrix());
             emat->Solution() = solver.solve(emat->Rhs()); 
+            // std::cout << "--------------------\n";
+            // std::cout << "SOLUCAO\n";
+            // printMatrixXd(emat->Solution());
             std::cout << "Mat determinant = " << solver.determinant() << '\n';
         }
         break;

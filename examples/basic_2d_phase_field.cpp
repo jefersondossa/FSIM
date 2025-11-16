@@ -345,7 +345,6 @@ int main()
     Grid mech_coupling_normalized(Nx, vector<double>(Ny));
 
     write_vtu(phi, "phi_" + std::to_string(0) + ".vtu");
-    return 1;
 
     while(true)
     {

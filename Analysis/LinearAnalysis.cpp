@@ -46,7 +46,8 @@ void LinearAnalysis::UpdateSolution(){
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
                 double sol = this->MeshVector()[imesh]->NodeVec()[i] -> Solution()[k];
                 this->MeshVector()[imesh]->NodeVec()[i] -> SetPreviousSolution(k,sol);
-                this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
+                // this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
+                this->MeshVector()[imesh]->NodeVec()[i] -> IncrementSolution(k,val);
             }
         };
     }
@@ -71,4 +72,25 @@ void LinearAnalysis::Run(){
     // fGlobalMatrix->PrintRhs();
     // fGlobalMatrix->PrintSolution();
 };
+
+void LinearAnalysis::RunLumped(){
+    Analysis::RunLumped();
+    // std::cout << "Allocating problem..." << '\n';
+    // std::clock_t t3 = std::clock();
+    // Compute();
+    // std::clock_t t4 = std::clock();
+    // std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
+    // // fGlobalMatrix->PrintMatrix();
+    // // fGlobalMatrix->PrintRhs();
+    // // fGlobalMatrix->PrintSolution();
+    // Solve();
+    // std::clock_t t5 = std::clock();
+    // std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
+    // std::cout << "Updating solution..." << '\n';
+    // LinearAnalysis::UpdateSolution();
+    // fGlobalMatrix->PrintMatrix();
+    // fGlobalMatrix->PrintRhs();
+    // fGlobalMatrix->PrintSolution();
+};
+
 

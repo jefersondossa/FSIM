@@ -19,12 +19,11 @@ void LagrangeMultiplier::ComputeStiffness(int &index, IntPointData &leftdata, In
     double nphi = leftdata.fPhi.size();
     
     Stiffness += WJ * leftdata.fPhi * rightdata.fPhi.transpose();
-   
 }
 
 void LagrangeMultiplier::ComputeResidual(int &index, IntPointData &leftdata, IntPointData &rightdata, VecDouble &Rhs){
-
-    double WJ = leftdata.fWeight * leftdata.fJacA0 * leftdata.fWeightFunction[index];
+    double WJ = leftdata.fWeight * leftdata.fJacA0;//* leftdata.fWeightFunction[index];
+    // double WJ = leftdata.fWeight * leftdata.fJacA0;// * leftdata.fWeightFunction[index];
     double nphiL = leftdata.fPhi.size();
     double nphiR = rightdata.fPhi.size();
     VecDouble forcingF(1);
@@ -35,7 +34,11 @@ void LagrangeMultiplier::ComputeResidual(int &index, IntPointData &leftdata, Int
         Rhs[i] -= WJ * leftdata.fPhi[i] * rightdata.fSol[0];
     }
     for (int i = 0; i < nphiR; i++){
-        Rhs[nphiL+i] += (forcingF[0] * rightdata.fPhi[i] - rightdata.fPhi[i] * leftdata.fSol[0]) * WJ;
+        // Rhs[nphiL+i] += (forcingF[0] * rightdata.fPhi[i] /*- rightdata.fPhi[i] * leftdata.fSol[0]*/) * WJ;
+        Rhs[nphiL+i] += (forcingF[0] * rightdata.fPhi[i]) * WJ;
+        for(int j = 0; j < nphiL; j++) {
+            Rhs[nphiL+i] -= (leftdata.fPhi[j] * leftdata.fSol[0]) * WJ;
+        }
     }
 };
 

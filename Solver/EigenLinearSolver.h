@@ -12,6 +12,7 @@ public:
     virtual ~EigenLinearSolver();
 
     void Solve() override;
+    void SolveLumped() override;
 };
 
 

@@ -210,3 +210,36 @@ void Analysis::Run(){
     std::cout << "Updating solution..." << '\n';
     UpdateSolution();
 };
+
+
+void Analysis::RunLumped(){
+    std::cout << "Allocating problem..." << '\n';
+    std::clock_t t3 = std::clock();
+    Compute();
+    std::clock_t t4 = std::clock();
+    std::cout << "Time assembling = " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << "s \n";
+    {
+        std::cout << "Solving..." << '\n';
+
+        #ifdef HAS_PETSC
+            if (fArlequin && fReducedArlequin){
+                fSolver = new ArlequinRedSolverPETSc(this);
+            } else {
+                fSolver = new PETScSolver(this);
+            }
+        #else
+            if (fArlequin && fReducedArlequin){
+                fSolver = new ArlequinRedSolverEigen(this);
+            } else {
+                fSolver = new EigenLinearSolver(this);
+            }
+        #endif
+            fSolver->SolveLumped();
+            delete fSolver;
+            fSolver = nullptr;
+    }
+    std::clock_t t5 = std::clock();
+    std::cout << "Time Solving = " << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << "s \n";
+    std::cout << "Updating solution..." << '\n';
+    UpdateSolution();
+};

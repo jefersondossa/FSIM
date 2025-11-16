@@ -36,7 +36,7 @@ int main()
     model->InsertMaterial(freeBC);
 
     val2.setZero();
-    val2[1] = -10;
+    val2[0] = 10;
 
     constexpr auto kLoadMatId = 16;
     auto *loadBC = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
@@ -45,6 +45,15 @@ int main()
     GmshTools::Read(*model, "../cantilever_2d_beam.msh");
 
     LinearAnalysis an(model.get(), SolverType::ELU);
+
+    for (size_t inode = 0; inode < model->NNodes(); inode++){
+        model->NodeVec()[inode]->setWeightFunction(1);
+    }
+    for (int64_t i_el = 0; i_el < model->NElements(); i_el++){
+        auto &elemElas2D = model->ElementVec()[i_el];            
+        if (elemElas2D->Dimension() != model->Dimension()) continue;
+        elemElas2D->setIntegPointWeightFunction();
+    }
 
     an.Run();
 

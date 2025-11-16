@@ -1,11 +1,9 @@
 #include "PhaseField.h"
 
 //Class constructor
-PhaseField::PhaseField(int matid, int dim, double kappa, double eta, double dTime) : WeakForm()
+PhaseField::PhaseField(int matid, int dim) : WeakForm()
 {
-    fKappa = kappa;
-    fEta = eta;
-    fTimeStep = dTime;
+    fTimeStep = fDt;
     fIntegScheme = IEuler;
     fMatId = matid;
     fDimension = dim;
@@ -24,27 +22,27 @@ void PhaseField::ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDo
         data.fSol.resize(1);
     }
 
-    // TODO: Remove fWeightFunction.
     double WJ = data.fWeight * data.fJacA0;
     int nphi = data.fPhi.size();
 
-    // TODO: Use fWeightFunction instead of data.fJ.
     const auto sol = data.fSol(0, 0);
 
-    const auto y = 1e-1*-fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0 * fEta * data.fJ * (1-sol)*sol);
+    // const auto mechCoupling = data.fInterpWeightFunction * fBeta;
+    // const auto doubleWellDerivative = fGamma * 2.0 * (1.0-sol)*(1.0-2.0*sol);
+
     for (int i = nphi; i-- ; ){
         for (int j = nphi; j-- ; ){
             for (int k = fDimension; k--;  ){
                 Stiffness(i,j) += fM*fGamma*fKsi*data.fDPhiX0(k,i) * data.fDPhiX0(k,j) * WJ;
             }
-            Stiffness(i,j) += data.fPhi[i] * data.fPhi[j] * y * WJ;
+            // Stiffness(i,j) += data.fPhi[i] * data.fPhi[j] * (mechCoupling - doubleWellDerivative) * WJ;
         };
     };
 }
 
 void PhaseField::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
 
-    ComputeStiffnessStatic(index, data, Stiffness);
+    // ComputeStiffnessStatic(index, data, Stiffness);
 
     const int nphi = data.fPhi.size();
     const double WJ = data.fWeight * data.fJacA0;
@@ -72,7 +70,6 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
     auto force = fForceFunction;
     int nphi = data.fPhi.size();
 
-    // TODO: Remove fWeightFunction.
     double WJ = data.fWeight * data.fJacA0;
 
     VecDouble forcingF(1);
@@ -81,8 +78,8 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
 
     const auto sol = data.fSol(0, 0);
 
-    // TODO: Use fWeightFunction instead of data.fJ.
-    const auto y = 1e-1*-fM * (data.fInterpWeightFunction + fGamma*(4*sol*sol - 6*sol + 2));//(1.0 - sol) * (sol - 0.5 - 30.0*fEta * data.fJ * (1-sol)*sol);
+    const auto mechCoupling = data.fInterpWeightFunction * fBeta;
+    const auto doubleWellDerivative = fGamma * 2.0 * sol * (1.0-sol)*(1.0-2.0*sol);
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];
@@ -93,39 +90,39 @@ void PhaseField::ComputeResidualStatic(int &index, IntPointData &data, VecDouble
 
         double phaseFieldRes = 0.0;
 
-        phaseFieldRes = shapeFi * y * sol;
+        phaseFieldRes = (mechCoupling  - doubleWellDerivative) * shapeFi;
 
         //Source term
-        double F = (forcingF[0]) * shapeFi;
+        // double F = (forcingF[0]) * shapeFi;
 
-        Rhs[i] += (-phaseFieldRes -K + F) * WJ;
+        Rhs[i] += (phaseFieldRes - K /*+ F*/) * WJ;
     };
 }
 
 void PhaseField::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     ComputeResidualStatic(index, data, Rhs);
     
-    const auto vel = data.fDSolDt;
-    const int nphi = data.fPhi.size();
-    const double WJ = data.fWeight * data.fJacA0;
+    // const auto vel = data.fDSolDt;
+    // const int nphi = data.fPhi.size();
+    // const double WJ = data.fWeight * data.fJacA0;
 
     // int (R) -> int (w[dphi/dt + ...])
     // R_i+1 = R_i + grad(R) * delta_phi
     // dphi/dt -> int(w * dphi/dt)
 
-    switch (fIntegScheme)
-    {
-    case IEuler:
-        for (size_t i = 0; i < nphi; i++)
-        {
-            Rhs[i] -= ((data.fSol[0] - data.fSolPrev[0]) / fTimeStep) * data.fPhi[i] * WJ;
-        }
-        break;
+    // switch (fIntegScheme)
+    // {
+    // case IEuler:
+    //     for (size_t i = 0; i < nphi; i++)
+    //     {
+    //         Rhs[i] -= ((data.fSol[0] - data.fSolPrev[0]) / fTimeStep) * data.fPhi[i] * WJ;
+    //     }
+    //     break;
 
-    default:
-        PanicButton();
-        break;
-        }
+    // default:
+    //     PanicButton();
+    //     break;
+    //     }
 };
 
 void PhaseField::ComputeError(IntPointData &data, VecDouble &errors){
