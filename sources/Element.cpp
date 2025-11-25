@@ -2513,6 +2513,182 @@ void Element<DIM,DEG>::getLagrangeMultipliersSameMesh(MatrixDouble &lagrMultMatr
     
     return;
 };
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSameMeshMatrix(MatrixDouble &lagrMultMatrix){
+
+    VecDouble xsi(DIM);
+    
+    MatrixDouble dphi_dx(nElNodes,DIM);
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeF shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    double tSUPG_; double tPSPG_; double tLSIC_;
+
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    double &alpha_f = parameters->getAlphaF();
+    double &gamma = parameters->getGamma();
+    double &dTime_ = parameters->getTimeStep();
+
+    
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        //Velocity
+        VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
+        interpolateVelocity(index, u_, uPrev_);
+        una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
+
+        //Velocity Derivatives
+        MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
+        interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+        duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
+
+        //Lagrange Multiplier
+        VecDouble lagM_(DIM);
+        interpolateLagMultiplier(index, lagM_);
+
+        //Lagrange Multiplier Derivatives
+        MatrixDouble dL_dx(DIM,DIM);
+        interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+        
+        double WJ = weight_ * djac_;
+        for (int i = 0; i < nElNodes; i++){
+            for (int j = 0; j < nElNodes; j++){
+                double l2 = DI -> phi_(i,index) * DI -> phi_(j,index) * WJ * k1;
+                for (int k = 0; k < DIM; k++){
+                    // L2 COUPLING OPERATOR
+                    lagrMultMatrix(DIM*i+k,DIM*j+k) -= l2;
+                    for (int l = 0; l < DIM; l++){
+                        //H1 COUPLING OPERATOR
+                        double K = dphi_dx(i,l) * dphi_dx(j,k);
+                        if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dx(j,m);
+
+                        lagrMultMatrix(DIM*i+k,DIM*j+l) -= K * WJ * k2;
+                    };
+                };
+            };
+        };
+        index++; 
+    }; 
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                for (int j = 0; j < nLocDOF; j++){
+                    lagrMultMatrix(DIM*i+k,j) = 0.;
+                    lagrMultMatrix(j,DIM*i+k) = 0.;
+                };
+            };
+        };
+    };
+    
+    return;
+};
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSameMeshVector(VecDouble &lagrMultVector, VecDouble &rhsVector){
+
+    VecDouble xsi(DIM);
+    
+    MatrixDouble dphi_dx(nElNodes,DIM);
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeF shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    double tSUPG_; double tPSPG_; double tLSIC_;
+
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    double &alpha_f = parameters->getAlphaF();
+    double &gamma = parameters->getGamma();
+    double &dTime_ = parameters->getTimeStep();
+
+    
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+        double djac_ = 0.;
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        //Velocity
+        VecDouble u_(DIM), uPrev_(DIM), una_(DIM);
+        interpolateVelocity(index, u_, uPrev_);
+        una_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
+
+        //Velocity Derivatives
+        MatrixDouble du_dx(DIM,DIM), duprev_dx(DIM,DIM), duna_dx(DIM,DIM);
+        interpolateVelDerivatives(dphi_dx, du_dx, duprev_dx);
+        duna_dx = alpha_f * du_dx + (1. - alpha_f) * duprev_dx;
+
+        //Lagrange Multiplier
+        VecDouble lagM_(DIM);
+        interpolateLagMultiplier(index, lagM_);
+
+        //Lagrange Multiplier Derivatives
+        MatrixDouble dL_dx(DIM,DIM);
+        interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+        
+        double WJ = weight_ * djac_;
+        for (int i = 0; i < nElNodes; i++){
+            // Lagrange multipliers residual
+            for (int k = 0; k < DIM; k++){
+                double L2 = lagM_[k] * DI -> phi_(i,index) * k1;
+
+                double H1 = 0.;
+                for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(k,l) * k2;
+                for (int l=DIM; l--; ) H1 += dphi_dx(i,l) * dL_dx(l,k) * k2;
+
+                lagrMultVector[DIM*i+k] += (L2 + H1) * WJ;
+
+                double L2u = una_[k] * DI -> phi_(i,index) * k1;
+
+                double H1u = 0.;
+                for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(k,l) * k2;
+                for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(l,k) * k2;
+
+                rhsVector[DIM*i+k] += (L2u + H1u) * WJ;
+            };
+        };
+        index++; 
+    }; 
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                lagrMultVector[DIM*i+k] = 0.0;
+            };
+        };
+    };
+    
+    return;
+};
+
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
@@ -2723,6 +2899,22 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMesh(MatrixDouble &ja
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMeshMatrix(MatrixDouble &jacobianNRMatrix){
+
+
+    return;
+};
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_SameMeshVector(VecDouble &rhsVector){
+
+
+    return;
+};
+
+//------------------------------------------------------------------------------
+//----------------------------STEADY LAPLACE PROBEM-----------------------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
 void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix, VecDouble &arlequinStabVector, 
                                                               VecDouble &ML1, VecDouble &t1, VecDouble &j1, 
                                                               VecDouble &kk1, VecDouble &p1){
@@ -2925,6 +3117,373 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
                     arlequinStab(DIM*i+k,j) = 0.;
                     arlequinStab(j,DIM*i+k) = 0.;
                 };
+                arlequinStabVector[DIM*i+k] = 0.0;
+            };
+        };
+    };
+
+    return;
+};
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshMatrix(MatrixDouble &arlequinStab, MatrixDouble &laplMatrix){
+
+    VecDouble xsi(DIM);    
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dx(nElNodes,dimddphi);
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeF shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &k1 = parameters->getArlequinK1();
+
+    getParameterArlequin2();
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        double djac_ = 0.; 
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
+        
+        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+
+        double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
+        
+        //Lagrange Multiplier Derivatives
+        MatrixDouble dL_dx(DIM,DIM);
+        interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+        //Acceleration
+        VecDouble a_(DIM), aPrev_(DIM), am_(DIM);
+        VecDouble u_(DIM), uPrev_(DIM), um_(DIM);
+        interpolateAcceleration(index, a_, aPrev_);
+        interpolateVelocity(index, u_, uPrev_);
+        um_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
+        am_ = alpha_m * a_ + (1. - alpha_m) * aPrev_;
+
+        //Pressure
+        double p_;
+        VecDouble dp_dx(DIM);
+        int index = 0;
+        interpolatePressure(index, dphi_dx, p_, dp_dx);
+
+        MatrixDouble da_dx(DIM,DIM), daprev_dx(DIM,DIM), dana_dx(DIM,DIM);
+        interpolateAccelDerivatives(dphi_dx, da_dx, daprev_dx);
+        dana_dx = alpha_f * da_dx + (1. - alpha_f) * daprev_dx;
+
+        // Pressure Laplacian
+        VecDouble ddp_dx2(3);
+        ddp_dx2.setZero();
+        for (int i = nElNodes; i--; ){
+            for (int j = 3; j--; ) 
+                ddp_dx2[j] += (*nodes_)[connect_[i]] -> getPressure() * ddphi_dx(i,j);
+        }
+
+        VecDouble ddu_dx2(3),ddv_dx2(3);
+        ddu_dx2.setZero();
+        ddv_dx2.setZero();
+        for (int i = nElNodes; i--; ){
+            for (int j = 3; j--; ) {
+                ddu_dx2[j] += (*nodes_)[connect_[i]] -> getVelocity(0) * ddphi_dx(i,j);
+                ddv_dx2[j] += (*nodes_)[connect_[i]] -> getVelocity(1) * ddphi_dx(i,j);
+            }
+        }        
+
+        for (int i = 0; i < nElNodes; i++){
+            for (int j = 0; j < nElNodes; j++){        
+
+                //ARLEQUIN STABILIZATION TERMS
+                double AM = 0.;
+                double Lpx = 0.; double Lpy = 0.;
+                double LC = 0.; double LL = 0.;
+
+                // AM = DI->phi_(i,index) * DI->phi_(j,index) *  tARLQ_ * wna_* alpha_m;
+
+                // LL = -2 * phi_[i] * phi_[j] * tauAlequin / dens_;
+                for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m)  * tauAlequin / dens_;
+
+                // Lpx = -(dphi_dx[0][i] * dp_dxx + dphi_dx[1][i] * dp_dxy) * intPointWeightFunction(index)
+                //      * tauAlequin / dens_;
+                // Lpy = -(dphi_dx[0][i] * dp_dxy + dphi_dx[1][i] * dp_dyy) * intPointWeightFunction(index)
+                //      * tARLQ_ / dens_;
+
+                // LC = phi_[i] * ((una_ - umesh_) * dphi_dx[0][i] + (vna_ - vmesh_) * dphi_dx[1][i]) * phi_[j] * tARLQ_ * intPointWeightFunction(index);
+
+                for (int k = DIM; k--; )
+                    arlequinStab(DIM*i+k,DIM*j+k) += (AM + LL) * weight_ * djac_;
+
+
+                // LC = -(dphi_dx[0][i]*(du_dx*dphi_dx[0][j] + dv_dx*dphi_dx[1][j]) +
+                //        dphi_dx[1][i]*(du_dy*dphi_dx[0][j] + dv_dy*dphi_dx[1][j]) + 
+                //        dphi_dx[0][i]*(u_*ddphi_dx(0,0)(j) + v_*ddphi_dx(0,1)(j)) + 
+                //        dphi_dx[1][i]*(u_*ddphi_dx(1,0)(j) + v_*ddphi_dx(1,1)(j))) * tARLQ_ * intPointWeightFunction(index);
+
+                // Lpx = 0.; Lpy = 0.;
+
+                // Lpx = (dphi_dx[0][i] * ddphi_dx(0,0)(j) + 
+                //        dphi_dx[1][i] * ddphi_dx(0,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+                // Lpy = (dphi_dx[0][i] * ddphi_dx(1,0)(j) + 
+                //        dphi_dx[1][i] * ddphi_dx(1,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+
+
+
+
+                // laplMatrix[2*i  ][2*j  ] += (LC + AM) * weight_ * djac_;
+                // laplMatrix[2*i+1][2*j+1] += (LC + AM) * weight_ * djac_;
+
+                // laplMatrix[2*i  ][12+j] += Lpx * weight_ * djac_;
+                // laplMatrix[2*i+1][12+j] += Lpy * weight_ * djac_;
+                // laplMatrix[12+j][2*i  ] += Lpx * weight_ * djac_;
+                // laplMatrix[12+j][2*i+1] += Lpy * weight_ * djac_;
+
+            };
+
+        //     //ARLEQUIN STABILIZATION TERMS
+        //     double LCx = 0.; double LCy = 0.;
+        //     double LPx = 0.; double LPy = 0.;
+
+        //     for (int k = DIM; k--; ){
+        //         double LLx = 0.;
+        //         for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ * tauAlequin / dens_;
+        //         double Amx = 0.;
+        //         // double Amx = - DI->phi_(i,index) * am_[k] ;
+        //         arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_  * wna_;
+
+        //     }
+
+        //     //New stabilization (Pati)
+        //     double du_dx = dana_dx(0,0); double du_dy = dana_dx(0,1);
+        //     double dv_dx = dana_dx(1,0); double dv_dy = dana_dx(1,1);
+        //     double dp_dxx = ddp_dx2(0); double dp_dyy = ddp_dx2(1); double dp_dxy = ddp_dx2(2);
+        //     double dax_dx = dana_dx(0,0); double dax_dy = dana_dx(0,1);
+        //     double day_dx = dana_dx(1,0); double day_dy = dana_dx(1,1);
+        //     double du_dxx = ddu_dx2(0); double du_dyy = ddu_dx2(1); double du_dxy = ddu_dx2(2);
+        //     double dv_dxx = ddv_dx2(0); double dv_dyy = ddv_dx2(1); double dv_dxy = ddv_dx2(2);
+
+        //     ML1[DIM*i+0] = (DI->phi_(i,index) * u_[0]) * weight_ * djac_;
+        //     ML1[DIM*i+1] = (DI->phi_(i,index) * u_[1]) * weight_ * djac_;
+
+        //     p1[DIM*i+0] = (dphi_dx(i,0) * dp_dxx + dphi_dx(i,1) * dp_dxy) * weight_ * djac_ * wna_;
+        //     p1[DIM*i+1] = (dphi_dx(i,1) * dp_dyy + dphi_dx(i,1) * dp_dxy) * weight_ * djac_ * wna_;
+
+        //     j1[DIM*i+0] = (dphi_dx(i,1) * day_dx + dphi_dx(i,0) * dax_dx) * weight_ * djac_ * wna_;
+        //     j1[DIM*i+1] = (dphi_dx(i,1) * day_dy + dphi_dx(i,0) * dax_dy) * weight_ * djac_ * wna_;
+
+        //     t1[DIM*i+0] = (dphi_dx(i,1) * (du_dy*du_dx + dv_dy*dv_dx + u_[0]*du_dxy + u_[1]*dv_dxy) + 
+        //                    dphi_dx(i,0) * (du_dx*du_dx + dv_dx*dv_dx + u_[0]*du_dxx + u_[1]*dv_dxx)) * weight_ * djac_ * wna_;
+        //     t1[DIM*i+1] = (dphi_dx(i,1) * (du_dy*du_dy + dv_dy*dv_dy + u_[0]*du_dyy + u_[1]*dv_dyy) + 
+        //                    dphi_dx(i,0) * (du_dy*du_dx + dv_dy*dv_dx + u_[0]*du_dxy + u_[1]*dv_dxy)) * weight_ * djac_ * wna_;
+
+        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/wna_) + dphi_dx[1][i] * (dLx_dy/wna_)) * tARLQ_ / dens_;
+        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/wna_) + dphi_dx[1][i] * (dLy_dy/wna_)) * tARLQ_ / dens_;
+        //    //}else{
+        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/intPointWeightFunction(index) - duna_dx*duna_dx - dvna_dx*duna_dy) + 
+        //         //         dphi_dx[1][i] * (dLx_dy/intPointWeightFunction(index) - duna_dy*duna_dx - dvna_dy*duna_dy)) * tARLQ_ / dens_;
+        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/intPointWeightFunction(index) - duna_dx*dvna_dx - dvna_dx*dvna_dy) + 
+        //         //         dphi_dx[1][i] * (dLy_dy/intPointWeightFunction(index) - duna_dy*dvna_dx - dvna_dy*dvna_dy)) * tARLQ_ / dens_;  
+        //         // LLx = -(dphi_dx[0][i] * (dLx_dx/intPointWeightFunction(index) - dp_dxx) + 
+        //         //         dphi_dx[1][i] * (dLx_dy/intPointWeightFunction(index) - dp_dxy)) * tARLQ_ / dens_;
+        //         // LLy = -(dphi_dx[0][i] * (dLy_dx/intPointWeightFunction(index) - dp_dxy) + 
+        //         //         dphi_dx[1][i] * (dLy_dy/intPointWeightFunction(index) - dp_dyy)) * tARLQ_ / dens_;  
+
+        //         // if (iTimeStep > 10){
+        //         //     LLx +=  -(dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;
+        //         //     LLx +=  -(dphi_dx[0][i]*day_dx + dphi_dx[1][i]*day_dy) * tARLQ_ ;
+        //         // };
+
+        //     //}
+            
+        //     // arlequinStabVector[2*i  ] += (Amx + LLx) * weight_ * djac_ * wna_;
+        //     // arlequinStabVector[2*i+1] += (Amy + LLy) * weight_ * djac_ * wna_;
+
+           
+        };         
+        
+        index++;        
+    };  
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                for (int j = 0; j < nLocDOF; j++){
+                    arlequinStab(DIM*i+k,j) = 0.;
+                    arlequinStab(j,DIM*i+k) = 0.;
+                };
+            };
+        };
+    };
+
+    return;
+};
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshVector(VecDouble &arlequinStabVector, 
+                                                              VecDouble &ML1, VecDouble &t1, VecDouble &j1, 
+                                                              VecDouble &kk1, VecDouble &p1){
+
+    VecDouble xsi(DIM);    
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dx(nElNodes,dimddphi);
+    MatrixDouble ainv_(DIM,DIM);
+
+    ShapeF shapeQuad;
+    int index = 0;
+    NormalQuad nQuad = NormalQuad();
+
+    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &k1 = parameters->getArlequinK1();
+
+    getParameterArlequin2();
+
+    for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
+
+        //Returns the quadrature integration weight
+        double weight_ = nQuad.WeightList(index);
+
+        double djac_ = 0.; 
+        //Computes the jacobian matrix
+        getJacobianMatrix(xsi, ainv_, djac_);
+
+        getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+        getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
+        
+        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+
+        double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
+        
+        //Lagrange Multiplier Derivatives
+        MatrixDouble dL_dx(DIM,DIM);
+        interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+        //Acceleration
+        VecDouble a_(DIM), aPrev_(DIM), am_(DIM);
+        VecDouble u_(DIM), uPrev_(DIM), um_(DIM);
+        interpolateAcceleration(index, a_, aPrev_);
+        interpolateVelocity(index, u_, uPrev_);
+        um_ = alpha_f * u_ + (1. - alpha_f) * uPrev_;
+        am_ = alpha_m * a_ + (1. - alpha_m) * aPrev_;
+
+        //Pressure
+        double p_;
+        VecDouble dp_dx(DIM);
+        int index = 0;
+        interpolatePressure(index, dphi_dx, p_, dp_dx);
+
+        MatrixDouble da_dx(DIM,DIM), daprev_dx(DIM,DIM), dana_dx(DIM,DIM);
+        interpolateAccelDerivatives(dphi_dx, da_dx, daprev_dx);
+        dana_dx = alpha_f * da_dx + (1. - alpha_f) * daprev_dx;
+
+        // Pressure Laplacian
+        VecDouble ddp_dx2(3);
+        ddp_dx2.setZero();
+        for (int i = nElNodes; i--; ){
+            for (int j = 3; j--; ) 
+                ddp_dx2[j] += (*nodes_)[connect_[i]] -> getPressure() * ddphi_dx(i,j);
+        }
+
+        VecDouble ddu_dx2(3),ddv_dx2(3);
+        ddu_dx2.setZero();
+        ddv_dx2.setZero();
+        for (int i = nElNodes; i--; ){
+            for (int j = 3; j--; ) {
+                ddu_dx2[j] += (*nodes_)[connect_[i]] -> getVelocity(0) * ddphi_dx(i,j);
+                ddv_dx2[j] += (*nodes_)[connect_[i]] -> getVelocity(1) * ddphi_dx(i,j);
+            }
+        }        
+
+        for (int i = 0; i < nElNodes; i++){
+            //ARLEQUIN STABILIZATION TERMS
+            double LCx = 0.; double LCy = 0.;
+            double LPx = 0.; double LPy = 0.;
+
+            for (int k = DIM; k--; ){
+                double LLx = 0.;
+                for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ * tauAlequin / dens_;
+                double Amx = 0.;
+                // double Amx = - DI->phi_(i,index) * am_[k] ;
+                arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_  * wna_;
+
+            }
+
+            //New stabilization (Pati)
+            double du_dx = dana_dx(0,0); double du_dy = dana_dx(0,1);
+            double dv_dx = dana_dx(1,0); double dv_dy = dana_dx(1,1);
+            double dp_dxx = ddp_dx2(0); double dp_dyy = ddp_dx2(1); double dp_dxy = ddp_dx2(2);
+            double dax_dx = dana_dx(0,0); double dax_dy = dana_dx(0,1);
+            double day_dx = dana_dx(1,0); double day_dy = dana_dx(1,1);
+            double du_dxx = ddu_dx2(0); double du_dyy = ddu_dx2(1); double du_dxy = ddu_dx2(2);
+            double dv_dxx = ddv_dx2(0); double dv_dyy = ddv_dx2(1); double dv_dxy = ddv_dx2(2);
+
+            ML1[DIM*i+0] = (DI->phi_(i,index) * u_[0]) * weight_ * djac_;
+            ML1[DIM*i+1] = (DI->phi_(i,index) * u_[1]) * weight_ * djac_;
+
+            p1[DIM*i+0] = (dphi_dx(i,0) * dp_dxx + dphi_dx(i,1) * dp_dxy) * weight_ * djac_ * wna_;
+            p1[DIM*i+1] = (dphi_dx(i,1) * dp_dyy + dphi_dx(i,1) * dp_dxy) * weight_ * djac_ * wna_;
+
+            j1[DIM*i+0] = (dphi_dx(i,1) * day_dx + dphi_dx(i,0) * dax_dx) * weight_ * djac_ * wna_;
+            j1[DIM*i+1] = (dphi_dx(i,1) * day_dy + dphi_dx(i,0) * dax_dy) * weight_ * djac_ * wna_;
+
+            t1[DIM*i+0] = (dphi_dx(i,1) * (du_dy*du_dx + dv_dy*dv_dx + u_[0]*du_dxy + u_[1]*dv_dxy) + 
+                           dphi_dx(i,0) * (du_dx*du_dx + dv_dx*dv_dx + u_[0]*du_dxx + u_[1]*dv_dxx)) * weight_ * djac_ * wna_;
+            t1[DIM*i+1] = (dphi_dx(i,1) * (du_dy*du_dy + dv_dy*dv_dy + u_[0]*du_dyy + u_[1]*dv_dyy) + 
+                           dphi_dx(i,0) * (du_dy*du_dx + dv_dy*dv_dx + u_[0]*du_dxy + u_[1]*dv_dxy)) * weight_ * djac_ * wna_;
+
+                // LLx = -(dphi_dx[0][i] * (dLx_dx/wna_) + dphi_dx[1][i] * (dLx_dy/wna_)) * tARLQ_ / dens_;
+                // LLy = -(dphi_dx[0][i] * (dLy_dx/wna_) + dphi_dx[1][i] * (dLy_dy/wna_)) * tARLQ_ / dens_;
+           //}else{
+                // LLx = -(dphi_dx[0][i] * (dLx_dx/intPointWeightFunction(index) - duna_dx*duna_dx - dvna_dx*duna_dy) + 
+                //         dphi_dx[1][i] * (dLx_dy/intPointWeightFunction(index) - duna_dy*duna_dx - dvna_dy*duna_dy)) * tARLQ_ / dens_;
+                // LLy = -(dphi_dx[0][i] * (dLy_dx/intPointWeightFunction(index) - duna_dx*dvna_dx - dvna_dx*dvna_dy) + 
+                //         dphi_dx[1][i] * (dLy_dy/intPointWeightFunction(index) - duna_dy*dvna_dx - dvna_dy*dvna_dy)) * tARLQ_ / dens_;  
+                // LLx = -(dphi_dx[0][i] * (dLx_dx/intPointWeightFunction(index) - dp_dxx) + 
+                //         dphi_dx[1][i] * (dLx_dy/intPointWeightFunction(index) - dp_dxy)) * tARLQ_ / dens_;
+                // LLy = -(dphi_dx[0][i] * (dLy_dx/intPointWeightFunction(index) - dp_dxy) + 
+                //         dphi_dx[1][i] * (dLy_dy/intPointWeightFunction(index) - dp_dyy)) * tARLQ_ / dens_;  
+
+                // if (iTimeStep > 10){
+                //     LLx +=  -(dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;
+                //     LLx +=  -(dphi_dx[0][i]*day_dx + dphi_dx[1][i]*day_dy) * tARLQ_ ;
+                // };
+
+            //}
+            
+            // arlequinStabVector[2*i  ] += (Amx + LLx) * weight_ * djac_ * wna_;
+            // arlequinStabVector[2*i+1] += (Amy + LLy) * weight_ * djac_ * wna_;
+
+           
+        };         
+        
+        index++;        
+    };  
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
                 arlequinStabVector[DIM*i+k] = 0.0;
             };
         };
@@ -3169,6 +3728,249 @@ void Element<DIM,DEG>::getLagrangeMultipliersDifferentMesh(int &ielem, double &t
 
     return;
 };
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshMatrix(int &ielem, double &tPSPG2_, VecDouble &press, 
+                                                     VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
+                                                     MatrixDouble &lagrMultMatrix){
+
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
+    ShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    SpecialQuad sQuad = SpecialQuad();
+
+    //tARLQ_ = -tPSPG2_;
+
+    VecDouble phiLM_(nElNodes);
+    VecDouble phi_(nElNodes);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble dphiL_dx(nElNodes,DIM);    
+    
+    double &dTime_ = parameters->getTimeStep();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &gamma = parameters->getGamma();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    int &iTimeStep = parameters->getTimeInstant();
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    // if (index_ == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
+    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+        
+        if ((intPointCorrespElem[index] == ielem)){
+
+            //Defines the integration points adimentional coordinates
+            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+            
+            //Computes the velocity shape functions
+            shapeQuad.evaluate(xsi,phi_);
+            
+            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+
+            //Computes the coarse mesh shape functions
+            shapeQuad.evaluate(xsi_intp,phiLM_);
+            
+            //Returns the quadrature integration weight
+            double weight_ = sQuad.WeightList(index);
+            
+            double djac_ = 0.;
+            //Computes the jacobian matrix
+            getJacobianMatrix(xsi_intp, ainv_, djac_);
+                        
+            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+
+            dphiL_dx = dphi_dx;
+
+            djac_ = 0.;
+            getJacobianMatrix(xsi, ainv_, djac_);
+            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+            //Lagrange Multiplier
+            VecDouble lagM_(DIM), una_(DIM);
+            MatrixDouble duna_dx(DIM,DIM);
+            interpolateLagMultiplier(index, lagM_);
+
+            //Lagrange Multiplier Derivatives
+            MatrixDouble dL_dx(DIM,DIM);
+            interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+
+            double dalpha_dx = 0.;
+            double dalpha_dy = 0.;
+            double WJ = weight_ * djac_;
+
+            for (int i = 0; i < nElNodes; ++i){
+                // dalpha_dx += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[0][i];
+                // dalpha_dy += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[1][i];
+                
+                una_[0] += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
+                una_[1] += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
+            }
+            for (int i = 0; i < nElNodes; i++){
+                for (int j = 0; j < nElNodes; j++){
+                    double l2 = phi_[i] * phiLM_[j] * WJ * k1;
+                    for (int k = 0; k < DIM; k++){
+                        // L2 COUPLING OPERATOR
+                        lagrMultMatrix(DIM*i+k,DIM*j+k) += l2;
+                        for (int l = 0; l < DIM; l++){
+                            //H1 COUPLING OPERATOR
+                            double K = dphi_dx(i,l) * dphiL_dx(j,k);
+                            if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphiL_dx(j,m);
+
+                            lagrMultMatrix(DIM*i+k,DIM*j+l) += K * WJ * k2;
+                        };
+                    };
+                };
+            };
+        };
+        index++;        
+    };  
+
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                for (int j = 0; j < nLocDOF; j++){
+                    lagrMultMatrix(DIM*i+k,j) = 0.;
+                    lagrMultMatrix(j,DIM*i+k) = 0.;
+                };
+                //lagrMultMatrix(12+i,12+i) = 1.;
+                // std::cout << "AQUI2 elem different mesh" << std::endl;
+            };
+        }
+    };
+
+    return;
+};
+
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersDifferentMeshVector(int &ielem, double &tPSPG2_, VecDouble &press, 
+                                                     VecDouble &velx, VecDouble &vely, VecDouble &velxPrev, VecDouble &velyPrev,
+                                                     VecDouble &rhsVectorLM, VecDouble &rhsVector){
+
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
+    ShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    SpecialQuad sQuad = SpecialQuad();
+
+    //tARLQ_ = -tPSPG2_;
+
+    VecDouble phiLM_(nElNodes);
+    VecDouble phi_(nElNodes);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble dphiL_dx(nElNodes,DIM);    
+    
+    double &dTime_ = parameters->getTimeStep();
+    double &visc_ = parameters->getViscosity();
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &alpha_m = parameters->getAlphaM();
+    double &gamma = parameters->getGamma();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+    int &iTimeStep = parameters->getTimeInstant();
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    // if (index_ == 4936) std::cout << "PSPG Fine " << ielem << " " << tPSPG_ << std::endl;
+    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+        
+        if ((intPointCorrespElem[index] == ielem)){
+
+            //Defines the integration points adimentional coordinates
+            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+            
+            //Computes the velocity shape functions
+            shapeQuad.evaluate(xsi,phi_);
+            
+            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+
+            //Computes the coarse mesh shape functions
+            shapeQuad.evaluate(xsi_intp,phiLM_);
+            
+            //Returns the quadrature integration weight
+            double weight_ = sQuad.WeightList(index);
+            
+            double djac_ = 0.;
+            //Computes the jacobian matrix
+            getJacobianMatrix(xsi_intp, ainv_, djac_);
+                        
+            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+
+            dphiL_dx = dphi_dx;
+
+            djac_ = 0.;
+            getJacobianMatrix(xsi, ainv_, djac_);
+            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+            //Lagrange Multiplier
+            VecDouble lagM_(DIM), una_(DIM);
+            MatrixDouble duna_dx(DIM,DIM);
+            interpolateLagMultiplier(index, lagM_);
+
+            //Lagrange Multiplier Derivatives
+            MatrixDouble dL_dx(DIM,DIM);
+            interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+
+            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+
+            double dalpha_dx = 0.;
+            double dalpha_dy = 0.;
+            double WJ = weight_ * djac_;
+
+            for (int i = 0; i < nElNodes; ++i){
+                // dalpha_dx += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[0][i];
+                // dalpha_dy += ((*nodes_)[connect_[i]] -> getWeightFunction()) * dphi_dx[1][i];
+                
+                una_[0] += alpha_f * velx[i] * phiLM_[i] + (1. - alpha_f) * velxPrev[i] * phiLM_[i];
+                una_[1] += alpha_f * vely[i] * phiLM_[i] + (1. - alpha_f) * velyPrev[i] * phiLM_[i];
+            }
+            for (int i = 0; i < nElNodes; i++){
+                // Lagrange multipliers residual
+                for (int k = 0; k < DIM; k++){
+                    double L2 = lagM_[k] * phiLM_[i] * k1;
+
+                    double H1 = 0.;
+                    for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(k,l) * k2;
+                    for (int l=DIM; l--; ) H1 += dphiL_dx(i,l) * dL_dx(l,k) * k2;
+
+                    rhsVectorLM[DIM*i+k] -= (L2 + H1) * WJ;
+
+                    double L2u = una_[k] * phi_[i] * k1;
+
+                    double H1u = 0.;
+                    for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(k,l) * k2;
+                    for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * duna_dx(l,k) * k2;
+
+                    rhsVector[DIM*i+k] -= (L2u + H1u) * WJ;
+                };
+            };
+        };
+        index++;        
+    };  
+
+
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                //lagrMultMatrix(12+i,12+i) = 1.;
+                rhsVectorLM[DIM*i+k] = 0.0;
+                // std::cout << "AQUI2 elem different mesh" << std::endl;
+            };
+        }
+    };
+
+    return;
+};
+
 
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
@@ -3468,6 +4270,20 @@ void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMesh(int &ielem,
     return;
 };
 
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMeshMatrix(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                               MatrixDouble &jacobianNRMatrix){
+
+    return;
+};
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersSUPG_PSPG_DifferentMeshVector(int &ielem, double &tPSPG2_, VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                               VecDouble &rhsVector){
+
+    return;
+};
+
 
 //------------------------------------------------------------------------------
 //----------------------------STEADY LAPLACE PROBEM-----------------------------
@@ -3697,6 +4513,403 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMesh(int &ielem, d
                     arlequinStab(DIM*i+k,j) = 0.;
                     arlequinStab(j,DIM*i+k) = 0.;
                 };
+                //lagrMultMatrix(12+i,12+i) = 1.;
+                arlequinStabVector[DIM*i+k] = 0.0;
+                // std::cout << "AQUI2 elem different mesh" << std::endl;
+            };
+        }
+    };
+
+    return;
+};
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshMatrix(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                                   VecDouble &acelx, VecDouble &acely, VecDouble &acelxPrev, VecDouble &acelyPrev,                                                               
+                                                                   MatrixDouble &arlequinStab, MatrixDouble &laplMatrix){
+
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
+    ShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    SpecialQuad sQuad = SpecialQuad();
+
+    //tARLQ_ = -tPSPG2_;
+
+    VecDouble phi_(nElNodes);
+    VecDouble phiLM_(nElNodes);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble dphiL_dx(nElNodes,DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dx(nElNodes,dimddphi);
+    
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+
+    // arlequinStab.clear();
+    // arlequinStabVector.clear();
+    // laplMatrix.clear();
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+        
+        if ((intPointCorrespElem[index] == ielem)){
+
+            //Defines the integration points adimentional coordinates
+            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+            
+            //Computes the velocity shape functions
+            shapeQuad.evaluate(xsi,phi_);
+            
+            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+
+            //Computes the coarse mesh shape functions
+            shapeQuad.evaluate(xsi_intp,phiLM_);
+            
+            //Returns the quadrature integration weight
+            double weight_ = sQuad.WeightList(index);
+            
+            double djac_ = 0.;
+            //Computes the jacobian matrix
+            getJacobianMatrix(xsi_intp, ainv_, djac_);
+                        
+            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+            getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
+
+            dphiL_dx = dphi_dx;
+
+            djac_ = 0.;
+            getJacobianMatrix(xsi, ainv_, djac_);
+            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+            // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+
+
+            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+
+            // u_ = 0.;
+            // v_ = 0.;
+
+            // du_dx = 0.;
+            // du_dy = 0.;
+            // dv_dx = 0.;
+            // dv_dy = 0.;
+
+            // //Interpolates the velocity components and its spatial derivatives
+            // for (int i = 0; i < 6; i++){
+            //     u_ += velx[i] * phiLM_[i];
+            //     v_ += vely[i] * phiLM_[i];
+
+            //     du_dx += velx[i] * dphiL_dx[0][i];
+            //     du_dy += velx[i] * dphiL_dx[1][i];
+            //     dv_dx += vely[i] * dphiL_dx[0][i];
+            //     dv_dy += vely[i] * dphiL_dx[1][i];
+            // };  
+
+            MatrixDouble da_dx(DIM,DIM);
+            MatrixDouble daprev_dx(DIM,DIM);
+            da_dx.setZero();
+            daprev_dx.setZero();
+            VecDouble um_(DIM);
+
+            for (int i = nElNodes; i--; ){
+                for (int j = DIM; j--; ){
+                    da_dx(j,0) += acelx[i] * dphiL_dx(i,j);
+                    da_dx(j,1) += acely[i] * dphiL_dx(i,j);
+                }
+                um_[0] += velx[i] * phiLM_[i];
+                um_[1] += vely[i] * phiLM_[i];
+            }
+
+            //Lagrange Multiplier Derivatives
+            MatrixDouble dL_dx(DIM,DIM);
+            interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+            
+
+            for (int i = 0; i < nElNodes; i++){
+                for (int j = 0; j < nElNodes; j++){     
+                    double AM = 0.;
+                    double Lpx = 0.; double Lpy = 0.;
+                    double LC = 0.; double LL = 0.;
+
+                    // AM = -phiLM_(i) * phi_[j] * 
+                    // intPointWeightFunction(index) * tauAlequin;
+
+                    // LL = phiLM_(i) * phi_[j] * tauAlequin / dens_;
+
+                    for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m) * tauAlequin / dens_;
+
+                    for (int k = DIM; k--; )
+                        arlequinStab(DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
+
+
+                    // LL = (dphi_dx[0][i] * dphi_dx[0][j] + dphi_dx[1][i] * dphi_dx[1][j]) * tARLQ_ / dens_;
+
+                    // Lpx = phi_[i] * dphi_dx[0][i] * intPointWeightFunction(index)
+                    //     * tARLQ_ / dens_;
+                    // Lpy = phi_[i] * dphi_dx[1][i] * intPointWeightFunction(index)
+                    //     * tARLQ_ / dens_;
+
+                    // LC = -phi_[j] * ((una_ - umesh_) * dphi_dx[0][j] + (vna_ - vmesh_) * dphi_dx[1][j]) * phiLM_(i) * tARLQ_ * intPointWeightFunction(index);
+
+                    // arlequinStab[2*j  ][2*i  ] += LL * weight_ * djac_;
+                    // arlequinStab[2*j+1][2*i+1] += LL * weight_ * djac_;
+                    // arlequinStab(12+i,12+j) += 0 * weight_ * djac_;
+
+                    // LC = (dphi_dx[0][i]*(du_dx*dphiL_dx(0,j) + dv_dx*dphiL_dx(1,j)) +
+                    //       dphi_dx[1][i]*(du_dy*dphiL_dx(0,j) + dv_dy*dphiL_dx(1,j)) + 
+                    //       dphi_dx[0][i]*(u_*ddphiL_dx(0,0)(j) + v_*ddphiL_dx(0,1)(j)) + 
+                    //       dphi_dx[1][i]*(u_*ddphiL_dx(1,0)(j) + v_*ddphiL_dx(1,1)(j))) * tARLQ_ * (1-intPointWeightFunction(index));
+
+                    // laplMatrix(2*i  ,2*j  ) += LC * weight_ * djac_;
+                    // laplMatrix(2*i+1,2*j+1) += LC * weight_ * djac_;
+
+                     Lpx = 0.; Lpy = 0.;
+
+                    // Lpx = (dphi_dx[0][i] * ddphi_dx(0,0)(j) + 
+                    //        dphi_dx[1][i] * ddphi_dx(0,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+                    // Lpy = (dphi_dx[0][i] * ddphi_dx(1,0)(j) + 
+                    //        dphi_dx[1][i] * ddphi_dx(1,1)(j)) * tARLQ_ * intPointWeightFunction(index);
+
+                    // laplMatrix[2*j  ][2*i  ] += LC * weight_ * djac_;
+                    // laplMatrix[2*j+1][2*i+1] += LC * weight_ * djac_;
+
+                    // laplMatrix[2*j  ][12+i] += Lpx * weight_ * djac_;
+                    // laplMatrix[2*j+1][12+i] += Lpy * weight_ * djac_;
+                    // laplMatrix[12+i][2*j  ] += Lpx * weight_ * djac_;
+                    // laplMatrix[12+i][2*j+1] += Lpy * weight_ * djac_;
+
+                };
+
+                //ARLEQUIN STABILIZATION TERMS
+                double Amx = 0.; double Amy = 0.;
+                double LCx = 0.; double LCy = 0.;
+                double LPx = 0.; double LPy = 0.;
+                double LLy = 0.;
+                
+
+                
+
+                // if (iTimeStep > 5){
+                //     Amx = -phi_[i] * axm_ * intPointWeightFunctionSpecial(index) * tARLQ_;
+                //     Amy = -phi_[i] * aym_ * intPointWeightFunctionSpecial(index) * tARLQ_;
+                // }
+                //if (iTimeStep < 10){
+                    // LLx = -(dphi_dx[0][i] * dLx_dx/(1-wna_) + dphi_dx[1][i] * dLx_dy/(1-wna_)) * tARLQ_;
+                    // LLy = -(dphi_dx[0][i] * dLy_dx/(1-wna_) + dphi_dx[1][i] * dLy_dy/(1-wna_)) * tARLQ_;
+                //}else{
+                    // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + duna_dx*duna_dx + dvna_dx*duna_dy) + 
+                    //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + duna_dy*duna_dx + dvna_dy*duna_dy)) * tARLQ_ / dens_;
+                    // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + duna_dx*dvna_dx + dvna_dx*dvna_dy) + 
+                    //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + duna_dy*dvna_dx + dvna_dy*dvna_dy)) * tARLQ_ / dens_;
+                    // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + dp_dxx) + 
+                    //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + dp_dxy)) * tARLQ_ / dens_;
+                    // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + dp_dxy) + 
+                    //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + dp_dyy)) * tARLQ_ / dens_;
+                //};
+     
+                // if (iTimeStep > 5){
+                //     LLx +=  (dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;
+                //     LLx +=  (dphi_dx[0][i]*day_dx + dphi_dx[1][i]*day_dy) * tARLQ_ ;
+                // };
+
+
+
+                // arlequinStabVector[2*i  ] += (Amx + LLx) * weight_ * djac_ * (1-wna_) *0;
+                // arlequinStabVector[2*i+1] += (Amy + LLy) * weight_ * djac_ * (1-wna_) *0;
+            };
+        };
+        index++;        
+    };  
+    
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
+                for (int j = 0; j < nLocDOF; j++){
+                    arlequinStab(DIM*i+k,j) = 0.;
+                    arlequinStab(j,DIM*i+k) = 0.;
+                };
+                //lagrMultMatrix(12+i,12+i) = 1.;
+                // std::cout << "AQUI2 elem different mesh" << std::endl;
+            };
+        }
+    };
+
+    return;
+};
+
+template<int DIM, int DEG>
+void Element<DIM,DEG>::getLagrangeMultipliersArlequinDifferentMeshVector(int &ielem, double &tPSPG2_,VecDouble &press, VecDouble &velx, VecDouble &vely,
+                                                                   VecDouble &acelx, VecDouble &acely, VecDouble &acelxPrev, VecDouble &acelyPrev,                                                               
+                                                                   VecDouble &arlequinStabVector){
+
+    VecDouble xsi(DIM);
+    VecDouble xsi_intp(DIM);
+    ShapeFunction<DIM,DEG> shapeQuad;
+    int index = 0;
+    SpecialQuad sQuad = SpecialQuad();
+
+    //tARLQ_ = -tPSPG2_;
+
+    VecDouble phi_(nElNodes);
+    VecDouble phiLM_(nElNodes);
+    MatrixDouble dphi_dx(nElNodes,DIM);
+    MatrixDouble dphiL_dx(nElNodes,DIM);
+    int dimddphi = DIM == 2 ? 3 : 6;
+    MatrixDouble ddphi_dx(nElNodes,dimddphi);
+    
+    double &dens_ = parameters->getDensity();
+    double &alpha_f = parameters->getAlphaF();
+    double &k1 = parameters->getArlequinK1();
+    double &k2 = parameters->getArlequinK2();
+
+    // arlequinStab.clear();
+    // arlequinStabVector.clear();
+    // laplMatrix.clear();
+
+    MatrixDouble ainv_(DIM,DIM);
+
+    double tSUPG_, tPSPG_, tLSIC_, tARLQ_;
+
+    for(int it = 0; it < sQuad.getNumberOfIntegrationPoints(); it++){
+        
+        if ((intPointCorrespElem[index] == ielem)){
+
+            //Defines the integration points adimentional coordinates
+            for (int k = 0; k < DIM; k++) xsi[k] = sQuad.PointList(index,k);
+            
+            //Computes the velocity shape functions
+            shapeQuad.evaluate(xsi,phi_);
+            
+            for (int k = 0; k < DIM; k++) xsi_intp[k] = intPointCorrespXsi(index,k);
+
+            //Computes the coarse mesh shape functions
+            shapeQuad.evaluate(xsi_intp,phiLM_);
+            
+            //Returns the quadrature integration weight
+            double weight_ = sQuad.WeightList(index);
+            
+            double djac_ = 0.;
+            //Computes the jacobian matrix
+            getJacobianMatrix(xsi_intp, ainv_, djac_);
+                        
+            getSpatialDerivatives(xsi_intp, ainv_, dphi_dx);
+            getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
+
+            dphiL_dx = dphi_dx;
+
+            djac_ = 0.;
+            getJacobianMatrix(xsi, ainv_, djac_);
+            getSpatialDerivatives(xsi, ainv_, dphi_dx);
+
+            // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+
+
+            double wna_ = alpha_f * intPointWeightFunctionSpecial[index] + (1. - alpha_f) * intPointWeightFunctionSpecialPrev[index];
+
+            // u_ = 0.;
+            // v_ = 0.;
+
+            // du_dx = 0.;
+            // du_dy = 0.;
+            // dv_dx = 0.;
+            // dv_dy = 0.;
+
+            // //Interpolates the velocity components and its spatial derivatives
+            // for (int i = 0; i < 6; i++){
+            //     u_ += velx[i] * phiLM_[i];
+            //     v_ += vely[i] * phiLM_[i];
+
+            //     du_dx += velx[i] * dphiL_dx[0][i];
+            //     du_dy += velx[i] * dphiL_dx[1][i];
+            //     dv_dx += vely[i] * dphiL_dx[0][i];
+            //     dv_dy += vely[i] * dphiL_dx[1][i];
+            // };  
+
+            MatrixDouble da_dx(DIM,DIM);
+            MatrixDouble daprev_dx(DIM,DIM);
+            da_dx.setZero();
+            daprev_dx.setZero();
+            VecDouble um_(DIM);
+
+            for (int i = nElNodes; i--; ){
+                for (int j = DIM; j--; ){
+                    da_dx(j,0) += acelx[i] * dphiL_dx(i,j);
+                    da_dx(j,1) += acely[i] * dphiL_dx(i,j);
+                }
+                um_[0] += velx[i] * phiLM_[i];
+                um_[1] += vely[i] * phiLM_[i];
+            }
+
+            //Lagrange Multiplier Derivatives
+            MatrixDouble dL_dx(DIM,DIM);
+            interpolateLagMultiplierDerivatives(dphi_dx, dL_dx);
+            
+
+            for (int i = 0; i < nElNodes; i++){
+                //ARLEQUIN STABILIZATION TERMS
+                double Amx = 0.; double Amy = 0.;
+                double LCx = 0.; double LCy = 0.;
+                double LPx = 0.; double LPy = 0.;
+                double LLy = 0.;
+                
+
+                for (int k = DIM; k--; ){
+                    double LLx = 0.;
+                    for (int m = DIM; m--; ) LLx -= dphiL_dx(i,m) * dL_dx(k,m)/wna_ * tauAlequin / dens_;
+
+                    arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
+
+                    //New stabilization (Pati)
+                    // ML0[DIM*i+k] = DI->phi_(i,index) * um_[k] * weight_ * djac_;
+                    // t0[DIM*i+k] = 0.;// Has second-order derivatives
+                    // k0[DIM*i+k] = 0.;// Has second-order derivatives
+                    // p0[DIM*i+k] = 0.;// Has second-order derivatives
+                    // for (int m = DIM; m--; ) j0[DIM*i+k] = dphi_dx(i,m) * da_dx(k,m) * weight_ * djac_ * wna_;
+                    // for (int m = DIM; m--; ) gamma0[DIM*i+k] = -dphi_dx(i,m) * dL_dx(k,m) * weight_ * djac_;
+                }
+                
+
+                // if (iTimeStep > 5){
+                //     Amx = -phi_[i] * axm_ * intPointWeightFunctionSpecial(index) * tARLQ_;
+                //     Amy = -phi_[i] * aym_ * intPointWeightFunctionSpecial(index) * tARLQ_;
+                // }
+                //if (iTimeStep < 10){
+                    // LLx = -(dphi_dx[0][i] * dLx_dx/(1-wna_) + dphi_dx[1][i] * dLx_dy/(1-wna_)) * tARLQ_;
+                    // LLy = -(dphi_dx[0][i] * dLy_dx/(1-wna_) + dphi_dx[1][i] * dLy_dy/(1-wna_)) * tARLQ_;
+                //}else{
+                    // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + duna_dx*duna_dx + dvna_dx*duna_dy) + 
+                    //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + duna_dy*duna_dx + dvna_dy*duna_dy)) * tARLQ_ / dens_;
+                    // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + duna_dx*dvna_dx + dvna_dx*dvna_dy) + 
+                    //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + duna_dy*dvna_dx + dvna_dy*dvna_dy)) * tARLQ_ / dens_;
+                    // LLx = -(dphi_dx[0][i] * (dLx_dx/(1-intPointWeightFunction(index)) + dp_dxx) + 
+                    //         dphi_dx[1][i] * (dLx_dy/(1-intPointWeightFunction(index)) + dp_dxy)) * tARLQ_ / dens_;
+                    // LLy = -(dphi_dx[0][i] * (dLy_dx/(1-intPointWeightFunction(index)) + dp_dxy) + 
+                    //         dphi_dx[1][i] * (dLy_dy/(1-intPointWeightFunction(index)) + dp_dyy)) * tARLQ_ / dens_;
+                //};
+     
+                // if (iTimeStep > 5){
+                //     LLx +=  (dphi_dx[0][i]*dax_dx + dphi_dx[1][i]*dax_dy) * tARLQ_;
+                //     LLx +=  (dphi_dx[0][i]*day_dx + dphi_dx[1][i]*day_dy) * tARLQ_ ;
+                // };
+
+
+
+                // arlequinStabVector[2*i  ] += (Amx + LLx) * weight_ * djac_ * (1-wna_) *0;
+                // arlequinStabVector[2*i+1] += (Amy + LLy) * weight_ * djac_ * (1-wna_) *0;
+            };
+        };
+        index++;        
+    };  
+    
+    for (int i = 0; i < nElNodes; i++){
+        for (int k = DIM; k--; ){
+            if ((*nodes_)[connect_[i]] -> getConstrains(k) == 1) {
                 //lagrMultMatrix(12+i,12+i) = 1.;
                 arlequinStabVector[DIM*i+k] = 0.0;
                 // std::cout << "AQUI2 elem different mesh" << std::endl;
