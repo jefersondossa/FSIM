@@ -2838,6 +2838,353 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
 
 
 
+//------------------------------------------------------------------------------
+//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
+
+    //Coarse mesh
+    for (int jel = 0; jel < numElemCoarse; jel++){   
+        if (domDecompCoarse.first[jel] == rank) {
+            //Compute Element matrix
+            MatrixDouble matrix(nLocDOF,nLocDOF);
+            matrix.setZero();
+
+            elementsCoarse_[jel] -> getTransientNavierStokesMatrix(matrix);
+
+            setMatValuesCoarseModel(matrix, elementsCoarse_[jel] -> getConnectivity());
+
+        };
+    };
+
+    //Fine mesh
+    for (int jel = 0; jel < numElemFine; jel++){           
+        if (domDecompFine.first[jel] == rank) {
+            //Compute Element matrix                    
+            MatrixDouble matrix(nLocDOF,nLocDOF);
+            matrix.setZero();
+
+            elementsFine_[jel] -> getTransientNavierStokesMatrix(matrix);
+
+            setMatValuesFineModel(matrix, elementsFine_[jel] -> getConnectivity());
+
+        };                
+    };
+      
+
+    //Lagrange Multipliers
+    for (int l=0; l< numElemGlueZoneFine; l++){
+        int jel = elementsGlueZoneFine_[l];
+        if (domDecompFine.first[jel] == rank) {
+            
+            VecInt connecC;
+            VecInt connec = elementsFine_[jel] -> getConnectivity();
+            VecInt connecL = glueZoneFine_[l] -> getConnectivity();
+            //FINE MESH
+            //Matrices
+            MatrixDouble Ajac2(nLocDOF,nLocDOF);
+            MatrixDouble localMV_mat(nLocDOF,nLocDOF);
+            MatrixDouble ArlequinA1(nLocDOF,nLocDOF);
+            MatrixDouble ArlequinA2(nLocDOF,nLocDOF);
+            Ajac2.setZero();
+            localMV_mat.setZero();
+            ArlequinA1.setZero();
+            ArlequinA2.setZero();
+
+            // FINE MESH
+            //Computes element matrix
+
+            elementsFine_[jel] -> getLagrangeMultipliersSameMeshMatrix(Ajac2);
+            
+            if (fArlequinStab != ArlequinStabType::ENoStab){
+                //PSPG and SUPG stabilizations
+                elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMeshMatrix(localMV_mat);
+            
+                //Arlequin Stabilization
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMeshMatrix(ArlequinA1, ArlequinA2);
+
+            }
+            // stabilizeArlequinNew(Ml1, t1, j1, k1, p1, tArlequin);
+            // ArlequinA1 *= tArlequin;
+            // ArlequinA2 *= tArlequin;
+            // RhsArlequin2 *= tArlequin;
+            
+            setMatValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
+                                        elementsFine_[jel] -> getConnectivity(),
+                                        glueZoneFine_[l] -> getConnectivity());
+            
+            //COARSE MESH
+            //Counts number of coarse mesh intersecting the fine element
+            int numberIntPoints = elementsFine_[jel] -> 
+                getNumberOfIntegrationPoints();
+            int aux;
+            
+            std::vector<int> ele, diffElem;
+            ele.clear();
+            diffElem.clear();
+
+            ele.reserve(3);
+            for (int i=0; i<numberIntPoints; i++){
+                aux = elementsFine_[jel] -> 
+                    getIntegPointCorrespondenceElement(i);
+                ele.push_back(aux);
+                //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
+            };
+            
+            int numElemIntersect = 1;
+            int flag = 0;
+            diffElem.push_back(ele[0]);
+            
+            for (int i = 1; i<numberIntPoints; i++){
+                flag = 0;
+                for (int j = 0; j<numElemIntersect; j++){
+                    if (ele[i] == diffElem[j]) {
+                        break;
+                    }else{
+                        flag++;
+                    };
+                    if(flag == numElemIntersect){
+                        numElemIntersect++;
+                        diffElem.push_back(ele[i]);
+                    };
+                };
+            };
+            //Compute the Lagrange Multiplier element matrix
+            for (int ielem = 0; ielem < numElemIntersect; ielem++){
+                
+                int iElemCoarse = diffElem[ielem];
+                double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
+                VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes), acelX_(nElNodes), acelY_(nElNodes), acelXPrev_(nElNodes), acelYPrev_(nElNodes);
+
+                connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
+
+                for (int k = 0; k < nElNodes; k++){
+                    press_[k] = (*nodesCoarse_)[connecC[k]] -> getPressure();
+                    velX_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(0);
+                    velY_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(1);
+                    velXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(0);
+                    velYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(1);
+                    acelX_[k] = (*nodesCoarse_)[connecC[k]] -> getAcceleration(0);
+                    acelY_[k] = (*nodesCoarse_)[connecC[k]] -> getAcceleration(1);
+                    acelXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousAcceleration(0);
+                    acelYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousAcceleration(1);
+                }
+                
+                Ajac2.setZero();
+                localMV_mat.setZero();
+                ArlequinA1.setZero();
+                ArlequinA2.setZero();
+                
+                //Vectors
+                // rhsLagMult2.setZero();
+                // Rhs2.setZero();
+                // localMV_vec.setZero();
+                // RhsArlequin2.setZero();
+                
+                elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshMatrix(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,Ajac2);
+
+                if (fArlequinStab != ArlequinStabType::ENoStab){
+                    elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMeshMatrix(iElemCoarse,pspg,press_,velX_,velY_,localMV_mat);
+
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMeshMatrix(iElemCoarse,pspg,press_,velX_,velY_,acelX_,acelY_,
+                                                                                            acelXPrev_,acelYPrev_,ArlequinA1,ArlequinA2);
+                }
+
+                // ArlequinA1 *= tArlequin;
+                // ArlequinA2 *= tArlequin;
+                // RhsArlequin2 *= tArlequin;
+
+                setMatValuesLagMultFineCoarse(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
+                                              elementsCoarse_[iElemCoarse] -> getConnectivity(), 
+                                              glueZoneFine_[l] -> getConnectivity());
+                
+            }; //Number of intersections
+        }; // if element belongs to the glue zone
+    }; // Glue zone
+
+    return;
+}
+
+
+
+
+
+//------------------------------------------------------------------------------
+//----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
+//------------------------------------------------------------------------------
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::assembleArlequinVector(){
+
+    //Coarse mesh
+    for (int jel = 0; jel < numElemCoarse; jel++){   
+        if (domDecompCoarse.first[jel] == rank) {
+            //Compute Element matrix
+            VecDouble rhs(nLocDOF);
+            rhs.setZero();
+
+            elementsCoarse_[jel] -> getTransientNavierStokesVector(rhs);
+
+            setVecValuesCoarseModel(rhs,elementsCoarse_[jel] -> getConnectivity());
+
+        };
+    };
+
+    //Fine mesh
+    for (int jel = 0; jel < numElemFine; jel++){           
+        if (domDecompFine.first[jel] == rank) {
+            //Compute Element matrix                    
+            VecDouble rhs(nLocDOF);
+            rhs.setZero();
+
+            elementsFine_[jel] -> getTransientNavierStokesVector(rhs);
+
+            setVecValuesFineModel(rhs,elementsFine_[jel] -> getConnectivity());
+
+        };                
+    };
+      
+
+    //Lagrange Multipliers
+    for (int l=0; l< numElemGlueZoneFine; l++){
+        int jel = elementsGlueZoneFine_[l];
+        if (domDecompFine.first[jel] == rank) {
+            
+            VecInt connecC;
+            VecInt connec = elementsFine_[jel] -> getConnectivity();
+            VecInt connecL = glueZoneFine_[l] -> getConnectivity();
+            //FINE MESH
+            //Vectors
+            VecDouble rhsLagMult2(nLocDOF);
+            VecDouble Rhs2(nLocDOF);
+            VecDouble localMV_vec(nLocDOF);
+            VecDouble RhsArlequin2(nLocDOF);
+            rhsLagMult2.setZero();
+            Rhs2.setZero();
+            localMV_vec.setZero();
+            RhsArlequin2.setZero();
+
+            //Stabilization 
+            double tArlequin;
+            VecDouble Ml1(nLocDOF), t1(nLocDOF), j1(nLocDOF), 
+                      k1(nLocDOF), p1(nLocDOF);
+            Ml1.setZero(); t1.setZero(); j1.setZero(); k1.setZero(); p1.setZero();
+
+            // FINE MESH
+            //Computes element matrix
+
+            elementsFine_[jel] -> getLagrangeMultipliersSameMeshVector(rhsLagMult2, Rhs2);
+            
+            if (fArlequinStab != ArlequinStabType::ENoStab){
+                //PSPG and SUPG stabilizations
+                elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_SameMeshVector(localMV_vec);
+            
+                //Arlequin Stabilization
+                elementsFine_[jel] -> getLagrangeMultipliersArlequinSameMeshVector(RhsArlequin2, Ml1, t1, j1, k1, p1);
+
+            }
+            // stabilizeArlequinNew(Ml1, t1, j1, k1, p1, tArlequin);
+            // ArlequinA1 *= tArlequin;
+            // ArlequinA2 *= tArlequin;
+            // RhsArlequin2 *= tArlequin;
+            
+            setVecValuesLagMultFineFine(Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
+                                        elementsFine_[jel] -> getConnectivity(),
+                                        glueZoneFine_[l] -> getConnectivity());
+
+            //COARSE MESH
+            //Counts number of coarse mesh intersecting the fine element
+            int numberIntPoints = elementsFine_[jel] -> 
+                getNumberOfIntegrationPoints();
+            int aux;
+            
+            std::vector<int> ele, diffElem;
+            ele.clear();
+            diffElem.clear();
+
+            ele.reserve(3);
+            for (int i=0; i<numberIntPoints; i++){
+                aux = elementsFine_[jel] -> 
+                    getIntegPointCorrespondenceElement(i);
+                ele.push_back(aux);
+                //std::cout << "Num elem inters " << jel << " " << aux << std::endl;
+            };
+            
+            int numElemIntersect = 1;
+            int flag = 0;
+            diffElem.push_back(ele[0]);
+            
+            for (int i = 1; i<numberIntPoints; i++){
+                flag = 0;
+                for (int j = 0; j<numElemIntersect; j++){
+                    if (ele[i] == diffElem[j]) {
+                        break;
+                    }else{
+                        flag++;
+                    };
+                    if(flag == numElemIntersect){
+                        numElemIntersect++;
+                        diffElem.push_back(ele[i]);
+                    };
+                };
+            };
+            //Compute the Lagrange Multiplier element matrix
+            for (int ielem = 0; ielem < numElemIntersect; ielem++){
+                
+                int iElemCoarse = diffElem[ielem];
+                double pspg = 0;//elementsCoarse_[iElemCoarse] -> getPSPG();
+                VecDouble press_(nElNodes), velX_(nElNodes), velY_(nElNodes), velXPrev_(nElNodes), velYPrev_(nElNodes), acelX_(nElNodes), acelY_(nElNodes), acelXPrev_(nElNodes), acelYPrev_(nElNodes);
+
+                connecC = elementsCoarse_[iElemCoarse] -> getConnectivity();
+
+                for (int k = 0; k < nElNodes; k++){
+                    press_[k] = (*nodesCoarse_)[connecC[k]] -> getPressure();
+                    velX_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(0);
+                    velY_[k] = (*nodesCoarse_)[connecC[k]] -> getVelocity(1);
+                    velXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(0);
+                    velYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousVelocity(1);
+                    acelX_[k] = (*nodesCoarse_)[connecC[k]] -> getAcceleration(0);
+                    acelY_[k] = (*nodesCoarse_)[connecC[k]] -> getAcceleration(1);
+                    acelXPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousAcceleration(0);
+                    acelYPrev_[k] = (*nodesCoarse_)[connecC[k]] -> getPreviousAcceleration(1);
+                }
+                                
+                //Vectors
+                rhsLagMult2.setZero();
+                Rhs2.setZero();
+                localMV_vec.setZero();
+                RhsArlequin2.setZero();
+                
+                elementsFine_[jel] -> getLagrangeMultipliersDifferentMeshVector(iElemCoarse,pspg,press_,velX_,velY_,velXPrev_,velYPrev_,rhsLagMult2,Rhs2);
+
+                if (fArlequinStab != ArlequinStabType::ENoStab){
+                    elementsFine_[jel] -> getLagrangeMultipliersSUPG_PSPG_DifferentMeshVector(iElemCoarse,pspg,press_,velX_,velY_,localMV_vec);
+
+                    elementsFine_[jel] -> getLagrangeMultipliersArlequinDifferentMeshVector(iElemCoarse,pspg,press_,velX_,velY_,acelX_,acelY_,
+                                                                                      acelXPrev_,acelYPrev_,RhsArlequin2);
+                }
+
+                // ArlequinA1 *= tArlequin;
+                // ArlequinA2 *= tArlequin;
+                // RhsArlequin2 *= tArlequin;
+
+                setVecValuesLagMultFineCoarse(Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
+                                              elementsCoarse_[iElemCoarse] -> getConnectivity(), 
+                                              glueZoneFine_[l] -> getConnectivity());
+                
+            }; //Number of intersections
+        }; // if element belongs to the glue zone
+    }; // Glue zone
+
+    return;
+}
+
+
+
+
+
+
+
 
 
 
