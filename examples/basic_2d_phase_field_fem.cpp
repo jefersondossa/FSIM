@@ -16,6 +16,8 @@
 #include <NullWeakForm.h>
 #include <algorithm>
 
+static constexpr double V_F = 0.55;
+
 void SetupBoundaryConditionsElasticity2D2(CompMesh &modelElasticity2D)
 {
     MatrixDouble val1(2, 2);
@@ -74,58 +76,40 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     constexpr auto kVolumeMatId = 15;
     auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
     modelElasticity2D.InsertMaterial(govEquationElasticity2D);
+
     val1.setZero();
     val2.setZero();
-    // val2[0] = 1.;
-    // constexpr auto kEngasteMatId = 22;
+    val2[0] = 0.;
+
     constexpr auto kEngasteMatId = 16;
-    // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+
     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(engasteBC);
-    // {
-    //     val1.setZero();
-    //     val2.setZero();
-    //     constexpr auto kEngasteMatId = 22;
-    //     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
-    //     modelElasticity2D.InsertMaterial(engasteBC);
-    // }
+
     val1.setZero();
     val2.setZero();
     val2[0] = 0.;
+
     constexpr auto kFreeMatTopId = 18;
+
     auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBC);
+
     val1.setZero();
     val2.setZero();
     val2[0] = 0.;
+
     constexpr auto kFreeMatBottomId = 19;
+
     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBCEl2D);
-    {
-        val2[0] = 10.;
-        constexpr auto kRightMatBottomId = 45;
-        auto *freeBCEl2D = new L2Projection(kRightMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-        modelElasticity2D.InsertMaterial(freeBCEl2D);
-    }
 
-    // {
-    //     constexpr auto kFreeMatBottomId = 23;
-    //     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    //     modelElasticity2D.InsertMaterial(freeBCEl2D);
-    // }
-    // val1.setZero();
-    // val2.setZero();
-    // val2[0] = 0.;
-    // constexpr auto kExLoadMatId = 21;
-    // auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    // modelElasticity2D.InsertMaterial(El2D);
-    // val1.setZero();
-    // val2.setZero();
-    // // val2[0] = -10;
-    // val2[1] = -10;
-    // constexpr auto kLoadMatId = 17;
-    // auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    // modelElasticity2D.InsertMaterial(El2D2);
+    val2.setZero();
+    val2[1] = -10;
+    constexpr auto kLoadMatId = 45;
+    auto *El2D = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D);
+
     GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
 
     // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
@@ -136,45 +120,124 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     // }
 }
 
+void SetupBoundaryConditionsElasticity2DMBB(CompMesh &modelElasticity2D)
+{
+    MatrixDouble val1(2, 2);
+    VecDouble val2(2);
+    constexpr auto kVolumeMatId = 15;
+    auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
+    modelElasticity2D.InsertMaterial(govEquationElasticity2D);
+
+    val1.setZero();
+    val2.setZero();
+    val2[0] = 1.0;
+    constexpr auto kEngasteMatId = 16;
+    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(engasteBC);
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = 1.0;
+    constexpr auto kBottomRight = 17;
+    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(bottomRightBC);
+
+    val2.setZero();
+    val1.setZero();
+    val2[0] = 0.;
+    constexpr auto kFreeMatTopId = 18;
+    auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(freeBC);
+
+    val1.setZero();
+    val2.setZero();
+    val2[0] = 0.;
+    constexpr auto kFreeMatBottomId = 19;
+    auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(freeBCEl2D);
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = -10;
+    constexpr auto kLoadMatId = 23;
+    auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D2);
+    GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
+}
+
 void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
 {
     MatrixDouble val1(1, 1);
     VecDouble val2(1);
+
     val1.setZero();
     val2.setZero();
     constexpr auto kPhaseFieldInternalMatId = 15;
     auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2);
     modelPhaseField.InsertMaterial(govEquationPF);
 
-    constexpr auto kPhaseFieldLeftMatId = 16;
-    auto *leftBCPF = new L2Projection(kPhaseFieldLeftMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(leftBCPF);
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kEngasteMatId = 16;
+    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(engasteBC);
 
-    constexpr auto kPhaseFieldRightMatId = 45;
-    auto *rightBCPF = new L2Projection(kPhaseFieldRightMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(rightBCPF);
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kBottomRight = 17;
+    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(bottomRightBC);
 
-    constexpr auto kPhaseFieldTopMatId = 18;
-    auto *topBCPF = new L2Projection(kPhaseFieldTopMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(topBCPF);
+    val2.setZero();
+    val1.setZero();
+    constexpr auto kFreeMatTopId = 18;
+    auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(freeBC);
 
-    // val2[0] = 1.0;
-    constexpr auto kPhaseFieldBotttomMatId = 19;
-    auto *bottomBCPF = new L2Projection(kPhaseFieldBotttomMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(bottomBCPF);
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kFreeMatBottomId = 19;
+    auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(freeBCEl2D);
 
-    // {
-    //     constexpr auto kLoadMatId = 17;
-    //     auto *loaddd = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    //     modelPhaseField.InsertMaterial(loaddd);
-    // }
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kLoadMatId = 23;
+    auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(El2D2);
 
-    // {
-    //     constexpr auto kLoadMatId = 23;
-    //     auto *loaddd = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    //     modelPhaseField.InsertMaterial(loaddd);
-    // }
-
+    do
+    {
+        break;
+        constexpr auto kPhaseFieldLeftMatId = 16;
+        auto *leftBCPF = new L2Projection(kPhaseFieldLeftMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+        modelPhaseField.InsertMaterial(leftBCPF);
+    
+        constexpr auto kPhaseFieldRightMatId = 45;
+        auto *rightBCPF = new L2Projection(kPhaseFieldRightMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+        modelPhaseField.InsertMaterial(rightBCPF);
+    
+        constexpr auto kPhaseFieldTopMatId = 18;
+        auto *topBCPF = new L2Projection(kPhaseFieldTopMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+        modelPhaseField.InsertMaterial(topBCPF);
+    
+        // val2[0] = 1.0;
+        constexpr auto kPhaseFieldBotttomMatId = 19;
+        auto *bottomBCPF = new L2Projection(kPhaseFieldBotttomMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+        modelPhaseField.InsertMaterial(bottomBCPF);
+    
+        // {
+        //     constexpr auto kLoadMatId = 17;
+        //     auto *loaddd = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+        //     modelPhaseField.InsertMaterial(loaddd);
+        // }
+    
+        // {
+        //     constexpr auto kLoadMatId = 23;
+        //     auto *loaddd = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+        //     modelPhaseField.InsertMaterial(loaddd);
+    } while (false);
+    
     GmshTools::Read(modelPhaseField, "../../rectangle.msh");
     // return;
     // For the phase field implementation, we also need to impose an additional restrain to the final volume.
@@ -212,7 +275,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
     static constexpr auto finalVolRel = finalVol / 2.0;
     auto forcingFunction = [](const VecDouble &coord, VecDouble &force)
     {
-        force[0] = 0.55;
+        force[0] = V_F;
         // force[0] = 0.0;
     };
     lagmult->SetForcingFunction(forcingFunction);
@@ -267,7 +330,8 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
 int main()
 {
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
-    SetupBoundaryConditionsElasticity2D2(*modelElasticity2D);
+    // SetupBoundaryConditionsElasticity2D2(*modelElasticity2D);
+    SetupBoundaryConditionsElasticity2DMBB(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     std::unique_ptr<CompMesh> modelPhaseField = std::make_unique<CompMesh>();
@@ -311,12 +375,9 @@ int main()
 
     const auto u0 = [](double x, double y) -> double
     {
-        // double cx = 0.5, cy = 0.5, sigma = 0.08;
-        // double r2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
-        // return exp(-r2 / (2 * sigma * sigma));
         constexpr auto A = 0.2;
-        const double V = 0.55;
-        return V;// + A * sin(8 * M_PI * x) * sin(8 * M_PI * y);
+        const double V = V_F;
+        return V + A * sin(8 * M_PI * x) * sin(8 * M_PI * y);
     };
 
     for (size_t i = 0; i < anPhaseField.MeshVector()[0]->NNodes(); i++)
@@ -340,7 +401,7 @@ int main()
         fSol.resize(1);
         fSolPrev.resize(1);
 
-        fSol[0] = u0(node_pos[0], node_pos[1]); //(has_void) ? 0.0 : max_val;
+        fSol[0] = u0(node_pos[0], node_pos[1]);
         fSolPrev[0] = fSol[0];
     }
 
@@ -380,8 +441,6 @@ int main()
         elemPhaseField->IntegrationData().fJ = 1;
     }
 
-    // VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, 1);
-
     int step = 0;
     // Solving
     while (true)
@@ -405,8 +464,10 @@ int main()
         step++;
         // std::cout << "Solving Solid Mechanics\n";
         anElasticity2D.Run();
-        VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
-
+        VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, 0);
+        if(i % 200 == 0) {
+            VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
+        }
         std::vector<double> compliances;
         // For each elasticity element, compute the compliance and then transfer the information
         // to the phase field corresponding element. The value of J need to be computed for each integration point.
@@ -474,9 +535,9 @@ int main()
 
         std::cout << "Solving Phase-Field\n";
         anPhaseField.Run(1);
-        VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
-
-        // return 0;
+        if(i % 10 == 0) {
+            VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
+        }
 
         std::cout << "LAGRANGE MULTIPLIER = " << modelPhaseField->NodeVec().back()->Solution()[0] << '\n';
         i++;

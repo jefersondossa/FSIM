@@ -4,15 +4,17 @@
 #include "TransientWeakForm.h"
 #include "WeakForm.h"
 
+static constexpr double KK = 2.0;
+
 /// @brief Implements the PhaseField's equation weak form
 class PhaseField : public TransientWeakForm, public WeakForm{
 private:
-    static constexpr double dx = 0.02;
+    static constexpr double dx = 0.01;
     static constexpr double fM = 1.0;
-    static constexpr double fGamma = 0.16;
-    static constexpr double fKsi = 1e-4;
-    static constexpr double fBeta = 0.5;
-    static constexpr double fDt = 0.25 * (dx * dx) / (4 * fGamma * fKsi) * 0.05;//5e-3;
+    static constexpr double fGamma = 16*dx * KK;
+    static constexpr double fKsi = 8e-4 * KK;
+    static constexpr double fBeta = 1.5;
+    static constexpr double fDt = 0.25 * (dx * dx) / (4 * fGamma * fKsi) / 10;//5e-3;
 
 private:
     void ComputeStiffnessStatic(int &index, IntPointData &data, MatrixDouble &Stiffness);
