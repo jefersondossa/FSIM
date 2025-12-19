@@ -74,7 +74,8 @@ public:
     VecScatter        ctx;
     PetscScalar       val;
     PetscLogDouble bytes = 0;
-    SNES              snes;
+    SNES              fSNES;
+    bool              useSNES = true;
 
 public:
     int numElemCoarse;
@@ -129,6 +130,13 @@ public:
     /// @param int 0 - Steady problem; 1 - Transient problem.
     int solveArlequinProblem(int iterNumber, double tolerance,
                              int problem_type, int time_dependency);
+    
+    void SetUseSNES(){
+        useSNES = true;
+    }
+    void UnsetUseSNES(){
+        useSNES = false;
+    }
 
     /// Mounts and solve the incompressible flow problem with overlapping meshes
     /// using the Arlequin method with the gluing zone defined in the fine model
@@ -181,22 +189,22 @@ public:
                                   int numElem, int &elCorr, VecDouble &xsiCorr, int elSearch);
 
     void setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
-    void setVecValuesFineModel(VecDouble &rhs, VecInt &connec);
-    void setMatValuesFineModel(MatrixDouble &matrix, VecInt &connec);
+    void setVecValuesFineModel(Vec &b, VecDouble &rhs, VecInt &connec);
+    void setMatValuesFineModel(Mat &A, MatrixDouble &matrix, VecInt &connec);
     void setMatVecValuesFineModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
-    void setVecValuesCoarseModel(VecDouble &rhs, VecInt &connec);
-    void setMatValuesCoarseModel(MatrixDouble &matrix, VecInt &connec);
+    void setVecValuesCoarseModel(Vec &b, VecDouble &rhs, VecInt &connec);
+    void setMatValuesCoarseModel(Mat &A, MatrixDouble &matrix, VecInt &connec);
     void setMatVecValuesCoarseModelPoisson(MatrixDouble &matrix, VecDouble &rhs, VecInt &connec);
     void setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                         MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                         VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                         VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                         VecInt &connec, VecInt &connecL);
-    void setVecValuesLagMultFineFine(VecDouble &Rhs2, VecDouble &rhsLagMult2,
+    void setVecValuesLagMultFineFine(Vec &b, VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                      VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                      VecInt &connec, VecInt &connecL);
-    void setMatValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+    void setMatValuesLagMultFineFine(Mat &A, MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                      MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                      VecInt &connec, VecInt &connecL);
 
@@ -211,10 +219,10 @@ public:
                                           VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                           VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                           VecInt &connecC, VecInt &connecL);
-    void setVecValuesLagMultFineCoarse(VecDouble &Rhs2, VecDouble &rhsLagMult2,
+    void setVecValuesLagMultFineCoarse(Vec &b, VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                        VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                        VecInt &connecC, VecInt &connecL);
-    void setMatValuesLagMultFineCoarse(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+    void setMatValuesLagMultFineCoarse(Mat &A, MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                        MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                        VecInt &connecC, VecInt &connecL);
     
@@ -225,8 +233,8 @@ public:
                                                  VecInt &connecC, VecInt &connecL);
 
     void assembleArlequinSystem();
-    void assembleArlequinMatrix();
-    void assembleArlequinVector();
+    void assembleArlequinMatrix(Mat &A);
+    void assembleArlequinVector(Vec &b);
     void assembleArlequinSystemPoisson();
 
     /// Print the results for Paraview post-processing
@@ -246,6 +254,12 @@ public:
 
     static PetscErrorCode FormFunction(SNES snes, Vec vecU,Vec vecB, void *ptr);
     static PetscErrorCode FormJacobian(SNES snes,Vec vecU,Mat matA, Mat matB, void *ptr);
+
+    void solveArlequinProblemSNES(double tolerance);
+    void solveArlequinProblemNewtonRaphson(int iterNumber, double tolerance);
+
+
+    void UpdateSolution(Vec &x);
 
 };
 

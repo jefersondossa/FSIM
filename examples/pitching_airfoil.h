@@ -732,10 +732,10 @@
         fluid2 -> addBoundaryCondition("GLUE", l1026, {0}, {0}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("GLUE", l1027, {0}, {0}, {}, "GLOBAL");
 
-        fluid2 -> addBoundaryCondition("DIRICHLET", l1001, {0.0}, {0.0}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("DIRICHLET", l1002, {0}, {0.0}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("DIRICHLET", l1003, {0}, {0}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("DIRICHLET", l1004, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l1001, {0.0}, {0.0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l1002, {0}, {0.0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l1003, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l1004, {0}, {0}, {}, "GLOBAL");
 
         //Surfaces
         fluid2 -> transfiniteSurface({s1001}, "Right", {});
@@ -811,7 +811,7 @@
 
     // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
     // coupledProblem.solveFSIProblemArlequin(100000);
-
+    arlequinProblem.UnsetUseSNES();
     bool noPitch=true;
     if (noPitch) {
         arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1);

@@ -1,6 +1,8 @@
 #include "Fluid.h"
 #include "petscpartitioner.h"
 #include "metis.h"
+#include "hdf5.h"
+
 
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
@@ -1193,75 +1195,75 @@ void Fluid<2,2>::readInitialValues(const std::string& inputPrev, const std::stri
 
     int rank;
 
-    // MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
 
-    // hid_t filePrevious;
-    // hid_t fileCurrent;
-    // hid_t dataset;
-    // herr_t status;
+    hid_t filePrevious;
+    hid_t fileCurrent;
+    hid_t dataset;
+    herr_t status;
 
-    // double *vecValues;
-    // double *scaValues;
-    // vecValues = new double[3*numNodes];
-    // scaValues = new double[numNodes];
+    double *vecValues;
+    double *scaValues;
+    vecValues = new double[3*numNodes];
+    scaValues = new double[numNodes];
 
-    // filePrevious = H5Fopen(inputPrev.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
-    // fileCurrent = H5Fopen(inputCurr.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
+    filePrevious = H5Fopen(inputPrev.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
+    fileCurrent = H5Fopen(inputCurr.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
 
-    // char datasetName[] = "/velocity";
-    // dataset = H5Dopen( filePrevious, datasetName, H5P_DEFAULT );
-    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    // status = H5Dclose(dataset);
-    // for (int i = 0; i < numNodes; ++i){
-    //     nodes_[i] -> setPreviousVelocityComponent(0,vecValues[3*i  ]);
-    //     nodes_[i] -> setPreviousVelocityComponent(1,vecValues[3*i+1]);
-    // }
-    // dataset = H5Dopen( fileCurrent, datasetName, H5P_DEFAULT );
-    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    // status = H5Dclose(dataset);
-    // for (int i = 0; i < numNodes; ++i){
-    //     nodes_[i] -> setVelocityComponent(0,vecValues[3*i  ]);
-    //     nodes_[i] -> setVelocityComponent(1,vecValues[3*i+1]);
-    // }
+    char datasetName[] = "/velocity";
+    dataset = H5Dopen( filePrevious, datasetName, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setPreviousVelocityComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setPreviousVelocityComponent(1,vecValues[3*i+1]);
+    }
+    dataset = H5Dopen( fileCurrent, datasetName, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setVelocityComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setVelocityComponent(1,vecValues[3*i+1]);
+    }
 
-    // char datasetName2[] = "/acceleration";
-    // dataset = H5Dopen( filePrevious, datasetName2, H5P_DEFAULT );
-    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    // status = H5Dclose(dataset);
-    // for (int i = 0; i < numNodes; ++i){
-    //     nodes_[i] -> setPreviousAccelerationComponent(0,vecValues[3*i  ]);
-    //     nodes_[i] -> setPreviousAccelerationComponent(1,vecValues[3*i+1]);
-    // }
-    // dataset = H5Dopen( fileCurrent, datasetName2, H5P_DEFAULT );
-    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    // status = H5Dclose(dataset);
-    // for (int i = 0; i < numNodes; ++i){
-    //     nodes_[i] -> setAccelerationComponent(0,vecValues[3*i  ]);
-    //     nodes_[i] -> setAccelerationComponent(1,vecValues[3*i+1]);
-    // }
+    char datasetName2[] = "/acceleration";
+    dataset = H5Dopen( filePrevious, datasetName2, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setPreviousAccelerationComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setPreviousAccelerationComponent(1,vecValues[3*i+1]);
+    }
+    dataset = H5Dopen( fileCurrent, datasetName2, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setAccelerationComponent(0,vecValues[3*i  ]);
+        nodes_[i] -> setAccelerationComponent(1,vecValues[3*i+1]);
+    }
 
-    // char datasetName3[] = "/lagrangeMultiplers";
-    // dataset = H5Dopen( fileCurrent, datasetName3, H5P_DEFAULT );
-    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
-    // status = H5Dclose(dataset);
-    // for (int i = 0; i < numNodes; ++i){
-    //     nodes_[i] -> setLagrangeMultiplier(0,vecValues[3*i  ]);
-    //     nodes_[i] -> setLagrangeMultiplier(1,vecValues[3*i+1]);
-    // }
+    char datasetName3[] = "/lagrangeMultiplers";
+    dataset = H5Dopen( fileCurrent, datasetName3, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vecValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setLagrangeMultiplier(0,vecValues[3*i  ]);
+        nodes_[i] -> setLagrangeMultiplier(1,vecValues[3*i+1]);
+    }
 
-    // char datasetName4[] = "/pressure";
-    // dataset = H5Dopen( fileCurrent, datasetName4, H5P_DEFAULT );
-    // status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &scaValues[0]);
-    // status = H5Dclose(dataset);
-    // for (int i = 0; i < numNodes; ++i){
-    //     nodes_[i] -> setPressure(vecValues[i]);
-    // }
+    char datasetName4[] = "/pressure";
+    dataset = H5Dopen( fileCurrent, datasetName4, H5P_DEFAULT );
+    status = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &scaValues[0]);
+    status = H5Dclose(dataset);
+    for (int i = 0; i < numNodes; ++i){
+        nodes_[i] -> setPressure(vecValues[i]);
+    }
 
-    // delete [] vecValues;
-    // delete [] scaValues;
+    delete [] vecValues;
+    delete [] scaValues;
 
-    // //End HDF5 file
-    // status = H5Fclose(filePrevious);
+    //End HDF5 file
+    status = H5Fclose(filePrevious);
 
     return;
 }

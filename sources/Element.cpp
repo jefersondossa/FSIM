@@ -1262,7 +1262,7 @@ void Element<DIM,DEG>::getParameterArlequin(int &index, double &tARLQ_, double &
     //     tARLQ_ = djac_ * std::sqrt(u_ * u_ + v_ * v_) / std::sqrt(lagMx_ * lagMx_ + lagMy_ * lagMy_);//-tSUPG_*1;
     // }else{
     // tARLQ_ = -1. * k1 * tSUPG_ * 1.e-2;
-    tARLQ_ = -1.e0 * k1 * tSUPG_;
+    tARLQ_ = -1.e-2 * k1 * tSUPG_;
     //}
     //tARLQ_ = 0.;
 
@@ -1475,7 +1475,7 @@ void Element<DIM,DEG>::getParameterArlequin2() {
     if (std::fabs(tp2) <= 1.e-10) tp2 = 1.e-10;
     if (std::fabs(tp3) <= 1.e-10) tp3 = 1.e-10;
 
-    tauAlequin = -1.e0 / 
+    tauAlequin = -0.e-2 / 
                   std::sqrt(1. / (tp1*tp1) +
                             1. / (tp2*tp2) +
                             1. / (tp3*tp3));
@@ -2936,7 +2936,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
     double &alpha_m = parameters->getAlphaM();
     double &k1 = parameters->getArlequinK1();
 
-    getParameterArlequin2();
+    // getParameterArlequin2();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
@@ -2953,7 +2953,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMesh(MatrixDouble &arle
 
         getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
         
-        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+        getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
         
@@ -3145,7 +3145,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshMatrix(MatrixDouble
     double &alpha_m = parameters->getAlphaM();
     double &k1 = parameters->getArlequinK1();
 
-    getParameterArlequin2();
+    // getParameterArlequin2();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
@@ -3162,7 +3162,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshMatrix(MatrixDouble
 
         getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
         
-        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+        getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
         
@@ -3355,7 +3355,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshVector(VecDouble &a
     double &alpha_m = parameters->getAlphaM();
     double &k1 = parameters->getArlequinK1();
 
-    getParameterArlequin2();
+    // getParameterArlequin2();
 
     for(int it = 0; it < nQuad.getNumberOfIntegrationPoints(); it++){
         //Defines the integration points adimentional coordinates
@@ -3372,7 +3372,7 @@ void Element<DIM,DEG>::getLagrangeMultipliersArlequinSameMeshVector(VecDouble &a
 
         getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
         
-        // getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
+        getParameterArlequin(index, tARLQ_, tSUPG_, tPSPG_, tLSIC_, dphi_dx);
 
         double wna_ = alpha_f * intPointWeightFunction[index] + (1. - alpha_f) * intPointWeightFunctionPrev[index];
         

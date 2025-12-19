@@ -2001,7 +2001,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesCoarseModel(MatrixDouble &matrix, VecDoub
 
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setVecValuesCoarseModel(VecDouble &rhs, VecInt &connec){
+void Arlequin<DIM,DEG>::setVecValuesCoarseModel(Vec &b, VecDouble &rhs, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2018,7 +2018,7 @@ void Arlequin<DIM,DEG>::setVecValuesCoarseModel(VecDouble &rhs, VecInt &connec){
 }
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatValuesCoarseModel(MatrixDouble &matrix, VecInt &connec){
+void Arlequin<DIM,DEG>::setMatValuesCoarseModel(Mat &A, MatrixDouble &matrix, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2110,7 +2110,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesFineModel(MatrixDouble &matrix, VecDouble
 };
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setVecValuesFineModel(VecDouble &rhs, VecInt &connec){
+void Arlequin<DIM,DEG>::setVecValuesFineModel(Vec &b, VecDouble &rhs, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2127,7 +2127,7 @@ void Arlequin<DIM,DEG>::setVecValuesFineModel(VecDouble &rhs, VecInt &connec){
 };
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatValuesFineModel(MatrixDouble &matrix, VecInt &connec){
+void Arlequin<DIM,DEG>::setMatValuesFineModel(Mat &A, MatrixDouble &matrix, VecInt &connec){
 
     //Disperse local contributions into the global matrix
     for (int i = 0; i < nElNodes; i++){
@@ -2262,7 +2262,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineFine(MatrixDouble &Ajac2, Matr
 };
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setVecValuesLagMultFineFine(VecDouble &Rhs2, VecDouble &rhsLagMult2,
+void Arlequin<DIM,DEG>::setVecValuesLagMultFineFine(Vec &b, VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                                     VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                                     VecInt &connec, VecInt &connecL){
 
@@ -2300,7 +2300,7 @@ void Arlequin<DIM,DEG>::setVecValuesLagMultFineFine(VecDouble &Rhs2, VecDouble &
 };
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatValuesLagMultFineFine(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+void Arlequin<DIM,DEG>::setMatValuesLagMultFineFine(Mat &A, MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                                     MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2,
                                                     VecInt &connec, VecInt &connecL){
 
@@ -2496,7 +2496,7 @@ void Arlequin<DIM,DEG>::setMatVecValuesLagMultFineCoarse(MatrixDouble &Ajac2, Ma
 
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setVecValuesLagMultFineCoarse(VecDouble &Rhs2, VecDouble &rhsLagMult2,
+void Arlequin<DIM,DEG>::setVecValuesLagMultFineCoarse(Vec &b, VecDouble &Rhs2, VecDouble &rhsLagMult2,
                                                       VecDouble &localMV_vec, VecDouble &RhsArlequin2,
                                                       VecInt &connecC, VecInt &connecL){
 
@@ -2532,7 +2532,7 @@ void Arlequin<DIM,DEG>::setVecValuesLagMultFineCoarse(VecDouble &Rhs2, VecDouble
 
 
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::setMatValuesLagMultFineCoarse(MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
+void Arlequin<DIM,DEG>::setMatValuesLagMultFineCoarse(Mat &A, MatrixDouble &Ajac2, MatrixDouble &localMV_mat, 
                                                       MatrixDouble &ArlequinA1, MatrixDouble &ArlequinA2, 
                                                       VecInt &connecC, VecInt &connecL){
 
@@ -2842,7 +2842,7 @@ void Arlequin<DIM,DEG>::assembleArlequinSystem(){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
+void Arlequin<DIM,DEG>::assembleArlequinMatrix(Mat &A){
 
     //Coarse mesh
     for (int jel = 0; jel < numElemCoarse; jel++){   
@@ -2853,7 +2853,7 @@ void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
 
             elementsCoarse_[jel] -> getTransientNavierStokesMatrix(matrix);
 
-            setMatValuesCoarseModel(matrix, elementsCoarse_[jel] -> getConnectivity());
+            setMatValuesCoarseModel(A, matrix, elementsCoarse_[jel] -> getConnectivity());
 
         };
     };
@@ -2867,7 +2867,7 @@ void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
 
             elementsFine_[jel] -> getTransientNavierStokesMatrix(matrix);
 
-            setMatValuesFineModel(matrix, elementsFine_[jel] -> getConnectivity());
+            setMatValuesFineModel(A, matrix, elementsFine_[jel] -> getConnectivity());
 
         };                
     };
@@ -2910,7 +2910,7 @@ void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
             // ArlequinA2 *= tArlequin;
             // RhsArlequin2 *= tArlequin;
             
-            setMatValuesLagMultFineFine(Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
+            setMatValuesLagMultFineFine(A, Ajac2,localMV_mat,ArlequinA1,ArlequinA2, 
                                         elementsFine_[jel] -> getConnectivity(),
                                         glueZoneFine_[l] -> getConnectivity());
             
@@ -2995,7 +2995,7 @@ void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
                 // ArlequinA2 *= tArlequin;
                 // RhsArlequin2 *= tArlequin;
 
-                setMatValuesLagMultFineCoarse(Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
+                setMatValuesLagMultFineCoarse(A, Ajac2, localMV_mat, ArlequinA1, ArlequinA2, 
                                               elementsCoarse_[iElemCoarse] -> getConnectivity(), 
                                               glueZoneFine_[l] -> getConnectivity());
                 
@@ -3014,7 +3014,7 @@ void Arlequin<DIM,DEG>::assembleArlequinMatrix(){
 //----------------COMPUTE ARLEQUIN COUPLED NAVIER-STOKES PROBLEM----------------
 //------------------------------------------------------------------------------
 template<int DIM, int DEG>
-void Arlequin<DIM,DEG>::assembleArlequinVector(){
+void Arlequin<DIM,DEG>::assembleArlequinVector(Vec &b){
 
     //Coarse mesh
     for (int jel = 0; jel < numElemCoarse; jel++){   
@@ -3025,7 +3025,7 @@ void Arlequin<DIM,DEG>::assembleArlequinVector(){
 
             elementsCoarse_[jel] -> getTransientNavierStokesVector(rhs);
 
-            setVecValuesCoarseModel(rhs,elementsCoarse_[jel] -> getConnectivity());
+            setVecValuesCoarseModel(b, rhs,elementsCoarse_[jel] -> getConnectivity());
 
         };
     };
@@ -3039,7 +3039,7 @@ void Arlequin<DIM,DEG>::assembleArlequinVector(){
 
             elementsFine_[jel] -> getTransientNavierStokesVector(rhs);
 
-            setVecValuesFineModel(rhs,elementsFine_[jel] -> getConnectivity());
+            setVecValuesFineModel(b, rhs,elementsFine_[jel] -> getConnectivity());
 
         };                
     };
@@ -3088,7 +3088,7 @@ void Arlequin<DIM,DEG>::assembleArlequinVector(){
             // ArlequinA2 *= tArlequin;
             // RhsArlequin2 *= tArlequin;
             
-            setVecValuesLagMultFineFine(Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
+            setVecValuesLagMultFineFine(b, Rhs2,rhsLagMult2,localMV_vec,RhsArlequin2,
                                         elementsFine_[jel] -> getConnectivity(),
                                         glueZoneFine_[l] -> getConnectivity());
 
@@ -3168,7 +3168,7 @@ void Arlequin<DIM,DEG>::assembleArlequinVector(){
                 // ArlequinA2 *= tArlequin;
                 // RhsArlequin2 *= tArlequin;
 
-                setVecValuesLagMultFineCoarse(Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
+                setVecValuesLagMultFineCoarse(b, Rhs2, rhsLagMult2, localMV_vec, RhsArlequin2,
                                               elementsCoarse_[iElemCoarse] -> getConnectivity(), 
                                               glueZoneFine_[l] -> getConnectivity());
                 
@@ -3400,13 +3400,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         printResultsCoarse(100);
         printResultsFine(100);
     }
-    // Computes the system size
-    int sysSize;
-    if (fProbType == ProblemType::ENavierStokes){
-        sysSize = (DIM+1)*numNodesCoarse + (DIM+1)*numNodesFine + DIM*numNodesGlueZoneFine;
-    } else if (fProbType == ProblemType::EPoisson){
-        sysSize = numNodesCoarse + numNodesFine + numNodesGlueZoneFine;
-    }
+    
     double integScheme = fineModel.integScheme;
  
     alpha_f = 1. / (1. + integScheme);
@@ -3414,6 +3408,30 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
     gamma = 0.5 + alpha_m - alpha_f;
 
     std::cout << "Time integration parameters = " << alpha_f << ", " << alpha_m << ", " << gamma <<std::endl; 
+
+    int sysSize;
+    if (fProbType == ProblemType::ENavierStokes){
+        sysSize = (DIM+1)*numNodesCoarse + (DIM+1)*numNodesFine + DIM*numNodesGlueZoneFine;
+    } else if (fProbType == ProblemType::EPoisson){
+        sysSize = numNodesCoarse + numNodesFine + numNodesGlueZoneFine;
+    }
+
+    // Preallocates the matrix
+    if (parametersFine->getSolverType() == SolverType::ESuiteSparse){
+        MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
+    } else {
+        MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
+                        sysSize, sysSize,600,NULL,1500,NULL,&A); 
+    }
+    
+            
+
+    //Create PETSc vectors
+    VecCreate(PETSC_COMM_WORLD, &b);
+    VecSetSizes(b, PETSC_DECIDE, sysSize);
+    VecSetFromOptions(b);
+    VecDuplicate(b, &u);
+
 
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
@@ -3435,7 +3453,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         PetscMemoryGetCurrentUsage(&bytes);
         PetscPrintf(PETSC_COMM_WORLD,"Memory used22 %g M\n",bytes/(1024*1024));
 
-        //Updates velocity and acceleration
+        //Predict velocity and acceleration
         for (int i = 0; i < numNodesCoarse; i++){
             VecDouble accel(DIM), u(DIM), uprev(DIM);
             
@@ -3448,11 +3466,18 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             accel[0] = (*nodesCoarse_)[i] -> getAcceleration(0);
             accel[1] = (*nodesCoarse_)[i] -> getAcceleration(1);
             
-            (*nodesCoarse_)[i] -> setPreviousAcceleration(accel);
+            if (i==450&&rank==0){
+                std::cout << "accel before = " << accel[0] << " , "<< accel[1] << std::endl;
+            }
 
+            (*nodesCoarse_)[i] -> setPreviousAcceleration(accel);
+            
             accel[0] *= (gamma - 1.) / gamma;
             accel[1] *= (gamma - 1.) / gamma;
-            
+            if (i==450&&rank==0){
+                std::cout << "gamma = " << gamma << std::endl;
+                std::cout << "accel after = " << accel[0] << " , "<< accel[1] << std::endl;
+            }
             (*nodesCoarse_)[i] -> setAcceleration(accel);            
 
         };
@@ -3476,266 +3501,43 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             
             (*nodesFine_)[i] -> setAcceleration(accel);
         };
-
-        //STARTS NEWTON-RAPHSON
-        for (int inewton = 0; inewton < iterNumber; inewton++){
-            
-            std::clock_t t1 = std::clock();
-            
-            // Preallocates the matrix
-            if (parametersFine->getSolverType() == SolverType::ESuiteSparse){
-                ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
-            } else {
-                ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                                sysSize, sysSize,600,NULL,1500,NULL,&A); 
-            }
-
-            for (PetscInt i=0; i<sysSize; i++){
-                double val = 1.e-10;
-                ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
-            }  
-            CHKERRQ(ierr);
-            
-            // Divides the matrix between the processes
-            ierr = MatGetOwnershipRange(A, &Istart, &Iend);CHKERRQ(ierr);
-            
-            //Create PETSc vectors
-            ierr = VecCreate(PETSC_COMM_WORLD, &b); CHKERRQ(ierr);
-            ierr = VecSetSizes(b, PETSC_DECIDE, sysSize); CHKERRQ(ierr);
-            ierr = VecSetFromOptions(b); CHKERRQ(ierr); 
-            ierr = VecDuplicate(b, &u); CHKERRQ(ierr);
-                        
-            // for (int i=0; i<sysSize; i++){
-            //     double val = 1.e-20;
-            //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
-                
-            // }
-            
-
-            std::clock_t t3 = std::clock();
-            if (fProbType == ProblemType::ENavierStokes){
-                assembleArlequinSystem();
-            } else if (fProbType == ProblemType::EPoisson){
-                assembleArlequinSystemPoisson();
-            }
-            
-            std::clock_t t4 = std::clock();
-
-            //std::cout << "Enter PETSc " << rank << std::endl;
-            
-            //Assemble matrices and vectors
-            ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-            
-            ierr = VecAssemblyBegin(b);CHKERRQ(ierr);
-            ierr = VecAssemblyEnd(b);CHKERRQ(ierr);
-            std::clock_t t5 = std::clock();
-
-          
-            
- // PetscViewer    viewer;
-
- // PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
- // PetscObjectSetName((PetscObject)viewer,"Line graph Plot");
- //  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-
-            // ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            
-            //Create KSP context to solve the linear system
-            ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);CHKERRQ(ierr);
-            
-            ierr = KSPSetOperators(ksp,A,A);CHKERRQ(ierr);
-
-
-            switch (parametersFine->getSolverType())
-            {
-            case SolverType::ESuiteSparse:
-                KSPGetPC(ksp, &pc);
-                PCSetType(pc, PCLU);
-                PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
-                break;
-            case SolverType::EMumps:
-                KSPGetPC(ksp, &pc);
-                PCSetType(pc, PCLU);
-                PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
-                break;
-
-            case SolverType::EIterative:
-                KSPSetType(ksp,KSPFGMRES);
-                KSPGetPC(ksp, &pc);
-                PCSetType(pc,PCBJACOBI);
-                KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
-                break;
-
-            default:
-                PanicButton();
-                break;
-            }
-
-
-            
-            ierr = KSPSolve(ksp,b,u);CHKERRQ(ierr);
-            
-            ierr = KSPGetTotalIterations(ksp, &iterations);
-            
-            std::clock_t t6 = std::clock();
-
-            if (rank == 0) std::cout << "TIME " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << " " 
-                                                << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << " " 
-                                                << 1000.*(t6-t5)/CLOCKS_PER_SEC/1000. << std::endl;
-            //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
+        // if (iTimeStep<10){
+        //     useSNES = false;
+        // } else {
+        //     useSNES = true;
+        // }
+        if (useSNES){
+            solveArlequinProblemSNES(tolerance);
+        } else {
+            solveArlequinProblemNewtonRaphson(iterNumber,tolerance);
+        }        
         
-            //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-            
-            //Gathers the solution vector to the master process
-            ierr = VecScatterCreateToAll(u, &ctx, &All);CHKERRQ(ierr);
-            
-            ierr = VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-            CHKERRQ(ierr);
-            
-            ierr = VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
-            CHKERRQ(ierr);
-            
-            ierr = VecScatterDestroy(&ctx);CHKERRQ(ierr);
-            
-            //Updates nodal values
-            double u_[DIM];
-            double normU = 0.;
-            double normP = 0.;
-            double normL = 0.;
-            double p_;
-            Ione = 1;
-
-            if (fProbType == ProblemType::ENavierStokes){
-                for (int i = 0; i < numNodesCoarse; ++i){
-                    double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
-                    for (int k = 0; k < DIM; k++){
-                        Ii = (DIM+1) * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                        u_[k] = val;
-                        normU += val*w_*val*w_;
-                        (*nodesCoarse_)[i] -> incrementAcceleration(k,u_[k]);
-                        (*nodesCoarse_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
-                    }
-                    Ii = (DIM+1) * i + DIM;
-                    ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                    p_ = val;
-                    normP += val*w_*val*w_;
-                    (*nodesCoarse_)[i] -> incrementPressure(p_);
-                };
-                
-                for (int i = 0; i < numNodesFine; ++i){
-                    double w_ = (*nodesFine_)[i] -> getWeightFunction();
-                    for (int k = 0; k < DIM; k++){
-                        Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        u_[k] = val;
-                        normU += val*w_*val*w_;
-                        (*nodesFine_)[i] -> incrementAcceleration(k,u_[k]);
-                        (*nodesFine_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
-                    }        
-                    Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + DIM;
-                    ierr = VecGetValues(All,Ione,&Ii,&val);CHKERRQ(ierr);
-                    p_ = val;
-                    normP += val*w_*val*w_;
-                    (*nodesFine_)[i] -> incrementPressure(p_);
-                };
-                
-                for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                    for (int k = 0; k < DIM; k++){
-                        Ii = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * i + k;
-                        ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                        u_[k] = val;
-                        (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
-                        normL += val*val;
-                    }
-                };
-            } else if (fProbType == ProblemType::EPoisson){
-                for (int i = 0; i < numNodesCoarse; ++i){
-                    double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
-                    Ii = i;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
-                    u_[0] = val;
-                    normU += val*w_*val*w_;
-                    (*nodesCoarse_)[i] -> incrementVelocity(0,u_[0]);
-                };
-                
-                for (int i = 0; i < numNodesFine; ++i){
-                    double w_ = (*nodesFine_)[i] -> getWeightFunction();
-                    Ii = numNodesCoarse + i;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[0] = val;
-                    normU += val*w_*val*w_;
-                    (*nodesFine_)[i] -> incrementVelocity(0,u_[0]);
-                };
-                
-                for (int i = 0; i < numNodesGlueZoneFine; ++i){
-                    Ii = numNodesCoarse + numNodesFine + i;
-                    ierr = VecGetValues(All, Ione, &Ii, &val);CHKERRQ(ierr);
-                    u_[0] = val;
-                    (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
-                    normL += val*val;
-
-                };
-            }
-            
-            //Computes the solution vector norm
-            ierr = VecNorm(u,NORM_2,&val);CHKERRQ(ierr);
-            
-            std::clock_t t2 = std::clock();
-            
-            if(rank == 0){
-                std::cout<<"Iteration = " << inewton << " (" << iterations <<  
-                    ")  Du Norm = " << std::scientific << sqrt(normU) 
-                         << " " << sqrt(normP) 
-                         << " " << sqrt(normL) 
-                         << " " << val << 
-                    "  Time (s) = " << std::fixed << 
-                    1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
-            };
-            
-            ierr = KSPDestroy(&ksp); CHKERRQ(ierr);
-            ierr = VecDestroy(&b); CHKERRQ(ierr);
-            ierr = VecDestroy(&u); CHKERRQ(ierr);
-            ierr = VecDestroy(&All); CHKERRQ(ierr);
-            ierr = MatDestroy(&A); CHKERRQ(ierr);
-           // ierr = MatDestroy(&F); CHKERRQ(ierr);
-            //ierr = MatDestroy(&C); CHKERRQ(ierr);
-            
-            if(val <= tolerance){
-                break;            
-            }; 
-        };
-        
-        if (rank == 0){
-            double normUUprev, normU;
-            normUUprev = 0.;
-            normU = 0.;
-            for (int i = 0; i < numNodesCoarse; ++i){
-                for (int k = 0; k < DIM; k++){
-                    double u, uPr, weight;
-                    weight = (*nodesCoarse_)[i] -> getWeightFunction();
-                    u = (*nodesCoarse_)[i] -> getVelocity(k) * weight;
-                    uPr = (*nodesCoarse_)[i] -> getPreviousVelocity(k) * weight;
-                    normUUprev += (u-uPr) * (u-uPr);
-                    normU += u*u;
-                }
-            }
-            for (int i = 0; i < numNodesFine; ++i){
-                for (int k = 0; k < DIM; k++){
-                    double u, uPr, weight;
-                    weight = (*nodesFine_)[i] -> getWeightFunction();
-                    u = (*nodesFine_)[i] -> getVelocity(k) * weight;
-                    uPr = (*nodesFine_)[i] -> getPreviousVelocity(k) * weight;
-                    normUUprev += (u-uPr) * (u-uPr);
-                    normU += u*u;
-                }
-            }
-            std::cout << "NORM U  " << std::scientific <<  sqrt(normUUprev/normU) << std::endl;
-        }
+        // if (rank == 0){
+        //     double normUUprev, normU;
+        //     normUUprev = 0.;
+        //     normU = 0.;
+        //     for (int i = 0; i < numNodesCoarse; ++i){
+        //         for (int k = 0; k < DIM; k++){
+        //             double u, uPr, weight;
+        //             weight = (*nodesCoarse_)[i] -> getWeightFunction();
+        //             u = (*nodesCoarse_)[i] -> getVelocity(k) * weight;
+        //             uPr = (*nodesCoarse_)[i] -> getPreviousVelocity(k) * weight;
+        //             normUUprev += (u-uPr) * (u-uPr);
+        //             normU += u*u;
+        //         }
+        //     }
+        //     for (int i = 0; i < numNodesFine; ++i){
+        //         for (int k = 0; k < DIM; k++){
+        //             double u, uPr, weight;
+        //             weight = (*nodesFine_)[i] -> getWeightFunction();
+        //             u = (*nodesFine_)[i] -> getVelocity(k) * weight;
+        //             uPr = (*nodesFine_)[i] -> getPreviousVelocity(k) * weight;
+        //             normUUprev += (u-uPr) * (u-uPr);
+        //             normU += u*u;
+        //         }
+        //     }
+        //     std::cout << "NORM U  " << std::scientific <<  sqrt(normUUprev/normU) << std::endl;
+        // }
 
         //Compute real velocity
         ShapeFunction<DIM,DEG>                       shapeQuad;
@@ -3795,9 +3597,9 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
         if (parametersCoarse->getExactSolutionPoisson() && parametersFine->getExactSolutionPoisson()) computeErrorPoisson();
         
         // Compute and print drag and lift coefficients
-        if (fineModel.getComputeDragAndLift()){
-            dragAndLiftCoefficients(dragLift);
-        };
+        // if (fineModel.getComputeDragAndLift()){
+        //     dragAndLiftCoefficients(dragLift);
+        // };
 
         if (rank == 0) {
             //Printing results
@@ -3916,20 +3718,30 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
 
 
 
-            VecDouble xn(DIM);
+            VecDouble xn(DIM), un(DIM);
             VecDouble xi = (*nodesFine_)[i] -> getInitialCoordinates();       
             VecDouble x = (*nodesFine_)[i] -> getCoordinates();       
     
             double a = -20 * pi / 180 + 10 * pi / 180 * std::cos(2.*pi*iTimeStep*dTime);// + 10 * pi / 180;
-
+            double a2 = pi / 18 * (-2 + std::cos(2.*pi*iTimeStep*dTime));// + 10 * pi / 180;
+            double pit2 = pi * iTimeStep * dTime * 2.;
             // std::cout << " AAA " << a << std::endl;
 
             xn[0] = 0.5 + (xi[0]-0.5) * std::cos(a) - (xi[1]-0.0) * std::sin(a);
             xn[1] = 0.0 + (xi[0]-0.5) * std::sin(a) + (xi[1]-0.0) * std::cos(a);
 
+            un[0] = pi*pi/9. * std::sin(pit2) * (xi[1]*std::cos(a2) + (xi[0]-0.5)*std::sin(a2));
+            un[1] = pi*pi/9. * std::sin(pit2) * (-(xi[0]-0.5)*std::cos(a2) + xi[1]*std::sin(a2));
+
             u[0] = (xn[0] - x[0]) / dTime;
             u[1] = (xn[1] - x[1]) / dTime;
 
+            if ((*nodesFine_)[i] -> getConstrains(0) == 3 || (*nodesFine_)[i] -> getConstrains(1) == 3){
+                (*nodesFine_)[i] -> setConstrainValue(0, un[0]);
+                (*nodesFine_)[i] -> setConstrainValue(1, un[1]);
+                (*nodesFine_)[i] -> setVelocityComponent(0, un[0]);
+                (*nodesFine_)[i] -> setVelocityComponent(1, un[1]);
+            }
 
             (*nodesFine_)[i] -> setMeshVelocity(u);
       
@@ -4695,18 +4507,448 @@ void Arlequin<DIM,DEG>::stabilizeArlequinNew(VecDouble &Ml1, VecDouble &t1,
 };
 
 template<int DIM, int DEG>
-PetscErrorCode Arlequin<DIM,DEG>::FormJacobian(SNES snes,Vec vecU, Mat matA, Mat matB,void *ptr){
+PetscErrorCode Arlequin<DIM,DEG>::FormJacobian(SNES fSNES,Vec u, Mat A, Mat b,void *ptr){
+    
+    Arlequin<DIM,DEG>* problem = (Arlequin<DIM,DEG>*) ptr;
+    MatZeroEntries(A);
+
+    PetscInt m,n;
+    MatGetSize(A, &m, &n);
+
+    for (PetscInt i=0; i<m; i++){
+        double val = 1.e-10;
+        MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
+    }  
+        
+    problem->assembleArlequinMatrix(A);
+
+    //Assemble matrices and vectors
+    MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+    // MatView(A,PETSC_VIEWER_STDOUT_WORLD);
 
     return 0;
 }
 
 template<int DIM, int DEG>
-PetscErrorCode Arlequin<DIM,DEG>::FormFunction(SNES snes, Vec vecU,Vec vecB, void *ptr){
+PetscErrorCode Arlequin<DIM,DEG>::FormFunction(SNES fSNES, Vec u,Vec b, void *ptr){
 
+    Arlequin<DIM,DEG>* problem = (Arlequin<DIM,DEG>*) ptr;
+    // Update the solution.
+    problem->UpdateSolution(u);
+
+
+    VecZeroEntries(b);
+
+    problem->assembleArlequinVector(b);
+
+    //Assemble matrices and vectors
+    VecAssemblyBegin(b);
+    VecAssemblyEnd(b);
+
+
+            //ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    // VecView(problem->b,PETSC_VIEWER_STDOUT_WORLD);
+            
     return 0;
 }
 
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::solveArlequinProblemSNES(double tolerance){
 
+    
+    SNESCreate(PETSC_COMM_WORLD,&fSNES);
+    
+    SNESSetFunction(fSNES,b,FormFunction,&(*this));
+    SNESSetJacobian(fSNES,A,A,FormJacobian,&(*this));
+
+
+    SNESGetKSP(fSNES,&ksp);
+
+    //Create KSP context to solve the linear system
+    // KSPCreate(PETSC_COMM_WORLD,&ksp);
+    // KSPSetOperators(ksp,A,A);
+    switch (parametersFine->getSolverType())
+    {
+    case SolverType::ESuiteSparse:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCLU);
+        PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+        break;
+    case SolverType::EMumps:
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc, PCLU);
+        PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+        break;
+
+    case SolverType::EIterative:
+        KSPSetType(ksp,KSPFGMRES);
+        KSPGetPC(ksp, &pc);
+        PCSetType(pc,PCBJACOBI);
+        KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+        break;
+
+    default:
+        PanicButton();
+        break;
+    }
+
+    VecZeroEntries(u);
+    SNESSetFromOptions(fSNES);        
+    // SNESView(fSNES,PETSC_VIEWER_STDOUT_WORLD);
+
+    PetscInt iterations = 0;
+    PetscReal fgnorm = 0.;
+    PetscViewerAndFormat *vf;
+
+    SNESSetForceIteration(fSNES,PETSC_TRUE);
+    SNESSetType(fSNES, SNESNEWTONLS);
+    // SNESLineSearch linesearch;
+    // SNESGetLineSearch(fSNES, &linesearch);
+    // SNESLineSearchSetType(linesearch, SNESLINESEARCHSECANT );
+    PetscReal tol = 1.e-8;
+    PetscInt maxit = 500;
+    SNESSetTolerances(fSNES, tol, tol, tol, maxit, maxit);
+    // SNESMonitorDefault(fSNES,NULL,NULL,NULL);
+    SNESGetIterationNumber(fSNES,&iterations);
+    SNESSolve(fSNES,NULL,u);
+    // petscmat->PrintSolution();
+   
+    // KSPDestroy(&ksp);
+    // VecDestroy(&b);
+    // VecDestroy(&u);
+    // MatDestroy(&A);
+    SNESDestroy(&fSNES);
+    // MatDestroy(&F);
+    // MatDestroy(&C);
+
+    for (int i = 0; i < numNodesCoarse; ++i){
+        for (int k = 0; k < DIM; k++){
+            if ((*nodesCoarse_)[i]->getConstrains(k)==1)continue;
+            double val = (*nodesCoarse_)[i]->getAcceleration(k);
+            (*nodesCoarse_)[i]->setPreviousAccelerationComponent(k,val);
+            val = (*nodesCoarse_)[i]->getVelocity(k);
+            (*nodesCoarse_)[i]->setPreviousVelocityComponent(k,val);
+        }
+    }
+    for (int i = 0; i < numNodesFine; ++i){
+        for (int k = 0; k < DIM; k++){
+            if ((*nodesFine_)[i]->getConstrains(k)==1)continue;
+            double val = (*nodesFine_)[i]->getAcceleration(k);
+            (*nodesFine_)[i]->setPreviousAccelerationComponent(k,val);
+            val = (*nodesFine_)[i]->getVelocity(k);
+            (*nodesFine_)[i]->setPreviousVelocityComponent(k,val);
+        }
+    }
+
+
+}
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::solveArlequinProblemNewtonRaphson(int iterNumber, double tolerance){
+
+   
+
+    for (int inewton = 0; inewton < iterNumber; inewton++){
+
+
+        std::clock_t t1 = std::clock();
+    
+        MatZeroEntries(A);
+        PetscInt m,n;
+        MatGetSize(A, &m, &n);
+
+        for (PetscInt i=0; i<m; i++){
+            double val = 1.e-10;
+            MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);   
+        }  
+        
+        // Divides the matrix between the processes
+        MatGetOwnershipRange(A, &Istart, &Iend);
+        
+        //Create PETSc vectors
+        VecZeroEntries(b);
+        // VecZeroEntries(u);
+
+        // for (int i=0; i<sysSize; i++){
+        //     double val = 1.e-20;
+        //     ierr = MatSetValues(A,1,&i,1,&i,&val,ADD_VALUES);
+            
+        // }
+        
+
+        std::clock_t t3 = std::clock();
+        if (fProbType == ProblemType::ENavierStokes){
+            assembleArlequinSystem();
+        } else if (fProbType == ProblemType::EPoisson){
+            assembleArlequinSystemPoisson();
+        }
+        
+        std::clock_t t4 = std::clock();
+
+        //std::cout << "Enter PETSc " << rank << std::endl;
+        
+        //Assemble matrices and vectors
+        MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+        MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+
+        VecAssemblyBegin(b);
+        VecAssemblyEnd(b);
+        std::clock_t t5 = std::clock();
+
+        
+        
+// PetscViewer    viewer;
+
+// PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+// PetscObjectSetName((PetscObject)viewer,"Line graph Plot");
+//  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+
+        // ierr = MatView(A,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        //ierr = VecView(b,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        
+        //Create KSP context to solve the linear system
+        KSPCreate(PETSC_COMM_WORLD,&ksp);
+        KSPSetOperators(ksp,A,A);
+
+
+
+        switch (parametersFine->getSolverType())
+        {
+        case SolverType::ESuiteSparse:
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc, PCLU);
+            PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
+            break;
+        case SolverType::EMumps:
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc, PCLU);
+            PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
+            break;
+
+        case SolverType::EIterative:
+            KSPSetType(ksp,KSPFGMRES);
+            KSPGetPC(ksp, &pc);
+            PCSetType(pc,PCBJACOBI);
+            KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+            break;
+
+        default:
+            PanicButton();
+            break;
+        }
+
+
+
+        KSPSolve(ksp,b,u);
+
+        KSPGetTotalIterations(ksp, &iterations);
+
+        std::clock_t t6 = std::clock();
+
+        if (rank == 0) std::cout << "TIME " << 1000.*(t4-t3)/CLOCKS_PER_SEC/1000. << " " 
+                                            << 1000.*(t5-t4)/CLOCKS_PER_SEC/1000. << " " 
+                                            << 1000.*(t6-t5)/CLOCKS_PER_SEC/1000. << std::endl;
+        //if (rank == 0)std::cout << "GMRES Iterations = " << iterations << std::endl;
+    
+        //ierr = VecView(u,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+        
+        //Gathers the solution vector to the master process
+        VecScatterCreateToAll(u, &ctx, &All);
+
+        VecScatterBegin(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+
+        VecScatterEnd(ctx, u, All, INSERT_VALUES, SCATTER_FORWARD);
+
+        VecScatterDestroy(&ctx);
+
+        //Updates nodal values
+        double u_[DIM];
+        double normU = 0.;
+        double normP = 0.;
+        double normL = 0.;
+        double p_;
+        Ione = 1;
+
+        if (fProbType == ProblemType::ENavierStokes){
+            for (int i = 0; i < numNodesCoarse; ++i){
+                double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
+                for (int k = 0; k < DIM; k++){
+                    Ii = (DIM+1) * i + k;
+                    VecGetValues(All, Ione, &Ii, &val);
+                    // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+                    u_[k] = val;
+                    normU += val*w_*val*w_;
+                    (*nodesCoarse_)[i] -> incrementAcceleration(k,u_[k]);
+                    (*nodesCoarse_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
+                }
+                Ii = (DIM+1) * i + DIM;
+                VecGetValues(All,Ione,&Ii,&val);
+                p_ = val;
+                normP += val*w_*val*w_;
+                (*nodesCoarse_)[i] -> incrementPressure(p_);
+            };
+            
+            for (int i = 0; i < numNodesFine; ++i){
+                double w_ = (*nodesFine_)[i] -> getWeightFunction();
+                for (int k = 0; k < DIM; k++){
+                    Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + k;
+                    VecGetValues(All, Ione, &Ii, &val);
+                    u_[k] = val;
+                    normU += val*w_*val*w_;
+                    (*nodesFine_)[i] -> incrementAcceleration(k,u_[k]);
+                    (*nodesFine_)[i] -> incrementVelocity(k,u_[k]*gamma*dTime);
+                }        
+                Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + DIM;
+                VecGetValues(All,Ione,&Ii,&val);
+                p_ = val;
+                normP += val*w_*val*w_;
+                (*nodesFine_)[i] -> incrementPressure(p_);
+            };
+            
+            for (int i = 0; i < numNodesGlueZoneFine; ++i){
+                for (int k = 0; k < DIM; k++){
+                    Ii = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * i + k;
+                    VecGetValues(All, Ione, &Ii, &val);
+                    u_[k] = val;
+                    (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,u_[k]);
+                    normL += val*val;
+                }
+            };
+        } else if (fProbType == ProblemType::EPoisson){
+            for (int i = 0; i < numNodesCoarse; ++i){
+                double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
+                Ii = i;
+                VecGetValues(All, Ione, &Ii, &val);
+                // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+                u_[0] = val;
+                normU += val*w_*val*w_;
+                (*nodesCoarse_)[i] -> incrementVelocity(0,u_[0]);
+            };
+            
+            for (int i = 0; i < numNodesFine; ++i){
+                double w_ = (*nodesFine_)[i] -> getWeightFunction();
+                Ii = numNodesCoarse + i;
+                VecGetValues(All, Ione, &Ii, &val);
+                u_[0] = val;
+                normU += val*w_*val*w_;
+                (*nodesFine_)[i] -> incrementVelocity(0,u_[0]);
+            };
+            
+            for (int i = 0; i < numNodesGlueZoneFine; ++i){
+                Ii = numNodesCoarse + numNodesFine + i;
+                VecGetValues(All, Ione, &Ii, &val);
+                u_[0] = val;
+                (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(0,u_[0]);
+                normL += val*val;
+
+            };
+        }
+        
+        //Computes the solution vector norm
+        VecNorm(u,NORM_2,&val);
+
+        std::clock_t t2 = std::clock();
+        
+        if(rank == 0){
+            std::cout<<"Iteration = " << inewton << " (" << iterations <<  
+                ")  Du Norm = " << std::scientific << sqrt(normU) 
+                        << " " << sqrt(normP) 
+                        << " " << sqrt(normL) 
+                        << " " << val << 
+                "  Time (s) = " << std::fixed << 
+                1000.*(t2-t1)/CLOCKS_PER_SEC/1000. << std::endl;
+        };
+
+        KSPDestroy(&ksp);
+        VecDestroy(&All);
+        // MatDestroy(&F);
+        // MatDestroy(&C);
+
+        if(val <= tolerance){
+            break;            
+        }; 
+    };
+};
+
+template<int DIM, int DEG>
+void Arlequin<DIM,DEG>::UpdateSolution(Vec &x){
+
+    //Gathers the solution vector to the master process
+    VecScatterCreateToAll(x, &ctx, &All);
+
+    VecScatterBegin(ctx, x, All, INSERT_VALUES, SCATTER_FORWARD);
+
+    VecScatterEnd(ctx, x, All, INSERT_VALUES, SCATTER_FORWARD);
+
+    VecScatterDestroy(&ctx);
+
+    //Updates nodal values
+    double u_[DIM];
+    double normU = 0.;
+    double normP = 0.;
+    double normL = 0.;
+    double p_;
+    Ione = 1;
+
+    // VecView(All,PETSC_VIEWER_STDOUT_WORLD);
+    for (int i = 0; i < numNodesCoarse; ++i){
+        double w_ = (*nodesCoarse_)[i] -> getWeightFunction();
+        for (int k = 0; k < DIM; k++){
+            if ((*nodesCoarse_)[i]->getConstrains(k)==1)continue;
+            Ii = (DIM+1) * i + k;
+            VecGetValues(All, Ione, &Ii, &val);
+            // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
+
+            if (i==450&&rank==0&&k==0){
+                std::cout << "VAL = " << val << " ,SOL = "<< (*nodesCoarse_)[i]->getAcceleration(k) << ", PREV SOL = " << (*nodesCoarse_)[i]->getPreviousAcceleration(k) << std::endl;
+            }
+
+            // val -= (*nodesCoarse_)[i]->getPreviousAcceleration(k);
+
+            
+            (*nodesCoarse_)[i] -> incrementAcceleration(k,val);
+            // (*nodesCoarse_)[i] -> setAccelerationComponent(k,val);
+            (*nodesCoarse_)[i] -> incrementVelocity(k,val*gamma*dTime);
+            // (*nodesCoarse_)[i] -> setVelocityComponent(k,val*gamma*dTime);
+        }
+        Ii = (DIM+1) * i + DIM;
+        VecGetValues(All,Ione,&Ii,&val);
+        // val -= (*nodesCoarse_)[i]->getPressure();
+        (*nodesCoarse_)[i] -> incrementPressure(val);
+        // (*nodesCoarse_)[i] -> setPressure(val);
+    };
+    
+    for (int i = 0; i < numNodesFine; ++i){
+        double w_ = (*nodesFine_)[i] -> getWeightFunction();
+        for (int k = 0; k < DIM; k++){
+            if ((*nodesFine_)[i]->getConstrains(k)==1)continue;
+            Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + k;
+            VecGetValues(All, Ione, &Ii, &val);
+            // val -= (*nodesFine_)[i]->getPreviousAcceleration(k);
+            (*nodesFine_)[i] -> incrementAcceleration(k,val);
+            // (*nodesFine_)[i] -> setAccelerationComponent(k,val);
+            (*nodesFine_)[i] -> incrementVelocity(k,val*gamma*dTime);
+            // (*nodesFine_)[i] -> setVelocityComponent(k,val*gamma*dTime);
+        }        
+        Ii = (DIM+1) * numNodesCoarse + (DIM+1) * i + DIM;
+        VecGetValues(All,Ione,&Ii,&val);
+        // val -= (*nodesFine_)[i]->getPressure();
+        (*nodesFine_)[i] -> incrementPressure(val);
+        // (*nodesFine_)[i] -> setPressure(val);
+    };
+    
+    for (int i = 0; i < numNodesGlueZoneFine; ++i){
+        for (int k = 0; k < DIM; k++){
+            Ii = (DIM+1) * numNodesCoarse + (DIM+1) * numNodesFine + DIM * i + k;
+            VecGetValues(All, Ione, &Ii, &val);
+            // val -= (*nodesFine_)[nodesGlueZoneFine_[i]] -> getLagrangeMultiplier(k);
+            (*nodesFine_)[nodesGlueZoneFine_[i]] -> incrementLagrangeMultiplier(k,val);
+            // (*nodesFine_)[nodesGlueZoneFine_[i]] -> setLagrangeMultiplier(k,val);
+        }
+    };
+    VecDestroy(&All);
+}
 
 template class Arlequin<2,1>;
 template class Arlequin<2,2>;
