@@ -756,20 +756,22 @@ void ElementT<geoshape,compshape>::interpolateSolution() {
     int count = 0;
     if (fIntegData.fSolPrev.size() != 0) fIntegData.fSolPrev.setZero();
     for (int iside = 0; iside < compshape::NSides; iside++){
-        double shapeFi = fIntegData.fPhi[count];
+        
         int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
         if (nshape == 0) continue;
         int nstate = fMesh->NState();
+        
 
         for (int ishape = 0; ishape < nshape; ishape++){
+            double shapeFi = fIntegData.fPhi[count];
             for (int j = 0; j < nstate; j++ ){
-                fIntegData.fSol[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(j) * shapeFi;
+                fIntegData.fSol[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(ishape+j) * shapeFi;
                 if (fIntegData.fSolPrev.size() != 0) {
                     fIntegData.fSolPrev[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetPreviousSolution(j) * shapeFi;
                 }
             }
+            count++;
         }
-        count += nshape;
     }
 
     // Store solution for nodes only in case the weakForm has no memory (used by topology optimization only) 
@@ -872,7 +874,7 @@ void ElementT<geoshape,compshape>::interpolateSolDerivatives() {
         for (int ishape = 0; ishape < nshape; ishape++){
             for (int j = 0; j < compshape::Dimension; j++ ){
                 for (int k = 0; k < nstate; k++ ){
-                    fIntegData.fDSolDx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
+                    fIntegData.fDSolDx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(ishape+k) *fIntegData.fDPhiX0(j,count);
 
                     if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,count);
 
@@ -884,8 +886,8 @@ void ElementT<geoshape,compshape>::interpolateSolDerivatives() {
 #endif
                 } 
             }
+            count++;
         }
-        count += nshape;
     }
 
 

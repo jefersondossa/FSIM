@@ -9,6 +9,7 @@ private:
     int fNShape;
     int fOrder;
     int64_t fIndex;
+    int64_t fSequenceNumber;
 
     /// @brief Solution
     VecDouble fSolution;
@@ -20,7 +21,7 @@ private:
     VecDouble fDDTimeSolution;
 
 public:
-    Connect(int nstate, int nshape, int order, int64_t index);
+    Connect(int nstate, int nshape, int order, int64_t index, int64_t seqnum);
     // void CreateConnections();
 
     void AllocateTimeDerivatives();
@@ -35,6 +36,14 @@ public:
 
     int GetOrder(){
         return fOrder;
+    };
+
+    int64_t GetIndex(){
+        return fIndex;
+    };
+
+    int64_t GetSequenceNumber(){
+        return fSequenceNumber;
     };
 
     /// @brief Sets the solution

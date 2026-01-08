@@ -60,6 +60,7 @@ public:
 
 
     static void Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
+    static void Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
 };
 
 #endif

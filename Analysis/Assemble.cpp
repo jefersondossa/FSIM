@@ -29,17 +29,19 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             for (int i=0; i<nConnects; i++){
                 int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
                 int nshapei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNShapeFunctions();
+                int64_t seqnumi = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetSequenceNumber();
                 if (nstatei*nshapei == 0) continue;
                 for (int j=0; j<nConnects; j++){
                     int nstatej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNStateVariables();
                     int nshapej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNShapeFunctions();
+                    int64_t seqnumj = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetSequenceNumber();
                     if (nstatej*nshapej == 0) continue;
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
                             for (int ishape = 0; ishape < nshapei; ishape++){
                                 for (int jshape = 0; jshape < nshapej; jshape++){
-                                    int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
-                                    int64_t dof_j = startDOF + nstatej * (connec[j]+jshape) + jstate; 
+                                    int64_t dof_i = startDOF + nstatei * (seqnumi+ishape) + istate;
+                                    int64_t dof_j = startDOF + nstatej * (seqnumj+jshape) + jstate; 
                                     fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+ishape)+istate,nstatej*(j+jshape)+jstate)); 
                                 }
                             } 
@@ -50,7 +52,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
                     for (int ishape = 0; ishape < nshapei; ishape++){
-                        int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                        int64_t dof_i = startDOF + nstatei * (seqnumi+ishape) + istate;
                         fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*(i+ishape)+istate]);
                     }
                 }
