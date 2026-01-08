@@ -4,11 +4,12 @@
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
 
-Connect::Connect(int nstate, int nshape, int order, int64_t index){
+Connect::Connect(int nstate, int nshape, int order, int64_t index, int64_t seqnum){
     fNState = nstate;
     fNShape = nshape;
     fOrder = order;
-    fIndex = index; 
+    fIndex = index;
+    fSequenceNumber = seqnum;
 
     fSolution.resize(fNShape*fNState);
     fSolution.setZero();

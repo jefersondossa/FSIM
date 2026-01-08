@@ -68,6 +68,7 @@ void CompMesh::BuildMesh(){
 
 void CompMesh::BuildConnects(){
     int nconnects = 0;
+    int64_t seqnum = 0;
 
     switch (fApproxType)
     {
@@ -78,7 +79,8 @@ void CompMesh::BuildConnects(){
         nconnects = NNodes();
         fConnectVector.resize(nconnects);
         for (int64_t i = 0; i < NNodes(); i++){
-            fConnectVector[i] = new Connect(fNState,1,fOrder,i);
+            fConnectVector[i] = new Connect(fNState,1,fOrder,i,seqnum);
+            seqnum += fNState;
         }
         for (int64_t iel=0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
@@ -115,6 +117,8 @@ void CompMesh::BuildHierarquicConnects(){
     int edgecount = 0;
     int facecount = 0;
     int volumecount = 0;
+    int64_t seqnum = 0;
+
     for (auto iel = 0; iel < NElements(); iel++){
         Element *el = fElementVector[iel];
         VecInt &geoNodes = el->getGeometricNodes();
@@ -129,7 +133,8 @@ void CompMesh::BuildHierarquicConnects(){
         //Start the connectivity with the corner nodes
         for (int i = 0; i < ncorner; i++){
             if (node_to_connect.find(geoNodes[i]) == node_to_connect.end()){
-                fConnectVector.push_back(new Connect(fNState,1,1,nconnects));
+                fConnectVector.push_back(new Connect(fNState,1,1,nconnects,seqnum));
+                seqnum += fNState;
                 node_to_connect[geoNodes[i]] = nconnects;
                 connect[i] = node_to_connect[geoNodes[i]];
                 nconnects++;
@@ -162,7 +167,9 @@ void CompMesh::BuildHierarquicConnects(){
                     //verificar se ja existe um connect para essa aresta
                     if (edge_to_connect.find(sideNodes) == edge_to_connect.end()){
                         int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
-                        fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects));
+                        int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                        fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
+                        seqnum += nshape * fNState;
                         edge_to_connect[sideNodes] = nconnects;
                         connect[i] = nconnects;
                         nconnects++;
@@ -222,6 +229,7 @@ void CompMesh::Print(std::string filename){
         file << "NState = " << c->GetNStateVariables() << ", ";
         file << "NShapeFunctions = " << c->GetNShapeFunctions() << ", ";
         file << "Order = " << c->GetOrder() << ", ";
+        file << "SeqNum = " << c->GetSequenceNumber() << ", ";
         file << "Solution = [";
         VecDouble &sol = c->Solution();
         for (size_t j = 0; j < sol.size(); j++) {

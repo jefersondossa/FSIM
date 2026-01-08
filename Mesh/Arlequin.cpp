@@ -1075,7 +1075,7 @@ void Arlequin::setWeightFunction(double val){
             
     };
 
-    VTUGenerator::PrintResults(this,"ArlequinMesh");
+    // VTUGenerator::PrintResults(this,"ArlequinMesh");
 
     return;
 };

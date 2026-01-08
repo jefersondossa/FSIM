@@ -61,11 +61,11 @@ void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[0] = (1 - xi[0]) / 2.;
     phi[1] = (1 + xi[0]) / 2.;
 
-    if (order > 2) {
+    if (order >= 2) {
         MatrixDouble phih(order+1,1);
         MatrixDouble dphih(1,order+1);
-        Chebyshev(xi[0],order+1,phih,dphih);
-        for(int i=2;i<order+1;i++) phi[i] = phih(i,0);
+        Legendre(xi[0],order,phih,dphih);
+        for(int i=2;i<=order;i++) phi[i] = phih(i,0)-phih(i-2,0);
     }
 
 }
@@ -74,11 +74,11 @@ void HierarquicalOneD::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     dphi(0,0) = -0.5;
     dphi(0,1) =  0.5;
 
-    if (order > 2) {
+    if (order >= 2) {
         MatrixDouble phih(order+1,1);
         MatrixDouble dphih(1,order+1);
-        Chebyshev(xi[0],order+1,phih,dphih);
-        for(int i=2;i<order+1;i++) dphi(0,i) = dphih(0,i);
+        Legendre(xi[0],order,phih,dphih);
+        for(int i=2;i<=order;i++) dphi(0,i) = dphih(0,i)-dphih(0,i-2);
     }
 
 }
@@ -104,6 +104,28 @@ void HierarquicalOneD::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDoubl
     for(ord = 2;ord<num;ord++) {
         phi(ord,0) = 2.0*x*phi(ord-1,0) - phi(ord-2,0);
         dphi(0,ord) = 2.0*x*dphi(0,ord-1) + 2.0*phi(ord-1,0) - dphi(0,ord-2);
+    }
+    // dphi.Print("DphisDepois = ",std::cout,EMathematicaInput);
+}
+
+
+
+void HierarquicalOneD::Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+    // Quadratic or higher shape functions
+    if(num <= 0) return;
+    phi.setZero();
+    dphi.setZero();
+    phi(0,0) = 1.0;
+    dphi(0,0) = 0.0;
+    if(num == 1) return;
+    phi(1,0) = x;
+    dphi(0,1) = 1.0;
+    int ord;
+    // dphi.Print("DphisAntes = ",std::cout,EMathematicaInput);
+
+    for(ord = 2;ord<=num;ord++) {
+        phi(ord,0) = ((2.0*ord-1.0)*x*phi(ord-1,0) - (ord-1.0)*phi(ord-2,0))/ord;
+        dphi(0,ord) = dphi(0,ord-2) + (2.0*ord-1.0)*phi(ord-1,0);
     }
     // dphi.Print("DphisDepois = ",std::cout,EMathematicaInput);
 }
