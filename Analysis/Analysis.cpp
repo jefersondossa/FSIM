@@ -161,20 +161,19 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
 #endif
     int isArlequin = 0;
     if (fArlequin) isArlequin = 1;
+    VecDouble errorsProcess(errorsTotal.size());
+    errorsProcess.setZero();
+    
     for (int imesh = 0; imesh < fMeshVector.size()-isArlequin; imesh++){
-        VecDouble errorsProcess;
         // Loop over the elements
         for (int jel = fMeshVector[imesh]->NElements(); jel--; ){
 
-            VecDouble errors;
+            VecDouble errors(errorsProcess.size());
 
             fMeshVector[imesh]->ElementVec()[jel] -> ComputeError(errors);
-            if (errors.size() == 0) continue;
-            errorsProcess.resize(errors.size());
             errorsProcess += errors;
 
         }; //Elements
-        errorsTotal.resize(errorsProcess.size());
         errorsTotal.setZero();
 
 #ifdef HAS_PETSC

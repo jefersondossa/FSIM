@@ -55,7 +55,6 @@ void Poisson::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
 void Poisson::ComputeError(IntPointData &data, VecDouble &errors){
 
-    errors.resize(3);
     errors.setZero();
 
     VecDouble uExact(1);
