@@ -19,9 +19,9 @@ auto forcing = [](const VecDouble &coord, VecDouble &force){
 
 {
 
-    CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(3);
-    // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
+    // CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
+    // cmesh->SetDefaultOrder(3);
+    CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
 
     Poisson * matelas = new Poisson(4,1,1);
     matelas->SetForcingFunction(forcing);
@@ -57,7 +57,7 @@ auto forcing = [](const VecDouble &coord, VecDouble &force){
     an.Run();
     cmesh->Print("cmeshup.txt");
 
-    VecDouble errors;
+    VecDouble errors(3);
     an.PostProcessError(errors);
 
     VTUGenerator::PrintResults(cmesh,"resultbeam",ScalarNames,VectorNames);    
