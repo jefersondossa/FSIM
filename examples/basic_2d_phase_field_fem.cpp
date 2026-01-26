@@ -16,7 +16,7 @@
 #include <NullWeakForm.h>
 #include <algorithm>
 
-static constexpr double V_F = 0.55;
+static constexpr double V_F = 0.40;
 
 void SetupBoundaryConditionsElasticity2D2(CompMesh &modelElasticity2D)
 {
@@ -158,11 +158,61 @@ void SetupBoundaryConditionsElasticity2DMBB(CompMesh &modelElasticity2D)
 
     val1.setZero();
     val2.setZero();
-    val2[1] = -10;
+    val2[1] = -1;
     constexpr auto kLoadMatId = 23;
     auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(El2D2);
     GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
+}
+
+void SetupBoundaryConditionsElasticity2DBridge(CompMesh &modelElasticity2D)
+{
+    MatrixDouble val1(2, 2);
+    VecDouble val2(2);
+    constexpr auto kVolumeMatId = 15;
+    auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
+    modelElasticity2D.InsertMaterial(govEquationElasticity2D);
+
+    // val1.setZero();
+    // val2.setZero();
+    // constexpr auto kLeftMatId = 16;
+    // auto *leftBC = new L2Projection(kLeftMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(leftBC);
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = 1.0;
+    constexpr auto kBottomRight = 17;
+    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(bottomRightBC);
+
+    // val2.setZero();
+    // val1.setZero();
+    // val2[0] = 0.;
+    // constexpr auto kFreeMatTopId = 18;
+    // auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(freeBC);
+
+    // val1.setZero();
+    // val2.setZero();
+    // constexpr auto kFreeMatBottomId = 19;
+    // auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(freeBCEl2D);
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = -40;
+    constexpr auto kMiddleBottom = 23;
+    auto *El2D2 = new L2Projection(kMiddleBottom, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D2);
+
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kLeftBottom = 24;
+    auto *bottomLeftBC = new L2Projection(kLeftBottom, 2, BoundaryConditionType::kDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(bottomLeftBC);
+
+    GmshTools::Read(modelElasticity2D, "../../rectangle_bridge.msh");
 }
 
 void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
@@ -176,11 +226,11 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
     auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2);
     modelPhaseField.InsertMaterial(govEquationPF);
 
-    val1.setZero();
-    val2.setZero();
-    constexpr auto kEngasteMatId = 16;
-    auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(engasteBC);
+    // val1.setZero();
+    // val2.setZero();
+    // constexpr auto kEngasteMatId = 16;
+    // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelPhaseField.InsertMaterial(engasteBC);
 
     val1.setZero();
     val2.setZero();
@@ -188,23 +238,29 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
     auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelPhaseField.InsertMaterial(bottomRightBC);
 
-    val2.setZero();
-    val1.setZero();
-    constexpr auto kFreeMatTopId = 18;
-    auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(freeBC);
+    // val2.setZero();
+    // val1.setZero();
+    // constexpr auto kFreeMatTopId = 18;
+    // auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelPhaseField.InsertMaterial(freeBC);
 
-    val1.setZero();
-    val2.setZero();
-    constexpr auto kFreeMatBottomId = 19;
-    auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelPhaseField.InsertMaterial(freeBCEl2D);
+    // val1.setZero();
+    // val2.setZero();
+    // constexpr auto kFreeMatBottomId = 19;
+    // auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelPhaseField.InsertMaterial(freeBCEl2D);
 
     val1.setZero();
     val2.setZero();
     constexpr auto kLoadMatId = 23;
     auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelPhaseField.InsertMaterial(El2D2);
+
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kLeftBottom = 24;
+    auto *leftBottomBC = new L2Projection(kLeftBottom, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(leftBottomBC);
 
     do
     {
@@ -238,7 +294,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
         //     modelPhaseField.InsertMaterial(loaddd);
     } while (false);
     
-    GmshTools::Read(modelPhaseField, "../../rectangle.msh");
+    GmshTools::Read(modelPhaseField, "../../rectangle_bridge.msh");
     // return;
     // For the phase field implementation, we also need to impose an additional restrain to the final volume.
     // To do so, we create a new node, which serves to store the additional Lagrange multiplier variable.
@@ -259,6 +315,7 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
     // Point
     Element *gel = nullptr;
     int matnull = modelPhaseField.GetNewMaterialId();
+    std::cout << "matnul " << matnull << std::endl;
     NullWeakForm *nullwf = new NullWeakForm(matnull, 1);
     gel = new ElementTransient<ShapePoint>(index, connect, &modelPhaseField, nullwf);
     modelPhaseField.InsertElement(gel);
@@ -331,7 +388,7 @@ int main()
 {
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     // SetupBoundaryConditionsElasticity2D2(*modelElasticity2D);
-    SetupBoundaryConditionsElasticity2DMBB(*modelElasticity2D);
+    SetupBoundaryConditionsElasticity2DBridge(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     std::unique_ptr<CompMesh> modelPhaseField = std::make_unique<CompMesh>();
