@@ -1364,6 +1364,7 @@ void ElementT<geoshape,compshape>::Integrate(std::vector<std::string> &varNames,
 #include "ShapeTriangleCub.h"
 #include "HierarquicalOneD.h"
 #include "HierarquicalQuad.h"
+#include "HierarquicalTriangle.h"
 
 template class ElementT<ShapePoint,ShapePoint>;
 template class ElementT<ShapeOneDLin,ShapeOneDLin>;
@@ -1375,6 +1376,9 @@ template class ElementT<ShapeOneDCub,HierarquicalOneD>;
 template class ElementT<ShapeTriangleLin,ShapeTriangleLin>;
 template class ElementT<ShapeTriangleQua,ShapeTriangleQua>;
 template class ElementT<ShapeTriangleCub,ShapeTriangleCub>;
+template class ElementT<ShapeTriangleLin,HierarquicalTriangle>;
+template class ElementT<ShapeTriangleQua,HierarquicalTriangle>;
+template class ElementT<ShapeTriangleCub,HierarquicalTriangle>;
 template class ElementT<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
 template class ElementT<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
 template class ElementT<ShapeQuadrilateralLin,HierarquicalQuad>;
