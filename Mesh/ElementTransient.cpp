@@ -156,6 +156,8 @@ void ElementTransient<geoshape,compshape>::ComputeElContribution(std::vector<Mat
 #include "ShapeTriangleCub.h"
 #include "HierarquicalOneD.h"
 #include "HierarquicalQuad.h"
+#include "HierarquicalTriangle.h"
+
 
 template class ElementTransient<ShapePoint,ShapePoint>;
 template class ElementTransient<ShapeOneDLin,ShapeOneDLin>;
@@ -167,6 +169,9 @@ template class ElementTransient<ShapeOneDCub,HierarquicalOneD>;
 template class ElementTransient<ShapeTriangleLin,ShapeTriangleLin>;
 template class ElementTransient<ShapeTriangleQua,ShapeTriangleQua>;
 template class ElementTransient<ShapeTriangleCub,ShapeTriangleCub>;
+template class ElementTransient<ShapeTriangleLin,HierarquicalTriangle>;
+template class ElementTransient<ShapeTriangleQua,HierarquicalTriangle>;
+template class ElementTransient<ShapeTriangleCub,HierarquicalTriangle>;
 template class ElementTransient<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
 template class ElementTransient<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
 template class ElementTransient<ShapeQuadrilateralLin,HierarquicalQuad>;
