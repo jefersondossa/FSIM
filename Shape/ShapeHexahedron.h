@@ -46,6 +46,13 @@ public:
     /// Gets the element nodal coordinates
     /// @param VecDouble Parametric coordinates 
     static void getCoordinates(MatrixDouble &coord);
+
+    // Number of nodes associated with a side
+    static int NSideNodes(int side){return 1;};
+
+    static int SideNodeLocIndex(int side, int node){
+        return node;
+    };
 };
 
 #endif

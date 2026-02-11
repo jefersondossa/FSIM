@@ -24,7 +24,7 @@ int HierarquicalOneD::SideNodeLocIndex(int side, int node) {
 int HierarquicalOneD::NShapeFunctions(VecInt &orders) {
     
     int nsf_tot = 0;
-    for (int is=0; is<3; is++) {
+    for (int is=0; is<NSides; is++) {
         nsf_tot += NShapeFunctions(is, orders[is]);
     }
     

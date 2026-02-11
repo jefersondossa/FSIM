@@ -168,6 +168,8 @@ public:
     virtual int NFaces() = 0;
     virtual int NVolumes() = 0;
     virtual int NSides() = 0;
+    virtual int NSideNodes(int iside) = 0;
+    virtual int SideNodeLocIndex(int side, int node) = 0;
 
     double &GetIntPointDistFunction(int index){
         return  fIntegData.fDistFunction[index];

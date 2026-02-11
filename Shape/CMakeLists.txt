@@ -28,6 +28,8 @@ file(GLOB shape
     ShapeQuadrilateralQua.cpp
     HierarquicalOneD.h
     HierarquicalOneD.cpp
+    HierarquicalQuad.h
+    HierarquicalQuad.cpp
 )
 
 set(SHAPE ${shape} PARENT_SCOPE)

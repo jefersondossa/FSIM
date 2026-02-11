@@ -13,6 +13,7 @@
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
 #include "HierarquicalOneD.h"
+#include "HierarquicalQuad.h"
 #ifdef HAS_METIS
 #include <metis.h>
 #endif
@@ -1287,11 +1288,44 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         {
             // Linear Quadrilateral
             if (plasticmaterial){
-                gel = new ElementWithMem<ShapeQuadrilateralLin,ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementWithMem<ShapeQuadrilateralLin,ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementWithMem<ShapeQuadrilateralLin,HierarquicalQuad>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else if (transientmaterial){
-                gel = new ElementTransient<ShapeQuadrilateralLin,ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementTransient<ShapeQuadrilateralLin,ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementTransient<ShapeQuadrilateralLin,HierarquicalQuad>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else {
-                gel = new ElementT<ShapeQuadrilateralLin,ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementT<ShapeQuadrilateralLin,ShapeQuadrilateralLin>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementT<ShapeQuadrilateralLin,HierarquicalQuad>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }          
             }
             gel->PrintType() = 9;
             break;
@@ -1385,11 +1419,44 @@ Element* InsertElement(CompMesh * gmesh, int & physical_identifier, int & el_typ
         {
             // Quadratic Quad
             if (plasticmaterial){
-                gel = new ElementWithMem<ShapeQuadrilateralQua,ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementWithMem<ShapeQuadrilateralQua,ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementWithMem<ShapeQuadrilateralQua,HierarquicalQuad>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else if (transientmaterial){
-                gel = new ElementTransient<ShapeQuadrilateralQua,ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementTransient<ShapeQuadrilateralQua,ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementTransient<ShapeQuadrilateralQua,HierarquicalQuad>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }                
             } else {
-                gel = new ElementT<ShapeQuadrilateralQua,ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                switch (approx){
+                case ApproxType::EIsoparametric:
+                    gel = new ElementT<ShapeQuadrilateralQua,ShapeQuadrilateralQua>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                case ApproxType::EHierarquic:
+                    gel = new ElementT<ShapeQuadrilateralQua,HierarquicalQuad>(el_identifier,Topology,gmesh,gmesh->Material(physical_identifier));
+                    break;
+                
+                default:
+                    PanicButton();
+                    break;
+                }          
             }
             gel->PrintType() = 28;           
             break;

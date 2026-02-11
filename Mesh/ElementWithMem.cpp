@@ -409,6 +409,8 @@ void ElementWithMem<geoshape,compshape>::ComputeElContribution(std::vector<Matri
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
 #include "HierarquicalOneD.h"
+#include "HierarquicalQuad.h"
+
 
 template class ElementWithMem<ShapePoint,ShapePoint>;
 template class ElementWithMem<ShapeOneDLin,ShapeOneDLin>;
@@ -422,6 +424,8 @@ template class ElementWithMem<ShapeTriangleQua,ShapeTriangleQua>;
 template class ElementWithMem<ShapeTriangleCub,ShapeTriangleCub>;
 template class ElementWithMem<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
 template class ElementWithMem<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
+template class ElementWithMem<ShapeQuadrilateralLin,HierarquicalQuad>;
+template class ElementWithMem<ShapeQuadrilateralQua,HierarquicalQuad>;
 template class ElementWithMem<ShapeTetrahedronLin,ShapeTetrahedronLin>;
 template class ElementWithMem<ShapeTetrahedronQua,ShapeTetrahedronQua>;
 template class ElementWithMem<ShapeTetrahedronCub,ShapeTetrahedronCub>;

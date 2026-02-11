@@ -1,28 +1,28 @@
-#ifndef HierarquicalOneD_H
-#define HierarquicalOneD_H
+#ifndef HierarquicalQuad_H
+#define HierarquicalQuad_H
 
 #include "DataTypes.h"
-#include "IntRule1d.h"
+#include "IntRuleQuad.h"
 
-class HierarquicalOneD{
+class HierarquicalQuad{
 public:
     // Type definition of local integration rule
-    typedef IntRule1d LocIntRule;
+    typedef IntRuleQuad LocIntRule;
 
     // Element dimension
-    const static int Dimension = 1;
+    const static int Dimension = 2;
 
     // Number of corner (vertex) nodes
-    const static int NCornerNodes = 2;
+    const static int NCornerNodes = 4;
 
-    const static int NSides = 3;
+    const static int NSides = 9;
 
-    const static ElementType ElType = ElementType::EOneD;
+    const static ElementType ElType = ElementType::EQuadrilateral;
 
-    constexpr static int EdgePermutation[2][2] = {{0,1},{1,0}};
+    constexpr static int EdgePermutation[8][2] = {{0,1},{1,0},{1,2},{2,1},{2,3},{3,2},{3,0},{0,3}};
 
     static VecInt GetEdgePermutation(int side){
-        if(side < 0 || side > 1) PanicButton();
+        if(side < 0 || side > 7) PanicButton();
         VecInt perm(2);
         perm[0] = EdgePermutation[side][0];
         perm[1] = EdgePermutation[side][1];
@@ -57,12 +57,8 @@ public:
     /// @param std::vector<MatrixDouble> Shape function second derivatives values
     static void ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi);  
 
-
-
     static void Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
     static void Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
-
-    
 };
 
 #endif
