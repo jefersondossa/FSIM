@@ -55,8 +55,6 @@ private:
     double           fPrevWeightFunction;
     /// @brief Inverse incidence, i.e., elements connected by the node
     std::vector<int64_t> fInverseIncidence;
-
-    bool fHasBC = false;
     
 public:
     /// @brief Class constructor
@@ -66,14 +64,6 @@ public:
 
     /// @brief Default destructor
     ~Node() = default;
-
-    void SetHasBC(){
-        fHasBC = true;
-    }
-
-    bool HasBC(){
-        return fHasBC;
-    }
 
     /// @brief Returns the node index
     /// @return index

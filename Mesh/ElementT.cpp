@@ -52,16 +52,6 @@ ElementT<geoshape,compshape>::ElementT(int64_t index, VecInt &geonodes, CompMesh
     fIntegData.fDPhi.resize(geoshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
     fIntegData.fDPhi.setZero();
 
-    //Checks if it is a BC element and set the nodes as BC
-    L2Projection *bc = dynamic_cast<L2Projection*>(fWeakForm);
-    if (bc){
-        if (bc->GetBCType() == BoundaryConditionType::kDirectionalHomogeneousDirichlet || 
-            bc->GetBCType() == BoundaryConditionType::kDirichlet) {
-        for (int i = 0; i < compshape::NSides; i++){
-            fMesh->NodeVec()[fGeoNodes[i]]->SetHasBC();
-        }
-            }
-    }
 };
 
 //------------------------------------------------------------------------------
@@ -1373,6 +1363,7 @@ void ElementT<geoshape,compshape>::Integrate(std::vector<std::string> &varNames,
 #include "ShapeTriangleQua.h"
 #include "ShapeTriangleCub.h"
 #include "HierarquicalOneD.h"
+#include "HierarquicalQuad.h"
 
 template class ElementT<ShapePoint,ShapePoint>;
 template class ElementT<ShapeOneDLin,ShapeOneDLin>;
@@ -1386,6 +1377,8 @@ template class ElementT<ShapeTriangleQua,ShapeTriangleQua>;
 template class ElementT<ShapeTriangleCub,ShapeTriangleCub>;
 template class ElementT<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
 template class ElementT<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
+template class ElementT<ShapeQuadrilateralLin,HierarquicalQuad>;
+template class ElementT<ShapeQuadrilateralQua,HierarquicalQuad>;
 template class ElementT<ShapeTetrahedronLin,ShapeTetrahedronLin>;
 template class ElementT<ShapeTetrahedronQua,ShapeTetrahedronQua>;
 template class ElementT<ShapeTetrahedronCub,ShapeTetrahedronCub>;

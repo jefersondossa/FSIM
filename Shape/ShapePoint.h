@@ -58,7 +58,12 @@ public:
         coord(2,0) = 0.;
     };
 
+    // Number of nodes associated with a side
+    static int NSideNodes(int side){return 1;};
 
+    static int SideNodeLocIndex(int side, int node){
+        return node;
+    };
     
 };
 

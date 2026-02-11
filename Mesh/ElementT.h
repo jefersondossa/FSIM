@@ -122,6 +122,8 @@ public:
     int NFaces() override {return geoshape::NFaces;}
     int NVolumes() override {return geoshape::NVolumes;}
     int NSides() override {return compshape::NSides;}
+    int NSideNodes(int iside) override {return compshape::NSideNodes(iside);}
+    int SideNodeLocIndex(int side, int node) override {return compshape::SideNodeLocIndex(side, node);}
 
     void setIntegPointWeightFunction() override;
 
