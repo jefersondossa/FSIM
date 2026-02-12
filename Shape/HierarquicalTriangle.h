@@ -1,10 +1,10 @@
-#ifndef HierarquicalQuad_H
-#define HierarquicalQuad_H
+#ifndef HierarquicalTriangle_H
+#define HierarquicalTriangle_H
 
 #include "DataTypes.h"
 #include "IntRuleQuad.h"
 
-class HierarquicalQuad{
+class HierarquicalTriangle{
 public:
     // Type definition of local integration rule
     typedef IntRuleQuad LocIntRule;
@@ -13,16 +13,16 @@ public:
     const static int Dimension = 2;
 
     // Number of corner (vertex) nodes
-    const static int NCornerNodes = 4;
+    const static int NCornerNodes = 3;
 
-    const static int NSides = 9;
+    const static int NSides = 7;
 
-    const static ElementType ElType = ElementType::EQuadrilateral;
+    const static ElementType ElType = ElementType::ETriangle;
 
-    constexpr static int EdgePermutation[8][2] = {{0,1},{1,0},{1,2},{2,1},{2,3},{3,2},{3,0},{0,3}};
+    constexpr static int EdgePermutation[6][2] = {{0,1},{1,0},{1,2},{2,1},{2,0},{0,2}};
 
     static VecInt GetEdgePermutation(int side){
-        if(side < 0 || side > 7) PanicButton();
+        if(side < 0 || side > 5) PanicButton();
         VecInt perm(2);
         perm[0] = EdgePermutation[side][0];
         perm[1] = EdgePermutation[side][1];
@@ -37,7 +37,7 @@ public:
 
     // Returns the number of shape functions associated with a side
     static int NShapeFunctions(int side, int order);
-    static int NShapeFunctions(int order){return (order+1)*(order+1);};
+    static int NShapeFunctions(int order){return order+1;};
     
     // Returns the total number of shape functions
     static int NShapeFunctions(VecInt &orders);

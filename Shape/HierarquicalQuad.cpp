@@ -56,33 +56,22 @@ void HierarquicalQuad::Shape(VecDouble &xi, VecDouble &phi, int order) {
     
     if(order <= 0) PanicButton();
 
-    MatrixDouble phi0(order+1,1),phi1(order+1,1);
-    MatrixDouble dphi0(1,order+1),dphi1(1,order+1);
-
-    HierarquicalOneD::Legendre(xi[0],order,phi0,dphi0);
-    HierarquicalOneD::Legendre(xi[1],order,phi1,dphi1);
-
-    for (int i=0;i<order;i++) {
-        for (int j=0;j<order;j++) {
-            int index = i*order+j;
-            phi(index,0) =  phi0(i,0) * phi1(j,0);
-            // dphi(0,index) = dphi0(0,i)* phi1(j,0);
-            // dphi(1,index) =  phi0(i,0)*dphi1(0,j);
-        }
-    }
+    phi[0] = 0.25 * (1 - xi[0])*(1 - xi[1]);
+    phi[1] = 0.25 * (1 + xi[0])*(1 - xi[1]);
+    phi[2] = 0.25 * (1 + xi[0])*(1 + xi[1]);
+    phi[3] = 0.25 * (1 - xi[0])*(1 + xi[1]);
 
 }
 
 void HierarquicalQuad::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    dphi(0,0) = -0.5;
-    dphi(0,1) =  0.5;
-
-    if (order >= 2) {
-        MatrixDouble phih(order+1,1);
-        MatrixDouble dphih(1,order+1);
-        Legendre(xi[0],order,phih,dphih);
-        for(int i=2;i<=order;i++) dphi(0,i) = dphih(0,i)-dphih(0,i-2);
-    }
+    dphi(0,0) = -0.25 * (1. - xi[1]);
+    dphi(1,0) = -0.25 * (1. - xi[0]);
+    dphi(0,1) =  0.25 * (1. - xi[1]);
+    dphi(1,1) = -0.25 * (1. + xi[0]);
+    dphi(0,2) =  0.25 * (1. + xi[1]);
+    dphi(1,2) =  0.25 * (1. + xi[0]);
+    dphi(0,3) = -0.25 * (1. + xi[1]);
+    dphi(1,3) =  0.25 * (1. - xi[0]);
 
 }
 
