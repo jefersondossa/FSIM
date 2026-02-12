@@ -97,10 +97,7 @@ auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
     ScalarNames = {"Solution"};
     // VectorNames = {"Displacement"};
 
-    VTUGenerator::PrintResults(cmesh,"resultCoarse",ScalarNames,VectorNames);
-    // VTUGenerator::PrintResults(fineModel,"resultFine");
-    // VTUGenerator::PrintResults(arl.MeshVec()[2],"resultCoupling");
-
+    VTUGenerator::PrintResults(cmesh,"result2d",ScalarNames,VectorNames);
 
     // VecDouble errors;
     // an.PostProcessError(errors);
