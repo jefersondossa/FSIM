@@ -1,11 +1,5 @@
 
 file(GLOB integration 
-    IntegrationQuadrature.h
-    IntegrationQuadrature.cpp
-    IntegrationQuadrature11.h
-    IntegrationQuadrature11.cpp
-    DomainIntegration.h
-    DomainIntegration.cpp
     IntRule.h
     IntRule.cpp
     IntRule0d.h

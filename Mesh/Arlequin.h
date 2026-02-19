@@ -14,7 +14,6 @@
 #ifndef ARLEQUIN_H
 #define ARLEQUIN_H
 
-#include "IntegrationQuadrature11.h"
 #include <map>
 #include <set>
 #include "Analysis.h"

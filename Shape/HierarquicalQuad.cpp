@@ -55,6 +55,10 @@ int HierarquicalQuad::NShapeFunctions(int side, int order){
 void HierarquicalQuad::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
     
     if(order <= 0) PanicButton();
+    if(order >=3){
+        std::cout << "HierarquicalQuad::Shape : order not implemented, the side (edge) shape functions need to be compatibilized " << order << "\n";
+        PanicButton();
+    }
 
     phi[0] = 0.25 * (1 - xi[0])*(1 - xi[1]);
     phi[1] = 0.25 * (1 + xi[0])*(1 - xi[1]);

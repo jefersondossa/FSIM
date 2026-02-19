@@ -17,9 +17,6 @@
 #include "Element.h"
 #include "Node.h"
 #include "PanicButton.h"
-#include "IntegrationQuadrature.h"
-#include "IntegrationQuadrature11.h"
-#include "DomainIntegration.h"
 #include "IntPointData.h"
 // #include "PartitionedQuadrature.hpp"
 
