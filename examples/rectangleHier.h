@@ -50,7 +50,7 @@ auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
 
 {
     CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(1);
+    cmesh->SetDefaultOrder(2);
     // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
 
     Poisson * matpoisson = new Poisson(8,2);
