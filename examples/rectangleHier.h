@@ -4,19 +4,19 @@ auto exactSolPoisson = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gr
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    // u[0] = x * x * (x-1.) * y * y * (y-1.);
-    // gradU(0,0) = x*(3*x-2.)*(y-1.)*y*y;
-    // gradU(1,0) = x*x*(x-1.)*y*(3.*y-2.);
-    u[0] = x;
-    gradU(0,0) = 1.;
-    gradU(1,0) = 0.;
+    u[0] = x * x * (x-1.) * y * y * (y-1.);
+    gradU(0,0) = x*(3*x-2.)*(y-1.)*y*y;
+    gradU(1,0) = x*x*(x-1.)*y*(3.*y-2.);
+    // u[0] = x;
+    // gradU(0,0) = 1.;
+    // gradU(1,0) = 0.;
 };
 
 auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = 1.-x*x;
-    // force[0] = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
+    // force[0] = 1.-x*x;
+    force[0] = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
 };
 
 auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
@@ -50,7 +50,7 @@ auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
 
 {
     CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(2);
+    cmesh->SetDefaultOrder(3);
     // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
 
     Poisson * matpoisson = new Poisson(8,2);
@@ -94,7 +94,7 @@ auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
     an.Run();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"Solution"};
+    ScalarNames = {"Solution","ExactSolution"};
     // VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(cmesh,"result2d",ScalarNames,VectorNames);

@@ -470,7 +470,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
     for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
         auto compel = cmesh->ElementVec()[iel];
         auto graphconnect = graphmesh->Connect(iel);
-        // if (compel->Dimension() != cmesh->Dimension()) continue;
+        if (compel->Dimension() != cmesh->Dimension()) continue;
         int nelnodes = compel->NElNodes();
         for (int inode = 0; inode < nelnodes; inode++){
             auto xparametric = compel->NodeCoord(inode);
