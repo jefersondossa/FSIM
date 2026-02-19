@@ -9,7 +9,7 @@ const int ShapeTriangleQua::NFaces;
 const int ShapeTriangleQua::NVolumes;
 const ElementType ShapeTriangleQua::ElType;
 
-void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -21,17 +21,6 @@ void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[3] = 4.0 * xsi3 * xsi1;
     phi[4] = 4.0 * xsi1 * xsi2;
     phi[5] = 4.0 * xsi2 * xsi3;
-    // element conectivity
-    //     2
-    //     54
-    //     031
-
-}
-
-void ShapeTriangleQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = 1. - xsi1 - xsi2;
 
     dphi(0,1) = 4. * xsi1 - 1.;
     dphi(1,1) = 0.;
@@ -49,6 +38,7 @@ void ShapeTriangleQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     //     2
     //     54
     //     031
+
 }
 
 void ShapeTriangleQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

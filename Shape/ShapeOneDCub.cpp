@@ -9,14 +9,12 @@ const int ShapeOneDCub::NFaces;
 const int ShapeOneDCub::NVolumes;
 const ElementType ShapeOneDCub::ElType;
 
-void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
     phi[0] = (-1. + xi[0] + 9.*xi[0]*xi[0] - 9.*xi[0]*xi[0]*xi[0]) / 16.;
     phi[1] = (1. + xi[0])*(-1. + 3.*xi[0])*(1. + 3.*xi[0]) / 16.;
     phi[2] = (1. + xi[0])*(1. - 4.*xi[0] + 3.*xi[0]*xi[0]) * 9. / 16.;
     phi[3] = (-1. + xi[0])*(1. + xi[0])*(1.+3.*xi[0]) * - 9. / 16.;
-}
 
-void ShapeOneDCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     dphi(0,0) = (1. + 18. * xi[0] - 27. * xi[0]*xi[0])/16.;
     dphi(0,1) = (-1. + 18. * xi[0] + 27. * xi[0]*xi[0])/16.;
     dphi(0,2) = (-3. - 2. * xi[0] + 9. * xi[0]*xi[0])*9./16.;

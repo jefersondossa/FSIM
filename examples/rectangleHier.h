@@ -7,50 +7,22 @@ auto exactSolPoisson = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gr
     u[0] = x * x * (x-1.) * y * y * (y-1.);
     gradU(0,0) = x*(3*x-2.)*(y-1.)*y*y;
     gradU(1,0) = x*x*(x-1.)*y*(3.*y-2.);
-    // u[0] = x;
-    // gradU(0,0) = 1.;
-    // gradU(1,0) = 0.;
+    // u[0] = x * (x-1.) * y * (y-1.);
+    // gradU(0,0) = (2*x-1.)*(y-1.)*y;
+    // gradU(1,0) = x*(x-1.)*(2.*y-1.);
 };
 
 auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    // force[0] = 1.-x*x;
     force[0] = -2. * (x*x*(1.-3.*y) - (y-1.)*y*y + 3.*x*(y-1.)*y*y + x*x*x*(3.*y-1.));
-};
-
-auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
-    const auto &x=coord[0];
-    const auto &y=coord[1];
-    auto pi = M_PI;
-    u[0] = cos(pi*x)*sin(2.*pi*y);
-    u[1] = cos(pi*y)*sin(pi*x);
-    gradU(0,0) = -pi*sin(pi*x)*sin(2.*pi*y);
-    gradU(0,1) = pi*cos(pi*x)*cos(pi*y);
-    gradU(1,0) = 2.*pi*cos(pi*x)*cos(2.*pi*y);
-    gradU(1,1) = -pi*sin(pi*x)*sin(pi*y);
-    // u[0] = x;
-    // u[1] = 0.;
-    // gradU(0,0) = 1.;
-    // gradU(0,1) = 0.;
-    // gradU(1,0) = 0.;
-    // gradU(1,1) = 0.;
-};
-
-auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
-    const auto &x=coord[0];
-    const auto &y=coord[1];
-    double E=1.;
-    double poisson=0.;
-    auto pi = M_PI;
-    force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
-    force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
+    // force[0] = -2.*(x-1.)*x - 2.*(y-1.)*y;
 };
 
 
 {
     CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(3);
+    cmesh->SetDefaultOrder(2);
     // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
 
     Poisson * matpoisson = new Poisson(8,2);

@@ -9,7 +9,7 @@ const int ShapeTriangleCub::NFaces;
 const int ShapeTriangleCub::NVolumes;
 const ElementType ShapeTriangleCub::ElType;
 
-void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -25,18 +25,6 @@ void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[7] = (9.0 * xsi1 * (xsi2 + xsi1 - 1.0) * (3.0 * xsi2 + 3.0 * xsi1 - 2.0)) / 2.0;
     phi[8] = -(9.0 * xsi1 * (3.0 * xsi1 - 1.0) * (xsi2 + xsi1 - 1.0)) / 2.0;
     phi[9] = -27.0 * xsi1 * xsi2 * (xsi2 + xsi1 - 1.0);
-    // element conectivity
-    //     2
-    //     76
-    //     895
-    //     0341
-        
-}
-
-void ShapeTriangleCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = 1. - xsi1 - xsi2;
 
     dphi(0,0) = (27.0 * xsi1 * xsi1 - 18.0 * xsi1 + 2.0) / 2.0;
     dphi(0,1) = 0.0;
@@ -48,6 +36,7 @@ void ShapeTriangleCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     dphi(0,7) = (9.0 * (3.0 * xsi2 * xsi2 + 12.0 * xsi1 * xsi2 - 5.0 * xsi2 + 9.0 * xsi1 * xsi1 - 10.0 * xsi1 + 2.0)) / 2.0;
     dphi(0,8) = -(9.0 * (6.0 * xsi1 * xsi2 - xsi2 + 9.0 * xsi1 * xsi1 - 8.0 * xsi1 + 1.0)) / 2.0;
     dphi(0,9) = -27.0 * xsi2 * (xsi2 + 2.0 * xsi1 - 1.0);
+
     dphi(1,0) = 0.0;
     dphi(1,1) = (27.0 * xsi2 * xsi2 - 18.0 * xsi2 + 2) / 2.0;
     dphi(1,2) = -(27.0 * xsi2 * xsi2 + 54.0 * xsi1 * xsi2 - 36.0 * xsi2 + 27.0 * xsi1 * xsi1 - 36.0 * xsi1 + 11.0) / 2.0;
@@ -63,6 +52,7 @@ void ShapeTriangleCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     //     76
     //     895
     //     0341
+        
 }
 
 void ShapeTriangleCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
