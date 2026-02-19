@@ -9,13 +9,11 @@ const int ShapeOneDQua::NFaces;
 const int ShapeOneDQua::NVolumes;
 const ElementType ShapeOneDQua::ElType;
 
-void ShapeOneDQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeOneDQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
     phi[0] = (xi[0] - 1.) * xi[0] / 2.;
     phi[1] = (1. + xi[0]) * xi[0] / 2.;
     phi[2] = (1. - xi[0] * xi[0]); 
-}
 
-void ShapeOneDQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     dphi(0,0) = xi[0] - 0.5;
     dphi(0,1) = xi[0] + 0.5;
     dphi(0,2) = -2. * xi[0];

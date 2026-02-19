@@ -32,13 +32,8 @@ public:
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values
-    static void Shape(VecDouble &xi, VecDouble &phi, int order = 1);
+    static void Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order = 1);
     
-    /// Shapes the values of the shape funtion derivatives
-    /// @param VecDouble Parametric coordinates 
-    /// @param MatrixDouble Shape function derivatives values
-    static void ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order = 1);
-
     /// Shapes the values of the shape funtion second derivatives    
     /// @param VecDouble Parametric coordinates 
     /// @param std::vector<MatrixDouble> Shape function second derivatives values

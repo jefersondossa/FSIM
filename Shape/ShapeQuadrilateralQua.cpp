@@ -9,7 +9,7 @@ const int ShapeQuadrilateralQua::NFaces;
 const int ShapeQuadrilateralQua::NVolumes;
 const ElementType ShapeQuadrilateralQua::ElType;
 
-void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
     
@@ -22,11 +22,6 @@ void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[6] =  0.5 * (1. - xsi1*xsi1) * (xsi2 + 1.) * xsi2;
     phi[7] =  0.5 * xsi1 * (xsi1 - 1.) * (1. - xsi2*xsi2);
     phi[8] =  (1. - xsi1*xsi1) * (1. - xsi2*xsi2);
-}
-
-void ShapeQuadrilateralQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
 
     dphi(0,0) = 0.5 * (-0.5 + 1. * xsi1) * (-1. + xsi2) * xsi2;
     dphi(1,0) = 0.5 * (-1. + xsi1) * xsi1 * (-0.5 + 1. * xsi2);
@@ -53,7 +48,6 @@ void ShapeQuadrilateralQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble
     PanicButton();
     return;
 }
-
 
 void ShapeQuadrilateralQua::getCoordinates(MatrixDouble &coord) {
     coord(0,0) = -1.0;

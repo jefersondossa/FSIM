@@ -9,7 +9,7 @@ const int ShapeTetrahedronCub::NFaces;
 const int ShapeTetrahedronCub::NVolumes;
 const ElementType ShapeTetrahedronCub::ElType;
 
-void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -36,24 +36,6 @@ void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[17] = 27.0 * xsi1 * xsi3 * xsi4;
     phi[18] = 27.0 * xsi2 * xsi3 * xsi4;
     phi[19] = 27.0 * xsi1 * xsi2 * xsi3;
-    // element conectivity
-    //layer 1
-    //     3
-    //     8 9
-    //     2 7 1
-    //layer 2
-    //     6
-    //     54
-    //layer 3
-    //     0
-
-}
-
-void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = xi[2];
 
     dphi(0,0 ) = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
     dphi(0,1 ) = 0.50 * (2.0 - 18.0 * xsi1 + 27.0 * xsi1 * xsi1);
@@ -75,6 +57,7 @@ void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int o
     dphi(0,17) = -27.0 * xsi3 * (-1.0 + 2.0 * xsi1 + xsi2 + xsi3);
     dphi(0,18) = -27.0 * xsi2 * xsi3;
     dphi(0,19) = 27.0 * xsi2 * xsi3;
+
     dphi(1,0 ) = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
     dphi(1,1 ) = 0.0;
     dphi(1,2 ) = 0.50 * (2.0 - 18.0 * xsi2 + 27.0 * xsi2 * xsi2);
@@ -95,6 +78,7 @@ void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int o
     dphi(1,17) = -27.0 * xsi1 * xsi3;
     dphi(1,18) = -27.0 * xsi3 * (-1.0 + xsi1 + 2.0 * xsi2 + xsi3);
     dphi(1,19) = 27.0 * xsi1 * xsi3;
+
     dphi(2,0 ) = 0.50 * (-11.0 + 36.0 * xsi1 - 27.0 * xsi1 * xsi1 + 36.0 * xsi2 - 54.0 * xsi1 * xsi2 - 27.0 * xsi2 * xsi2 + 36.0 * xsi3 - 54.0 * xsi1 * xsi3 - 54.0 * xsi2 * xsi3 - 27.0 * xsi3 * xsi3);
     dphi(2,1 ) = 0.0;
     dphi(2,2 ) = 0.0;
@@ -115,6 +99,17 @@ void ShapeTetrahedronCub::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int o
     dphi(2,17) = -27.0 * xsi1 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
     dphi(2,18) = -27.0 * xsi2 * (-1.0 + xsi1 + 2.0 * xsi3 + xsi2);
     dphi(2,19) = 27.0 * xsi1 * xsi2;
+    
+    // element conectivity
+    //layer 1
+    //     3
+    //     8 9
+    //     2 7 1
+    //layer 2
+    //     6
+    //     54
+    //layer 3
+    //     0
 
 }
 

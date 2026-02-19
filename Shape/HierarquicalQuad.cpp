@@ -52,7 +52,7 @@ int HierarquicalQuad::NShapeFunctions(int side, int order){
 }
 
 
-void HierarquicalQuad::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void HierarquicalQuad::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
     
     if(order <= 0) PanicButton();
 
@@ -61,63 +61,6 @@ void HierarquicalQuad::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[2] = 0.25 * (1 + xi[0])*(1 + xi[1]);
     phi[3] = 0.25 * (1 - xi[0])*(1 + xi[1]);
 
-    int nshape1d = HierarquicalOneD::NShapeFunctions(order);
-    VecDouble phi0(nshape1d), phi1(nshape1d);
-    VecDouble xi0(1), xi1(1);
-    xi0[0] = xi[0];
-    xi1[0] = xi[1];
-    HierarquicalOneD::Shape(xi0, phi0, order);
-    HierarquicalOneD::Shape(xi1, phi1, order);
-
-    int count = 4;
-    // Side 4
-    for(int j=2; j < nshape1d; j++) {
-        phi[count] = phi0[j]*phi1[0];
-        count++;
-    }
-    // Side 5
-    for(int j=2; j < nshape1d; j++) {
-        phi[count] = phi0[1]*phi1[j];
-        count++;
-    }
-    // Side 6
-    for(int j=2; j < nshape1d; j++) {
-        phi[count] = phi0[j]*phi1[1];
-        count++;
-    }
-    // Side 7
-    for(int j=2; j < nshape1d; j++) {
-        phi[count] = phi0[0]*phi1[j];
-        count++;
-    }
-    // Side 8
-    for(int j=2; j < nshape1d; j++) {
-        for(int k=2; k < nshape1d; k++) {
-            phi[count] = phi0[j]*phi1[k];
-            count++;
-        }
-    }
-    
-    // int nshape1d = HierarquicalOneD::NShapeFunctions(order);
-    // MatrixDouble dphi0(nshape1d,1), dphi1(nshape1d,1);
-    // VecDouble xi0(1), xi1(1);
-    // xi0[0] = xi[0];
-    // xi1[0] = xi[1];
-    // HierarquicalOneD::ShapeGradient(xi0, dphi0, order);
-    // HierarquicalOneD::ShapeGradient(xi1, dphi1, order);
-
-    // int i = 0;
-    // VecDouble phi_q(nshape1d*nshape1d);
-    // for(int j=0; j<nshape1d; j++) {
-    //     for(int k=0; k<nshape1d; k++) {
-    //         phi_q[i++] = dphi0(j,0)*dphi1(k,0);
-    //     }
-    // }
-
-
-}
-
-void HierarquicalQuad::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     dphi(0,0) = -0.25 * (1. - xi[1]);
     dphi(1,0) = -0.25 * (1. - xi[0]);
     dphi(0,1) =  0.25 * (1. - xi[1]);
@@ -127,38 +70,42 @@ void HierarquicalQuad::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     dphi(0,3) = -0.25 * (1. + xi[1]);
     dphi(1,3) =  0.25 * (1. - xi[0]);
 
+    if (order == 1) return;
+
     int nshape1d = HierarquicalOneD::NShapeFunctions(order);
-    MatrixDouble dphi0(1,nshape1d), dphi1(1,nshape1d);
     VecDouble phi0(nshape1d), phi1(nshape1d);
+    MatrixDouble dphi0(1,nshape1d), dphi1(1,nshape1d);
     VecDouble xi0(1), xi1(1);
     xi0[0] = xi[0];
     xi1[0] = xi[1];
-    HierarquicalOneD::Shape(xi0, phi0, order);
-    HierarquicalOneD::Shape(xi1, phi1, order);
-    HierarquicalOneD::ShapeGradient(xi0, dphi0, order);
-    HierarquicalOneD::ShapeGradient(xi1, dphi1, order);
+    HierarquicalOneD::Shape(xi0, phi0, dphi0, order);
+    HierarquicalOneD::Shape(xi1, phi1, dphi1, order);
 
     int count = 4;
     // Side 4
     for(int j=2; j < nshape1d; j++) {
+        phi[count] = phi0[j]*phi1[0];
         dphi(0,count) = dphi0(0,j)*phi1[0];
         dphi(1,count) = phi0[j]*dphi1(0,0);
         count++;
     }
     // Side 5
     for(int j=2; j < nshape1d; j++) {
+        phi[count] = phi0[1]*phi1[j];
         dphi(0,count) = dphi0(0,1)*phi1[j];
         dphi(1,count) = phi0[1]*dphi1(0,j);
         count++;
     }
     // Side 6
     for(int j=2; j < nshape1d; j++) {
+        phi[count] = phi0[j]*phi1[1];
         dphi(0,count) = dphi0(0,j)*phi1[1];
         dphi(1,count) = phi0[j]*dphi1(0,1);
         count++;
     }
     // Side 7
     for(int j=2; j < nshape1d; j++) {
+        phi[count] = phi0[0]*phi1[j];
         dphi(0,count) = dphi0(0,0)*phi1[j];
         dphi(1,count) = phi0[0]*dphi1(0,j);
         count++;
@@ -166,12 +113,12 @@ void HierarquicalQuad::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     // Side 8
     for(int j=2; j < nshape1d; j++) {
         for(int k=2; k < nshape1d; k++) {
+            phi[count] = phi0[j]*phi1[k];
             dphi(0,count) = dphi0(0,j)*phi1[k];
             dphi(1,count) = phi0[j]*dphi1(0,k);
             count++;
         }
-    }
-
+    }    
 }
 
 void HierarquicalQuad::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

@@ -9,7 +9,7 @@ const int ShapeTetrahedronQua::NFaces;
 const int ShapeTetrahedronQua::NVolumes;
 const ElementType ShapeTetrahedronQua::ElType;
 
-void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -26,6 +26,47 @@ void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[6] = 4.0 * xsi3 * (1.0 - xsi1 - xsi2 - xsi3);
     phi[4] = 4.0 * xsi2 * (1.0 - xsi1 - xsi2 - xsi3);
     phi[5] = 4.0 * xsi2 * xsi3;
+
+    dphi(0,3) = 4. * xsi1 - 1.;
+    dphi(1,3) = 0.;
+    dphi(2,3) = 0.;
+
+    dphi(0,1) = 0.;
+    dphi(1,1) = 4. * xsi2 - 1.;
+    dphi(2,1) = 0.;
+
+    dphi(0,2) = 0.;
+    dphi(1,2) = 0.;
+    dphi(2,2) = 4. * xsi3 - 1.;
+
+    dphi(0,0) = 4. * (xsi1 + xsi2 + xsi3) - 3.;
+    dphi(1,0) = 4. * (xsi1 + xsi2 + xsi3) - 3.;
+    dphi(2,0) = 4. * (xsi1 + xsi2 + xsi3) - 3.;
+
+    dphi(0,8) = 4. * xsi2;
+    dphi(1,8) = 4. * xsi1;
+    dphi(2,8) = 0.;
+
+    dphi(0,9) = 4. * xsi3;
+    dphi(1,9) = 0.;
+    dphi(2,9) = 4. * xsi1;
+
+    dphi(0,7) = 4. * (1. - 2. * xsi1 - xsi2 - xsi3);
+    dphi(1,7) = -4. * xsi1;
+    dphi(2,7) = -4. * xsi1;
+
+    dphi(0,5) = 0.;
+    dphi(1,5) = 4. * xsi3;
+    dphi(2,5) = 4. * xsi2;
+
+    dphi(0,6) = -4. * xsi3;
+    dphi(1,6) = -4. * xsi3;
+    dphi(2,6) = 4. * (1. - 2. * xsi3 - xsi2 - xsi1);
+
+    dphi(0,4) = -4. * xsi2;
+    dphi(1,4) = 4. * (1. - 2. * xsi2 - xsi1 - xsi3);
+    dphi(2,4) = -4. * xsi2;   
+
     // element conectivity
     //layer 1
     //     3
@@ -37,45 +78,6 @@ void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi, int order) {
     //layer 3
     //     0
       
-}
-
-void ShapeTetrahedronQua::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = xi[2];
-
-    dphi(0,3) = 4. * xsi1 - 1.;
-    dphi(1,3) = 0.;
-    dphi(2,3) = 0.;
-    dphi(0,1) = 0.;
-    dphi(1,1) = 4. * xsi2 - 1.;
-    dphi(2,1) = 0.;
-    dphi(0,2) = 0.;
-    dphi(1,2) = 0.;
-    dphi(2,2) = 4. * xsi3 - 1.;
-    dphi(0,0) = 4. * (xsi1 + xsi2 + xsi3) - 3.;
-    dphi(1,0) = 4. * (xsi1 + xsi2 + xsi3) - 3.;
-    dphi(2,0) = 4. * (xsi1 + xsi2 + xsi3) - 3.;
-    dphi(0,8) = 4. * xsi2;
-    dphi(1,8) = 4. * xsi1;
-    dphi(2,8) = 0.;
-    dphi(0,9) = 4. * xsi3;
-    dphi(1,9) = 0.;
-    dphi(2,9) = 4. * xsi1;
-    dphi(0,7) = 4. * (1. - 2. * xsi1 - xsi2 - xsi3);
-    dphi(1,7) = -4. * xsi1;
-    dphi(2,7) = -4. * xsi1;
-    dphi(0,5) = 0.;
-    dphi(1,5) = 4. * xsi3;
-    dphi(2,5) = 4. * xsi2;
-    dphi(0,6) = -4. * xsi3;
-    dphi(1,6) = -4. * xsi3;
-    dphi(2,6) = 4. * (1. - 2. * xsi3 - xsi2 - xsi1);
-    dphi(0,4) = -4. * xsi2;
-    dphi(1,4) = 4. * (1. - 2. * xsi2 - xsi1 - xsi3);
-    dphi(2,4) = -4. * xsi2;            
-
 }
 
 void ShapeTetrahedronQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

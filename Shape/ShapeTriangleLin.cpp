@@ -9,7 +9,7 @@ const int ShapeTriangleLin::NFaces;
 const int ShapeTriangleLin::NVolumes;
 const ElementType ShapeTriangleLin::ElType;
 
-void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -18,16 +18,6 @@ void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[0] = xsi3;
     phi[1] = xsi1;
     phi[2] = xsi2;
-    // element conectivity
-    //     2
-    //     01
-
-}
-
-void ShapeTriangleLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = 1. - xsi1 - xsi2;
 
     dphi(0,0) = -1.;
     dphi(1,0) = -1.;
@@ -38,6 +28,7 @@ void ShapeTriangleLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
     // element conectivity
     //     2
     //     01
+
 }
 
 void ShapeTriangleLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

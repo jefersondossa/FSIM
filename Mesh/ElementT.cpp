@@ -111,7 +111,7 @@ void ElementT<geoshape,compshape>::ComputeIntPointDistFunction(VecDouble &nodalv
         
         for (int i=0; i<DIM; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(index,i);
            
-        compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fMesh->GetDefaultOrder());
+        compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,fMesh->GetDefaultOrder());
 
         for (int j=0; j<geoshape::NShape; j++){
                 fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
@@ -131,14 +131,13 @@ void ElementT<geoshape,compshape>::ComputeIntPointDistFunction(VecDouble &nodalv
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::getIntegPointCoordinates(){
     int DIM = compshape::Dimension;
-    DEG = fMesh->GetDefaultOrder();
-
     fIntPointCoordinates.resize(fIntRule.NPoints(),2);
     fIntPointCoordinates.setZero();
 
     int nshape = geoshape::NShape;
     VecDouble xsi(DIM);
     VecDouble phi_(nshape);
+    MatrixDouble dphi_(DIM,nshape);
     fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
     for (int i = 0; i < fIntRule.NPoints(); i++){
@@ -146,7 +145,7 @@ void ElementT<geoshape,compshape>::getIntegPointCoordinates(){
 
         for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
-        geoshape::Shape(xsi,phi_);
+        geoshape::Shape(xsi,phi_,dphi_);
 
         for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
 
@@ -187,8 +186,7 @@ void ElementT<geoshape,compshape>::ComputeJacobian() {
     VecDouble phigeo(geoshape::NShape);
     MatrixDouble dphigeo(geoshape::Dimension,geoshape::NShape);
 
-    geoshape::Shape(fIntegData.fAdimCoord,phigeo);
-    geoshape::ShapeGradient(fIntegData.fAdimCoord,dphigeo);
+    geoshape::Shape(fIntegData.fAdimCoord,phigeo,dphigeo);
 
     fIntegData.fA0.setZero();
     VecDouble xna(3);
@@ -373,8 +371,7 @@ void ElementT<geoshape,compshape>::ComputeJacobianSearch() {
     VecDouble phigeo(geoshape::NShape);
     MatrixDouble dphigeo(geoshape::Dimension,geoshape::NShape);
 
-    geoshape::Shape(fIntegData.fAdimCoord,phigeo);
-    geoshape::ShapeGradient(fIntegData.fAdimCoord,dphigeo);
+    geoshape::Shape(fIntegData.fAdimCoord,phigeo,dphigeo);
 
     fIntegData.fA0.setZero();
     VecDouble xna(3);
@@ -546,8 +543,7 @@ void ElementT<geoshape,compshape>::ComputeSpatialDerivatives() {
     fIntegData.fDPhi.setZero();
 
     //Shape functions
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fMesh->GetDefaultOrder());
-    compshape::ShapeGradient(fIntegData.fAdimCoord,fIntegData.fDPhi,fMesh->GetDefaultOrder());
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,fMesh->GetDefaultOrder());
     // shapeQuad.ShapeHessian(xsi,ddphi);
 
     //Shape functions spatial first derivatives
@@ -559,10 +555,8 @@ void ElementT<geoshape,compshape>::ComputeSpatialDerivatives() {
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeCurrentSpatialDerivatives() {
     
-    
     MatrixDouble DphiComp(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
-
-    compshape::ShapeGradient(fIntegData.fAdimCoord,DphiComp,fMesh->GetDefaultOrder());
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,DphiComp,fMesh->GetDefaultOrder());
     // shapeQuad.ShapeHessian(xsi,ddphi);
     
     fIntegData.fDPhiX1.setZero();
@@ -701,7 +695,7 @@ double ElementT<geoshape,compshape>::InterpolateVariable(VecDouble &nValues, int
     fIntegData.fPhi.setZero();
     fIntegData.fAdimCoord.resize(compshape::Dimension);
     for (int i=0; i<compshape::Dimension; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(point,i);
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fMesh->GetDefaultOrder());
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,fMesh->GetDefaultOrder());
     for (int i = nshape; i--; ){
         double shapeFi = fIntegData.fPhi[i];
         val += nValues[i] * shapeFi;

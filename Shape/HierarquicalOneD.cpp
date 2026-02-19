@@ -57,20 +57,10 @@ int HierarquicalOneD::NShapeFunctions(int side, int order){
 }
 
 
-void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
     phi[0] = (1 - xi[0]) / 2.;
     phi[1] = (1 + xi[0]) / 2.;
 
-    if (order >= 2) {
-        MatrixDouble phih(order+1,1);
-        MatrixDouble dphih(1,order+1);
-        Legendre(xi[0],order,phih,dphih);
-        for(int i=2;i<=order;i++) phi[i] = phih(i,0)-phih(i-2,0);
-    }
-
-}
-
-void HierarquicalOneD::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
     dphi(0,0) = -0.5;
     dphi(0,1) =  0.5;
 
@@ -78,7 +68,10 @@ void HierarquicalOneD::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int orde
         MatrixDouble phih(order+1,1);
         MatrixDouble dphih(1,order+1);
         Legendre(xi[0],order,phih,dphih);
-        for(int i=2;i<=order;i++) dphi(0,i) = dphih(0,i)-dphih(0,i-2);
+        for(int i=2;i<=order;i++) {
+            phi[i] = phih(i,0)-phih(i-2,0);
+            dphi(0,i) = dphih(0,i)-dphih(0,i-2);
+        }
     }
 
 }

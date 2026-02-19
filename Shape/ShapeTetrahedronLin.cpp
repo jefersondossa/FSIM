@@ -9,7 +9,7 @@ const int ShapeTetrahedronLin::NFaces;
 const int ShapeTetrahedronLin::NVolumes;
 const ElementType ShapeTetrahedronLin::ElType;
 
-void ShapeTetrahedronLin::Shape(VecDouble &xi, VecDouble &phi, int order) {
+void ShapeTetrahedronLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];
@@ -20,14 +20,6 @@ void ShapeTetrahedronLin::Shape(VecDouble &xi, VecDouble &phi, int order) {
     phi[1] = xsi1;
     phi[2] = xsi2;
     phi[3] = xsi3;
-       
-}
-
-void ShapeTetrahedronLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int order) {
-    
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = xi[2];
     
     dphi(0,0) = -1.0;
     dphi(1,0) = -1.0;
@@ -41,7 +33,6 @@ void ShapeTetrahedronLin::ShapeGradient(VecDouble &xi, MatrixDouble &dphi, int o
     dphi(0,3) = 0.0;
     dphi(1,3) = 0.0;
     dphi(2,3) = 1.0;
-
 }
 
 void ShapeTetrahedronLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
