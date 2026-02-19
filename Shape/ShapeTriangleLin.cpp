@@ -9,7 +9,7 @@ const int ShapeTriangleLin::NFaces;
 const int ShapeTriangleLin::NVolumes;
 const ElementType ShapeTriangleLin::ElType;
 
-void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];

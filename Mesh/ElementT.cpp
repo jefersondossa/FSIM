@@ -107,11 +107,15 @@ void ElementT<geoshape,compshape>::ComputeIntPointDistFunction(VecDouble &nodalv
 
     int index=0;
     fIntegData.fDistFunction.setZero();
+
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+
     for(int it = 0; it < fIntRule.NPoints(); it++){
         
         for (int i=0; i<DIM; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(index,i);
            
-        compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,fMesh->GetDefaultOrder());
+        compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
 
         for (int j=0; j<geoshape::NShape; j++){
                 fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
@@ -140,12 +144,15 @@ void ElementT<geoshape,compshape>::getIntegPointCoordinates(){
     MatrixDouble dphi_(DIM,nshape);
     fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
+    VecInt orders(geoshape::NSides);
+    orders.fill(1);
+
     for (int i = 0; i < fIntRule.NPoints(); i++){
         double x[DIM] = {};
 
         for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
-        geoshape::Shape(xsi,phi_,dphi_);
+        geoshape::Shape(xsi,phi_,dphi_,orders);
 
         for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
 
@@ -185,8 +192,10 @@ void ElementT<geoshape,compshape>::ComputeJacobian() {
     fIntegData.fX.setZero();
     VecDouble phigeo(geoshape::NShape);
     MatrixDouble dphigeo(geoshape::Dimension,geoshape::NShape);
+    VecInt orders(geoshape::NSides);
+    orders.fill(1);
 
-    geoshape::Shape(fIntegData.fAdimCoord,phigeo,dphigeo);
+    geoshape::Shape(fIntegData.fAdimCoord,phigeo,dphigeo,orders);
 
     fIntegData.fA0.setZero();
     VecDouble xna(3);
@@ -370,8 +379,10 @@ void ElementT<geoshape,compshape>::ComputeJacobianSearch() {
     fIntegData.fDPhi.setZero();
     VecDouble phigeo(geoshape::NShape);
     MatrixDouble dphigeo(geoshape::Dimension,geoshape::NShape);
+    VecInt orders(geoshape::NSides);
+    orders.fill(1);
 
-    geoshape::Shape(fIntegData.fAdimCoord,phigeo,dphigeo);
+    geoshape::Shape(fIntegData.fAdimCoord,phigeo,dphigeo,orders);
 
     fIntegData.fA0.setZero();
     VecDouble xna(3);
@@ -542,8 +553,11 @@ void ElementT<geoshape,compshape>::ComputeSpatialDerivatives() {
     fIntegData.fPhi.setZero();
     fIntegData.fDPhi.setZero();
 
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+
     //Shape functions
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,fMesh->GetDefaultOrder());
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
     // shapeQuad.ShapeHessian(xsi,ddphi);
 
     //Shape functions spatial first derivatives
@@ -554,9 +568,11 @@ void ElementT<geoshape,compshape>::ComputeSpatialDerivatives() {
 
 template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::ComputeCurrentSpatialDerivatives() {
-    
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+
     MatrixDouble DphiComp(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,DphiComp,fMesh->GetDefaultOrder());
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,DphiComp,orders);
     // shapeQuad.ShapeHessian(xsi,ddphi);
     
     fIntegData.fDPhiX1.setZero();
@@ -695,7 +711,11 @@ double ElementT<geoshape,compshape>::InterpolateVariable(VecDouble &nValues, int
     fIntegData.fPhi.setZero();
     fIntegData.fAdimCoord.resize(compshape::Dimension);
     for (int i=0; i<compshape::Dimension; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(point,i);
-    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,fMesh->GetDefaultOrder());
+
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
     for (int i = nshape; i--; ){
         double shapeFi = fIntegData.fPhi[i];
         val += nValues[i] * shapeFi;

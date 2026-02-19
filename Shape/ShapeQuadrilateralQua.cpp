@@ -9,7 +9,7 @@ const int ShapeQuadrilateralQua::NFaces;
 const int ShapeQuadrilateralQua::NVolumes;
 const ElementType ShapeQuadrilateralQua::ElType;
 
-void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeQuadrilateralQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
     const double xsi1 = xi[0];
     const double xsi2 = xi[1];
     

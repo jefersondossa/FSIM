@@ -9,7 +9,7 @@ const int ShapeOneDLin::NFaces;
 const int ShapeOneDLin::NVolumes;
 const ElementType ShapeOneDLin::ElType;
 
-void ShapeOneDLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeOneDLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
     phi[0] = (1 - xi[0]) / 2.;
     phi[1] = (1 + xi[0]) / 2.;
 

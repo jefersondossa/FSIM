@@ -32,7 +32,7 @@ public:
     /// Shapes the shape function value
     /// @param VecDouble Parametric coordinates 
     /// @param VecDouble Shape function values
-    static void Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order = 1);
+    static void Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders);
     
     /// Shapes the values of the shape funtion second derivatives    
     /// @param VecDouble Parametric coordinates 
