@@ -37,6 +37,7 @@ GraphMesh::GraphMesh(CompMesh *cmesh){
 
     for (int64_t iel = 0; iel < nElements; iel++){
         auto cel = cmesh->ElementVec()[iel];
+        if (cel->Dimension() != cmesh->Dimension()) continue;
         int nelnodes = cel->NElNodes();
         fElementTypes[iel] = cel->PrintType();
         fElementConnects[iel].resize(nelnodes);

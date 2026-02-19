@@ -713,12 +713,21 @@ template<class geoshape, class compshape>
 void ElementT<geoshape,compshape>::interpolateSolDTimeDerivatives() {
     fIntegData.fDSolDt.setZero();
     fIntegData.fDSolDDt.setZero();
-    for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
-        double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
-        for (int j = 0; j < nstate; j++ ){
-            fIntegData.fDSolDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
-            fIntegData.fDSolDDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
+
+    int count = 0;
+    for (int iside = 0; iside < compshape::NSides; iside++){
+        
+        int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
+        if (nshape == 0) continue;
+        int nstate = fMesh->NState();
+    
+        for (int ishape = 0; ishape < nshape; ishape++){
+            double shapeFi = fIntegData.fPhi[count];
+            for (int j = 0; j < nstate; j++ ){
+                fIntegData.fDSolDt[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetDSolutionDTime(j) * shapeFi;
+                fIntegData.fDSolDDt[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetDSolutionDDTime(j) * shapeFi;
+            }
+            count++;
         }
     }
 }
@@ -755,7 +764,7 @@ void ElementT<geoshape,compshape>::interpolateSolution() {
         for (int ishape = 0; ishape < nshape; ishape++){
             double shapeFi = fIntegData.fPhi[count];
             for (int j = 0; j < nstate; j++ ){
-                fIntegData.fSol[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(ishape+j) * shapeFi;
+                fIntegData.fSol[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(j) * shapeFi;
                 if (fIntegData.fSolPrev.size() != 0) {
                     fIntegData.fSolPrev[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetPreviousSolution(j) * shapeFi;
                 }
@@ -864,7 +873,7 @@ void ElementT<geoshape,compshape>::interpolateSolDerivatives() {
         for (int ishape = 0; ishape < nshape; ishape++){
             for (int j = 0; j < compshape::Dimension; j++ ){
                 for (int k = 0; k < nstate; k++ ){
-                    fIntegData.fDSolDx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(ishape+k) *fIntegData.fDPhiX0(j,count);
+                    fIntegData.fDSolDx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
 
                     if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,count);
 
@@ -975,8 +984,8 @@ void ElementT<geoshape,compshape>::ComputeElContribution(MatrixDouble &jacobianN
         index++;        
     };  
 
-    PrintMathematica(jacobianNRMatrix, "Stiffness");
-    PrintMathematica(rhsVector, "Rhs");
+    // PrintMathematica(jacobianNRMatrix, "Stiffness");
+    // PrintMathematica(rhsVector, "Rhs");
     // Set stiffness matrix to cache.
     // fIntegData.fStiffnessMatrix = jacobianNRMatrix;
     // fIntegData.fRHS = rhsVector;
