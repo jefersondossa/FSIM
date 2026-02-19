@@ -5,7 +5,6 @@
 #include "CompMeshTools.h"
 #include "DataTypes.h"
 #include "Element.h"
-#include "DomainIntegration.h"
 #include "Analysis.h"
 #include "GmshTools.h"
 #include "WeakForm.h"
