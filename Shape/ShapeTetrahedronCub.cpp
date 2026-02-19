@@ -9,7 +9,7 @@ const int ShapeTetrahedronCub::NFaces;
 const int ShapeTetrahedronCub::NVolumes;
 const ElementType ShapeTetrahedronCub::ElType;
 
-void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];

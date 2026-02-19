@@ -9,7 +9,7 @@ const int ShapeTriangleQua::NFaces;
 const int ShapeTriangleQua::NVolumes;
 const ElementType ShapeTriangleQua::ElType;
 
-void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
     double xsi1 = xi[0];
     double xsi2 = xi[1];

@@ -8,7 +8,7 @@ const int ShapeHexahedron::NFaces;
 const int ShapeHexahedron::NVolumes;
 const ElementType ShapeHexahedron::ElType;
 
-void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
     double xsi1 = xi[0];
     double xsi2 = xi[1];
     double xsi3 = xi[2];

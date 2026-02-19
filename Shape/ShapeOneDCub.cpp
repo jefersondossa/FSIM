@@ -9,7 +9,7 @@ const int ShapeOneDCub::NFaces;
 const int ShapeOneDCub::NVolumes;
 const ElementType ShapeOneDCub::ElType;
 
-void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, int order) {
+void ShapeOneDCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
     phi[0] = (-1. + xi[0] + 9.*xi[0]*xi[0] - 9.*xi[0]*xi[0]*xi[0]) / 16.;
     phi[1] = (1. + xi[0])*(-1. + 3.*xi[0])*(1. + 3.*xi[0]) / 16.;
     phi[2] = (1. + xi[0])*(1. - 4.*xi[0] + 3.*xi[0]*xi[0]) * 9. / 16.;
