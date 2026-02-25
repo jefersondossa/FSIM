@@ -25,6 +25,8 @@ file(GLOB mesh
     LagrangeMultCoupling.cpp
     Connect.h
     Connect.cpp 
+    MixedCompMesh.h
+    MixedCompMesh.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)
