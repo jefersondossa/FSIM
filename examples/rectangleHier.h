@@ -64,6 +64,8 @@ auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
 
     LinearAnalysis an(cmesh,SolverType::ELDLt);
     an.Run();
+    // an.PrintGlobalMatrix();
+    // an.PrintGlobalRhs();
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Solution","ExactSolution"};

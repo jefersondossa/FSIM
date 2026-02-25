@@ -70,6 +70,19 @@ public:
     virtual ~Analysis() = default;
 
     LinearSolver *Solver(){return fSolver;}
+
+    void PrintGlobalMatrix(){
+        fGlobalMatrix->PrintMatrix();
+    }
+
+    void PrintGlobalRhs(){
+        fGlobalMatrix->PrintRhs();
+    }
+
+     void PrintGlobalSolution(){
+        fGlobalMatrix->PrintSolution();
+    }
+
 };
 
 
