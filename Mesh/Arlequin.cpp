@@ -178,64 +178,64 @@ std::vector<PointTriangle> TriangleIntersectionPoints(const std::vector<PointTri
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
 void Arlequin::ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIntersected){
-    auto refElement = fMeshVector[2]->ElementVec()[iEl];
-    auto connectref = fMeshVector[0]->ElementVec()[iEl]->getConnectivity();
-    std::set<int> pointsInsideRefElement;
+    // auto refElement = fMeshVector[2]->ElementVec()[iEl];
+    // auto connectref = fMeshVector[0]->ElementVec()[iEl]->getConnectivity();
+    // std::set<int> pointsInsideRefElement;
     
-    for (auto interCoarse : elIntersected){
-        auto intElement = fMeshVector[0]->ElementVec()[interCoarse];
-        auto connectint=intElement->getConnectivity();
+    // for (auto interCoarse : elIntersected){
+    //     auto intElement = fMeshVector[0]->ElementVec()[interCoarse];
+    //     auto connectint=intElement->getConnectivity();
 
-        PointTriangle ref1(fMeshVector[2]->NodeVec()[connectref[0]]->getCoordinates());
-        PointTriangle ref2(fMeshVector[2]->NodeVec()[connectref[1]]->getCoordinates());
-        PointTriangle ref3(fMeshVector[2]->NodeVec()[connectref[2]]->getCoordinates());
-        PointTriangle int1(fMeshVector[2]->NodeVec()[connectint[0]]->getCoordinates());
-        PointTriangle int2(fMeshVector[2]->NodeVec()[connectint[1]]->getCoordinates());
-        PointTriangle int3(fMeshVector[2]->NodeVec()[connectint[2]]->getCoordinates());
+    //     PointTriangle ref1(fMeshVector[2]->NodeVec()[connectref[0]]->getCoordinates());
+    //     PointTriangle ref2(fMeshVector[2]->NodeVec()[connectref[1]]->getCoordinates());
+    //     PointTriangle ref3(fMeshVector[2]->NodeVec()[connectref[2]]->getCoordinates());
+    //     PointTriangle int1(fMeshVector[2]->NodeVec()[connectint[0]]->getCoordinates());
+    //     PointTriangle int2(fMeshVector[2]->NodeVec()[connectint[1]]->getCoordinates());
+    //     PointTriangle int3(fMeshVector[2]->NodeVec()[connectint[2]]->getCoordinates());
 
-        std::vector<PointTriangle> reftriangle = {ref1,ref2,ref3};
-        std::vector<PointTriangle> inttriangle = {int1,int2,int3};
+    //     std::vector<PointTriangle> reftriangle = {ref1,ref2,ref3};
+    //     std::vector<PointTriangle> inttriangle = {int1,int2,int3};
 
-        // Find intersection points.
-        std::vector<PointTriangle> intersectionPoints = TriangleIntersectionPoints(reftriangle, inttriangle);
+    //     // Find intersection points.
+    //     std::vector<PointTriangle> intersectionPoints = TriangleIntersectionPoints(reftriangle, inttriangle);
 
-        // Find nodes of Triangle 1 that are inside Triangle 2.
-        std::vector<PointTriangle> nodesIn = NodesInsideTriangle(reftriangle, inttriangle);
+    //     // Find nodes of Triangle 1 that are inside Triangle 2.
+    //     std::vector<PointTriangle> nodesIn = NodesInsideTriangle(reftriangle, inttriangle);
 
-        // if (nodesIn.size()>1) {
-        //     std::cout << "The case of more than one point inside other element is\n";
-        //     PanicButton();
-        // }
-        //Creating the containers for the input and output
-        // struct triangulateio in;
-        // struct triangulateio out;
-        // clearTrianglesList(out);
+    //     // if (nodesIn.size()>1) {
+    //     //     std::cout << "The case of more than one point inside other element is\n";
+    //     //     PanicButton();
+    //     // }
+    //     //Creating the containers for the input and output
+    //     // struct triangulateio in;
+    //     // struct triangulateio out;
+    //     // clearTrianglesList(out);
 
-        // buildInput(nodes, param, in);
+    //     // buildInput(nodes, param, in);
 
-        // int triangle_error = generateTesselation(in, out);
+    //     // int triangle_error = generateTesselation(in, out);
         
-        std::string triflags = "znQP";
-        char *triswitches = new char[triflags.size()+1];
-        std::strcpy(triswitches, triflags.c_str());
+    //     std::string triflags = "znQP";
+    //     char *triswitches = new char[triflags.size()+1];
+    //     std::strcpy(triswitches, triflags.c_str());
 
-        int triangle_error = 0;
+    //     int triangle_error = 0;
 
-        // try
-        // {
-        //     triangulate(triswitches, &in, &out, (struct triangulateio *)NULL);
-        // }
+    //     // try
+    //     // {
+    //     //     triangulate(triswitches, &in, &out, (struct triangulateio *)NULL);
+    //     // }
 
 
 
-        // setToContainer(out);
+    //     // setToContainer(out);
 
-        // executePostMeshingProcesses(nodes, elements, param);
+    //     // executePostMeshingProcesses(nodes, elements, param);
 
-        // deleteInContainer(in);
-        // deleteOutContainer(out);
+    //     // deleteInContainer(in);
+    //     // deleteOutContainer(out);
 
-    }
+    // }
 }
 
 
@@ -293,13 +293,13 @@ void Arlequin::SetElementBoxes() {
     //Compute element boxes for coarse model
     //Only function for straight elements
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
-        connec = fMeshVector[0]->ElementVec()[jel] -> getConnectivity();
+        connec = fMeshVector[0]->Reference()->ElementVec()[jel] -> getGeometricNodes();
         int ncorner = fMeshVector[0]->ElementVec()[jel]->NCornerNodes();
         VecDouble xi(ncorner), yi(ncorner), zi(ncorner);
         for (int i = 0; i < ncorner; i++){
-            xi[i] = fMeshVector[0]->NodeVec()[connec[i]] -> getCoordinateValue(0);        
-            yi[i] = fMeshVector[0]->NodeVec()[connec[i]] -> getCoordinateValue(1);        
-            zi[i] = fMeshVector[0]->NodeVec()[connec[i]] -> getCoordinateValue(2);        
+            xi[i] = fMeshVector[0]->Reference()->NodeVec()[connec[i]] -> getCoordinateValue(0);        
+            yi[i] = fMeshVector[0]->Reference()->NodeVec()[connec[i]] -> getCoordinateValue(1);        
+            zi[i] = fMeshVector[0]->Reference()->NodeVec()[connec[i]] -> getCoordinateValue(2);        
         }
         xk[0] = xi.minCoeff();
         Xk[0] = xi.maxCoeff();
@@ -314,13 +314,13 @@ void Arlequin::SetElementBoxes() {
     //Compute element boxes for fine model
     //Only function for straight elements
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
-        connec = fMeshVector[1]->ElementVec()[jel] -> getConnectivity();
+        connec = fMeshVector[1]->Reference()->ElementVec()[jel] -> getGeometricNodes();
         int ncorner = fMeshVector[1]->ElementVec()[jel]->NCornerNodes();
         VecDouble xi(ncorner), yi(ncorner), zi(ncorner);
         for (int i = 0; i < ncorner; i++){
-            xi[i] = fMeshVector[1]->NodeVec()[connec[i]] -> getCoordinateValue(0);        
-            yi[i] = fMeshVector[1]->NodeVec()[connec[i]] -> getCoordinateValue(1);        
-            zi[i] = fMeshVector[1]->NodeVec()[connec[i]] -> getCoordinateValue(2);        
+            xi[i] = fMeshVector[1]->Reference()->NodeVec()[connec[i]] -> getCoordinateValue(0);        
+            yi[i] = fMeshVector[1]->Reference()->NodeVec()[connec[i]] -> getCoordinateValue(1);        
+            zi[i] = fMeshVector[1]->Reference()->NodeVec()[connec[i]] -> getCoordinateValue(2);        
         }
         xk[0] = xi.minCoeff();
         Xk[0] = xi.maxCoeff();
@@ -372,7 +372,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     } else {
         elemsearch = cmesh->ElementVec()[elSearch];
     }
-    VecInt connec = elemsearch -> getConnectivity();
+    VecInt connec = elemsearch -> getGeometricNodes();
     
     auto &integdata = elemsearch->IntegrationData();
     integdata.fAdimCoord = xsi;
@@ -380,7 +380,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
     int nElNodes = integdata.fPhi.size();
 
     for (int i = 0; i < nElNodes; i++){
-        VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+        VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
         for (int k = 0; k < DIM; k++){
             x_[k] += xint[k] * integdata.fPhi[i];
         }        
@@ -410,7 +410,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
         // shapeQuad.Shape(xsi,phi_);
         
         for (int i=0; i<nElNodes; i++){
-            VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+            VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
             for (int k = 0; k < DIM; k++)x_[k] += xint[k] * integdata.fPhi[i];
         };
 
@@ -466,7 +466,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
             cmesh->ElementVec()[jel]->ComputeJacobianSearch();
 
             for (int i = 0; i < nElNodes; i++){
-                VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+                VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
                 for (int k = DIM; k--; )
                     x_[k] += xint[k] * cmesh->ElementVec()[jel]->IntegrationData().fPhi[i];
             };
@@ -497,7 +497,7 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
                 cmesh->ElementVec()[jel]->IntegrationData().fAdimCoord = xsi;
                 cmesh->ElementVec()[jel] -> ComputeJacobianSearch();
                 for (int i=0; i<nElNodes; i++){
-                    VecDouble xint = cmesh->NodeVec()[connec[i]] -> getCoordinates();
+                    VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
                     for (int k = DIM; k--; ) x_[k] += xint[k] * cmesh->ElementVec()[jel]->IntegrationData().fPhi[i];
                 };
                         
@@ -555,9 +555,9 @@ void Arlequin::setNodalCorrespondenceFine() {
     int DIM = fMeshVector[0]->Dimension();
     int DEG = fMeshVector[0]->GetDefaultOrder();
     //FINE MESH
-    for (int inode = 0; inode < fMeshVector[2]->NNodes(); inode++) {
+    for (int inode = 0; inode < fMeshVector[2]->Reference()->NNodes(); inode++) {
         
-        VecDouble x = fMeshVector[2]->NodeVec()[inode] -> getCoordinates();
+        VecDouble x = fMeshVector[2]->Reference()->NodeVec()[inode] -> getCoordinates();
 
         int elCorr = 0;
         VecDouble xsiCorr(DIM);
@@ -600,7 +600,7 @@ void Arlequin::setNodalCorrespondenceFine() {
         
         
         for (int i = 0; i < nElNodes; i++){
-            VecDouble x = fMeshVector[2]->NodeVec()[connec[i]] -> getCoordinates();
+            VecDouble x = fMeshVector[2]->Reference()->NodeVec()[connec[i]] -> getCoordinates();
             // VecDouble xp = fMeshVector[2]->NodeVec()[connec[i]] -> getPreviousCoordinates();
             
             x1[i] = x[0];//alpha_f * x[0] + (1. - alpha_f) * xp[0];
@@ -695,8 +695,8 @@ void Arlequin::setSignaledDistance(){
     int nSegments = fMeshVector[0]->GetDefaultOrder();
 
     //Fine mesh nodes
-    for (int ino = 0; ino < fMeshVector[1]->NNodes(); ino++){
-        VecDouble x = fMeshVector[1]->NodeVec()[ino] -> getCoordinates();
+    for (int ino = 0; ino < fMeshVector[1]->Reference()->NNodes(); ino++){
+        VecDouble x = fMeshVector[1]->Reference()->NodeVec()[ino] -> getCoordinates();
         fLocalSignaledDistance[ino] = 1.e15;
 
         for (int i = 0; i < fMeshVector[1]->NElements(); i++){
@@ -710,8 +710,8 @@ void Arlequin::setSignaledDistance(){
             case 1:
                 {
                     VecDouble start(3),end(3);
-                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist = ShortestDistance(x,start,end);
                     if (fabs(dist)<fabs(fLocalSignaledDistance[ino])){
                         if (fInvertSignaledDistance){
@@ -726,12 +726,12 @@ void Arlequin::setSignaledDistance(){
                 {
                     VecDouble start(3),end(3);
                     //Segment 1
-                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[2]] -> getCoordinates();
                     double dist1 = ShortestDistance(x,start,end);
                     //Segment 2
-                    start = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[2]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist2 = ShortestDistance(x,start,end);
 
                     if (fabs(dist1)<fabs(fLocalSignaledDistance[ino])){
@@ -754,16 +754,16 @@ void Arlequin::setSignaledDistance(){
                 {
                     VecDouble start(4),end(4);
                     //Segment 1
-                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[2]] -> getCoordinates();
                     double dist1 = ShortestDistance(x,start,end);
                     //Segment 2
-                    start = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[2]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[3]] -> getCoordinates();
                     double dist2 = ShortestDistance(x,start,end);
                     //Segment 3
-                    start = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[3]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist3 = ShortestDistance(x,start,end);
 
                     if (fabs(dist1)<fabs(fLocalSignaledDistance[ino])){
@@ -798,8 +798,8 @@ void Arlequin::setSignaledDistance(){
     }
 
     //Coarse mesh nodes
-    for (int ino = 0; ino < fMeshVector[0]->NNodes(); ino++){
-        VecDouble x = fMeshVector[0]->NodeVec()[ino] -> getCoordinates();
+    for (int ino = 0; ino < fMeshVector[0]->Reference()->NNodes(); ino++){
+        VecDouble x = fMeshVector[0]->Reference()->NodeVec()[ino] -> getCoordinates();
         fGlobalSignaledDistance[ino] = 1.e15;
 
         for (int i = 0; i < fMeshVector[1]->NElements(); i++){
@@ -813,8 +813,8 @@ void Arlequin::setSignaledDistance(){
             case 1:
                 {
                     VecDouble start(3),end(3);
-                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist = ShortestDistance(x,start,end);
                     if (fabs(dist)<fabs(fGlobalSignaledDistance[ino])){
                         if (fInvertSignaledDistance){
@@ -829,16 +829,16 @@ void Arlequin::setSignaledDistance(){
                 {
                     VecDouble start(3),end(3);
                     //Segment 1
-                    start = fMeshVector[1]->NodeVec()[bconnec[0]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[0]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[2]] -> getCoordinates();
                     double dist1 = ShortestDistance(x,start,end);
                     //Segment 2
-                    start = fMeshVector[1]->NodeVec()[bconnec[2]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[2]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[3]] -> getCoordinates();
                     double dist2 = ShortestDistance(x,start,end);
                     //Segment 3
-                    start = fMeshVector[1]->NodeVec()[bconnec[3]] -> getCoordinates();
-                    end = fMeshVector[1]->NodeVec()[bconnec[1]] -> getCoordinates();
+                    start = fMeshVector[1]->Reference()->NodeVec()[bconnec[3]] -> getCoordinates();
+                    end = fMeshVector[1]->Reference()->NodeVec()[bconnec[1]] -> getCoordinates();
                     double dist3 = ShortestDistance(x,start,end);
                     
                     if (fabs(dist1)<fabs(fGlobalSignaledDistance[ino])){
@@ -904,14 +904,14 @@ void Arlequin::setCouplingZone(){
 
     // double dist;
     int flag;
-    int nodesCZ[fMeshVector[1]->NNodes()];
-    int nodesCZ2[fMeshVector[0]->NNodes()];
+    int nodesCZ[fMeshVector[1]->Reference()->NNodes()];
+    int nodesCZ2[fMeshVector[0]->Reference()->NNodes()];
 
     double lim1 = 0.06251;
     double lim2 = 0.93749;
     double tick = 0.01249;
 
-    for (int i = 0; i < fMeshVector[1]->NNodes(); i++) nodesCZ[i] = 0;    
+    for (int i = 0; i < fMeshVector[1]->Reference()->NNodes(); i++) nodesCZ[i] = 0;    
     int index = 0;
 
     
@@ -923,7 +923,7 @@ void Arlequin::setCouplingZone(){
         flag = 0;
         int nElNodes = connec.size();
         for (int ino = 0; ino < nElNodes; ino++){
-            VecDouble x = fMeshVector[1]->NodeVec()[connec[ino]] -> getCoordinates();
+            VecDouble x = fMeshVector[1]->Reference()->NodeVec()[connec[ino]] -> getCoordinates();
             double dist = fLocalSignaledDistance[connec[ino]];
             //  std::cout << "DIST " << dist << std::endl;
             if (fabs(dist) <= fGlueZoneThickness + 0.001) flag++;
@@ -956,12 +956,12 @@ void Arlequin::setCouplingZone(){
     // numNodesGlueZoneFine = 0;
     std::map<int,int> FineToGluing;
     int64_t nodeindex = 0;
-    for (int i = 0; i < fMeshVector[1]->NNodes(); i++){
+    for (int i = 0; i < fMeshVector[1]->Reference()->NNodes(); i++){
         if(nodesCZ[i] > 0) {
             // numNodesGlueZoneFine++;
-            auto x = fMeshVector[1]->NodeVec()[i]->getCoordinates();
+            auto x = fMeshVector[1]->Reference()->NodeVec()[i]->getCoordinates();
             Node *node = new Node(x,nodeindex);
-            fMeshVector[2]->NodeVec().push_back(node);
+            fMeshVector[2]->Reference()->NodeVec().push_back(node);
             FineToGluing[i] = nodeindex;
             nodeindex++;
         };
@@ -969,7 +969,7 @@ void Arlequin::setCouplingZone(){
 
 
     std::cout << "GLUE ZONE - Number of Nodes = " 
-              << fMeshVector[2]->NNodes() 
+              << fMeshVector[2]->Reference()->NNodes() 
               << " - Number of Elements = " 
               << fMeshVector[2]->NElements() << std::endl;
     
@@ -1042,11 +1042,11 @@ void Arlequin::setWeightFunction(double val){
     double epsilon = fArlequinEpsilon;
     double lambda = fGlueZoneThickness*1.01;
  
-    for (int i = 0; i < fMeshVector[0]->NNodes(); i++){
+    for (int i = 0; i < fMeshVector[0]->NConnects(); i++){
         
         double r = fGlobalSignaledDistance[i];
         double wFuncValue = GlobalWeightFunction(r);
-        fMeshVector[0]->NodeVec()[i] -> setWeightFunction(wFuncValue);
+        fMeshVector[0]->ConnectVec()[i] -> setWeightFunction(wFuncValue);
     };         
 
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
@@ -1059,10 +1059,10 @@ void Arlequin::setWeightFunction(double val){
     };
 
 
-    for (int i=0; i<fMeshVector[1]->NNodes(); i++){
+    for (int i=0; i<fMeshVector[1]->NConnects(); i++){
         double r = fLocalSignaledDistance[i];
         double wFuncValue = LocalWeightFunction(r);
-        fMeshVector[1]->NodeVec()[i] -> setWeightFunction(wFuncValue);
+        fMeshVector[1]->ConnectVec()[i] -> setWeightFunction(wFuncValue);
     };
     
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){

@@ -1,7 +1,23 @@
 #include "CompMesh.h"
 #include "Connect.h"
 #include "TransientWeakForm.h"
+#include "PlasticityModel.h"
 #include "HierarquicalOneD.h"
+#include "ElementT.h"
+#include "ElementWithMem.h"
+#include "ElementTransient.h"
+
+CompMesh::CompMesh(GeoMesh *gmesh, ApproxType approxType){
+    fReference = gmesh;
+    fApproxType = approxType;
+
+    // Create the elements based on the geometric mesh
+    BuildElements();
+
+    //Build the computational mesh
+    BuildConnectivity();
+}
+
 
 GraphMesh* CompMesh::GetGraphMesh(){
     if (!fGraphMesh){
@@ -39,15 +55,16 @@ void CompMesh::SetSolution(VecDouble &sol){
         std::cout << "The solution vector size is different from the number of state variables. Please check it. \n";
         PanicButton();
     }
-    for (int64_t inode = 0; inode < NNodes(); inode++){
+    for (int64_t iconnect = 0; iconnect < NConnects() ; iconnect++){
         for (int istate = 0; istate < fNState; istate++){
-            fConnectVector[inode]->SetSolution(istate,sol[istate]);
-            fConnectVector[inode]->SetPreviousSolution(istate,sol[istate]);
+            fConnectVector[iconnect]->SetSolution(istate,sol[istate]);
+            fConnectVector[iconnect]->SetPreviousSolution(istate,sol[istate]);
         }
     }
 }
 
-void CompMesh::BuildMesh(){
+void CompMesh::BuildConnectivity(){
+
     BuildConnects();
     
     //If there is any transient material, allocate the time derivatives for all connects
@@ -74,9 +91,9 @@ void CompMesh::BuildConnects(){
         BuildHierarquicConnects();
         break;
     case ApproxType::EIsoparametric:
-        nconnects = NNodes();
+        nconnects = fReference->NNodes();
         fConnectVector.resize(nconnects);
-        for (int64_t i = 0; i < NNodes(); i++){
+        for (int64_t i = 0; i < nconnects; i++){
             fConnectVector[i] = new Connect(fNState,1,fOrder,i,seqnum);
             seqnum += fNState;
         }
@@ -106,7 +123,7 @@ void CompMesh::BuildHierarquicConnects(){
     // para implementar, mas manteria a banda da matriz menor.
 
     int nconnects = 0;
-    fConnectVector.reserve(NNodes()+NElements());
+    fConnectVector.reserve(NElements());
     std::map<int,int> node_to_connect;
     std::map<std::vector<int>,int> edge_to_connect;
     std::map<std::vector<int>,int> face_to_connect;
@@ -263,7 +280,6 @@ void CompMesh::Print(std::string filename){
 
     file << "Computational Mesh Information\n";
     file << "===============================\n";
-    file << "Number of Nodes: " << NNodes() << "\n";
     file << "Number of Elements: " << NElements() << "\n";
     file << "Number of Connects: " << NConnects() << "\n";
     file << "Approximation Type: " << approxTypeNames.at(fApproxType) << "\n";
@@ -314,4 +330,83 @@ void CompMesh::Print(std::string filename){
     
 
     file.close();
+}
+
+
+
+#include "ShapeHexahedron.h"
+#include "ShapeOneDLin.h"
+#include "ShapeOneDQua.h"
+#include "ShapeOneDCub.h"
+#include "ShapeQuadrilateralLin.h"
+#include "ShapeQuadrilateralQua.h"
+#include "ShapePoint.h"
+#include "ShapeTetrahedronLin.h"
+#include "ShapeTetrahedronQua.h"
+#include "ShapeTetrahedronCub.h"
+#include "ShapeTriangleLin.h"
+#include "ShapeTriangleQua.h"
+#include "ShapeTriangleCub.h"
+#include "HierarquicalOneD.h"
+#include "HierarquicalQuad.h"
+#include "HierarquicalTriangle.h"
+
+void CompMesh::BuildElements(){
+    fElementVector.resize(fReference->NElements());
+    for (int64_t iel = 0; iel < NElements(); iel++){
+        int elType = fReference->ElementVec()[iel]->PrintType();
+        int matid = fReference->ElementVec()[iel]->Material();
+
+        PlasticityModel *plasticmaterial = dynamic_cast<PlasticityModel * > (fMaterialVector[matid]);
+        TransientWeakForm *transientmaterial = dynamic_cast<TransientWeakForm * > (fMaterialVector[matid]);
+
+        switch (elType)
+        {
+        case 3: //Linear Line 
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                
+                default:
+                    break;
+                }
+            }
+            
+            break;
+
+            
+
+            
+        default:
+            break;
+        }
+
+
+    }
 }

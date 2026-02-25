@@ -12,6 +12,7 @@
 #include <set>
 #include "GraphMesh.h"
 #include "Connect.h"
+#include "GeoMesh.h"
 
 enum class ApproxType
 {
@@ -20,10 +21,10 @@ enum class ApproxType
     EIsogeometric = 2
 };
 
-
 class Element;
 class Analysis;
 class GraphMesh;
+class GeoMesh;
 
 class CompMesh{
 private:
@@ -36,8 +37,8 @@ private:
     ///Number of DOFS
     int64_t fNGlobalDOF = 0;
 
-    /// Defines the vector of fluid nodes
-    std::vector<Node *>       fNodeVector;
+    // /// Defines the vector of fluid nodes
+    // std::vector<Node *>       fNodeVector;
 
     /// Defines the vector of fluid elements
     std::vector<Element *>    fElementVector;
@@ -50,6 +51,8 @@ private:
     GraphMesh *fGraphMesh = nullptr;
 
     ApproxType fApproxType = ApproxType::EIsoparametric;
+
+    GeoMesh* fReference = nullptr;
     
 public:
     int* part_elem;      //Domain Decomposition - Elements
@@ -59,10 +62,12 @@ public:
     CompMesh() = default;
 
     /// @brief Constructor
-    CompMesh(ApproxType approxType) : fApproxType(approxType) {}
+    CompMesh(GeoMesh *gmesh, ApproxType approxType);
 
     /// @brief Default destructor
     ~CompMesh() = default;
+
+    GeoMesh* Reference() {return fReference;}
 
     /// @brief Inserts a weak form to the computational mesh
     /// @param wf weak form
@@ -79,15 +84,6 @@ public:
         return fMaterialVector;
     }
     
-    /// Gets the fluid model nodes and export for solving the overlapping
-    /// mesh problem with the Arlequin method
-    /// @return fluid model nodes information
-    std::vector<Node *> &NodeVec(){return fNodeVector;}
-
-
-    int64_t NNodes(){return fNodeVector.size();}
-    void SetNumNodes(int64_t nnodes){fNodeVector.resize(nnodes);}
-
 
     std::vector<Connect *> &ConnectVec(){return fConnectVector;}
     int64_t NConnects(){return fConnectVector.size();}
@@ -150,7 +146,8 @@ public:
         return fApproxType;
     }
 
-    void BuildMesh();
+    void BuildElements();
+    void BuildConnectivity();
     void BuildConnects();
     void BuildHierarquicConnects();
 

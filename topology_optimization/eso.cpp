@@ -66,7 +66,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
             }
 
             const auto elem = model.ElementVec()[i_el];
-            const VecDouble center_of_mass = elem->GetGeometricCenter(model);
+            const VecDouble center_of_mass = elem->Reference()->GetGeometricCenter();
 
             double sum = 0.0;
 
@@ -89,7 +89,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
                 if(elemental_compliances[iel_neighbor] != std::numeric_limits<double>::max())
                 {
                     const auto elem_visiting = model.ElementVec()[iel_neighbor];
-                    const VecDouble center_of_mass_neighbor = elem_visiting->GetGeometricCenter(model);
+                    const VecDouble center_of_mass_neighbor = elem_visiting->Reference()->GetGeometricCenter();
 
                     const auto distance = (center_of_mass_neighbor - center_of_mass).norm();
                     if (distance < filter_radius)

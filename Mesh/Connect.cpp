@@ -46,3 +46,19 @@ void Connect::SetDSolutionDDTime(int istate, double val){
 void Connect::SetPreviousSolution(int istate, double val){
     fPrevSolution[istate] = val;
 };
+
+
+void Connect::setMeshVelocity(VecDouble &u){
+    for (int i=3; i--; ){
+        fMeshVelocity[i] = u[i];          
+    };
+};
+
+void Connect::setMeshVelocityComponent(int dir,double u){
+    fMeshVelocity[dir] = u;
+} ;
+
+void Connect::setWeightFunction(double val) {
+    fPrevWeightFunction = fWeightFunction; 
+    fWeightFunction = val;
+};

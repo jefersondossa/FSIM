@@ -18,13 +18,13 @@
 #include "PlasticityModel.h"
 
 /// Defines the fluid element object and all the element information
-template<class geoshape, class compshape>
-class ElementWithMem : public ElementT<geoshape,compshape>{
+template<class compshape>
+class ElementWithMem : public ElementT<compshape>{
 protected:
     MatrixDouble fElasticConstitutiveMatrix;
 
 public:
-    ElementWithMem() : ElementT<geoshape,compshape>(){
+    ElementWithMem() : ElementT<compshape>(){
     };
 
     ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf);

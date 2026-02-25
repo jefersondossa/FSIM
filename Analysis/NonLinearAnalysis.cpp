@@ -17,7 +17,7 @@ void NonLinearAnalysis::UpdateSolution(){
     int64_t nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
-        for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
+        for (int i = 0; i < this->MeshVector()[imesh]->NConnects(); ++i){
             int nstate = this->MeshVector()[imesh]->NState();
             for (int k = 0; k<nstate; k++){
                 Ii = nstartDOF + nstate*i+k;
