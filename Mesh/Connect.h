@@ -19,6 +19,12 @@ private:
     VecDouble fDTimeSolution;
     /// @brief Solution second time derivative
     VecDouble fDDTimeSolution;
+        /// @brief Nodal mesh velocity
+    VecDouble fMeshVelocity;
+    /// @brief Nodal Arlequin weight function
+    double    fWeightFunction;
+    /// @brief Nodal Arlequin previous time step weight funtion
+    double    fPrevWeightFunction;
 
 public:
     Connect(int nstate, int nshape, int order, int64_t index, int64_t seqnum);
@@ -104,6 +110,33 @@ public:
         return fDDTimeSolution;
     }
     void SetDSolutionDDTime(int istate, double val);
+
+
+    //.........................Mesh Velocity functions..........................
+    /// Sets the node mesh velocity
+    /// @param double* mesh velocity
+    void setMeshVelocity(VecDouble &u);
+    void setMeshVelocityComponent(int dir,double u);
+
+    /// Gets the node mesh velocity
+    /// @param int direction @return mesh velocity component
+    double getMeshVelocity(int dir) const {
+        return fMeshVelocity[dir];
+    }
+   
+    //............................Arlequin functions............................
+    /// Sets the nodal energy weight function value
+    /// @param double weight function value
+    void setWeightFunction(double val);
+
+    /// Gets the nodal energy weight function value
+    /// @return weight function value
+    double getWeightFunction() const {
+        return fWeightFunction;
+    };
+    double getPreviousWeightFunction() const {
+        return fPrevWeightFunction;
+    };
 };
 
 #endif // CONNECT_H

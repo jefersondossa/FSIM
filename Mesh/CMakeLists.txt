@@ -27,6 +27,12 @@ file(GLOB mesh
     Connect.cpp 
     MixedCompMesh.h
     MixedCompMesh.cpp
+    GeoMesh.h
+    GeoMesh.cpp
+    GeoElement.h
+    GeoElement.cpp
+    GeoElementT.h
+    GeoElementT.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)

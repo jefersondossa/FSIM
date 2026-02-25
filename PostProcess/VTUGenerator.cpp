@@ -200,7 +200,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     output_v << "<?xml version=\"1.0\"?>" << std::endl
              << "<VTKFile type=\"UnstructuredGrid\">" << std::endl
              << "  <UnstructuredGrid>" << std::endl
-             << "  <Piece NumberOfPoints=\"" << cmesh->NNodes()
+             << "  <Piece NumberOfPoints=\"" << cmesh->Reference()->NNodes()
              << "\"  NumberOfCells=\"" << cmesh->NElements()
              << "\">" << std::endl;
 
@@ -209,8 +209,8 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
              << "      <DataArray type=\"Float64\" "
              << "NumberOfComponents=\"3\" format=\"ascii\">" << std::endl;
 
-    for (int inode=0; inode<cmesh->NNodes(); inode++){
-        auto x = cmesh->NodeVec()[inode]->getCoordinates();
+    for (int inode=0; inode<cmesh->Reference()->NNodes(); inode++){
+        auto x = cmesh->Reference()->NodeVec()[inode]->getCoordinates();
         for(std::size_t i = 0; i < 3; i++) {
             output_v << x[i] << " ";    
         }
@@ -251,7 +251,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
              << "format=\"ascii\">" << std::endl;
 
     for (int i=0; i<cmesh->NElements(); i++){
-        output_v << cmesh->ElementVec()[i]->PrintType() << std::endl;
+        output_v << cmesh->ElementVec()[i]->Reference()->PrintType() << std::endl;
     };
 
     output_v << "      </DataArray>" << std::endl
@@ -323,7 +323,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     for (int iscal = 0; iscal < scalnames.size(); iscal++){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"1\" "
             << "Name=\"" << scalnames[iscal] << "\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
+        for (int i=0; i<cmesh->Reference()->NNodes(); i++){
             // if (scalSol[i].size()==0){
                 // output_v <<std::scientific<< "0" << std::endl;
             // }else{
@@ -336,7 +336,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     for (int iscal = 0; iscal < vecnames.size(); iscal++){
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
-        for (int i=0; i<cmesh->NNodes(); i++){
+        for (int i=0; i<cmesh->Reference()->NNodes(); i++){
             // if (vectSol[i].size()==0){
                 // output_v <<std::scientific<< "0,0,0" << std::endl;
             // }else{
@@ -454,7 +454,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
              << "format=\"ascii\">" << std::endl;
 
     for (int i=0; i<cmesh->NElements(); i++){
-        output_v << cmesh->ElementVec()[i]->PrintType() << std::endl;
+        output_v << cmesh->ElementVec()[i]->Reference()->PrintType() << std::endl;
     };
 
     output_v << "      </DataArray>" << std::endl

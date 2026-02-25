@@ -6,6 +6,8 @@
 #include<string>
 #include "CompMesh.h"
 
+class CompMesh;
+
 /// @brief Implements the graphical mesh, used to print results in a .vtu or .xdmf file
 // It differs from the computational mesh because all elements are disconnected
 class GraphMesh

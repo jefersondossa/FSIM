@@ -38,7 +38,7 @@ void LinearAnalysis::UpdateSolution(){
     int64_t nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
-        for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
+        for (int i = 0; i < this->MeshVector()[imesh]->NConnects(); ++i){
             for (int iconnect = 0; iconnect < this->MeshVector()[imesh]->NConnects(); iconnect++){
                 int64_t fSeqnum = this->MeshVector()[imesh]->ConnectVec()[iconnect]->GetSequenceNumber();
                 if (fSeqnum < 0) continue;

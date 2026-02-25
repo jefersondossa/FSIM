@@ -22,7 +22,7 @@
 
 
 /// Defines the fluid element object and all the element information
-template<class geoshape, class compshape>
+template<class compshape>
 class ElementT : public Element{
 protected:
     // Integration rule object
@@ -36,18 +36,7 @@ public:
 
     double InterpolateVariable(VecDouble &nValues, int point) override;
     void getIntegPointCoordinates();
-    //........................Element basic information.........................
-    /// Compute and store the spatial jacobian matrix
-    /// @param bounded_vector integration point adimensional coordinates
-    void ComputeJacobian() override;
-    void ComputeCurrentJacobian() override;
-    void ComputeJacobianSearch() override;
-
-    /// Compute and store the shape function spatial derivatives
-    /// @param bounded_vector integration point adimensional coordinates
-    void ComputeSpatialDerivatives() override;
-    void ComputeCurrentSpatialDerivatives() override;
-    void getHighOrderSpatialDerivatives(VecDouble &xsi, MatrixDouble &ainv_, MatrixDouble &dphi_dx, MatrixDouble &dDphi_dx);
+    
 
     void interpolateSolution(int &index, VecDouble &u_) override;
     void interpolateSolution(VecDouble &phi, VecDouble &u_) override;
@@ -86,7 +75,7 @@ public:
 
     
 
-    int Dimension() override {return geoshape::Dimension;}  
+    int Dimension() override {return compshape::Dimension;}  
 
     //.................Element intersection and correspondence..................
     /// Gets the element intersection parameters 
@@ -105,8 +94,6 @@ public:
 
     void ComputeError(VecDouble &errors) override;
     
-    const int &NElNodes() override {return geoshape::NShape;}
-
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(MatrixDouble &Stiffness) override;
     void ComputeElContribution(VecDouble &Rhs) override;
@@ -114,10 +101,6 @@ public:
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness) override;
     void ComputeElContribution(std::vector<VecDouble> &Rhs) override;
 
-    int NCornerNodes() override {return geoshape::NCornerNodes;}
-    int NEdges() override {return geoshape::NEdges;}
-    int NFaces() override {return geoshape::NFaces;}
-    int NVolumes() override {return geoshape::NVolumes;}
     int NSides() override {return compshape::NSides;}
     int NSideNodes(int iside) override {return compshape::NSideNodes(iside);}
     int SideNodeLocIndex(int side, int node) override {return compshape::SideNodeLocIndex(side, node);}
@@ -127,20 +110,12 @@ public:
     //Method for creating a copy of the element
     virtual Element *Clone() const;
 
-    VecDouble NodeCoord(int inode) override{
-        VecDouble xnode(3);
-        MatrixDouble coords(3,geoshape::NShape);
-        geoshape::getCoordinates(coords);
-        for (int i = 0; i < 3; i++){
-            xnode[i] = coords(i,inode);
-        }
-        return xnode;
-    }
+    
 
     void Integrate(std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result) override;
 
     ElementType Type() override{
-        return geoshape::ElType;
+        return fReference->Type();
     }
 
 };

@@ -11,13 +11,13 @@ private:
 public:
     MixedCompMesh() = default;
 
-    MixedCompMesh(ApproxType approxType, int nspaces) : CompMesh(approxType) {
-        fNSpaces = nspaces;
-    };
+    // MixedCompMesh(ApproxType approxType, int nspaces) : CompMesh(approxType) {
+    //     fNSpaces = nspaces;
+    // };
 
     ~MixedCompMesh() = default;
 
-    
+
 
 
 };

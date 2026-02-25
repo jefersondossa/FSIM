@@ -5,8 +5,8 @@
 #include "PositionalTruss.h"
 #include "TransientPositionalFrame2D.h"
 
-template<class geoshape, class compshape>
-ElementTransient<geoshape,compshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<geoshape,compshape>(index,connect,mesh,wf){
+template<class compshape>
+ElementTransient<compshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index,connect,mesh,wf){
     int DIM = compshape::Dimension;
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fAdimCoord.setZero();
@@ -33,8 +33,8 @@ ElementTransient<geoshape,compshape>::ElementTransient(int64_t index, VecInt &co
     this->fIntegData.fNeedsTimeDerivatives = true;
 };
 
-template<class geoshape, class compshape>
-void ElementTransient<geoshape,compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
+template<class compshape>
+void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
     if (!this->fWeakForm) return;
 
@@ -95,8 +95,8 @@ void ElementTransient<geoshape,compshape>::ComputeElContribution(MatrixDouble &j
 //------------------------------------------------------------------------------
 //-----------------------TRANSIENT NAVIER-STOKES PROBEM-------------------------
 //------------------------------------------------------------------------------
-template<class geoshape, class compshape>
-void ElementTransient<geoshape,compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
+template<class compshape>
+void ElementTransient<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMatrix, std::vector<VecDouble> &rhsVector){
     PanicButton();
     if (!this->fWeakForm) return;
 
@@ -134,8 +134,6 @@ void ElementTransient<geoshape,compshape>::ComputeElContribution(std::vector<Mat
     };  
     // // std::cout << "\nStiffness Element " << this->Index() << "\n" << jacobianNRMatrix[1];
     // // std::cout << "\nrhsVector Element " << this->Index() << "\n" << rhsVector[1];
-    // //Apply boundary conditions
-    // ApplyBC(jacobianNRMatrix, rhsVector);
 
     return;
 };
@@ -159,24 +157,19 @@ void ElementTransient<geoshape,compshape>::ComputeElContribution(std::vector<Mat
 #include "HierarquicalTriangle.h"
 
 
-template class ElementTransient<ShapePoint,ShapePoint>;
-template class ElementTransient<ShapeOneDLin,ShapeOneDLin>;
-template class ElementTransient<ShapeOneDQua,ShapeOneDQua>;
-template class ElementTransient<ShapeOneDCub,ShapeOneDCub>;
-template class ElementTransient<ShapeOneDLin,HierarquicalOneD>;
-template class ElementTransient<ShapeOneDQua,HierarquicalOneD>;
-template class ElementTransient<ShapeOneDCub,HierarquicalOneD>;
-template class ElementTransient<ShapeTriangleLin,ShapeTriangleLin>;
-template class ElementTransient<ShapeTriangleQua,ShapeTriangleQua>;
-template class ElementTransient<ShapeTriangleCub,ShapeTriangleCub>;
-template class ElementTransient<ShapeTriangleLin,HierarquicalTriangle>;
-template class ElementTransient<ShapeTriangleQua,HierarquicalTriangle>;
-template class ElementTransient<ShapeTriangleCub,HierarquicalTriangle>;
-template class ElementTransient<ShapeQuadrilateralLin,ShapeQuadrilateralLin>;
-template class ElementTransient<ShapeQuadrilateralQua,ShapeQuadrilateralQua>;
-template class ElementTransient<ShapeQuadrilateralLin,HierarquicalQuad>;
-template class ElementTransient<ShapeQuadrilateralQua,HierarquicalQuad>;
-template class ElementTransient<ShapeTetrahedronLin,ShapeTetrahedronLin>;
-template class ElementTransient<ShapeTetrahedronQua,ShapeTetrahedronQua>;
-template class ElementTransient<ShapeTetrahedronCub,ShapeTetrahedronCub>;
-template class ElementTransient<ShapeHexahedron,ShapeHexahedron>;
+template class ElementTransient<ShapePoint>;
+template class ElementTransient<ShapeOneDLin>;
+template class ElementTransient<ShapeOneDQua>;
+template class ElementTransient<ShapeOneDCub>;
+template class ElementTransient<HierarquicalOneD>;
+template class ElementTransient<ShapeTriangleLin>;
+template class ElementTransient<ShapeTriangleQua>;
+template class ElementTransient<ShapeTriangleCub>;
+template class ElementTransient<HierarquicalTriangle>;
+template class ElementTransient<ShapeQuadrilateralLin>;
+template class ElementTransient<ShapeQuadrilateralQua>;
+template class ElementTransient<HierarquicalQuad>;
+template class ElementTransient<ShapeTetrahedronLin>;
+template class ElementTransient<ShapeTetrahedronQua>;
+template class ElementTransient<ShapeTetrahedronCub>;
+template class ElementTransient<ShapeHexahedron>;

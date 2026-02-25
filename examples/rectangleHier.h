@@ -21,9 +21,15 @@ auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
 
 
 {
-    CompMesh* cmesh = new CompMesh(ApproxType::EHierarquic); 
+
+    GeoMesh * gmesh = new GeoMesh();
+    GmshTools::Read(*gmesh,"../hierarquic2d.msh");
+
+    gmesh->Print("gmesh.txt");
+
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
     cmesh->SetDefaultOrder(2);
-    // CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric); 
+    // CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIsoparametric); 
 
     Poisson * matpoisson = new Poisson(8,2);
     cmesh->InsertMaterial(matpoisson);
@@ -59,7 +65,7 @@ auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
 
-    GmshTools::Read(*cmesh,"../hierarquic2d.msh");
+    
     cmesh->Print("cmesh.txt");
 
     LinearAnalysis an(cmesh,SolverType::ELDLt);

@@ -17,11 +17,11 @@
 #include "ElementT.h"
 
 /// Defines the fluid element object and all the element information
-template<class geoshape, class compshape>
-class ElementTransient : public ElementT<geoshape,compshape>{
+template<class compshape>
+class ElementTransient : public ElementT<compshape>{
     
 public:
-    ElementTransient() : ElementT<geoshape,compshape>(){
+    ElementTransient() : ElementT<compshape>(){
     };
 
     ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf);

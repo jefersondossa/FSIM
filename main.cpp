@@ -33,6 +33,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include <fstream> 
   
 // Developed Header Files
+#include "GeoMesh.h"
 #include "LinearAnalysis.h"
 #include "NonLinearAnalysis.h"
 #include "IncrementalAnalysis.h"
