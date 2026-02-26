@@ -2,6 +2,9 @@
 #define GeoElementT_h
 
 #include "GeoElement.h"
+#include "IntPointData.h"
+#include "Element.h"
+
 
 template<class geoshape>
 class GeoElementT:public GeoElement{
@@ -42,15 +45,20 @@ public:
     //........................Element basic information.........................
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    void ComputeJacobian() override;
-    void ComputeCurrentJacobian() override;
-    void ComputeJacobianSearch() override;
+    void ComputeJacobian(IntPointData &data) override;
+    void ComputeCurrentJacobian(IntPointData &data, Element* compel) override;
+    void ComputeJacobianSearch(IntPointData &data) override;
 
-    /// Compute and store the shape function spatial derivatives
-    /// @param bounded_vector integration point adimensional coordinates
-    void ComputeSpatialDerivatives() override;
-    void ComputeCurrentSpatialDerivatives() override;
-    void ComputeHighOrderSpatialDerivatives() override;
+    
+
+
+    //.................Element intersection and correspondence..................
+    /// Gets the element intersection parameters 
+    /// @param minimum coordinates @param maximum coordinates 
+    /// @param minimum inner product @param maximum inner product
+    /// @param side lenght
+    void setIntersectionParameters(VecDouble &x, VecDouble &X) override ;
+
 
 };
 

@@ -6,7 +6,7 @@
 #include "PositionalTruss.h"
 
 template<class compshape>
-ElementWithMem<compshape>::ElementWithMem(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index,connect,mesh,wf){
+ElementWithMem<compshape>::ElementWithMem(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index, gel, mesh, wf){
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
     if (fPlasticityModel){
         this->fIntegData.fYieldFunction.resize(this->fIntRule.NPoints());
@@ -45,7 +45,7 @@ ElementWithMem<compshape>::ElementWithMem(int64_t index, VecInt &connect, CompMe
     } else {
         PanicButton();
     }
-    int DIM = Dimension();
+    int DIM = this->Dimension();
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fNeedsDSol = true;
     this->fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
@@ -116,7 +116,7 @@ void ElementWithMem<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMa
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-    int DIM = Dimension();
+    int DIM = this->Dimension();
     
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
@@ -141,14 +141,14 @@ void ElementWithMem<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMa
         this->fIntegData.fWeight = this->fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        this->ComputeJacobian();
+        this->fReference->ComputeJacobian(this->fIntegData);
 
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
 
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            this->ComputeCurrentJacobian();
+            this->fReference->ComputeCurrentJacobian(this->fIntegData,this);
             this->ComputeCurrentSpatialDerivatives();
         }
 
@@ -196,7 +196,7 @@ void ElementWithMem<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMa
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-    int DIM = Dimension();
+    int DIM = this->Dimension();
     
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
@@ -221,14 +221,14 @@ void ElementWithMem<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMa
         this->fIntegData.fWeight = this->fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        this->ComputeJacobian();
+        this->fReference->ComputeJacobian(this->fIntegData);
 
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
 
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            this->ComputeCurrentJacobian();
+            this->fReference->ComputeCurrentJacobian(this->fIntegData,this);
             this->ComputeCurrentSpatialDerivatives();
         }
 
@@ -276,7 +276,7 @@ void ElementWithMem<compshape>::ComputeElContribution(VecDouble &rhsVector){
     int index = 0;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fPlasticityModel->ElasticModel());
     auto *truss = dynamic_cast<PositionalTruss *> (fPlasticityModel->ElasticModel());
-    int DIM = Dimension();
+    int DIM = this->Dimension();
     
     for(int it = 0; it < this->fIntRule.NPoints(); it++){
         if (fPlasticityModel->Dimension() == 2){
@@ -301,14 +301,14 @@ void ElementWithMem<compshape>::ComputeElContribution(VecDouble &rhsVector){
         this->fIntegData.fWeight = this->fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        this->ComputeJacobian();
+        this->fReference->ComputeJacobian(this->fIntegData);
 
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
 
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            this->ComputeCurrentJacobian();
+            this->fReference->ComputeCurrentJacobian(this->fIntegData,this);
             this->ComputeCurrentSpatialDerivatives();
         }
 
@@ -352,7 +352,7 @@ void ElementWithMem<compshape>::ComputeElContribution(std::vector<MatrixDouble> 
 
     if (!this->fWeakForm) return;
 
-    int DIM = Dimension();
+    int DIM = this->Dimension();
     
 
     int index = 0;
@@ -366,7 +366,7 @@ void ElementWithMem<compshape>::ComputeElContribution(std::vector<MatrixDouble> 
         this->fIntegData.fWeight = this->fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        this->ComputeJacobian();
+        this->fReference->ComputeJacobian(this->fIntegData);
 
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();

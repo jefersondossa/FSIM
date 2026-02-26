@@ -2,8 +2,11 @@
 #define GeoElement_h
 
 #include "GeoMesh.h"
+#include "IntPointData.h"
+#include "Element.h"
 
 class GeoMesh;
+class Element;
 
 class GeoElement
 {
@@ -86,17 +89,19 @@ public:
 
     /// Compute and store the spatial jacobian matrix
     /// @param bounded_vector integration point adimensional coordinates
-    virtual void ComputeJacobian() = 0;
-    virtual void ComputeCurrentJacobian() = 0;
-    virtual void ComputeJacobianSearch() = 0;
+    virtual void ComputeJacobian(IntPointData &data) = 0;
+    virtual void ComputeCurrentJacobian(IntPointData &data, Element* compel) = 0;
+    virtual void ComputeJacobianSearch(IntPointData &data) = 0;
 
-    /// Compute and store the shape function spatial derivatives
-    /// @param bounded_vector integration point adimensional coordinates
-    virtual void ComputeSpatialDerivatives() = 0;
-    virtual void ComputeCurrentSpatialDerivatives() = 0;
-    virtual void ComputeHighOrderSpatialDerivatives() = 0;
+  
 
-    virtual double getJacobian() = 0;
+    virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
+
+    /// Gets the coordinates intersection parameters
+    /// @return minimum and maximum coordinates
+    std::pair<VecDouble,VecDouble> getXIntersectionParameter() {return std::make_pair(xK,XK);};
+
+    
 };
 
 #endif

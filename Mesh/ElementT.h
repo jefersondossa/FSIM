@@ -31,12 +31,17 @@ protected:
 public:
     ElementT();
 
-    ElementT(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf);
+    ElementT(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
 
 
     double InterpolateVariable(VecDouble &nValues, int point) override;
     void getIntegPointCoordinates();
     
+    /// Compute and store the shape function spatial derivatives
+    /// @param bounded_vector integration point adimensional coordinates
+    void ComputeSpatialDerivatives() override;
+    void ComputeCurrentSpatialDerivatives() override;
+    void ComputeHighOrderSpatialDerivatives() override;
 
     void interpolateSolution(int &index, VecDouble &u_) override;
     void interpolateSolution(VecDouble &phi, VecDouble &u_) override;
@@ -56,7 +61,7 @@ public:
         // std::cout << "AAA 1 "<< std::endl;
         //Computes the jacobian matrix
         int index = 0;
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
         // std::cout << "AAA 2 "<< std::endl;        
         //Computes spatial derivatives
         // ComputeSpatialDerivatives(xsi, ainv_, dphi_dx);
@@ -76,13 +81,6 @@ public:
     
 
     int Dimension() override {return compshape::Dimension;}  
-
-    //.................Element intersection and correspondence..................
-    /// Gets the element intersection parameters 
-    /// @param minimum coordinates @param maximum coordinates 
-    /// @param minimum inner product @param maximum inner product
-    /// @param side lenght
-    void setIntersectionParameters(VecDouble &x, VecDouble &X) override ;
 
     
 

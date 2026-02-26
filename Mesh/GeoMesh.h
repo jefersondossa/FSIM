@@ -34,6 +34,8 @@ public:
         fDimension = dim;
     }
 
+    int Dimension() {return fDimension;}
+
     /// Gets the mesh nodes
     /// @return fluid model nodes information
     std::vector<Node *> &NodeVec(){return fNodeVector;}

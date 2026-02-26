@@ -65,6 +65,7 @@ auto forcingFunctionPoisson = [](const VecDouble &coord, VecDouble &force){
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
 
+    cmesh->AutoBuild();
     
     cmesh->Print("cmesh.txt");
 

@@ -34,9 +34,16 @@ public:
     int &NLocDOF() {
         return nLocDOF;
     }
-    virtual const int &NElNodes() = 0;
 
     GeoElement *Reference() {return fReference;}
+
+     /// Compute and store the shape function spatial derivatives
+    /// @param bounded_vector integration point adimensional coordinates
+    virtual void ComputeSpatialDerivatives() = 0;
+    virtual void ComputeCurrentSpatialDerivatives() = 0;
+    virtual void ComputeHighOrderSpatialDerivatives() = 0;
+
+    virtual double getJacobian() = 0;
     
     virtual void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
     virtual void ComputeElContribution(MatrixDouble &Stiffness) = 0;
@@ -101,18 +108,7 @@ public:
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
     double &getIntegPointWeightFunction(int index) {return fIntegData.fWeightFunction[index];};
-    virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
 
-    /// Gets the coordinates intersection parameters
-    /// @return minimum and maximum coordinates
-    std::pair<VecDouble,VecDouble> getXIntersectionParameter() {return std::make_pair(xK,XK);};
-
-    
-
-    virtual int NCornerNodes() = 0;
-    virtual int NEdges() = 0;
-    virtual int NFaces() = 0;
-    virtual int NVolumes() = 0;
     virtual int NSides() = 0;
     virtual int NSideNodes(int iside) = 0;
     virtual int SideNodeLocIndex(int side, int node) = 0;
@@ -128,8 +124,6 @@ public:
     // Method for creating a copy of the element
     virtual Element *Clone() const = 0;
 
-    virtual VecDouble NodeCoord(int inode) = 0;
-
     void Solution(int var, VecDouble &Sol){
         fWeakForm->Solution(fIntegData,var,Sol);
     };
@@ -139,8 +133,6 @@ public:
     };
 
     virtual ElementType Type() = 0;
-
-    
 
 };
 
