@@ -79,8 +79,8 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
 
-        for (int inode = 0; inode < compel->NElNodes(); inode++){
-            auto xparametric = compel->NodeCoord(inode);
+        for (int inode = 0; inode < compel->Reference()->NCornerNodes(); inode++){
+            auto xparametric = compel->Reference()->NodeCoord(inode);
             compel->IntegrationData().fAdimCoord = xparametric;
             if (!compel->IntegrationData().fNeedsSol || !compel->IntegrationData().fNeedsDSol){
                 compel->IntegrationData().fNeedsSol = true;
@@ -88,7 +88,7 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
                 compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
                 compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
             }
-            compel->ComputeJacobian();
+            compel->Reference()->ComputeJacobian(compel->IntegrationData());
             compel->ComputeSpatialDerivatives();
             compel->interpolateSolution();
             compel->interpolateSolDerivatives();
@@ -227,7 +227,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     
     for (int i=0; i<cmesh->NElements(); i++){
         auto connec=cmesh->ElementVec()[i]->getConnectivity();
-        for (int k = 0; k < cmesh->ElementVec()[i]->NElNodes(); k++)
+        for (int k = 0; k < cmesh->ElementVec()[i]->Reference()->NCornerNodes(); k++)
         {
             output_v << connec[k] << " ";
         }
@@ -241,7 +241,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     
     int aux = 0;
     for (int i=0; i<cmesh->NElements(); i++){
-        aux += cmesh->ElementVec()[i]->NElNodes();
+        aux += cmesh->ElementVec()[i]->Reference()->NCornerNodes();
         output_v << aux << std::endl;
     };
     output_v << "      </DataArray>" << std::endl;
@@ -269,8 +269,8 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
         auto graphconnect = cmesh->ElementVec()[iel]->getConnectivity();
         if (compel->Dimension() != cmesh->Dimension()) continue;
 
-        for (int inode = 0; inode < compel->NElNodes(); inode++){
-            auto xparametric = compel->NodeCoord(inode);
+        for (int inode = 0; inode < compel->Reference()->NCornerNodes(); inode++){
+            auto xparametric = compel->Reference()->NodeCoord(inode);
             compel->IntegrationData().fAdimCoord = xparametric;
             if (!compel->IntegrationData().fNeedsSol || !compel->IntegrationData().fNeedsDSol){
                 compel->IntegrationData().fNeedsSol = true;
@@ -278,7 +278,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
                 compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
                 compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
             }
-            compel->ComputeJacobian();
+            compel->Reference()->ComputeJacobian(compel->IntegrationData());
             compel->ComputeSpatialDerivatives();
             compel->interpolateSolution();
             compel->interpolateSolDerivatives();
@@ -471,9 +471,9 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
         auto compel = cmesh->ElementVec()[iel];
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
-        int nelnodes = compel->NElNodes();
+        int nelnodes = compel->Reference()->NCornerNodes();
         for (int inode = 0; inode < nelnodes; inode++){
-            auto xparametric = compel->NodeCoord(inode);
+            auto xparametric = compel->Reference()->NodeCoord(inode);
             compel->IntegrationData().fAdimCoord = xparametric;
             if (!compel->IntegrationData().fNeedsSol || !compel->IntegrationData().fNeedsDSol){
                 compel->IntegrationData().fNeedsSol = true;
@@ -481,7 +481,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
                 compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
                 compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
             }
-            compel->ComputeJacobian();
+            compel->Reference()->ComputeJacobian(compel->IntegrationData());
             compel->ComputeSpatialDerivatives();
             compel->interpolateSolution();
             compel->interpolateSolDerivatives();

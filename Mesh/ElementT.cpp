@@ -9,16 +9,16 @@ ElementT<compshape>::ElementT() : Element(){
 };
 
 template<class compshape>
-ElementT<compshape>::ElementT(int64_t index, VecInt &geonodes, CompMesh* mesh, WeakForm *wf) : Element(){
+ElementT<compshape>::ElementT(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : Element(){
+    fReference = gel;
     int DIM = compshape::Dimension;
     fMesh = mesh;
     fConnect.resize(compshape::NSides);
     fIndex = index;
-    DEG = fMesh->GetDefaultOrder();
     fWeakForm = wf;
     if (fWeakForm) nLocDOF = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()) * fWeakForm->NState();
 
-    fNeighborElements.clear();
+    
     int increase = 0;
     if(wf->GetExactSolution()) increase = 2;
 
@@ -32,7 +32,7 @@ ElementT<compshape>::ElementT(int64_t index, VecInt &geonodes, CompMesh* mesh, W
     fIntegData.fWeightFunction.fill(1.);
     fIntegData.fPrevWeightFunction.fill(1.);
 
-    getIntegPointCoordinates();
+    // getIntegPointCoordinates();
     fIntegData.fAdimCoord.resize(DIM);
 
     fIntegData.fA0Inv.resize(DIM,DIM);
@@ -55,6 +55,133 @@ ElementT<compshape>::ElementT(int64_t index, VecInt &geonodes, CompMesh* mesh, W
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+//-----------------------------SPATIAL DERIVATIVES------------------------------
+//------------------------------------------------------------------------------
+template<class compshape>
+void ElementT<compshape>::ComputeSpatialDerivatives() {
+    fIntegData.fPhi.setZero();
+    fIntegData.fDPhi.setZero();
+
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+
+    //Shape functions
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
+    // shapeQuad.ShapeHessian(xsi,ddphi);
+
+    //Shape functions spatial first derivatives
+    fIntegData.fDPhiX0 = fIntegData.fA0Inv.transpose() * fIntegData.fDPhi;
+
+    return;
+};
+
+template<class compshape>
+void ElementT<compshape>::ComputeCurrentSpatialDerivatives() {
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+
+    MatrixDouble DphiComp(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
+    compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,DphiComp,orders);
+    // shapeQuad.ShapeHessian(xsi,ddphi);
+    
+    fIntegData.fDPhiX1.setZero();
+
+    //Shape functions spatial first derivatives
+    fIntegData.fDPhiX1 = fIntegData.fA1.inverse().transpose() * DphiComp;
+
+    return;
+};
+//------------------------------------------------------------------------------
+//-----------------------------SPATIAL DERIVATIVES------------------------------
+//------------------------------------------------------------------------------
+template<class compshape>
+void ElementT<compshape>::ComputeHighOrderSpatialDerivatives() {
+    
+    // int DIM = compshape::Dimension;
+        
+    // int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+
+    // dDphi_dx.setZero();
+    // std::vector<MatrixDouble> ddphi(nshape,MatrixDouble(DIM,DIM));
+    // for (int i = 0; i < nshape; i++)
+    // {
+    //     ddphi[i].setZero();
+    // }
+    
+    // compshape::ShapeHessian(xsi,ddphi);
+    
+    // //These derivatives are computed with basis in this reference:
+    // //https://scicomp.stackexchange.com/questions/25196/implementing-higher-order-derivatives-for-finite-element
+    // MatrixDouble matAux,invSecDeriv;
+    // VecDouble HODerivatives, vecAux;
+    // // if (!isSecondDerivativeInverted){
+    //     if (DIM == 2){
+    //         matAux.resize(3,3); HODerivatives.resize(3); vecAux.resize(3); invSecDeriv.resize(3,3);
+    //         matAux.setZero(); HODerivatives.setZero(); vecAux.setZero(); invSecDeriv.setZero();
+
+    //         matAux(0,0) = ainv_(0,0) * ainv_(0,0);
+    //         matAux(0,1) = ainv_(0,1) * ainv_(0,1);//Pode estar errado, e ser(1,0)ou seja a transposta
+    //         matAux(0,2) = 2. * ainv_(0,0) * ainv_(0,1);
+            
+    //         matAux(1,0) = ainv_(1,0) * ainv_(1,0);
+    //         matAux(1,1) = ainv_(1,1) * ainv_(1,1);
+    //         matAux(1,2) = 2. * ainv_(1,0) * ainv_(1,1);
+            
+    //         matAux(2,0) = ainv_(0,0) * ainv_(1,0);
+    //         matAux(2,1) = ainv_(0,1) * ainv_(1,1);
+    //         matAux(2,2) = ainv_(0,0) * ainv_(1,1) + ainv_(1,0) * ainv_(0,1);
+
+    //         invSecDeriv = matAux.inverse();
+
+    //     } else if (DIM == 3){
+    //         matAux.resize(6,6); HODerivatives.resize(6); vecAux.resize(6);invSecDeriv.resize(6,6);
+    //         matAux.setZero(); HODerivatives.setZero(); vecAux.setZero(); invSecDeriv.setZero();
+    //     } else {
+    //         PanicButton();
+    //     }
+    // // }
+    
+    // //Shape functions spatial second derivatives
+    // double ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
+    // VecDouble xna_(DIM);
+
+    // for (int i = nshape; i--; ){
+    //     xna_.setZero();
+    //     for (int j = DIM; j--; ){
+    //         // Approximate the integration space
+    //         xna_[j] = fMesh->Reference()->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j);
+    //     }
+    //     ddx_dxsi += xna_[0] * ddphi[i](0,0);
+    //     ddx_deta += xna_[0] * ddphi[i](1,1);
+    //     ddx_dxsideta += xna_[0] * ddphi[i](0,1);
+    //     ddy_dxsi += xna_[1] * ddphi[i](0,0);
+    //     ddy_deta += xna_[1] * ddphi[i](1,1);
+    //     ddy_dxsideta += xna_[1] * ddphi[i](0,1);
+    // };
+
+    // if (DIM == 2){
+    //     VecDouble vecAux2(3);
+    //     for (int i = nshape; i--; ){
+    //         vecAux[0] = ddphi[i](0,0) - dphi_dx(i,0)*ddx_dxsi - dphi_dx(i,1)*ddy_dxsi;
+    //         vecAux[1] = ddphi[i](1,1) - dphi_dx(i,0)*ddx_deta - dphi_dx(i,1)*ddy_deta;
+    //         vecAux[2] = ddphi[i](0,1) - dphi_dx(i,0)*ddx_dxsideta - dphi_dx(i,1)*ddy_dxsideta;
+
+    //         vecAux2 = invSecDeriv * vecAux;
+
+    //         dDphi_dx(i,0) = vecAux2[0];
+    //         dDphi_dx(i,1) = vecAux2[1];
+    //         dDphi_dx(i,2) = vecAux2[2];
+    //     }
+        
+        
+    // }
+
+    return;
+};
+
 
 template<class compshape>
 void ElementT<compshape>::setIntegPointWeightFunction() {
@@ -91,90 +218,81 @@ void ElementT<compshape>::setIntegPointWeightFunction() {
 // //------------------------------------------------------------------------------
 
 
-// template<class compshape>
-// void ElementT<compshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
+template<class compshape>
+void ElementT<compshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
     
-//     int DIM = Dimension();
-//     fIntegData.fAdimCoord.resize(DIM);
-//     fIntegData.fPhi.resize(geoshape::NShape);
+    PanicButton();
+    // int DIM = Dimension();
+    // fIntegData.fAdimCoord.resize(DIM);
+    // fIntegData.fPhi.resize(geoshape::NShape);
     
-//     // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
-//     //     intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
-//     //     intPointWeightFunction[i] = 0.;
-//     // }
+    // // for(int i = 0; i < nQuad.getNumberOfIntegrationPoints(); i++) {
+    // //     intPointWeightFunctionPrev[i] = intPointWeightFunction[i];
+    // //     intPointWeightFunction[i] = 0.;
+    // // }
 
-//     int index=0;
-//     fIntegData.fDistFunction.setZero();
+    // int index=0;
+    // fIntegData.fDistFunction.setZero();
 
-//     VecInt orders(compshape::NSides);
-//     for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+    // VecInt orders(compshape::NSides);
+    // for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
 
-//     for(int it = 0; it < fIntRule.NPoints(); it++){
+    // for(int it = 0; it < fIntRule.NPoints(); it++){
         
-//         for (int i=0; i<DIM; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(index,i);
+    //     for (int i=0; i<DIM; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(index,i);
            
-//         compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
+    //     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
 
-//         for (int j=0; j<geoshape::NShape; j++){
-//                 fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
-//         };
+    //     for (int j=0; j<geoshape::NShape; j++){
+    //             fIntegData.fDistFunction[index] +=  fIntegData.fPhi[j] * nodalval[j];
+    //     };
 
-//         // intPointWeightFunction(index) = 1.;
-//         index++;
-//     }; 
+    //     // intPointWeightFunction(index) = 1.;
+    //     index++;
+    // }; 
 
-//     index = 0;
-//     return;
-// };
+    // index = 0;
+    return;
+};
 
-// //------------------------------------------------------------------------------
-// //------------------COMPUTES THE INTEGRATION POINT COORDINATE-------------------
-// //------------------------------------------------------------------------------
-// template<class compshape>
-// void ElementT<compshape>::getIntegPointCoordinates(){
-//     int DIM = compshape::Dimension;
-//     fIntPointCoordinates.resize(fIntRule.NPoints(),2);
-//     fIntPointCoordinates.setZero();
+//------------------------------------------------------------------------------
+//------------------COMPUTES THE INTEGRATION POINT COORDINATE-------------------
+//------------------------------------------------------------------------------
+template<class compshape>
+void ElementT<compshape>::getIntegPointCoordinates(){
 
-//     int nshape = geoshape::NShape;
-//     VecDouble xsi(DIM);
-//     VecDouble phi_(nshape);
-//     MatrixDouble dphi_(DIM,nshape);
-//     fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
+    PanicButton();
+    // int DIM = compshape::Dimension;
+    // fIntPointCoordinates.resize(fIntRule.NPoints(),2);
+    // fIntPointCoordinates.setZero();
 
-//     VecInt orders(geoshape::NSides);
-//     orders.fill(1);
+    // int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+    // VecDouble xsi(DIM);
+    // VecDouble phi_(nshape);
+    // MatrixDouble dphi_(DIM,nshape);
+    // fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
-//     for (int i = 0; i < fIntRule.NPoints(); i++){
-//         double x[DIM] = {};
+    // VecInt orders(compshape::NSides);
+    // orders.fill(1);
 
-//         for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
+    // for (int i = 0; i < fIntRule.NPoints(); i++){
+    //     double x[DIM] = {};
 
-//         geoshape::Shape(xsi,phi_,dphi_,orders);
+    //     for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
-//         for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
+    //     geoshape::Shape(xsi,phi_,dphi_,orders);
 
-//         for (int j = 0; j < nshape; j++)
-//             for (int k = DIM; k--; )
-//                 fIntPointCoordinates(i,k) += fMesh->Reference()->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
+    //     for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
+
+    //     for (int j = 0; j < nshape; j++)
+    //         for (int k = DIM; k--; )
+    //             fIntPointCoordinates(i,k) += fMesh->Reference()->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
         
-//     };
+    // };
 
-//     return;
-// };
+    return;
+};
 
-
-// //------------------------------------------------------------------------------
-// //----------------------SET ELEMENT INTERSECTION PARAMETERS---------------------
-// //------------------------------------------------------------------------------
-// template<class compshape>
-// void ElementT<compshape>::setIntersectionParameters(VecDouble &x, VecDouble &X) {
-//     xK.resize(2);
-//     XK.resize(2);
-//     xK[0] = x[0]; xK[1] = x[1]; 
-//     XK[0] = X[0]; XK[1] = X[1];
-//     return;
-// };
 
 
 
@@ -188,13 +306,15 @@ void ElementT<compshape>::interpolateMeshVelocity(int &index, VecDouble &umesh_,
     int DIM = compshape::Dimension;
     umesh_.setZero();
     umeshPrev_.setZero();
+
+    PanicButton();
     
-    for (int i = geoshape::NShape; i--; ){
-        double shapeFi = fIntegData.fPhi[i];
-        for (int j = DIM; j--; ){
-            umesh_[j] += fMesh->ConnectVec()[fConnect[i]] -> getMeshVelocity(j) * shapeFi;
-        }
-    }
+    // for (int i = compshape::NShape; i--; ){
+    //     double shapeFi = fIntegData.fPhi[i];
+    //     for (int j = DIM; j--; ){
+    //         umesh_[j] += fMesh->ConnectVec()[fConnect[i]] -> getMeshVelocity(j) * shapeFi;
+    //     }
+    // }
 
     return;
 }
@@ -298,10 +418,10 @@ void ElementT<compshape>::interpolateSolution() {
     // Store solution for nodes only in case the weakForm has no memory (used by topology optimization only) 
     if (fWeakForm && !fWeakForm->GetHasMemory()) {
         const size_t n_state = fMesh->NState();
-
-        fIntegData.fSolNodes.resize(geoshape::NShape * n_state);
+        int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+        fIntegData.fSolNodes.resize(nshape * n_state);
         fIntegData.fSolNodes.setZero();
-        for (int i = 0; i < geoshape::NShape; i++){
+        for (int i = 0; i < nshape; i++){
             for (int j = 0; j < n_state; j++ ){
                 fIntegData.fSolNodes[(n_state*i) + j] = fMesh->ConnectVec()[fConnect[i]]->GetSolution(j);
             }
@@ -483,14 +603,14 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss || frame2d){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
 
@@ -536,14 +656,14 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
     
@@ -584,14 +704,14 @@ void ElementT<compshape>::ComputeElContribution(VecDouble &rhsVector){
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }     
 
@@ -639,14 +759,14 @@ void ElementT<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacob
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
 
@@ -690,14 +810,14 @@ void ElementT<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacob
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
 
@@ -734,14 +854,14 @@ void ElementT<compshape>::ComputeElContribution(std::vector<VecDouble> &rhsVecto
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
 
@@ -794,14 +914,14 @@ void ElementT<compshape>::ComputeError(VecDouble &errors){
         fIntegData.fWeight = fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        ComputeJacobian();
+        fReference->ComputeJacobian(fIntegData);
 
         //Computes spatial derivatives
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || truss){
-            ComputeCurrentJacobian();
+            fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
 
@@ -846,14 +966,14 @@ void ElementT<compshape>::Integrate(std::vector<std::string> &varNames, std::map
             fIntegData.fWeight = fIntRule.WeightList(index);
 
             //Computes the jacobian matrix
-            ComputeJacobian();
+            fReference->ComputeJacobian(fIntegData);
 
             //Computes spatial derivatives
             ComputeSpatialDerivatives();
             
             // Computes current spatial derivatives (only for position-based weak forms)
             // if (pos2d || truss){
-            //     ComputeCurrentJacobian();
+            //     fReference->ComputeCurrentJacobian(fIntegData,this);
             //     ComputeCurrentSpatialDerivatives();
             // }
 

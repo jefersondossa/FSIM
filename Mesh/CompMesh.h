@@ -146,6 +146,7 @@ public:
         return fApproxType;
     }
 
+    void AutoBuild();
     void BuildElements();
     void BuildConnectivity();
     void BuildConnects();

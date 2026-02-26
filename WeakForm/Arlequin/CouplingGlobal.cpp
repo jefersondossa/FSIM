@@ -39,7 +39,7 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
     // VecDouble phiGlobal(nphi);
     // tshape::Shape(XsiGlobal,phiGlobal);
     //Computes coarse mesh derivatives
-    elglobal->ComputeJacobian();
+    elglobal->Reference()->ComputeJacobian(dataglobal);
     elglobal->ComputeSpatialDerivatives();
 
     auto dphi_dx = data.fDPhiX0;

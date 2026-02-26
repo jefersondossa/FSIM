@@ -10,12 +10,16 @@
 CompMesh::CompMesh(GeoMesh *gmesh, ApproxType approxType){
     fReference = gmesh;
     fApproxType = approxType;
+}
 
+void CompMesh::AutoBuild(){
     // Create the elements based on the geometric mesh
     BuildElements();
 
     //Build the computational mesh
     BuildConnectivity();
+
+    part_elem= new int[NElements()]();
 }
 
 
@@ -99,7 +103,7 @@ void CompMesh::BuildConnects(){
         }
         for (int64_t iel=0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
-            VecInt &geoNodes = el->getGeometricNodes();
+            VecInt &geoNodes = el->Reference()->getGeometricNodes();
             el->setConnectivity(geoNodes);
         }
         fNGlobalDOF = nconnects * fNState;
@@ -136,14 +140,14 @@ void CompMesh::BuildHierarquicConnects(){
 
     for (auto iel = NElements()-1; iel >= 0; iel--){
         Element *el = fElementVector[iel];
-        VecInt &geoNodes = el->getGeometricNodes();
-        int ncorner = el->NCornerNodes();
-        int nedges = el->NEdges();
-        int nfaces = el->NFaces();
-        int nvolumes = el->NVolumes();
+        VecInt &geoNodes = el->Reference()->getGeometricNodes();
+        int ncorner = el->Reference()->NCornerNodes();
+        int nedges = el->Reference()->NEdges();
+        int nfaces = el->Reference()->NFaces();
+        int nvolumes = el->Reference()->NVolumes();
         int nsides = el->NSides();
         VecInt connect(nsides);
-        connect.setZero();
+        connect.setZero(); 
 
         //Start the connectivity with the corner nodes
         for (int i = 0; i < ncorner; i++){
@@ -170,13 +174,13 @@ void CompMesh::BuildHierarquicConnects(){
             //Varrer todos os elementos vizinhos e verificar se os dois nos participam
             //do vetor geo nodes. Se sim, então há um connect comum para os dois.
             // Caso contrário, criar um novo connect de aresta.
-            int numNeig=el->getNumberOfNeighborElements(); 
+            int numNeig=el->Reference()->getNumberOfNeighborElements(); 
             for (int ineig = 0; ineig < numNeig; ineig++){
-                auto neig = el->getNeighborElement(ineig);
+                auto neig = el->Reference()->getNeighborElement(ineig);
                 if (!fElementVector[neig]) continue;
                 if (fElementVector[neig]->Dimension() == 0) continue;
 
-                VecInt &neigNodes = fElementVector[neig]->getGeometricNodes();
+                VecInt &neigNodes = fElementVector[neig]->Reference()->getGeometricNodes();
                 std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
                 if (neighNodesVec.find(sideNodes[0])!= neighNodesVec.end() &&
                     neighNodesVec.find(sideNodes[1])!= neighNodesVec.end()){
@@ -211,13 +215,13 @@ void CompMesh::BuildHierarquicConnects(){
             //Varrer todos os elementos vizinhos e verificar se os dois nos participam
             //do vetor geo nodes. Se sim, então há um connect comum para os dois.
             // Caso contrário, criar um novo connect de aresta.
-            int numNeig=el->getNumberOfNeighborElements(); 
+            int numNeig=el->Reference()->getNumberOfNeighborElements(); 
             for (int ineig = 0; ineig < numNeig; ineig++){
-                auto neig = el->getNeighborElement(ineig);
+                auto neig = el->Reference()->getNeighborElement(ineig);
                 if (!fElementVector[neig]) continue;
                 if (fElementVector[neig]->Dimension() == 0) continue;
 
-                VecInt &neigNodes = fElementVector[neig]->getGeometricNodes();
+                VecInt &neigNodes = fElementVector[neig]->Reference()->getGeometricNodes();
                 std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
 
                 bool allNodesFound = true;
@@ -313,7 +317,7 @@ void CompMesh::Print(std::string filename){
         file << "Element " << i << ": ";
         file << "Material ID = " << el->GetWeakForm()->Id() << ", ";
         file << "Geometric Nodes = [";
-        VecInt &geoNodes = el->getGeometricNodes();
+        VecInt &geoNodes = el->Reference()->getGeometricNodes();
         for (size_t j = 0; j < geoNodes.size(); j++) {
             file << geoNodes[j];
             if (j < geoNodes.size() - 1) file << ", ";
@@ -362,14 +366,15 @@ void CompMesh::BuildElements(){
 
         switch (elType)
         {
-        case 3: //Linear Line 
+        case 3: 
+        {//Linear Line 
             if (plasticmaterial){
                 switch (fApproxType){
                 case ApproxType::EIsoparametric:
-                    fElementVector[iel] = new ElementWithMem<ShapeOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    fElementVector[iel] = new ElementWithMem<ShapeOneDLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
-                    fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                 
                 default:
                     break;
@@ -377,10 +382,10 @@ void CompMesh::BuildElements(){
             } else if (transientmaterial){
                 switch (fApproxType){
                 case ApproxType::EIsoparametric:
-                    fElementVector[iel] = new ElementTransient<ShapeOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    fElementVector[iel] = new ElementTransient<ShapeOneDLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
-                    fElementVector[iel] = new ElementTransient<HierarquicalOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    fElementVector[iel] = new ElementTransient<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                 
                 default:
                     break;
@@ -388,22 +393,382 @@ void CompMesh::BuildElements(){
             } else {
                 switch (fApproxType){
                 case ApproxType::EIsoparametric:
-                    fElementVector[iel] = new ElementT<ShapeOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    fElementVector[iel] = new ElementT<ShapeOneDLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
-                    fElementVector[iel] = new ElementT<HierarquicalOneD>(fReference->ElementVec()[iel],this,plasticmaterial);
+                    fElementVector[iel] = new ElementT<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                 
                 default:
                     break;
                 }
             }
-            
             break;
+        }
 
-            
+        case 5: 
+        {//Linear Triangle
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeTriangleLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeTriangleLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeTriangleLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
 
+        case 9:
+        {// Linear Quadrilateral
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeQuadrilateralLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeQuadrilateralLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeQuadrilateralLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 10:
+        {//Linear tetrahedron
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeTetrahedronLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeTetrahedronLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeTetrahedronLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
             
+        case 12:
+        {// Linear Hexahedron
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeHexahedron>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic hexahedron not implemented yet
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeHexahedron>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic hexahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeHexahedron>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic hexahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 21:
+        {// Quadratic Line
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeOneDQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeOneDQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeOneDQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 22:
+        {// Quadratic Triangle
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeTriangleQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeTriangleQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeTriangleQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 28:
+        {// Quadratic Quad
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeQuadrilateralQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeQuadrilateralQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeQuadrilateralQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 1:
+        {//Point
+            if (plasticmaterial){
+                fElementVector[iel] = new ElementWithMem<ShapePoint>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+            } else if (transientmaterial){
+                fElementVector[iel] = new ElementTransient<ShapePoint>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+            } else {
+                fElementVector[iel] = new ElementT<ShapePoint>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+            }
+            break;
+        }
+
+        case 69:
+        {// Cubic Triangle
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeTriangleCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeTriangleCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeTriangleCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
+        case 35:
+        {// Cubic Line
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeOneDCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeOneDCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementTransient<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeOneDCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    fElementVector[iel] = new ElementT<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+
         default:
+            std::cout << "Element type " << elType << " not implemented yet. Please check it. \n";
+            PanicButton();
             break;
         }
 

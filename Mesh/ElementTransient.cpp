@@ -6,7 +6,7 @@
 #include "TransientPositionalFrame2D.h"
 
 template<class compshape>
-ElementTransient<compshape>::ElementTransient(int64_t index, VecInt &connect, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index,connect,mesh,wf){
+ElementTransient<compshape>::ElementTransient(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index, gel, mesh, wf){
     int DIM = compshape::Dimension;
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fAdimCoord.setZero();
@@ -61,14 +61,14 @@ void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNR
         this->fIntegData.fWeight = this->fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        this->ComputeJacobian();
+        this->fReference->ComputeJacobian(this->fIntegData);
 
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
 
         // Computes current spatial derivatives (only for position-based weak forms)
         if (pos2d || pos2dt || truss){
-            this->ComputeCurrentJacobian();
+            this->fReference->ComputeCurrentJacobian(this->fIntegData,this);
             this->ComputeCurrentSpatialDerivatives();
         }
 
@@ -115,7 +115,7 @@ void ElementTransient<compshape>::ComputeElContribution(std::vector<MatrixDouble
         this->fIntegData.fWeight = this->fIntRule.WeightList(index);
 
         //Computes the jacobian matrix
-        this->ComputeJacobian();
+        this->fReference->ComputeJacobian(this->fIntegData);
 
         //Computes spatial derivatives
         this->ComputeSpatialDerivatives();
