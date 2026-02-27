@@ -28,6 +28,7 @@ public:
 
     /// @brief Default constructor
     WeakForm() = default;
+    WeakForm(int matid, int nstate) : fMatId(matid), fNState(nstate) {};
 
     /// @brief Default destructor
     virtual ~WeakForm() = default;
