@@ -48,7 +48,8 @@ int main(int argc, char **args)
     auto *loadBC = new L2Projection(kLoadMatId, 3, BoundaryConditionType::kNeumann, val1, val2);
     model->InsertMaterial(loadBC);
 
-    GmshTools::Read(*model, "../cantilever_3d_beam.msh");
+    PanicButton();//Need refactor
+    // GmshTools::Read(*model, "../cantilever_3d_beam.msh");
 
     LinearAnalysis an(model.get(), SolverType::EMumps);
 

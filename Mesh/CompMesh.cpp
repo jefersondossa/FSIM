@@ -140,6 +140,7 @@ void CompMesh::BuildHierarquicConnects(){
 
     for (auto iel = NElements()-1; iel >= 0; iel--){
         Element *el = fElementVector[iel];
+        if (!el) continue;
         VecInt &geoNodes = el->Reference()->getGeometricNodes();
         int ncorner = el->Reference()->NCornerNodes();
         int nedges = el->Reference()->NEdges();
@@ -314,7 +315,8 @@ void CompMesh::Print(std::string filename){
     for (int64_t i = 0; i < NElements(); i++)
     {
         Element *el = fElementVector[i];
-        file << "Element " << i << ": ";
+        if (!el) continue;
+        file << "Element " << el->Index() << ": ";
         file << "Material ID = " << el->GetWeakForm()->Id() << ", ";
         file << "Geometric Nodes = [";
         VecInt &geoNodes = el->Reference()->getGeometricNodes();
@@ -360,6 +362,9 @@ void CompMesh::BuildElements(){
     for (int64_t iel = 0; iel < NElements(); iel++){
         int elType = fReference->ElementVec()[iel]->PrintType();
         int matid = fReference->ElementVec()[iel]->Material();
+
+        //If there is no weak form associated with the material id, skip the element
+        if (!Material(fReference->ElementVec()[iel]->Material())) continue;
 
         PlasticityModel *plasticmaterial = dynamic_cast<PlasticityModel * > (fMaterialVector[matid]);
         TransientWeakForm *transientmaterial = dynamic_cast<TransientWeakForm * > (fMaterialVector[matid]);

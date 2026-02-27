@@ -98,9 +98,9 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
                         sum += fac;
                         compliance_val += fac * elemental_compliances[iel_neighbor] * eles_rho[iel_neighbor];
 
-                        for (std::size_t i_neighbor_of_neighbor = 0; i_neighbor_of_neighbor < elem_visiting->getNumberOfNeighborElements(); i_neighbor_of_neighbor++)
+                        for (std::size_t i_neighbor_of_neighbor = 0; i_neighbor_of_neighbor < elem_visiting->Reference()->getNumberOfNeighborElements(); i_neighbor_of_neighbor++)
                         {
-                            neighbors_to_visit.push_back(elem_visiting->getNeighborElement(i_neighbor_of_neighbor));
+                            neighbors_to_visit.push_back(elem_visiting->Reference()->getNeighborElement(i_neighbor_of_neighbor));
                         }
                     }
                 }

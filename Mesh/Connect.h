@@ -52,6 +52,10 @@ public:
         return fSequenceNumber;
     };
 
+    void SetSequenceNumber(int64_t seqnum){
+        fSequenceNumber = seqnum;
+    };
+
     /// @brief Sets the solution
     /// @param istate state variable index
     /// @param sol solution
