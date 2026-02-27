@@ -40,8 +40,8 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                         for (int jstate = 0; jstate < nstatej; jstate++){
                             for (int ishape = 0; ishape < nshapei; ishape++){
                                 for (int jshape = 0; jshape < nshapej; jshape++){
-                                    int64_t dof_i = startDOF + nstatei * (seqnumi+ishape) + istate;
-                                    int64_t dof_j = startDOF + nstatej * (seqnumj+jshape) + jstate; 
+                                    int64_t dof_i = startDOF + seqnumi + istate;
+                                    int64_t dof_j = startDOF + seqnumj + jstate; 
                                     fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+ishape)+istate,nstatej*(j+jshape)+jstate)); 
                                 }
                             } 
@@ -52,7 +52,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
                     for (int ishape = 0; ishape < nshapei; ishape++){
-                        int64_t dof_i = startDOF + nstatei * (seqnumi+ishape) + istate;
+                        int64_t dof_i = startDOF + seqnumi + istate;
                         fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*(i+ishape)+istate]);
                     }
                 }
