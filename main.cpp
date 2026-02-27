@@ -65,6 +65,7 @@ static char help[] = "Solves the Incompressible flow problem";
 #include "LinearFrame.h"
 #include "PositionalFrame2D.h"
 #include "TransientPositionalFrame2D.h"
+#include "MixedCompMesh.h"
 #define USE_SNES
 
 int main(int argc, char **args) {

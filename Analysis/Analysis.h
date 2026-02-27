@@ -79,7 +79,7 @@ public:
         fGlobalMatrix->PrintRhs();
     }
 
-     void PrintGlobalSolution(){
+     void PrintSolution(){
         fGlobalMatrix->PrintSolution();
     }
 
