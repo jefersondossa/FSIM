@@ -6,7 +6,8 @@ file(GLOB preprocess
     GmshTools.cpp
     OpenFOAMWriter.h
     OpenFOAMWriter.cpp
-    # ProblemParameters.h
+    GeoMeshTools.h
+    GeoMeshTools.cpp
 )
 
 set(PREPROCESS ${preprocess} PARENT_SCOPE)

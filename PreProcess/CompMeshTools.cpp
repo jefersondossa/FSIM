@@ -65,3 +65,115 @@ void CompMeshTools::DomainDecompositionMETIS(CompMesh *cmesh){
 
     
 }
+
+
+void CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, int64_t elSearch){
+    
+    int DIM = cmesh->Dimension();
+    int DEG = cmesh->GetDefaultOrder();
+    VecDouble xsiCC(DIM);
+    std::pair<VecDouble,VecDouble> XK;
+
+    elCorr = 150000;
+    VecDouble xsi(DIM);
+    VecDouble x_(DIM);
+    VecDouble deltaX(DIM);
+    VecDouble deltaXsi(DIM);
+    xsi.setZero(); x_.setZero(); deltaX.setZero(); deltaXsi.setZero();
+    
+    xsiCC.fill(1.e10);
+    xsiCorr.fill(1.e50);
+    xsi.fill(1./3.);
+    x_.fill(0.);
+    
+    Element *elemsearch = nullptr;
+    if (cmesh->ElementVec()[elSearch]->Dimension() != cmesh->Dimension()){
+        for (int i=0; i<cmesh->NElements(); i++){
+            if(cmesh->ElementVec()[i]->Dimension() != cmesh->Dimension()) continue;
+            elemsearch = cmesh->ElementVec()[i];
+            break;
+        }
+    } else {
+        elemsearch = cmesh->ElementVec()[elSearch];
+    }
+    VecInt connec = elemsearch -> Reference() -> getGeometricNodes();
+    
+    auto &integdata = elemsearch->IntegrationData();
+    integdata.fAdimCoord = xsi;
+    elemsearch-> Reference() -> ComputeJacobianSearch(integdata);
+    int nElNodes = integdata.fPhi.size();
+
+    for (int i = 0; i < nElNodes; i++){
+        VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
+        for (int k = 0; k < DIM; k++){
+            x_[k] += xint[k] * integdata.fPhi[i];
+        }        
+    };
+
+    double error = 1.e6;
+    int iterations = 0;
+
+    while ((error > 1.e-8) && (iterations < 4)) {
+        
+        iterations++;
+        
+        for (int k = 0; k < DIM; k++) deltaX[k] = x[k] - x_[k];
+        deltaXsi.setZero();
+        
+        elemsearch -> Reference() -> ComputeJacobianSearch(elemsearch->IntegrationData());
+
+        deltaXsi = elemsearch->IntegrationData().fA0Inv*deltaX;    
+
+        xsi += deltaXsi;
+        x_.setZero();
+        
+        integdata.fAdimCoord = xsi;
+        
+        for (int i=0; i<nElNodes; i++){
+            VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
+            for (int k = 0; k < DIM; k++)x_[k] += xint[k] * integdata.fPhi[i];
+        };
+
+        error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
+    };
+    
+    double t1 = -1.e-2;
+    double t2 =  1. - t1;
+    
+    xsiCC[0] = xsi[0];
+    xsiCC[1] = xsi[1];
+
+
+    switch (elemsearch->Type())
+    {
+    case ETriangle:
+        if ((xsiCC[0] >= t1) && (xsiCC[1] >= t1) && ((1. - xsiCC[0] - xsiCC[1]) >= t1) &&
+            (xsiCC[0] <= t2) && (xsiCC[1] <= t2) && ((1. - xsiCC[0] - xsiCC[1]) <= t2)){
+
+            xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+            elCorr = elemsearch->Index();
+            return;
+        }
+        break;
+    case EQuadrilateral:
+        if ((xsiCC[0] >= t1-1.) && (xsiCC[1] >= t1-1.) &&
+            (xsiCC[0] <= t2) && (xsiCC[1] <= t2)){
+
+            xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
+            elCorr = elemsearch->Index();
+            return;
+        }
+        break;
+
+    default:
+        PanicButton();
+        break;
+    }
+
+    if (fabs(xsi[0]) > 2.) {
+        std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
+        PanicButton();
+    }
+    if (elCorr == 150000) PanicButton();
+    return;
+};
