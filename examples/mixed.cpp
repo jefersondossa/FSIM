@@ -88,6 +88,19 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     WeakForm * mat = new WeakForm(8,nstate);
     cmesh->InsertMaterial(mat);
 
+    //BC
+    MatrixDouble val1(nstate,nstate);
+    val1.setZero();
+    VecDouble val2(nstate);
+    val2.setZero();
+    L2Projection * matbc3 = new L2Projection(6,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc2 = new L2Projection(7,1,BoundaryConditionType::kNeumann,val1,val2);
+
+    cmesh->InsertMaterial(matbc1);
+    cmesh->InsertMaterial(matbc2);
+    cmesh->InsertMaterial(matbc3);
+
     cmesh->AutoBuild();
     
     cmesh->Print("cmesh_pressure.txt");
@@ -100,6 +113,8 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
     MixedElasticity * mat = new MixedElasticity(8,2,1.0,0.0);
+
+    adicionar l2 projections aqui.
     cmesh->InsertMaterial(mat);
 
     cmesh->AutoBuild();

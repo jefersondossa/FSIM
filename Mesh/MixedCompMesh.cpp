@@ -15,16 +15,21 @@ void MixedCompMesh::AutoBuild(){
 void MixedCompMesh::CreateMixedConnects(){
     
     int64_t nEl0 = fMeshVector[0]->NElements();
-    int64_t nEl1 = fMeshVector[1]->NElements();    
+    int64_t nEl1 = fMeshVector[1]->NElements();
+
+    int64_t nConnects0 = fMeshVector[0]->NConnects();
+    int64_t nConnects1 = fMeshVector[1]->NConnects();
 
 #ifdef DEBUG_BUILD
-    if (nEl0 != nEl1) {
-        std::cout << "Error: The number of elements in the meshes must be the same." << std::endl;
+    if (nEl0 != nEl1 || nConnects0 != nConnects1) {
+        std::cout << "nEl0: " << nEl0 << " nEl1: " << nEl1 << std::endl;
+        std::cout << "nConnects0: " << nConnects0 << " nConnects1: " << nConnects1 << std::endl;
+        std::cout << "Error: The number of elements and connects in the meshes must be the same." << std::endl;
         PanicButton();
     }
 #endif
     
-this->SetNumElements(nEl0);
+    this->SetNumElements(nEl0);
 
     for (int64_t iel = 0; iel < nEl0; iel++){
         auto el0 = fMeshVector[0]->ElementVec()[iel];
@@ -37,8 +42,9 @@ this->SetNumElements(nEl0);
         }
 #endif  
         std::vector<Element *> elvector = {el0, el1};
-
-        ElementMixed *fMixedEl = new ElementMixed(iel, elvector, this, this->Material(0)); 
+        int matid = el0->Reference()->Material();
+        ElementMixed *fMixedEl = new ElementMixed(iel, elvector, this, this->Material(matid));
+        this->ElementVec()[iel] = fMixedEl;
     }
 
     // int64_t nconnects = 0;
