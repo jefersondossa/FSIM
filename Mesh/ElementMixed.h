@@ -1,22 +1,23 @@
-
 //------------------------------------------------------------------------------
 //-----------------------------------ELEMENT------------------------------------
 //------------------------------------------------------------------------------
 
-#ifndef ELEMENTTRANSIENT_H
-#define ELEMENTTRANSIENT_H
+#ifndef ELEMENTMIXED_H
+#define ELEMENTMIXED_H
 
-#include "ElementT.h"
+#include "Element.h"
+#include "MixedCompMesh.h"
 
 /// Defines the fluid element object and all the element information
-template<class compshape>
-class ElementTransient : public ElementT<compshape>{
-    
+class ElementMixed : public Element{
+protected:
+    std::vector<Element *> fSubElements;     
+
 public:
-    ElementTransient() : ElementT<compshape>(){
+    ElementMixed() : Element(){
     };
 
-    ElementTransient(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
+    ElementMixed(int64_t index, std::vector<Element *> elvector, MixedCompMesh* mesh, WeakForm *wf);
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) override;

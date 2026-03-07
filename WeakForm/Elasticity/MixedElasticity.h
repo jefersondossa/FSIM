@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #ifndef MIXEDELASTICITY2_H
+=======
+#ifndef MIXEDELASTICITY_H
+>>>>>>> 5cce436 (add mixed element)
 #define MIXEDELASTICITY_H
 
 #include "WeakForm.h"

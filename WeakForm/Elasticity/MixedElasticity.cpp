@@ -5,16 +5,38 @@ MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisso
     fDimension = dim;
     fYoungModulus = young;
     fPoissonRatio = poisson;
+    fBulkModulus = fYoungModulus / (3. * (1. - 2. * fPoissonRatio));
+    fShearModulus = fYoungModulus / (2. * (1. + fPoissonRatio));
+
     if (fDimension == 2) {
         fConstitutiveMatrix.resize(3,3);
+        fConstitutiveMatrix.setZero();
+
+        MatrixDouble I0 = MatrixDouble::Identity(3,3);
+        I0(2,2) = 0.5;
+        VecDouble m(3);
+        m.setZero();
+        m(0) = m(1) = 1.;
+
+        fConstitutiveMatrix = 2. * fShearModulus * (I0 - 1./3. * m * m.transpose());
+
     } else if (fDimension == 3) {
         fConstitutiveMatrix.resize(6,6);
+        fConstitutiveMatrix.setZero();
+
+        MatrixDouble I0 = MatrixDouble::Identity(6,6);
+        I0(3,3) = I0(4,4) = I0(5,5) = 0.5;
+        VecDouble m(3);
+        m.setZero();
+        m(0) = m(1) = m(2) = 1.;
+
+        fConstitutiveMatrix = 2. * fShearModulus * (I0 - 1./3. * m * m.transpose());
     } else {
         std::cerr << "Error: MixedElasticity only supports 2D and 3D problems." << std::endl;
         PanicButton();
     }
     
-    fConstitutiveMatrix.setZero();
+    
 
    
 };
