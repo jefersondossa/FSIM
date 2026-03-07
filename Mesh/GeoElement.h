@@ -40,6 +40,7 @@ public:
 
     int &PrintType() {return fPrintType;}
     int &Material() {return fMaterial;}
+    int64_t &Index() {return fIndex;}
 
     /// Pushs back a term of the inverse incidence, i.e., an element which
     /// contains the node
