@@ -325,7 +325,7 @@ void CompMesh::Print(std::string filename){
             if (j < geoNodes.size() - 1) file << ", ";
         }
         file << "], Connects = [";
-        VecInt &connects = el->getConnectivity();
+        VecInt connects = el->getConnectivityIndices();
         for (size_t j = 0; j < connects.size(); j++) {
             file << connects[j];
             if (j < connects.size() - 1) file << ", ";

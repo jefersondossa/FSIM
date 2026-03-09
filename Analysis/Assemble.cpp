@@ -11,7 +11,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             if (!el) continue;
-            VecInt connec = el -> getConnectivity();
+            VecInt connec = el -> getConnectivityIndices();
             int nLocDOF = el->NLocDOF(); 
             int nConnects = connec.size();
 
@@ -68,7 +68,7 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
-            VecInt connec = el -> getConnectivity();
+            VecInt connec = el -> getConnectivityIndices();
             int nLocDOF = el->NLocDOF(); 
             int nConnects = connec.size();
 
@@ -111,7 +111,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
         if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
-            VecInt connec = el -> getConnectivity();
+            VecInt connec = el -> getConnectivityIndices();
             int nLocDOF = el->NLocDOF(); 
             int nConnects = connec.size();
 
@@ -157,7 +157,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
 
     //Lagrange Multipliers
     for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
-        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivity();
+        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivityIndices();
         auto *elclocal = dynamic_cast<CouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         auto *elcglobal = dynamic_cast<CouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         int64_t jelcoupled = 0;
@@ -188,10 +188,10 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         int64_t startDOF = 0;
         //Gets the right connectivity
         if(elclocal){
-            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivity();
+            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivityIndices();
             startDOF = GloDOF;
         } else if (elcglobal){
-            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivity();
+            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivityIndices();
         } else {
             PanicButton();
         }
@@ -281,7 +281,7 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
 
     //Lagrange Multipliers
     for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
-        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivity();
+        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivityIndices();
         auto *elclocal = dynamic_cast<CouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         auto *elcglobal = dynamic_cast<CouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         int64_t jelcoupled = 0;
@@ -310,10 +310,10 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
         int64_t startDOF = 0;
         //Gets the right connectivity
         if(elclocal){
-            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivity();
+            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivityIndices();
             startDOF = GloDOF;
         } else if (elcglobal){
-            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivity();
+            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivityIndices();
         } else {
             PanicButton();
         }
@@ -379,7 +379,7 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
 
     //Lagrange Multipliers
     for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
-        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivity();
+        auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivityIndices();
         auto *elclocal = dynamic_cast<CouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         auto *elcglobal = dynamic_cast<CouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         int64_t jelcoupled = 0;
@@ -407,10 +407,10 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
         int64_t startDOF = 0;
         //Gets the right connectivity
         if(elclocal){
-            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivity();
+            connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivityIndices();
             startDOF = GloDOF;
         } else if (elcglobal){
-            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivity();
+            connec = fAnalysis->MeshVector()[0]->ElementVec()[jelcoupled]->getConnectivityIndices();
         } else {
             PanicButton();
         }

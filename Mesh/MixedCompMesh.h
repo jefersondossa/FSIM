@@ -19,6 +19,7 @@ public:
 
     void CreateMixedConnects();
 
+    void Print(std::string filename);
 
 };
 

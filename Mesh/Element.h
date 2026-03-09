@@ -6,15 +6,17 @@
 #include "IntPointData.h"
 #include "WeakForm.h"
 #include "GeoElement.h"
+#include "Connect.h"
 
 class GeoElement;
 class CompMesh;
+class Connect;
 
 class Element{
 protected:
-    CompMesh *fMesh = nullptr;
-    VecInt        fConnect;  // element connectivity
-    int64_t       fIndex;    //Element index
+    CompMesh                *fMesh = nullptr;
+    std::vector<Connect *>  fConnect;  // element connectivity
+    int64_t                 fIndex;    //Element index
 
     int nLocDOF = 0;
 
@@ -67,11 +69,20 @@ public:
 
     /// Sets the element connectivity
     /// @param int* element connectivity
-    void setConnectivity(VecInt &connect){fConnect = connect;};
+    void setConnectivity(std::vector<Connect *> connect){fConnect = connect;};
+    void setConnectivity(VecInt connect);
 
     /// Gets the element connectivity
     /// @return element connectivity
-    VecInt &getConnectivity(){return fConnect;};
+    std::vector<Connect *> &getConnectivity(){return fConnect;};
+
+    VecInt getConnectivityIndices(){
+        VecInt indices(fConnect.size());
+        for (size_t i = 0; i < fConnect.size(); i++){
+            indices[i] = fConnect[i]->Index();
+        }
+        return indices;
+    }
     
     CompMesh* Mesh() {return fMesh;}
     

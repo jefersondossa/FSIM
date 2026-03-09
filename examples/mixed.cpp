@@ -113,11 +113,11 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
     MixedElasticity * mat = new MixedElasticity(8,2,1.0,0.0);
-
-    adicionar l2 projections aqui.
     cmesh->InsertMaterial(mat);
 
     cmesh->AutoBuild();
+
+    cmesh->Print("cmesh_mixed.txt");
 
     return cmesh;
 };

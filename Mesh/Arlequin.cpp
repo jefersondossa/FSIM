@@ -268,7 +268,7 @@ void Arlequin::CreateGlobalCouplingElements(){
                 auto *el = fMeshVector[0]->ElementVec()[ielcoarse]->Clone();
                 el->SetMesh(fMeshVector[2]);
                 el->SetWeakForm(cglobal);
-                el->setConnectivity(fMeshVector[2]->ElementVec()[iel]->getConnectivity());
+                el->setConnectivity(fMeshVector[2]->ElementVec()[iel]->getConnectivityIndices());
                 fMeshVector[2]->ElementVec().push_back(el);
             }
         }
@@ -441,9 +441,9 @@ void Arlequin::searchNodeCorrespondence(VecDouble &x,CompMesh *cmesh,
         for (int jel = 0; jel < nEl; jel++){
             if (cmesh->ElementVec()[jel]->Dimension()!= cmesh->Dimension()) continue;
             if (fFirstSearch){
-                connec = cmesh->ElementVec()[jel] -> getConnectivity();
+                connec = cmesh->ElementVec()[jel] -> getConnectivityIndices();
             } else {
-                connec = cmesh->ElementVec()[elemsearch -> Reference() -> getNeighborElement(jel)] -> getConnectivity();
+                connec = cmesh->ElementVec()[elemsearch -> Reference() -> getNeighborElement(jel)] -> getConnectivityIndices();
             }   
 
             //get boxes information        
@@ -594,7 +594,7 @@ void Arlequin::setNodalCorrespondenceFine() {
 
     for (int ielem = 0; ielem < fMeshVector[2]->NElements(); ielem++) {
         auto *el = fMeshVector[2]->ElementVec()[ielem];
-        VecInt connec = fMeshVector[2]->ElementVec()[ielem] -> getConnectivity();
+        VecInt connec = fMeshVector[2]->ElementVec()[ielem] -> getConnectivityIndices();
         int nElNodes = connec.size();
         VecDouble x1(nElNodes), x2(nElNodes), x3(nElNodes);
         
@@ -703,7 +703,7 @@ void Arlequin::setSignaledDistance(){
             auto *el = fMeshVector[1]->ElementVec()[i];
 
             if (fGlueMatID.find(el->GetWeakForm()->Id())==fGlueMatID.end()) continue;
-            VecInt bconnec = el -> getConnectivity();
+            VecInt bconnec = el -> getConnectivityIndices();
             
             // Loop over the 1D element segments
             switch (nSegments){
@@ -806,7 +806,7 @@ void Arlequin::setSignaledDistance(){
             auto *el = fMeshVector[1]->ElementVec()[i];
 
             if (fGlueMatID.find(el->GetWeakForm()->Id())==fGlueMatID.end()) continue;
-            VecInt bconnec = el -> getConnectivity();
+            VecInt bconnec = el -> getConnectivityIndices();
             
             // Loop over the 1D element segments
             switch (nSegments){
@@ -874,7 +874,7 @@ void Arlequin::setSignaledDistance(){
 
     for (int jel = 0; jel < fMeshVector[0]->NElements(); jel++){
         if(fMeshVector[0]->ElementVec()[jel]->Dimension()!=fMeshVector[0]->Dimension())continue;
-        auto connect = fMeshVector[0]->ElementVec()[jel]->getConnectivity();
+        auto connect = fMeshVector[0]->ElementVec()[jel]->getConnectivityIndices();
         VecDouble distfunction(connect.size());
         for (int i = 0; i < connect.size(); i++){
             distfunction[i] = fGlobalSignaledDistance[connect[i]];
@@ -883,7 +883,7 @@ void Arlequin::setSignaledDistance(){
     };
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
         if(fMeshVector[1]->ElementVec()[jel]->Dimension()!=fMeshVector[1]->Dimension())continue;
-        auto connect = fMeshVector[1]->ElementVec()[jel]->getConnectivity();
+        auto connect = fMeshVector[1]->ElementVec()[jel]->getConnectivityIndices();
         VecDouble distfunction(connect.size());
         for (int i = 0; i < connect.size(); i++){
             distfunction[i] = fLocalSignaledDistance[connect[i]];
@@ -919,7 +919,7 @@ void Arlequin::setCouplingZone(){
     //Defines a criterion to select the elements that are in the glue zone
     for (int jel = 0; jel < fMeshVector[1]->NElements(); jel++){
         if (fMeshVector[1]->ElementVec()[jel]->Dimension() != fMeshVector[1]->Dimension()) continue; 
-        VecInt connec = fMeshVector[1]->ElementVec()[jel] -> getConnectivity();
+        VecInt connec = fMeshVector[1]->ElementVec()[jel] -> getConnectivityIndices();
         flag = 0;
         int nElNodes = connec.size();
         for (int ino = 0; ino < nElNodes; ino++){
@@ -947,7 +947,7 @@ void Arlequin::setCouplingZone(){
         auto elcoup = fMeshVector[2]->ElementVec()[i];
         CouplingLocal * coupling = dynamic_cast<CouplingLocal*> (elcoup->GetWeakForm());
         auto locindex = coupling->GetLocalIndex();
-        VecInt connec = fMeshVector[1]->ElementVec()[locindex] -> getConnectivity();
+        VecInt connec = fMeshVector[1]->ElementVec()[locindex] -> getConnectivityIndices();
         nElNodes = connec.size();
         for (int ino = 0; ino < nElNodes; ino++) nodesCZ[connec[ino]]++;
     };
@@ -976,13 +976,13 @@ void Arlequin::setCouplingZone(){
 
     for (int i = 0; i < fMeshVector[2]->NElements(); i++){
         auto *el =fMeshVector[2]->ElementVec()[i];
-        auto connec1 = el->getConnectivity();
+        auto connec1 = el->getConnectivityIndices();
         
         VecInt connecAux(nElNodes);
         CouplingLocal * coupling = dynamic_cast<CouplingLocal*> (el->GetWeakForm());
         auto locindex = coupling->GetLocalIndex();
 
-        VecInt connec = fMeshVector[1]->ElementVec()[locindex] -> getConnectivity();
+        VecInt connec = fMeshVector[1]->ElementVec()[locindex] -> getConnectivityIndices();
         
         // for (int ino = 0; ino < numNodesGlueZoneFine; ino++)
         for (int k = 0; k < nElNodes; k++) connecAux[k] = FineToGluing[connec[k]];

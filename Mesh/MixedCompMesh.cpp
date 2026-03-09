@@ -10,57 +10,132 @@ MixedCompMesh::MixedCompMesh(std::vector<CompMesh* > meshvector){
 void MixedCompMesh::AutoBuild(){
  
    CreateMixedConnects();
+
+   part_elem= new int[NElements()]();
 }
 
 void MixedCompMesh::CreateMixedConnects(){
-    
+
+    int nElements = fMeshVector[0]->NElements(); 
     int64_t nEl0 = fMeshVector[0]->NElements();
     int64_t nEl1 = fMeshVector[1]->NElements();
 
-    int64_t nConnects0 = fMeshVector[0]->NConnects();
-    int64_t nConnects1 = fMeshVector[1]->NConnects();
-
 #ifdef DEBUG_BUILD
-    if (nEl0 != nEl1 || nConnects0 != nConnects1) {
+    if (nEl0 != nEl1) {
         std::cout << "nEl0: " << nEl0 << " nEl1: " << nEl1 << std::endl;
-        std::cout << "nConnects0: " << nConnects0 << " nConnects1: " << nConnects1 << std::endl;
-        std::cout << "Error: The number of elements and connects in the meshes must be the same." << std::endl;
+        std::cout << "Error: The number of elements in the meshes must be the same." << std::endl;
         PanicButton();
     }
 #endif
     
     this->SetNumElements(nEl0);
 
+    //maps the space to the connect
+    std::map<int,int64_t> fixedConnects;
+
     for (int64_t iel = 0; iel < nEl0; iel++){
-        auto el0 = fMeshVector[0]->ElementVec()[iel];
-        auto el1 = fMeshVector[1]->ElementVec()[iel];
+        std::vector<Element*> elvector(fNSpaces);
+
+        for (int ispaces = 0; ispaces < fNSpaces; ispaces++){
+            elvector[ispaces] = fMeshVector[ispaces]->ElementVec()[iel];
+        }
 
 #ifdef DEBUG_BUILD
-        if (el0->Reference()->Index() != el1->Reference()->Index()) {
+        if (elvector[0]->Reference()->Index() != elvector[0]->Reference()->Index()) {
             std::cout << "Error: The reference element of the subelements must be the same." << std::endl;
             PanicButton();
         }
 #endif  
-        std::vector<Element *> elvector = {el0, el1};
-        int matid = el0->Reference()->Material();
+        int matid = elvector[0]->Reference()->Material();
         ElementMixed *fMixedEl = new ElementMixed(iel, elvector, this, this->Material(matid));
+        int connsize = 0;
+        for (int ispaces = 0; ispaces < fNSpaces; ispaces++){
+            connsize += elvector[ispaces]->getConnectivity().size();
+        }
+        std::vector<Connect *> mixedconnect(connsize);
+        for (int ispaces = 0; ispaces < fNSpaces; ispaces++){
+            for (int i = 0; i < elvector[ispaces]->getConnectivity().size(); i++){
+                mixedconnect[i] = elvector[ispaces]->getConnectivity()[i];
+            }
+        }
+        fMixedEl->setConnectivity(mixedconnect);
+
         this->ElementVec()[iel] = fMixedEl;
     }
 
-    // int64_t nconnects = 0;
-    // for (int i = 0; i < fNSpaces; i++){
-    //     nconnects += fMeshVector[i]->NConnects();
-    // }
-    // SetNumConnects(nconnects);
+    //fix the sequence number
+    int64_t seqnum = 0;
+    for (int ispace = 1; ispace < fNSpaces; ispace++){
+        seqnum += fMeshVector[ispace-1]->NGlobalDOF();
+        for (int iconnect = 0; iconnect < fMeshVector[ispace]->NConnects(); iconnect++){
+            int64_t current_seqnum = fMeshVector[ispace]->ConnectVec()[iconnect]->GetSequenceNumber();
+            if (current_seqnum < 0) continue;
+            fMeshVector[ispace]->ConnectVec()[iconnect]->SetSequenceNumber(current_seqnum+seqnum);
+        }
+    }
 
-    // int64_t count = 0;
-    // for (int i = 0; i < fNSpaces; i++){
-    //     for (int j = 0; j < fMeshVector[i]->NConnects(); j++){
-    //         Connect *c = fMeshVector[i]->ConnectVec()[j];
-    //         c->SetSequenceNumber(count);
-    //         ConnectVec()[count] = c;
-    //         count++;
-    //     }
-    // }
 
+}
+
+void MixedCompMesh::Print(std::string filename){
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    file << "Computational Mesh Information\n";
+    file << "===============================\n";
+    file << "Number of Elements: " << NElements() << "\n";
+    file << "Number of Spaces: " << fNSpaces << "\n\n\n";
+    for (int ispace = 0; ispace < fNSpaces; ispace++){
+        file << "===============================\n";
+        file << "INFORMATION OF SPACE " << ispace << "\n";
+        file << "Polynomial Order: " << fMeshVector[ispace]->GetDefaultOrder() << "\n";
+        file << "--------------------------------\n";
+
+        file << "Connects Information:\n";
+        for (int64_t i = 0; i < fMeshVector[ispace]->NConnects(); i++)
+        {
+            Connect *c = fMeshVector[ispace]->ConnectVec()[i];
+            file << "Connect " << i << ": ";
+            file << "NState = " << c->GetNStateVariables() << ", ";
+            file << "NShapeFunctions = " << c->GetNShapeFunctions() << ", ";
+            file << "Order = " << c->GetOrder() << ", ";
+            file << "SeqNum = " << c->GetSequenceNumber() << ", ";
+            file << "Solution = [";
+            VecDouble &sol = c->Solution();
+            for (size_t j = 0; j < sol.size(); j++) {
+                file << sol[j];
+                if (j < sol.size() - 1) file << ", ";
+            }
+            file << "]\n";
+        }
+
+        file << "--------------------------------\n";
+        file << "Elements Information:\n";
+        for (int64_t i = 0; i < fMeshVector[ispace]->NElements(); i++)
+        {
+            Element *el = fMeshVector[ispace]->ElementVec()[i];
+            if (!el) continue;
+            file << "Element " << el->Index() << ": ";
+            file << "Material ID = " << el->GetWeakForm()->Id() << ", ";
+            file << "Geometric Nodes = [";
+            VecInt &geoNodes = el->Reference()->getGeometricNodes();
+            for (size_t j = 0; j < geoNodes.size(); j++) {
+                file << geoNodes[j];
+                if (j < geoNodes.size() - 1) file << ", ";
+            }
+            file << "], Connects = [";
+            VecInt connects = el->getConnectivityIndices();
+            for (size_t j = 0; j < connects.size(); j++) {
+                file << connects[j];
+                if (j < connects.size() - 1) file << ", ";
+            }
+            file << "]\n";
+        }  
+    }
+    
+
+    file.close();
 }

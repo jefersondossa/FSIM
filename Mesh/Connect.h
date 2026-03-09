@@ -44,7 +44,7 @@ public:
         return fOrder;
     };
 
-    int64_t GetIndex(){
+    int64_t Index(){
         return fIndex;
     };
 

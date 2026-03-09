@@ -291,20 +291,20 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
                 int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
                 VecDouble Sol(nvar);
                 compel->Solution(varindex,Sol);
-                if (scalSol[graphconnect[inode]].size()==0){
-                    scalSol[graphconnect[inode]].resize(scalnames.size());
+                if (scalSol[graphconnect[inode]->Index()].size()==0){
+                    scalSol[graphconnect[inode]->Index()].resize(scalnames.size());
                 }
-                scalSol[graphconnect[inode]][iscal]=Sol;
+                scalSol[graphconnect[inode]->Index()][iscal]=Sol;
             }
             for (int ivect = 0; ivect < vecnames.size(); ivect++){
                 int varindex = compel->GetWeakForm()->VariableIndex(vecnames[ivect]);
                 int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
                 VecDouble Sol(nvar);
                 compel->Solution(varindex,Sol);
-                if (vectSol[graphconnect[inode]].size()==0){
-                    vectSol[graphconnect[inode]].resize(vecnames.size());
+                if (vectSol[graphconnect[inode]->Index()].size()==0){
+                    vectSol[graphconnect[inode]->Index()].resize(vecnames.size());
                 }
-                vectSol[graphconnect[inode]][ivect]=Sol;
+                vectSol[graphconnect[inode]->Index()][ivect]=Sol;
             }
         }
     }

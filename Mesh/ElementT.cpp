@@ -66,7 +66,7 @@ void ElementT<compshape>::ComputeSpatialDerivatives() {
     fIntegData.fDPhi.setZero();
 
     VecInt orders(compshape::NSides);
-    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+    for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
 
     //Shape functions
     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
@@ -81,7 +81,7 @@ void ElementT<compshape>::ComputeSpatialDerivatives() {
 template<class compshape>
 void ElementT<compshape>::ComputeCurrentSpatialDerivatives() {
     VecInt orders(compshape::NSides);
-    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+    for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
 
     MatrixDouble DphiComp(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,DphiComp,orders);
@@ -203,7 +203,7 @@ void ElementT<compshape>::setIntegPointWeightFunction() {
        for (int j=0; j<compshape::NSides; j++){
         std::cout << "alterar armazenamento do weightfunction para vector de connects" << std::endl;
         PanicButton();
-           fIntegData.fWeightFunction[index] += fIntegData.fPhi[j] * fMesh->ConnectVec()[fConnect[j]] -> getWeightFunction();
+           fIntegData.fWeightFunction[index] += fIntegData.fPhi[j] * fConnect[j] -> getWeightFunction();
        };
        // fIntegData.fWeightFunction(index) = 1.;
        index++;
@@ -325,9 +325,9 @@ void ElementT<compshape>::interpolateSolution(int &index, VecDouble &u_) {
 
     for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fConnect[i]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            u_[j] += fMesh->ConnectVec()[fConnect[i]] -> GetSolution(j) * shapeFi;
+            u_[j] += fConnect[i] -> GetSolution(j) * shapeFi;
         }
     }
 }
@@ -341,7 +341,7 @@ double ElementT<compshape>::InterpolateVariable(VecDouble &nValues, int point) {
     for (int i=0; i<compshape::Dimension; i++) fIntegData.fAdimCoord[i] = fIntRule.PointList(point,i);
 
     VecInt orders(compshape::NSides);
-    for (int i = compshape::NSides; i--; ) orders[i] = this->fMesh->ConnectVec()[fConnect[i]] -> GetOrder();
+    for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
 
     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
     for (int i = nshape; i--; ){
@@ -366,8 +366,8 @@ void ElementT<compshape>::interpolateSolDTimeDerivatives() {
         for (int ishape = 0; ishape < nshape; ishape++){
             double shapeFi = fIntegData.fPhi[count];
             for (int j = 0; j < nstate; j++ ){
-                fIntegData.fDSolDt[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetDSolutionDTime(j) * shapeFi;
-                fIntegData.fDSolDDt[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetDSolutionDDTime(j) * shapeFi;
+                fIntegData.fDSolDt[j] += fConnect[iside] -> GetDSolutionDTime(j) * shapeFi;
+                fIntegData.fDSolDDt[j] += fConnect[iside] -> GetDSolutionDDTime(j) * shapeFi;
             }
             count++;
         }
@@ -380,10 +380,10 @@ void ElementT<compshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDo
     fIntegData.fDSolDDt.setZero();
     for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
         double shapeFi = fIntegData.fPhi[i];
-        int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();
+        int nstate = fConnect[i]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
-            fIntegData.fDSolDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDTime(j) * shapeFi;
-            fIntegData.fDSolDDt[j] += fMesh->ConnectVec()[fConnect[i]] -> GetDSolutionDDTime(j) * shapeFi;
+            fIntegData.fDSolDt[j] += fConnect[i] -> GetDSolutionDTime(j) * shapeFi;
+            fIntegData.fDSolDDt[j] += fConnect[i] -> GetDSolutionDDTime(j) * shapeFi;
         }
     }
     du_dt = fIntegData.fDSolDt;
@@ -406,9 +406,9 @@ void ElementT<compshape>::interpolateSolution() {
         for (int ishape = 0; ishape < nshape; ishape++){
             double shapeFi = fIntegData.fPhi[count];
             for (int j = 0; j < nstate; j++ ){
-                fIntegData.fSol[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(j) * shapeFi;
+                fIntegData.fSol[j] += fConnect[iside] -> GetSolution(j) * shapeFi;
                 if (fIntegData.fSolPrev.size() != 0) {
-                    fIntegData.fSolPrev[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetPreviousSolution(j) * shapeFi;
+                    fIntegData.fSolPrev[j] += fConnect[iside] -> GetPreviousSolution(j) * shapeFi;
                 }
             }
             count++;
@@ -423,7 +423,7 @@ void ElementT<compshape>::interpolateSolution() {
         fIntegData.fSolNodes.setZero();
         for (int i = 0; i < nshape; i++){
             for (int j = 0; j < n_state; j++ ){
-                fIntegData.fSolNodes[(n_state*i) + j] = fMesh->ConnectVec()[fConnect[i]]->GetSolution(j);
+                fIntegData.fSolNodes[(n_state*i) + j] = fConnect[i]->GetSolution(j);
             }
         }
     }
@@ -442,7 +442,7 @@ void ElementT<compshape>::interpolateSolution(VecDouble &phi, VecDouble &u_) {
 
         for (int ishape = 0; ishape < nshape; ishape++){
             for (int j = 0; j < nstate; j++ ){
-                u_[j] += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(j) * shapeFi;
+                u_[j] += fConnect[iside] -> GetSolution(j) * shapeFi;
             }
         }
         count += nshape;
@@ -466,7 +466,7 @@ void ElementT<compshape>::interpolateSolDerivatives(MatrixDouble &du_dx) {
         for (int ishape = 0; ishape < nshape; ishape++){
             for (int j = 0; j < DIM; j++ ){
                 for (int k = 0; k < nstate; k++ ){
-                    du_dx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
+                    du_dx(k,j) += fConnect[iside] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
                 }
             }
         }
@@ -488,7 +488,7 @@ void ElementT<compshape>::interpolateSolDerivatives(MatrixDouble &dphidx, Matrix
         for (int ishape = 0; ishape < nshape; ishape++){
             for (int j = 0; j < DIM; j++ ){
                 for (int k = 0; k < nstate; k++ ){
-                    du_dx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(k) *dphidx(j,count);
+                    du_dx(k,j) += fConnect[iside] -> GetSolution(k) *dphidx(j,count);
                 }
             }
         }
@@ -515,11 +515,11 @@ void ElementT<compshape>::interpolateSolDerivatives() {
         for (int ishape = 0; ishape < nshape; ishape++){
             for (int j = 0; j < compshape::Dimension; j++ ){
                 for (int k = 0; k < nstate; k++ ){
-                    fIntegData.fDSolDx(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
+                    fIntegData.fDSolDx(k,j) += fConnect[iside] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
 
-                    if (flag) fIntegData.fDSolDxPrev(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,count);
+                    if (flag) fIntegData.fDSolDxPrev(k,j) += fConnect[iside] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,count);
 
-                    if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fMesh->ConnectVec()[fConnect[iside]] -> GetSolution(k) * fIntegData.fDPhi(j,count);
+                    if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fConnect[iside] -> GetSolution(k) * fIntegData.fDPhi(j,count);
 #ifdef DEBUG_BUILD
                     if (std::isnan(fIntegData.fDSolDx(k,j))){
                         PanicButton();
