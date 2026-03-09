@@ -32,7 +32,6 @@ ElementT<compshape>::ElementT(int64_t index, GeoElement* gel, CompMesh* mesh, We
     fIntegData.fWeightFunction.fill(1.);
     fIntegData.fPrevWeightFunction.fill(1.);
 
-    // getIntegPointCoordinates();
     fIntegData.fAdimCoord.resize(DIM);
 
     fIntegData.fA0Inv.resize(DIM,DIM);
@@ -259,36 +258,37 @@ void ElementT<compshape>::ComputeIntPointDistFunction(VecDouble &nodalval) {
 //------------------COMPUTES THE INTEGRATION POINT COORDINATE-------------------
 //------------------------------------------------------------------------------
 template<class compshape>
-void ElementT<compshape>::getIntegPointCoordinates(){
+void ElementT<compshape>::ComputeIntegPointCoordinates(){
 
-    PanicButton();
-    // int DIM = compshape::Dimension;
-    // fIntPointCoordinates.resize(fIntRule.NPoints(),2);
-    // fIntPointCoordinates.setZero();
+    int DIM = compshape::Dimension;
+    fIntPointCoordinates.resize(fIntRule.NPoints(),2);
+    fIntPointCoordinates.setZero();
 
-    // int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
-    // VecDouble xsi(DIM);
-    // VecDouble phi_(nshape);
-    // MatrixDouble dphi_(DIM,nshape);
-    // fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
+    int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+    VecDouble xsi(DIM);
+    VecDouble phi_(nshape);
+    MatrixDouble dphi_(DIM,nshape);
+    fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
-    // VecInt orders(compshape::NSides);
-    // orders.fill(1);
+    VecInt orders(compshape::NSides);
+    for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
 
-    // for (int i = 0; i < fIntRule.NPoints(); i++){
-    //     double x[DIM] = {};
+    VecInt fGeoNodes = fReference->getGeometricNodes();
 
-    //     for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
+    for (int i = 0; i < fIntRule.NPoints(); i++){
+        double x[DIM] = {};
 
-    //     geoshape::Shape(xsi,phi_,dphi_,orders);
+        for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
-    //     for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
+        compshape::Shape(xsi,phi_,dphi_,orders);
 
-    //     for (int j = 0; j < nshape; j++)
-    //         for (int k = DIM; k--; )
-    //             fIntPointCoordinates(i,k) += fMesh->Reference()->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
+        for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
+
+        for (int j = 0; j < nshape; j++)
+            for (int k = DIM; k--; )
+                fIntPointCoordinates(i,k) += fMesh->Reference()->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
         
-    // };
+    };
 
     return;
 };

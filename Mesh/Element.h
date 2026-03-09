@@ -108,6 +108,8 @@ public:
         return aux;
     };
 
+    virtual void ComputeIntegPointCoordinates() = 0;
+
     /// Sets the integration point energy weight function
     /// @param int integration point index 
     /// @param double energy weight function value

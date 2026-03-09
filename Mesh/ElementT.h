@@ -28,7 +28,7 @@ public:
 
 
     double InterpolateVariable(VecDouble &nValues, int point) override;
-    void getIntegPointCoordinates();
+    void ComputeIntegPointCoordinates() override;
     
     /// Compute and store the shape function spatial derivatives
     /// @param bounded_vector integration point adimensional coordinates

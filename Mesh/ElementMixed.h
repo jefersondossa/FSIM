@@ -105,6 +105,10 @@ public:
         return fSubElements[0]->InterpolateVariable(nValues, point);
     }
 
+    void ComputeIntegPointCoordinates() override{
+        fSubElements[0]->ComputeIntegPointCoordinates();
+    }
+
 };
 
 
