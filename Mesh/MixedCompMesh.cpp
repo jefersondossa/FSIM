@@ -4,6 +4,7 @@
 MixedCompMesh::MixedCompMesh(std::vector<CompMesh* > meshvector){
     fMeshVector = meshvector;
     fNSpaces = meshvector.size();
+    this->fReference = fMeshVector[0]->Reference();
 }
 
 
@@ -53,9 +54,10 @@ void MixedCompMesh::CreateMixedConnects(){
             connsize += elvector[ispaces]->getConnectivity().size();
         }
         std::vector<Connect *> mixedconnect(connsize);
+        int count = 0;
         for (int ispaces = 0; ispaces < fNSpaces; ispaces++){
             for (int i = 0; i < elvector[ispaces]->getConnectivity().size(); i++){
-                mixedconnect[i] = elvector[ispaces]->getConnectivity()[i];
+                mixedconnect[count++] = elvector[ispaces]->getConnectivity()[i];
             }
         }
         fMixedEl->setConnectivity(mixedconnect);

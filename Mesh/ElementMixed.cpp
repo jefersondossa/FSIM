@@ -8,6 +8,18 @@ ElementMixed::ElementMixed(int64_t index, std::vector<Element *> elvector, Mixed
     this->fMesh = mesh;
     this->fWeakForm = wf;
 
+
+    fIntegData.fAdimCoord.resize(DIM);
+
+    fIntegData.fA0Inv.resize(DIM,DIM);
+    fIntegData.fA0Inv.setZero();
+    fIntegData.fAxes0.resize(3,DIM);
+    fIntegData.fAxes0.setZero();
+    fIntegData.fA0.resize(DIM,DIM);
+    fIntegData.fA0.setZero();
+    fIntegData.fX.resize(3);
+    fIntegData.fX.setZero();
+
 };
 
 Element *ElementMixed::Clone() const {

@@ -59,7 +59,9 @@ public:
         PanicButton();
     };
     void interpolateSolution(){
-        PanicButton();
+        for (int i = 0; i < fSubElements.size(); i++){
+            fSubElements[i]->interpolateSolution();
+        }
     }
     void interpolateSolDerivatives(MatrixDouble &du_dx) override{
         PanicButton();
@@ -68,7 +70,9 @@ public:
         PanicButton();
     }
     void interpolateSolDerivatives() override{
-        PanicButton();
+        for (int i = 0; i < fSubElements.size(); i++){
+            fSubElements[i]->interpolateSolDerivatives();
+        }
     }
     void interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDouble &du_ddt) override{
         PanicButton();

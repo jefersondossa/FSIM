@@ -27,7 +27,7 @@ class GraphMesh;
 class GeoMesh;
 
 class CompMesh{
-private:
+protected:
     int fDimension = 2;
     int fNState = 0;
 
