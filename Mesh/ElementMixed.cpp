@@ -8,7 +8,6 @@ ElementMixed::ElementMixed(int64_t index, std::vector<Element *> elvector, Mixed
     this->fMesh = mesh;
     this->fWeakForm = wf;
 
-
     fIntegData.fAdimCoord.resize(DIM);
 
     fIntegData.fA0Inv.resize(DIM,DIM);
@@ -19,6 +18,14 @@ ElementMixed::ElementMixed(int64_t index, std::vector<Element *> elvector, Mixed
     fIntegData.fA0.setZero();
     fIntegData.fX.resize(3);
     fIntegData.fX.setZero();
+    
+    this->nLocDOF = 0;
+
+    for (int i = 0; i < fSubElements.size(); i++){
+        int locdof = fSubElements[i]->NLocDOF();
+        this->nLocDOF += locdof;
+    }
+    
 
 };
 
@@ -30,35 +37,45 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
 
     if (!this->fWeakForm) return;
 
+    int DIM = this->fReference->Dimension();
+
+    for (int i = 0; i < fSubElements.size(); i++){
+        auto &integdata = fSubElements[i]->IntegrationData();
+        integdata.fNeedsDSol = true;
+        integdata.fDSolDx.resize(fSubElements[i]->GetWeakForm()->NState(), DIM);
+        integdata.fNeedsSol = true;
+        integdata.fSol.resize(fSubElements[i]->GetWeakForm()->NState());
+    }
+    
     int index = 0;
     
+    //The integration is always performed with basis in the first sub element.
+    for(int it = 0; it < fSubElements[0]->getNumberOfIntegrationPoints(); it++){
 
-    // for(int it = 0; it < this->fIntRule.NPoints(); it++){
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = fSubElements[0]->IntegPointCoordinate(index,k);
 
-    //     //Defines the integration points adimentional coordinates
-    //     for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = this->fIntRule.PointList(index,k);
+        //Returns the quadrature integration weight
+        this->fIntegData.fWeight = fSubElements[0]->IntegPointWeight(index);
 
-    //     //Returns the quadrature integration weight
-    //     this->fIntegData.fWeight = this->fIntRule.WeightList(index);
+        //Computes the jacobian matrix
+        this->fReference->ComputeJacobian(this->fIntegData);
 
-    //     //Computes the jacobian matrix
-    //     this->fReference->ComputeJacobian(this->fIntegData);
-
-    //     //Computes spatial derivatives
-    //     this->ComputeSpatialDerivatives();
+        //Computes spatial derivatives
+        this->ComputeSpatialDerivatives();
 
 
-    //     if (this->fIntegData.fNeedsSol) this->interpolateSolution();
-    //     if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
+        if (this->fIntegData.fNeedsSol) this->interpolateSolution();
+        if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
 
-    //     //Computes the element diffusion/viscosity matrix
-    //     this->fWeakForm->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
+        //Computes the element diffusion/viscosity matrix
+        this->fWeakForm->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
 
-    //     //Computes the RHS vector
-    //     this->fWeakForm->ComputeResidual(index, this->fIntegData, rhsVector); 
+        //Computes the RHS vector
+        this->fWeakForm->ComputeResidual(index, this->fIntegData, rhsVector); 
 
-    //     index++;        
-    // };  
+        index++;        
+    };  
 
     // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
     // std::cout << "Rhs \n" << rhsVector << std::endl;

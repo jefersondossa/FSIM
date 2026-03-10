@@ -51,7 +51,7 @@ void MixedElasticity::ComputeStiffness(int &index, IntPointData &data, MatrixDou
         data.fSol.resize(fNState);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0;
     int nphi = data.fPhi.size();
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
@@ -73,7 +73,7 @@ void MixedElasticity::ComputeResidual(int &index, IntPointData &data, VecDouble 
 
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0;
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
    

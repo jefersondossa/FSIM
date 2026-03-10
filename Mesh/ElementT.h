@@ -26,7 +26,6 @@ public:
 
     ElementT(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
 
-
     double InterpolateVariable(VecDouble &nValues, int point) override;
     void ComputeIntegPointCoordinates() override;
     
@@ -81,7 +80,13 @@ public:
     //......................Integration Points Information......................
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
-    int getNumberOfIntegrationPoints(){return fIntRule.NPoints();};
+    int getNumberOfIntegrationPoints() override {return fIntRule.NPoints();};
+    double IntegPointWeight(int index) override {
+        return fIntRule.WeightList(index);
+    };
+    double IntegPointCoordinate(int index, int dir) override {
+        return fIntRule.PointList(index, dir);
+    };
 
     void ComputeError(VecDouble &errors) override;
     

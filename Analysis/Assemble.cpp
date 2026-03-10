@@ -12,6 +12,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             if (!el) continue;
             VecInt connec = el -> getConnectivityIndices();
+            std::vector<Connect* > connectivity = el -> getConnectivity();
             int nLocDOF = el->NLocDOF(); 
             int nConnects = connec.size();
 
@@ -27,14 +28,15 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
             //Disperse local contributions into the global matrix
             //Stiffness matrix
             for (int i=0; i<nConnects; i++){
-                int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
-                int nshapei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNShapeFunctions();
-                int64_t seqnumi = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetSequenceNumber();
+                // int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
+                int nstatei = connectivity[i]->GetNStateVariables();
+                int nshapei = connectivity[i]->GetNShapeFunctions();
+                int64_t seqnumi = connectivity[i]->GetSequenceNumber();
                 if (nstatei*nshapei == 0) continue;
                 for (int j=0; j<nConnects; j++){
-                    int nstatej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNStateVariables();
-                    int nshapej = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetNShapeFunctions();
-                    int64_t seqnumj = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[j]]->GetSequenceNumber();
+                    int nstatej = connectivity[j]->GetNStateVariables();
+                    int nshapej = connectivity[j]->GetNShapeFunctions();
+                    int64_t seqnumj = connectivity[j]->GetSequenceNumber();
                     if (nstatej*nshapej == 0) continue;
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){

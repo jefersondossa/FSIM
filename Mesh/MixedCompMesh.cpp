@@ -5,6 +5,12 @@ MixedCompMesh::MixedCompMesh(std::vector<CompMesh* > meshvector){
     fMeshVector = meshvector;
     fNSpaces = meshvector.size();
     this->fReference = fMeshVector[0]->Reference();
+
+    this->fNGlobalDOF = 0;
+    for (int i = 0; i < fNSpaces; i++){
+        fNGlobalDOF += fMeshVector[i]->NGlobalDOF();
+    }
+    
 }
 
 

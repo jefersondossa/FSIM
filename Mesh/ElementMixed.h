@@ -102,6 +102,12 @@ public:
     int getNumberOfIntegrationPoints() override{
         return fSubElements[0]->getNumberOfIntegrationPoints();
     }
+    double IntegPointWeight(int index) override{
+        return fSubElements[0]->IntegPointWeight(index);
+    }
+    double IntegPointCoordinate(int index, int dir) override{
+        return fSubElements[0]->IntegPointCoordinate(index, dir);
+    }
     void ComputeIntPointDistFunction(VecDouble &nodalval) override{
         return fSubElements[0]->ComputeIntPointDistFunction(nodalval);
     }
