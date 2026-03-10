@@ -24,18 +24,18 @@ public:
     /// @param index integration point index
     /// @param data integration point data
     /// @param Stiffness vector of stiffness matrices
-    void ComputeStiffness(int &index, std::vector<IntPointData> &data, MatrixDouble &Stiffness) override;
+    void ComputeStiffness(int &index, std::vector<IntPointData *> &data, MatrixDouble &Stiffness) override;
     
     /// @brief Returns the weak form residual vector. It should never be called in this class
     /// @param index integration point index
     /// @param data integration point data
     /// @param Rhs residual vector
-    void ComputeResidual(int &index, std::vector<IntPointData> &data, VecDouble &Rhs) override;
+    void ComputeResidual(int &index, std::vector<IntPointData *> &data, VecDouble &Rhs) override;
     
     /// @brief Computes the element error. The exact solution shoul be provided.
     /// @param data integration point data
     /// @param errors vector storing all errors
-    void ComputeError(std::vector<IntPointData> &data, VecDouble &errors) override;
+    void ComputeError(std::vector<IntPointData *> &data, VecDouble &errors) override;
 
     /// @brief Returns the variable index of a given solution variable
     /// @param name solution variable name
@@ -51,7 +51,7 @@ public:
     /// @param data integration point data
     /// @param var solution variable's index
     /// @param Sol solution vector
-    void Solution(std::vector<IntPointData> &data, int var, VecDouble &Sol) override;
+    void Solution(std::vector<IntPointData *> &data, int var, VecDouble &Sol) override;
 
     /// @brief Computes the material constitutive matrix (used in plasticity models)
     /// @return constitutive matrix

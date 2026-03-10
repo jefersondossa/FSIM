@@ -33,10 +33,10 @@ int main(int argc, char **args) {
     an.PrintSolution();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"Solution","ExactSolution"};
-    // VectorNames = {"Displacement"};
+    // ScalarNames = {"Displacement"};
+    VectorNames = {"Displacement"};
 
-    VTUGenerator::PrintResults(cmesh,"result2d",ScalarNames,VectorNames);
+    VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
 
     // VecDouble errors;
     // an.PostProcessError(errors);

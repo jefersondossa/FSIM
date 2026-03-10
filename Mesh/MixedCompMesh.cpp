@@ -10,7 +10,7 @@ MixedCompMesh::MixedCompMesh(std::vector<CompMesh* > meshvector){
     for (int i = 0; i < fNSpaces; i++){
         fNGlobalDOF += fMeshVector[i]->NGlobalDOF();
     }
-    
+    fApproxType = fMeshVector[0]->GetApproxType();
 }
 
 

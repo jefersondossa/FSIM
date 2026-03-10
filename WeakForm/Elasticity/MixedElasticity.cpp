@@ -42,79 +42,90 @@ MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisso
 };
 
 
-void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData> &data, MatrixDouble &Stiffness){
+void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData *> &data, MatrixDouble &Stiffness){
 
 
-    double WJ = data[0].fWeight * data[0].fJacA0;
-    int nphiU = data[0].fPhi.size();
-    int nphiP = data[1].fPhi.size();
-    int nphi = nphiU + nphiP;
+    double WJ = data[0]->fWeight * data[0]->fJacA0;
+    int nphiU = data[0]->fPhi.size();
+    int nphiP = data[1]->fPhi.size();
     MatrixDouble matB(3,2*nphiU);
     matB.setZero();
-    auto matBT=matB.transpose();
 
-    for (int j = 0; j < nphi; j++){
-        matB(0,2*j  ) = data[0].fDPhiX0(0,j);
-        matB(1,2*j+1) = data[0].fDPhiX0(1,j);
-        matB(2,2*j  ) = data[0].fDPhiX0(1,j);
-        matB(2,2*j+1) = data[0].fDPhiX0(0,j);
+    for (int j = 0; j < nphiU; j++){
+        matB(0,2*j  ) = data[0]->fDPhiX0(0,j);
+        matB(1,2*j+1) = data[0]->fDPhiX0(1,j);
+        matB(2,2*j  ) = data[0]->fDPhiX0(1,j);
+        matB(2,2*j+1) = data[0]->fDPhiX0(0,j);
     }
+    MatrixDouble matBT=matB.transpose();
     
     MatrixDouble A(nphiU*fDimension,nphiU*fDimension);
     MatrixDouble C(nphiU*fDimension,nphiP);
     MatrixDouble V(nphiP,nphiP);
-    
-    A = matB.transpose() * fConstitutiveMatrix * matB * WJ;
-
-    Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
-
 
     VecDouble m(3);
     m.setZero();
     m(0) = m(1) = 1.;
-
-
-
-
     
+    A = matBT * fConstitutiveMatrix * matB * WJ;
+    C = matBT * m * data[1]->fPhi.transpose() * WJ;
+    V = data[1]->fPhi * data[1]->fPhi.transpose() * WJ / fBulkModulus;
+
+    for (int i = fDimension*nphiU; i--; ){
+        for (int j = fDimension*nphiU; j--; ){
+            Stiffness(i,j) += A(i,j);
+        }
+        for (int j = 0; j < nphiP; j++)
+        {
+            Stiffness(i,fDimension*nphiU+j) += C(i,j);
+            Stiffness(fDimension*nphiU+j,i) += C(i,j);
+        }
+    }
+    for (int i = 0; i < nphiP; i++){
+        for (int j = 0; j < nphiP; j++){
+            Stiffness(fDimension*nphiU+i,fDimension*nphiU+j) += V(i,j);
+        }
+    }
 
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
 
-void MixedElasticity::ComputeResidual(int &index, std::vector<IntPointData> &data, VecDouble &Rhs){
+void MixedElasticity::ComputeResidual(int &index, std::vector<IntPointData *> &data, VecDouble &Rhs){
 
-    int nphi = data[0].fPhi.size() + data[1].fPhi.size();
+    // int nphi = data[0]->fPhi.size() + data[1]->fPhi.size();
+    int nphiU = data[0]->fPhi.size();
 
-    double WJ = data[0].fWeight * data[0].fJacA0;
-    MatrixDouble matB(3,2*nphi);
-    matB.setZero();
+
+    double WJ = data[0]->fWeight * data[0]->fJacA0;
+    // MatrixDouble matB(3,2*nphi);
+    // matB.setZero();
    
 
     auto force = fForceFunction;
     VecDouble forcingF(fDimension);
     forcingF.setZero();
-    VecDouble x_ = data[0].fX;
+    VecDouble x_ = data[0]->fX;
     if (force) force(x_,forcingF);
     
-    for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j  ) = data[0].fDPhiX0(0,j);
-        matB(1,fDimension*j+1) = data[0].fDPhiX0(1,j);
-        matB(2,fDimension*j  ) = data[0].fDPhiX0(1,j);
-        matB(2,fDimension*j+1) = data[0].fDPhiX0(0,j);
-    }
+    // for (int j = 0; j < nphi; j++){
+    //     matB(0,fDimension*j  ) = data[0]->fDPhiX0(0,j);
+    //     matB(1,fDimension*j+1) = data[0]->fDPhiX0(1,j);
+    //     matB(2,fDimension*j  ) = data[0]->fDPhiX0(1,j);
+    //     matB(2,fDimension*j+1) = data[0]->fDPhiX0(0,j);
+    // }
     
-    VecDouble strain(3);
-    strain.setZero();
-    strain[0] = data[0].fDSolDx(0,0);
-    strain[1] = data[0].fDSolDx(1,1);
-    strain[2] = (data[0].fDSolDx(0,1)+data[0].fDSolDx(1,0));
-    VecDouble stress = fConstitutiveMatrix * strain;
+    // VecDouble strain(3);
+    // strain.setZero();
+    // strain[0] = data[0]->fDSolDx(0,0);
+    // strain[1] = data[0]->fDSolDx(1,1);
+    // strain[2] = (data[0]->fDSolDx(0,1)+data[0]->fDSolDx(1,0));
+    // VecDouble stress = fConstitutiveMatrix * strain;
 
-    Rhs -= matB.transpose() * stress * WJ;
+    // Rhs -= matB.transpose() * stress * WJ;
 
-    for (int i = nphi; i--; ){
-        double shapeFi = data[0].fPhi[i];
-        //External force
+    for (int i = nphiU; i--; ){
+        double shapeFi = data[0]->fPhi[i];
+        //Body force
         double Fx = forcingF[0] * shapeFi;
         double Fy = forcingF[1] * shapeFi;
         Rhs[2*i  ] += Fx * WJ;
@@ -124,12 +135,12 @@ void MixedElasticity::ComputeResidual(int &index, std::vector<IntPointData> &dat
     
 };
 
-void MixedElasticity::ComputeError(std::vector<IntPointData> &data, VecDouble &errors){
+void MixedElasticity::ComputeError(std::vector<IntPointData *> &data, VecDouble &errors){
     errors.resize(4);
 
     VecDouble uExact(fDimension);
     MatrixDouble DuExact(fDimension,fDimension);
-    VecDouble x_ = data[0].fX;
+    VecDouble x_ = data[0]->fX;
     fExactSol(x_,uExact,DuExact);
 
     // //L2 displacement
@@ -229,12 +240,12 @@ int MixedElasticity::NSolutionVariables(int var) const{
     }
 };
 
-void MixedElasticity::Solution(std::vector<IntPointData> &data, int var, VecDouble &Sol) {
+void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDouble &Sol) {
 
     //Displacement
     if (var == 1){
-        Sol[0] = data[0].fSol[0];
-        Sol[1] = data[0].fSol[1];
+        Sol[0] = data[0]->fSol[0];
+        Sol[1] = data[0]->fSol[1];
         Sol[2] = 0.;
         return;
     };
@@ -305,7 +316,7 @@ void MixedElasticity::Solution(std::vector<IntPointData> &data, int var, VecDoub
 
 
     VecDouble forcingF(fDimension);
-    VecDouble x_ = data[0].fX;
+    VecDouble x_ = data[0]->fX;
     if (fForceFunction) fForceFunction(x_,forcingF);
 
     VecDouble disp(fDimension);

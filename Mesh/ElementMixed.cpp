@@ -51,9 +51,9 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
     
     int nsub = fSubElements.size();
 
-    std::vector<IntPointData > data(nsub);
+    std::vector<IntPointData *> data(nsub);
     for (int i = 0; i < nsub; i++){
-        data[i] = fSubElements[i]->IntegrationData();
+        data[i] = &fSubElements[i]->IntegrationData();
     }
     //The integration is always performed with basis in the first sub element.
     for(int it = 0; it < fSubElements[0]->getNumberOfIntegrationPoints(); it++){
@@ -62,24 +62,24 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
         for (int k = 0; k < DIM; k++) {
             double coord = fSubElements[0]->IntegPointCoordinate(index,k);
             for (int i = 0; i < nsub; i++){
-                data[i].fAdimCoord[k] = coord;
+                data[i]->fAdimCoord[k] = coord;
             }
         }
 
         //Returns the quadrature integration weight
         double weight = fSubElements[0]->IntegPointWeight(index);
         for (int i = 0; i < nsub; i++){
-            data[i].fWeight = weight;
+            data[i]->fWeight = weight;
         }
             
         //Computes the jacobian matrix
         this->fReference->ComputeJacobian(this->fIntegData);
         for (int i = 0; i < nsub; i++){
-            data[i].fA0 = this->fIntegData.fA0;
-            data[i].fA0Inv = this->fIntegData.fA0Inv;
-            data[i].fAxes0 = this->fIntegData.fAxes0;
-            data[i].fJacA0 = this->fIntegData.fJacA0;
-            data[i].fX = this->fIntegData.fX;
+            data[i]->fA0 = this->fIntegData.fA0;
+            data[i]->fA0Inv = this->fIntegData.fA0Inv;
+            data[i]->fAxes0 = this->fIntegData.fAxes0;
+            data[i]->fJacA0 = this->fIntegData.fJacA0;
+            data[i]->fX = this->fIntegData.fX;
 
             //Computes spatial derivatives
             fSubElements[i]->ComputeSpatialDerivatives();
@@ -97,7 +97,7 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
         index++;        
     };  
 
-    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
     // std::cout << "Rhs \n" << rhsVector << std::endl;
 
     return;

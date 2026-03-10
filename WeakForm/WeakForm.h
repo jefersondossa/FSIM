@@ -40,7 +40,7 @@ public:
     virtual void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) {
         PanicButton();
     };
-    virtual void ComputeStiffness(int &index, std::vector<IntPointData > &data, MatrixDouble &Stiffness) {
+    virtual void ComputeStiffness(int &index, std::vector<IntPointData *> &data, MatrixDouble &Stiffness) {
         PanicButton();
     };
     
@@ -59,7 +59,7 @@ public:
     virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) {
         PanicButton();
     };
-    virtual void ComputeResidual(int &index, std::vector<IntPointData > &data, VecDouble &Rhs) {
+    virtual void ComputeResidual(int &index, std::vector<IntPointData *> &data, VecDouble &Rhs) {
         PanicButton();
     };
 
@@ -78,7 +78,7 @@ public:
     /// @param data integration point data
     /// @param errors vector storing all errors
     virtual void ComputeError(IntPointData &data, VecDouble &errors) {};
-    virtual void ComputeError(std::vector<IntPointData > &data, VecDouble &errors) {};
+    virtual void ComputeError(std::vector<IntPointData *> &data, VecDouble &errors) {};
     
     /// @brief Sets the exact solution
     /// @param exSol Lambda function to compute the exact solution and its gradient for a given coordinate
@@ -139,7 +139,7 @@ public:
     virtual void Solution(IntPointData &data, int var, VecDouble &Sol) {
         PanicButton();
     };
-    virtual void Solution(std::vector<IntPointData > &data, int var, VecDouble &Sol) {
+    virtual void Solution(std::vector<IntPointData *> &data, int var, VecDouble &Sol) {
         PanicButton();
     };
 
