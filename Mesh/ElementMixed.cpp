@@ -49,30 +49,50 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
     
     int index = 0;
     
+    int nsub = fSubElements.size();
+
+    std::vector<IntPointData > data(nsub);
+    for (int i = 0; i < nsub; i++){
+        data[i] = fSubElements[i]->IntegrationData();
+    }
     //The integration is always performed with basis in the first sub element.
     for(int it = 0; it < fSubElements[0]->getNumberOfIntegrationPoints(); it++){
 
         //Defines the integration points adimentional coordinates
-        for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = fSubElements[0]->IntegPointCoordinate(index,k);
+        for (int k = 0; k < DIM; k++) {
+            double coord = fSubElements[0]->IntegPointCoordinate(index,k);
+            for (int i = 0; i < nsub; i++){
+                data[i].fAdimCoord[k] = coord;
+            }
+        }
 
         //Returns the quadrature integration weight
-        this->fIntegData.fWeight = fSubElements[0]->IntegPointWeight(index);
-
+        double weight = fSubElements[0]->IntegPointWeight(index);
+        for (int i = 0; i < nsub; i++){
+            data[i].fWeight = weight;
+        }
+            
         //Computes the jacobian matrix
         this->fReference->ComputeJacobian(this->fIntegData);
+        for (int i = 0; i < nsub; i++){
+            data[i].fA0 = this->fIntegData.fA0;
+            data[i].fA0Inv = this->fIntegData.fA0Inv;
+            data[i].fAxes0 = this->fIntegData.fAxes0;
+            data[i].fJacA0 = this->fIntegData.fJacA0;
+            data[i].fX = this->fIntegData.fX;
 
-        //Computes spatial derivatives
-        this->ComputeSpatialDerivatives();
+            //Computes spatial derivatives
+            fSubElements[i]->ComputeSpatialDerivatives();
+            fSubElements[i]->interpolateSolution();
+            fSubElements[i]->interpolateSolDerivatives();
+        }
 
-
-        if (this->fIntegData.fNeedsSol) this->interpolateSolution();
-        if (this->fIntegData.fNeedsDSol) this->interpolateSolDerivatives();
 
         //Computes the element diffusion/viscosity matrix
-        this->fWeakForm->ComputeStiffness(index, this->fIntegData, jacobianNRMatrix);
+        this->fWeakForm->ComputeStiffness(index, data, jacobianNRMatrix);
 
         //Computes the RHS vector
-        this->fWeakForm->ComputeResidual(index, this->fIntegData, rhsVector); 
+        this->fWeakForm->ComputeResidual(index, data, rhsVector); 
 
         index++;        
     };  

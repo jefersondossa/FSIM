@@ -26,7 +26,7 @@ MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisso
 
         MatrixDouble I0 = MatrixDouble::Identity(6,6);
         I0(3,3) = I0(4,4) = I0(5,5) = 0.5;
-        VecDouble m(3);
+        VecDouble m(6);
         m.setZero();
         m(0) = m(1) = m(2) = 1.;
 
@@ -42,38 +42,50 @@ MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisso
 };
 
 
-void MixedElasticity::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
+void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData> &data, MatrixDouble &Stiffness){
 
-    if (!data.fNeedsDSol){
-        data.fNeedsDSol = true;
-        data.fDSolDx.resize(fNState,fDimension);
-        data.fNeedsSol = true;
-        data.fSol.resize(fNState);
-    }
 
-    double WJ = data.fWeight * data.fJacA0;
-    int nphi = data.fPhi.size();
-    MatrixDouble matB(3,2*nphi);
+    double WJ = data[0].fWeight * data[0].fJacA0;
+    int nphiU = data[0].fPhi.size();
+    int nphiP = data[1].fPhi.size();
+    int nphi = nphiU + nphiP;
+    MatrixDouble matB(3,2*nphiU);
     matB.setZero();
     auto matBT=matB.transpose();
 
     for (int j = 0; j < nphi; j++){
-        matB(0,2*j  ) = data.fDPhiX0(0,j);
-        matB(1,2*j+1) = data.fDPhiX0(1,j);
-        matB(2,2*j  ) = data.fDPhiX0(1,j);
-        matB(2,2*j+1) = data.fDPhiX0(0,j);
+        matB(0,2*j  ) = data[0].fDPhiX0(0,j);
+        matB(1,2*j+1) = data[0].fDPhiX0(1,j);
+        matB(2,2*j  ) = data[0].fDPhiX0(1,j);
+        matB(2,2*j+1) = data[0].fDPhiX0(0,j);
     }
     
+    MatrixDouble A(nphiU*fDimension,nphiU*fDimension);
+    MatrixDouble C(nphiU*fDimension,nphiP);
+    MatrixDouble V(nphiP,nphiP);
+    
+    A = matB.transpose() * fConstitutiveMatrix * matB * WJ;
+
     Stiffness += matB.transpose() * fConstitutiveMatrix * matB * WJ;
+
+
+    VecDouble m(3);
+    m.setZero();
+    m(0) = m(1) = 1.;
+
+
+
+
+    
 
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 }
 
-void MixedElasticity::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
+void MixedElasticity::ComputeResidual(int &index, std::vector<IntPointData> &data, VecDouble &Rhs){
 
-    int nphi = data.fPhi.size();
+    int nphi = data[0].fPhi.size() + data[1].fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0;
+    double WJ = data[0].fWeight * data[0].fJacA0;
     MatrixDouble matB(3,2*nphi);
     matB.setZero();
    
@@ -81,27 +93,27 @@ void MixedElasticity::ComputeResidual(int &index, IntPointData &data, VecDouble 
     auto force = fForceFunction;
     VecDouble forcingF(fDimension);
     forcingF.setZero();
-    VecDouble x_ = data.fX;
+    VecDouble x_ = data[0].fX;
     if (force) force(x_,forcingF);
     
     for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j  ) = data.fDPhiX0(0,j);
-        matB(1,fDimension*j+1) = data.fDPhiX0(1,j);
-        matB(2,fDimension*j  ) = data.fDPhiX0(1,j);
-        matB(2,fDimension*j+1) = data.fDPhiX0(0,j);
+        matB(0,fDimension*j  ) = data[0].fDPhiX0(0,j);
+        matB(1,fDimension*j+1) = data[0].fDPhiX0(1,j);
+        matB(2,fDimension*j  ) = data[0].fDPhiX0(1,j);
+        matB(2,fDimension*j+1) = data[0].fDPhiX0(0,j);
     }
     
     VecDouble strain(3);
     strain.setZero();
-    strain[0] = data.fDSolDx(0,0);
-    strain[1] = data.fDSolDx(1,1);
-    strain[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
+    strain[0] = data[0].fDSolDx(0,0);
+    strain[1] = data[0].fDSolDx(1,1);
+    strain[2] = (data[0].fDSolDx(0,1)+data[0].fDSolDx(1,0));
     VecDouble stress = fConstitutiveMatrix * strain;
 
     Rhs -= matB.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
-        double shapeFi = data.fPhi[i];
+        double shapeFi = data[0].fPhi[i];
         //External force
         double Fx = forcingF[0] * shapeFi;
         double Fy = forcingF[1] * shapeFi;
@@ -112,45 +124,45 @@ void MixedElasticity::ComputeResidual(int &index, IntPointData &data, VecDouble 
     
 };
 
-void MixedElasticity::ComputeError(IntPointData &data, VecDouble &errors){
+void MixedElasticity::ComputeError(std::vector<IntPointData> &data, VecDouble &errors){
     errors.resize(4);
 
     VecDouble uExact(fDimension);
     MatrixDouble DuExact(fDimension,fDimension);
-    VecDouble x_ = data.fX;
+    VecDouble x_ = data[0].fX;
     fExactSol(x_,uExact,DuExact);
 
-    //L2 displacement
-    errors[0] += ((uExact[0]-data.fSol[0])*(uExact[0]-data.fSol[0]) + 
-                  (uExact[1]-data.fSol[1])*(uExact[1]-data.fSol[1]))
-                  * data.fWeight * data.fJacA0 ;
+    // //L2 displacement
+    // errors[0] += ((uExact[0]-data.fSol[0])*(uExact[0]-data.fSol[0]) + 
+    //               (uExact[1]-data.fSol[1])*(uExact[1]-data.fSol[1]))
+    //               * data.fWeight * data.fJacA0 ;
 
-    VecDouble exactStrain(3);
-    exactStrain(0) = DuExact(0,0);
-    exactStrain(1) = DuExact(1,1);
-    exactStrain(2) = 0.5 * (DuExact(1,0) + DuExact(0,1));
-    auto exactStress = fConstitutiveMatrix * exactStrain;
+    // VecDouble exactStrain(3);
+    // exactStrain(0) = DuExact(0,0);
+    // exactStrain(1) = DuExact(1,1);
+    // exactStrain(2) = 0.5 * (DuExact(1,0) + DuExact(0,1));
+    // auto exactStress = fConstitutiveMatrix * exactStrain;
 
-    VecDouble StrainMEF(3);
-    StrainMEF(0) = data.fDSolDx(0,0);
-    StrainMEF(1) = data.fDSolDx(1,1);
-    StrainMEF(2) = 0.5 * (data.fDSolDx(1,0) + data.fDSolDx(0,1));
-    auto StressMEF = fConstitutiveMatrix * StrainMEF;
+    // VecDouble StrainMEF(3);
+    // StrainMEF(0) = data.fDSolDx(0,0);
+    // StrainMEF(1) = data.fDSolDx(1,1);
+    // StrainMEF(2) = 0.5 * (data.fDSolDx(1,0) + data.fDSolDx(0,1));
+    // auto StressMEF = fConstitutiveMatrix * StrainMEF;
 
-    double sigx = StressMEF[0] - exactStress[0];
-    double sigy = StressMEF[1] - exactStress[1];
-    double sigxy = StressMEF[2] - exactStress[2];
+    // double sigx = StressMEF[0] - exactStress[0];
+    // double sigy = StressMEF[1] - exactStress[1];
+    // double sigxy = StressMEF[2] - exactStress[2];
 
-    // Energy norm
-    errors[1] = (sigx*(StrainMEF[0]-exactStrain[0])+sigy*(StrainMEF[1]-exactStrain[1])+2.*sigxy*(StrainMEF[2]-exactStrain[2]));
+    // // Energy norm
+    // errors[1] = (sigx*(StrainMEF[0]-exactStrain[0])+sigy*(StrainMEF[1]-exactStrain[1])+2.*sigxy*(StrainMEF[2]-exactStrain[2]));
 	
-	// erro em norma L2 em tensoes
-    errors[2] = sigx*sigx + sigy*sigy + 2.*sigxy*sigxy;
+	// // erro em norma L2 em tensoes
+    // errors[2] = sigx*sigx + sigy*sigy + 2.*sigxy*sigxy;
     
-	// erro estimado na norma H1
-    double SemiH1 =0.;
-    for(int i = 0; i < 2; i++) for(int j = 0; j < 2; j++) SemiH1 += (data.fDSolDx(i,j) - DuExact(i,j)) * (data.fDSolDx(i,j) - DuExact(i,j));
-	errors[3] = errors[0] + SemiH1;
+	// // erro estimado na norma H1
+    // double SemiH1 =0.;
+    // for(int i = 0; i < 2; i++) for(int j = 0; j < 2; j++) SemiH1 += (data.fDSolDx(i,j) - DuExact(i,j)) * (data.fDSolDx(i,j) - DuExact(i,j));
+	// errors[3] = errors[0] + SemiH1;
 }
 
 int MixedElasticity::VariableIndex(const std::string &name) const{
@@ -217,22 +229,22 @@ int MixedElasticity::NSolutionVariables(int var) const{
     }
 };
 
-void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
+void MixedElasticity::Solution(std::vector<IntPointData> &data, int var, VecDouble &Sol) {
 
     //Displacement
     if (var == 1){
-        Sol[0] = data.fSol[0];
-        Sol[1] = data.fSol[1];
+        Sol[0] = data[0].fSol[0];
+        Sol[1] = data[0].fSol[1];
         Sol[2] = 0.;
         return;
     };
 
     //Sigma X
     if (var == 2){
-        VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // VecDouble epsilon(3);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
@@ -245,10 +257,10 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Sigma Y
     if (var == 3){
-        VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // VecDouble epsilon(3);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
@@ -261,10 +273,10 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Tau XY
     if (var == 4){
-        VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // VecDouble epsilon(3);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (1.-fPoissonRatio) * epsilon[2];
@@ -277,23 +289,23 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Epsilon X
     if (var == 5){
-        Sol[0] = data.fDSolDx(0,0);
+        // Sol[0] = data.fDSolDx(0,0);
         return;
     };
     //Epsilon Y
     if (var == 6){
-        Sol[0] = data.fDSolDx(1,1);
+        // Sol[0] = data.fDSolDx(1,1);
         return;
     };
     //Epsilon XY
     if (var == 7){
-        Sol[0] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // Sol[0] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         return;
     };
 
 
     VecDouble forcingF(fDimension);
-    VecDouble x_ = data.fX;
+    VecDouble x_ = data[0].fX;
     if (fForceFunction) fForceFunction(x_,forcingF);
 
     VecDouble disp(fDimension);
@@ -383,9 +395,9 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
     //Stress
     if (var == 16){
         VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
         //     double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
@@ -414,18 +426,18 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Strain
     if (var == 17){
-        Sol[0] = data.fDSolDx(0,0);
-        Sol[1] = data.fDSolDx(1,1);
-        Sol[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
+        // Sol[0] = data.fDSolDx(0,0);
+        // Sol[1] = data.fDSolDx(1,1);
+        // Sol[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
         return;
     };
 
     //Stress Z
     if (var == 18){
-        VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // VecDouble epsilon(3);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     Sol[0] = 0.;
         // } else {
@@ -437,9 +449,9 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Delta Strain
     if (var == 19){
-        Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
-        Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
-        Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
+        // Sol[0] = data.fDSolDx(0,0) - data.fDSolDxPrev(0,0);
+        // Sol[1] = data.fDSolDx(1,1) - data.fDSolDxPrev(1,1);
+        // Sol[2] = ((data.fDSolDx(0,1)+data.fDSolDx(1,0))-(data.fDSolDxPrev(0,1)+data.fDSolDxPrev(1,0)));
         // int index = data.fIndex;
         // Sol[0] = data.fDSolDx(0,0) - data.fElasticStrain[index].fXX();
         // Sol[1] = data.fDSolDx(1,1) - data.fElasticStrain[index].fYY();
@@ -453,9 +465,9 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
     //Pressure
     if (var == 20){
         VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     PanicButton();
         // } else {
@@ -474,9 +486,9 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
     //J2
     if (var == 21){
         VecDouble epsilon(3);
-        epsilon[0] = data.fDSolDx(0,0);
-        epsilon[1] = data.fDSolDx(1,1);
-        epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        // epsilon[0] = data.fDSolDx(0,0);
+        // epsilon[1] = data.fDSolDx(1,1);
+        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
         //     PanicButton();
         // } else {
@@ -494,14 +506,14 @@ void MixedElasticity::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //Compliance
     if (var == 22){
-        if(!data.fStiffnessMatrix.has_value()){
-            Sol[0] = std::numeric_limits<float>::max();
-            PanicButton();
-            return;
-        }
-        const auto compliance = data.fSolNodes.transpose() * (*data.fStiffnessMatrix) * data.fSolNodes;
-        Sol[0] = compliance(0, 0);
-        return;
+        // if(!data.fStiffnessMatrix.has_value()){
+        //     Sol[0] = std::numeric_limits<float>::max();
+        //     PanicButton();
+        //     return;
+        // }
+        // const auto compliance = data.fSolNodes.transpose() * (*data.fStiffnessMatrix) * data.fSolNodes;
+        // Sol[0] = compliance(0, 0);
+        // return;
     }
 };
 

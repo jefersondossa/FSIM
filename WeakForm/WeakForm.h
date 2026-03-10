@@ -40,6 +40,9 @@ public:
     virtual void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) {
         PanicButton();
     };
+    virtual void ComputeStiffness(int &index, std::vector<IntPointData > &data, MatrixDouble &Stiffness) {
+        PanicButton();
+    };
     
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -56,6 +59,10 @@ public:
     virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) {
         PanicButton();
     };
+    virtual void ComputeResidual(int &index, std::vector<IntPointData > &data, VecDouble &Rhs) {
+        PanicButton();
+    };
+
     virtual void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor3D &Stress) {
         PanicButton();
     };
@@ -71,6 +78,7 @@ public:
     /// @param data integration point data
     /// @param errors vector storing all errors
     virtual void ComputeError(IntPointData &data, VecDouble &errors) {};
+    virtual void ComputeError(std::vector<IntPointData > &data, VecDouble &errors) {};
     
     /// @brief Sets the exact solution
     /// @param exSol Lambda function to compute the exact solution and its gradient for a given coordinate
@@ -129,6 +137,9 @@ public:
     /// @param var solution variable's index
     /// @param Sol solution vector
     virtual void Solution(IntPointData &data, int var, VecDouble &Sol) {
+        PanicButton();
+    };
+    virtual void Solution(std::vector<IntPointData > &data, int var, VecDouble &Sol) {
         PanicButton();
     };
 
