@@ -14,7 +14,7 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fNeedsSol = true;
         data.fSol.resize(fNState);
     }
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * WeakForm::fBigNumber;
+    double WJ = data.fWeight * data.fJacA0 * WeakForm::fBigNumber;
     double nphi = data.fPhi.size();
     
     MatrixDouble deriv(data.fX.size(), fNState);
@@ -70,7 +70,7 @@ void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
 
 void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0;
     double nphi = data.fPhi.size();
 
     MatrixDouble deriv(data.fX.size(), fNState);

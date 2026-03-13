@@ -62,8 +62,9 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
     // val2[0] = 1.0;
     L2Projection * matbc3 = new L2Projection(6,1,BoundaryConditionType::kDirichlet,val1,val2);
     val2.setZero();
-    L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kDirichlet,val1,val2);
-    L2Projection * matbc2 = new L2Projection(7,1,BoundaryConditionType::kDirichlet,val1,val3);
+    val2[0] = 1.0;
+    L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc2 = new L2Projection(7,1,BoundaryConditionType::kNeumann,val1,val3);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
@@ -104,6 +105,14 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     cmesh->AutoBuild();
     
     cmesh->Print("cmesh_pressure.txt");
+
+    for (auto cel : cmesh->ElementVec()){
+        cel->ComputeIntegPointCoordinates();
+        VecDouble xsi = cel->getIntegPointCoordinatesValue(0);
+        std::cout << "cel index: " << cel->Index() << " Dimension = " << cel->Dimension() << std::endl;
+        std::cout << "xsi: " << xsi.transpose() << std::endl;
+    }
+    
 
     return cmesh;
 }

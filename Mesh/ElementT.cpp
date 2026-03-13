@@ -261,14 +261,13 @@ template<class compshape>
 void ElementT<compshape>::ComputeIntegPointCoordinates(){
 
     int DIM = compshape::Dimension;
-    fIntPointCoordinates.resize(fIntRule.NPoints(),2);
+    fIntPointCoordinates.resize(fIntRule.NPoints(),3);
     fIntPointCoordinates.setZero();
 
     int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
     VecDouble xsi(DIM);
     VecDouble phi_(nshape);
     MatrixDouble dphi_(DIM,nshape);
-    fIntPointCoordinates.resize(fIntRule.NPoints(),DIM);
 
     VecInt orders(compshape::NSides);
     for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
@@ -276,16 +275,12 @@ void ElementT<compshape>::ComputeIntegPointCoordinates(){
     VecInt fGeoNodes = fReference->getGeometricNodes();
 
     for (int i = 0; i < fIntRule.NPoints(); i++){
-        double x[DIM] = {};
-
         for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
         compshape::Shape(xsi,phi_,dphi_,orders);
 
-        for (int k = DIM; k--; ) fIntPointCoordinates(i,k) = 0.;
-
         for (int j = 0; j < nshape; j++)
-            for (int k = DIM; k--; )
+            for (int k = 0; k < 3; k++)
                 fIntPointCoordinates(i,k) += fMesh->Reference()->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
         
     };

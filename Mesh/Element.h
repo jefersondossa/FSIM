@@ -104,9 +104,10 @@ public:
     /// Gets the integration point global coordinates
     /// @param int integration point index @return integration point coordinates
     VecDouble getIntegPointCoordinatesValue(int index){
-        VecDouble aux(2);
-        aux[0] = fIntPointCoordinates(index,0); 
-        aux[1] = fIntPointCoordinates(index,1); 
+        VecDouble aux(3);
+        for (int i = 0; i < 3; i++){
+            aux[i] = fIntPointCoordinates(index,i);
+        }
         return aux;
     };
 

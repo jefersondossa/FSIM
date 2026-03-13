@@ -26,7 +26,6 @@ ElementMixed::ElementMixed(int64_t index, std::vector<Element *> elvector, Mixed
         this->nLocDOF += locdof;
     }
     
-
 };
 
 Element *ElementMixed::Clone() const {
@@ -35,7 +34,7 @@ Element *ElementMixed::Clone() const {
 
 void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
-    if (!this->fWeakForm) return;
+    // if (!this->fWeakForm) return;
 
     int DIM = this->fReference->Dimension();
 
@@ -88,12 +87,18 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
         }
 
 
-        //Computes the element diffusion/viscosity matrix
-        this->fWeakForm->ComputeStiffness(index, data, jacobianNRMatrix);
-
-        //Computes the RHS vector
-        this->fWeakForm->ComputeResidual(index, data, rhsVector); 
-
+        //Computes the element stiffness matrix and residual vector
+        if (!this->fWeakForm){
+            for (int i = 0; i < nsub; i++){
+                fSubElements[i]->GetWeakForm()->ComputeStiffness(index, *data[i], jacobianNRMatrix);
+                fSubElements[i]->GetWeakForm()->ComputeResidual(index, *data[i], rhsVector);
+            }
+            
+        } else {
+            this->fWeakForm->ComputeStiffness(index, data, jacobianNRMatrix);
+            this->fWeakForm->ComputeResidual(index, data, rhsVector); 
+        }
+        
         index++;        
     };  
 
