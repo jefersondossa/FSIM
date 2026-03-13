@@ -8,9 +8,9 @@ GeoElementT<geoshape>::GeoElementT() : GeoElement(){
 template<class geoshape>
 GeoElementT<geoshape>::GeoElementT(int64_t index, VecInt &geonodes, GeoMesh* mesh, int &material) : GeoElement(){
     fMesh = mesh;
-    fGeoNodes.resize(geoshape::NCornerNodes);
+    fGeoNodes.resize(geoshape::NShape);
     fIndex = index;
-    for (int i = geoshape::NCornerNodes; i--; ) fGeoNodes[i] = geonodes[i];
+    for (int i = geoshape::NShape; i--; ) fGeoNodes[i] = geonodes[i];
     fMaterial = material;
     fNeighborElements.clear();
 };

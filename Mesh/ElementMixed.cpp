@@ -102,8 +102,8 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
         index++;        
     };  
 
-    std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
-    // std::cout << "Rhs \n" << rhsVector << std::endl;
+    // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
+    std::cout << "Rhs \n" << rhsVector << std::endl;
 
     return;
 };

@@ -46,7 +46,7 @@ int main(int argc, char **args) {
 
 CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 
-    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIsoparametric); 
     cmesh->SetDefaultOrder(2);
 
     int nstate = 2;
@@ -105,14 +105,6 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     cmesh->AutoBuild();
     
     cmesh->Print("cmesh_pressure.txt");
-
-    for (auto cel : cmesh->ElementVec()){
-        cel->ComputeIntegPointCoordinates();
-        VecDouble xsi = cel->getIntegPointCoordinatesValue(0);
-        std::cout << "cel index: " << cel->Index() << " Dimension = " << cel->Dimension() << std::endl;
-        std::cout << "xsi: " << xsi.transpose() << std::endl;
-    }
-    
 
     return cmesh;
 }

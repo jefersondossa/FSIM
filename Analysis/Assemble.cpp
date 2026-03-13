@@ -31,11 +31,13 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 // int nstatei = fAnalysis->MeshVector()[mesh]->ConnectVec()[connec[i]]->GetNStateVariables();
                 int nstatei = connectivity[i]->GetNStateVariables();
                 int nshapei = connectivity[i]->GetNShapeFunctions();
+                int shapeicount = 0;
                 int64_t seqnumi = connectivity[i]->GetSequenceNumber();
                 if (nstatei*nshapei == 0) continue;
                 for (int j=0; j<nConnects; j++){
                     int nstatej = connectivity[j]->GetNStateVariables();
                     int nshapej = connectivity[j]->GetNShapeFunctions();
+                    int shapejcount = 0;
                     int64_t seqnumj = connectivity[j]->GetSequenceNumber();
                     if (nstatej*nshapej == 0) continue;
                     for (int istate = 0; istate < nstatei; istate++){
@@ -44,20 +46,23 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                                 for (int jshape = 0; jshape < nshapej; jshape++){
                                     int64_t dof_i = startDOF + seqnumi + istate;
                                     int64_t dof_j = startDOF + seqnumj + jstate; 
-                                    fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+ishape)+istate,nstatej*(j+jshape)+jstate)); 
+                                    fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+shapeicount)+istate,nstatej*(j+shapejcount)+jstate)); 
+                                    
                                 }
                             } 
                         }
                     }
+                    shapejcount++;
                 };
                 
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
                     for (int ishape = 0; ishape < nshapei; ishape++){
                         int64_t dof_i = startDOF + seqnumi + istate;
-                        fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*(i+ishape)+istate]);
+                        fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*(i+shapeicount)+istate]);
                     }
                 }
+                shapeicount++;
             };
         };
         // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
