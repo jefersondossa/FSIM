@@ -65,7 +65,11 @@ void ElementT<compshape>::ComputeSpatialDerivatives() {
     fIntegData.fDPhi.setZero();
 
     VecInt orders(compshape::NSides);
-    for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
+    if (fConnect.size() != compshape::NSides) {
+        orders.setZero();
+    } else {
+        for (int i = compshape::NSides; i--; ) orders[i] = fConnect[i] -> GetOrder();
+    }
 
     //Shape functions
     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
@@ -391,22 +395,34 @@ void ElementT<compshape>::interpolateSolution() {
     fIntegData.fSol.setZero();
     int count = 0;
     if (fIntegData.fSolPrev.size() != 0) fIntegData.fSolPrev.setZero();
-    for (int iside = 0; iside < compshape::NSides; iside++){
-        
-        int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
-        if (nshape == 0) continue;
-        int nstate = fMesh->NState();
-        
+    if (fConnect.size() == 0) return;
 
-        for (int ishape = 0; ishape < nshape; ishape++){
-            double shapeFi = fIntegData.fPhi[count];
-            for (int j = 0; j < nstate; j++ ){
-                fIntegData.fSol[j] += fConnect[iside] -> GetSolution(j) * shapeFi;
-                if (fIntegData.fSolPrev.size() != 0) {
-                    fIntegData.fSolPrev[j] += fConnect[iside] -> GetPreviousSolution(j) * shapeFi;
-                }
+    if (fConnect.size()!=compshape::NSides) {
+        int nstate = fMesh->NState();
+        for (int j = 0; j < nstate; j++ ){
+            fIntegData.fSol[j] += fConnect[0] -> GetSolution(j);
+            if (fIntegData.fSolPrev.size() != 0) {
+                fIntegData.fSolPrev[j] += fConnect[0] -> GetPreviousSolution(j);
             }
-            count++;
+        }
+    } else {
+        for (int iside = 0; iside < compshape::NSides; iside++){
+            
+            int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
+            if (nshape == 0) continue;
+            int nstate = fMesh->NState();
+            
+
+            for (int ishape = 0; ishape < nshape; ishape++){
+                double shapeFi = fIntegData.fPhi[count];
+                for (int j = 0; j < nstate; j++ ){
+                    fIntegData.fSol[j] += fConnect[iside] -> GetSolution(j) * shapeFi;
+                    if (fIntegData.fSolPrev.size() != 0) {
+                        fIntegData.fSolPrev[j] += fConnect[iside] -> GetPreviousSolution(j) * shapeFi;
+                    }
+                }
+                count++;
+            }
         }
     }
 
@@ -500,32 +516,42 @@ void ElementT<compshape>::interpolateSolDerivatives() {
         fIntegData.fDSolDxPrev.setZero(); 
         flag = true;
     }
+    if (fConnect.size() == 0) return;
 
-    int count = 0;
-    for (int iside = 0; iside < compshape::NSides; iside++){
-        int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
-        if (nshape == 0) continue;
+    if (fConnect.size() != compshape::NSides) {
         int nstate = fMesh->NState();
+        for (int j = 0; j < nstate; j++ ){
+            fIntegData.fDSolDx(j) = 0;
+            if (flag) fIntegData.fDSolDxPrev(j) = 0;
+            if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(j) = 0;
+        }
+        return;
+    } else {
+        int count = 0;
+        for (int iside = 0; iside < compshape::NSides; iside++){
+            int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
+            if (nshape == 0) continue;
+            int nstate = fMesh->NState();
 
-        for (int ishape = 0; ishape < nshape; ishape++){
-            for (int j = 0; j < compshape::Dimension; j++ ){
-                for (int k = 0; k < nstate; k++ ){
-                    fIntegData.fDSolDx(k,j) += fConnect[iside] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
+            for (int ishape = 0; ishape < nshape; ishape++){
+                for (int j = 0; j < compshape::Dimension; j++ ){
+                    for (int k = 0; k < nstate; k++ ){
+                        fIntegData.fDSolDx(k,j) += fConnect[iside] -> GetSolution(k) *fIntegData.fDPhiX0(j,count);
 
-                    if (flag) fIntegData.fDSolDxPrev(k,j) += fConnect[iside] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,count);
+                        if (flag) fIntegData.fDSolDxPrev(k,j) += fConnect[iside] -> GetPreviousSolution(k) * fIntegData.fDPhiX0(j,count);
 
-                    if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fConnect[iside] -> GetSolution(k) * fIntegData.fDPhi(j,count);
+                        if (fIntegData.fNeedsDSolDAdim) fIntegData.fDSolDAdim(k,j) += fConnect[iside] -> GetSolution(k) * fIntegData.fDPhi(j,count);
 #ifdef DEBUG_BUILD
-                    if (std::isnan(fIntegData.fDSolDx(k,j))){
-                        PanicButton();
-                    }
+                        if (std::isnan(fIntegData.fDSolDx(k,j))){
+                            PanicButton();
+                        }
 #endif
-                } 
+                    } 
+                }
+                count++;
             }
-            count++;
         }
     }
-
 
 //     for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
 //         int nstate = fMesh->ConnectVec()[fConnect[i]]->GetNStateVariables();

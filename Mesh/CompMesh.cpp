@@ -126,6 +126,7 @@ void CompMesh::BuildHierarquicConnects(){
     // própria e não necessariamente coincidente com a do comp mesh. Isso pode ser mais trabalhoso
     // para implementar, mas manteria a banda da matriz menor.
 
+
     int nconnects = 0;
     fConnectVector.reserve(NElements());
     std::map<int,int> node_to_connect;
@@ -138,9 +139,26 @@ void CompMesh::BuildHierarquicConnects(){
     int volumecount = 0;
     int64_t seqnum = 0;
 
-    for (auto iel = NElements()-1; iel >= 0; iel--){
-        Element *el = fElementVector[iel];
+    for (auto el:fElementVector){
         if (!el) continue;
+
+        if (fOrder == 0){
+            if (el->Dimension() != fDimension) {
+                el->getConnectivity().resize(0);
+                el->NLocDOF() = 0;
+                continue;
+            }
+            //For order 0, we create only one connect for the element, and all nodes, edges and faces are associated with it
+            fConnectVector.push_back(new Connect(fNState,1,0,nconnects,seqnum));
+            seqnum += fNState;
+            VecInt connect(1);
+            connect[0] = nconnects;
+            el->getConnectivity().resize(1);
+            el->setConnectivity(connect);
+            nconnects++;
+            continue;
+        }
+        
         VecInt &geoNodes = el->Reference()->getGeometricNodes();
         int ncorner = el->Reference()->NCornerNodes();
         int nedges = el->Reference()->NEdges();

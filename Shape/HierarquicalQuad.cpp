@@ -56,7 +56,14 @@ void HierarquicalQuad::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, 
     
     int minorder = orders.minCoeff();
     int maxorder = orders.maxCoeff();
-    if(minorder <= 0) PanicButton();
+    if(minorder < 0) PanicButton();
+
+    if (minorder == 0) {
+        phi[0] = 1.0;
+        dphi.setZero();
+        return;
+    }
+    
     if(maxorder >=3){
         std::cout << "HierarquicalQuad::Shape : order not implemented, the side (edge) shape functions need to be compatibilized "  << "\n";
         PanicButton();

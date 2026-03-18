@@ -33,8 +33,15 @@ int HierarquicalOneD::NShapeFunctions(VecInt &orders) {
 
 /// returns the number of shape functions associated with a side
 int HierarquicalOneD::NShapeFunctions(int side, int order){
-
-    if(order < 1 ) PanicButton();
+    
+    if (order == 0){
+        if (side == 2){
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    if(order < 0 ) PanicButton();
     switch (side)
     {
     case 0:
@@ -58,6 +65,12 @@ int HierarquicalOneD::NShapeFunctions(int side, int order){
 
 
 void HierarquicalOneD::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
+    if(orders[0]==0 && orders[1]==0 && orders[2]==0) {
+        phi[0] = 1.0;
+        dphi.setZero();
+        return;
+    }
+
     phi[0] = (1 - xi[0]) / 2.;
     phi[1] = (1 + xi[0]) / 2.;
 

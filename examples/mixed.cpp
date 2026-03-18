@@ -36,7 +36,7 @@ int main(int argc, char **args) {
     // ScalarNames = {"Displacement"};
     VectorNames = {"Displacement"};
 
-    VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
+    // VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
 
     // VecDouble errors;
     // an.PostProcessError(errors);
