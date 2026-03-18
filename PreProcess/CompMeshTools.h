@@ -3,8 +3,9 @@
 
 #include "Element.h"
 #include "CompMesh.h"
-class CompMesh;
 
+class CompMesh;
+class Element;
 
 namespace CompMeshTools{
     /// @brief Performs domain decomposition, used for MPI parallelism
@@ -16,8 +17,8 @@ namespace CompMeshTools{
     /// @param cmesh the geometric mesh
     /// @param elCorr correpondence element
     /// @param xsiCorr correspondence Xsi
-    /// @param elSearch the first guess element
-    void searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, int64_t elSearch = 0);
+    /// @param elemsearch the first guess element
+    bool searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, Element *elemsearch);
 }
 
 

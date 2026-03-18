@@ -35,6 +35,8 @@ file(GLOB mesh
     GeoElementT.cpp
     ElementMixed.h
     ElementMixed.cpp
+    ElementEnriched.h
+    ElementEnriched.cpp
 )
 
 set(MESH ${mesh} PARENT_SCOPE)

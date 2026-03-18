@@ -95,13 +95,13 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     double time = fTimeInstant * fTimeStep;
     if (forceT) forceT(x_, time, forcingFT);
 
-    for (int i = 0; i < fNState; i++){
-        result[i] += forcingF[i] + forcingFT[i];
-        if (this->BCType == BoundaryConditionType::kNeumann){
-            BCVal2[i] -= forcingF[i] + forcingFT[i]; // Add time derivative contribution
-        }
-    }
-    
+    //for (int i = 0; i < fNState; i++){
+    //    result[i] += forcingF[i] + forcingFT[i];
+    //    if (this->BCType == BoundaryConditionType::kNeumann){
+    //        BCVal2[i] -= forcingF[i] + forcingFT[i]; // Add time derivative contribution
+    //    }
+    //}
+    auto result2 = forcingF;
 
     switch (BCType)
     {
@@ -116,7 +116,7 @@ void L2Projection::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     {
         for (int i = 0; i < nphi; i++){
             for (int istate = 0; istate < fNState; istate++){
-                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * (BCVal2[istate]);
+                Rhs(fNState*i+istate) +=  WJ * data.fPhi[i] * (result2[istate]);
             }
         }
     }

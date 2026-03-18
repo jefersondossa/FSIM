@@ -67,7 +67,7 @@ void CompMeshTools::DomainDecompositionMETIS(CompMesh *cmesh){
 }
 
 
-void CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, int64_t elSearch){
+bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, Element *elemsearch){
     
     int DIM = cmesh->Dimension();
     int DEG = cmesh->GetDefaultOrder();
@@ -83,19 +83,19 @@ void CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int6
     
     xsiCC.fill(1.e10);
     xsiCorr.fill(1.e50);
-    xsi.fill(1./3.);
+    xsi.fill(0.);
     x_.fill(0.);
     
-    Element *elemsearch = nullptr;
-    if (cmesh->ElementVec()[elSearch]->Dimension() != cmesh->Dimension()){
-        for (int i=0; i<cmesh->NElements(); i++){
-            if(cmesh->ElementVec()[i]->Dimension() != cmesh->Dimension()) continue;
-            elemsearch = cmesh->ElementVec()[i];
-            break;
-        }
-    } else {
-        elemsearch = cmesh->ElementVec()[elSearch];
-    }
+    // Element *elemsearch = nullptr;
+    // if (cmesh->ElementVec()[elSearch]->Dimension() != cmesh->Dimension()){
+    //     for (int i=0; i<cmesh->NElements(); i++){
+    //        if(cmesh->ElementVec()[i]->Dimension() != cmesh->Dimension()) continue;
+    //        elemsearch = cmesh->ElementVec()[i];
+    //        break;
+    //    }
+    // } else {
+    //     elemsearch = cmesh->ElementVec()[elSearch];
+    // }
     VecInt connec = elemsearch -> Reference() -> getGeometricNodes();
     
     auto &integdata = elemsearch->IntegrationData();
@@ -130,6 +130,7 @@ void CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int6
         integdata.fAdimCoord = xsi;
         
         for (int i=0; i<nElNodes; i++){
+            elemsearch -> Reference() -> ComputeJacobianSearch(elemsearch->IntegrationData());
             VecDouble xint = cmesh->Reference()->NodeVec()[connec[i]] -> getCoordinates();
             for (int k = 0; k < DIM; k++)x_[k] += xint[k] * integdata.fPhi[i];
         };
@@ -152,7 +153,7 @@ void CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int6
 
             xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
             elCorr = elemsearch->Index();
-            return;
+            return true;
         }
         break;
     case EQuadrilateral:
@@ -161,19 +162,23 @@ void CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int6
 
             xsiCorr[0] = xsi[0]; xsiCorr[1] = xsi[1];
             elCorr = elemsearch->Index();
-            return;
+            return true;
         }
         break;
 
     default:
-        PanicButton();
+        //PanicButton();
+        return false;
         break;
     }
 
     if (fabs(xsi[0]) > 2.) {
-        std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
-        PanicButton();
+        //std::cout << "PROBLEM SEARCHING NODE CORRESPONDENCE " << std::endl;
+        //PanicButton();
+        return false;
     }
-    if (elCorr == 150000) PanicButton();
-    return;
+    if (elCorr == 150000){
+        //PanicButton();
+        return false;
+    } 
 };

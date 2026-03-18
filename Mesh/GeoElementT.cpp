@@ -221,7 +221,8 @@ void GeoElementT<geoshape>::ComputeJacobianSearch(IntPointData &data) {
     orders.fill(1);
 
     geoshape::Shape(data.fAdimCoord,phigeo,dphigeo,orders);
-
+    data.fPhi = phigeo;
+    data.fDPhi = dphigeo;
     data.fA0.setZero();
     VecDouble xna(3);
     for (int i = geoshape::NShape; i--; ){
