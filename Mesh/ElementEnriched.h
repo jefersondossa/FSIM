@@ -21,8 +21,9 @@ class ElementEnriched : public Element{
 private:
     Element* fLocalElement;
     Element* fGlobalElement;
-    std::map<int64_t,int64_t> globalElementCorrespondence;
-    std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
+    std::map<int64_t,int64_t> *globalElementCorrespondence;
+    std::map<int64_t, MatrixDouble> *globalNodeCorrespondence;
+    std::map<int64_t, int64_t> *connectEnrichment;
     
 public:
     ElementEnriched() : Element(){
@@ -34,10 +35,14 @@ public:
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
 
-    void setCorrespondence(std::map<int64_t,int64_t> &elCorresp, std::map<int64_t, MatrixDouble> &nodeCorresp){
+    void setCorrespondence(std::map<int64_t,int64_t> *elCorresp, std::map<int64_t, MatrixDouble> *nodeCorresp){
 
         globalElementCorrespondence = elCorresp;
         globalNodeCorrespondence = nodeCorresp;
+    };
+
+    void SetEnrichmentData(std::map<int64_t, int64_t> *connectEnrichment_){
+        connectEnrichment = connectEnrichment_;
     };
 
     void ComputeElContribution(VecDouble &Rhs) override{

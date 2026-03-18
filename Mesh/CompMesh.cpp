@@ -335,7 +335,12 @@ void CompMesh::Print(std::string filename){
         Element *el = fElementVector[i];
         if (!el) continue;
         file << "Element " << el->Index() << ": ";
-        file << "Material ID = " << el->GetWeakForm()->Id() << ", ";
+        if (el->GetWeakForm()){
+             file << "Material ID = " << el->GetWeakForm()->Id() << ", ";
+        } else {
+             file << "Material ID = None, ";
+        }
+        
         file << "Geometric Nodes = [";
         VecInt &geoNodes = el->Reference()->getGeometricNodes();
         for (size_t j = 0; j < geoNodes.size(); j++) {

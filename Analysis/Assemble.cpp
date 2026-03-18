@@ -7,7 +7,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     std::cout << "Assembling..." << std::endl;
 
     for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
-        if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
+        // if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             if (!el) continue;
@@ -67,7 +67,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 }
                 shapeicount += nshapei*nstatei;
             };
-        };
+        // };
         // std::cout << "Element << " << jel << ", Type = " << fAnalysis->MeshVector()[mesh]->ElementVec()[jel]->PrintType() << std::endl;
         // fAnalysis->GlobalMatrix()->PrintRhs();
     }; //Elements
@@ -75,7 +75,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
 
 void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
     for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
-        if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
+        // if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             VecInt connec = el -> getConnectivityIndices();
@@ -112,13 +112,13 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
                     }
                 };
             };
-        };
+        // };
     }; //Elements
 }
 
 void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
     for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
-        if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
+        // if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
             VecInt connec = el -> getConnectivityIndices();
@@ -145,7 +145,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
                     }
                 }
             };
-        };
+        // };
     }; //Elements
 }
 

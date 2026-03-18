@@ -74,7 +74,9 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
 
 void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, IntPointData &globaldata, VecDouble &Rhs){
 
-    double WJ = localdata.fWeight * localdata.fJacA0 * localdata.fWeightFunction[index];
+    double WJ = localdata.fWeight * localdata.fJacA0;
+    int nphi = globaldata.fPhi.size();
+    
     double nphiL = globaldata.fPhi.size();
     double nphiG = globaldata.fPhi.size();
     VecDouble forcingF(1);

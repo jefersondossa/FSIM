@@ -126,7 +126,7 @@ public:
 
     /// @brief returns the number of global DOF's
     /// @return number of DOF's
-    int64_t NGlobalDOF() {
+    int64_t &NGlobalDOF() {
         return fNGlobalDOF;
     }
 
