@@ -3,6 +3,8 @@
 #include "TransientWeakForm.h"
 #include "PlasticityModel.h"
 #include "HierarquicalOneD.h"
+#include "HierarquicalQuad.h"
+#include "HierarquicalTriangle.h"
 #include "ElementT.h"
 #include "ElementWithMem.h"
 #include "ElementTransient.h"
@@ -257,8 +259,18 @@ void CompMesh::BuildHierarquicConnects(){
                     if (face_to_connect.find(sideNodes) == face_to_connect.end()){
 
 
-                        int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
-                        
+                        int nshape = 0;
+                        switch (el->Reference()->Type()){
+                            case ElementType::EQuadrilateral:
+                                nshape = HierarquicalQuad::NShapeFunctions(i,fOrder);
+                                break;
+                            case ElementType::ETriangle:
+                                nshape = HierarquicalTriangle::NShapeFunctions(i,fOrder);
+                                break;
+                            default:
+                                std::cout << "Face type not supported for hierarchical approximation. Please check it. \n";
+                                PanicButton();
+                        }
                         
                         int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
                         fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));

@@ -46,7 +46,7 @@ int HierarquicalQuad::NShapeFunctions(int side, int order){
     }
 
 
-    std::cout << "Shape1d::NShapeFunctions : Wrong side " << side << "\n";
+    std::cout << "HierarquicalQuad::NShapeFunctions : Wrong side " << side << "\n";
     PanicButton();
     return -1;    
 }

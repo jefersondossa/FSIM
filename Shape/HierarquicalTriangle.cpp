@@ -36,13 +36,32 @@ int HierarquicalTriangle::NShapeFunctions(VecInt &orders) {
 /// returns the number of shape functions associated with a side
 int HierarquicalTriangle::NShapeFunctions(int side, int order){
 
-  
+    if(order < 1 ) PanicButton();
+    
+    if(side<3) return 1;//0 a 2 -> Nodes
+
+    if(side<6) return (order-1);//3 a 5 -> Edges
+    if(side==6) {
+        return ((order-2)*(order-1)/2);//6 -> Face
+    }
+
+    std::cout << "HierarquicalTriangle::NShapeFunctions : Wrong side " << side << "\n";
     PanicButton();
     return -1;    
 }
 
 
 void HierarquicalTriangle::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
+    int minorder = orders.minCoeff();
+    int maxorder = orders.maxCoeff();
+    if(minorder < 0) PanicButton();
+
+    if (minorder == 0) {
+        phi[0] = 1.0;
+        dphi.setZero();
+        return;
+    }   
+    
     double xsi1 = xi[0];
     double xsi2 = xi[1];
     double xsi3 = 1. - xsi1 - xsi2;

@@ -10,6 +10,12 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh);
 CompMesh* CreatePressureMesh(GeoMesh *gmesh);
 MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector);
 
+auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    force[0] = 1.0;
+};
+
 int main(int argc, char **args) {   
     //Geometric Mesh
     GeoMesh * gmesh = new GeoMesh();
@@ -46,7 +52,7 @@ int main(int argc, char **args) {
 
 CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 
-    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIsoparametric); 
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
     cmesh->SetDefaultOrder(2);
 
     int nstate = 2;
@@ -59,12 +65,10 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
     VecDouble val2(nstate);
     VecDouble val3(nstate);
     val2.setZero();val3.setZero();
-    // val2[0] = 1.0;
     L2Projection * matbc3 = new L2Projection(6,1,BoundaryConditionType::kDirichlet,val1,val2);
-    val2.setZero();
-    val2[0] = 1.0;
     L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
     L2Projection * matbc2 = new L2Projection(7,1,BoundaryConditionType::kNeumann,val1,val3);
+    matbc1->SetForcingFunction(forcingFunction);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
@@ -83,7 +87,7 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 CompMesh* CreatePressureMesh(GeoMesh *gmesh){
 
     CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(1);
+    cmesh->SetDefaultOrder(0);
 
     int nstate = 1;
     WeakForm * mat = new WeakForm(8,nstate);
