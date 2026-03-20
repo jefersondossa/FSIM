@@ -77,6 +77,10 @@ void HierarquicalTriangle::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dp
     dphi(0,2) = 0.;
     dphi(1,2) = 1.;
 
+    if(maxorder >1){
+        PanicButton();
+        std::cout << "HierarquicalTriangle::Shape : Higher order not implemented yet\n";
+    }
 }
 
 void HierarquicalTriangle::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {

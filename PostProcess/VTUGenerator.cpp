@@ -226,8 +226,8 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
              << "Name=\"connectivity\" format=\"ascii\">" << std::endl;
     
     for (int i=0; i<cmesh->NElements(); i++){
-        auto connec=cmesh->ElementVec()[i]->getConnectivity();
-        for (int k = 0; k < cmesh->ElementVec()[i]->Reference()->NCornerNodes(); k++)
+        auto connec=cmesh->ElementVec()[i]->Reference()->getGeometricNodes();
+        for (int k = 0; k < cmesh->ElementVec()[i]->Reference()->NGeometricNodes(); k++)
         {
             output_v << connec[k] << " ";
         }
@@ -241,7 +241,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     
     int aux = 0;
     for (int i=0; i<cmesh->NElements(); i++){
-        aux += cmesh->ElementVec()[i]->Reference()->NCornerNodes();
+        aux += cmesh->ElementVec()[i]->Reference()->NGeometricNodes();
         output_v << aux << std::endl;
     };
     output_v << "      </DataArray>" << std::endl;
@@ -269,7 +269,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
         auto graphconnect = cmesh->ElementVec()[iel]->getConnectivity();
         if (compel->Dimension() != cmesh->Dimension()) continue;
 
-        for (int inode = 0; inode < compel->Reference()->NCornerNodes(); inode++){
+        for (int inode = 0; inode < compel->Reference()->NGeometricNodes(); inode++){
             auto xparametric = compel->Reference()->NodeCoord(inode);
             compel->IntegrationData().fAdimCoord = xparametric;
             if (!compel->IntegrationData().fNeedsSol || !compel->IntegrationData().fNeedsDSol){
@@ -340,7 +340,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
             // if (vectSol[i].size()==0){
                 // output_v <<std::scientific<< "0,0,0" << std::endl;
             // }else{
-                output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
+                    output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
             // }
         }
         output_v << "      </DataArray> " << std::endl;
@@ -361,7 +361,12 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
                 << "Name=\"Material\" format=\"ascii\">" << std::endl;
     for (int i=0; i<cmesh->NElements(); i++){
         auto compel = cmesh->ElementVec()[i];
-        int matid = compel->GetWeakForm()->Id();
+        int matid;
+        if (compel->GetWeakForm() == nullptr){
+            matid = -1;
+        }else{
+            matid = compel->GetWeakForm()->Id();
+        }
         output_v << matid << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;

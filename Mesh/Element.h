@@ -140,7 +140,7 @@ public:
     // Method for creating a copy of the element
     virtual Element *Clone() const = 0;
 
-    void Solution(int var, VecDouble &Sol){
+    virtual void Solution(int var, VecDouble &Sol){
         fWeakForm->Solution(fIntegData,var,Sol);
     };
 

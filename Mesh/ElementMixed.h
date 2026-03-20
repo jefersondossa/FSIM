@@ -63,6 +63,29 @@ public:
             fSubElements[i]->interpolateSolution();
         }
     }
+
+    void Solution(int var, VecDouble &Sol) override{
+        for (int i = 0; i < fSubElements.size(); i++){
+            fSubElements[i]->IntegrationData().fAdimCoord = fIntegData.fAdimCoord;
+            fSubElements[i]->IntegrationData().fWeight = fIntegData.fWeight;
+            fSubElements[i]->IntegrationData().fA0 = this->fIntegData.fA0;
+            fSubElements[i]->IntegrationData().fA0Inv = this->fIntegData.fA0Inv;
+            fSubElements[i]->IntegrationData().fAxes0 = this->fIntegData.fAxes0;
+            fSubElements[i]->IntegrationData().fJacA0 = this->fIntegData.fJacA0;
+            fSubElements[i]->IntegrationData().fX = this->fIntegData.fX;
+
+            //Computes spatial derivatives
+            fSubElements[i]->ComputeSpatialDerivatives();
+            fSubElements[i]->interpolateSolution();
+            fSubElements[i]->interpolateSolDerivatives();
+        }
+        std::vector<IntPointData *> data(fSubElements.size());
+        for (int i = 0; i < fSubElements.size(); i++){
+            data[i] = &fSubElements[i]->IntegrationData();
+        }
+        fWeakForm->Solution(data,var,Sol);
+    };
+
     void interpolateSolDerivatives(MatrixDouble &du_dx) override{
         PanicButton();
     }

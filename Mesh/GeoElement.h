@@ -77,7 +77,7 @@ public:
 
     VecDouble GetGeometricCenter();
 
-
+    int NGeometricNodes() {return fGeoNodes.size();}
     virtual int NCornerNodes() = 0;
     virtual int NEdges() = 0;
     virtual int NFaces() = 0;

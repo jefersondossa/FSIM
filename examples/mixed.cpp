@@ -38,11 +38,16 @@ int main(int argc, char **args) {
     an.PrintGlobalRhs();
     an.PrintSolution();
 
+    cmesh->Print("cmesh_mixed2.txt");
+    cmeshpressure->Print("cmesh_press2.txt");
+    cmeshdisp->Print("cmesh_disp2.txt");
+
+
     std::vector<std::string> ScalarNames, VectorNames;
     // ScalarNames = {"Displacement"};
     VectorNames = {"Displacement"};
 
-    // VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
+    VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
 
     // VecDouble errors;
     // an.PostProcessError(errors);
@@ -52,7 +57,7 @@ int main(int argc, char **args) {
 
 CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 
-    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIsoparametric); 
     cmesh->SetDefaultOrder(2);
 
     int nstate = 2;
@@ -87,7 +92,7 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 CompMesh* CreatePressureMesh(GeoMesh *gmesh){
 
     CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(0);
+    cmesh->SetDefaultOrder(1);
 
     int nstate = 1;
     WeakForm * mat = new WeakForm(8,nstate);
