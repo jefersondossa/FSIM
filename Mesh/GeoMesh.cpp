@@ -14,6 +14,22 @@ void GeoMesh::Print(std::string filename){
     file << "--------------------------------\n";
 
     file << "--------------------------------\n";
+    file << "Nodes Information:\n";
+    for (int64_t i = 0; i < NNodes(); i++)
+    {
+        Node *node = fNodeVector[i];
+        file << "Node " << i << ": ";
+        file << "Coordinates = [";
+        VecDouble coord = node->getCoordinates();
+        for (size_t j = 0; j < coord.size(); j++) {
+            file << coord[j];
+            if (j < coord.size() - 1) file << ", ";
+        }
+        file << "]\n";
+    }
+
+
+    file << "--------------------------------\n";
     file << "Elements Information:\n";
     for (int64_t i = 0; i < NElements(); i++)
     {

@@ -50,6 +50,8 @@ int main(int argc, char **args) {
     GmshTools::Read(*gmeshG,"../global.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EHierarquic);
     CreateGlobalModel(cmeshG);
+    gmeshG->Print("gmeshGlobal.txt");
+    cmeshG->Print("cmeshGlobal.txt");
     
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
@@ -62,6 +64,8 @@ int main(int argc, char **args) {
     GmshTools::Read(*gmeshL,"../local.msh");
     CompMesh *cmeshL = new CompMesh(gmeshL,ApproxType::EHierarquic);
     CreateLocalModel(cmeshL);
+    gmeshL->Print("gmeshLocal.txt");
+    cmeshL->Print("cmeshLocal.txt");
     
     //Solve Local Problem
     SolveLocalProblem(cmeshL);
@@ -72,6 +76,7 @@ int main(int argc, char **args) {
     //ENRICHED GLOBAL MODEL
     std::cout << "\nSolve Enriched Global Problem \n";
     CreateEnrichedModel(cmeshG,cmeshL);
+    cmeshG->Print("cmeshEnrichedGlobal.txt");
     SolveEnrichedProblem(cmeshG);
 
 }   
@@ -287,10 +292,11 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
     //cmeshG->Print("cmeshGEnriched.txt");
     
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
+
     //Count the number local elements to enrich in the global mesh
     int nelsToEnrich = 0;
     for (auto el:cmeshL->ElementVec()){
-        if (el->Dimension() != cmeshL->Dimension()) continue;
+        if (el->Dimension() != cmeshL->Dimension() && el->Reference()->Material() != overlappingNHNeumannBoundary) continue;
         nelsToEnrich++;
     }
     int64_t nElementsG = cmeshG->NElements();
@@ -298,7 +304,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
     //Create the enriched elements in the global mesh
     count = 0;
     for (auto localEl:cmeshL->ElementVec()){
-        if (localEl->Dimension() != cmeshL->Dimension()) continue;
+        if (localEl->Dimension() != cmeshL->Dimension() && localEl->Reference()->Material() != overlappingNHNeumannBoundary) continue;
         Element* globalEl = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
         ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, cmeshG, globalLocal);
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
@@ -339,8 +345,9 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     LinearAnalysis anE(cmeshG,SolverType::ELDLt);
 
     anE.Run();
+    anE.PrintGlobalRhs();
     anE.PrintSolution();
-    // anE.PrintGlobalRhs();
+
 
     // std::vector<std::string> ScalarNames, VectorNames;
     // ScalarNames = {"SigmaX","SigmaY","TauXY"};

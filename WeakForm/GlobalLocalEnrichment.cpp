@@ -20,6 +20,9 @@ GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double yo
 
 void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata, IntPointData &globaldata, MatrixDouble &Stiffness){
     
+    //Only contribute stiffness if we are in a 2D element
+    if (globaldata.fA0.rows() != 2) return;
+
     if (!localdata.fNeedsSol){
         localdata.fNeedsSol = true;
         localdata.fSol.resize(fNState);
@@ -73,9 +76,13 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
 };
 
 void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, IntPointData &globaldata, VecDouble &Rhs){
+    //Only contribute stiffness if we are in a 2D element
+    if (globaldata.fA0.rows() == 2) return;
 
-    // int nphi = globaldata.fPhi.size();
-    // double WJ = localdata.fWeight * localdata.fJacA0;
+
+
+    int nphi = globaldata.fPhi.size();
+    double WJ = localdata.fWeight * localdata.fJacA0;
 
     // MatrixDouble matB(3,2*nphi);
     // MatrixDouble matBEnr(3,2*nphi);
@@ -91,8 +98,8 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
     // VecDouble x_ = globaldata.fX;
     // if (force) force(x_,forcingF);
 
-    // double uXInterp = localdata.fSol[0];
-    // double uYInterp = localdata.fSol[1];
+    double uXInterp = localdata.fSol[0];
+    double uYInterp = localdata.fSol[1];
     // double dUxdx = localdata.fDSolDx(0,0);
     // double dUydy = localdata.fDSolDx(1,1);
     // double dUxdy = localdata.fDSolDx(0,1);
@@ -121,14 +128,14 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
 
     // Rhs -= matBTot.transpose() * stress * WJ;
 
-    // for (int i = nphi; i--; ){
-    //     double shapeFi = globaldata.fPhi[i];
-    //     //External force
-    //     double Fx = uXInterp * shapeFi; 
-    //     double Fy = uYInterp * shapeFi;
-    //     Rhs[2*nphi + 2*i] += Fx * WJ;
-    //     Rhs[2*nphi + 2*i+1] += Fy * WJ;
-    // };
+    for (int i = nphi; i--; ){
+        double shapeFi = globaldata.fPhi[i];
+        //External force
+        double Fx = uXInterp * shapeFi; 
+        double Fy = uYInterp * shapeFi;
+        Rhs[2*nphi + 2*i] += Fx * WJ;
+        Rhs[2*nphi + 2*i+1] += Fy * WJ;
+    };
 };
 
 int GlobalLocalEnrichment::VariableIndex(const std::string &name) const{

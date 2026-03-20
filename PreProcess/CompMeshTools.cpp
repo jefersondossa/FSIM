@@ -166,7 +166,8 @@ bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int6
         }
         break;
     case EOneD:
-        if ((xsiCC[0] >= t1) && (xsiCC[0] <= t2)){
+        if ((xsiCC[0] >= t1-1.) && (xsiCC[0] <= 1-t1)){
+            if (fabs(xsiCC[1]) >= fabs(t1)) return false;
             xsiCorr[0] = xsi[0];
             elCorr = elemsearch->Index();
             return true;
