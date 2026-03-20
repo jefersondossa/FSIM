@@ -128,7 +128,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     rhsVector = RhsCorrect;
 
     // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
-    // std::cout << "Rhs \n" << rhsVector << '\n';
+     std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };

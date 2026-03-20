@@ -74,24 +74,62 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
 
 void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, IntPointData &globaldata, VecDouble &Rhs){
 
-    double WJ = localdata.fWeight * localdata.fJacA0;
-    int nphi = globaldata.fPhi.size();
+    // int nphi = globaldata.fPhi.size();
+    // double WJ = localdata.fWeight * localdata.fJacA0;
+
+    // MatrixDouble matB(3,2*nphi);
+    // MatrixDouble matBEnr(3,2*nphi);
+    // MatrixDouble matBTot(3, (matB.cols()+matBEnr.cols()));
     
-    double nphiL = globaldata.fPhi.size();
-    double nphiG = globaldata.fPhi.size();
-    VecDouble forcingF(1);
-    VecDouble x_ = localdata.fX;
-    if (fForceFunction) fForceFunction(x_,forcingF);
+    // matB.setZero();
+    // matBEnr.setZero();
+    // matBTot.setZero();
 
-    for (int i = 0; i < nphiL; i++){
-        Rhs[i] -= WJ * localdata.fPhi[i] * globaldata.fSol[0];
-    }
-    for (int i = 0; i < nphiG; i++){
-        Rhs[nphiL+i] += (forcingF[0] * globaldata.fPhi[i] - globaldata.fPhi[i] * globaldata.fSol[0]) * WJ;
-    }
+    // auto force = fForceFunction;
+    // VecDouble forcingF(fDimension);
+    // forcingF.setZero();
+    // VecDouble x_ = globaldata.fX;
+    // if (force) force(x_,forcingF);
+
+    // double uXInterp = localdata.fSol[0];
+    // double uYInterp = localdata.fSol[1];
+    // double dUxdx = localdata.fDSolDx(0,0);
+    // double dUydy = localdata.fDSolDx(1,1);
+    // double dUxdy = localdata.fDSolDx(0,1);
+    // double dUydx = localdata.fDSolDx(1,0);
+    
+    // for (int j = 0; j < nphi; j++){
+    //     matB(0,2*j  ) = globaldata.fDPhiX0(0,j);
+    //     matB(1,2*j+1) = globaldata.fDPhiX0(1,j);
+    //     matB(2,2*j  ) = globaldata.fDPhiX0(1,j);
+    //     matB(2,2*j+1) = globaldata.fDPhiX0(0,j);
+
+    //     matBEnr(0,2*j  ) = globaldata.fDPhiX0(0,j)*uXInterp + globaldata.fPhi(j)*dUxdx;
+    //     matBEnr(1,2*j+1) = globaldata.fDPhiX0(1,j)*uYInterp + globaldata.fPhi(j)*dUydy;
+    //     matBEnr(2,2*j  ) = globaldata.fDPhiX0(1,j)*uXInterp + globaldata.fPhi(j)*dUxdy;
+    //     matBEnr(2,2*j+1) = globaldata.fDPhiX0(0,j)*uYInterp + globaldata.fPhi(j)*dUydx;
+    // }
+
+    // matBTot << matB, matBEnr;
+    
+    // VecDouble strain(3);
+    // strain.setZero();
+    // strain[0] = globaldata.fDSolDx(0,0);
+    // strain[1] = globaldata.fDSolDx(1,1);
+    // strain[2] = (globaldata.fDSolDx(0,1)+globaldata.fDSolDx(1,0));
+    // VecDouble stress = fConstitutiveMatrix * strain;
+
+    // Rhs -= matBTot.transpose() * stress * WJ;
+
+    // for (int i = nphi; i--; ){
+    //     double shapeFi = globaldata.fPhi[i];
+    //     //External force
+    //     double Fx = uXInterp * shapeFi; 
+    //     double Fy = uYInterp * shapeFi;
+    //     Rhs[2*nphi + 2*i] += Fx * WJ;
+    //     Rhs[2*nphi + 2*i+1] += Fy * WJ;
+    // };
 };
-
-
 
 int GlobalLocalEnrichment::VariableIndex(const std::string &name) const{
     

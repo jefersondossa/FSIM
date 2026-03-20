@@ -241,6 +241,14 @@ void GeoElementT<geoshape>::ComputeJacobianSearch(IntPointData &data) {
     int dim = DIM;
 
     switch (DIM) {
+        case 1:
+        {
+            data.fA0(0,0) = sqrt(data.fAxes0(0,0)*data.fAxes0(0,0) + data.fAxes0(1,0)*data.fAxes0(1,0));
+            data.fA0Inv(0,0) = 1/data.fA0(0,0);
+            data.fJacA0 = fabs(data.fA0Inv(0,0));
+
+            break;
+        }
         case 2:
         {
             // //Computing the jacobian determinant and Inverse
