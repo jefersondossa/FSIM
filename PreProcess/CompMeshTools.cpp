@@ -165,9 +165,16 @@ bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int6
             return true;
         }
         break;
+    case EOneD:
+        if ((xsiCC[0] >= t1) && (xsiCC[0] <= t2)){
+            xsiCorr[0] = xsi[0];
+            elCorr = elemsearch->Index();
+            return true;
+        }
+        break;
 
     default:
-        //PanicButton();
+        PanicButton();
         return false;
         break;
     }

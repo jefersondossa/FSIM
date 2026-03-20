@@ -243,9 +243,38 @@ void GeoElementT<geoshape>::ComputeJacobianSearch(IntPointData &data) {
     switch (DIM) {
         case 1:
         {
-            data.fA0(0,0) = sqrt(data.fAxes0(0,0)*data.fAxes0(0,0) + data.fAxes0(1,0)*data.fAxes0(1,0));
-            data.fA0Inv(0,0) = 1/data.fA0(0,0);
-            data.fJacA0 = fabs(data.fA0Inv(0,0));
+            data.fA0.resize(2,2);
+            data.fA0Inv.resize(2,2);
+            VecDouble v_1(3),v_1Normal(3);
+            v_1(0) = data.fAxes0(0, 0);
+            v_1(1) = data.fAxes0(1, 0);
+            v_1(2) = data.fAxes0(2, 0);
+            double norm_v_1 = v_1.norm();
+            v_1 /= norm_v_1;
+
+            v_1Normal(0) = -v_1(1);
+            v_1Normal(1) = v_1(0);
+            v_1Normal(2) = 0.0;
+
+
+            // //Computing the jacobian determinant and Inverse
+            data.fA0(0,0) = data.fAxes0(0,0);
+            data.fA0(1,0) = data.fAxes0(1,0);
+            data.fA0(0,1) = v_1Normal(0);            
+            data.fA0(1,1) = v_1Normal(1);
+            data.fJacA0 = data.fA0(0,0) * data.fA0(1,1) - data.fA0(0,1) * data.fA0(1,0);
+
+            data.fA0Inv(0,0) = data.fA0(1,1) / data.fJacA0;
+            data.fA0Inv(1,1) = data.fA0(0,0) / data.fJacA0;
+            data.fA0Inv(0,1) = -data.fA0(0,1) / data.fJacA0;
+            data.fA0Inv(1,0) = -data.fA0(1,0) / data.fJacA0;
+
+            // std::cout << "data.fJacA0 = " << data.fJacA0 << std::endl;
+            // std::cout << "data.fA0 = \n" << data.fA0 << std::endl;
+            // std::cout << "data.fA0Inv = \n" << data.fA0Inv << std::endl;
+
+            data.fJacA0 = fabs(data.fJacA0);
+
 
             break;
         }

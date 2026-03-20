@@ -26,11 +26,13 @@ void SolveGlobalProblem(CompMesh *cmeshG);
 void CreateLocalModel(CompMesh *cmeshL);
 void SolveLocalProblem(CompMesh *cmeshL);
 void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL);
+void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL);
 void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL);
 void SolveEnrichedProblem(CompMesh *cmeshG);
 
 int overlappingRegion;
 int overlappingBoundary;
+int overlappingNHNeumannBoundary;
 //Local index to global index correspondence for elements
 std::map<int64_t,int64_t> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
@@ -65,6 +67,7 @@ int main(int argc, char **args) {
     SolveLocalProblem(cmeshL);
 
     LocalToGlobalCorrespondence(cmeshG,cmeshL);
+    LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL);
 
     //ENRICHED GLOBAL MODEL
     std::cout << "\nSolve Enriched Global Problem \n";
@@ -122,6 +125,7 @@ void CreateLocalModel(CompMesh *cmeshL){
     cmeshL->InsertMaterial(matelasticityL);
 
     overlappingBoundary = 2;
+    overlappingNHNeumannBoundary = 4;
 
     //BC;
     MatrixDouble val1(2,2);
@@ -156,6 +160,61 @@ void SolveLocalProblem(CompMesh *cmeshL){
     VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
 };
 
+
+void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL){
+
+    Element *localElement = nullptr;
+    Element *globalElement = nullptr;
+
+    VecDouble x(dimension);
+    VecDouble xsiCorr(1);
+
+    MatrixDouble globalNode;
+    int64_t elCorr;
+
+    for (int i=0; i<cmeshL->NElements(); i++){
+        localElement = cmeshL->ElementVec()[i];
+        if (!localElement) continue;
+        if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension()) continue;
+        if (localElement->Reference()->Material() != overlappingNHNeumannBoundary) continue;
+
+        int numberOfIntegrationPoints = localElement -> getNumberOfIntegrationPoints();
+        localElement -> ComputeIntegPointCoordinates();
+
+        globalNode.resize(numberOfIntegrationPoints, 2);
+        globalNode.setZero();
+
+        elCorr = 0;
+
+        for(int index = 0; index < numberOfIntegrationPoints; index++){
+            x.setZero();
+            xsiCorr.setZero();
+
+            for(int k = 0; k < dimension; k++) x[k] = localElement->getIntegPointCoordinatesValue(index)[k];
+
+            for (elCorr; elCorr<cmeshG->NElements(); elCorr++){
+                if(cmeshG->ElementVec()[elCorr]->Dimension() == cmeshG->Dimension()) continue;
+                globalElement = cmeshG->ElementVec()[elCorr];
+
+                if(CompMeshTools ::searchNodeCorrespondence(x, cmeshG, elCorr, xsiCorr, globalElement)){
+                    globalElement->IntegrationData().fA0.resize(1,1);
+                    globalElement->IntegrationData().fA0Inv.resize(1,1);
+                    globalNode(index, 0) = xsiCorr[0];
+                    break;
+                }else{
+                    globalElement->IntegrationData().fA0.resize(1,1);
+                    globalElement->IntegrationData().fA0Inv.resize(1,1);
+                    elCorr = globalElement->Index();
+                }        
+            }        
+        }
+
+        globalNodeCorrespondence[localElement->Index()] = globalNode;
+        globalElementCorrespondence[localElement->Index()] = elCorr;
+    }
+};
+
+
 void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
 
     Element *localElement = nullptr;
@@ -168,7 +227,7 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
     int64_t elCorr;
 
     for (int i=0; i<cmeshL->NElements(); i++){
-        //if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension() || cmeshL->ElementVec()[i]->Reference()->Material() == overlappingBoundary){
+        if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension() || cmeshL->ElementVec()[i]->Reference()->Material() == overlappingBoundary){
             localElement = cmeshL->ElementVec()[i];
 
             int numberOfIntegrationPoints = localElement -> getNumberOfIntegrationPoints();
@@ -186,8 +245,8 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
                 for(int k = 0; k < dimension; k++) x[k] = localElement->getIntegPointCoordinatesValue(index)[k];
 
                 for (elCorr; elCorr<cmeshG->NElements(); elCorr++){
-                    //if(cmeshG->ElementVec()[elCorr]->Reference()->Material() != overlappingRegion) continue;
-                    if(cmeshG->ElementVec()[elCorr]->Dimension() != localElement->Dimension()) continue;
+                    if(cmeshG->ElementVec()[elCorr]->Reference()->Material() != overlappingRegion) continue;
+                    if(cmeshG->ElementVec()[elCorr]->Dimension() != cmeshG->Dimension()) continue;
                     globalElement = cmeshG->ElementVec()[elCorr];
 
                     if(CompMeshTools ::searchNodeCorrespondence(x, cmeshG, elCorr, xsiCorr, globalElement)){
@@ -201,7 +260,7 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
 
             globalNodeCorrespondence[localElement->Index()] = globalNode;
             globalElementCorrespondence[localElement->Index()] = elCorr;
-        //}
+        }
     }
 };
 
@@ -280,8 +339,8 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     LinearAnalysis anE(cmeshG,SolverType::ELDLt);
 
     anE.Run();
-    //anE.PrintSolution();
-    anE.PrintGlobalRhs();
+    anE.PrintSolution();
+    // anE.PrintGlobalRhs();
 
     // std::vector<std::string> ScalarNames, VectorNames;
     // ScalarNames = {"SigmaX","SigmaY","TauXY"};
