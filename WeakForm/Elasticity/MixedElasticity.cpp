@@ -475,22 +475,7 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
 
     //Pressure
     if (var == 20){
-        VecDouble epsilon(3);
-        // epsilon[0] = data.fDSolDx(0,0);
-        // epsilon[1] = data.fDSolDx(1,1);
-        // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
-        // if (fPlaneStress){
-        //     PanicButton();
-        // } else {
-        //     double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
-        //     Tensor3D Stress;
-        //     Stress.fXX() = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
-        //     Stress.fYY() = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
-        //     Stress.fZZ() = k * (fPoissonRatio * epsilon[0] + fPoissonRatio * epsilon[1]);
-        //     Stress.fXY() = G * epsilon[2];
-        //     Sol[0] = Stress.Trace()/3.;
-        // }
+        Sol[0] = data[1]->fSol[0];
         return;
     };
     

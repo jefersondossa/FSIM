@@ -569,7 +569,12 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
                 << "Name=\"Material\" format=\"ascii\">" << std::endl;
     for (int i=0; i<graphmesh->NElements(); i++){
         auto compel = cmesh->ElementVec()[i];
-        int matid = compel->GetWeakForm()->Id();
+        int matid;
+        if (compel->GetWeakForm() == nullptr){
+            matid = -1;
+        }else{
+            matid = compel->GetWeakForm()->Id();
+        }
         output_v << matid << std::endl;
     };
     output_v << "      </DataArray> " << std::endl;

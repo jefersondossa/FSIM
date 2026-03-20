@@ -13,7 +13,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector);
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = 1.0;
+    force[0] = -0.5+1.0*y;
 };
 
 int main(int argc, char **args) {   
@@ -34,9 +34,9 @@ int main(int argc, char **args) {
 
     LinearAnalysis an(cmesh,SolverType::ELDLt);
     an.Run();
-    an.PrintGlobalMatrix();
-    an.PrintGlobalRhs();
-    an.PrintSolution();
+    // an.PrintGlobalMatrix();
+    // an.PrintGlobalRhs();
+    // an.PrintSolution();
 
     cmesh->Print("cmesh_mixed2.txt");
     cmeshpressure->Print("cmesh_press2.txt");
@@ -44,7 +44,7 @@ int main(int argc, char **args) {
 
 
     std::vector<std::string> ScalarNames, VectorNames;
-    // ScalarNames = {"Displacement"};
+    ScalarNames = {"Pressure"};
     VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
@@ -57,7 +57,7 @@ int main(int argc, char **args) {
 
 CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 
-    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIsoparametric); 
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
     cmesh->SetDefaultOrder(2);
 
     int nstate = 2;
@@ -122,7 +122,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
 
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
-    MixedElasticity * mat = new MixedElasticity(8,2,1.0,0.0);
+    MixedElasticity * mat = new MixedElasticity(8,2,1.0,0.49);
     cmesh->InsertMaterial(mat);
 
     cmesh->AutoBuild();
