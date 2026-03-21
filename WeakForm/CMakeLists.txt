@@ -8,6 +8,8 @@ file(GLOB weakform
     TransientWeakForm.cpp
     GlobalLocalEnrichment.h
     GlobalLocalEnrichment.cpp
+    InterpolatedBC.h
+    InterpolatedBC.cpp
 )
 
 add_subdirectory(Stokes)

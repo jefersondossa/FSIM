@@ -6,6 +6,7 @@
 #include "L2Projection.h"
 #include "Elasticity2D.h"
 #include "CompMeshTools.h"
+#include "InterpolatedBC.h"
 
 #include "ElementEnriched.h"
 #include "Element.h"
@@ -23,7 +24,7 @@ auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
 
 void CreateGlobalModel(CompMesh *cmeshG);
 void SolveGlobalProblem(CompMesh *cmeshG);
-void CreateLocalModel(CompMesh *cmeshL);
+void CreateLocalModel(CompMesh *cmeshL, CompMesh *cmeshG);
 void SolveLocalProblem(CompMesh *cmeshL);
 void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL);
 void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL);
@@ -63,15 +64,15 @@ int main(int argc, char **args) {
     GeoMesh * gmeshL = new GeoMesh();
     GmshTools::Read(*gmeshL,"../local.msh");
     CompMesh *cmeshL = new CompMesh(gmeshL,ApproxType::EHierarquic);
-    CreateLocalModel(cmeshL);
+    CreateLocalModel(cmeshL, cmeshG);
     gmeshL->Print("gmeshLocal.txt");
     cmeshL->Print("cmeshLocal.txt");
-    
-    //Solve Local Problem
-    SolveLocalProblem(cmeshL);
 
     LocalToGlobalCorrespondence(cmeshG,cmeshL);
     LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL);
+
+    //Solve Local Problem
+    SolveLocalProblem(cmeshL);
 
     //ENRICHED GLOBAL MODEL
     std::cout << "\nSolve Enriched Global Problem \n";
@@ -124,7 +125,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     // VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
 }
 
-void CreateLocalModel(CompMesh *cmeshL){
+void CreateLocalModel(CompMesh *cmeshL, CompMesh * cmeshG){
 
     Elasticity2D* matelasticityL = new Elasticity2D(1, 1.0, 0.0);
     cmeshL->InsertMaterial(matelasticityL);
@@ -139,8 +140,9 @@ void CreateLocalModel(CompMesh *cmeshL){
     val2[1] = 1.0;
     L2Projection * matbcL1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     val2.setZero();
-    val2[0] = -2.0;
-    L2Projection * matbcL2 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
+    InterpolatedBC * matbcL2 = new InterpolatedBC(2,dimension-1,2,BoundaryConditionType::kDirichlet,&globalElementCorrespondence,&globalNodeCorrespondence,cmeshG);
+    // val2[0] = -2.;
+    // L2Projection * matbcL2 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
     L2Projection * matbcL3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     matbcL3->SetForcingFunction(forcingFunction);
 

@@ -597,6 +597,7 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
         rhsVector = fIntegData.fRHS;
         return;
     }
+    fIntegData.fElementIndex = this->fIndex;
 
     int DIM = compshape::Dimension;
     fIntegData.fNeedsDSol = true;
@@ -665,7 +666,7 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
 
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
-    
+    fIntegData.fElementIndex = this->fIndex;
     int index = 0;
     double val = 0.;
     for(int it = 0; it < fIntRule.NPoints(); it++){
@@ -704,7 +705,7 @@ template<class compshape>
 void ElementT<compshape>::ComputeElContribution(VecDouble &rhsVector){
 
     if (!fWeakForm) return;
-
+    fIntegData.fElementIndex = this->fIndex;
     int DIM = compshape::Dimension;
     fIntegData.fNeedsDSol = true;
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);

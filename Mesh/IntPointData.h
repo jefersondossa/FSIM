@@ -8,6 +8,7 @@
 class IntPointData {
 
 public:
+    int64_t fElementIndex;
     int fIndex;
     /// @brief Jacobian transform related to the initial mesh
     MatrixDouble fA0 = {};

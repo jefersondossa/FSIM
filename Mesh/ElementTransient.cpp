@@ -42,7 +42,7 @@ void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNR
 
     int index = 0;
     
-    
+    this->fIntegData.fElementIndex = this->fIndex;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (this->fWeakForm);
     auto *pos2dt = dynamic_cast<TransientPositionalFrame2D *> (this->fWeakForm);
     auto *truss = dynamic_cast<PositionalTruss *> (this->fWeakForm);
