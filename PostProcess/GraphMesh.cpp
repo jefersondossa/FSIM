@@ -28,26 +28,37 @@
 
 
 GraphMesh::GraphMesh(CompMesh *cmesh){
-    int64_t nElements = cmesh->NElements();
+    int64_t nElements =0;
+
+    for (int64_t iel = 0; iel < cmesh->NElements(); iel++){
+        auto cel = cmesh->ElementVec()[iel];
+        if (cel->Dimension() != cmesh->Dimension()) continue;
+        if (cel->GetWeakForm() == nullptr) continue;
+        nElements++;
+    }
+    
 
     fElementConnects.resize(nElements);
     fElementTypes.resize(nElements);
 
     int64_t nodecount = 0;
-
-    for (int64_t iel = 0; iel < nElements; iel++){
+    int64_t elcount = 0;
+    for (int64_t iel = 0; iel < cmesh->NElements(); iel++){
         auto cel = cmesh->ElementVec()[iel];
         if (cel->Dimension() != cmesh->Dimension()) continue;
+        if (cel->GetWeakForm() == nullptr) continue;
+        fGElementToMElement[elcount] = iel;
         int nelnodes = cel->Reference()->NCornerNodes();
-        fElementTypes[iel] = cel->Reference()->PrintType();
-        fElementConnects[iel].resize(nelnodes);
+        fElementTypes[elcount] = cel->Reference()->PrintType();
+        fElementConnects[elcount].resize(nelnodes);
         for (int inode = 0; inode < nelnodes; inode++){
             fNodes.push_back(cmesh->Reference()->NodeVec()[cel->Reference()->getGeometricNodes()[inode]]->getCoordinates());
             fGNodeToMNode[nodecount] = cel->Reference()->getGeometricNodes()[inode];
             fMNodeToGNode[cel->Reference()->getGeometricNodes()[inode]] = nodecount;
-            fElementConnects[iel][inode] = nodecount;
+            fElementConnects[elcount][inode] = nodecount;
             nodecount++;
         }
+        elcount++;
     }
     
     

@@ -119,9 +119,9 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     VectorNames = {"Displacement"};
 
     anG.Run();
-    //anG.PrintSolution();
+    anG.PrintSolution();
 
-    VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
+    // VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
 }
 
 void CreateLocalModel(CompMesh *cmeshL){
@@ -156,13 +156,13 @@ void SolveLocalProblem(CompMesh *cmeshL){
     LinearAnalysis anL(cmeshL,SolverType::ELDLt);
 
     anL.Run();
-    //anL.PrintSolution();
+    anL.PrintSolution();
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"SigmaX","SigmaY","TauXY"};
     VectorNames = {"Displacement"};
 
-    VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
+    // VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
 };
 
 
@@ -292,6 +292,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
     //cmeshG->Print("cmeshGEnriched.txt");
     
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
+    globalLocal->SetForcingFunction(forcingFunction);
 
     //Count the number local elements to enrich in the global mesh
     int nelsToEnrich = 0;
@@ -349,9 +350,9 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     anE.PrintSolution();
 
 
-    // std::vector<std::string> ScalarNames, VectorNames;
+    std::vector<std::string> ScalarNames, VectorNames;
     // ScalarNames = {"SigmaX","SigmaY","TauXY"};
-    // VectorNames = {"Displacement"};
+    VectorNames = {"Displacement"};
 
-    // VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
+    // VTUGenerator::PrintResults(cmeshG,"Enriched",ScalarNames,VectorNames); 
 };

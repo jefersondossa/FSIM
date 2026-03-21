@@ -92,11 +92,11 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
     // matBEnr.setZero();
     // matBTot.setZero();
 
-    // auto force = fForceFunction;
-    // VecDouble forcingF(fDimension);
-    // forcingF.setZero();
-    // VecDouble x_ = globaldata.fX;
-    // if (force) force(x_,forcingF);
+    auto force = fForceFunction;
+    VecDouble forcingF(3);
+    forcingF.setZero();
+    VecDouble x_ = globaldata.fX;
+    if (force) force(x_,forcingF);
 
     double uXInterp = localdata.fSol[0];
     double uYInterp = localdata.fSol[1];
@@ -131,8 +131,8 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
     for (int i = nphi; i--; ){
         double shapeFi = globaldata.fPhi[i];
         //External force
-        double Fx = uXInterp * shapeFi; 
-        double Fy = uYInterp * shapeFi;
+        double Fx = forcingF[0] * uXInterp * shapeFi; 
+        double Fy = forcingF[1] * uYInterp * shapeFi;
         Rhs[2*nphi + 2*i] += Fx * WJ;
         Rhs[2*nphi + 2*i+1] += Fy * WJ;
     };
@@ -140,7 +140,7 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
 
 int GlobalLocalEnrichment::VariableIndex(const std::string &name) const{
     
-    if(!strcmp("GlobalLocalEnrichment",name.c_str()))    return 1;
+    if(!strcmp("Displacement",name.c_str()))     return 1;
     
     std::cout << "Post Process variable not implemented \n";
     PanicButton();
@@ -151,7 +151,7 @@ int GlobalLocalEnrichment::NSolutionVariables(int var) const{
     switch (var)
     {
     case 1:
-        return fNState;
+        return 3;
 
     default:
         PanicButton();

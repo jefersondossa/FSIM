@@ -88,10 +88,6 @@ public:
         PanicButton();
     };
 
-    void interpolateSolution(){
-        fLocalElement->interpolateSolution();
-    };
-
     void interpolateSolDerivatives(MatrixDouble &du_dx) override{
         PanicButton();
     };
@@ -160,10 +156,44 @@ public:
         fLocalElement->ComputeIntegPointCoordinates();
     };
 
-    /*void GetInterfaceData(Element* &localEl, Element* &globalEl) override{
-        localEl = fLocalElement;
-        globalEl = fGlobalElement;
-    };*/
+    IntPointData &IntegrationData()override{
+        return fLocalElement->IntegrationData();
+    }
+
+    void interpolateSolution(){
+        // fLocalElement->IntegrationData().fAdimCoord = fIntegData.fAdimCoord;
+        // fLocalElement->IntegrationData().fWeight = fIntegData.fWeight;
+        // fLocalElement->IntegrationData().fA0 = this->fIntegData.fA0;
+        // fLocalElement->IntegrationData().fA0Inv = this->fIntegData.fA0Inv;
+        // fLocalElement->IntegrationData().fAxes0 = this->fIntegData.fAxes0;
+        // fLocalElement->IntegrationData().fJacA0 = this->fIntegData.fJacA0;
+        // fLocalElement->IntegrationData().fX = this->fIntegData.fX;
+
+        // //Computes spatial derivatives
+        // fLocalElement->ComputeSpatialDerivatives();
+        // fLocalElement->interpolateSolution();
+        // fLocalElement->interpolateSolDerivatives();
+
+        std::cout << "Para interpolar a solução global enriquecida é necessário encontrar também as correspondências dos nós da malha local\nInserir o valor correto aqui:";
+        // fGlobalElement->IntegrationData().fAdimCoord = globalNodeCorrespondence->at(fLocalElement->Index())(index,k);
+        fGlobalElement->IntegrationData().fAdimCoord = this->fIntegData.fAdimCoord;
+        fGlobalElement->IntegrationData().fWeight = this->fIntegData.fWeight;
+        fGlobalElement->Reference()->ComputeJacobian(fGlobalElement->IntegrationData());
+
+        //Computes spatial derivatives
+        fGlobalElement->ComputeSpatialDerivatives();
+        fGlobalElement->interpolateSolution();
+        fGlobalElement->interpolateSolDerivatives();
+        
+        
+        // PanicButton();
+    }
+
+    void Solution(int var, VecDouble &Sol) override{
+        
+        fWeakForm->Solution(fGlobalElement->IntegrationData(),var,Sol);
+    };
+
 };
 
 

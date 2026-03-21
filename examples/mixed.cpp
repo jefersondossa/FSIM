@@ -13,6 +13,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector);
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
+    // force[0] = -0.5+1.0*y;
     force[0] = -0.5+1.0*y;
 };
 

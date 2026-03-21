@@ -458,8 +458,8 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
     output_v << "      <DataArray type=\"UInt8\" Name=\"types\" "
              << "format=\"ascii\">" << std::endl;
 
-    for (int i=0; i<cmesh->NElements(); i++){
-        output_v << cmesh->ElementVec()[i]->Reference()->PrintType() << std::endl;
+    for (int i=0; i<graphmesh->NElements(); i++){
+        output_v << graphmesh->ElType(i) << std::endl;
     };
 
     output_v << "      </DataArray>" << std::endl
@@ -473,7 +473,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
     std::map<int64_t,std::vector<VecDouble>> vectSol;
     // std::vector<std::vector<VecDouble,scalnames.size()>,graphmesh->NNodes()> scalSol;
     for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
-        auto compel = cmesh->ElementVec()[iel];
+        auto compel = cmesh->ElementVec()[graphmesh->GraphElementToMeshElement(iel)];
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
         int nelnodes = compel->Reference()->NCornerNodes();
@@ -505,6 +505,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
                 scalSol[graphconnect[inode]][iscal]=Sol;
             }
             for (int ivect = 0; ivect < vecnames.size(); ivect++){
+                if (!compel->GetWeakForm())continue;
                 int varindex = compel->GetWeakForm()->VariableIndex(vecnames[ivect]);
                 int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
                 VecDouble Sol(nvar);

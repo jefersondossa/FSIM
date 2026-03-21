@@ -133,7 +133,7 @@ public:
         return  fIntegData.fDistFunction[index];
     }
 
-    IntPointData &IntegrationData() {return fIntegData;}
+    virtual IntPointData &IntegrationData() {return fIntegData;}
 
     virtual int Dimension() = 0;
 

@@ -23,6 +23,8 @@ private:
     std::map<int64_t,int64_t> fGNodeToMNode;
     // a map relating a comp mesh node to the graph node
     std::map<int64_t,int64_t> fMNodeToGNode;
+    // a map relating a graph element to the comp mesh element
+    std::map<int64_t,int64_t> fGElementToMElement;
 
 public:
     // graph mesh constructor
@@ -73,6 +75,10 @@ public:
     int64_t MeshNodeToGraphNode(int64_t meshnode){
         return fMNodeToGNode[meshnode];
     };
+
+    int64_t GraphElementToMeshElement(int64_t graphel){
+        return fGElementToMElement[graphel];
+    }
 };
 
 #endif
