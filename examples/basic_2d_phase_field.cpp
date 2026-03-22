@@ -24,23 +24,24 @@
 
 using namespace std;
 
-const int Nx = 301, Ny = 101;
-const double Lx = 3.0, Ly = 1.0;
+const int Nx = (60) + 1, Ny = (60) + 1;
+const double Lx = 1.0, Ly = 1.0;
 const double dx = Lx / (Nx - 1);
 const double dy = Ly / (Ny - 1);
-const double dt = 5e-3;
+const double dt = 4e-4;//5e-3;
 
-const int PHASEFIELD_STEPS_PER_ELASTICITY = 50;
-const int SAVE_EVERY = 8*PHASEFIELD_STEPS_PER_ELASTICITY;
-const int MAX_STEPS = 1200*SAVE_EVERY;
+constexpr double KK_ = 1.8;
+const int PHASEFIELD_STEPS_PER_ELASTICITY = 1;
+const int SAVE_EVERY = 8*PHASEFIELD_STEPS_PER_ELASTICITY * 50;
+const int MAX_STEPS = 12000*SAVE_EVERY;
 
 const double M = 1.0;
-const double gamma_ = dx*32;
-const double ksi = 1e-4;
+const double gamma_ = 0.01*8 * KK_;
+const double ksi = 4e-4*1.4;
 
-const double beta_ = 15e-1;
+const double beta_ = 1.5 * KK_;
 
-const double V = 0.55;
+const double V = 0.4;
 
 using Grid = vector<vector<double>>;
 using GridStress = vector<vector<double>>;
@@ -213,40 +214,11 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     modelElasticity2D.InsertMaterial(govEquationElasticity2D);
     val1.setZero();
     val2.setZero();
-    // val2[0] = 1.;
-    // constexpr auto kEngasteMatId = 22;
-    constexpr auto kEngasteMatId = 16;
-    // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    constexpr auto kEngasteMatId = 18;
     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(engasteBC);
-    // {
-    //     val1.setZero();
-    //     val2.setZero();
-    //     constexpr auto kEngasteMatId = 22;
-    //     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
-    //     modelElasticity2D.InsertMaterial(engasteBC);
-    // }
     val1.setZero();
     val2.setZero();
-    val2[0] = 0.;
-    constexpr auto kFreeMatTopId = 18;
-    auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(freeBC);
-    val1.setZero();
-    val2.setZero();
-    val2[0] = 0.;
-    constexpr auto kFreeMatBottomId = 19;
-    auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(freeBCEl2D);
-    // val1.setZero();
-    // val2.setZero();
-    // val2[0] = 0.;
-    // constexpr auto kExLoadMatId = 21;
-    // auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    // modelElasticity2D.InsertMaterial(El2D);
-    val1.setZero();
-    val2.setZero();
-    // val2[0] = -10;
     val2[1] = -10;
     constexpr auto kLoadMatId = 17;
     auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
@@ -323,13 +295,65 @@ void SetupBoundaryConditionsElasticity2DMBB(CompMesh& modelElasticity2D)
     // }
 }
 
+void SetupBoundaryConditionsElasticity2DBridge(CompMesh &modelElasticity2D)
+{
+    MatrixDouble val1(2, 2);
+    VecDouble val2(2);
+    constexpr auto kVolumeMatId = 15;
+    auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
+    modelElasticity2D.InsertMaterial(govEquationElasticity2D);
+
+    // val1.setZero();
+    // val2.setZero();
+    // constexpr auto kLeftMatId = 16;
+    // auto *leftBC = new L2Projection(kLeftMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(leftBC);
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = 1.0;
+    constexpr auto kBottomRight = 17;
+    auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(bottomRightBC);
+
+    // val2.setZero();
+    // val1.setZero();
+    // val2[0] = 0.;
+    // constexpr auto kFreeMatTopId = 18;
+    // auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(freeBC);
+
+    // val1.setZero();
+    // val2.setZero();
+    // constexpr auto kFreeMatBottomId = 19;
+    // auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    // modelElasticity2D.InsertMaterial(freeBCEl2D);
+
+    val1.setZero();
+    val2.setZero();
+    val2[1] = -40;
+    constexpr auto kMiddleBottom = 23;
+    auto *El2D2 = new L2Projection(kMiddleBottom, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D2);
+
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kLeftBottom = 24;
+    auto *bottomLeftBC = new L2Projection(kLeftBottom, 2, BoundaryConditionType::kDirichlet, val1, val2);
+    modelElasticity2D.InsertMaterial(bottomLeftBC);
+
+    GmshTools::Read(modelElasticity2D, "../../rectangle_bridge.msh");
+}
+
+
 int main()
 {
     Grid phi(Nx, vector<double>(Ny)), phi_new(Nx, vector<double>(Ny));
     initialize(phi);
 
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
-    SetupBoundaryConditionsElasticity2DMBB(*modelElasticity2D);
+    // SetupBoundaryConditionsElasticity2DBridge(*modelElasticity2D);
+    SetupBoundaryConditionsElasticity2DCantileverRightBottom(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     // RunEso(*modelElasticity2D, anElasticity2D, 0.55);
@@ -365,7 +389,9 @@ int main()
             elemElas2D->setIntegPointWeightFunction();
         }
         anElasticity2D.Run();
-        // VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
+        if(i % SAVE_EVERY == 0) {
+            VTUGenerator::PrintResults(modelElasticity2D.get(), "cantilever_2d_beam", ScalarNamesElasticity2D, VectorNamesElasticity2D, {}, i);
+        }
 
 
         for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++){

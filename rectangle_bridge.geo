@@ -27,9 +27,8 @@ Line Loop(1) = {101, 102, 2, 3, 4};
 Plane Surface(1) = {1};
 
 // Mesh control
-Transfinite Curve {101, 102, 2, 4} = 41 Using Progression 1;
-Transfinite Curve {101, 102, 2, 4} = 41 Using Progression 1;
-Transfinite Curve {3} = 81 Using Progression 1;
+Transfinite Curve {101, 102, 2, 4} = 61 Using Progression 1;
+Transfinite Curve {3} = 121 Using Progression 1;
 Transfinite Surface{1} = {1, 2, 3, 4};
 Recombine Surface{1};
 

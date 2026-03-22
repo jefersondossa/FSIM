@@ -76,40 +76,17 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     constexpr auto kVolumeMatId = 15;
     auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
     modelElasticity2D.InsertMaterial(govEquationElasticity2D);
-
     val1.setZero();
     val2.setZero();
-    val2[0] = 0.;
-
-    constexpr auto kEngasteMatId = 16;
-
+    constexpr auto kEngasteMatId = 18;
     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(engasteBC);
-
     val1.setZero();
-    val2.setZero();
-    val2[0] = 0.;
-
-    constexpr auto kFreeMatTopId = 18;
-
-    auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(freeBC);
-
-    val1.setZero();
-    val2.setZero();
-    val2[0] = 0.;
-
-    constexpr auto kFreeMatBottomId = 19;
-
-    auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(freeBCEl2D);
-
     val2.setZero();
     val2[1] = -10;
-    constexpr auto kLoadMatId = 45;
-    auto *El2D = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    modelElasticity2D.InsertMaterial(El2D);
-
+    constexpr auto kLoadMatId = 17;
+    auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelElasticity2D.InsertMaterial(El2D2);
     GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
 
     // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
@@ -215,7 +192,7 @@ void SetupBoundaryConditionsElasticity2DBridge(CompMesh &modelElasticity2D)
     GmshTools::Read(modelElasticity2D, "../../rectangle_bridge.msh");
 }
 
-void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
+void SetupBoundaryConditionsPhaseFieldBridge(CompMesh &modelPhaseField)
 {
     MatrixDouble val1(1, 1);
     VecDouble val2(1);
@@ -384,15 +361,130 @@ void SetupBoundaryConditionsPhaseField(CompMesh &modelPhaseField)
     modelPhaseField.part_elem = new int[modelPhaseField.NElements()]();
 }
 
+void SetupBoundaryConditionsPhaseFieldShear(CompMesh &modelPhaseField)
+{
+    MatrixDouble val1(1, 1);
+    VecDouble val2(1);
+
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kPhaseFieldInternalMatId = 15;
+    auto *govEquationPF = new PhaseField(kPhaseFieldInternalMatId, 2);
+    modelPhaseField.InsertMaterial(govEquationPF);
+
+    val2.setZero();
+    val1.setZero();
+    constexpr auto kFreeMatTopId = 18;
+    auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(freeBC);
+
+    val1.setZero();
+    val2.setZero();
+    constexpr auto kFreeMatBottomId = 17;
+    auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
+    modelPhaseField.InsertMaterial(freeBCEl2D);
+
+    
+    GmshTools::Read(modelPhaseField, "../../rectangle.msh");
+    // return;
+    // For the phase field implementation, we also need to impose an additional restrain to the final volume.
+    // To do so, we create a new node, which serves to store the additional Lagrange multiplier variable.
+    // However, the LM has the contribution of all elements. Thus, the new node need to be set as a new connectivity for all elements.
+    // Note that this completely changes the data structure, and additional care is needed to handle it.
+    // For instance, changes in the shape functions and assemble algorithm may be needed.
+    // First, create a new node and a new element to store the LM.
+    VecDouble Coor(3);
+    Coor[0] = 0.0;
+    Coor[1] = 0.0;
+    Coor[2] = 0.0;
+    Node *newNode = new Node(Coor, modelPhaseField.NodeVec().size(), 1);
+    newNode->AllocateTimeDerivatives();
+    modelPhaseField.NodeVec().push_back(newNode);
+    int64_t index = newNode->Index();
+    VecInt connect(1);
+    connect[0] = index;
+    // Point
+    Element *gel = nullptr;
+    int matnull = modelPhaseField.GetNewMaterialId();
+    std::cout << "matnul " << matnull << std::endl;
+    NullWeakForm *nullwf = new NullWeakForm(matnull, 1);
+    gel = new ElementTransient<ShapePoint>(index, connect, &modelPhaseField, nullwf);
+    modelPhaseField.InsertElement(gel);
+
+    // Creates the Lagrange multiplier material
+    int matlagmult = modelPhaseField.GetNewMaterialId();
+    LagrangeMultiplier *lagmult = new LagrangeMultiplier(matlagmult, 1);
+    // Sets the initial/final volume constraint as a forcing function
+    //  const auto diam = 2*100.0/700;
+    //  double finalVol = 2.-12.*M_PI*diam*diam/4.0;
+    static constexpr auto diam = 2 * 100.0 / 700;
+    static constexpr auto holesVol = 12. * M_PI * diam * diam / 4.0;
+    static constexpr auto finalVol = 2. - holesVol;
+    static constexpr auto finalVolRel = finalVol / 2.0;
+    auto forcingFunction = [](const VecDouble &coord, VecDouble &force)
+    {
+        force[0] = V_F;
+        // force[0] = 0.0;
+    };
+    lagmult->SetForcingFunction(forcingFunction);
+    modelPhaseField.InsertMaterial(lagmult);
+    // Now, create new elements of the type LagrangeMultiplier, which will be used to impose the additional constrain.
+    //  Here, the point element will always be the second and the volumetric element, the first.
+    //  std::cout << "NElements before LagrangeMultiplier: " << modelPhaseField.NElements() << '\n';
+    for (auto &element : modelPhaseField.ElementVec())
+    {
+        if (element->Dimension() != modelPhaseField.Dimension())
+            continue;
+
+        Element *gelmult = nullptr;
+        auto *wf = modelPhaseField.Material(matlagmult);
+        auto newindex = modelPhaseField.NElements();
+        auto type = element->Type();
+
+        switch (type)
+        {
+        case ElementType::EQuadrilateral:
+            if (modelPhaseField.GetDefaultOrder() == 1)
+            {
+                gelmult = new ElementLagrangeMultiplier<ShapeQuadrilateralLin>(newindex, element, gel, &modelPhaseField, wf);
+            }
+            else
+            {
+                PanicButton();
+            }
+            break;
+        case ElementType::ETriangle:
+            if (modelPhaseField.GetDefaultOrder() == 1)
+            {
+                gelmult = new ElementLagrangeMultiplier<ShapeTriangleLin>(newindex, element, gel, &modelPhaseField, wf);
+            }
+            else
+            {
+                PanicButton();
+            }
+            break;
+
+        default:
+            PanicButton();
+            break;
+        }
+        modelPhaseField.InsertElement(gelmult);
+    }
+    // std::cout << "NElements after LagrangeMultiplier: " << modelPhaseField.NElements() << '\n';
+    delete[] modelPhaseField.part_elem;
+    modelPhaseField.part_elem = new int[modelPhaseField.NElements()]();
+}
+
 int main()
 {
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     // SetupBoundaryConditionsElasticity2D2(*modelElasticity2D);
-    SetupBoundaryConditionsElasticity2DBridge(*modelElasticity2D);
+    // SetupBoundaryConditionsElasticity2DBridge(*modelElasticity2D);
+    SetupBoundaryConditionsElasticity2DCantileverRightBottom(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     std::unique_ptr<CompMesh> modelPhaseField = std::make_unique<CompMesh>();
-    SetupBoundaryConditionsPhaseField(*modelPhaseField);
+    SetupBoundaryConditionsPhaseFieldShear(*modelPhaseField);
     TransientAnalysis anPhaseField(modelPhaseField.get(), SolverType::ELU, true);
     // NonLinearAnalysis anPhaseField(modelPhaseField.get(), SolverType::ELU);
     anPhaseField.SetMaxIter(10);
@@ -591,8 +683,10 @@ int main()
         }
 
         std::cout << "Solving Phase-Field\n";
-        anPhaseField.Run(1);
-        if(i % 10 == 0) {
+        for(size_t i = 0; i < 40; i++) {
+            anPhaseField.Run(1);
+        }
+            if(i % 10 == 0) {
             VTUGenerator::PrintResults(modelPhaseField.get(), "phase_field_2d_", ScalarNamesPhaseField, VectorNamesPhaseField, {}, i);
         }
 
