@@ -85,6 +85,8 @@ void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNR
         index++;        
     };  
 
+    // std::cout << "WeakForm " << this->fWeakForm->Id() << std::endl;
+    // std::cout << "Index = " << this->fIndex << std::endl;
     // std::cout << "Stiffness \n" << jacobianNRMatrix << std::endl;
     // std::cout << "Rhs \n" << rhsVector << std::endl;
 

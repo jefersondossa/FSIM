@@ -70,8 +70,8 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     int nphi = data.fPhi.size();
 
     double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
-    MatrixDouble matB(3,2*nphi);
-    matB.setZero();
+    // MatrixDouble matB(3,2*nphi);
+    // matB.setZero();
    
 
     auto force = fForceFunction;
@@ -80,21 +80,21 @@ void Elasticity2D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
     
-    for (int j = 0; j < nphi; j++){
-        matB(0,fDimension*j  ) = data.fDPhiX0(0,j);
-        matB(1,fDimension*j+1) = data.fDPhiX0(1,j);
-        matB(2,fDimension*j  ) = data.fDPhiX0(1,j);
-        matB(2,fDimension*j+1) = data.fDPhiX0(0,j);
-    }
+    // for (int j = 0; j < nphi; j++){
+    //     matB(0,fDimension*j  ) = data.fDPhiX0(0,j);
+    //     matB(1,fDimension*j+1) = data.fDPhiX0(1,j);
+    //     matB(2,fDimension*j  ) = data.fDPhiX0(1,j);
+    //     matB(2,fDimension*j+1) = data.fDPhiX0(0,j);
+    // }
     
-    VecDouble strain(3);
-    strain.setZero();
-    strain[0] = data.fDSolDx(0,0);
-    strain[1] = data.fDSolDx(1,1);
-    strain[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
-    VecDouble stress = fConstitutiveMatrix * strain;
+    // VecDouble strain(3);
+    // strain.setZero();
+    // strain[0] = data.fDSolDx(0,0);
+    // strain[1] = data.fDSolDx(1,1);
+    // strain[2] = (data.fDSolDx(0,1)+data.fDSolDx(1,0));
+    // VecDouble stress = fConstitutiveMatrix * strain;
 
-    Rhs -= matB.transpose() * stress * WJ;
+    // Rhs -= matB.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
         double shapeFi = data.fPhi[i];

@@ -91,6 +91,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     }
 
     //Account the enriched DOFs in the stiffness matrix and rhs vector
+    std::set<int> locIndexes;
     VecInt geoNodes = fGlobalElement->Reference()->getGeometricNodes();
     for (size_t i = 0; i < geoNodes.size(); i++){
         if (!(*connectEnrichment)[geoNodes[i]])continue;
@@ -105,6 +106,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
             }
         }
         locConnectIndex -= NSides();
+        locIndexes.insert(locConnectIndex);
         int nshapei = c->GetNShapeFunctions();
         int nstatei = c->GetNStateVariables();
         for (int j = 0; j < nshapei*nstatei; j++){
@@ -115,10 +117,13 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
             }
             for (int k = 0; k < nshapei*nstatei; k++){
                 StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locConnectIndex*nstatei + k) = jacobianNRMatrix(nglobalDOF + i*nstatei + j,nglobalDOF + i*nstatei + k);   
+                for (auto locconnect:locIndexes){
+                    if (locconnect == locConnectIndex) continue;
+                    StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locconnect*nstatei + k) = jacobianNRMatrix(nglobalDOF + i*nstatei + j,nglobalDOF + locconnect*nstatei + k);
+                    StiffnessCorrect(nglobalDOF + locconnect*nstatei + k,nglobalDOF + locConnectIndex*nstatei + j) = jacobianNRMatrix(nglobalDOF + locconnect*nstatei + k,nglobalDOF + i*nstatei + j);
+                }
             }
-            
         }
-        
     }
     // std::cout << "Stiffness before \n" << jacobianNRMatrix << '\n';
     // std::cout << "Rhs \n" << rhsVector << '\n';
@@ -128,7 +133,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     rhsVector = RhsCorrect;
 
     // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
-    //  std::cout << "Rhs \n" << rhsVector << '\n';
+    // std::cout << "Rhs \n" << rhsVector << '\n';
 
     return;
 };

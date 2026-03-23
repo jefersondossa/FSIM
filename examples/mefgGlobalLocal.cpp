@@ -96,11 +96,12 @@ void CreateGlobalModel(CompMesh *cmeshG){
     //BC 
     MatrixDouble val1(2,2);
     val1.setZero();
-    VecDouble val2(2);
+    VecDouble val2(2),val3(2);
     val2.setZero();
+    val3.setZero();
     L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
-    val2[1] = 1.0;
-    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    val3[1] = 1.0;
+    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val3);
     L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     matbcG3->SetForcingFunction(forcingFunction);
 
@@ -120,7 +121,8 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     VectorNames = {"Displacement"};
 
     anG.Run();
-    anG.PrintSolution();
+    // anG.PrintSolution();
+    anG.PrintGlobalRhs();
 
     // VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
 }
@@ -140,9 +142,9 @@ void CreateLocalModel(CompMesh *cmeshL, CompMesh * cmeshG){
     val2[1] = 1.0;
     L2Projection * matbcL1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     val2.setZero();
-    InterpolatedBC * matbcL2 = new InterpolatedBC(2,dimension-1,2,BoundaryConditionType::kDirichlet,&globalElementCorrespondence,&globalNodeCorrespondence,cmeshG);
-    // val2[0] = -2.;
-    // L2Projection * matbcL2 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
+    // InterpolatedBC * matbcL2 = new InterpolatedBC(2,dimension-1,2,BoundaryConditionType::kDirichlet,&globalElementCorrespondence,&globalNodeCorrespondence,cmeshG);
+    val2[0] = -2.;
+    L2Projection * matbcL2 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
     L2Projection * matbcL3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     matbcL3->SetForcingFunction(forcingFunction);
 
@@ -291,7 +293,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         count++;
     }
 
-    //cmeshG->Print("cmeshGEnriched.txt");
+    cmeshG->Print("cmeshGEnriched.txt");
     
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
     globalLocal->SetForcingFunction(forcingFunction);
@@ -316,7 +318,9 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         enrichedEl->SetEnrichmentData(&enrichedNodes);
 
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
-        globalEl->SetWeakForm(nullptr);
+        if (globalEl->Dimension() == cmeshG->Dimension()){
+            globalEl->SetWeakForm(nullptr);
+        }
 
         //Seek how many nodes will be enriched in the global element and construct the proper connectivity for the enriched element.
         VecInt geoNodes = globalEl->Reference()->getGeometricNodes();
@@ -340,14 +344,15 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
     }
     cmeshG->NGlobalDOF() = fNGlobalDOF;
 
-    //cmeshG->Print("cmeshGEnriched2.txt");
+    cmeshG->Print("cmeshGEnriched2.txt");
 };
 
 void SolveEnrichedProblem(CompMesh *cmeshG){
 
-    LinearAnalysis anE(cmeshG,SolverType::ELDLt);
+    LinearAnalysis anE(cmeshG,SolverType::ELU);
 
     anE.Run();
+    anE.PrintGlobalMatrix();
     anE.PrintGlobalRhs();
     anE.PrintSolution();
 
