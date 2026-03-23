@@ -24,7 +24,7 @@ auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
 
 void CreateGlobalModel(CompMesh *cmeshG);
 void SolveGlobalProblem(CompMesh *cmeshG);
-void CreateLocalModel(CompMesh *cmeshL, CompMesh *cmeshG);
+void CreateLocalModel(CompMesh *cmeshG, CompMesh *cmeshL);
 void SolveLocalProblem(CompMesh *cmeshL);
 void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL);
 void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL);
@@ -32,8 +32,9 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL);
 void SolveEnrichedProblem(CompMesh *cmeshG);
 
 int overlappingRegion;
-int overlappingBoundary;
+int overlappingNHDirichletBoundary;
 int overlappingNHNeumannBoundary;
+int globalLocalIterations;
 //Local index to global index correspondence for elements
 std::map<int64_t,int64_t> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
@@ -45,41 +46,47 @@ int main(int argc, char **args) {
 
     //GLOBAL MODEL
     std::cout << "Solve Global Problem \n";
-    
+
     //Create Global Model
     GeoMesh *gmeshG = new GeoMesh();
     GmshTools::Read(*gmeshG,"../global.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EHierarquic);
     CreateGlobalModel(cmeshG);
-    gmeshG->Print("gmeshGlobal.txt");
-    cmeshG->Print("cmeshGlobal.txt");
+    //gmeshG->Print("gmeshGlobal.txt");
+    //cmeshG->Print("cmeshGlobal.txt");
     
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
 
-    //LOCAL MODEL
-    std::cout << "\nSolve Local Problem \n";
-    
-    //Create Local Model
+    CompMesh *cmeshL = nullptr;
     GeoMesh * gmeshL = new GeoMesh();
-    GmshTools::Read(*gmeshL,"../local.msh");
-    CompMesh *cmeshL = new CompMesh(gmeshL,ApproxType::EHierarquic);
-    CreateLocalModel(cmeshL, cmeshG);
-    gmeshL->Print("gmeshLocal.txt");
-    cmeshL->Print("cmeshLocal.txt");
+    for(int n = 0; n < globalLocalIterations; n++){
 
-    LocalToGlobalCorrespondence(cmeshG,cmeshL);
-    LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL);
+        std::cout << "\nGlobal-Local Iteration " << n + 1 << ": ";
 
-    //Solve Local Problem
-    SolveLocalProblem(cmeshL);
+        //LOCAL MODEL
+        std::cout << "\nSolve Local Problem \n";
+        if(n == 0){
+            //Create Local Model
+            GmshTools::Read(*gmeshL,"../local.msh");
+            cmeshL = new CompMesh(gmeshL,ApproxType::EHierarquic);
+            CreateLocalModel(cmeshG, cmeshL);
+            //gmeshL->Print("gmeshLocal.txt");
+            //cmeshL->Print("cmeshLocal.txt");
 
-    //ENRICHED GLOBAL MODEL
-    std::cout << "\nSolve Enriched Global Problem \n";
-    CreateEnrichedModel(cmeshG,cmeshL);
-    cmeshG->Print("cmeshEnrichedGlobal.txt");
-    SolveEnrichedProblem(cmeshG);
+            LocalToGlobalCorrespondence(cmeshG,cmeshL);
+            LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL);
+        }
+        //Solve Local Problem
+        SolveLocalProblem(cmeshL);
 
+        //ENRICHED GLOBAL MODEL
+        std::cout << "\nSolve Enriched Global Problem \n";
+        if(n == 0) CreateEnrichedModel(cmeshG,cmeshL);
+
+        //cmeshG->Print("cmeshEnrichedGlobal.txt");
+        SolveEnrichedProblem(cmeshG);
+   }
 }   
 
 void CreateGlobalModel(CompMesh *cmeshG){
@@ -90,6 +97,7 @@ void CreateGlobalModel(CompMesh *cmeshG){
     cmeshG->InsertMaterial(matelasticityG2);
 
     overlappingRegion = 1;
+    globalLocalIterations = 2;
     enrichedNodes[0]=-1;
     enrichedNodes[5]=-1;
     
@@ -121,18 +129,18 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     VectorNames = {"Displacement"};
 
     anG.Run();
-    // anG.PrintSolution();
-    anG.PrintGlobalRhs();
+    anG.PrintSolution();
+    //anG.PrintGlobalRhs();
 
     // VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
 }
 
-void CreateLocalModel(CompMesh *cmeshL, CompMesh * cmeshG){
+void CreateLocalModel(CompMesh *cmeshG, CompMesh * cmeshL){
 
     Elasticity2D* matelasticityL = new Elasticity2D(1, 1.0, 0.0);
     cmeshL->InsertMaterial(matelasticityL);
 
-    overlappingBoundary = 2;
+    overlappingNHDirichletBoundary = 2;
     overlappingNHNeumannBoundary = 4;
 
     //BC;
@@ -142,9 +150,9 @@ void CreateLocalModel(CompMesh *cmeshL, CompMesh * cmeshG){
     val2[1] = 1.0;
     L2Projection * matbcL1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     val2.setZero();
-    // InterpolatedBC * matbcL2 = new InterpolatedBC(2,dimension-1,2,BoundaryConditionType::kDirichlet,&globalElementCorrespondence,&globalNodeCorrespondence,cmeshG);
-    val2[0] = -2.;
-    L2Projection * matbcL2 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
+    InterpolatedBC * matbcL2 = new InterpolatedBC(2,dimension-1,2,BoundaryConditionType::kDirichlet,&globalElementCorrespondence,&globalNodeCorrespondence,cmeshG);
+    //val2[0] = -2.;
+    //L2Projection * matbcL2 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
     L2Projection * matbcL3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     matbcL3->SetForcingFunction(forcingFunction);
 
@@ -160,6 +168,8 @@ void SolveLocalProblem(CompMesh *cmeshL){
     LinearAnalysis anL(cmeshL,SolverType::ELDLt);
 
     anL.Run();
+    //anL.PrintGlobalMatrix();
+    //anL.PrintGlobalRhs();
     anL.PrintSolution();
 
     std::vector<std::string> ScalarNames, VectorNames;
@@ -236,7 +246,7 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
     int64_t elCorr;
 
     for (int i=0; i<cmeshL->NElements(); i++){
-        if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension() || cmeshL->ElementVec()[i]->Reference()->Material() == overlappingBoundary){
+        if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension() || cmeshL->ElementVec()[i]->Reference()->Material() == overlappingNHDirichletBoundary){
             localElement = cmeshL->ElementVec()[i];
 
             int numberOfIntegrationPoints = localElement -> getNumberOfIntegrationPoints();
@@ -293,7 +303,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         count++;
     }
 
-    cmeshG->Print("cmeshGEnriched.txt");
+    //cmeshG->Print("cmeshGEnriched.txt");
     
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
     globalLocal->SetForcingFunction(forcingFunction);
@@ -344,7 +354,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
     }
     cmeshG->NGlobalDOF() = fNGlobalDOF;
 
-    cmeshG->Print("cmeshGEnriched2.txt");
+    //cmeshG->Print("cmeshGEnriched2.txt");
 };
 
 void SolveEnrichedProblem(CompMesh *cmeshG){
@@ -352,8 +362,8 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     LinearAnalysis anE(cmeshG,SolverType::ELU);
 
     anE.Run();
-    anE.PrintGlobalMatrix();
-    anE.PrintGlobalRhs();
+    //anE.PrintGlobalMatrix();
+    //anE.PrintGlobalRhs();
     anE.PrintSolution();
 
 

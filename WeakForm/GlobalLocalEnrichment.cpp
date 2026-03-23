@@ -76,10 +76,9 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
 };
 
 void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, IntPointData &globaldata, VecDouble &Rhs){
+   
     //Only contribute stiffness if we are in a 2D element
     if (globaldata.fA0.rows() == 2) return;
-
-
 
     int nphi = globaldata.fPhi.size();
     double WJ = localdata.fWeight * localdata.fJacA0;
