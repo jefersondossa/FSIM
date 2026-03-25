@@ -7,6 +7,7 @@
 #include "Elasticity2D.h"
 #include "CompMeshTools.h"
 #include "InterpolatedBC.h"
+#include "EigenSpMatrix.h"
 
 #include "ElementEnriched.h"
 #include "Element.h"
@@ -171,6 +172,15 @@ void SolveLocalProblem(CompMesh *cmeshL){
     //anL.PrintGlobalMatrix();
     //anL.PrintGlobalRhs();
     anL.PrintSolution();
+
+    EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anL.GlobalMatrix());
+    if (!spMat) {
+        std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
+        return;
+    }
+    MatrixDouble previousSol = spMat->Solution();
+
+    anL.GlobalMatrix()->SolutionNorm();
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"SigmaX","SigmaY","TauXY"};
