@@ -111,6 +111,8 @@ public:
         return aux;
     };
 
+    MatrixDouble &getIntPointCoordinates() {return fIntPointCoordinates;};
+
     virtual void ComputeIntegPointCoordinates() = 0;
 
     /// Sets the integration point energy weight function

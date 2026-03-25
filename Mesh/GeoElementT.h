@@ -49,7 +49,7 @@ public:
     void ComputeCurrentJacobian(IntPointData &data, Element* compel) override;
     void ComputeJacobianSearch(IntPointData &data) override;
 
-    
+    void ComputeX(VecDouble &AdimCoord, VecDouble &X) override;
 
 
     //.................Element intersection and correspondence..................

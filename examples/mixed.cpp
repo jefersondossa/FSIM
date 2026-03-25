@@ -123,7 +123,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
 
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
-    MixedElasticity * mat = new MixedElasticity(8,2,1.0,0.499999999999);
+    MixedElasticity * mat = new MixedElasticity(8,2,1.0,0.);
     cmesh->InsertMaterial(mat);
 
     cmesh->AutoBuild();

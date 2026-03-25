@@ -19,3 +19,6 @@ target_link_libraries(mixed PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRA
 
 add_executable(mefg mefgGlobalLocal.cpp)
 target_link_libraries(mefg PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(mixedGL MixedGlobalLocal.cpp)
+target_link_libraries(mixedGL PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})

@@ -62,6 +62,7 @@ public:
         for (int i = 0; i < fSubElements.size(); i++){
             fSubElements[i]->interpolateSolution();
         }
+        this->fIntegData.fSol = fSubElements[0]->IntegrationData().fSol;
     }
 
     void Solution(int var, VecDouble &Sol) override{
@@ -140,6 +141,7 @@ public:
 
     void ComputeIntegPointCoordinates() override{
         fSubElements[0]->ComputeIntegPointCoordinates();
+        this->fIntPointCoordinates = fSubElements[0]->getIntPointCoordinates();
     }
 
 };

@@ -281,11 +281,13 @@ void ElementT<compshape>::ComputeIntegPointCoordinates(){
     for (int i = 0; i < fIntRule.NPoints(); i++){
         for (int k = DIM; k--; ) xsi[k] = fIntRule.PointList(i,k);
 
-        compshape::Shape(xsi,phi_,dphi_,orders);
+        // compshape::Shape(xsi,phi_,dphi_,orders);
+        VecDouble X(3);
+        X.setZero();
+        fReference->ComputeX(xsi,X);
 
-        for (int j = 0; j < nshape; j++)
-            for (int k = 0; k < 3; k++)
-                fIntPointCoordinates(i,k) += fMesh->Reference()->NodeVec()[fGeoNodes[j]] -> getCoordinateValue(k) * phi_[j];
+        for (int k = 0; k < 3; k++)
+            fIntPointCoordinates(i,k) = X[k];
         
     };
 

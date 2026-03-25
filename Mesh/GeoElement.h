@@ -94,7 +94,7 @@ public:
     virtual void ComputeCurrentJacobian(IntPointData &data, Element* compel) = 0;
     virtual void ComputeJacobianSearch(IntPointData &data) = 0;
 
-  
+    virtual void ComputeX(VecDouble &AdimCoord, VecDouble &X) = 0;
 
     virtual void setIntersectionParameters(VecDouble &x, VecDouble &X) = 0;
 

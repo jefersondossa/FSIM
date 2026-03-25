@@ -37,7 +37,7 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
     // if (!this->fWeakForm) return;
 
     int DIM = this->fReference->Dimension();
-
+    
     for (int i = 0; i < fSubElements.size(); i++){
         auto &integdata = fSubElements[i]->IntegrationData();
         integdata.fNeedsDSol = true;
@@ -53,6 +53,7 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
     std::vector<IntPointData *> data(nsub);
     for (int i = 0; i < nsub; i++){
         data[i] = &fSubElements[i]->IntegrationData();
+        data[i]->fElementIndex = this->fIndex;
     }
     //The integration is always performed with basis in the first sub element.
     for(int it = 0; it < fSubElements[0]->getNumberOfIntegrationPoints(); it++){

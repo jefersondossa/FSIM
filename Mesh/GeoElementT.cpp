@@ -15,7 +15,23 @@ GeoElementT<geoshape>::GeoElementT(int64_t index, VecInt &geonodes, GeoMesh* mes
     fNeighborElements.clear();
 };
 
+template<class geoshape>
+void GeoElementT<geoshape>:: ComputeX(VecDouble &AdimCoord, VecDouble &X){
+    X.setZero();
+    VecDouble phi(geoshape::NShape);
+    MatrixDouble dphi(geoshape::Dimension,geoshape::NShape);
+    VecInt orders(geoshape::NSides);
+    orders.fill(1);
 
+    geoshape::Shape(AdimCoord,phi,dphi,orders);
+
+    for (int i = geoshape::NShape; i--; ){
+        for (int j = 3; j--; ){
+            X[j] += fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) * phi(i);
+        };
+    };
+
+}
 
 //------------------------------------------------------------------------------
 //-------------------------SPATIAL TRANSFORM - JACOBIAN-------------------------
