@@ -8,7 +8,6 @@
 #include "CompMeshTools.h"
 #include "InterpolatedBC.h"
 #include "EigenSpMatrix.h"
-
 #include "ElementEnriched.h"
 #include "Element.h"
 #include "GlobalLocalEnrichment.h"
@@ -22,6 +21,138 @@ auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &y=coord[1];
     force[0] = -1*y;
 };
+auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(1,0) = stress(0,1);
+
+    //stress x
+    //stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
+    //stress y
+    //stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
+    //stress xy
+    //stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
+    //stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = sqrt(2)/2;
+    n[1] = sqrt(2)/2;
+
+    force = stress * n;
+};
+
+auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = - sqrt(2)/2;
+    n[1] = sqrt(2)/2;
+
+    force = stress * n;
+};
+
+auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = -sqrt(2)/2;
+    n[1] = -sqrt(2)/2;
+
+    force = stress * n;
+};
+
+auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = sqrt(2)/2;
+    n[1] = -sqrt(2)/2;
+
+    force = stress * n;
+};
+auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    double young = 1.0;
+    double nu = 0.0;
+    double kappa = 3 - 4*nu;
+    double G = young / (2*(1+nu));
+
+    u[0] = (A/(2*G)) * pow(r, lambda) * ((kappa - Q * (lambda+1))*cos(lambda*theta) - lambda*cos((lambda-2)*theta));
+    u[1] = (A/(2*G)) * pow(r, lambda) * ((kappa + Q * (lambda+1))*sin(lambda*theta) + lambda*sin((lambda-2)*theta));
+    
+    gradU(0,0) = 0.;
+    gradU(1,0) = 0.;
+};
 
 void CreateGlobalModel(CompMesh *cmeshG);
 void SolveGlobalProblem(CompMesh *cmeshG);
@@ -31,11 +162,15 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL);
 void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL);
 void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL);
 void SolveEnrichedProblem(CompMesh *cmeshG);
+bool CheckConvergence(int it);
 
 int overlappingRegion;
 int overlappingNHDirichletBoundary;
 int overlappingNHNeumannBoundary;
 int globalLocalIterations;
+double globalLocalTolerance;
+VecDouble previousSol;
+VecDouble currentSol;
 //Local index to global index correspondence for elements
 std::map<int64_t,int64_t> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
@@ -50,24 +185,26 @@ int main(int argc, char **args) {
 
     //Create Global Model
     GeoMesh *gmeshG = new GeoMesh();
-    GmshTools::Read(*gmeshG,"../global.msh");
+    GmshTools::Read(*gmeshG,"../chapaLRef1.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EHierarquic);
     CreateGlobalModel(cmeshG);
-    //gmeshG->Print("gmeshGlobal.txt");
-    //cmeshG->Print("cmeshGlobal.txt");
+    gmeshG->Print("gmeshGlobal.txt");
+    cmeshG->Print("cmeshGlobal.txt");
     
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
 
-    CompMesh *cmeshL = nullptr;
+    /*CompMesh *cmeshL = nullptr;
     GeoMesh * gmeshL = new GeoMesh();
-    for(int n = 0; n < globalLocalIterations; n++){
 
-        std::cout << "\nGlobal-Local Iteration " << n + 1 << ": ";
+    int it = 0;
+    //for(int it = 0; it < globalLocalIterations; it++){
+    while(it < globalLocalIterations){
+        std::cout << "\nGlobal-Local Iteration " << it + 1 << ": ";
 
         //LOCAL MODEL
         std::cout << "\nSolve Local Problem \n";
-        if(n == 0){
+        if(it == 0){
             //Create Local Model
             GmshTools::Read(*gmeshL,"../local.msh");
             cmeshL = new CompMesh(gmeshL,ApproxType::EHierarquic);
@@ -83,40 +220,65 @@ int main(int argc, char **args) {
 
         //ENRICHED GLOBAL MODEL
         std::cout << "\nSolve Enriched Global Problem \n";
-        if(n == 0) CreateEnrichedModel(cmeshG,cmeshL);
+        if(it == 0) CreateEnrichedModel(cmeshG,cmeshL);
 
         //cmeshG->Print("cmeshEnrichedGlobal.txt");
         SolveEnrichedProblem(cmeshG);
-   }
+
+        if(CheckConvergence(it)) break;
+        it++;
+   };*/
 }   
 
 void CreateGlobalModel(CompMesh *cmeshG){
 
     Elasticity2D *matelasticityG1 = new Elasticity2D(1, 1.0, 0.0); //região de sobreposição do domínio local no domínio global
-    Elasticity2D *matelasticityG2 = new Elasticity2D(2, 1.0, 0.0); //domínio global complementar
+    matelasticityG1->SetExactSolution(exactSol);
+    //Elasticity2D *matelasticityG2 = new Elasticity2D(2, 1.0, 0.0); //domínio global complementar
     cmeshG->InsertMaterial(matelasticityG1);
-    cmeshG->InsertMaterial(matelasticityG2);
+    //cmeshG->InsertMaterial(matelasticityG2);
 
     overlappingRegion = 1;
-    globalLocalIterations = 2;
-    enrichedNodes[0]=-1;
-    enrichedNodes[5]=-1;
+    globalLocalIterations = 10;
+    globalLocalTolerance = 1e-4;
+    //enrichedNodes[0]=-1;
+    //enrichedNodes[5]=-1;
+    enrichedNodes[8]=-1;
+    enrichedNodes[28]=-1;
+    enrichedNodes[29]=-1;
+    enrichedNodes[51]=-1;
+    enrichedNodes[52]=-1;
+    enrichedNodes[62]=-1;
+    enrichedNodes[63]=-1;
+    enrichedNodes[64]=-1;
     
     //BC 
     MatrixDouble val1(2,2);
     val1.setZero();
-    VecDouble val2(2),val3(2);
+    VecDouble val2(2);
     val2.setZero();
-    val3.setZero();
-    L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
-    val3[1] = 1.0;
-    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val3);
-    L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcG3->SetForcingFunction(forcingFunction);
+    val2[0] = 1.0;
+    L2Projection * matbcG1 = new L2Projection(2,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    //L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+    val2.setZero();
+    val2[1] = 1.0;
+    L2Projection * matbcG2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    val2.setZero();
+    L2Projection * matbcG3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG3->SetForcingFunction(forcingFunctionAB);
+    L2Projection * matbcG4 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG4->SetForcingFunction(forcingFunctionBC);
+    L2Projection * matbcG5 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG5->SetForcingFunction(forcingFunctionEF);
+    L2Projection * matbcG6 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG6->SetForcingFunction(forcingFunctionFA);
 
     cmeshG->InsertMaterial(matbcG1);
     cmeshG->InsertMaterial(matbcG2);
     cmeshG->InsertMaterial(matbcG3);
+    cmeshG->InsertMaterial(matbcG4);
+    cmeshG->InsertMaterial(matbcG5);
+    cmeshG->InsertMaterial(matbcG6);
     
     cmeshG->AutoBuild();
 }
@@ -133,7 +295,21 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     anG.PrintSolution();
     //anG.PrintGlobalRhs();
 
-    // VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
+    //VecDouble errors(3);
+    //anG.PostProcessError(errors);
+
+    EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anG.GlobalMatrix());
+    if (!spMat) {
+        std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
+        return;
+    }
+
+    VecDouble sol = spMat->Solution();
+    VecDouble rhs = spMat->Rhs();
+    double strainEnergy = (sol.dot(rhs))/2;
+    std::cout << "Strain Energy: "<< strainEnergy << std::endl;
+
+    VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
 }
 
 void CreateLocalModel(CompMesh *cmeshG, CompMesh * cmeshL){
@@ -172,15 +348,6 @@ void SolveLocalProblem(CompMesh *cmeshL){
     //anL.PrintGlobalMatrix();
     //anL.PrintGlobalRhs();
     anL.PrintSolution();
-
-    EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anL.GlobalMatrix());
-    if (!spMat) {
-        std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
-        return;
-    }
-    MatrixDouble previousSol = spMat->Solution();
-
-    anL.GlobalMatrix()->SolutionNorm();
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"SigmaX","SigmaY","TauXY"};
@@ -376,10 +543,38 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     //anE.PrintGlobalRhs();
     anE.PrintSolution();
 
+    EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anE.GlobalMatrix());
+    if (!spMat) {
+        std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
+        return;
+    }
+
+    currentSol = spMat->Solution();
+
+    VecDouble rhs = spMat->Rhs();
+    double strainEnergy = (currentSol.dot(rhs))/2;
+    std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
     std::vector<std::string> ScalarNames, VectorNames;
     // ScalarNames = {"SigmaX","SigmaY","TauXY"};
     VectorNames = {"Displacement"};
 
     // VTUGenerator::PrintResults(cmeshG,"Enriched",ScalarNames,VectorNames); 
+};
+
+bool CheckConvergence(int it){
+
+    if(it == 0){
+        previousSol = currentSol;
+        return false;
+    }else{
+        MatrixDouble diff = currentSol - previousSol;
+
+        if(diff.norm() <= globalLocalTolerance){
+            return true;
+        }else{
+            previousSol = currentSol;
+            return false;
+        }
+    }
 };
