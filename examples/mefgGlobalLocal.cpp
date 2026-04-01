@@ -33,20 +33,12 @@ auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
 
     MatrixDouble stress(2,2);
     //stress x
-    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
     //stress y
-    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
     //stress xy
-    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
     stress(1,0) = stress(0,1);
-
-    //stress x
-    //stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
-    //stress y
-    //stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
-    //stress xy
-    //stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
-    //stress(1,0) = stress(0,1);
 
     VecDouble n(2);
     n[0] = sqrt(2)/2;
@@ -67,11 +59,11 @@ auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
 
     MatrixDouble stress(2,2);
     //stress x
-    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
     //stress y
-    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
     //stress xy
-    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
     stress(1,0) = stress(0,1);
 
     VecDouble n(2);
@@ -93,11 +85,11 @@ auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
 
     MatrixDouble stress(2,2);
     //stress x
-    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
     //stress y
-    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
     //stress xy
-    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
     stress(1,0) = stress(0,1);
 
     VecDouble n(2);
@@ -119,11 +111,11 @@ auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
 
     MatrixDouble stress(2,2);
     //stress x
-    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos(lambda-1)*theta - (lambda-1)*cos(lambda-3)*theta);
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
     //stress y
-    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos(lambda-1)*theta + (lambda-1)*cos(lambda-3)*theta);
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
     //stress xy
-    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin(lambda-3)*theta + Q*(lambda+1)*sin(lambda-1)*theta);
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
     stress(1,0) = stress(0,1);
 
     VecDouble n(2);
@@ -143,7 +135,7 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     double theta = atan2(y, x);
 
     double young = 1.0;
-    double nu = 0.0;
+    double nu = 0.3;
     double kappa = 3 - 4*nu;
     double G = young / (2*(1+nu));
 
@@ -232,7 +224,7 @@ int main(int argc, char **args) {
 
 void CreateGlobalModel(CompMesh *cmeshG){
 
-    Elasticity2D *matelasticityG1 = new Elasticity2D(1, 1.0, 0.0); //região de sobreposição do domínio local no domínio global
+    Elasticity2D *matelasticityG1 = new Elasticity2D(1, 1.0, 0.3, false, 1.0); //região de sobreposição do domínio local no domínio global
     matelasticityG1->SetExactSolution(exactSol);
     //Elasticity2D *matelasticityG2 = new Elasticity2D(2, 1.0, 0.0); //domínio global complementar
     cmeshG->InsertMaterial(matelasticityG1);
