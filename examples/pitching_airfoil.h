@@ -31,8 +31,8 @@
         double y3 = 0.85;
         double y4 = 10;
     
-        double h1 = 13; double h2 = 25; double h3 = 20;
-        double v1 = 13; double v2 = 15;
+        double h1 = 26; double h2 = 41; double h3 = 31;
+        double v1 = 21; double v2 = 31;
 
         Point* p001 = fluid1 -> addPoint({x1,y1},0.5,false);
         Point* p002 = fluid1 -> addPoint({x2,y1},0.5,false);
@@ -97,8 +97,8 @@
         PlaneSurface* s008 = fluid1 -> addPlaneSurface({ll008});
         PlaneSurface* s009 = fluid1 -> addPlaneSurface({ll009});
 
-        double prog1 = 1.07;
-        double prog2 = 1.1;
+        double prog1 = 1.00;
+        double prog2 = 1.06;
 
         fluid1 -> transfiniteLine({l001}, h1, 1/prog2);
         fluid1 -> transfiniteLine({l002}, 4);
@@ -166,7 +166,7 @@
         
         // Fine
         Geometry* fluid2 = new Geometry(1);
-        double elSize = 2.e-2;
+        double elSize = 1.e-2;
 
         Point* p1001 = fluid2 -> addPoint({1.000000000000000E+00,0.000000000000000E+00},elSize,false);
         Point* p1002 = fluid2 -> addPoint({9.970300197601318E-01,-4.207300080452114E-04},elSize,false);
@@ -620,9 +620,9 @@
         LineLoop* ll1003 = fluid2 -> addLineLoop({ l1011 -> operator-(), l1007 -> operator-(), l1012, l1003 });
         LineLoop* ll1004 = fluid2 -> addLineLoop({ l1012 -> operator-(), l1008 -> operator-(), l1013, l1004 });
 
-        double elSize2 = 0.075;
-        double elSize3 = 0.03;
-        double elSize4 = 0.075;
+        double elSize2 = 0.0375;
+        double elSize3 = 0.015;
+        double elSize4 = 0.0375;
 
         Point* p1386 = fluid2 -> addPoint({1.25,0.0},elSize2,false);
         Point* p1387 = fluid2 -> addPoint({.4,0.},elSize2,false);
@@ -671,7 +671,7 @@
         
 
         //Transfinite lines 
-        int t1 = 20; int t2 = 65; int t3 = 35; int t4 = 4;
+        int t1 = 31; int t2 = 101; int t3 = 50; int t4 = 6;
         //corners
         fluid2 -> transfiniteLine({ l1001 }, t2, 1.02);
         fluid2 -> transfiniteLine({ l1002 -> operator-()}, t3, 1.05);
@@ -785,8 +785,8 @@
     fineModel.setProblemType(ProblemType::ENavierStokes);
 
 
-    fineModel.readInitialValues("../resultFine104000.h5","../resultFine104001.h5");
-    coarseModel.readInitialValues("../resultCoarse104000.h5","../resultCoarse104001.h5");
+    // fineModel.readInitialValues("../resultFine104000.h5","../resultFine104001.h5");
+    // coarseModel.readInitialValues("../resultCoarse104000.h5","../resultCoarse104001.h5");
 
     for (int i = 0; i < fineModel.numNodes; i++){
         VecDouble xn(2);
@@ -815,7 +815,7 @@
     // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
     // coupledProblem.solveFSIProblemArlequin(100000);
     arlequinProblem.UnsetUseSNES();
-    bool noPitch=false;
+    bool noPitch=true;
     if (noPitch) {
         arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
     } else {
