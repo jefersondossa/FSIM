@@ -1190,8 +1190,8 @@ int Fluid<DIM,DEG>::solveSteadyLaplaceProblem(int iterNumber, double tolerance) 
 //------------------------------------------------------------------------------
 //-------------------------SOLVE TRANSIENT FLUID PROBLEM------------------------
 //------------------------------------------------------------------------------
-template<>
-void Fluid<2,2>::readInitialValues(const std::string& inputPrev, const std::string& inputCurr) {
+template<int DIM, int DEG>
+void Fluid<DIM,DEG>::readInitialValues(const std::string& inputPrev, const std::string& inputCurr) {
 
     int rank;
 

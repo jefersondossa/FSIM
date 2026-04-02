@@ -21,15 +21,15 @@
         //Coarse
         Geometry* fluid1 = new Geometry(0);
 
-        double x1 = -6.;
+        double x1 = -10.;
         double x2 = -0.6;
         double x3 = 1.6;
         double x4 = 20.5;
 
-        double y1 = -6;
+        double y1 = -10;
         double y2 = -0.85;
         double y3 = 0.85;
-        double y4 = 6;
+        double y4 = 10;
     
         double h1 = 13; double h2 = 25; double h3 = 20;
         double v1 = 13; double v2 = 15;
@@ -785,6 +785,9 @@
     fineModel.setProblemType(ProblemType::ENavierStokes);
 
 
+    fineModel.readInitialValues("../resultFine104000.h5","../resultFine104001.h5");
+    coarseModel.readInitialValues("../resultCoarse104000.h5","../resultCoarse104001.h5");
+
     for (int i = 0; i < fineModel.numNodes; i++){
         VecDouble xn(2);
         VecDouble xi = fineModel.nodes_[i] -> getInitialCoordinates();       
@@ -812,10 +815,9 @@
     // coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
     // coupledProblem.solveFSIProblemArlequin(100000);
     arlequinProblem.UnsetUseSNES();
-    bool noPitch=true;
+    bool noPitch=false;
     if (noPitch) {
-        arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1);
+        arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
     } else {
-        arlequinProblem.solveArlequinProblemMoving(3, 1.e-7, 2, 1);
+        arlequinProblem.solveArlequinProblemMoving(4, 1.e-7, 2, 1);
     }
-        //

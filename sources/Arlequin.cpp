@@ -3762,7 +3762,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblemMoving(int iterNumber, double toleran
             
             // Preallocates the matrix
             if (parametersFine->getSolverType() == SolverType::ESuiteSparse){
-                ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 100,NULL,&A);
+                ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, sysSize, sysSize, 1000,NULL,&A);
             } else {
                 ierr = MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
                                 sysSize, sysSize,400,NULL,600,NULL,&A); 
