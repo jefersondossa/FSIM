@@ -2,6 +2,7 @@
 #include <TransientAnalysis.h>
 #include <GmshTools.h>
 #include <VTUGenerator.h>
+#include <VTUReader.h>
 #include <L2Projection.h>
 #include <PhaseField.h>
 #include <Elasticity2D.h>
@@ -15,8 +16,81 @@
 #include <ShapeTriangleLin.h>
 #include <NullWeakForm.h>
 #include <algorithm>
+#include <functional>
+#include <stdexcept>
+#include <string>
 
 static constexpr double V_F = 0.40;
+
+namespace
+{
+bool file_exists(const std::string &filename)
+{
+    std::ifstream input(filename);
+    return static_cast<bool>(input);
+}
+
+std::string resolve_vtu_filename(const std::string &filename_or_prefix, int initial_step)
+{
+    if (file_exists(filename_or_prefix))
+    {
+        return filename_or_prefix;
+    }
+
+    const auto indexed_filename = filename_or_prefix + std::to_string(initial_step) + ".vtu";
+    if (file_exists(indexed_filename))
+    {
+        return indexed_filename;
+    }
+
+    throw std::runtime_error("could not find VTU file from \"" + filename_or_prefix + "\"");
+}
+
+double sample_row_wise_grid(const VTUReader::Grid &grid, double x, double y, double lx, double ly)
+{
+    if (grid.empty() || grid.front().empty())
+    {
+        throw std::runtime_error("initial VTU field is empty");
+    }
+    if (lx <= 0.0 || ly <= 0.0)
+    {
+        throw std::runtime_error("LX and LY must be positive");
+    }
+
+    const std::size_t nrows = grid.size();
+    const std::size_t ncols = grid.front().size();
+    for (const auto &row : grid)
+    {
+        if (row.size() != ncols)
+        {
+            throw std::runtime_error("initial VTU field is not rectangular");
+        }
+    }
+
+    const double x_clamped = std::clamp(x, 0.0, lx);
+    const double y_clamped = std::clamp(y, 0.0, ly);
+
+    const double col_pos = (ncols == 1) ? 0.0 : x_clamped * static_cast<double>(ncols - 1) / lx;
+    const double row_pos = (nrows == 1) ? 0.0 : y_clamped * static_cast<double>(nrows - 1) / ly;
+
+    const std::size_t col0 = static_cast<std::size_t>(std::floor(col_pos));
+    const std::size_t row0 = static_cast<std::size_t>(std::floor(row_pos));
+    const std::size_t col1 = std::min(col0 + 1, ncols - 1);
+    const std::size_t row1 = std::min(row0 + 1, nrows - 1);
+
+    const double tx = col_pos - static_cast<double>(col0);
+    const double ty = row_pos - static_cast<double>(row0);
+
+    const double v00 = grid[row0][col0];
+    const double v01 = grid[row0][col1];
+    const double v10 = grid[row1][col0];
+    const double v11 = grid[row1][col1];
+
+    const double top = (1.0 - tx) * v00 + tx * v01;
+    const double bottom = (1.0 - tx) * v10 + tx * v11;
+    return (1.0 - ty) * top + ty * bottom;
+}
+}
 
 void SetupBoundaryConditionsElasticity2D2(CompMesh &modelElasticity2D)
 {
@@ -475,8 +549,45 @@ void SetupBoundaryConditionsPhaseFieldShear(CompMesh &modelPhaseField)
     modelPhaseField.part_elem = new int[modelPhaseField.NElements()]();
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    bool use_vtu_initial_condition = false;
+    int initial_step = 0;
+    std::string initial_vtu_filename;
+    std::string initial_field_name;
+    double initial_lx = 0.0;
+    double initial_ly = 0.0;
+    VTUReader::Grid initial_field;
+
+    if (argc == 6)
+    {
+        try
+        {
+            initial_vtu_filename = resolve_vtu_filename(argv[1], std::stoi(argv[5]));
+            initial_field_name = argv[2];
+            initial_lx = std::stod(argv[3]);
+            initial_ly = std::stod(argv[4]);
+            initial_step = std::stoi(argv[5]);
+            initial_field = VTUReader::read_field_from_vtu(initial_vtu_filename, initial_field_name);
+            if (initial_field.empty() || initial_field.front().empty())
+            {
+                throw std::runtime_error("failed to load initial field from VTU");
+            }
+            use_vtu_initial_condition = true;
+            std::cout << "Initializing u0 from " << initial_vtu_filename << " using field \"" << initial_field_name << "\"\n";
+        }
+        catch (const std::exception &error)
+        {
+            std::cerr << "Invalid VTU initialization arguments: " << error.what() << '\n';
+            return 1;
+        }
+    }
+    else if (argc != 1)
+    {
+        std::cerr << "Usage: " << argv[0] << " [filename field_name lx ly initial_step]\n";
+        return 1;
+    }
+
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     // SetupBoundaryConditionsElasticity2D2(*modelElasticity2D);
     // SetupBoundaryConditionsElasticity2DBridge(*modelElasticity2D);
@@ -522,12 +633,23 @@ int main()
     constexpr auto min_val = 1e-3;
     constexpr auto max_val = 1.0;
 
-    const auto u0 = [](double x, double y) -> double
+    std::function<double(double, double)> u0;
+    if (use_vtu_initial_condition)
     {
-        constexpr auto A = 0.2;
-        const double V = V_F;
-        return V + A * sin(8 * M_PI * x) * sin(8 * M_PI * y);
-    };
+        u0 = [initial_field = std::move(initial_field), initial_lx, initial_ly](double x, double y) -> double
+        {
+            return sample_row_wise_grid(initial_field, x, y, initial_lx, initial_ly);
+        };
+    }
+    else
+    {
+        u0 = [](double x, double y) -> double
+        {
+            constexpr auto A = 0.2;
+            const double V = V_F;
+            return V + A * sin(8 * M_PI * x) * sin(8 * M_PI * y);
+        };
+    }
 
     for (size_t i = 0; i < anPhaseField.MeshVector()[0]->NNodes(); i++)
     {
@@ -581,7 +703,7 @@ int main()
     ScalarNamesElasticity2D = {"Compliance", "ComplianceSensibility", "WeightFunction"};
     VectorNamesElasticity2D = {"Displacement", "Stress", "Strain"};
 
-    int i = 0;
+    int i = initial_step;
     
     for (int64_t i_el = 0; i_el < modelElasticity2D->NElements(); i_el++)
     {
@@ -590,7 +712,7 @@ int main()
         elemPhaseField->IntegrationData().fJ = 1;
     }
 
-    int step = 0;
+    int step = initial_step;
     // Solving
     while (true)
     {
