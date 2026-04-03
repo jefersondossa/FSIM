@@ -24,8 +24,8 @@
 
 using namespace std;
 
-const int Nx = (60) + 1, Ny = (60) + 1;
-const double Lx = 1.0, Ly = 1.0;
+const int Nx = (111) + 1, Ny = (37) + 1;
+const double Lx = 3.0, Ly = 1.0;
 const double dx = Lx / (Nx - 1);
 const double dy = Ly / (Ny - 1);
 const double dt = 4e-4;//5e-3;
@@ -37,7 +37,7 @@ const int MAX_STEPS = 12000*SAVE_EVERY;
 
 const double M = 1.0;
 const double gamma_ = 0.01*8 * KK_;
-const double ksi = 4e-4*1.4;
+const double ksi = 4e-4*0.6; //4e-4*1.4;
 
 const double beta_ = 1.5 * KK_;
 
@@ -233,66 +233,49 @@ void SetupBoundaryConditionsElasticity2DCantileverRightBottom(CompMesh& modelEla
     // }
 }
 
-void SetupBoundaryConditionsElasticity2DMBB(CompMesh& modelElasticity2D)
+void SetupBoundaryConditionsElasticity2DMBB(CompMesh &modelElasticity2D)
 {
     MatrixDouble val1(2, 2);
     VecDouble val2(2);
     constexpr auto kVolumeMatId = 15;
     auto *govEquationElasticity2D = new Elasticity2D(kVolumeMatId, 1e3, 0.3);
     modelElasticity2D.InsertMaterial(govEquationElasticity2D);
+
     val1.setZero();
     val2.setZero();
     val2[0] = 1.0;
-    // val2[0] = 1.;
-    // constexpr auto kEngasteMatId = 22;
     constexpr auto kEngasteMatId = 16;
-    // auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
     auto *engasteBC = new L2Projection(kEngasteMatId, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(engasteBC);
 
     val1.setZero();
     val2.setZero();
     val2[1] = 1.0;
-    // val2[0] = 1.;
-    // constexpr auto kEngasteMatId = 22;
     constexpr auto kBottomRight = 17;
-    // auto *engasteBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
     auto *bottomRightBC = new L2Projection(kBottomRight, 2, BoundaryConditionType::kDirectionalHomogeneousDirichlet, val1, val2);
     modelElasticity2D.InsertMaterial(bottomRightBC);
 
-    val1.setZero();
     val2.setZero();
+    val1.setZero();
     val2[0] = 0.;
     constexpr auto kFreeMatTopId = 18;
     auto *freeBC = new L2Projection(kFreeMatTopId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBC);
+
     val1.setZero();
     val2.setZero();
     val2[0] = 0.;
     constexpr auto kFreeMatBottomId = 19;
     auto *freeBCEl2D = new L2Projection(kFreeMatBottomId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(freeBCEl2D);
-    // val1.setZero();
-    // val2.setZero();
-    // val2[0] = 0.;
-    // constexpr auto kExLoadMatId = 21;
-    // auto *El2D = new L2Projection(kExLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
-    // modelElasticity2D.InsertMaterial(El2D);
+
     val1.setZero();
     val2.setZero();
-    // val2[0] = -10;
-    val2[1] = -10;
+    val2[1] = -1;
     constexpr auto kLoadMatId = 23;
     auto *El2D2 = new L2Projection(kLoadMatId, 2, BoundaryConditionType::kNeumann, val1, val2);
     modelElasticity2D.InsertMaterial(El2D2);
-    GmshTools::Read(modelElasticity2D, "../../rectangle.msh");
-
-    // TODO: Disabled because now we recalculate the stiffness matrix contribution per node (based on phi)
-    // Disables memory on elements
-    // (makes sure elemental stiffness is not recalculated)
-    // for(auto& [_, pWeakForm] : modelElasticity2D.MaterialVector()) {
-        // govEquationElasticity2D->SetHasMemory(false);
-    // }
+    GmshTools::Read(modelElasticity2D, "../../rectangle_mbb.msh");
 }
 
 void SetupBoundaryConditionsElasticity2DBridge(CompMesh &modelElasticity2D)
@@ -353,7 +336,7 @@ int main()
 
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     // SetupBoundaryConditionsElasticity2DBridge(*modelElasticity2D);
-    SetupBoundaryConditionsElasticity2DCantileverRightBottom(*modelElasticity2D);
+    SetupBoundaryConditionsElasticity2DMBB(*modelElasticity2D);
     LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
 
     // RunEso(*modelElasticity2D, anElasticity2D, 0.55);
