@@ -1729,7 +1729,7 @@ void Element<DIM,DEG>::setBoundaryConditionsLaplace(MatrixDouble &jacobianNRMatr
 
     for (int i = nElNodes; i--; ){
         for (int k = DIM; k--; ){
-            if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(k) == 1) {
+            if ((*nodes_)[connect_[i]] -> getConstrainsLaplace(k) == 1 || (*nodes_)[connect_[i]] -> getConstrainsLaplace(k) == 3) {
                 for (int j = nLocDOF; j--; ){
                     jacobianNRMatrix(DIM*i+k,j) = 0.;
                     jacobianNRMatrix(j,DIM*i+k) = 0.;

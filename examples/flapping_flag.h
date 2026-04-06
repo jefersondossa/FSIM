@@ -46,8 +46,10 @@
 
         // Fine
         Geometry* fluid2 = new Geometry(1);
-        double s2 = 0.1;
-        double s3 = 0.3;
+        double s2 = 0.05;
+        double s3 = 0.2;
+
+        double radius = 1.0;
 
         Point* p100 = fluid2 -> addPoint({5.5,5.5},s2,false);
         Point* p101 = fluid2 -> addPoint({6.5,5.5},s2,false);
@@ -60,14 +62,14 @@
         Point* p108 = fluid2 -> addPoint({12.0,4.0},s3,false);
         Point* p109 = fluid2 -> addPoint({4.0,8.0},s3,false);
         Point* p110 = fluid2 -> addPoint({12.0,8.0},s3,false);
-        Point* p111 = fluid2 -> addPoint({4.0,3.0},s3,false);
-        Point* p112 = fluid2 -> addPoint({12.0,3.0},s3,false);
-        Point* p113 = fluid2 -> addPoint({13.0,4.0},s3,false);
-        Point* p114 = fluid2 -> addPoint({13.0,8.0},s3,false);
-        Point* p115 = fluid2 -> addPoint({12.0,9.0},s3,false);
-        Point* p116 = fluid2 -> addPoint({4.0,9.0},s3,false);
-        Point* p117 = fluid2 -> addPoint({3.0,8.0},s3,false);
-        Point* p118 = fluid2 -> addPoint({3.0,4.0},s3,false);
+        Point* p111 = fluid2 -> addPoint({4.0,4.0-radius},s3,false);
+        Point* p112 = fluid2 -> addPoint({12.0,4.0-radius},s3,false);
+        Point* p113 = fluid2 -> addPoint({12.0+radius,4.0},s3,false);
+        Point* p114 = fluid2 -> addPoint({12.0+radius,8.0},s3,false);
+        Point* p115 = fluid2 -> addPoint({12.0,8.0+radius},s3,false);
+        Point* p116 = fluid2 -> addPoint({4.0,8.0+radius},s3,false);
+        Point* p117 = fluid2 -> addPoint({4.0-radius,8.0},s3,false);
+        Point* p118 = fluid2 -> addPoint({4.0-radius,4.0},s3,false);
         
         Line* l100 = fluid2 -> addLine({p100,p101});
         Line* l101 = fluid2 -> addLine({p100,p102});
@@ -177,8 +179,8 @@
 	MPI_Barrier(PETSC_COMM_WORLD);
     
     
-    coarseModel.meshReading(fluid1,"flapping_flag_data.txt","coarse.msh","mirror.txt",0);
-    fineModel.meshReading(fluid2,"flapping_flag_data.txt","fine.msh","mirror_fine.txt",0);
+    coarseModel.meshReading(fluid1,"../flapping_flag_data.txt","coarse.msh","mirror.txt",0);
+    fineModel.meshReading(fluid2,"../flapping_flag_data.txt","fine.msh","mirror_fine.txt",0);
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
 

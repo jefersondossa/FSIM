@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 TIME STEPS     PRINTING FREQ
 --------------------------------------------------------------------------------
-1000         1
+5000         1
 
 --------------------------------------------------------------------------------
 UNDISTURBED VELOCITY AND PRESSURE
@@ -29,7 +29,7 @@ Gx       Gy       Gz
 ARLEQUIN VARIABLES
 GLUE ZONE THICKNESS     EPSILON     WEIGHT FUNCT. (POL. DEGREE)   K1     K2
 --------------------------------------------------------------------------------
-1.0                     1E-2        1                             1E+0   0.E0 
+1.0                     2E-2        1                             100E+0   0.E0 
 
 --------------------------------------------------------------------------------
 COMPUTE DRAG AND LIFT FORCES (0-No, 1-Yes)      BOUNDARY NUMBER
@@ -51,7 +51,7 @@ PRINT RESULTS (0-No, 1-Yes)
 0 - VORTICITY
 0 - INNER NORMAL
 0 - MESH VELOCITY
-0 - MESH DISPLACEMENT
+1 - MESH DISPLACEMENT
 0 - GLUE ZONE
 0 - JACOBIAN
 0 - PROCESS

@@ -679,7 +679,7 @@ void Fluid<DIM,DEG>::setBoundaryConstrains(){
         VecInt connectB = boundary_[ibound] -> getBoundaryConnectivity();
 
         for (int k = 0; k < DIM; k++){
-            if ((boundary_[ibound] -> getConstrain(k) == 3)){
+            if ((boundary_[ibound] -> getConstrain(k) == 1)||(boundary_[ibound] -> getConstrain(k) == 3)){
                 for (int j = 0; j < nBdNodes; j++) nodes_[connectB[j]] -> setConstrainsLaplace(k,1,0);
             };
         };
