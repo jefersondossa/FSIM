@@ -185,44 +185,68 @@
         double a2 = 0.15;
         double a4 = 0.1;
         double a3 = 0.5;
+        double dxToGlueZone = 7.;
+        double dyToGlueZone = 5.;
+        double gzsize = 1.;
 
-		Point* p100 = fluid2 -> addPoint({ 0.000, 0.000},a2,false);
-        Point* p101 = fluid2 -> addPoint({ 1.850, 0.000},a2,false);
-        Point* p102 = fluid2 -> addPoint({-1.850, 0.000},a2,false);
-        Point* p103 = fluid2 -> addPoint({-3.850, 0.000},a2,false);
-        Point* p104 = fluid2 -> addPoint({ 0.150, 0.000},a4,false);
-        Point* p105 = fluid2 -> addPoint({-0.150, 0.000},a4,false);
-        Point* p106 = fluid2 -> addPoint({ 3.850, 0.000},a2,false);
-        Point* p107 = fluid2 -> addPoint({ 0.000,-7.00},a3,false);
-        Point* p108 = fluid2 -> addPoint({ 7.00, 0.000},a3,false);
-        Point* p109 = fluid2 -> addPoint({ 0.000, 7.00},a3,false);
-        Point* p110 = fluid2 -> addPoint({-7.00, 0.000},a3,false);
-        Point* p111 = fluid2 -> addPoint({ 0.000,-9.00},a3,false);
-        Point* p112 = fluid2 -> addPoint({ 9.00, 0.000},a3,false);
-        Point* p113 = fluid2 -> addPoint({ 0.000, 9.00},a3,false);
-        Point* p114 = fluid2 -> addPoint({-9.00, 0.000},a3,false);
+        {
+        double centerX = 0.;
+        double centerY = 0.;
+
+		Point* p100 = fluid2 -> addPoint({ centerX, centerY+0.000},a2,false);
+        Point* p101 = fluid2 -> addPoint({ centerX+1.850, centerY+0.000},a2,false);
+        Point* p102 = fluid2 -> addPoint({ centerX-1.850, centerY+0.000},a2,false);
+        Point* p103 = fluid2 -> addPoint({ centerX-3.850, centerY+0.000},a2,false);
+        Point* p104 = fluid2 -> addPoint({ centerX+0.150, centerY+0.000},a4,false);
+        Point* p105 = fluid2 -> addPoint({ centerX-0.150, centerY+0.000},a4,false);
+        Point* p106 = fluid2 -> addPoint({ centerX+3.850, centerY+0.000},a2,false);
+        Point* p107 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY-dyToGlueZone+1.},a3,false);
+        Point* p108 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY-dyToGlueZone},a3,false);
+        Point* p109 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY+dyToGlueZone-1.},a3,false);
+        Point* p110 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY+dyToGlueZone},a3,false);
+        Point* p111 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY},a3,false);
+        Point* p112 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY},a3,false);
+        //Glue zone
+       
+        Point* p113 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY-dyToGlueZone-gzsize+1.},a3,false);
+        Point* p114 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY-dyToGlueZone-gzsize},a3,false);
+        Point* p115 = fluid2 -> addPoint({ centerX+dxToGlueZone+gzsize,centerY-dyToGlueZone},a3,false);
+        Point* p116 = fluid2 -> addPoint({ centerX+dxToGlueZone+gzsize,centerY+dyToGlueZone-1.},a3,false);
+        Point* p117 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY+dyToGlueZone+gzsize-1.},a3,false);
+        Point* p118 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY+dyToGlueZone+gzsize},a3,false);
+        Point* p119 = fluid2 -> addPoint({ centerX-dxToGlueZone-gzsize,centerY+dyToGlueZone},a3,false);
+        Point* p120 = fluid2 -> addPoint({ centerX-dxToGlueZone-gzsize,centerY-dyToGlueZone+1.},a3,false);
+
         
         Line* l100 = fluid2 -> addCircle({p104,p102,p103});
         Line* l101 = fluid2 -> addCircle({p105,p101,p106});
-        Line* l102 = fluid2 -> addCircle({p107,p100,p108});
-        Line* l103 = fluid2 -> addCircle({p108,p100,p109});
-        Line* l104 = fluid2 -> addCircle({p109,p100,p110});
-        Line* l105 = fluid2 -> addCircle({p110,p100,p107});
-        Line* l106 = fluid2 -> addCircle({p111,p100,p112});
-        Line* l107 = fluid2 -> addCircle({p112,p100,p113});
-        Line* l108 = fluid2 -> addCircle({p113,p100,p114});
-        Line* l109 = fluid2 -> addCircle({p114,p100,p111});
+        Line* l102 = fluid2 -> addLine({p107,p108});
+        Line* l103 = fluid2 -> addLine({p108,p112});
+        Line* l104 = fluid2 -> addLine({p112,p109});
+        Line* l105 = fluid2 -> addLine({p109,p110});
+        Line* l106 = fluid2 -> addLine({p110,p111});
+        Line* l107 = fluid2 -> addLine({p111,p107});
         Line* l110 = fluid2 -> addCircle({p104,p102,p103});
         Line* l111 = fluid2 -> addCircle({p105,p101,p106});
-        Line* l112 = fluid2 -> addLine({p110,p103});
-        // Line* l113 = fluid2 -> addLine({p105,p104});
-        Line* l114 = fluid2 -> addLine({p106,p108});
+        Line* l112 = fluid2 -> addLine({p111,p103});
+        Line* l114 = fluid2 -> addLine({p106,p112});
         Line* l115 = fluid2 -> addCircle({p104,p100,p105});
         Line* l116 = fluid2 -> addCircle({p105,p100,p104});
-         
-        LineLoop* ll101 = fluid2->addLineLoop({ l112 -> operator-(), l110, l115 -> operator-(), l101 -> operator-(), l114 -> operator-(), l102, l105 });
-        LineLoop* ll102 = fluid2->addLineLoop({ l112, l100 -> operator-(), l116 -> operator-(), l111, l114, l103, l104 });
-        LineLoop* ll103 = fluid2->addLineLoop({ l106, l107, l108, l109, l102 -> operator-(), l103 -> operator-(), l104 -> operator-(), l105 -> operator-() });
+        //Glue zone
+        Line* l117 = fluid2 -> addLine({p113,p114});
+        Line* l118 = fluid2 -> addCircle({p114,p108,p115});
+        Line* l119 = fluid2 -> addLine({p115,p116});
+        Line* l120 = fluid2 -> addCircle({p116,p109,p117});
+        Line* l121 = fluid2 -> addLine({p117,p118});
+        Line* l122 = fluid2 -> addCircle({p118,p110,p119});
+        Line* l123 = fluid2 -> addLine({p119,p120});
+        Line* l124 = fluid2 -> addCircle({p120,p107,p113});
+
+        Line * l125 = fluid2 -> addEllipse({p107}, 5.5, 4, -30);
+    
+        LineLoop* ll101 = fluid2->addLineLoop({ l112 -> operator-(), l110, l115 -> operator-(), l101 -> operator-(), l114 -> operator-(), l103, l102, l107 });
+        LineLoop* ll102 = fluid2->addLineLoop({ l112, l100 -> operator-(), l116 -> operator-(), l111, l114, l104, l105, l106 });
+        LineLoop* ll103 = fluid2->addLineLoop({ l117, l118, l119, l120, l121, l122, l123, l124, l102 -> operator-(), l107 -> operator-(), l106 -> operator-(), l105 -> operator-(), l104 -> operator-(), l103 -> operator-() });
         
         //std::vector<LineLoop*> lin = {ll2, ll1};
         //std::vector<LineLoop*> lin = {ll2};
@@ -235,14 +259,20 @@
         fluid2 -> addBoundaryCondition("NEUMANN", l103, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l104, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l105, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l106, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l107, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l112, {}, {}, {}, "GLOBAL");
         // fluid2 -> addBoundaryCondition("NEUMANN", l113, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l114, {}, {}, {}, "GLOBAL");
         
-        fluid2 -> addBoundaryCondition("GLUE", l106, {0}, {0}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("GLUE", l107, {0}, {0}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("GLUE", l108, {0}, {0}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("GLUE", l109, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l117, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l118, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l119, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l120, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l121, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l122, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l123, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l124, {0}, {0}, {}, "GLOBAL");
         
         fluid2 -> addBoundaryCondition("FSINTERFACE", l100, {0}, {0}, {}, "GLOBAL"); // FSI
         fluid2 -> addBoundaryCondition("FSINTERFACE", l101, {0}, {0}, {}, "GLOBAL"); // FSI
@@ -250,6 +280,100 @@
         fluid2 -> addBoundaryCondition("FSINTERFACE", l111, {0}, {0}, {}, "GLOBAL"); // FSI
         fluid2 -> addBoundaryCondition("DIRICHLET", l115, {0}, {0}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("DIRICHLET", l116, {0}, {0}, {}, "GLOBAL");    
+        }
+
+
+        {
+        double centerX = 25.;
+        double centerY = 0.;
+
+		Point* p100 = fluid2 -> addPoint({ centerX, centerY+0.000},a2,false);
+        Point* p101 = fluid2 -> addPoint({ centerX+1.850, centerY+0.000},a2,false);
+        Point* p102 = fluid2 -> addPoint({ centerX-1.850, centerY+0.000},a2,false);
+        Point* p103 = fluid2 -> addPoint({ centerX-3.850, centerY+0.000},a2,false);
+        Point* p104 = fluid2 -> addPoint({ centerX+0.150, centerY+0.000},a4,false);
+        Point* p105 = fluid2 -> addPoint({ centerX-0.150, centerY+0.000},a4,false);
+        Point* p106 = fluid2 -> addPoint({ centerX+3.850, centerY+0.000},a2,false);
+        Point* p107 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY-dyToGlueZone},a3,false);
+        Point* p108 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY-dyToGlueZone},a3,false);
+        Point* p109 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY+dyToGlueZone},a3,false);
+        Point* p110 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY+dyToGlueZone},a3,false);
+        Point* p111 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY},a3,false);
+        Point* p112 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY},a3,false);
+        //Glue zone
+        Point* p113 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY-dyToGlueZone-gzsize},a3,false);
+        Point* p114 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY-dyToGlueZone-gzsize},a3,false);
+        Point* p115 = fluid2 -> addPoint({ centerX+dxToGlueZone+gzsize,centerY-dyToGlueZone},a3,false);
+        Point* p116 = fluid2 -> addPoint({ centerX+dxToGlueZone+gzsize,centerY+dyToGlueZone},a3,false);
+        Point* p117 = fluid2 -> addPoint({ centerX+dxToGlueZone,centerY+dyToGlueZone+gzsize},a3,false);
+        Point* p118 = fluid2 -> addPoint({ centerX-dxToGlueZone,centerY+dyToGlueZone+gzsize},a3,false);
+        Point* p119 = fluid2 -> addPoint({ centerX-dxToGlueZone-gzsize,centerY+dyToGlueZone},a3,false);
+        Point* p120 = fluid2 -> addPoint({ centerX-dxToGlueZone-gzsize,centerY-dyToGlueZone},a3,false);
+
+        
+        Line* l100 = fluid2 -> addCircle({p104,p102,p103});
+        Line* l101 = fluid2 -> addCircle({p105,p101,p106});
+        Line* l102 = fluid2 -> addLine({p107,p108});
+        Line* l103 = fluid2 -> addLine({p108,p112});
+        Line* l104 = fluid2 -> addLine({p112,p109});
+        Line* l105 = fluid2 -> addLine({p109,p110});
+        Line* l106 = fluid2 -> addLine({p110,p111});
+        Line* l107 = fluid2 -> addLine({p111,p107});
+        Line* l110 = fluid2 -> addCircle({p104,p102,p103});
+        Line* l111 = fluid2 -> addCircle({p105,p101,p106});
+        Line* l112 = fluid2 -> addLine({p111,p103});
+        Line* l114 = fluid2 -> addLine({p106,p112});
+        Line* l115 = fluid2 -> addCircle({p104,p100,p105});
+        Line* l116 = fluid2 -> addCircle({p105,p100,p104});
+        //Glue zone
+        Line* l117 = fluid2 -> addLine({p113,p114});
+        Line* l118 = fluid2 -> addCircle({p114,p108,p115});
+        Line* l119 = fluid2 -> addLine({p115,p116});
+        Line* l120 = fluid2 -> addCircle({p116,p109,p117});
+        Line* l121 = fluid2 -> addLine({p117,p118});
+        Line* l122 = fluid2 -> addCircle({p118,p110,p119});
+        Line* l123 = fluid2 -> addLine({p119,p120});
+        Line* l124 = fluid2 -> addCircle({p120,p107,p113});
+
+
+        LineLoop* ll101 = fluid2->addLineLoop({ l112 -> operator-(), l110, l115 -> operator-(), l101 -> operator-(), l114 -> operator-(), l103, l102, l107 });
+        LineLoop* ll102 = fluid2->addLineLoop({ l112, l100 -> operator-(), l116 -> operator-(), l111, l114, l104, l105, l106 });
+        LineLoop* ll103 = fluid2->addLineLoop({ l117, l118, l119, l120, l121, l122, l123, l124, l102 -> operator-(), l107 -> operator-(), l106 -> operator-(), l105 -> operator-(), l104 -> operator-(), l103 -> operator-() });
+        
+        //std::vector<LineLoop*> lin = {ll2, ll1};
+        //std::vector<LineLoop*> lin = {ll2};
+        //PlaneSurface* s101 = fluid2 -> addPlaneSurface(lin);
+        PlaneSurface* s101 = fluid2 -> addPlaneSurface({ll101});
+        PlaneSurface* s102 = fluid2 -> addPlaneSurface({ll102});
+        PlaneSurface* s103 = fluid2 -> addPlaneSurface({ll103}); 
+        
+        fluid2 -> addBoundaryCondition("NEUMANN", l102, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l103, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l104, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l105, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l106, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l107, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l112, {}, {}, {}, "GLOBAL");
+        // fluid2 -> addBoundaryCondition("NEUMANN", l113, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l114, {}, {}, {}, "GLOBAL");
+        
+        fluid2 -> addBoundaryCondition("GLUE", l117, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l118, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l119, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l120, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l121, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l122, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l123, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("GLUE", l124, {0}, {0}, {}, "GLOBAL");
+        
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l100, {0}, {0}, {}, "GLOBAL"); // FSI
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l101, {0}, {0}, {}, "GLOBAL"); // FSI
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l110, {0}, {0}, {}, "GLOBAL"); // FSI
+        fluid2 -> addBoundaryCondition("FSINTERFACE", l111, {0}, {0}, {}, "GLOBAL"); // FSI
+        fluid2 -> addBoundaryCondition("DIRICHLET", l115, {0}, {0}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("DIRICHLET", l116, {0}, {0}, {}, "GLOBAL");    
+        }
+
 
 
     if (rank == 0){
@@ -260,7 +384,7 @@
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T6, DELAUNAY, "fine", "", false, true);
+        problem2 -> generateMesh(T6, DELAUNAY, "fine", "", true, true);
 
         // FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s001,s002,s003,s004,s005,s006,s007,s008,s009 }, 1.0, 1.0, 1.0, "PLANE_STRESS");

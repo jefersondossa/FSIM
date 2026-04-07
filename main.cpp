@@ -53,8 +53,9 @@ int main(int argc, char **args) {
     };
 
     // #include "examples/turbine.h"
+    #include "examples/turbine_new.h"
     // #include "examples/cylinder.h"
-    #include "examples/flapping_flag.h"
+    // #include "examples/flapping_flag.h"
     //#include "examples/pitching_airfoil.h"
     // #include "examples/rectangle.h"
      

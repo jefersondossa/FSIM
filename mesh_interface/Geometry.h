@@ -6,6 +6,7 @@
 #include "GeometricNeumann.h"
 #include "BoundaryCondition.h"
 #include <unordered_map>
+#include "Ellipse.h"
 
 class Geometry
 {
@@ -63,6 +64,8 @@ public:
 	Line* addLine(std::vector<Point*> points, const bool& discretization = true);
 
 	Circle* addCircle(std::vector<Point*> points, const bool& discretization = true);
+
+	Ellipse* addEllipse(std::vector<Point*> points, double rx, double ry, double angle = 0, const bool& discretization = true);
 
 	Spline* addSpline(std::vector<Point*> points, double(*function)(double), const int& ndiv, const bool& discretization = true);
 

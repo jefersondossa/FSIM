@@ -3466,18 +3466,18 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
             accel[0] = (*nodesCoarse_)[i] -> getAcceleration(0);
             accel[1] = (*nodesCoarse_)[i] -> getAcceleration(1);
             
-            if (i==450&&rank==0){
-                std::cout << "accel before = " << accel[0] << " , "<< accel[1] << std::endl;
-            }
+            // if (i==450&&rank==0){
+            //     std::cout << "accel before = " << accel[0] << " , "<< accel[1] << std::endl;
+            // }
 
             (*nodesCoarse_)[i] -> setPreviousAcceleration(accel);
             
             accel[0] *= (gamma - 1.) / gamma;
             accel[1] *= (gamma - 1.) / gamma;
-            if (i==450&&rank==0){
-                std::cout << "gamma = " << gamma << std::endl;
-                std::cout << "accel after = " << accel[0] << " , "<< accel[1] << std::endl;
-            }
+            // if (i==450&&rank==0){
+            //     std::cout << "gamma = " << gamma << std::endl;
+            //     std::cout << "accel after = " << accel[0] << " , "<< accel[1] << std::endl;
+            // }
             (*nodesCoarse_)[i] -> setAcceleration(accel);            
 
         };
@@ -4900,9 +4900,9 @@ void Arlequin<DIM,DEG>::UpdateSolution(Vec &x){
             VecGetValues(All, Ione, &Ii, &val);
             // if (nodesCoarse_[i] -> getDistFunction() > -1.2) val *= 1000.e0;
 
-            if (i==450&&rank==0&&k==0){
-                std::cout << "VAL = " << val << " ,SOL = "<< (*nodesCoarse_)[i]->getAcceleration(k) << ", PREV SOL = " << (*nodesCoarse_)[i]->getPreviousAcceleration(k) << std::endl;
-            }
+            // if (i==450&&rank==0&&k==0){
+            //     std::cout << "VAL = " << val << " ,SOL = "<< (*nodesCoarse_)[i]->getAcceleration(k) << ", PREV SOL = " << (*nodesCoarse_)[i]->getPreviousAcceleration(k) << std::endl;
+            // }
 
             // val -= (*nodesCoarse_)[i]->getPreviousAcceleration(k);
 
