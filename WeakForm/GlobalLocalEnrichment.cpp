@@ -1,21 +1,35 @@
 #include "GlobalLocalEnrichment.h"
 
-GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double young, double poisson) : WeakForm() {
+GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double young, double poisson, bool planes, double thick) : WeakForm() {
     this->fMatId = matid;
     fNState = dimension;
     fYoungModulus = young;
     fPoissonRatio = poisson;
+    fPlaneStress = planes;
+    fThickness = thick;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
 
-    double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
-    double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
-    double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
-    fConstitutiveMatrix(0,0) = k;
-    fConstitutiveMatrix(0,1) = k * fPoissonRatio;
-    fConstitutiveMatrix(1,0) = k * fPoissonRatio;
-    fConstitutiveMatrix(1,1) = k;
-    fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5;  
+    if (fPlaneStress){//Plane Stress Matrix
+        double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+        double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
+        fConstitutiveMatrix(0,0) = k;
+        fConstitutiveMatrix(0,1) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,0) = k * fPoissonRatio;
+        fConstitutiveMatrix(1,1) = k;
+        fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5; 
+    }else{
+        //Plane Strain Matrix
+        double fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
+        double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+        double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
+        fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * aux;
+        fConstitutiveMatrix(0,1) = aux * fPoissonRatio;
+        fConstitutiveMatrix(1,0) = aux * fPoissonRatio;
+        fConstitutiveMatrix(1,1) = (1.-fPoissonRatio) * aux;
+        fConstitutiveMatrix(2,2) = fShearModulus;
+    } 
 };
 
 void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata, IntPointData &globaldata, MatrixDouble &Stiffness){

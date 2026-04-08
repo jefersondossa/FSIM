@@ -10,11 +10,15 @@ protected:
     double       fYoungModulus;
     // Poisson's ratio
     double       fPoissonRatio;
+    // Thickness
+    double       fThickness;
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
+    // true if plane stress, false if plane strain
+    bool         fPlaneStress;
 
 public:
-    GlobalLocalEnrichment(int matid, int dimension, double young, double poisson);
+    GlobalLocalEnrichment(int matid, int dimension, double young, double poisson, bool planes = true, double thick=1);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

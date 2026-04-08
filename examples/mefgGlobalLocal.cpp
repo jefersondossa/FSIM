@@ -20,7 +20,8 @@ auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    force[0] = -1*y;
+    //force[0] = -1*y;
+    force[1] = -1;
 };
 auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
@@ -186,7 +187,7 @@ int main(int argc, char **args) {
 
     //Create Global Model
     GeoMesh *gmeshG = new GeoMesh();
-    GmshTools::Read(*gmeshG,"../global.msh");
+    GmshTools::Read(*gmeshG,"../chapaLGlobal.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EIsoparametric);
     CreateGlobalModel(cmeshG);
     gmeshG->Print("gmeshGlobal.txt");
@@ -207,11 +208,11 @@ int main(int argc, char **args) {
         std::cout << "\nSolve Local Problem \n";
         if(it == 0){
             //Create Local Model
-            GmshTools::Read(*gmeshL,"../local.msh");
+            GmshTools::Read(*gmeshL,"../chapaLLocalRef1.msh");
             cmeshL = new CompMesh(gmeshL,ApproxType::EIsoparametric);
             CreateLocalModel(cmeshG, cmeshL);
-            //gmeshL->Print("gmeshLocal.txt");
-            //cmeshL->Print("cmeshLocal.txt");
+            gmeshL->Print("gmeshLocal.txt");
+            cmeshL->Print("cmeshLocal.txt");
 
             LocalToGlobalCorrespondence(cmeshG,cmeshL);
             LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL);
@@ -233,8 +234,8 @@ int main(int argc, char **args) {
 
 void CreateGlobalModel(CompMesh *cmeshG){
 
-    Elasticity2D *matelasticityG1 = new Elasticity2D(1, 1.0, 0.0); //domínio global
-    Elasticity2D *matelasticityG2 = new Elasticity2D(2, 1.0, 0.0); //domínio local
+    Elasticity2D *matelasticityG1 = new Elasticity2D(1, 1.0, 0.3, false, 1.0); //domínio global
+    Elasticity2D *matelasticityG2 = new Elasticity2D(2, 1.0, 0.3, false, 1.0); //domínio local
 
     //matelasticityG1->SetExactSolution(exactSol);
 
@@ -242,24 +243,24 @@ void CreateGlobalModel(CompMesh *cmeshG){
     cmeshG->InsertMaterial(matelasticityG2);
 
     overlappingRegion = 2;
-    globalLocalIterations = 1;
+    globalLocalIterations = 2;
     globalLocalTolerance = 1e-4;
 
     //Chapa retangular tracionada
-    enrichedNodes[0]=-1;
-    enrichedNodes[6]=-1;
-    enrichedNodes[7]=-1;
-    enrichedNodes[5]=-1;
+    // enrichedNodes[0]=-1;
+    // enrichedNodes[6]=-1;
+    // enrichedNodes[7]=-1;
+    // enrichedNodes[5]=-1;
 
     //Chapa L 
-    // enrichedNodes[8]=-1;
-    // enrichedNodes[28]=-1;
-    // enrichedNodes[29]=-1;
-    // enrichedNodes[51]=-1;
-    // enrichedNodes[52]=-1;
-    // enrichedNodes[62]=-1;
-    // enrichedNodes[63]=-1;
-    // enrichedNodes[64]=-1;
+    enrichedNodes[8]=-1;
+    enrichedNodes[28]=-1;
+    enrichedNodes[29]=-1;
+    enrichedNodes[51]=-1;
+    enrichedNodes[52]=-1;
+    enrichedNodes[62]=-1;
+    enrichedNodes[63]=-1;
+    enrichedNodes[64]=-1;
     
     //BC 
     MatrixDouble val1(2,2);
@@ -268,44 +269,44 @@ void CreateGlobalModel(CompMesh *cmeshG){
     val2.setZero();
 
     //Chapa L teste: apoio fixo no lado BC e carregamento unitário uniforme ao longe de FA
-    //L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
-    //L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    //matbcG2->SetForcingFunction(forcingFunction);
+    // L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+    // L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcG2->SetForcingFunction(forcingFunction);
 
     //Chapa L: apoio horizontal no pontos B e F, apoio vertical no ponto A
-    // val2[0] = 1.0;
-    // L2Projection * matbcG1 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
-    // val2.setZero();
-    // val2[1] = 1.0;
-    // L2Projection * matbcG2 = new L2Projection(4,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    val2[0] = 1.0;
+    L2Projection * matbcG1 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    val2.setZero();
+    val2[1] = 1.0;
+    L2Projection * matbcG2 = new L2Projection(4,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     
     //Chapa L: apoio fixo no ponto D, apoio vertical no ponto A
     //L2Projection * matbcG1 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirichlet,val1,val2);
-    //val2[0] = 1.0;
+    //val2[1] = 1.0;
     //L2Projection * matbcG2 = new L2Projection(4,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     
-    // L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    // matbcG3->SetForcingFunction(forcingFunctionAB);
-    // L2Projection * matbcG4 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    // matbcG4->SetForcingFunction(forcingFunctionBC);
-    // L2Projection * matbcG5 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    // matbcG5->SetForcingFunction(forcingFunctionEF);
-    // L2Projection * matbcG6 = new L2Projection(8,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    // matbcG6->SetForcingFunction(forcingFunctionFA);
+    L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG3->SetForcingFunction(forcingFunctionAB);
+    L2Projection * matbcG4 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG4->SetForcingFunction(forcingFunctionBC);
+    L2Projection * matbcG5 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG5->SetForcingFunction(forcingFunctionEF);
+    L2Projection * matbcG6 = new L2Projection(8,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG6->SetForcingFunction(forcingFunctionFA);
 
     //Chapa retangular tracionada
-    L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
-    val2[1] = 1.0;
-    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
-    L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcG3->SetForcingFunction(forcingFunction);
+    // L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+    // val2[1] = 1.0;
+    // L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    // L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcG3->SetForcingFunction(forcingFunction);
 
     cmeshG->InsertMaterial(matbcG1);
     cmeshG->InsertMaterial(matbcG2);
     cmeshG->InsertMaterial(matbcG3);
-    // cmeshG->InsertMaterial(matbcG4);
-    // cmeshG->InsertMaterial(matbcG5);
-    // cmeshG->InsertMaterial(matbcG6);
+    cmeshG->InsertMaterial(matbcG4);
+    cmeshG->InsertMaterial(matbcG5);
+    cmeshG->InsertMaterial(matbcG6);
     
     cmeshG->AutoBuild();
 }
@@ -321,7 +322,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     anG.Run();
     //anG.PrintGlobalMatrix();
     //anG.PrintGlobalRhs();
-    anG.PrintSolution();
+    //anG.PrintSolution();
 
     //VecDouble errors(4);
     //anG.PostProcessError(errors);
@@ -342,11 +343,11 @@ void SolveGlobalProblem(CompMesh *cmeshG){
 
 void CreateLocalModel(CompMesh *cmeshG, CompMesh * cmeshL){
 
-    Elasticity2D* matelasticityL = new Elasticity2D(1, 1.0, 0.0);
+    Elasticity2D* matelasticityL = new Elasticity2D(1, 1.0, 0.3, false, 1.0);
     cmeshL->InsertMaterial(matelasticityL);
 
     overlappingNHDirichletBoundary = 2;
-    overlappingNHNeumannBoundary = 4;
+    //overlappingNHNeumannBoundary = 4;
 
     //BC;
     MatrixDouble val1(2,2);
@@ -359,15 +360,15 @@ void CreateLocalModel(CompMesh *cmeshG, CompMesh * cmeshL){
     //L2Projection * matbcL2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirichlet,val1,val2);
     
     //Chapa reatangular tracionada
-    val2[1] = 1.0;
-    L2Projection * matbcL2 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
-    val2.setZero();
-    L2Projection * matbcL3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcL3->SetForcingFunction(forcingFunction);
+    // val2[1] = 1.0;
+    // L2Projection * matbcL2 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    // val2.setZero();
+    // L2Projection * matbcL3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcL3->SetForcingFunction(forcingFunction);
 
     cmeshL->InsertMaterial(matbcL1);
-    cmeshL->InsertMaterial(matbcL2);
-    cmeshL->InsertMaterial(matbcL3);
+    // cmeshL->InsertMaterial(matbcL2);
+    // cmeshL->InsertMaterial(matbcL3);
     
     cmeshL->AutoBuild();
 }
@@ -379,7 +380,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.Run();
     //anL.PrintGlobalMatrix();
     //anL.PrintGlobalRhs();
-    anL.PrintSolution();
+    //anL.PrintSolution();
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"SigmaX","SigmaY","TauXY"};
@@ -514,7 +515,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
 
     //cmeshG->Print("cmeshGEnriched.txt");
     
-    GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
+    GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1, dimension, 1.0, 0.3, false, 1.0);
     globalLocal->SetForcingFunction(forcingFunction);
 
     //Count the number local elements to enrich in the global mesh
@@ -573,7 +574,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     anE.Run();
     //anE.PrintGlobalMatrix();
     //anE.PrintGlobalRhs();
-    anE.PrintSolution();
+    //anE.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anE.GlobalMatrix());
     if (!spMat) {
@@ -601,6 +602,8 @@ bool CheckConvergence(int it){
         return false;
     }else{
         MatrixDouble diff = currentSol - previousSol;
+
+        double teste = diff.norm();
 
         if(diff.norm() <= globalLocalTolerance){
             return true;
