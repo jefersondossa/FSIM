@@ -12,6 +12,7 @@ public:
 	Surface();
 
 	Surface(const int& index, const std::string& name, LineLoop* lineLoop);
+	Surface(const int& index, const std::string& name, std::vector<LineLoop*> lineLoop);
 
 	~Surface();
 
@@ -48,7 +49,8 @@ public:
 protected:
 	int index_;
 	std::string name_;
-	LineLoop* lineLoop_;
+	LineLoop* lineLoop_ = nullptr;
+	std::vector<LineLoop * > lineLoops_;
 	Material* material_;
 	// std::vector<ParametricSurfaceElement*> parametricElements_;
 	std::vector<ElementMesh*> elements_;

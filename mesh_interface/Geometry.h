@@ -65,19 +65,21 @@ public:
 
 	Circle* addCircle(std::vector<Point*> points, const bool& discretization = true);
 
-	Ellipse* addEllipse(std::vector<Point*> points, double rx, double ry, double angle = 0, const bool& discretization = true);
+	Ellipse* addEllipse(std::vector<Point*> points, double rx, double ry, double startangle = 0, double finalangle = 360, double angle = 0, const bool& discretization = true);
 
 	Spline* addSpline(std::vector<Point*> points, double(*function)(double), const int& ndiv, const bool& discretization = true);
 
 	LineLoop* addLineLoop(std::vector<Line*> lines);
 
 	Surface* addSurface(LineLoop* lineLoop);
+	Surface* addSurface(std::vector<LineLoop*> lineLoop);
 
 	Surface* addSurface(std::vector<Line*> lines);
 
 	PlaneSurface* addPlaneSurface(LineLoop* lineLoop);
 
 	PlaneSurface* addPlaneSurface(std::vector<Line*> lines);
+	PlaneSurface* addPlaneSurface(std::vector<LineLoop*> lineloops);
 
 	SurfaceLoop* addSurfaceLoop(std::vector<Surface*> surfaces);
 

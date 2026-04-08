@@ -146,12 +146,12 @@ Circle* Geometry::addCircle(std::vector<Point*> points, const bool& discretizati
 	return l;
 }
 
-Ellipse* Geometry::addEllipse(std::vector<Point*> points, double rx, double ry, double angle, const bool& discretization)
+Ellipse* Geometry::addEllipse(std::vector<Point*> points, double rx, double ry, double startangle, double finalangle, double angle, const bool& discretization)
 {
 	int index = getNumberOfLines();
 	std::stringstream name;
 	name << "l" << index;
-	Ellipse* l = new Ellipse(index, name.str(), points, rx, ry, angle, discretization);
+	Ellipse* l = new Ellipse(index, name.str(), points, rx, ry, startangle, finalangle, angle, discretization);
 	lines_[l->getName()] = l;
 	gmshCode_ += l->getGmshCode();
 	return l;
@@ -211,6 +211,17 @@ Surface* Geometry::addSurface(LineLoop* lineLoop)
 	return s;
 }
 
+Surface* Geometry::addSurface(std::vector<LineLoop*> lineLoop)
+{
+	int index = getNumberOfSurfaces();
+	std::stringstream name;
+	name << "s" << index;
+	Surface* s = new Surface(index, name.str(), lineLoop);
+	surfaces_[s->getName()] = s;
+	gmshCode_ += s->getGmshCode();
+	return s;
+}
+
 Surface* Geometry::addSurface(std::vector<Line*> lines)
 {
 	int index = getNumberOfSurfaces();
@@ -241,6 +252,18 @@ PlaneSurface* Geometry::addPlaneSurface(std::vector<Line*> lines)
 	name << "s" << index;
 	LineLoop* ll = addLineLoop(lines);
 	PlaneSurface* s = new PlaneSurface(index, name.str(), ll);
+	surfaces_[s->getName()] = s;
+	gmshCode_ += s->getGmshCode();
+	return s;
+}
+
+PlaneSurface* Geometry::addPlaneSurface(std::vector<LineLoop*> lineloops)
+{
+	int index = getNumberOfSurfaces();
+	std::stringstream name;
+	name << "s" << index;
+	// LineLoop* ll = addLineLoop(lines);
+	PlaneSurface* s = new PlaneSurface(index, name.str(), lineloops);
 	surfaces_[s->getName()] = s;
 	gmshCode_ += s->getGmshCode();
 	return s;

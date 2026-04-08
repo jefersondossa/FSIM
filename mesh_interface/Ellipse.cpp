@@ -1,6 +1,6 @@
 #include "Ellipse.h"
 
-Ellipse::Ellipse(const int& index, const std::string& name, std::vector<Point*> points, double rx, double ry, double angle, const bool& discretization)
+Ellipse::Ellipse(const int& index, const std::string& name, std::vector<Point*> points, double rx, double ry, double startangle, double finalangle, double angle, const bool& discretization)
 {
     index_ = index;
 	name_ = name;
@@ -11,6 +11,8 @@ Ellipse::Ellipse(const int& index, const std::string& name, std::vector<Point*> 
 	rx_ = rx;
 	ry_ = ry;
 	angle_ = angle;
+	startangle_ = startangle;
+	finalangle_ = finalangle;
 }
 
 Ellipse::~Ellipse() {}
@@ -27,14 +29,24 @@ std::string Ellipse::getGmshCode()
     std::stringstream text;
 	if (discretization_) {
 		text << name_ << " = newl; Ellipse(" << name_ << ") = {" << points_[0]->getX() << ", " << points_[0]->getY() << ", " << points_[0]->getZ()
-				<<  ", " << rx_ << ", " << ry_ << ", 0, 2*Pi}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
-		text << "Rotate {" << points_[0]->getX() << ", " << points_[0]->getY() << ", " << points_[0]->getZ() << "}, {0, 0, 1}, " << angle_ << "*Pi/180} {" << name_ << "};\n//\n";
+				<<  ", " << rx_ << ", " << ry_ << ", " << startangle_ << "*Pi/180, " << finalangle_ << "*Pi/180}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
+		text << "Rotate { {0, 0, 1}, {" << points_[0]->getX() << ", " << points_[0]->getY() << ", " << points_[0]->getZ() << "}, " << angle_ << "*Pi/180} { Curve{" << name_ << "};";
+		if (points_.size() > 1){
+			text << " Point{" << points_[1]->getName() << "}; Point{" << points_[2]->getName() <<  "};}\n//\n";
+		} else {
+			text << "}\n//\n";
+		}
 		return text.str();
 	}
 	else {
 		text << name_ << " = newl; Ellipse(" << name_ << ") = {" << points_[0]->getX() << ", " << points_[0]->getY() << ", " << points_[0]->getZ()
-				<<  ", " << rx_ << ", " << ry_ << ", 0, 2*Pi}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
-		text << "Rotate {" << points_[0]->getX() << ", " << points_[0]->getY() << ", " << points_[0]->getZ() << "}, {0, 0, 1}, " << angle_ << "*Pi/180} {" << name_ << "};\n//\n";
+				<<  ", " << rx_ << ", " << ry_ << ", " << startangle_ << "*Pi/180, " << finalangle_ << "*Pi/180}; Physical Line('" << name_ << "') = {" << name_ << "};\n//\n";
+		text << "Rotate { {0, 0, 1}, {" << points_[0]->getX() << ", " << points_[0]->getY() << ", " << points_[0]->getZ() << "}, " << angle_ << "*Pi/180} { Curve{" << name_ << "};";
+		if (points_.size() > 1){
+			text << " Point{" << points_[1]->getName() << "}; Point{" << points_[2]->getName() <<  "};}\n//\n";
+		} else {
+			text << "}\n//\n";
+		}
 		return text.str();
 	}
 }

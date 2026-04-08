@@ -13,6 +13,13 @@ Surface::Surface(const int& index, const std::string& name, LineLoop* lineLoop)
 	lineLoop_ = lineLoop;
 }
 
+Surface::Surface(const int& index, const std::string& name, std::vector<LineLoop*> lineLoop)
+{
+	index_ = index;
+	name_ = name;
+	lineLoops_ = lineLoop;
+}
+
 Surface::~Surface() {}
 
 int Surface::getIndex()
@@ -68,7 +75,18 @@ void Surface::addElement(ElementMesh* element)
 std::string Surface::getGmshCode()
 {
 	std::stringstream text;
-	text << name_ << " = news; Surface(" << name_ << ") = {" << lineLoop_->getName() << "}; Physical Surface('" << name_ << "') = {" << name_ << "};\n//\n";
+	if (lineLoop_ != nullptr) {
+		text << name_ << " = news; Surface(" << name_ << ") = {" << lineLoop_->getName() << "}; Physical Surface('" << name_ << "') = {" << name_ << "};\n//\n";
+	} else if (lineLoops_.size() != 0){
+		text << name_ << " = news; Surface(" << name_ << ") = {";
+		for (size_t i = 0; i < lineLoops_.size(); i++)
+		{
+			text << lineLoops_[i]->getName();
+			if (i != (lineLoops_.size() - 1))
+				text << ", ";
+		}
+		text << "}; Physical Surface('" << name_ << "') = {" << name_ << "};\n//\n";
+	}
 	return text.str();
 }
 

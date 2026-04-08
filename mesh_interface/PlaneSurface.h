@@ -9,6 +9,7 @@ public:
 	PlaneSurface();
 
 	PlaneSurface(const int& index, const std::string& name, LineLoop* lineLoop);
+	PlaneSurface(const int& index, const std::string& name, std::vector<LineLoop*> lineLoop);
 
 	~PlaneSurface();
 
