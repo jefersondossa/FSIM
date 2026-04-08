@@ -20,7 +20,7 @@ Physical Line("Apoio movel", 3) = {1,3};
 Physical Line("Carregamento", 4) = {4}; 
 
 Transfinite Curve {4, 2} = 3; //Using Progression 1;
-Transfinite Curve {1, 3} = 2; //Using Progression 1;
+Transfinite Curve {1, 3} = 3; //Using Progression 1;
 
 Transfinite Surface {6};
 Recombine Surface {6};
