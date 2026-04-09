@@ -12,8 +12,6 @@ InterpolatedBC::InterpolatedBC(int matid, int dim, int nstate,
     fGlobalElementCorrespondence = globalElementCorrespondence;
     fGlobalNodeCorrespondence = globalNodeCorrespondence;
     fGlobalMesh = globalmesh;
-    fInterpolatedValues.resize(nstate);
-
 };
 
 void InterpolatedBC::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
@@ -51,7 +49,6 @@ void InterpolatedBC::ComputeResidual(int &index, IntPointData &data, VecDouble &
     double WJ = data.fWeight * data.fJacA0;
     double nphi = data.fPhi.size();
 
-    fInterpolatedValues.setZero();
     int64_t myIndex = data.fElementIndex;
     Element *el = fGlobalMesh->ElementVec()[(*fGlobalElementCorrespondence)[myIndex]];
     el->IntegrationData().fAdimCoord[0] = (*fGlobalNodeCorrespondence)[myIndex](index,0); 

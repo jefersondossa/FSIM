@@ -84,7 +84,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     StiffnessCorrect.setZero(); RhsCorrect.setZero();
     //Account the standard DOFs in the stiffness matrix and rhs vector
     for (int i = 0; i < nglobalDOF; i++){
-        RhsCorrect[i] = rhsVector(i);
+        RhsCorrect[i] = rhsVector[i];
         for (int j = 0; j < nglobalDOF; j++){
             StiffnessCorrect(i,j) = jacobianNRMatrix(i,j);   
         }
@@ -92,10 +92,10 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
 
     //Account the enriched DOFs in the stiffness matrix and rhs vector
     std::set<int> locIndexes;
-    VecInt geoNodes = fGlobalElement->Reference()->getGeometricNodes();
-    for (size_t i = 0; i < geoNodes.size(); i++){
-        if (!(*connectEnrichment)[geoNodes[i]])continue;
-        int enrichConnectIndex = (*connectEnrichment)[geoNodes[i]];
+    auto globalConnects = fGlobalElement->getConnectivity();
+    for (size_t i = 0; i < globalConnects.size(); i++){
+        if (!(*connectEnrichment)[globalConnects[i]->Index()])continue;
+        int enrichConnectIndex = (*connectEnrichment)[globalConnects[i]->Index()];
         Connect *c;
         int locConnectIndex = -1;
         for(int ic = 0; ic < fConnect.size(); ic++) {
@@ -110,13 +110,16 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
         int nshapei = c->GetNShapeFunctions();
         int nstatei = c->GetNStateVariables();
         for (int j = 0; j < nshapei*nstatei; j++){
-            RhsCorrect[nglobalDOF + locConnectIndex*nstatei + j] = rhsVector(nglobalDOF + i*nstatei + j);
+            RhsCorrect[nglobalDOF + locConnectIndex*nstatei + j] = rhsVector[nglobalDOF + i*nstatei + j];
+            //Global DOFs x Enriched DOFs
             for (int k = 0; k < nglobalDOF; k++){
                 StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,k) = jacobianNRMatrix(nglobalDOF + i*nstatei + j, k);   
                 StiffnessCorrect(k,nglobalDOF + locConnectIndex*nstatei + j) = jacobianNRMatrix(k,nglobalDOF + i*nstatei + j);   
             }
             for (int k = 0; k < nshapei*nstatei; k++){
+                //Enriched DOFs x Enriched DOFs - Diagonal
                 StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locConnectIndex*nstatei + k) = jacobianNRMatrix(nglobalDOF + i*nstatei + j,nglobalDOF + i*nstatei + k);   
+                //Enriched DOFs x Enriched DOFs - Off-diagonal
                 for (auto locconnect:locIndexes){
                     if (locconnect == locConnectIndex) continue;
                     StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locconnect*nstatei + k) = jacobianNRMatrix(nglobalDOF + i*nstatei + j,nglobalDOF + locconnect*nstatei + k);

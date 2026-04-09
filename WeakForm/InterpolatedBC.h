@@ -18,7 +18,6 @@ protected:
     std::map<int64_t,int64_t> *fGlobalElementCorrespondence;
     std::map<int64_t, MatrixDouble> *fGlobalNodeCorrespondence;
     CompMesh *fGlobalMesh;
-    VecDouble fInterpolatedValues;
 
 public:
     /// @brief Boundary condition constructor

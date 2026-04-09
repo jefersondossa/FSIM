@@ -81,6 +81,19 @@ void EigenSpMatrix::PrintMatrix(){
         if (i<fMatrix.rows()-1) std::cout << ",\n";
     }
     std::cout << "};\n"; 
+
+    // std::cout << "Matrix Diagonal = {\n";
+    // for (int64_t i = 0; i < fMatrix.rows(); i++){
+    //     std::cout << "{";
+    //     if (fabs(fMatrix.coeffRef(i,i))<1.e-13) {
+    //         std::cout << 0.;
+    //     } else {
+    //         std::cout << fMatrix.coeffRef(i,i);
+    //     }
+    //     std::cout << "}";
+    //     if (i<fMatrix.rows()-1) std::cout << ",\n";
+    // }
+    // std::cout << "};\n"; 
 }
 
 void EigenSpMatrix::PrintRhs(){
