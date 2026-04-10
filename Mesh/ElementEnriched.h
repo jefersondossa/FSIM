@@ -207,6 +207,11 @@ public:
         }
     };
 
+    void setConnectivity(VecInt connect) override{
+        for (int iconnect = 0; iconnect < connect.size(); iconnect++){
+            fConnect[iconnect] = fMesh->ConnectVec()[connect[iconnect]];
+        } 
+    }
 
 };
 
