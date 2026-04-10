@@ -2,6 +2,7 @@
 
 MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisson) : WeakForm() {
     this->fMatId = matid;
+    this->fNState = 2;
     fDimension = dim;
     fYoungModulus = young;
     fPoissonRatio = poisson;

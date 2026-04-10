@@ -412,14 +412,14 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         int nshape = originalConnect->GetNShapeFunctions();
         int order = originalConnect->GetOrder();
         int nstate = originalConnect->GetNStateVariables();
-        Connect* c = new Connect(dimension, nshape, order, nConnects+count, SeqNum);
+        Connect* c = new Connect(nstate, nshape, order, nConnects+count, SeqNum);
         SeqNum += nstate;
         con.second = nConnects+count;
         mixedCmeshG->MeshVector()[0]->ConnectVec()[nConnects+count] = c;
         count++;
     }
 
-    //cmeshG->Print("cmeshGEnriched.txt");
+    mixedCmeshG->MeshVector()[0]->Print("cmeshGEnriched.txt");
     
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
     globalLocal->SetForcingFunction(forcingFunction);
@@ -430,21 +430,21 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         if (el->Dimension() != cmeshL->Dimension() && el->Reference()->Material() != overlappingNHNeumannBoundary) continue;
         nelsToEnrich++;
     }
-    int64_t nElementsG = cmeshG->NElements();
-    cmeshG->ElementVec().resize(cmeshG->NElements() + nelsToEnrich);
+    int64_t nElementsG = mixedCmeshG->MeshVector()[0]->NElements();
+    mixedCmeshG->MeshVector()[0]->ElementVec().resize(mixedCmeshG->MeshVector()[0]->NElements() + nelsToEnrich);
     //Create the enriched elements in the global mesh
     count = 0;
     for (auto localEl:cmeshL->ElementVec()){
         if (localEl->Dimension() != cmeshL->Dimension() && localEl->Reference()->Material() != overlappingNHNeumannBoundary) continue;
-        Element* globalEl = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
-        ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, cmeshG, globalLocal);
+        Element* globalEl = mixedCmeshG->MeshVector()[0]->ElementVec()[globalElementCorrespondence[localEl->Index()]];
+        ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, mixedCmeshG, globalLocal);
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
         
         //Sets which node will have enriched solution
         enrichedEl->SetEnrichmentData(&enrichedConnects);
 
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
-        if (globalEl->Dimension() == cmeshG->Dimension()){
+        if (globalEl->Dimension() == mixedCmeshG->MeshVector()[0]->Dimension()){
             globalEl->SetWeakForm(nullptr);
         }
 
@@ -459,7 +459,7 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         }
         enrichedEl->getConnectivity().resize(enrichedCon.size());
         enrichedEl->setConnectivity(0,enrichedCon);
-        cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
+        mixedCmeshG->MeshVector()[0]->ElementVec()[nElementsG+count] = enrichedEl;
         count++;
     }
     // Update the problem size

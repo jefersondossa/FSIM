@@ -34,16 +34,20 @@ Element *ElementMixed::Clone() const {
 
 void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDouble &rhsVector){
 
-    // if (!this->fWeakForm) return;
+    if (!this->fWeakForm) return;
 
     int DIM = this->fReference->Dimension();
     
     for (int i = 0; i < fSubElements.size(); i++){
         auto &integdata = fSubElements[i]->IntegrationData();
         integdata.fNeedsDSol = true;
-        integdata.fDSolDx.resize(fSubElements[i]->GetWeakForm()->NState(), DIM);
+        int nstate = this->fWeakForm->NState();
+        if (fSubElements[i]->GetWeakForm()){
+            nstate = fSubElements[i]->GetWeakForm()->NState();
+        }
+        integdata.fDSolDx.resize(nstate, DIM);
         integdata.fNeedsSol = true;
-        integdata.fSol.resize(fSubElements[i]->GetWeakForm()->NState());
+        integdata.fSol.resize(nstate);
     }
     
     int index = 0;

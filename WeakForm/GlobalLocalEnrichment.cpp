@@ -2,7 +2,7 @@
 
 GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double young, double poisson, bool planes, double thick) : WeakForm() {
     this->fMatId = matid;
-    fNState = dimension;
+    fNState = 2;
     fYoungModulus = young;
     fPoissonRatio = poisson;
     fPlaneStress = planes;
