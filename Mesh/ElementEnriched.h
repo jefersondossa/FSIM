@@ -15,6 +15,7 @@
 #define ELEMENTENRICHED_H
 
 #include "ElementT.h"
+#include "MixedCompMesh.h"
 
 /// Defines the fluid element object and all the element information
 class ElementEnriched : public Element{
@@ -197,6 +198,15 @@ public:
     int NShapeFunctions() override{
         return fGlobalElement->NShapeFunctions();
     };
+
+   void setConnectivity(int mesh, VecInt connect){
+        fConnect.resize(connect.size());
+        MixedCompMesh* mixedMesh = dynamic_cast<MixedCompMesh*>(fMesh);
+        for (size_t i = 0; i < connect.size(); i++){
+            fConnect[i] = mixedMesh->MeshVector()[mesh]->ConnectVec()[connect[i]];
+        }
+    };
+
 
 };
 

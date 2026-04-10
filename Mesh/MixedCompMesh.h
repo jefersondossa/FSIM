@@ -21,6 +21,8 @@ public:
 
     void Print(std::string filename);
 
+    std::vector<CompMesh* > &MeshVector(){return fMeshVector;}
+
 };
 
 #endif

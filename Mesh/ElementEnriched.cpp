@@ -14,6 +14,10 @@ ElementEnriched::ElementEnriched(int64_t index, Element* localEl, Element* globa
     this->fWeakForm = wf;
     this->nLocDOF = globalEl->NLocDOF() * 2;
     this->fReference = localEl->Reference();
+    fLocalElement->IntegrationData().fNeedsSol = true;
+    fLocalElement->IntegrationData().fNeedsDSol = true;
+    fGlobalElement->IntegrationData().fNeedsSol = true;
+    fGlobalElement->IntegrationData().fNeedsDSol = true;
 };
 
 Element *ElementEnriched::Clone() const {

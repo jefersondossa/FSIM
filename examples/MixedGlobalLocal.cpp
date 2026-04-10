@@ -42,17 +42,15 @@ int globalLocalIterations;
 std::map<int64_t,int64_t> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
 std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
-//Global node to be enriched to the index of the new connect associated with the enriched degree of freedom in the global mesh
-std::map<int64_t,int64_t> enrichedNodes;
+//Global connects to be enriched to the index of the new connect associated with the enriched degree of freedom
+std::map<int64_t,int64_t> enrichedConnects;
 
 int main(int argc, char **args) { 
 
-    overlappingRegion = 1;
+    overlappingRegion = 2;
     globalLocalIterations = 1;
     overlappingNHDirichletBoundary = 2;
     overlappingNHNeumannBoundary = 4;
-    enrichedNodes[0]=-1;
-    enrichedNodes[5]=-1;
 
     //GLOBAL MODEL
     std::cout << "Solve Global Problem \n";
@@ -70,6 +68,26 @@ int main(int argc, char **args) {
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
 
+    //Automatic search the connects to be enriched in the global model
+    for (auto celEl:cmeshG->ElementVec()){
+        auto geoEl = celEl->Reference();
+        //Create the enriched element associated with the global element 
+        //Now put the rule to find the connects.
+        // Ex: if all element node coordinate x < .1, then they will be enriched. 
+        bool enriched = true;
+        auto geoNodes = geoEl->getGeometricNodes();
+        for (auto node:geoNodes){
+            if (gmeshG->NodeVec()[node]->getCoordinateValue(0) > 0.1){
+                enriched = false;
+            }
+        }
+        if (enriched){
+            auto connects = celEl->getConnectivity();
+            for (int i = 0; i < connects.size(); i++){
+                enrichedConnects[connects[i]->Index()]=-1;
+            }
+        }
+    }    
     
     GeoMesh * gmeshL = new GeoMesh();
     GmshTools::Read(*gmeshL,"../local.msh");
@@ -378,21 +396,26 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
 
 void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
 
+    MixedCompMesh *mixedCmeshG = dynamic_cast<MixedCompMesh *>(cmeshG);
+    MixedCompMesh *mixedCmeshL = dynamic_cast<MixedCompMesh *>(cmeshL);
+
     // Create the new connects in the global mesh for the enriched nodes and resize the connect vector of the global mesh accordingly. 
     // The number of new connects is equal to the number of enriched nodes, since we are considering only one degree of freedom per node, 
     // but it can be easily generalized for more degrees of freedom per node.
-    int64_t nConnects = cmeshG->NConnects();
-    int64_t nEnrichedNodes = enrichedNodes.size();
-    cmeshG->ConnectVec().resize(nConnects + nEnrichedNodes);
-    int order = cmeshG->GetDefaultOrder();
+    int64_t nConnects = mixedCmeshG->MeshVector()[0]->NConnects();
+    int64_t nEnrichedConnects = enrichedConnects.size();
+    mixedCmeshG->MeshVector()[0]->ConnectVec().resize(nConnects + nEnrichedConnects);
     int count = 0;
     int64_t SeqNum = cmeshG->NGlobalDOF();
-    int nstate = cmeshG->NState();
-    for(auto &node:enrichedNodes){;
-        Connect* c = new Connect(dimension, 1, order, nConnects+count, SeqNum);
+    for(auto &con:enrichedConnects){;
+        Connect* originalConnect = mixedCmeshG->MeshVector()[0]->ConnectVec()[con.first];
+        int nshape = originalConnect->GetNShapeFunctions();
+        int order = originalConnect->GetOrder();
+        int nstate = originalConnect->GetNStateVariables();
+        Connect* c = new Connect(dimension, nshape, order, nConnects+count, SeqNum);
         SeqNum += nstate;
-        node.second = nConnects+count;
-        cmeshG->ConnectVec()[nConnects+count] = c;
+        con.second = nConnects+count;
+        mixedCmeshG->MeshVector()[0]->ConnectVec()[nConnects+count] = c;
         count++;
     }
 
@@ -418,32 +441,35 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
         
         //Sets which node will have enriched solution
-        enrichedEl->SetEnrichmentData(&enrichedNodes);
+        enrichedEl->SetEnrichmentData(&enrichedConnects);
 
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
         if (globalEl->Dimension() == cmeshG->Dimension()){
             globalEl->SetWeakForm(nullptr);
         }
 
-        //Seek how many nodes will be enriched in the global element and construct the proper connectivity for the enriched element.
-        VecInt geoNodes = globalEl->Reference()->getGeometricNodes();
-        VecInt enrichedConnects = globalEl->getConnectivityIndices();
-        for (int i = 0; i < geoNodes.size(); i++){
-            if (enrichedNodes.find(geoNodes[i]) != enrichedNodes.end()){
-                enrichedConnects.conservativeResize(enrichedConnects.size() + 1); // Increase size by 1
-                enrichedConnects(enrichedConnects.size() - 1) = enrichedNodes[geoNodes[i]];          
+        //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
+        auto elConnects = globalEl->getConnectivity();
+        VecInt enrichedCon = globalEl->getConnectivityIndices();
+        for (int i = 0; i < elConnects.size(); i++){
+            if (enrichedConnects.find(elConnects[i]->Index()) != enrichedConnects.end()){
+                enrichedCon.conservativeResize(enrichedCon.size() + 1); // Increase size by 1
+                enrichedCon(enrichedCon.size() - 1) = enrichedConnects[elConnects[i]->Index()];          
             }
         }
-        enrichedEl->getConnectivity().resize(enrichedConnects.size());
-        enrichedEl->setConnectivity(enrichedConnects);
+        enrichedEl->getConnectivity().resize(enrichedCon.size());
+        enrichedEl->setConnectivity(0,enrichedCon);
         cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
         count++;
     }
     // Update the problem size
     int64_t fNGlobalDOF  = 0;
-    for (int64_t i = 0; i < cmeshG->NConnects(); i++){
-        int nstate = cmeshG->NState();
-        fNGlobalDOF += cmeshG->ConnectVec()[i]->GetNShapeFunctions() * nstate;
+    for (int imesh = 0; imesh < mixedCmeshG->MeshVector().size(); imesh++){
+        for (int64_t i = 0; i < mixedCmeshG->MeshVector()[imesh]->NConnects(); i++){
+            Connect* con = mixedCmeshG->MeshVector()[imesh]->ConnectVec()[i];
+            int nstate = con->GetNStateVariables();
+            fNGlobalDOF += mixedCmeshG->MeshVector()[imesh]->ConnectVec()[i]->GetNShapeFunctions() * nstate;
+        }
     }
     cmeshG->NGlobalDOF() = fNGlobalDOF;
 
