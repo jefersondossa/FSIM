@@ -13,8 +13,9 @@ Point::Point(const int& index,
 {
 	index_ = index;
 	name_ = name;
-	coordinates_.reserve(3);
-	coordinates_ = coordinates;
+	coordinates_.resize(3);
+	coordinates_[0] = coordinates[0];
+	coordinates_[1] = coordinates[1];
 	if (coordinates.size() == 2) coordinates_[2] = 0.;
 	lcar_ = lcar;
 	discretization_ = discretization;

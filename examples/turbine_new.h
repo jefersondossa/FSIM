@@ -292,7 +292,7 @@
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
 
-    char in_solid[32] = "cantilever.txt";
+    char in_solid[32] = "turbine2.txt";
     coarseModel.getFluidParameters().setSolver(SolverType::EMumps);
     fineModel.getFluidParameters().setSolver(SolverType::EMumps);
 
@@ -305,7 +305,11 @@
     coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
 
     arlequinProblem.UnsetUseSNES();
-    arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
+    // arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
+
+
+    coupledProblem.setArlequinAndSolidModels(arlequinProblem,"turbine2.txt");
+    coupledProblem.solveFSIProblemArlequin(100000);
     
     // coupledProblem.solveFSIProblemArlequin(100000);
 
