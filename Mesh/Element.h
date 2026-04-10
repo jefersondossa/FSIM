@@ -152,6 +152,7 @@ public:
 
     virtual ElementType Type() = 0;
 
+    virtual int NShapeFunctions() = 0;
 };
 
 

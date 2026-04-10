@@ -194,6 +194,10 @@ public:
         fWeakForm->Solution(fGlobalElement->IntegrationData(),var,Sol);
     };
 
+    int NShapeFunctions() override{
+        return fGlobalElement->NShapeFunctions();
+    };
+
 };
 
 

@@ -114,6 +114,10 @@ public:
         return fReference->Type();
     }
 
+    int NShapeFunctions() override {
+        return compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
+    }
+
 };
 
 

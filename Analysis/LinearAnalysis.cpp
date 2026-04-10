@@ -67,6 +67,7 @@ void LinearAnalysis::UpdateSolution(){
                     int64_t fSeqnum = c->GetSequenceNumber();
                     if (fSeqnum < 0) continue;
                     int nstate = c->GetNStateVariables();
+                    if (c->GetNShapeFunctions() == 0) continue;
                     for (int k = 0; k<nstate; k++){
                         Ii = nstartDOF + fSeqnum + k;
                         val = this->GlobalMatrix()->GetValueSolution(Ii);

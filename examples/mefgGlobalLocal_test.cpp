@@ -50,7 +50,8 @@ int main(int argc, char **args) {
     //Create Global Model
     GeoMesh *gmeshG = new GeoMesh();
     GmshTools::Read(*gmeshG,"../global.msh");
-    CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EIsoparametric);
+    CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EHierarquic);
+    cmeshG->SetDefaultOrder(2);
     CreateGlobalModel(cmeshG);
     gmeshG->Print("gmeshGlobal.txt");
     cmeshG->Print("cmeshGlobal.txt");
@@ -90,7 +91,8 @@ int main(int argc, char **args) {
         if(n == 0){
             //Create Local Model
             GmshTools::Read(*gmeshL,"../local.msh");
-            cmeshL = new CompMesh(gmeshL,ApproxType::EIsoparametric);
+            cmeshL = new CompMesh(gmeshL,ApproxType::EHierarquic);
+            cmeshL->SetDefaultOrder(1);
             CreateLocalModel(cmeshG, cmeshL);
             gmeshL->Print("gmeshLocal.txt");
             cmeshL->Print("cmeshLocal.txt");
@@ -322,12 +324,14 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
     int64_t nConnects = cmeshG->NConnects();
     int64_t nEnrichedConnects = enrichedConnects.size();
     cmeshG->ConnectVec().resize(nConnects + nEnrichedConnects);
-    int order = cmeshG->GetDefaultOrder();
     int count = 0;
     int64_t SeqNum = cmeshG->NGlobalDOF();
     int nstate = cmeshG->NState();
     for(auto &con:enrichedConnects){;
-        Connect* c = new Connect(dimension, 1, order, nConnects+count, SeqNum);
+        Connect* originalConnect = cmeshG->ConnectVec()[con.first];
+        int nshape = originalConnect->GetNShapeFunctions();
+        int order = originalConnect->GetOrder();
+        Connect* c = new Connect(dimension, nshape, order, nConnects+count, SeqNum);
         SeqNum += nstate;
         con.second = nConnects+count;
         cmeshG->ConnectVec()[nConnects+count] = c;

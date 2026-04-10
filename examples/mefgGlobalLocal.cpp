@@ -176,8 +176,8 @@ VecDouble currentSol;
 std::map<int64_t,int64_t> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
 std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
-//Global node to be enriched to the index of the new connect associated with the enriched degree of freedom in the global mesh
-std::map<int64_t,int64_t> enrichedNodes;
+//Global connects to be enriched to the index of the new connect associated with the enriched degree of freedom
+std::map<int64_t,int64_t> enrichedConnects;
 
 int main(int argc, char **args) { 
 
@@ -246,18 +246,18 @@ void CreateGlobalModel(CompMesh *cmeshG){
     globalLocalTolerance = 1e-4;
 
     //Chapa retangular tracionada
-    //enrichedNodes[0]=-1;
-    //enrichedNodes[5]=-1;
+    //enrichedConnects[0]=-1;
+    //enrichedConnects[5]=-1;
 
     //Chapa L 
-    enrichedNodes[8]=-1;
-    enrichedNodes[28]=-1;
-    enrichedNodes[29]=-1;
-    enrichedNodes[51]=-1;
-    enrichedNodes[52]=-1;
-    enrichedNodes[62]=-1;
-    enrichedNodes[63]=-1;
-    enrichedNodes[64]=-1;
+    enrichedConnects[8]=-1;
+    enrichedConnects[28]=-1;
+    enrichedConnects[29]=-1;
+    enrichedConnects[51]=-1;
+    enrichedConnects[52]=-1;
+    enrichedConnects[62]=-1;
+    enrichedConnects[63]=-1;
+    enrichedConnects[64]=-1;
     
     //BC 
     MatrixDouble val1(2,2);
@@ -508,20 +508,23 @@ void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
 
 void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
 
+    
     // Create the new connects in the global mesh for the enriched nodes and resize the connect vector of the global mesh accordingly. 
     // The number of new connects is equal to the number of enriched nodes, since we are considering only one degree of freedom per node, 
     // but it can be easily generalized for more degrees of freedom per node.
     int64_t nConnects = cmeshG->NConnects();
-    int64_t nEnrichedNodes = enrichedNodes.size();
-    cmeshG->ConnectVec().resize(nConnects + nEnrichedNodes);
-    int order = cmeshG->GetDefaultOrder();
+    int64_t nEnrichedConnects = enrichedConnects.size();
+    cmeshG->ConnectVec().resize(nConnects + nEnrichedConnects);
     int count = 0;
     int64_t SeqNum = cmeshG->NGlobalDOF();
     int nstate = cmeshG->NState();
-    for(auto &node:enrichedNodes){;
-        Connect* c = new Connect(dimension, 1, order, nConnects+count, SeqNum);
+    for(auto &con:enrichedConnects){;
+        Connect* originalConnect = cmeshG->ConnectVec()[con.first];
+        int nshape = originalConnect->GetNShapeFunctions();
+        int order = originalConnect->GetOrder();
+        Connect* c = new Connect(dimension, nshape, order, nConnects+count, SeqNum);
         SeqNum += nstate;
-        node.second = nConnects+count;
+        con.second = nConnects+count;
         cmeshG->ConnectVec()[nConnects+count] = c;
         count++;
     }
@@ -548,24 +551,24 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
         
         //Sets which node will have enriched solution
-        enrichedEl->SetEnrichmentData(&enrichedNodes);
+        enrichedEl->SetEnrichmentData(&enrichedConnects);
 
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
         if (globalEl->Dimension() == cmeshG->Dimension()){
             globalEl->SetWeakForm(nullptr);
         }
 
-        //Seek how many nodes will be enriched in the global element and construct the proper connectivity for the enriched element.
-        VecInt geoNodes = globalEl->Reference()->getGeometricNodes();
-        VecInt enrichedConnects = globalEl->getConnectivityIndices();
-        for (int i = 0; i < geoNodes.size(); i++){
-            if (enrichedNodes.find(geoNodes[i]) != enrichedNodes.end()){
-                enrichedConnects.conservativeResize(enrichedConnects.size() + 1); // Increase size by 1
-                enrichedConnects(enrichedConnects.size() - 1) = enrichedNodes[geoNodes[i]];          
+        //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
+        auto elConnects = globalEl->getConnectivity();
+        VecInt enrichedCon = globalEl->getConnectivityIndices();
+        for (int i = 0; i < elConnects.size(); i++){
+            if (enrichedConnects.find(elConnects[i]->Index()) != enrichedConnects.end()){
+                enrichedCon.conservativeResize(enrichedCon.size() + 1); // Increase size by 1
+                enrichedCon(enrichedCon.size() - 1) = enrichedConnects[elConnects[i]->Index()];          
             }
         }
-        enrichedEl->getConnectivity().resize(enrichedConnects.size());
-        enrichedEl->setConnectivity(enrichedConnects);
+        enrichedEl->getConnectivity().resize(enrichedCon.size());
+        enrichedEl->setConnectivity(enrichedCon);
         cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
         count++;
     }

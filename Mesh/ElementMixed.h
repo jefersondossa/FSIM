@@ -144,6 +144,14 @@ public:
         this->fIntPointCoordinates = fSubElements[0]->getIntPointCoordinates();
     }
 
+    int NShapeFunctions() override{
+        int nshape = 0;
+        for (int i = 0; i < fSubElements.size(); i++){
+            nshape += fSubElements[i]->NShapeFunctions();
+        }
+        return nshape;
+    };
+
 };
 
 

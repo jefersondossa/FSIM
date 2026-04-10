@@ -53,6 +53,10 @@ void InterpolatedBC::ComputeResidual(int &index, IntPointData &data, VecDouble &
     Element *el = fGlobalMesh->ElementVec()[(*fGlobalElementCorrespondence)[myIndex]];
     el->IntegrationData().fAdimCoord[0] = (*fGlobalNodeCorrespondence)[myIndex](index,0); 
     el->IntegrationData().fAdimCoord[1] = (*fGlobalNodeCorrespondence)[myIndex](index,1); 
+    
+    int nshape = el->NShapeFunctions();
+    el->IntegrationData().fPhi.resize(nshape);
+    el->IntegrationData().fDPhi.resize(el->Dimension(),nshape);    
     el->Reference()->ComputeJacobian(el->IntegrationData());
     el->ComputeSpatialDerivatives();
     el->interpolateSolution();

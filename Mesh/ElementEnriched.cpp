@@ -12,7 +12,7 @@ ElementEnriched::ElementEnriched(int64_t index, Element* localEl, Element* globa
     fLocalElement = localEl;
     fGlobalElement = globalEl;
     this->fWeakForm = wf;
-    this->nLocDOF = localEl->NLocDOF() + globalEl->NLocDOF();
+    this->nLocDOF = globalEl->NLocDOF() * 2;
     this->fReference = localEl->Reference();
 };
 
@@ -105,7 +105,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
                 break;
             }
         }
-        locConnectIndex -= NSides();
+        locConnectIndex -= fGlobalElement->NSides();
         locIndexes.insert(locConnectIndex);
         int nshapei = c->GetNShapeFunctions();
         int nstatei = c->GetNStateVariables();

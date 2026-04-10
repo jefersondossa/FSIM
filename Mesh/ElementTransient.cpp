@@ -41,7 +41,10 @@ void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNR
     int DIM = compshape::Dimension;
 
     int index = 0;
-    
+        
+    this->fIntegData.fPhi.resize(compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
+    this->fIntegData.fDPhi.resize(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
+
     this->fIntegData.fElementIndex = this->fIndex;
     auto *pos2d = dynamic_cast<ElasticityPositional2D *> (this->fWeakForm);
     auto *pos2dt = dynamic_cast<TransientPositionalFrame2D *> (this->fWeakForm);
