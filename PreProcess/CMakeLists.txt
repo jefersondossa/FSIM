@@ -8,6 +8,8 @@ file(GLOB preprocess
     OpenFOAMWriter.cpp
     GeoMeshTools.h
     GeoMeshTools.cpp
+    MEFGGlobalLocalTools.h
+    MEFGGlobalLocalTools.cpp
 )
 
 set(PREPROCESS ${preprocess} PARENT_SCOPE)
