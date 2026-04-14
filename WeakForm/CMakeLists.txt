@@ -8,6 +8,8 @@ file(GLOB weakform
     TransientWeakForm.cpp
     GlobalLocalEnrichment.h
     GlobalLocalEnrichment.cpp
+    MixedGlobalLocalEnrichment.h
+    MixedGlobalLocalEnrichment.cpp
     InterpolatedBC.h
     InterpolatedBC.cpp
 )
