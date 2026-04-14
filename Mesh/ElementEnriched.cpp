@@ -4,7 +4,8 @@
 #include "ElasticTruss.h"
 #include "PositionalTruss.h"
 #include "GlobalLocalEnrichment.h"
-
+#include "MixedGlobalLocalEnrichment.h"
+#include "ElementMixed.h"
 
 ElementEnriched::ElementEnriched(int64_t index, Element* localEl, Element* globalEl, CompMesh* cmesh, WeakForm *wf) : Element(){
     this->fIndex = index;
@@ -12,7 +13,12 @@ ElementEnriched::ElementEnriched(int64_t index, Element* localEl, Element* globa
     fLocalElement = localEl;
     fGlobalElement = globalEl;
     this->fWeakForm = wf;
-    this->nLocDOF = globalEl->NLocDOF() * 2;
+    ElementMixed *mixed = dynamic_cast<ElementMixed*>(globalEl);
+    if (mixed){
+        this->nLocDOF = mixed->SubElements()[0]->NLocDOF()*2 + mixed->SubElements()[1]->NLocDOF();
+    } else {
+        this->nLocDOF = globalEl->NLocDOF() * 2;
+    }
     this->fReference = localEl->Reference();
     fLocalElement->IntegrationData().fNeedsSol = true;
     fLocalElement->IntegrationData().fNeedsDSol = true;
@@ -29,17 +35,21 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     if (!this->fWeakForm) return;
 
     GlobalLocalEnrichment *globalLocal = dynamic_cast<GlobalLocalEnrichment*>(this->fWeakForm);
-    if (!globalLocal) {
+    MixedGlobalLocalEnrichment *globalLocalMixed = dynamic_cast<MixedGlobalLocalEnrichment*>(this->fWeakForm);
+    
+    if (!globalLocal && !globalLocalMixed){
         PanicButton();
         return;
     }
-
+    
     int DIM = fLocalElement->Dimension();
     int index = 0;
     //int64_t elGlobalIndex = globalElementCorrespondence->at(fLocalElement->Index());
     MatrixDouble elGlobalXsi = globalNodeCorrespondence->at(fLocalElement->Index());
     // auto intrule = fLeftElement->GetIntRule();
-    
+    ElementMixed *mixed = dynamic_cast<ElementMixed*>(fGlobalElement);
+
+
     for(int it = 0; it < fLocalElement->getNumberOfIntegrationPoints(); it++){
 
         // //Defines the integration points adimentional coordinates 
@@ -59,18 +69,38 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
 
         //Computes spatial derivatives
         fLocalElement->ComputeSpatialDerivatives();
-        fGlobalElement->ComputeSpatialDerivatives();
+        std::vector<IntPointData *> data(2);
+        if (mixed){
+            for (int i = 0; i < mixed->SubElements().size(); i++){
+            mixed->SubElements()[i]->IntegrationData().fA0 = fGlobalElement->IntegrationData().fA0;
+            mixed->SubElements()[i]->IntegrationData().fA0Inv = fGlobalElement->IntegrationData().fA0Inv;
+            mixed->SubElements()[i]->IntegrationData().fAxes0 = fGlobalElement->IntegrationData().fAxes0;
+            mixed->SubElements()[i]->IntegrationData().fJacA0 = fGlobalElement->IntegrationData().fJacA0;
+            mixed->SubElements()[i]->IntegrationData().fX = fGlobalElement->IntegrationData().fX;
+
+            //Computes spatial derivatives
+            mixed->SubElements()[i]->ComputeSpatialDerivatives();
+            mixed->SubElements()[i]->interpolateSolution();
+            mixed->SubElements()[i]->interpolateSolDerivatives();
+            data[i] = &mixed->SubElements()[i]->IntegrationData();
+        }
+        } else {
+            fGlobalElement->ComputeSpatialDerivatives();
+            if (fGlobalElement->IntegrationData().fNeedsSol) fGlobalElement->interpolateSolution();
+            if (fGlobalElement->IntegrationData().fNeedsDSol) fGlobalElement->interpolateSolDerivatives();
+        }
+        
 
         if (fLocalElement->IntegrationData().fNeedsSol) fLocalElement->interpolateSolution();
         if (fLocalElement->IntegrationData().fNeedsDSol) fLocalElement->interpolateSolDerivatives();
-        if (fGlobalElement->IntegrationData().fNeedsSol) fGlobalElement->interpolateSolution();
-        if (fGlobalElement->IntegrationData().fNeedsDSol) fGlobalElement->interpolateSolDerivatives();
-
+        
         //Computes the element diffusion/viscosity matrix
-        globalLocal->ComputeStiffness(index, fLocalElement->IntegrationData(), fGlobalElement->IntegrationData(), jacobianNRMatrix);
+        if (globalLocal) globalLocal->ComputeStiffness(index, fLocalElement->IntegrationData(), fGlobalElement->IntegrationData(), jacobianNRMatrix);
+        if (globalLocalMixed) globalLocalMixed->ComputeStiffness(index, fLocalElement->IntegrationData(), data, jacobianNRMatrix);
 
         //Computes the RHS vector
-        globalLocal->ComputeResidual(index, fLocalElement->IntegrationData(), fGlobalElement->IntegrationData(), rhsVector); 
+        if (globalLocal) globalLocal->ComputeResidual(index, fLocalElement->IntegrationData(), fGlobalElement->IntegrationData(), rhsVector); 
+        if (globalLocalMixed) globalLocalMixed->ComputeResidual(index, fLocalElement->IntegrationData(), data, rhsVector); 
 
         index++;        
     };

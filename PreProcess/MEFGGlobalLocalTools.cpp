@@ -206,7 +206,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
                                                std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
                                                std::map<int64_t,int64_t> &enrichedConnects,
                                                int overlappingNHNeumannBoundary,
-                                               GlobalLocalEnrichment *globalLocal){
+                                               MixedGlobalLocalEnrichment *globalLocal){
 
     MixedCompMesh *mixedCmeshG = dynamic_cast<MixedCompMesh *>(cmeshG);
     MixedCompMesh *mixedCmeshL = dynamic_cast<MixedCompMesh *>(cmeshL);
@@ -246,7 +246,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
     count = 0;
     for (auto localEl:cmeshL->ElementVec()){
         if (localEl->Dimension() != cmeshL->Dimension() && localEl->Reference()->Material() != overlappingNHNeumannBoundary) continue;
-        Element* globalEl = mixedCmeshG->MeshVector()[0]->ElementVec()[globalElementCorrespondence[localEl->Index()]];
+        Element* globalEl = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
         ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, mixedCmeshG, globalLocal);
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
         Element* globalElMixed = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
@@ -258,7 +258,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
 
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
         if (globalEl->Dimension() == mixedCmeshG->MeshVector()[0]->Dimension()){
-            globalEl->SetWeakForm(nullptr);
+            mixedCmeshG->MeshVector()[0]->ElementVec()[globalElementCorrespondence[localEl->Index()]]->SetWeakForm(nullptr);
             globalElMixed->SetWeakForm(nullptr);
         }
 

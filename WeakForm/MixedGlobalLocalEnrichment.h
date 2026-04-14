@@ -25,7 +25,7 @@ public:
     void ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness) override{
         PanicButton();
     };
-    void ComputeStiffness(int &index, IntPointData &localdata, IntPointData &globaldata, MatrixDouble &Stiffness);
+    void ComputeStiffness(int &index, IntPointData &localdata, std::vector<IntPointData*> &globaldata, MatrixDouble &Stiffness);
     
     /// @brief Returns the weak form residual vector. It should never be called in this class
     /// @param index integration point index
@@ -34,7 +34,7 @@ public:
     void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs) override{
         PanicButton();
     };
-    void ComputeResidual(int &index, IntPointData &localdata, IntPointData &globaldata, VecDouble &Rhs);
+    void ComputeResidual(int &index, IntPointData &localdata, std::vector<IntPointData*> &globaldata, VecDouble &Rhs);
     
     /// @brief Returns the variable index of a given solution variable
     /// @param name solution variable name

@@ -38,25 +38,16 @@ MixedGlobalLocalEnrichment::MixedGlobalLocalEnrichment(int matid, int dimension,
     }
 };
 
-void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata, IntPointData &globaldata, MatrixDouble &Stiffness){
+void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata, std::vector<IntPointData*> &globaldata, MatrixDouble &Stiffness){
     
-    //Only contribute stiffness if we are in a 2D element
-    if (globaldata.fA0.rows() != 2) return;
-
-    if (!localdata.fNeedsSol){
-        localdata.fNeedsSol = true;
-        localdata.fSol.resize(fNState);
-    }
-    if (!globaldata.fNeedsSol){
-        globaldata.fNeedsSol = true;
-        globaldata.fSol.resize(fNState);
-    }
+    if (globaldata[0]->fA0.rows() != 2) return;
 
     double WJ = localdata.fWeight * localdata.fJacA0;
-    int nphi = globaldata.fPhi.size();
+    int nphiU = globaldata[0]->fPhi.size();
+    int nphiP = globaldata[1]->fPhi.size();
 
-    MatrixDouble matB(3,2*nphi);
-    MatrixDouble matBEnr(3,2*nphi);
+    MatrixDouble matB(3,2*nphiU);
+    MatrixDouble matBEnr(3,2*nphiU);
     MatrixDouble matBTot(3, (matB.cols()+matBEnr.cols()));
 
     matB.setZero();
@@ -70,17 +61,17 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
     double dUxdy = localdata.fDSolDx(0,1);
     double dUydx = localdata.fDSolDx(1,0);
 
-    for (int j = 0; j < nphi; j++){
+    for (int j = 0; j < nphiU; j++){
 
-        matB(0,2*j  ) = globaldata.fDPhiX0(0,j);
-        matB(1,2*j+1) = globaldata.fDPhiX0(1,j);
-        matB(2,2*j  ) = globaldata.fDPhiX0(1,j);
-        matB(2,2*j+1) = globaldata.fDPhiX0(0,j);
+        matB(0,2*j  ) = globaldata[0]->fDPhiX0(0,j);
+        matB(1,2*j+1) = globaldata[0]->fDPhiX0(1,j);
+        matB(2,2*j  ) = globaldata[0]->fDPhiX0(1,j);
+        matB(2,2*j+1) = globaldata[0]->fDPhiX0(0,j);
 
-        matBEnr(0,2*j  ) = globaldata.fDPhiX0(0,j)*uXInterp + globaldata.fPhi(j)*dUxdx;
-        matBEnr(1,2*j+1) = globaldata.fDPhiX0(1,j)*uYInterp + globaldata.fPhi(j)*dUydy;
-        matBEnr(2,2*j  ) = globaldata.fDPhiX0(1,j)*uXInterp + globaldata.fPhi(j)*dUxdy;
-        matBEnr(2,2*j+1) = globaldata.fDPhiX0(0,j)*uYInterp + globaldata.fPhi(j)*dUydx;
+        matBEnr(0,2*j  ) = globaldata[0]->fDPhiX0(0,j)*uXInterp + globaldata[0]->fPhi(j)*dUxdx;
+        matBEnr(1,2*j+1) = globaldata[0]->fDPhiX0(1,j)*uYInterp + globaldata[0]->fPhi(j)*dUydy;
+        matBEnr(2,2*j  ) = globaldata[0]->fDPhiX0(1,j)*uXInterp + globaldata[0]->fPhi(j)*dUxdy;
+        matBEnr(2,2*j+1) = globaldata[0]->fDPhiX0(0,j)*uYInterp + globaldata[0]->fPhi(j)*dUydx;
     }
 
     //std::cout << "Mat B =\n"<< matB << std::endl;
@@ -88,19 +79,41 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
 
     matBTot << matB, matBEnr;
 
+    VecDouble m(3);
+    m.setZero();
+    m(0) = m(1) = 1.;
+    MatrixDouble A = matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
+    MatrixDouble C = matBTot.transpose() * m * globaldata[1]->fPhi.transpose() * WJ;
+    MatrixDouble  V = -globaldata[1]->fPhi * globaldata[1]->fPhi.transpose() * WJ / fBulkModulus;
     //std::cout << "Mat BTot =\n"<< matBTot.transpose() << std::endl;
 
-    Stiffness += matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
+    int ndofu = 2*nphiU*2;
+    int ndofp = nphiP;
+    for (int i = 0; i< ndofu; i++ ){
+        for (int j =0; j < ndofu; j++ ){
+            Stiffness(i,j) += A(i,j);
+        }
+        for (int j = 0; j < ndofp; j++)
+        {
+            Stiffness(i,ndofu+j) += C(i,j);
+            Stiffness(ndofu+j,i) += C(i,j);
+        }
+    }
+    for (int i = 0; i < ndofp; i++){
+        for (int j = 0; j < ndofp; j++){
+            Stiffness(ndofu+i,ndofu+j) += V(i,j);
+        }
+    }
+    // Stiffness += matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
 
     //std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 };
 
-void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, IntPointData &globaldata, VecDouble &Rhs){
-   
-    //Only contribute stiffness if we are in a 2D element
-    if (globaldata.fA0.rows() == 2) return;
+void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, std::vector<IntPointData*> &globaldata, VecDouble &Rhs){
+    
+    if (globaldata[0]->fA0.rows() != 2) return;
 
-    int nphi = globaldata.fPhi.size();
+    int nphi = globaldata[0]->fPhi.size();
     double WJ = localdata.fWeight * localdata.fJacA0;
 
     // MatrixDouble matB(3,2*nphi);
@@ -114,7 +127,7 @@ void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &local
     auto force = fForceFunction;
     VecDouble forcingF(3);
     forcingF.setZero();
-    VecDouble x_ = globaldata.fX;
+    VecDouble x_ = globaldata[0]->fX;
     if (force) force(x_,forcingF);
 
     double uXInterp = localdata.fSol[0];
@@ -148,7 +161,7 @@ void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &local
     // Rhs -= matBTot.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
-        double shapeFi = globaldata.fPhi[i];
+        double shapeFi = globaldata[0]->fPhi[i];
         //External force
         double Fx = forcingF[0] * uXInterp * shapeFi; 
         double Fy = forcingF[1] * uYInterp * shapeFi;

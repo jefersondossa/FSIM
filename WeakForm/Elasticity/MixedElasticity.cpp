@@ -72,8 +72,8 @@ void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData *> &
     C = matBT * m * data[1]->fPhi.transpose() * WJ;
     V = -data[1]->fPhi * data[1]->fPhi.transpose() * WJ / fBulkModulus;
 
-    for (int i = fDimension*nphiU; i--; ){
-        for (int j = fDimension*nphiU; j--; ){
+    for (int i = 0; i< fDimension*nphiU; i++ ){
+        for (int j =0; j < fDimension*nphiU; j++ ){
             Stiffness(i,j) += A(i,j);
         }
         for (int j = 0; j < nphiP; j++)

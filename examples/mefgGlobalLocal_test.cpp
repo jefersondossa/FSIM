@@ -48,7 +48,7 @@ std::map<int64_t,int64_t> enrichedConnects;
 int main(int argc, char **args) { 
 
     overlappingRegion = 2;
-    globalLocalIterations = 2;
+    globalLocalIterations = 1;
     overlappingNHDirichletBoundary = 2;
     overlappingNHNeumannBoundary = 4;
 
@@ -59,7 +59,7 @@ int main(int argc, char **args) {
     GeoMesh *gmeshG = new GeoMesh();
     GmshTools::Read(*gmeshG,"../global.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EHierarquic);
-    cmeshG->SetDefaultOrder(2);
+    cmeshG->SetDefaultOrder(1);
     CreateGlobalModel(cmeshG);
     gmeshG->Print("gmeshGlobal.txt");
     cmeshG->Print("cmeshGlobal.txt");
@@ -102,19 +102,19 @@ int main(int argc, char **args) {
     MEFGGlobalLocalTools::LocalToGlobalCorrespondence(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, overlappingRegion, overlappingNHDirichletBoundary);
     MEFGGlobalLocalTools::LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, overlappingNHNeumannBoundary);
 
-    //Print correspondence for debugging
-    std::cout << "Global to local element correspondence: \n";
-    for (auto &elem:globalElementCorrespondence){
-        std::cout << "Global element index: " << elem.second << " \nLocal element index: \n" << elem.first << "\n";
-    }
-    std::cout << "Global to local node correspondence: \n";
-    for (auto &node:globalNodeCorrespondence){
-        std::cout << "Global node index: " << node.first << " \nLocal node indexes: \n" << node.second.transpose() << "\n";
-    }
-    std::cout << "Global connects to be enriched: \n";
-    for (auto &connect:enrichedConnects){
-        std::cout << "Global connect index: " << connect.first << "\n";
-    }
+    // //Print correspondence for debugging
+    // std::cout << "Global to local element correspondence: \n";
+    // for (auto &elem:globalElementCorrespondence){
+    //     std::cout << "Global element index: " << elem.second << " \nLocal element index: \n" << elem.first << "\n";
+    // }
+    // std::cout << "Global to local node correspondence: \n";
+    // for (auto &node:globalNodeCorrespondence){
+    //     std::cout << "Global node index: " << node.first << " \nLocal node indexes: \n" << node.second.transpose() << "\n";
+    // }
+    // std::cout << "Global connects to be enriched: \n";
+    // for (auto &connect:enrichedConnects){
+    //     std::cout << "Global connect index: " << connect.first << "\n";
+    // }
 
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,ModElasticity,PoissonRatio);
     globalLocal->SetForcingFunction(forcingFunction);

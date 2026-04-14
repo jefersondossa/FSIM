@@ -99,6 +99,7 @@ public:
         for (int i = 0; i < fSubElements.size(); i++){
             fSubElements[i]->interpolateSolDerivatives();
         }
+        this->fIntegData.fDSolDx = fSubElements[0]->IntegrationData().fDSolDx;
     }
     void interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDouble &du_ddt) override{
         PanicButton();

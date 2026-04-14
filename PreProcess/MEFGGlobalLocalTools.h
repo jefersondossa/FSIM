@@ -4,6 +4,7 @@
 #include "Element.h"
 #include "CompMesh.h"
 #include "GlobalLocalEnrichment.h"
+#include "MixedGlobalLocalEnrichment.h"
 
 class CompMesh;
 class Element;
@@ -33,7 +34,7 @@ namespace MEFGGlobalLocalTools{
                                 std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
                                 std::map<int64_t,int64_t> &enrichedConnects,
                                 int overlappingNHNeumannBoundary,
-                                GlobalLocalEnrichment *globalLocal);
+                                MixedGlobalLocalEnrichment *globalLocal);
 };
 
 

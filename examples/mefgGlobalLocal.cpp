@@ -11,7 +11,6 @@
 #include "ElementEnriched.h"
 #include "Element.h"
 #include "GlobalLocalEnrichment.h"
-#include "MEFGGlobalLocalTools.h"
 
 //Comentar erro ao debugar após incluir a weakform GlobalLocalEnrichment e o element ElementEnriched. 
 
@@ -166,6 +165,11 @@ void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL);
 void SolveEnrichedProblem(CompMesh *cmeshG);
 bool CheckConvergence(int it);
 
+int overlappingRegion;
+int overlappingNHDirichletBoundary;
+int overlappingNHNeumannBoundary;
+int globalLocalIterations;
+double globalLocalTolerance;
 VecDouble previousSol;
 VecDouble currentSol;
 //Local index to global index correspondence for elements
@@ -175,29 +179,14 @@ std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
 //Global connects to be enriched to the index of the new connect associated with the enriched degree of freedom
 std::map<int64_t,int64_t> enrichedConnects;
 
-int overlappingRegion;
-int overlappingNHDirichletBoundary;
-int overlappingNHNeumannBoundary;
-int globalLocalIterations;
-double globalLocalTolerance;
-double ModElasticity = 1.;
-double PoissonRatio = 0.3;
-
 int main(int argc, char **args) { 
-
-    overlappingRegion = 2;
-    globalLocalIterations = 2;
-    globalLocalTolerance = 1e-4;
-
-    overlappingNHDirichletBoundary = 2;
-    //overlappingNHNeumannBoundary = 3;
 
     //GLOBAL MODEL
     std::cout << "Solve Global Problem \n";
 
     //Create Global Model
     GeoMesh *gmeshG = new GeoMesh();
-    GmshTools::Read(*gmeshG,"../chapaLGlobal.msh");
+    GmshTools::Read(*gmeshG,"../chapaLGlobalTeste.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EIsoparametric);
     CreateGlobalModel(cmeshG);
     gmeshG->Print("gmeshGlobal.txt");
@@ -209,9 +198,6 @@ int main(int argc, char **args) {
     CompMesh *cmeshL = nullptr;
     GeoMesh * gmeshL = new GeoMesh();
 
-    GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(overlappingRegion, dimension, ModElasticity, PoissonRatio, false, 1.0);
-    globalLocal->SetForcingFunction(forcingFunction); /// perguntar sobre essa força
-
     int it = 0;
     //for(int it = 0; it < globalLocalIterations; it++){
     while(it < globalLocalIterations){
@@ -221,24 +207,23 @@ int main(int argc, char **args) {
         std::cout << "\nSolve Local Problem \n";
         if(it == 0){
             //Create Local Model
-            GmshTools::Read(*gmeshL,"../chapaLLocal.msh");
+            GmshTools::Read(*gmeshL,"../chapaLLocalTeste.msh");
             cmeshL = new CompMesh(gmeshL,ApproxType::EIsoparametric);
             CreateLocalModel(cmeshG, cmeshL);
             gmeshL->Print("gmeshLocal.txt");
             //cmeshL->Print("cmeshLocal.txt");
 
-            MEFGGlobalLocalTools::LocalToGlobalCorrespondence(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, overlappingRegion, overlappingNHDirichletBoundary);
-            MEFGGlobalLocalTools::LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, overlappingNHNeumannBoundary);
-
+            LocalToGlobalCorrespondence(cmeshG,cmeshL);
+            LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL);
         }
         //Solve Local Problem
         SolveLocalProblem(cmeshL);
 
         //ENRICHED GLOBAL MODEL
         std::cout << "\nSolve Enriched Global Problem \n";
-        if(it == 0) MEFGGlobalLocalTools::CreateEnrichedModel(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, enrichedConnects, overlappingNHNeumannBoundary, globalLocal);
+        if(it == 0) CreateEnrichedModel(cmeshG,cmeshL);
 
-        //cmeshG->Print("cmeshEnrichedGlobal.txt");
+        cmeshG->Print("cmeshEnrichedGlobal.txt");
         SolveEnrichedProblem(cmeshG);
 
         if(CheckConvergence(it)) break;
@@ -248,13 +233,17 @@ int main(int argc, char **args) {
 
 void CreateGlobalModel(CompMesh *cmeshG){
 
-    Elasticity2D *matelasticityG1 = new Elasticity2D(1, ModElasticity, PoissonRatio, false, 1.0); //domínio global
-    Elasticity2D *matelasticityG2 = new Elasticity2D(2, ModElasticity, PoissonRatio, false, 1.0); //domínio local
+    Elasticity2D *matelasticityG1 = new Elasticity2D(1, 1.0, 0.3); //domínio global
+    Elasticity2D *matelasticityG2 = new Elasticity2D(2, 1.0, 0.3); //domínio local
 
     //matelasticityG1->SetExactSolution(exactSol);
 
     cmeshG->InsertMaterial(matelasticityG1);
     cmeshG->InsertMaterial(matelasticityG2);
+
+    overlappingRegion = 2;
+    globalLocalIterations = 5;
+    globalLocalTolerance = 1e-4;
 
     //Chapa retangular tracionada
     //enrichedConnects[0]=-1;
@@ -262,7 +251,6 @@ void CreateGlobalModel(CompMesh *cmeshG){
 
     //Chapa L 
     enrichedConnects[8]=-1;
-
     enrichedConnects[28]=-1;
     enrichedConnects[29]=-1;
     enrichedConnects[51]=-1;
@@ -270,108 +258,6 @@ void CreateGlobalModel(CompMesh *cmeshG){
     enrichedConnects[62]=-1;
     enrichedConnects[63]=-1;
     enrichedConnects[64]=-1;
-
-    /*enrichedConnects[44]=-1;
-    enrichedConnects[45]=-1;
-    enrichedConnects[113]=-1;
-    enrichedConnects[116]=-1;
-    enrichedConnects[206]=-1;
-    enrichedConnects[215]=-1;
-    enrichedConnects[221]=-1;*/
-
-    /*enrichedConnects[43]=-1;
-    enrichedConnects[44]=-1;
-    enrichedConnects[45]=-1;
-    enrichedConnects[46]=-1;
-    enrichedConnects[112]=-1;
-    enrichedConnects[113]=-1;
-    enrichedConnects[115]=-1;
-    enrichedConnects[116]=-1;
-    enrichedConnects[198]=-1;
-    enrichedConnects[200]=-1;
-    enrichedConnects[204]=-1;
-    enrichedConnects[206]=-1;
-    enrichedConnects[207]=-1;
-    enrichedConnects[209]=-1;
-    enrichedConnects[213]=-1;
-    enrichedConnects[215]=-1;
-    enrichedConnects[216]=-1;
-    enrichedConnects[217]=-1;
-    enrichedConnects[220]=-1;
-    enrichedConnects[221]=-1;*/
-
-    /*enrichedConnects[76]=-1;
-    enrichedConnects[77]=-1;
-    enrichedConnects[237]=-1;
-    enrichedConnects[244]=-1;
-    enrichedConnects[734]=-1;
-    enrichedConnects[783]=-1;
-    enrichedConnects[809]=-1;*/
-
-    /*enrichedConnects[73]=-1;
-    enrichedConnects[74]=-1;
-    enrichedConnects[75]=-1;
-    enrichedConnects[76]=-1;
-    enrichedConnects[77]=-1;
-    enrichedConnects[78]=-1;
-    enrichedConnects[79]=-1;
-    enrichedConnects[80]=-1;
-    enrichedConnects[234]=-1;
-    enrichedConnects[235]=-1;
-    enrichedConnects[236]=-1;
-    enrichedConnects[237]=-1;
-    enrichedConnects[241]=-1;
-    enrichedConnects[242]=-1;
-    enrichedConnects[243]=-1;
-    enrichedConnects[244]=-1;
-    enrichedConnects[686]=-1;
-    enrichedConnects[688]=-1;
-    enrichedConnects[692]=-1;
-    enrichedConnects[694]=-1;
-    enrichedConnects[702]=-1;
-    enrichedConnects[705]=-1;
-    enrichedConnects[719]=-1;
-    enrichedConnects[725]=-1;
-    enrichedConnects[727]=-1;
-    enrichedConnects[728]=-1;
-    enrichedConnects[729]=-1;
-    enrichedConnects[730]=-1;
-    enrichedConnects[731]=-1;
-    enrichedConnects[732]=-1;
-    enrichedConnects[733]=-1;
-    enrichedConnects[734]=-1;
-    enrichedConnects[735]=-1;
-    enrichedConnects[737]=-1;
-    enrichedConnects[741]=-1;
-    enrichedConnects[743]=-1;
-    enrichedConnects[751]=-1;
-    enrichedConnects[754]=-1;
-    enrichedConnects[768]=-1;
-    enrichedConnects[774]=-1;
-    enrichedConnects[776]=-1;
-    enrichedConnects[777]=-1;
-    enrichedConnects[778]=-1;
-    enrichedConnects[779]=-1;
-    enrichedConnects[780]=-1;
-    enrichedConnects[781]=-1;
-    enrichedConnects[782]=-1;
-    enrichedConnects[783]=-1;
-    enrichedConnects[784]=-1;
-    enrichedConnects[785]=-1;
-    enrichedConnects[788]=-1;
-    enrichedConnects[789]=-1;
-    enrichedConnects[796]=-1;
-    enrichedConnects[799]=-1;
-    enrichedConnects[805]=-1;
-    enrichedConnects[806]=-1;
-    enrichedConnects[807]=-1;
-    enrichedConnects[808]=-1;
-    enrichedConnects[809]=-1;
-    enrichedConnects[810]=-1;
-    enrichedConnects[811]=-1;
-    enrichedConnects[812]=-1;
-    enrichedConnects[813]=-1;
-    enrichedConnects[814]=-1;*/
     
     //BC 
     MatrixDouble val1(2,2);
@@ -380,38 +266,38 @@ void CreateGlobalModel(CompMesh *cmeshG){
     val2.setZero();
 
     //Chapa L teste: apoio fixo no lado BC e carregamento unitário uniforme ao longe de FA
-    // L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
-    // L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    // matbcG2->SetForcingFunction(forcingFunction);
+    L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbcG2->SetForcingFunction(forcingFunction);
 
     //Chapa L: apoio horizontal no pontos B e F, apoio vertical no ponto A
-    val2[0] = 1.0;
-    L2Projection * matbcG1 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
-    val2.setZero();
-    val2[1] = 1.0;
-    L2Projection * matbcG2 = new L2Projection(4,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    // val2[0] = 1.0;
+    // L2Projection * matbcG1 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    // val2.setZero();
+    // val2[1] = 1.0;
+    // L2Projection * matbcG2 = new L2Projection(4,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     
     //Chapa L: apoio fixo no ponto D, apoio vertical no ponto A
     //L2Projection * matbcG1 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirichlet,val1,val2);
     //val2[0] = 1.0;
     //L2Projection * matbcG2 = new L2Projection(4,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
 
-    val2.setZero();
-    L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcG3->SetForcingFunction(forcingFunctionAB);
-    L2Projection * matbcG4 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcG4->SetForcingFunction(forcingFunctionBC);
-    L2Projection * matbcG5 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcG5->SetForcingFunction(forcingFunctionEF);
-    L2Projection * matbcG6 = new L2Projection(8,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbcG6->SetForcingFunction(forcingFunctionFA);
+    // val2.setZero();
+    // L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcG3->SetForcingFunction(forcingFunctionAB);
+    // L2Projection * matbcG4 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcG4->SetForcingFunction(forcingFunctionBC);
+    // L2Projection * matbcG5 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcG5->SetForcingFunction(forcingFunctionEF);
+    // L2Projection * matbcG6 = new L2Projection(8,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    // matbcG6->SetForcingFunction(forcingFunctionFA);
 
     cmeshG->InsertMaterial(matbcG1);
     cmeshG->InsertMaterial(matbcG2);
-    cmeshG->InsertMaterial(matbcG3);
-    cmeshG->InsertMaterial(matbcG4);
-    cmeshG->InsertMaterial(matbcG5);
-    cmeshG->InsertMaterial(matbcG6);
+    // cmeshG->InsertMaterial(matbcG3);
+    // cmeshG->InsertMaterial(matbcG4);
+    // cmeshG->InsertMaterial(matbcG5);
+    // cmeshG->InsertMaterial(matbcG6);
     
     cmeshG->AutoBuild();
 }
@@ -448,8 +334,11 @@ void SolveGlobalProblem(CompMesh *cmeshG){
 
 void CreateLocalModel(CompMesh *cmeshG, CompMesh * cmeshL){
 
-    Elasticity2D* matelasticityL = new Elasticity2D(1, ModElasticity, PoissonRatio, false, 1.0);
+    Elasticity2D* matelasticityL = new Elasticity2D(1, 1.0, 0.3);
     cmeshL->InsertMaterial(matelasticityL);
+
+    overlappingNHDirichletBoundary = 2;
+    //overlappingNHNeumannBoundary = 3;
 
     //BC;
     MatrixDouble val1(2,2);
@@ -506,9 +395,192 @@ void SolveLocalProblem(CompMesh *cmeshL){
 
     double strainEnergy = (sol.dot(rhs))/2;
     
+    
+
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
     VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
+};
+
+
+void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL){
+
+    Element *localElement = nullptr;
+    Element *globalElement = nullptr;
+
+    VecDouble x(dimension);
+    VecDouble xsiCorr(1);
+
+    MatrixDouble globalNode;
+    int64_t elCorr;
+
+    for (int i=0; i<cmeshL->NElements(); i++){
+        localElement = cmeshL->ElementVec()[i];
+        if (!localElement) continue;
+        if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension()) continue;
+        if (localElement->Reference()->Material() != overlappingNHNeumannBoundary) continue;
+
+        int numberOfIntegrationPoints = localElement -> getNumberOfIntegrationPoints();
+        localElement -> ComputeIntegPointCoordinates();
+
+        globalNode.resize(numberOfIntegrationPoints, 2);
+        globalNode.setZero();
+
+        elCorr = 0;
+
+        for(int index = 0; index < numberOfIntegrationPoints; index++){
+            x.setZero();
+            xsiCorr.setZero();
+
+            for(int k = 0; k < dimension; k++) x[k] = localElement->getIntegPointCoordinatesValue(index)[k];
+
+            for (elCorr; elCorr<cmeshG->NElements(); elCorr++){
+                if(cmeshG->ElementVec()[elCorr]->Dimension() == cmeshG->Dimension()) continue;
+                globalElement = cmeshG->ElementVec()[elCorr];
+
+                if(CompMeshTools ::searchNodeCorrespondence(x, cmeshG, elCorr, xsiCorr, globalElement)){
+                    globalElement->IntegrationData().fA0.resize(1,1);
+                    globalElement->IntegrationData().fA0Inv.resize(1,1);
+                    globalNode(index, 0) = xsiCorr[0];
+                    break;
+                }else{
+                    globalElement->IntegrationData().fA0.resize(1,1);
+                    globalElement->IntegrationData().fA0Inv.resize(1,1);
+                    elCorr = globalElement->Index();
+                }        
+            }        
+        }
+
+        globalNodeCorrespondence[localElement->Index()] = globalNode;
+        globalElementCorrespondence[localElement->Index()] = elCorr;
+    }
+};
+
+
+void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL){
+
+    Element *localElement = nullptr;
+    Element *globalElement = nullptr;
+
+    VecDouble x(dimension);
+    VecDouble xsiCorr(2);
+
+    MatrixDouble globalNode;
+    int64_t elCorr;
+
+    for (int i=0; i<cmeshL->NElements(); i++){
+        if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension() || cmeshL->ElementVec()[i]->Reference()->Material() == overlappingNHDirichletBoundary){
+            localElement = cmeshL->ElementVec()[i];
+
+            int numberOfIntegrationPoints = localElement -> getNumberOfIntegrationPoints();
+            localElement -> ComputeIntegPointCoordinates();
+
+            globalNode.resize(numberOfIntegrationPoints, 2);
+            globalNode.setZero();
+
+            elCorr = 0;
+
+            for(int index = 0; index < numberOfIntegrationPoints; index++){
+                x.setZero();
+                xsiCorr.setZero();
+
+                for(int k = 0; k < dimension; k++) x[k] = localElement->getIntegPointCoordinatesValue(index)[k];
+
+                for (elCorr; elCorr<cmeshG->NElements(); elCorr++){
+                    if(cmeshG->ElementVec()[elCorr]->Reference()->Material() != overlappingRegion) continue;
+                    if(cmeshG->ElementVec()[elCorr]->Dimension() != cmeshG->Dimension()) continue;
+                    globalElement = cmeshG->ElementVec()[elCorr];
+
+                    if(CompMeshTools ::searchNodeCorrespondence(x, cmeshG, elCorr, xsiCorr, globalElement)){
+                        globalNode(index, 0) = xsiCorr[0]; globalNode(index, 1) = xsiCorr[1];
+                        break;
+                    }else{
+                        elCorr = globalElement->Index();
+                    }                 
+                }        
+            }
+
+            globalNodeCorrespondence[localElement->Index()] = globalNode;
+            globalElementCorrespondence[localElement->Index()] = elCorr;
+        }
+    }
+};
+
+void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL){
+
+    
+    // Create the new connects in the global mesh for the enriched nodes and resize the connect vector of the global mesh accordingly. 
+    // The number of new connects is equal to the number of enriched nodes, since we are considering only one degree of freedom per node, 
+    // but it can be easily generalized for more degrees of freedom per node.
+    int64_t nConnects = cmeshG->NConnects();
+    int64_t nEnrichedConnects = enrichedConnects.size();
+    cmeshG->ConnectVec().resize(nConnects + nEnrichedConnects);
+    int count = 0;
+    int64_t SeqNum = cmeshG->NGlobalDOF();
+    int nstate = cmeshG->NState();
+    for(auto &con:enrichedConnects){;
+        Connect* originalConnect = cmeshG->ConnectVec()[con.first];
+        int nshape = originalConnect->GetNShapeFunctions();
+        int order = originalConnect->GetOrder();
+        Connect* c = new Connect(dimension, nshape, order, nConnects+count, SeqNum);
+        SeqNum += nstate;
+        con.second = nConnects+count;
+        cmeshG->ConnectVec()[nConnects+count] = c;
+        count++;
+    }
+
+    //cmeshG->Print("cmeshGEnriched.txt");
+    
+    GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,1.0,0.0);
+    globalLocal->SetForcingFunction(forcingFunction);
+
+    //Count the number local elements to enrich in the global mesh
+    int nelsToEnrich = 0;
+    for (auto el:cmeshL->ElementVec()){
+        if (el->Dimension() != cmeshL->Dimension() && el->Reference()->Material() != overlappingNHNeumannBoundary) continue;
+        nelsToEnrich++;
+    }
+    int64_t nElementsG = cmeshG->NElements();
+    cmeshG->ElementVec().resize(cmeshG->NElements() + nelsToEnrich);
+    //Create the enriched elements in the global mesh
+    count = 0;
+    for (auto localEl:cmeshL->ElementVec()){
+        if (localEl->Dimension() != cmeshL->Dimension() && localEl->Reference()->Material() != overlappingNHNeumannBoundary) continue;
+        Element* globalEl = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
+        ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, cmeshG, globalLocal);
+        enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
+        
+        //Sets which node will have enriched solution
+        enrichedEl->SetEnrichmentData(&enrichedConnects);
+
+        //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
+        if (globalEl->Dimension() == cmeshG->Dimension()){
+            globalEl->SetWeakForm(nullptr);
+        }
+
+        //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
+        auto elConnects = globalEl->getConnectivity();
+        VecInt enrichedCon = globalEl->getConnectivityIndices();
+        for (int i = 0; i < elConnects.size(); i++){
+            if (enrichedConnects.find(elConnects[i]->Index()) != enrichedConnects.end()){
+                enrichedCon.conservativeResize(enrichedCon.size() + 1); // Increase size by 1
+                enrichedCon(enrichedCon.size() - 1) = enrichedConnects[elConnects[i]->Index()];          
+            }
+        }
+        enrichedEl->getConnectivity().resize(enrichedCon.size());
+        enrichedEl->setConnectivity(enrichedCon);
+        cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
+        count++;
+    }
+    // Update the problem size
+    int64_t fNGlobalDOF  = 0;
+    for (int64_t i = 0; i < cmeshG->NConnects(); i++){
+        int nstate = cmeshG->NState();
+        fNGlobalDOF += cmeshG->ConnectVec()[i]->GetNShapeFunctions() * nstate;
+    }
+    cmeshG->NGlobalDOF() = fNGlobalDOF;
+
+    cmeshG->Print("cmeshGEnriched2.txt");
 };
 
 void SolveEnrichedProblem(CompMesh *cmeshG){

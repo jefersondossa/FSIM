@@ -13,6 +13,7 @@
 #include "Element.h"
 #include "GlobalLocalEnrichment.h"
 #include "MEFGGlobalLocalTools.h"
+#include "MixedGlobalLocalEnrichment.h"
 
 //Comentar erro ao debugar após incluir a weakform GlobalLocalEnrichment e o element ElementEnriched. 
 
@@ -47,7 +48,7 @@ std::map<int64_t,int64_t> enrichedConnects;
 
 int main(int argc, char **args) { 
 
-    overlappingRegion = 2;
+    overlappingRegion = 1;
     globalLocalIterations = 1;
     overlappingNHDirichletBoundary = 2;
     overlappingNHNeumannBoundary = 4;
@@ -114,7 +115,7 @@ int main(int argc, char **args) {
     //     std::cout << "Global connect index: " << connect.first << "\n";
     // }
 
-    GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,ModElasticity,PoissonRatio);
+    MixedGlobalLocalEnrichment *globalLocal = new MixedGlobalLocalEnrichment(1,dimension,ModElasticity,PoissonRatio);
     globalLocal->SetForcingFunction(forcingFunction);
 
     for(int n = 0; n < globalLocalIterations; n++){
@@ -154,8 +155,8 @@ MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshve
     val2.setZero();
     val3.setZero();
     L2Projection * matbcG1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
-    val3[1] = 1.0;
-    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val3);
+    // val3[1] = 1.0;
+    L2Projection * matbcG2 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val3);
     L2Projection * matbcG3 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     matbcG3->SetForcingFunction(forcingFunction);
 
@@ -244,8 +245,8 @@ MixedCompMesh* CreateLocalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvec
     MatrixDouble val1(2,2);
     val1.setZero();
     VecDouble val2(2);
-    val2[1] = 1.0;
-    L2Projection * matbcL1 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    // val2[1] = 1.0;
+    L2Projection * matbcL1 = new L2Projection(3,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     val2.setZero();
     InterpolatedBC * matbcL2 = new InterpolatedBC(2,dimension-1,2,BoundaryConditionType::kDirichlet,&globalElementCorrespondence,&globalNodeCorrespondence,cmeshG);
     // val2[0] = -2.;
