@@ -176,8 +176,11 @@ public:
         // fLocalElement->interpolateSolDerivatives();
 
         std::cout << "Para interpolar a solução global enriquecida é necessário encontrar também as correspondências dos nós da malha local\nInserir o valor correto aqui:";
-        // fGlobalElement->IntegrationData().fAdimCoord = globalNodeCorrespondence->at(fLocalElement->Index())(index,k);
-        fGlobalElement->IntegrationData().fAdimCoord = this->fIntegData.fAdimCoord;
+        
+        for (int k = 0; k < fLocalElement->Dimension(); k++){   
+            fGlobalElement->IntegrationData().fAdimCoord[k] = globalNodeCorrespondence->at(fLocalElement->Index())(fLocalElement->IntegrationData().fIndex,k);
+        }
+        // fGlobalElement->IntegrationData().fAdimCoord = this->fIntegData.fAdimCoord;
         fGlobalElement->IntegrationData().fWeight = this->fIntegData.fWeight;
         fGlobalElement->Reference()->ComputeJacobian(fGlobalElement->IntegrationData());
 

@@ -21,8 +21,8 @@ const int dimension = 2;
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = -1*y;
-    // force[0] = -1;
+    // force[0] = -1*y;
+    force[0] = -1;
 };
 
 MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvector);
@@ -213,7 +213,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     VectorNames = {"Displacement"};
 
     anG.Run();
-    // anG.PrintGlobalMatrix();
+    anG.PrintGlobalMatrix();
     // anG.PrintSolution();
     // anG.PrintGlobalRhs();
 
@@ -327,7 +327,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     anE.Run();
     anE.PrintGlobalMatrix();
     anE.PrintGlobalRhs();
-    // anE.PrintSolution();
+    anE.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anE.GlobalMatrix());
     if (!spMat) {

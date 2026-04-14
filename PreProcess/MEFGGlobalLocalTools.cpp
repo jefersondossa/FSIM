@@ -5,6 +5,7 @@
 #include "L2Projection.h"
 #include "CompMeshTools.h"
 #include "ElementEnriched.h"
+#include "ElementMixed.h"
 
 void MEFGGlobalLocalTools::LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL, 
                                                        std::map<int64_t,int64_t> &globalElementCorrespondence, 
@@ -35,7 +36,7 @@ void MEFGGlobalLocalTools::LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMes
 
             for(int index = 0; index < numberOfIntegrationPoints; index++){
                 x.setZero();
-                xsiCorr.setZero();
+                xsiCorr.fill(1e50);
 
                 for(int k = 0; k < dimension; k++) x[k] = localElement->getIntegPointCoordinatesValue(index)[k];
 
@@ -240,6 +241,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
     }
     int64_t nElementsG = mixedCmeshG->MeshVector()[0]->NElements();
     mixedCmeshG->MeshVector()[0]->ElementVec().resize(mixedCmeshG->MeshVector()[0]->NElements() + nelsToEnrich);
+    cmeshG->ElementVec().resize(cmeshG->NElements() + nelsToEnrich);
     //Create the enriched elements in the global mesh
     count = 0;
     for (auto localEl:cmeshL->ElementVec()){
@@ -247,13 +249,17 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
         Element* globalEl = mixedCmeshG->MeshVector()[0]->ElementVec()[globalElementCorrespondence[localEl->Index()]];
         ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, mixedCmeshG, globalLocal);
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
-        
+        Element* globalElMixed = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
+        // std::vector<Element *> elMixedEnriched = {enrichedEl, localEl};
+        // ElementMixed *enrichedElMixed = new ElementMixed(nElementsG+count, elMixedEnriched, mixedCmeshG, globalLocal);
+
         //Sets which node will have enriched solution
         enrichedEl->SetEnrichmentData(&enrichedConnects);
 
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
         if (globalEl->Dimension() == mixedCmeshG->MeshVector()[0]->Dimension()){
             globalEl->SetWeakForm(nullptr);
+            globalElMixed->SetWeakForm(nullptr);
         }
 
         //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
@@ -268,6 +274,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
         enrichedEl->getConnectivity().resize(enrichedCon.size());
         enrichedEl->setConnectivity(0,enrichedCon);
         mixedCmeshG->MeshVector()[0]->ElementVec()[nElementsG+count] = enrichedEl;
+        cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
         count++;
     }
     // Update the problem size
