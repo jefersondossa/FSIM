@@ -58,37 +58,37 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
     int index = 0;
     
     int nsub = fSubElements.size();
-
-    std::vector<IntPointData *> data(nsub);
     for (int i = 0; i < nsub; i++){
-        data[i] = &fSubElements[i]->IntegrationData();
-        data[i]->fElementIndex = this->fIndex;
+        fSubElements[i]->IntegrationData().fElementIndex = this->fIndex;
     }
+    
     //The integration is always performed with basis in the first sub element.
     for(int it = 0; it < fSubElements[0]->getNumberOfIntegrationPoints(); it++){
 
         //Defines the integration points adimentional coordinates
         for (int k = 0; k < DIM; k++) {
             double coord = fSubElements[0]->IntegPointCoordinate(index,k);
+            this->fIntegData.fAdimCoord[k] = coord;
             for (int i = 0; i < nsub; i++){
-                data[i]->fAdimCoord[k] = coord;
+                fSubElements[i]->IntegrationData().fAdimCoord[k] = coord;
             }
         }
 
         //Returns the quadrature integration weight
         double weight = fSubElements[0]->IntegPointWeight(index);
+        this->fIntegData.fWeight = weight;
         for (int i = 0; i < nsub; i++){
-            data[i]->fWeight = weight;
+            fSubElements[i]->IntegrationData().fWeight = weight;
         }
             
         //Computes the jacobian matrix
         this->fReference->ComputeJacobian(this->fIntegData);
         for (int i = 0; i < nsub; i++){
-            data[i]->fA0 = this->fIntegData.fA0;
-            data[i]->fA0Inv = this->fIntegData.fA0Inv;
-            data[i]->fAxes0 = this->fIntegData.fAxes0;
-            data[i]->fJacA0 = this->fIntegData.fJacA0;
-            data[i]->fX = this->fIntegData.fX;
+            fSubElements[i]->IntegrationData().fA0 = this->fIntegData.fA0;
+            fSubElements[i]->IntegrationData().fA0Inv = this->fIntegData.fA0Inv;
+            fSubElements[i]->IntegrationData().fAxes0 = this->fIntegData.fAxes0;
+            fSubElements[i]->IntegrationData().fJacA0 = this->fIntegData.fJacA0;
+            fSubElements[i]->IntegrationData().fX = this->fIntegData.fX;
 
             //Computes spatial derivatives
             fSubElements[i]->ComputeSpatialDerivatives();
@@ -100,11 +100,15 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
         //Computes the element stiffness matrix and residual vector
         if (!this->fWeakForm){
             for (int i = 0; i < nsub; i++){
-                fSubElements[i]->GetWeakForm()->ComputeStiffness(index, *data[i], jacobianNRMatrix);
-                fSubElements[i]->GetWeakForm()->ComputeResidual(index, *data[i], rhsVector);
+                fSubElements[i]->GetWeakForm()->ComputeStiffness(index, fSubElements[i]->IntegrationData(), jacobianNRMatrix);
+                fSubElements[i]->GetWeakForm()->ComputeResidual(index, fSubElements[i]->IntegrationData(), rhsVector);
             }
             
         } else {
+            std::vector<IntPointData *> data(nsub);
+            for (int i = 0; i < nsub; i++){
+                data[i] = &fSubElements[i]->IntegrationData();
+            }
             this->fWeakForm->ComputeStiffness(index, data, jacobianNRMatrix);
             this->fWeakForm->ComputeResidual(index, data, rhsVector); 
         }

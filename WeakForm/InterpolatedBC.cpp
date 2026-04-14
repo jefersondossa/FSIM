@@ -1,4 +1,5 @@
 #include "InterpolatedBC.h"
+#include "ElementMixed.h"
 
 InterpolatedBC::InterpolatedBC(int matid, int dim, int nstate, 
         BoundaryConditionType bctype, 
@@ -51,16 +52,34 @@ void InterpolatedBC::ComputeResidual(int &index, IntPointData &data, VecDouble &
 
     int64_t myIndex = data.fElementIndex;
     Element *el = fGlobalMesh->ElementVec()[(*fGlobalElementCorrespondence)[myIndex]];
-    el->IntegrationData().fAdimCoord[0] = (*fGlobalNodeCorrespondence)[myIndex](index,0); 
-    el->IntegrationData().fAdimCoord[1] = (*fGlobalNodeCorrespondence)[myIndex](index,1); 
-    
-    int nshape = el->NShapeFunctions();
-    el->IntegrationData().fPhi.resize(nshape);
-    el->IntegrationData().fDPhi.resize(el->Dimension(),nshape);    
-    el->Reference()->ComputeJacobian(el->IntegrationData());
-    el->ComputeSpatialDerivatives();
-    el->interpolateSolution();
-    VecDouble Sol = el->IntegrationData().fSol;
+    int nshape = 0;
+    VecDouble Sol;
+
+    ElementMixed *elMixed = dynamic_cast<ElementMixed *>(el);
+    if (elMixed){
+        elMixed->SubElements()[0]->IntegrationData().fAdimCoord[0] = (*fGlobalNodeCorrespondence)[myIndex](index,0); 
+        elMixed->SubElements()[0]->IntegrationData().fAdimCoord[1] = (*fGlobalNodeCorrespondence)[myIndex](index,1); 
+        
+        nshape = elMixed->SubElements()[0]->NShapeFunctions();
+        elMixed->SubElements()[0]->IntegrationData().fPhi.resize(nshape);
+        elMixed->SubElements()[0]->IntegrationData().fDPhi.resize(elMixed->SubElements()[0]->Dimension(),nshape);    
+        elMixed->SubElements()[0]->Reference()->ComputeJacobian(elMixed->SubElements()[0]->IntegrationData());
+        elMixed->SubElements()[0]->ComputeSpatialDerivatives();
+        elMixed->SubElements()[0]->interpolateSolution();
+        Sol = elMixed->SubElements()[0]->IntegrationData().fSol;
+    }else{
+        el->IntegrationData().fAdimCoord[0] = (*fGlobalNodeCorrespondence)[myIndex](index,0); 
+        el->IntegrationData().fAdimCoord[1] = (*fGlobalNodeCorrespondence)[myIndex](index,1); 
+        
+        nshape = el->NShapeFunctions();
+        el->IntegrationData().fPhi.resize(nshape);
+        el->IntegrationData().fDPhi.resize(el->Dimension(),nshape);    
+        el->Reference()->ComputeJacobian(el->IntegrationData());
+        el->ComputeSpatialDerivatives();
+        el->interpolateSolution();
+        Sol = el->IntegrationData().fSol;
+    }
+
 
     switch (BCType)
     {

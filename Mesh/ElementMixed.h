@@ -21,6 +21,8 @@ public:
 
     ElementMixed(int64_t index, std::vector<Element *> elvector, MixedCompMesh* mesh, WeakForm *wf);
 
+    std::vector<Element *> &SubElements(){return fSubElements;};
+
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(VecDouble &Rhs) override{
         PanicButton();

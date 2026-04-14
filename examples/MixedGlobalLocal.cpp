@@ -21,8 +21,8 @@ const int dimension = 2;
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    // force[0] = -1*y;
-    force[0] = -1;
+    force[0] = -1*y;
+    // force[0] = -1;
 };
 
 MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvector);
@@ -100,19 +100,19 @@ int main(int argc, char **args) {
     MEFGGlobalLocalTools::LocalToGlobalCorrespondence(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, overlappingRegion, overlappingNHDirichletBoundary);
     MEFGGlobalLocalTools::LocalToGlobalCorrespondenceBoundary(cmeshG,cmeshL, globalElementCorrespondence, globalNodeCorrespondence, overlappingNHNeumannBoundary);
 
-     //Print correspondence for debugging
-    std::cout << "Global to local element correspondence: \n";
-    for (auto &elem:globalElementCorrespondence){
-        std::cout << "Global element index: " << elem.second << " \nLocal element index: \n" << elem.first << "\n";
-    }
-    std::cout << "Global to local node correspondence: \n";
-    for (auto &node:globalNodeCorrespondence){
-        std::cout << "Global node index: " << node.first << " \nLocal node indexes: \n" << node.second.transpose() << "\n";
-    }
-    std::cout << "Global connects to be enriched: \n";
-    for (auto &connect:enrichedConnects){
-        std::cout << "Global connect index: " << connect.first << "\n";
-    }
+    //  //Print correspondence for debugging
+    // std::cout << "Global to local element correspondence: \n";
+    // for (auto &elem:globalElementCorrespondence){
+    //     std::cout << "Global element index: " << elem.second << " \nLocal element index: \n" << elem.first << "\n";
+    // }
+    // std::cout << "Global to local node correspondence: \n";
+    // for (auto &node:globalNodeCorrespondence){
+    //     std::cout << "Global node index: " << node.first << " \nLocal node indexes: \n" << node.second.transpose() << "\n";
+    // }
+    // std::cout << "Global connects to be enriched: \n";
+    // for (auto &connect:enrichedConnects){
+    //     std::cout << "Global connect index: " << connect.first << "\n";
+    // }
 
     GlobalLocalEnrichment *globalLocal = new GlobalLocalEnrichment(1,dimension,ModElasticity,PoissonRatio);
     globalLocal->SetForcingFunction(forcingFunction);
@@ -302,7 +302,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.Run();
     // anL.PrintGlobalMatrix();
     // anL.PrintGlobalRhs();
-    anL.PrintSolution();
+    // anL.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anL.GlobalMatrix());
     if (!spMat) {
@@ -325,8 +325,8 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     LinearAnalysis anE(cmeshG,SolverType::ELU);
 
     anE.Run();
-    //anE.PrintGlobalMatrix();
-    //anE.PrintGlobalRhs();
+    anE.PrintGlobalMatrix();
+    anE.PrintGlobalRhs();
     // anE.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anE.GlobalMatrix());
