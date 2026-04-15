@@ -32,7 +32,7 @@ void Elasticity3D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fDSolDx.resize(fNState,fDimension);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fInterpWeightFunction;
     int nphi = data.fPhi.size();
     MatrixDouble matB(6,3*nphi);
     matB.setZero();
@@ -58,7 +58,7 @@ void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    double WJ = data.fWeight * data.fJacA0 * data.fInterpWeightFunction;
     MatrixDouble matB(6,3*nphi);
     matB.setZero();
 
@@ -166,7 +166,9 @@ int Elasticity3D::VariableIndex(const std::string &name) const{
     if(!strcmp("Stress",name.c_str()))           return 16;
     if(!strcmp("Strain",name.c_str()))           return 17;
     if(!strcmp("DeltaStrain",name.c_str()))      return 19;
-    if(!strcmp("Compliance",name.c_str()))       return 20;
+    if(!strcmp("Compliance",name.c_str()))              return 20;
+    if(!strcmp("ComplianceSensibility",name.c_str()))   return 21;
+    if(!strcmp("WeightFunction",name.c_str()))          return 22;
 
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
@@ -195,6 +197,8 @@ int Elasticity3D::NSolutionVariables(int var) const{
     case 13:
     case 14:
     case 20:
+    case 21:
+    case 22:
         return 1;
     case 19:
         return 6;
@@ -382,6 +386,34 @@ void Elasticity3D::Solution(IntPointData &data, int var, VecDouble &Sol) {
         }
         const auto compliance = data.fSolNodes.transpose() * (*data.fStiffnessMatrix) * data.fSolNodes;
         Sol[0] = compliance(0, 0);
+        return;
+    }
+
+    // ComplianceSensibility
+    if(var == 21) {
+        if(!data.fStiffnessMatrix.has_value()){
+            Sol[0] = std::numeric_limits<float>::max();
+            PanicButton();
+            return;
+        }
+
+        VecDouble epsilon(6);
+        epsilon[0] = data.fDSolDx(0,0);
+        epsilon[1] = data.fDSolDx(1,1);
+        epsilon[2] = data.fDSolDx(2,2);
+        epsilon[3] = data.fDSolDx(2,1)+data.fDSolDx(1,2);
+        epsilon[4] = data.fDSolDx(0,2)+data.fDSolDx(2,0);
+        epsilon[5] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
+        VecDouble stress = fConstitutiveMatrix * epsilon;
+
+        double compliance = data.fInterpWeightFunction * stress.transpose() * epsilon;
+        Sol[0] = compliance;
+        return;
+    }
+
+    //Weight Function
+    if (var == 22){
+        Sol[0] = data.fInterpWeightFunction;
         return;
     }
 }; 
