@@ -48,7 +48,7 @@ std::map<int64_t,int64_t> enrichedConnects;
 
 int main(int argc, char **args) { 
 
-    overlappingRegion = 1;
+    overlappingRegion = 2;
     globalLocalIterations = 1;
     overlappingNHDirichletBoundary = 2;
     overlappingNHNeumannBoundary = 4;

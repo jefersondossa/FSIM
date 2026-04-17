@@ -71,7 +71,7 @@ public:
 
     /// Sets the element connectivity
     /// @param int* element connectivity
-    void setConnectivity(std::vector<Connect *> connect){fConnect = connect;};
+    virtual void setConnectivity(std::vector<Connect *> connect){fConnect = connect;};
     virtual void setConnectivity(VecInt connect);
 
     /// Gets the element connectivity

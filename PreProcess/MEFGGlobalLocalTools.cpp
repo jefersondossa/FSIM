@@ -249,7 +249,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
         Element* globalEl = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
         ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, mixedCmeshG, globalLocal);
         enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
-        Element* globalElMixed = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
+        ElementMixed* globalElMixed = dynamic_cast<ElementMixed*>(globalEl);
         // std::vector<Element *> elMixedEnriched = {enrichedEl, localEl};
         // ElementMixed *enrichedElMixed = new ElementMixed(nElementsG+count, elMixedEnriched, mixedCmeshG, globalLocal);
 
@@ -259,20 +259,22 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
         //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
         if (globalEl->Dimension() == mixedCmeshG->MeshVector()[0]->Dimension()){
             mixedCmeshG->MeshVector()[0]->ElementVec()[globalElementCorrespondence[localEl->Index()]]->SetWeakForm(nullptr);
-            globalElMixed->SetWeakForm(nullptr);
+            globalEl->SetWeakForm(nullptr);
         }
 
         //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
         auto elConnects = globalEl->getConnectivity();
-        VecInt enrichedCon = globalEl->getConnectivityIndices();
+        std::vector<Connect *> enrichedCon = globalElMixed->SubElements()[0]->getConnectivity();
         for (int i = 0; i < elConnects.size(); i++){
             if (enrichedConnects.find(elConnects[i]->Index()) != enrichedConnects.end()){
-                enrichedCon.conservativeResize(enrichedCon.size() + 1); // Increase size by 1
-                enrichedCon(enrichedCon.size() - 1) = enrichedConnects[elConnects[i]->Index()];          
+                enrichedCon.resize(enrichedCon.size() + 1); // Increase size by 1
+                enrichedCon[enrichedCon.size() - 1] = mixedCmeshG->MeshVector()[0]->ConnectVec()[enrichedConnects[elConnects[i]->Index()]];          
             }
         }
-        enrichedEl->getConnectivity().resize(enrichedCon.size());
-        enrichedEl->setConnectivity(0,enrichedCon);
+        std::vector<Connect *> presscon = globalElMixed->SubElements()[1]->getConnectivity();
+        enrichedCon.insert(enrichedCon.end(), presscon.begin(), presscon.end());
+        
+        enrichedEl->setConnectivity(enrichedCon);
         mixedCmeshG->MeshVector()[0]->ElementVec()[nElementsG+count] = enrichedEl;
         cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
         count++;

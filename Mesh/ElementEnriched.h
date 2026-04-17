@@ -216,6 +216,12 @@ public:
         } 
     }
 
+    void setConnectivity(std::vector<Connect *> connect)override{fConnect = connect;};
+
+
+    void AccountForEnrichment(MatrixDouble &Stiffness, VecDouble &Rhs);
+    void AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDouble &Rhs);
+
 };
 
 

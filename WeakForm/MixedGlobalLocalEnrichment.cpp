@@ -106,7 +106,7 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
     }
     // Stiffness += matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
 
-    //std::cout << "Stiffness =\n"<< Stiffness << std::endl;
+    // std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 };
 
 void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, std::vector<IntPointData*> &globaldata, VecDouble &Rhs){

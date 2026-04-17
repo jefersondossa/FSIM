@@ -58,7 +58,6 @@ void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData *> &
         matB(2,2*j  ) = data[0]->fDPhiX0(1,j);
         matB(2,2*j+1) = data[0]->fDPhiX0(0,j);
     }
-    MatrixDouble matBT=matB.transpose();
     
     MatrixDouble A(nphiU*fDimension,nphiU*fDimension);
     MatrixDouble C(nphiU*fDimension,nphiP);
@@ -68,8 +67,8 @@ void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData *> &
     m.setZero();
     m(0) = m(1) = 1.;
     
-    A = matBT * fConstitutiveMatrix * matB * WJ;
-    C = matBT * m * data[1]->fPhi.transpose() * WJ;
+    A = matB.transpose() * fConstitutiveMatrix * matB * WJ;
+    C = matB.transpose() * m * data[1]->fPhi.transpose() * WJ;
     V = -data[1]->fPhi * data[1]->fPhi.transpose() * WJ / fBulkModulus;
 
     for (int i = 0; i< fDimension*nphiU; i++ ){
