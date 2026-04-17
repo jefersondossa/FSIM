@@ -74,10 +74,12 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
         matBEnr(2,2*j+1) = globaldata[0]->fDPhiX0(0,j)*uYInterp + globaldata[0]->fPhi(j)*dUydx;
     }
 
-    //std::cout << "Mat B =\n"<< matB << std::endl;
+    
     //std::cout << "Mat BEnr =\n"<< matBEnr << std::endl;
 
     matBTot << matB, matBEnr;
+    // std::cout << "Mat B =\n"<< matBTot << std::endl;
+    // std::cout << "Constitutive Matrix =\n"<< fConstitutiveMatrix << std::endl;
 
     VecDouble m(3);
     m.setZero();
