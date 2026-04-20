@@ -25,7 +25,7 @@
 
 using namespace std;
 
-const int Nx = (14) + 1, Ny = (14) + 1, Nz = (14) + 1;
+const int Nx = (30) + 1, Ny = (30) + 1, Nz = (30) + 1;
 const double Lx = 1.0, Ly = 1.0, Lz = 1.0;
 const double dx = Lx / (Nx - 1);
 const double dy = Ly / (Ny - 1);
@@ -397,17 +397,23 @@ void SetupBoundaryConditionsElasticity3DBench(CompMesh &modelElasticity2D)
     GmshTools::Read(modelElasticity2D, "../../bench_3D.msh");
 }
 
+static char help[] = "";
 
 
-int main()
+int main(int argc, char **args)
 {
+#ifdef HAS_PETSC
+    // Starts main program invoking PETSc
+    PetscInitialize(&argc, &args, (char*)0, help);
+#endif
+
     Grid phi(Nx, vector<vector<double>>(Ny, vector<double>(Nz)));
     Grid phi_new(Nx, vector<vector<double>>(Ny, vector<double>(Nz)));
     initialize(phi);
 
     std::unique_ptr<CompMesh> modelElasticity2D = std::make_unique<CompMesh>();
     SetupBoundaryConditionsElasticity3DBench(*modelElasticity2D);
-    LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::ELU);
+    LinearAnalysis anElasticity2D(modelElasticity2D.get(), SolverType::EIterative);
 
     int i = 0;
     std::vector<std::string> ScalarNamesElasticity2D, VectorNamesElasticity2D;
@@ -488,6 +494,11 @@ int main()
 
         i++;
     }
+
+#ifdef HAS_PETSC
+    //Finalize main program   
+    PetscFinalize();
+#endif
 
     return 0;
 }

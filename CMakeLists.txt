@@ -82,7 +82,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(dependencies)
 
-add_subdirectory(triangle)
+# add_subdirectory(triangle)
 add_subdirectory(Util)
 add_subdirectory(Analysis)
 add_subdirectory(Integral)
@@ -117,7 +117,7 @@ set(INCLUDE_DIRS_LIST
 	"${PROJECT_SOURCE_DIR}/Solver"
 	"${PROJECT_SOURCE_DIR}/WeakForm"
 	"${PROJECT_SOURCE_DIR}/Util"
-	"${PROJECT_SOURCE_DIR}/triangle"
+	# "${PROJECT_SOURCE_DIR}/triangle"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Arlequin"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Elasticity"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Poisson"
@@ -200,7 +200,7 @@ endif()
 
 add_executable(f main.cpp )
 set_property(TARGET f PROPERTY LINKER_LANGUAGE Fortran)
-target_link_libraries (f fsarl_library Eigen3::Eigen triangle ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+target_link_libraries (f fsarl_library Eigen3::Eigen ${FOR_FILES} ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
 if(ENABLE_GRAPHINTERFACE)
 	add_executable(window Window.cpp )

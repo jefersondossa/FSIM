@@ -43,10 +43,10 @@ void PETScSolver::Solve(){
         PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
         break;
     case SolverType::EIterative:
-        KSPSetType(ksp,KSPIBCGS);
+        KSPSetType(ksp,KSPCG);
         KSPGetPC(ksp, &pc);
-        PCSetType(pc,PCJACOBI);
-        KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,200);
+        PCSetType(pc,PCBJACOBI);
+        KSPSetTolerances(ksp,1.e-10,PETSC_DEFAULT,PETSC_DEFAULT,2000);
         break;
 
     default:
@@ -58,8 +58,9 @@ void PETScSolver::Solve(){
     auto * pmat = dynamic_cast<PETScMatrix*> (fAnalysis->GlobalMatrix());
 
     KSPSolve(ksp,pmat->Rhs(),pmat->Solution());
-    // KSPGetTotalIterations(ksp, &iterations); 
-
+    PetscInt iterations;
+    KSPGetTotalIterations(ksp, &iterations); 
+    std::cout << "PETScSolver: Total Iterations = " << iterations << std::endl;
     // VecView(fAnalysis->Solution(),PETSC_VIEWER_STDOUT_WORLD);
 
 }

@@ -121,8 +121,8 @@ Surface Loop(4) = {17, 18, 5, 16, 19, 20};
 Volume(4) = {4};
 
 // Five elements in each half of x/y, ten elements through z.
-Transfinite Curve {1:24} = 8 Using Progression 1;
-Transfinite Curve {25:33} = 15 Using Progression 1;
+Transfinite Curve {1:24} = 16 Using Progression 1;
+Transfinite Curve {25:33} = 31 Using Progression 1;
 Transfinite Surface {1:20};
 Recombine Surface {1:20};
 Transfinite Volume {1:4};
