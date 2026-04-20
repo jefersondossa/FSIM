@@ -30,7 +30,7 @@ Plane Surface(3) = {3};
 // Physical groups
 Physical Surface("Dominio", 1) = {1, 2, 3};
 Physical Point("Apoio movel horizontal", 2) = {2, 6};
-Physical Point("Apoio movel vertical", 3) = {1};
+Physical Point("Apoio movel vertical", 3) = {1, 4};
 Physical Line("C. C. AB", 4) = {1, 2}; 
 Physical Line("C. C. BC", 5) = {3}; 
 Physical Line("C. C. EF", 6) = {6}; 

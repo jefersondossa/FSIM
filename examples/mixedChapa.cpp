@@ -163,11 +163,17 @@ void SolveProblem(CompMesh *cmesh){
         std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
         return;
     }
-
+    
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
     double strainEnergy = (sol.dot(rhs))/2;
+    double strainEnergy2 = 0.0;
+    for (int i = 0; i < sol.size(); i++){
+        if (fabs(sol[i])>1.e3 || fabs(rhs[i])>1.e3)continue;
+        strainEnergy2 += sol[i]*rhs[i]/2.;
+    }
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
+    std::cout << "Strain Energy 2: "<< strainEnergy2 << std::endl;
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Pressure"};
@@ -243,11 +249,15 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     L2Projection * matbc2 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
     L2Projection * matbc3 = new L2Projection(6,1,BoundaryConditionType::kNeumann,val1,val2);
     L2Projection * matbc4 = new L2Projection(7,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc5 = new L2Projection(2,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc6 = new L2Projection(3,1,BoundaryConditionType::kNeumann,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
+    cmesh->InsertMaterial(matbc5);
+    cmesh->InsertMaterial(matbc6);
 
     cmesh->AutoBuild();
     
@@ -260,7 +270,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
 
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
-    MixedElasticity * mat = new MixedElasticity(1, 2, 1.0, 0.);
+    MixedElasticity * mat = new MixedElasticity(1, 2, 1.0, 0.3);
     cmesh->InsertMaterial(mat);
 
     cmesh->AutoBuild();
