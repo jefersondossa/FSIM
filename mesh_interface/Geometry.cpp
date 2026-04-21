@@ -7,8 +7,6 @@ Geometry::Geometry() {}
 Geometry::Geometry(const int& index)
 {
 	index_ = index;
-
-	gmshCode_ += "SetFactory(\"OpenCASCADE\");\n\n";
 }
 
 Geometry::~Geometry() {}
@@ -146,12 +144,12 @@ Circle* Geometry::addCircle(std::vector<Point*> points, const bool& discretizati
 	return l;
 }
 
-Ellipse* Geometry::addEllipse(std::vector<Point*> points, double rx, double ry, double startangle, double finalangle, double angle, const bool& discretization)
+Ellipse* Geometry::addEllipse(std::vector<Point*> points, const bool& discretization)
 {
 	int index = getNumberOfLines();
 	std::stringstream name;
 	name << "l" << index;
-	Ellipse* l = new Ellipse(index, name.str(), points, rx, ry, startangle, finalangle, angle, discretization);
+	Ellipse* l = new Ellipse(index, name.str(), points, discretization);
 	lines_[l->getName()] = l;
 	gmshCode_ += l->getGmshCode();
 	return l;

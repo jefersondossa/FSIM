@@ -14,7 +14,7 @@ private:
     
     public:
     
-    Ellipse(const int& index, const std::string& name, std::vector<Point*> center, double rx, double ry, double startangle = 0, double finalangle = 360, double angle = 0, const bool& discretization = true);
+    Ellipse(const int& index, const std::string& name, std::vector<Point*> points, const bool& discretization = true);
 
     ~Ellipse();
 

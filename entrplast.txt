@@ -1,11 +1,11 @@
 matriz p
-.667 -.333 -.333 0 0 0
--.333 .667 -.333 0 0 0
--.333 -.333 .667 0 0 0
+0.667 -0.333 -0.333 0 0 0
+-0.333 0.667 -0.333 0 0 0
+-0.333 -0.333 0.667 0 0 0
 0 0 0 2 0 0
 0 0 0 0 2 0
 0 0 0 0 0 2
-vetor L (abertura do cone (mi*(1,1,1,0,0,0) para drucker, mi calculado no programa)
+vetor L abertura do cone (mi*(1,1,1,0,0,0) para drucker, mi calculado no programa)
 1. 1. 1. 0 0 0
 numero de trechos nl adicionais
 1

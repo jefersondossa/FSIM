@@ -1188,7 +1188,9 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
     std::string om = "omega.txt";
     std::ofstream saidaOmega(om.c_str());
 
-
+    // arlequinModel.printResultsCoarse(0);
+    // arlequinModel.printResultsFine(0);
+    // printstructure_();
     double sizeSolid = 3 * numNodesSolid;
 
     double *X_k;
@@ -1512,6 +1514,14 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
             if(rank == 0) std::cout << "GAUSS-SEIDEL RESIDUAL = " 
                                     << std::scientific << residual << std::endl;
 
+                                    
+            if (rank == 0) {
+            // if(iTimeStep % 1 == 0){
+                arlequinModel.printResultsCoarse(100);
+                arlequinModel.printResultsFine(100);
+                printstructure_();
+            // };
+            };
         };
         
         if (rank == 0) updatesolid_(&iTimeStep);
@@ -1538,11 +1548,11 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
 
         // Printing Results
         if (rank == 0) {
-            if(iTimeStep % 1 == 0){
+            // if(iTimeStep % 1 == 0){
                 arlequinModel.printResultsCoarse(iTimeStep);
                 arlequinModel.printResultsFine(iTimeStep);
                 printstructure_();
-            };
+            // };
         };
 
 

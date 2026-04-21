@@ -1,11 +1,11 @@
 c      ***************************************************
-c      Pprograma de analise não linear geométrica e física
-c      de pórtico plano incluindo impacto
-c      Formulação posicional - Lagrangiana totl com
-c      Cinemática exata
+c      Pprograma de analise nï¿½o linear geomï¿½trica e fï¿½sica
+c      de pï¿½rtico plano incluindo impacto
+c      Formulaï¿½ï¿½o posicional - Lagrangiana totl com
+c      Cinemï¿½tica exata
 c      Autores:   Humberto Breves Coda
 c                 Rodrigo Ribeiro Paccola
-c     Instituição EESC - USP
+c     Instituiï¿½ï¿½o EESC - USP
 c     Departamento de Engenharia de Estruturas
 
 c      ********************************************
@@ -15,15 +15,15 @@ c      Inicio do programa principal
 c      *******************************************   
 
 c     ********************************************
-c     O módulo BIG_STUFF serve para se poder definir alocação dinâmica
-c     de variáveis únicas (globais) para todo o programa
+c     O mï¿½dulo BIG_STUFF serve para se poder definir alocaï¿½ï¿½o dinï¿½mica
+c     de variï¿½veis ï¿½nicas (globais) para todo o programa
 c     sem a necessidade de se utilizar lista de argumentos
 c     nas chamadas de subrotinas
 c     Nas subrotinas fazemos a chamada do modulo 
 c     e adicionamos o include do subprograma alocadin.for  
-c     que aloca o tamanho das variáveis
+c     que aloca o tamanho das variï¿½veis
 c     O include do bloclagatbig.for faz o mesmo papel 
-c     para as variáveis estáticas 
+c     para as variï¿½veis estï¿½ticas 
 c    *************************************************
 
       subroutine solveFrameStructure(ipt2)
@@ -37,7 +37,7 @@ c     use msimsl
       integer*4 ipt2
 
 c     **********************************************************
-c     Este subprograma serve para as variáveis menores, alocação estática
+c     Este subprograma serve para as variï¿½veis menores, alocaï¿½ï¿½o estï¿½tica
 c     **************************************************************
       
       INTEGER(2) IHRI,IMINI,ISECI,I100THI,IHRF,IMINF,ISECF,I100THF !so uso para marcar tempo
@@ -45,31 +45,31 @@ c     **************************************************************
       ipt = ipt2
 
 c     **********************************************
-c     inicio do processo dinâmico (ou incremental) / iterativo (implícito)
+c     inicio do processo dinï¿½mico (ou incremental) / iterativo (implï¿½cito)
 c     ***********************************************
       
       
-      !ipt=ipt+1                 !Atualização do tempo
+      !ipt=ipt+1                 !Atualizaï¿½ï¿½o do tempo
 
-      ia=0                      !Contador de iterações
+      ia=0                      !Contador de iteraï¿½ï¿½es
       
-c     variacao temporal da temperatura, por enquanto segue o mesmo padrão da carga externa
-      temb=dtemb*               !Abaixo, dinâmico
+c     variacao temporal da temperatura, por enquanto segue o mesmo padrï¿½o da carga externa
+      temb=dtemb*               !Abaixo, dinï¿½mico
      #(ca+cb*ipc*dt+cc*(ipc*dt)**2+cd*sin(ce*ipc*dt)
      #+cf*cos(cg*ipc*dt)
      #+crh*exp(cri*ipc*dt)+cj*exp(ck*ipc*dt))
       
-      temc=dtemc*               !Acima dinâmico
+      temc=dtemc*               !Acima dinï¿½mico
      #(ca+cb*ipc*dt+cc*(ipc*dt)**2+cd*sin(ce*ipc*dt)
      #+cf*cos(cg*ipc*dt)
      #+crh*exp(cri*ipc*dt)+cj*exp(ck*ipc*dt))
       
-c     variacao temporal da carga incluindo distribuída conservativa já alocada no vetor de forças
+c     variacao temporal da carga incluindo distribuï¿½da conservativa jï¿½ alocada no vetor de forï¿½as
       
 
-c     variacao temporal da posição para estático
-      do i=1,n                  !Número total de graus de liberdade
-         if(ko(i).eq.1) p(i)=p0(i)+dp(i)* !dinâmico
+c     variacao temporal da posiï¿½ï¿½o para estï¿½tico
+      do i=1,n                  !Nï¿½mero total de graus de liberdade
+         if(ko(i).eq.1) p(i)=p0(i)+dp(i)* !dinï¿½mico
      #(ba+bb*ipc*dt+bc*(ipc*dt)**2
      #+bd*sin(be*ipc*dt)+bf*cos(bg*ipc*dt)
      #+bh*exp(bri*ipc*dt)+bj*exp(bk*ipc*dt))
@@ -77,13 +77,13 @@ c     variacao temporal da posição para estático
 c     somente para viga
       
       
-      call alocanco             !Alocação do carregamento ortogonal (não conservativo)
+      call alocanco             !Alocaï¿½ï¿½o do carregamento ortogonal (nï¿½o conservativo)
       call alocadistr
 
 
-      do i=1,n                  !Número total de graus de liberdade
+      do i=1,n                  !Nï¿½mero total de graus de liberdade
          f(i)=df(i)             !*ipt !*(ca+df(i)/nfc*ipc)
-c$$$  !dinâmico
+c$$$  !dinï¿½mico
 c$$$  #(ca+cb*ipc*dt+cc*(ipc*dt)**2
 c$$$  #+cd*dsin(ce*ipc*dt)+cf*dcos(cg*ipc*dt)
 c$$$  #+crh*dexp(cri*ipc*dt)+cj*dexp(ck*ipc*dt))
@@ -95,12 +95,12 @@ c$$$  #+crh*dexp(cri*ipc*dt)+cj*dexp(ck*ipc*dt))
       ! endif
 
 
- 10   continue                  !Laço de iterações
-      if (ia.le.6) call destroca1 !Atualização das variáveis após solução do sistema
-      if (ia.gt.6) call destroca1 !idem com bissecção (não utilizado)
-      call matriz               !Chamada da criação das matrizes e vetores do problema
-      call condcon              !Aplicação da condição de contorno
-      call ma27                 !Solver de domínio Público HSL (UK)
+ 10   continue                  !Laï¿½o de iteraï¿½ï¿½es
+      if (ia.le.6) call destroca1 !Atualizaï¿½ï¿½o das variï¿½veis apï¿½s soluï¿½ï¿½o do sistema
+      if (ia.gt.6) call destroca1 !idem com bissecï¿½ï¿½o (nï¿½o utilizado)
+      call matriz               !Chamada da criaï¿½ï¿½o das matrizes e vetores do problema
+      call condcon              !Aplicaï¿½ï¿½o da condiï¿½ï¿½o de contorno
+      call ma27                 !Solver de domï¿½nio Pï¿½blico HSL (UK)
 c$$$  
 
 c$$$  do inosd=1,nnosdp
@@ -119,16 +119,16 @@ c$$$  v(3*indpesp-2)=rmed1
 c$$$  
 c$$$  enddo
 
-      call calculanorma         !Calculo da norma de parada das iterações
-      ia=ia+1                   !contador de iterações
-      if (ia.eq.2) goto 20   !Limite de iterações
+      call calculanorma         !Calculo da norma de parada das iteraï¿½ï¿½es
+      ia=ia+1                   !contador de iteraï¿½ï¿½es
+      if (ia.eq.2) goto 20   !Limite de iteraï¿½ï¿½es
       if ((rnorma.gt.tol).or.(ia.lt.2)) goto 10 !Teste de parada
- 20   continue                  !Fim das iterações
+ 20   continue                  !Fim das iteraï¿½ï¿½es
 c$$$      
-c$$$      call destroca1            !Utilizando a última iteração ainda não aproveitada
-c$$$      as1=p/rbn/dt**2-qs        !Atualizando aceleração presente para ser usada
-c$$$      vs=vs+dt*(1.-rgn)*as+rgn*dt*as1 !Acertando velocidade passado (desnecessário guardar presente)
-c$$$      as=as1                    !aceleração passado sendo atualizada
+c$$$      call destroca1            !Utilizando a ï¿½ltima iteraï¿½ï¿½o ainda nï¿½o aproveitada
+c$$$      as1=p/rbn/dt**2-qs        !Atualizando aceleraï¿½ï¿½o presente para ser usada
+c$$$      vs=vs+dt*(1.-rgn)*as+rgn*dt*as1 !Acertando velocidade passado (desnecessï¿½rio guardar presente)
+c$$$      as=as1                    !aceleraï¿½ï¿½o passado sendo atualizada
 c$$$      write(*,*) 'numero de iteracoes',ia,ipt,ipt
 c$$$      
 c$$$      call momento              !Calcula os esforcos solicitantes
@@ -146,24 +146,24 @@ c$$$c     write(*,*)'ruptura0',rmsd,rmrd,j,ino
 c$$$            
 c$$$c$$$  
 c$$$c$$$  
-c$$$c     Verificação da ruptura por momento:
+c$$$c     Verificaï¿½ï¿½o da ruptura por momento:
 c$$$            if(dabs(rmsd).gt.rmrd)then
 c$$$               iresistcrit(ic(j,ino))=0
 c$$$               write(99,*)'rupturam',ino,j,rmsd,rmrd,ipt
 c$$$            endif
-c$$$c     Verificação da ruptura por cortante:
+c$$$c     Verificaï¿½ï¿½o da ruptura por cortante:
 c$$$            if(dabs(rvsd).gt.rvrd)then
 c$$$               iresistcrit(ic(j,ino))=0
 c$$$               write(99,*)'rupturav',ino,j,rvsd,rvrd,ipt
 c$$$            endif
-c$$$c     Verificação da ruptura por normal:
+c$$$c     Verificaï¿½ï¿½o da ruptura por normal:
 c$$$            if(dabs(rnsd).gt.rnrd)then
 c$$$               iresistcrit(ic(j,ino))=0
 c$$$               write(99,*)'rupturan',ino,j,rnsd,rnrd,ipt
 c$$$c     read(*,*)
 c$$$            endif
-c$$$c     Verificação da ruptura combinada porn normal e momento:
-c$$$c$$$  c     Verificação da ruptura por ação combinada
+c$$$c     Verificaï¿½ï¿½o da ruptura combinada porn normal e momento:
+c$$$c$$$  c     Verificaï¿½ï¿½o da ruptura por aï¿½ï¿½o combinada
 c$$$c$$$  
 c$$$c$$$  resistcomb=rmsd*rmsd/(rmrd*rmrd)+rnsd*rnsd/(rnrd
 c$$$c$$$  $               *rnrd)+rvsd*rvsd/(rvrd*rvrd)
@@ -242,7 +242,7 @@ c$$$c$$$      stop
       character*32 entrada2
 
 c     **********************************************************
-c     Este subprograma serve para as variáveis menores, alocação estática
+c     Este subprograma serve para as variï¿½veis menores, alocaï¿½ï¿½o estï¿½tica
 c     **************************************************************
       
       INTEGER(2) IHRI,IMINI,ISECI,I100THI,IHRF,IMINF,ISECF,I100THF !so uso para marcar tempo
@@ -274,11 +274,11 @@ c     Capturando instante de inicio do processamento
 c     CALL GETTIM (IHRI, IMINI, ISECI, I100THI)
       !write(*,*) 'inicio',ihri,imini,iseci,i100thi,entrada2
 
-      pi=2.*datan2(1.d00,0.d00) !definido a grandeza trigonométrica pi
+      pi=2.*datan2(1.d00,0.d00) !definido a grandeza trigonomï¿½trica pi
 
       call dadosiniciais        ! Camada da subrotina que faz a leitura dos dados iniciais
-      call lerplast             ! Leitura de informações sobre plasticidade
-      call matrizmassa          !subrotina que gera a matriz de massa que não varia em todo o processo
+      call lerplast             ! Leitura de informaï¿½ï¿½es sobre plasticidade
+      call matrizmassa          !subrotina que gera a matriz de massa que nï¿½o varia em todo o processo
 
 
       read(3,*)                 !nova lista para cada fase de carga
@@ -304,34 +304,41 @@ c     CALL GETTIM (IHRI, IMINI, ISECI, I100THI)
 
 c      *******************************************
 c      Etradas dos dados iniciais
-c      deve-se observar que algumas variáveis sáo calculadas
+c      deve-se observar que algumas variï¿½veis sï¿½o calculadas
 c      para os elementos finitos
 c      *******************************************   
-      subroutine dadosiniciais  !Comentado anteriormente (não passamos argumentos variáveis globais)
-      USE BIG_STUFF             !Definição das variáveis dinâmicas
+      subroutine dadosiniciais  !Comentado anteriormente (nï¿½o passamos argumentos variï¿½veis globais)
+      USE BIG_STUFF             !Definiï¿½ï¿½o das variï¿½veis dinï¿½micas
       USE BLOCLAGATBIG
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
-c     include 'bloclagatbig.for' !definição das variáveis estáticas
+c     include 'bloclagatbig.for' !definiï¿½ï¿½o das variï¿½veis estï¿½ticas
 
 c     Novidade
-c     Para problemas dinâmicos podemos encontrar a posição estática de equilíbrio 
-c     de determinada carga permanente usando a opção abaixo
+c     Para problemas dinï¿½micos podemos encontrar a posiï¿½ï¿½o estï¿½tica de equilï¿½brio 
+c     de determinada carga permanente usando a opï¿½ï¿½o abaixo
       read(3,*)                 !Dizer se deve ler posicao atual diferente da inicial 1 sim, 0 nao
       read(3,*) iposic
 
-c     nnos = número de nós
-c     nel = número de elementos
-c     nfc = número de fases de carga
-c     tol = tolerância de parada (posição)
-c     ngf = nó para gráfico 1
-c     ngf1 = nó para gráfico 2
+c     nnos = nï¿½mero de nï¿½s
+c     nel = nï¿½mero de elementos
+c     nfc = nï¿½mero de fases de carga
+c     tol = tolerï¿½ncia de parada (posicao)
+c     ngf = nï¿½ para grï¿½fico 1
+c     ngf1 = nï¿½ para grï¿½fico 2
       read(3,*)
       write(5,*)'nnos,ne,nfc,tol,ngf,ngf1'
       read(3,*) nnos,nel,nfc,tol,ngf,ngf1
 
       read(3,*)                 !'entre com o numero de nos multiplos'
       read(3,*) nnosmt
-      read(3,*)                 !pares de nós duplos
+      write(*,*)'nnosmt',nnosmt
+      read(3,*)                 !pares de nos duplos
+      if (allocated(iseq_nosdp)) then
+         deallocate(iseq_nosdp)
+      end if
+      if (allocated(iconect_nosdp)) then
+         deallocate(iconect_nosdp)
+      end if
       allocate(iseq_nosdp(nnosmt,5),iconect_nosdp(nnosmt,5))
       iseq_nosdp=0
       do i=1,nnosmt
@@ -351,7 +358,16 @@ c     pares de nos
       enddo
 c$$$  read(3,*)!'entre com o numero de nos duplos'
 c$$$  read(3,*) nnosdp
-c$$$  read(3,*)!pares de nós duplos
+c$$$  read(3,*)!pares de nï¿½s duplos
+      if (allocated(ipar_nduplo)) then
+         deallocate(ipar_nduplo)
+      end if
+      if (allocated(rlambdalag)) then
+         deallocate(rlambdalag)
+      end if
+      if (allocated(iresistcrit)) then
+         deallocate(iresistcrit)
+      end if
       allocate(ipar_nduplo(nnosdp,2),rlambdalag(nnosdp*3)
      $     ,iresistcrit(nnos))
       iresistcrit=1
@@ -392,19 +408,22 @@ c$$$  $           =itagnosd(i)+1
  20   format(3(1x,I7),1x,f20.7,2(1x,I7))
 c     *************************************************
       read(3,*)
-      read(3,*) ng3,nprint      !Número de pontos de Gauss na altura e
+      read(3,*) ng3,nprint      !Nï¿½mero de pontos de Gauss na altura e
       write(5,30)
  30   format(2(1x,I7))
 
-c     frequência para impressão de resultados
-c     O número de pontos de integração na longitudinal é
-c     igual ao número de nós do Elemento finito
+c     frequï¿½ncia para impressï¿½o de resultados
+c     O nï¿½mero de pontos de integraï¿½ï¿½o na longitudinal ï¿½
+c     igual ao nï¿½mero de nï¿½s do Elemento finito
 
-      ALLOCATE (notl(nel))      !Esta é uma das alocações dinâmicas feita antes
+      if (allocated(notl)) then
+         deallocate(notl)
+      end if
+      ALLOCATE (notl(nel))      !Esta ï¿½ uma das alocaï¿½ï¿½es dinï¿½micas feita antes
 
 c     Novidade
-      read(3,*)                 ! Elemento, número de nós do elemento
-      write(5,*) ' Elemento, número de nós do elemento'
+      read(3,*)                 ! Elemento, nï¿½mero de nï¿½s do elemento
+      write(5,*) ' Elemento, nï¿½mero de nï¿½s do elemento'
       do j=1,nel
          read(3,*) k,notl(k)
          write(5,30) k,notl(k)
@@ -416,11 +435,11 @@ c     Novidade
       enddo
       nnoel=k+1                 !+1 por caussa do solver (esparsidade)
       
-c     Lembrando que o cálculo do número de graus de liberdade 
-c     depende das rótulas precisamos chamar uma subrotina que vai
-c     alocar dinamicamente algumas variáveis separadamente da alocadin,
-c     fazer a leitura da incidência dos elementos, antes das coordenadas dos nos
-c     bem como da condição de rotulação dos nos das barras
+c     Lembrando que o cï¿½lculo do nï¿½mero de graus de liberdade 
+c     depende das rï¿½tulas precisamos chamar uma subrotina que vai
+c     alocar dinamicamente algumas variï¿½veis separadamente da alocadin,
+c     fazer a leitura da incidï¿½ncia dos elementos, antes das coordenadas dos nos
+c     bem como da condiï¿½ï¿½o de rotulaï¿½ï¿½o dos nos das barras
       call rotular
       write(*,*)nnos,n
 c     read(*,*)
@@ -442,22 +461,46 @@ c     read(*,*)
 
 
 
-c     include 'alocadin.for'    !Alocação dinâmica das demais variáveis
+c     include 'alocadin.for'    !Alocaï¿½ï¿½o dinï¿½mica das demais variï¿½veis
 
-c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
+c     nnoel=30 !no mï¿½ximo 30 nos por elemento apesar do programa poder ser geral
       not=nnoel
       nglel=3*nnoel
       nzexp=(nglel**2)*nel*2
       nzexp1=Int((2*nzexp+3*n+1)*1.2)
 
-      ALLOCATE (prsi0(nel,nnoel,ng3,3)) !variável de estado (mede o tamanho da superfície de plastificaçã)
-      ALLOCATE (ep(nel,nnoel,ng3,3,6)) !deformação plástica acumulada para cada ponto de integração
-      ALLOCATE (eeq(nel,nnoel,ng3,3)) !deformação equivalente
+      if (allocated(prsi0)) then
+         deallocate(prsi0)
+      end if
+      if (allocated(ep)) then
+         deallocate(ep)
+      end if
+      if (allocated(eeq)) then
+         deallocate(eeq)
+      end if
+      if (allocated(temc)) then
+         deallocate(temc)
+      end if
+      if (allocated(temb)) then
+         deallocate(temb)
+      end if
+      if (allocated(dtemc)) then
+         deallocate(dtemc)
+      end if
+      if (allocated(dtemb)) then
+         deallocate(dtemb)
+      end if
+      if (allocated(calt)) then
+         deallocate(calt)
+      end if
+      ALLOCATE (prsi0(nel,nnoel,ng3,3)) !variï¿½vel de estado (mede o tamanho da superfï¿½cie de plastificaï¿½ï¿½)
+      ALLOCATE (ep(nel,nnoel,ng3,3,6)) !deformaï¿½ï¿½o plï¿½stica acumulada para cada ponto de integraï¿½ï¿½o
+      ALLOCATE (eeq(nel,nnoel,ng3,3)) !deformaï¿½ï¿½o equivalente
       ALLOCATE (temc(nel))      !temperatura total acima da barra
       ALLOCATE (temb(nel))      !temperatura total abaixo da barra
-      ALLOCATE (dtemc(nel))     !acréscimo por passo de tempo ou de carga
-      ALLOCATE (dtemb(nel))     !acréscimo por passo de tempo ou de carga
-      ALLOCATE (calt(nel))      !coeficiente de dilatação térmica do material por elemento
+      ALLOCATE (dtemc(nel))     !acrï¿½scimo por passo de tempo ou de carga
+      ALLOCATE (dtemb(nel))     !acrï¿½scimo por passo de tempo ou de carga
+      ALLOCATE (calt(nel))      !coeficiente de dilataï¿½ï¿½o tï¿½rmica do material por elemento
 
       prsi0=0.
       ep=0.
@@ -468,22 +511,94 @@ c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
       dtemb=0.
       calt=0.
       
+      if (allocated(rmz)) then
+         deallocate(rmz)
+      end if
+      if (allocated(rvy)) then
+         deallocate(rvy)
+      end if
+      if (allocated(rnx)) then
+         deallocate(rnx)
+      end if
+      if (allocated(fd)) then
+         deallocate(fd)
+      end if
+      if (allocated(brd)) then
+         deallocate(brd)
+      end if
+      if (allocated(yb)) then
+         deallocate(yb)
+      end if
+      if (allocated(rib)) then
+         deallocate(rib)
+      end if
+      if (allocated(hb)) then
+         deallocate(hb)
+      end if
+
+      ALLOCATE (rmz(nel,not))   !esforï¿½o solicitante momento fletor
+      ALLOCATE (rvy(nel,not))   !esforï¿½o solicitante forï¿½a cortante
+      ALLOCATE (rnx(nel,not))   !esforï¿½o solicitante forï¿½a normal
       
-      ALLOCATE (rmz(nel,not))   !esforço solicitante momento fletor
-      ALLOCATE (rvy(nel,not))   !esforço solicitante força cortante
-      ALLOCATE (rnx(nel,not))   !esforço solicitante força normal
-      
-      ALLOCATE (fd(nel,3))      !posição da fibra da seção transversal (3 fibras por enquanto)
+      ALLOCATE (fd(nel,3))      !posiï¿½ï¿½o da fibra da seï¿½ï¿½o transversal (3 fibras por enquanto)
       ALLOCATE (brd(nel,3))     !largura da fibra
-      ALLOCATE (yb(nel))        !posição do cg (módulo de engenharia)
-      ALLOCATE (rib(nel))       !momento de inércia
+      ALLOCATE (yb(nel))        !posiï¿½ï¿½o do cg (mï¿½dulo de engenharia)
+      ALLOCATE (rib(nel))       !momento de inï¿½rcia
       ALLOCATE (hb(nel,3))      !altura da fibra
       
-      ALLOCATE (qx(nel,nnoel))  !força distribuída horizontal
-      ALLOCATE (qy(nel,nnoel))  !força distribuída vertical   
-      ALLOCATE (qn(nel,nnoel))  !força não conservativa ortogonal   
-      ALLOCATE (qt(nel,nnoel))  !força não conservativa tangencial
+      if (allocated(qx)) then
+         deallocate(qx)
+      end if
+      if (allocated(qy)) then
+         deallocate(qy)
+      end if
+      if (allocated(qn)) then
+         deallocate(qn)
+      end if
+      if (allocated(qt)) then
+         deallocate(qt)
+      end if
+      ALLOCATE (qx(nel,nnoel))  !forï¿½a distribuï¿½da horizontal
+      ALLOCATE (qy(nel,nnoel))  !forï¿½a distribuï¿½da vertical   
+      ALLOCATE (qn(nel,nnoel))  !forï¿½a nï¿½o conservativa ortogonal   
+      ALLOCATE (qt(nel,nnoel))  !forï¿½a nï¿½o conservativa tangencial
       
+      if (allocated(ro)) then
+         deallocate(ro)
+      end if
+      if (allocated(ram)) then
+         deallocate(ram)
+      end if
+      if (allocated(rmp)) then
+         deallocate(rmp)
+      end if
+      if (allocated(rmg)) then
+         deallocate(rmg)
+      end if
+      if (allocated(sx)) then
+         deallocate(sx)
+      end if
+      if (allocated(sy)) then
+         deallocate(sy)
+      end if
+      if (allocated(sxy)) then
+         deallocate(sxy)
+      end if
+      if (allocated(in)) then
+         deallocate(in)
+      end if
+      if (allocated(rhook)) then
+         deallocate(rhook)
+      end if
+      if (allocated(indx)) then
+         deallocate(indx)
+      end if
+      if (allocated(itip)) then
+         deallocate(itip)
+      end if
+      if (allocated(inct)) then
+         deallocate(inct)
+      end if
       ALLOCATE (ro(nel))        !densidade (massa) do material
       ALLOCATE (ram(nel))       !amortecimento viscoso
       ALLOCATE (rmp(not,not,nel)) !matriz de massa compacta
@@ -491,14 +606,43 @@ c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
       ALLOCATE (sx(nel,nnoel))  !tensao x
       ALLOCATE (sy(nel,nnoel))  !tensao y
       ALLOCATE (sxy(nel,nnoel)) !tensao xy
-      ALLOCATE (in(noel,noel))  !incidência dos elementos
-      ALLOCATE (rhook(nel,6,6)) !lei constitutiva (elástica) por elemento
-      ALLOCATE (indx(n))        ! versão casca (ainda não apagar)
-      ALLOCATE (itip(100,4))    ! (versão casca (ainda não apagar)
-      ALLOCATE (inct(55,3))     !(versão casca)
-      ALLOCATE (ko(n))          !restrição graus de liberdade / aplicação de recalque
-      ALLOCATE (ko1(n))         !restrição parcial para controle do impacto
-      ALLOCATE (IRN(nzexp))     !variável de controle da coluna para solver
+      ALLOCATE (in(noel,noel))  !incidï¿½ncia dos elementos
+      ALLOCATE (rhook(nel,6,6)) !lei constitutiva (elï¿½stica) por elemento
+      ALLOCATE (indx(n))        ! versï¿½o casca (ainda nï¿½o apagar)
+      ALLOCATE (itip(100,4))    ! versao casca (ainda nï¿½o apagar)
+      ALLOCATE (inct(55,3))     !(versï¿½o casca)
+
+
+      if (allocated(ko)) then
+         deallocate(ko)
+      end if
+      if (allocated(ko1)) then
+         deallocate(ko1)
+      end if
+      if (allocated(IRN)) then
+         deallocate(IRN)
+      end if
+      if (allocated(ICN)) then
+         deallocate(ICN)
+      end if
+      if (allocated(IRNa)) then
+         deallocate(IRNa)
+      end if
+      if (allocated(ICNa)) then
+         deallocate(ICNa)
+      end if
+      if (allocated(IW)) then
+         deallocate(IW)
+      end if
+      if (allocated(IW1)) then
+         deallocate(IW1)
+      end if
+      if (allocated(IKEEP)) then
+         deallocate(IKEEP)
+      end if
+      ALLOCATE (ko(n))          !restriï¿½ï¿½o graus de liberdade / aplicaï¿½ï¿½o de recalque
+      ALLOCATE (ko1(n))         !restriï¿½ï¿½o parcial para controle do impacto
+      ALLOCATE (IRN(nzexp))     !variï¿½vel de controle da coluna para solver
       ALLOCATE (ICN(nzexp))     !idem
       ALLOCATE (IRNa(nzexp))    !controle para a linha
       ALLOCATE (ICNa(nzexp))    !idem
@@ -520,24 +664,88 @@ c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
       iw1=0
       ikeep=0
       
-      ALLOCATE (pl0(nel,6,nnoel)) !posição inicial no elemento
-      ALLOCATE (pl(nel,6,nnoel)) !posição atual no elemento
+      if (allocated(pl0)) then
+         deallocate(pl0)
+      end if
+      if (allocated(pl)) then
+         deallocate(pl)
+      end if
+      ALLOCATE (pl0(nel,6,nnoel)) !posiï¿½ï¿½o inicial no elemento
+      ALLOCATE (pl(nel,6,nnoel)) !posiï¿½ï¿½o atual no elemento
       
-      ALLOCATE (rsl(nel,6,nnoel)) !resíduo dinâmico do método de Newmark
-      ALLOCATE (qsl(nel,6,nnoel)) !resíduo dinâmico do método de Newmark
+      if (allocated(rsl)) then
+         deallocate(rsl)
+      end if
+      if (allocated(qsl)) then
+         deallocate(qsl)
+      end if
+      ALLOCATE (rsl(nel,6,nnoel)) !resï¿½duo dinï¿½mico do mï¿½todo de Newmark
+      ALLOCATE (qsl(nel,6,nnoel)) !resï¿½duo dinï¿½mico do mï¿½todo de Newmark
       
-      ALLOCATE (drl1(nnoel))    !variável para cálculo de derivada de função de forma qualquer em função de variável adimensional
-      ALLOCATE (drl2(nnoel))    !idem casca (não apagar)
+      if (allocated(drl1)) then
+         deallocate(drl1)
+      end if
+      if (allocated(drl2)) then
+         deallocate(drl2)
+      end if
+      if (allocated(rh)) then
+         deallocate(rh)
+      end if
+      if (allocated(rf)) then
+         deallocate(rf)
+      end if
+      if (allocated(rp)) then
+         deallocate(rp)
+      end if
+      if (allocated(drex)) then
+         deallocate(drex)
+      end if
+      if (allocated(drey)) then
+         deallocate(drey)
+      end if
+      if (allocated(drez)) then
+         deallocate(drez)
+      end if
+      if (allocated(drexy)) then
+         deallocate(drexy)
+      end if
+      if (allocated(drexz)) then
+         deallocate(drexz)
+      end if
+      if (allocated(dreyz)) then
+         deallocate(dreyz)
+      end if
+      ALLOCATE (drl1(nnoel))    !variï¿½vel para cï¿½lculo de derivada de funï¿½ï¿½o de forma qualquer em funï¿½ï¿½o de variï¿½vel adimensional
+      ALLOCATE (drl2(nnoel))    !idem casca (nï¿½o apagar)
       ALLOCATE (rh(nel))        !casca
       ALLOCATE (rf(nel))        !casca
       ALLOCATE (rp(nel))        !casca
-      ALLOCATE (drex(6,nnoel))  !derivada da deformação longitudinal em relação aos graus de liberdade
-      ALLOCATE (drey(6,nnoel))  !derivada da deformação longitudinal em relação aos graus de liberdade
+      ALLOCATE (drex(6,nnoel))  !derivada da deformaï¿½ï¿½o longitudinal em relaï¿½ï¿½o aos graus de liberdade
+      ALLOCATE (drey(6,nnoel))  !derivada da deformaï¿½ï¿½o longitudinal em relaï¿½ï¿½o aos graus de liberdade
       ALLOCATE (drez(6,nnoel))  !casca
-      ALLOCATE (drexy(6,nnoel)) !derivada da distorcao em relação aos graus de liberdade
+      ALLOCATE (drexy(6,nnoel)) !derivada da distorcao em relaï¿½ï¿½o aos graus de liberdade
       ALLOCATE (drexz(6,nnoel)) !casca
       ALLOCATE (dreyz(6,nnoel)) !casca
       
+
+      if (allocated(aurxy)) then
+         deallocate(aurxy)
+      end if
+      if (allocated(aur1xy)) then
+         deallocate(aur1xy)
+      end if
+      if (allocated(aurxz)) then
+         deallocate(aurxz)
+      end if
+      if (allocated(aur1xz)) then
+         deallocate(aur1xz)
+      end if
+      if (allocated(auryz)) then
+         deallocate(auryz)
+      end if
+      if (allocated(aur1yz)) then
+         deallocate(aur1yz)
+      end if
       ALLOCATE (aurxy(6,nnoel)) !auxiliares para derivada de tensor de alongamento de Cauchy Green
       ALLOCATE (aur1xy(6,nnoel)) !idem
       ALLOCATE (aurxz(6,nnoel)) !idem
@@ -545,11 +753,26 @@ c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
       ALLOCATE (auryz(6,nnoel)) !idem
       ALLOCATE (aur1yz(6,nnoel)) !idem
       
-      ALLOCATE (p1(3,6,nnoel))  !derivada da mudança de configuração em relação ao parâmetro nodal (direcao x)
-      ALLOCATE (p2(3,6,nnoel))  !derivada da mudança de configuração em relação ao parâmetro nodal (direção y)
+      if (allocated(p1)) then
+         deallocate(p1)
+      end if
+      if (allocated(p2)) then
+         deallocate(p2)
+      end if
+      if (allocated(p3)) then
+         deallocate(p3)
+      end if
+      if (allocated(daf)) then
+         deallocate(daf)
+      end if
+      if (allocated(dch)) then
+         deallocate(dch)
+      end if
+      ALLOCATE (p1(3,6,nnoel))  !derivada da mudanï¿½a de configuraï¿½ï¿½o em relaï¿½ï¿½o ao parï¿½metro nodal (direcao x)
+      ALLOCATE (p2(3,6,nnoel))  !derivada da mudanï¿½a de configuraï¿½ï¿½o em relaï¿½ï¿½o ao parï¿½metro nodal (direï¿½ï¿½o y)
       ALLOCATE (p3(3,6,nnoel))  !casca
       ALLOCATE (daf(3,3,nnoel,6)) !escrita da derivada acima em forma matricial para inicio de montagem da matriz hessiana
-      ALLOCATE (dch(3,3,6,nnoel)) !derivada do alongamento de cauchy green em relação aos parâmetros nodais
+      ALLOCATE (dch(3,3,6,nnoel)) !derivada do alongamento de cauchy green em relaï¿½ï¿½o aos parï¿½metros nodais
       
       
       aurxy=0.
@@ -580,60 +803,205 @@ c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
       derexy=0.
       drexz=0.
       
-      
-      ALLOCATE (rl1(nnoel))     !auxilia na montagem da função de forma de ordem qualquer
+      if (allocated(rl1)) then
+         deallocate(rl1)
+      end if
+      if (allocated(rl2)) then
+         deallocate(rl2)
+      end if
+      if (allocated(xs1)) then
+         deallocate(xs1)
+      end if
+      if (allocated(xs2)) then
+         deallocate(xs2)
+      end if
+      if (allocated(qsi)) then
+         deallocate(qsi)
+      end if
+      if (allocated(qsi3)) then
+         deallocate(qsi3)
+      end if
+      if (allocated(w)) then
+         deallocate(w)
+      end if
+      if (allocated(w3)) then
+         deallocate(w3)
+      end if
+      if (allocated(vint)) then
+         deallocate(vint)
+      end if
+      if (allocated(reacao)) then
+         deallocate(reacao)
+      end if
+      if (allocated(vtl)) then
+         deallocate(vtl)
+      end if
+      ALLOCATE (rl1(nnoel))     !auxilia na montagem da funï¿½ï¿½o de forma de ordem qualquer
       ALLOCATE (rl2(nnoel))     !idem casca
-      ALLOCATE (xs1(nnoel))     !coordenada nodal em variáveis adimensionais para montagem das funções de forma generalizadas
+      ALLOCATE (xs1(nnoel))     !coordenada nodal em variï¿½veis adimensionais para montagem das funï¿½ï¿½es de forma generalizadas
       ALLOCATE (xs2(nnoel))     !idem casca
-      ALLOCATE (qsi(20))        !estádi de gaus no comprimento
+      ALLOCATE (qsi(20))        !estï¿½di de gaus no comprimento
       ALLOCATE (qsi3(20))       !estadio de gauss na altura
       ALLOCATE (w(20))          !peso de gauss no comprimento
       ALLOCATE (w3(20))         !peso de gaus na altura
-      ALLOCATE (vint(n))        !vetor de forças internas e inerciais (global)
-      ALLOCATE (reacao(n))      !vetor de forças reativas (global)
-      ALLOCATE (vtl(nglel,nel)) !vetor de fornças internas e inerciais (local)
+      ALLOCATE (vint(n))        !vetor de forï¿½as internas e inerciais (global)
+      ALLOCATE (reacao(n))      !vetor de forï¿½as reativas (global)
+      ALLOCATE (vtl(nglel,nel)) !vetor de fornï¿½as internas e inerciais (local)
       
-      ALLOCATE (frib(nglel))    !força de inércia base (local)
-      ALLOCATE (fri(nglel))     !força de inércia total (local)
+      if (allocated(frib)) then
+         deallocate(frib)
+      end if
+      if (allocated(fri)) then
+         deallocate(fri)
+      end if
+      ALLOCATE (frib(nglel))    !forï¿½a de inï¿½rcia base (local)
+      ALLOCATE (fri(nglel))     !forï¿½a de inï¿½rcia total (local)
       
-      ALLOCATE (rg(nel))        ! módulo de elasticidade transversal
-      ALLOCATE (dp(n))          !incremento de posição
-      ALLOCATE (df(n))          !incremento de forã externa
-      ALLOCATE (v(n),vlambda(n)) !vetor independente para solução do sistema
+      if (allocated(rg)) then
+         deallocate(rg)
+      end if
+      if (allocated(dp)) then
+         deallocate(dp)
+      end if
+      if (allocated(df)) then
+         deallocate(df)
+      end if
+      if (allocated(v)) then
+         deallocate(v)
+      end if
+      if (allocated(vlambda)) then
+         deallocate(vlambda)
+      end if
+      ALLOCATE (rg(nel))        ! mï¿½dulo de elasticidade transversal
+      ALLOCATE (dp(n))          !incremento de posiï¿½ï¿½o
+      ALLOCATE (df(n))          !incremento de forï¿½ externa
+      ALLOCATE (v(n),vlambda(n)) !vetor independente para soluï¿½ï¿½o do sistema
       
+      if (allocated(vs)) then
+         deallocate(vs)
+      end if
+      if (allocated(vs_aux)) then
+         deallocate(vs_aux)
+      end if
+      if (allocated(vs_ant)) then
+         deallocate(vs_ant)
+      end if
+      if (allocated(as)) then
+         deallocate(as)
+      end if
+      if (allocated(as1)) then
+         deallocate(as1)
+      end if
+      if (allocated(rs)) then
+         deallocate(rs)
+      end if
+      if (allocated(qs)) then
+         deallocate(qs)
+      end if
       
       ALLOCATE (vs(n))          !velocidade nodal global
       ALLOCATE (vs_aux(n))      !velocidade nodal globa
       ALLOCATE (vs_ant(n))      !velocidade nodal global
-      ALLOCATE (as(n))          !aceleração nodal global
-      ALLOCATE (as1(n))         !aceleração nodal global (passado)
-      ALLOCATE (rs(n))          !resíduo newmark (conhecido passado)
-      ALLOCATE (qs(n))          !resíduo newmark (conhecido passado)
+      ALLOCATE (as(n))          !aceleraï¿½ï¿½o nodal global
+      ALLOCATE (as1(n))         !aceleraï¿½ï¿½o nodal global (passado)
+      ALLOCATE (rs(n))          !resï¿½duo newmark (conhecido passado)
+      ALLOCATE (qs(n))          !resï¿½duo newmark (conhecido passado)
       
-      
+      if (allocated(rhs)) then
+         deallocate(rhs)
+      end if
+      if (allocated(h)) then
+         deallocate(h)
+      end if
+      if (allocated(fi)) then
+         deallocate(fi)
+      end if
+      if (allocated(dfi)) then
+         deallocate(dfi)
+      end if
+      if (allocated(f)) then
+         deallocate(f)
+      end if
+      if (allocated(aux)) then
+         deallocate(aux)
+      end if
+      if (allocated(vv)) then
+         deallocate(vv)
+      end if
+      if (allocated(p)) then
+         deallocate(p)
+      end if
+      if (allocated(rkls)) then
+         deallocate(rkls)
+      end if
+      if (allocated(re)) then
+         deallocate(re)
+      end if
       ALLOCATE (rhs(n))         !vetor de carga para solver
-      ALLOCATE (h(26,n))        !conjunto de linhas para matriz hessiana (até 8 nos)
-      ALLOCATE (fi(nnoel))      !funções de forma 
-      ALLOCATE (dfi(nnoel,2))   !derivada das funções de forma
-      ALLOCATE (f(n))           !forças externas (global)
+      ALLOCATE (h(26,n))        !conjunto de linhas para matriz hessiana (atï¿½ 8 nos)
+      ALLOCATE (fi(nnoel))      !funï¿½ï¿½es de forma 
+      ALLOCATE (dfi(nnoel,2))   !derivada das funï¿½ï¿½es de forma
+      ALLOCATE (f(n))           !forï¿½as externas (global)
       ALLOCATE (aux(n))         !auxiliar geral
       ALLOCATE (vv(n))          !auxiliar
-      ALLOCATE (p(n))           !posição atual dos nós
-      ALLOCATE (rkls(nglel,nglel)) !matriz hessiana local (não usada)
+      ALLOCATE (p(n))           !posiï¿½ï¿½o atual dos nï¿½s
+      ALLOCATE (rkls(nglel,nglel)) !matriz hessiana local (nï¿½o usada)
       ALLOCATE (re(nel))        !modulo de elasticidade longitudinal
+      
+      if (allocated(ri)) then
+         deallocate(ri)
+      end if
+      if (allocated(rc)) then
+         deallocate(rc)
+      end if
+      if (allocated(resp)) then
+         deallocate(resp)
+      end if
+      if (allocated(ra)) then
+         deallocate(ra)
+      end if
+      if (allocated(p0)) then
+         deallocate(p0)
+      end if
+      if (allocated(p0i)) then
+         deallocate(p0i)
+      end if
+      if (allocated(rkl)) then
+         deallocate(rkl)
+      end if
+      if (allocated(A)) then
+         deallocate(A)
+      end if
+      if (allocated(Aag)) then
+         deallocate(Aag)
+      end if
+      if (allocated(W27)) then
+         deallocate(W27)
+      end if
+      
       ALLOCATE (ri(nel))        !coeficiente de poisson
       ALLOCATE (rc(nel))        !adicional nlg
       ALLOCATE (resp(nel))      !casca
       ALLOCATE (ra(nel))        !casca
-      ALLOCATE (p0(n))          !posição inicial dos nós
-      ALLOCATE (p0i(n))         !posição passada para imposição de impacto geométrico
+      ALLOCATE (p0(n))          !posiï¿½ï¿½o inicial dos nï¿½s
+      ALLOCATE (p0i(n))         !posiï¿½ï¿½o passada para imposiï¿½ï¿½o de impacto geomï¿½trico
       ALLOCATE (rkl(nglel,nglel,nel)) !Hessiana local usada
       ALLOCATE (A(nzexp))       !controle solver
       ALLOCATE (Aag(nzexp))     !idem
       ALLOCATE (W27(nzexp1))    !idem
-      ALLOCATE (valor(nel,nnoel)) !preparação de pos processamento
-      ALLOCATE (fno(n))         !preparação de pós processamento
-      ALLOCATE (EsfResist(3,nel)) !esforços resistentes (NRd, VRd, MRd)
+
+      if (allocated(valor)) then
+         deallocate(valor)
+      end if
+      if (allocated(fno)) then
+         deallocate(fno)
+      end if
+      if (allocated(EsfResist)) then
+         deallocate(EsfResist)
+      end if
+      ALLOCATE (valor(nel,nnoel)) !preparaï¿½ï¿½o de pos processamento
+      ALLOCATE (fno(n))         !preparaï¿½ï¿½o de pï¿½s processamento
+      ALLOCATE (EsfResist(3,nel)) !esforï¿½os resistentes (NRd, VRd, MRd)
       valor=0.
       fno=0.
       
@@ -735,7 +1103,7 @@ c     nnoel=30 !no máximo 30 nos por elemento apesar do programa poder ser geral
 
 
 
-c     coordenadas dos nos não leio giro
+c     coordenadas dos nos nï¿½o leio giro
 c     no,x,y,z
       read (3,*)
       read (3,*)	  
@@ -750,10 +1118,10 @@ c     no,x,y,z
 
  10	  format(1x,i7,3(1x,f27.10))
 
-c     Propriedades físicas dos elementos
+c     Propriedades fï¿½sicas dos elementos
 c     Elemento,e,mi,altura,area,ybarra,momin,ro,cm
-c     Ainda não estamos entrando com as fibras no elemento diretamente pelas
-c     limitações dos usuários atuais
+c     Ainda nï¿½o estamos entrando com as fibras no elemento diretamente pelas
+c     limitaï¿½ï¿½es dos usuï¿½rios atuais
       read (3,*)
       read (3,*)	  
 
@@ -763,11 +1131,11 @@ c     limitações dos usuários atuais
          read(3,*) k,re(k),ri(k),resp(k),ra(k),yb(k),rib(k),ro(k),ram(k)
          write(5,12) k,re(k),ri(k),resp(k),ra(k),yb(k),rib(k),ro(k)
      $        ,ram(k)
-         rg(k)=re(k)/(1.+ri(k))/2. ! Módulo de elasticidade transversal
+         rg(k)=re(k)/(1.+ri(k))/2. ! Mï¿½dulo de elasticidade transversal
       enddo
       READ(3,*)
       READ(3,*)
-      write(5,*) 'esforço resistente do elemento'
+      write(5,*) 'esforï¿½o resistente do elemento'
       write(5,*) 'elemento, NRd, VRd, MRd'
 
       do j=1,nel
@@ -776,10 +1144,10 @@ c     limitações dos usuários atuais
       enddo
 
 
-c     Esta subrotina reduz o número de fibras a três apensa,
-c     não tirando a generalidade do programa, 
-c     mas apenas o reduzindo às necessidades
-c     atuais dos usuários do SET-EESC-USP 
+c     Esta subrotina reduz o nï¿½mero de fibras a trï¿½s apensa,
+c     nï¿½o tirando a generalidade do programa, 
+c     mas apenas o reduzindo ï¿½s necessidades
+c     atuais dos usuï¿½rios do SET-EESC-USP 
       call secoes 
 
 c     ************************************************
@@ -800,16 +1168,16 @@ c      call defineleiEPT
       enddo
 
       
-      read(3,*)                 ! Impacto sem atrito, região quadrada
+      read(3,*)                 ! Impacto sem atrito, regiï¿½o quadrada
       read(3,*)                 ! Entrar com coordenadas da caixa de impacto e coeficiente de atrito (0-1)
       read(3,*)                 ! xp,yp,xc,yc,rimp
       read(3,*)  xp,yp,xc,yc,rimp
       write(5,*)'coord. da caixa de impacto e coef. de atrito'
       write(5,13) xp,yp,xc,yc,rimp
 
-c     Chamada da subrotina que prepara as grandezas iniciais lidas para os náo
+c     Chamada da subrotina que prepara as grandezas iniciais lidas para os nï¿½o
 c     em grandezas nos elementos finitos
-c     Caractcterística do método posicional
+c     Caractcterï¿½stica do mï¿½todo posicional
       call geometriainicial
 
 
@@ -832,7 +1200,7 @@ c      *******************************************
       USE BLOCLAGATBIG
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C     include 'bloclagatbig.for'
-c     Cálculo da posição dos pontos nodais no espaço de Gauss
+c     Cï¿½lculo da posiï¿½ï¿½o dos pontos nodais no espaï¿½o de Gauss
 c     para elemento de qualquer ordem
 
       do is=1,notl(j)
@@ -848,7 +1216,7 @@ c     para elemento de qualquer ordem
 c      *******************************************
 c      Etrada de dados que podem mudar com o tempo
 c      Na realidade para fases de carga
-c      que definem intervalos de tempo cujas condições de contorno não se alteram
+c      que definem intervalos de tempo cujas condiï¿½ï¿½es de contorno nï¿½o se alteram
 c      *******************************************   
       subroutine dadosdin
       USE BIG_STUFF
@@ -866,11 +1234,11 @@ C     include 'bloclagatbig.for'
 	read(3,*) nelcar,nelnco,ntem
       write(5,13)nelcar,nelnco,ntem
 
-c     Novidade (parâmetros de Newmark estabelecidos pelo usuário
-c     Estruturas isoestáticas e hiperestáticas Beta=0.25, Gama=0.5
-c     Máquinas Beta=0.33, Gama=0.55
+c     Novidade (parï¿½metros de Newmark estabelecidos pelo usuï¿½rio
+c     Estruturas isoestï¿½ticas e hiperestï¿½ticas Beta=0.25, Gama=0.5
+c     Mï¿½quinas Beta=0.33, Gama=0.55
 c     Impacto Beta=0.5, Gama=1.5 
-c     Problemas estáticos Beta=1.0, Gama=1.0 
+c     Problemas estï¿½ticos Beta=1.0, Gama=1.0 
 c     Leitura dos parametros do integrador temporal de newmark
 c     beta, gama, dt (intervalo de tempo)
       read(3,*)
@@ -940,7 +1308,7 @@ c     calculo para os outros nos (comportamento linear do caregamento)
        enddo
       enddo
 
-c     valor das cargas distribuidas não conservativas nas extremidades
+c     valor das cargas distribuidas nï¿½o conservativas nas extremidades
 c     calculo para os outros nos (comportamento linear do caregamento)
       read(3,*) !cargas nas extremidades
 	read(3,*) ! elemeto, qn no inicial, qn no final, qt no inicial, qt no final
@@ -959,10 +1327,10 @@ c     calculo para os outros nos (comportamento linear do caregamento)
       enddo
 
 c     valor das temperaturas constante ao longo do elemento
-      read(3,*) !temperatura e coeficiente de dilatação térmica
+      read(3,*) !temperatura e coeficiente de dilatacao termica
 	read(3,*) ! elemeto, temp.acima, temp. abaixo, dil. termica
       write(5,*) 'temperatura'
-      write(5,*) 'elemeto,  temp.acima, temp. abaixo, dilatação térmica'
+      write(5,*) 'elemeto,  temp.acima, temp. abaixo, dilatacao termica'
 
       do j=1,ntem
        read(3,*) k,dtemc(k),dtemb(k),calt(k)
@@ -970,7 +1338,7 @@ c     valor das temperaturas constante ao longo do elemento
       enddo
 
 c     Colocar no carregamento nodal a carga distribuida conservativa
-c     A não conservativa deve ser feita para cada passo de tempo e não para cada fase de carga
+c     A nï¿½o conservativa deve ser feita para cada passo de tempo e nï¿½o para cada fase de carga
       call alocadistr
 
 c     comportamento temporal da carga
@@ -990,10 +1358,10 @@ c     comportamento temporal da carga
 
 c      
 c      *******************************************
-c      Nesta subrotina a posição inicial nodal é atribuida às variáveis
+c      Nesta subrotina a posiï¿½ï¿½o inicial nodal ï¿½ atribuida ï¿½s variï¿½veis
 c      locais, no elemento
-c      calculamos os cossenos diretores iniciais para se tornarem as posições angulares
-c      iniciais nos elementos (estas são diferentes para cada elemento, mesmo conectados)
+c      calculamos os cossenos diretores iniciais para se tornarem as posiï¿½ï¿½es angulares
+c      iniciais nos elementos (estas sï¿½o diferentes para cada elemento, mesmo conectados)
 c      *******************************************   
       subroutine geometriainicial
       USE BIG_STUFF	 
@@ -1001,13 +1369,13 @@ c      *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C      include 'bloclagatbig.for'
       
-!     A posição angular para cada elemento é calculada
-!     A posição de translação é a mesma do elemento global
+!     A posiï¿½ï¿½o angular para cada elemento ï¿½ calculada
+!     A posiï¿½ï¿½o de translaï¿½ï¿½o ï¿½ a mesma do elemento global
       do j=1,nel
          do k=1,notl(j)
             nog=ic(j,k)
-            do igl=1,2          !igl é o grau de liberdade x,y
-               pl0(j,igl,k)=p0(glgl(nog,igl)) !posição inicial no elemento
+            do igl=1,2          !igl ï¿½ o grau de liberdade x,y
+               pl0(j,igl,k)=p0(glgl(nog,igl)) !posiï¿½ï¿½o inicial no elemento
             enddo
          enddo 
          
@@ -1017,9 +1385,9 @@ c     calcular a derivada em cada ponto do elemento
             xsi1=(2.*is1-(1.+notl(j)))/(notl(j)-1.)
             
 c     ***********************
-c     variaveis necessárias para funcao de forma e derivadas de ordem qualquer
+c     variaveis necessï¿½rias para funcao de forma e derivadas de ordem qualquer
             call suportefuncoesdeforma !coordenadas de gaus para os pontos nodais
-            call formaederi0    !Novidade (funções de forma e derivadas para qualquer ordem de elemento
+            call formaederi0    !Novidade (funï¿½ï¿½es de forma e derivadas para qualquer ordem de elemento
             dpl=0.
             do k=1,notl(j)
                dpl(1,1)=dpl(1,1)+dfi(k,1)*pl0(j,1,k)
@@ -1033,14 +1401,14 @@ c     Calculando a direcao ortogonal
             vn1=vn1/rmod
             vn2=vn2/rmod
             
-c     Ângulo
+c     ï¿½ngulo
             alfrad=datan2(vn2,vn1) 
             
-c     Acerto do ângulo para situações críticas
+c     Acerto do ï¿½ngulo para situaï¿½ï¿½es crï¿½ticas
             if (dabs(alfrad+pi).lt.1.0d-8) alfrad=pi
-            pl0(j,3,kk)=alfrad  !atribuindo posição angular
+            pl0(j,3,kk)=alfrad  !atribuindo posiï¿½ï¿½o angular
          enddo
-c     Outras situações críticas
+c     Outras situaï¿½ï¿½es crï¿½ticas
          do kk =2,notl(j)
             if((pl0(j,3,kk)-pl0(j,3,1)).gt.pi) 
      #pl0(j,3,kk)=pl0(j,3,kk)-2*pi
@@ -1050,10 +1418,10 @@ c     Outras situações críticas
       enddo
       
 c     Novidade
-c     Caso a posição no início de um proceso (uauslamente dinâmico)
-c     seja fruto de um equilíbrio de carregamento estático
-c     permanente, este já foi processado anteriormente e o arquivo
-c     contendo estas informações é lido na posição atual
+c     Caso a posiï¿½ï¿½o no inï¿½cio de um proceso (uauslamente dinï¿½mico)
+c     seja fruto de um equilï¿½brio de carregamento estï¿½tico
+c     permanente, este jï¿½ foi processado anteriormente e o arquivo
+c     contendo estas informaï¿½ï¿½es ï¿½ lido na posiï¿½ï¿½o atual
       if (iposic.eq.1) then 
          read(51,*)
          read(51,*)	  
@@ -1066,7 +1434,7 @@ c     no,x,y,z
             write(5,10) k,p(glgl(k,1)),p(glgl(k,2)),p(glgl(k,3))
          enddo
       else
-         p=p0                   ! aqui a primeira tentativa de solução é a posição inicial 
+         p=p0                   ! aqui a primeira tentativa de soluï¿½ï¿½o ï¿½ a posiï¿½ï¿½o inicial 
       endif
       
  10   format(1x,i7,3(1x,f27.10))
@@ -1075,10 +1443,10 @@ c     no,x,y,z
 
 c     *******************************************
 c     Novidade
-c     Nesta subrotina, após uma solução de cada iteração
-c     as posições locais são atualizadas
-c     nos elementos para cáculo de nova
-c     força interna e matriz Hessiana
+c     Nesta subrotina, apï¿½s uma soluï¿½ï¿½o de cada iteraï¿½ï¿½o
+c     as posiï¿½ï¿½es locais sï¿½o atualizadas
+c     nos elementos para cï¿½culo de nova
+c     forï¿½a interna e matriz Hessiana
 c      *******************************************   
       subroutine geometriaatual
       USE BIG_STUFF
@@ -1088,15 +1456,15 @@ C      include 'bloclagatbig.for'
       
       do k=1,notl(j)
          nog=ic(j,k)
-         do igl=1,2             !igl é o grau de liberdade x,y
-            pl(j,igl,k)=p(glgl(nog,igl)) !posição atual no elemento
+         do igl=1,2             !igl ï¿½ o grau de liberdade x,y
+            pl(j,igl,k)=p(glgl(nog,igl)) !posiï¿½ï¿½o atual no elemento
             rsl(j,igl,k)=rs(glgl(nog,igl)) !correcao dinamica atual no elemento
             qsl(j,igl,k)=qs(glgl(nog,igl)) !correcao dinamica no elemento
          enddo
       enddo
       
-c     Laço para giro, devemos somar os giros nas posições angulares iniciais 
-c     para calcularmos as deformações nos elementos
+c     Laï¿½o para giro, devemos somar os giros nas posiï¿½ï¿½es angulares iniciais 
+c     para calcularmos as deformaï¿½ï¿½es nos elementos
       do k=1,notl(j)
          nog=ic(j,k)
          pl(j,3,k)=pl0(j,3,k)+p(glgl(nog,iglv(nog,j)))
@@ -1108,9 +1476,9 @@ c     para calcularmos as deformações nos elementos
 c      
 c     *******************************************
 c     Subrotina para calcular a matriz de massa para todos os elementos
-c     a matriz de massa é uma grandeza lagrangeana e não muda
-c     (conservação de masss) é calculada uma s´vez em todo o processo
-c     não incluímos inércia de rotação pois as barras são esbeltas
+c     a matriz de massa ï¿½ uma grandeza lagrangeana e nï¿½o muda
+c     (conservaï¿½ï¿½o de masss) ï¿½ calculada uma sï¿½vez em todo o processo
+c     nï¿½o incluï¿½mos inï¿½rcia de rotaï¿½ï¿½o pois as barras sï¿½o esbeltas
 c     *******************************************   
       subroutine matrizmassa
       USE BIG_STUFF
@@ -1119,7 +1487,7 @@ c     *******************************************
 C     include 'bloclagatbig.for'
 
       do j=1,nel
-         call massa             !cálculo efetivo para cada elemento
+         call massa             !cï¿½lculo efetivo para cada elemento
       enddo
 
       return
@@ -1127,8 +1495,8 @@ C     include 'bloclagatbig.for'
 c      
 c     *******************************************
 c     Subrotina para calcular a matriz hessiana
-c     Forças internas inercias de (algoritmo de Newmark)
-c     Forças internas elastoplásticas
+c     Forï¿½as internas inercias de (algoritmo de Newmark)
+c     Forï¿½as internas elastoplï¿½sticas
 c     *******************************************   
       subroutine matriz
       USE BIG_STUFF
@@ -1141,7 +1509,7 @@ C     include 'bloclagatbig.for'
       vv=0.                     ! vetor independente
       vint=0.                   !vetor de forca interna
       
-c     nel é o numero de elementos
+c     nel ï¿½ o numero de elementos
       do j=1,nel
          call elemento
       enddo
@@ -1159,16 +1527,16 @@ c$$$  indp=ipar_nduplo(inosd,1)
 c$$$  if(ib.lt.indp)ibbaux=ib+ibb
 c$$$  enddo
          h=0.
-         do jj=1,kn(ib)         !jj vai até o número de elementos que o nó participa
-            j=im(ib,jj)         ! j é o numero de cada elemento (incidência inversa)
-            call montalinha(ib,jj) !montando linhas do nó ib
+         do jj=1,kn(ib)         !jj vai atï¿½ o nï¿½mero de elementos que o nï¿½ participa
+            j=im(ib,jj)         ! j ï¿½ o numero de cada elemento (incidï¿½ncia inversa)
+            call montalinha(ib,jj) !montando linhas do nï¿½ ib
          enddo
          
          do i=1,ngl(ib)
             ii=(ib-1)*3+i
             ii=glgl(ib,i)
             do jj=ii,n-3*nnosdp
-               if (dabs(h(i,jj)).gt.1.d-16) then !no vetor-matriz só entra valores não nulos
+               if (dabs(h(i,jj)).gt.1.d-16) then !no vetor-matriz sï¿½ entra valores nï¿½o nulos
                   kkk=kkk+1
                   irn(kkk)=ii
                   icn(kkk)=jj
@@ -1281,7 +1649,7 @@ c$$$
       enddo
       
       nz=kkk                    !controle de tamanho do vetor matriz para ma27
-      n27=n                     !número de graus de liberdade informado ao ma27
+      n27=n                     !nï¿½mero de graus de liberdade informado ao ma27
       
       return
       end
@@ -1289,7 +1657,7 @@ c$$$
 c     
 c     *******************************************
 c     subrotina que cria a matriz Hessiana (rigidez)
-c     e forças internas para cada elemento finito
+c     e forï¿½as internas para cada elemento finito
 c     *******************************************   
       subroutine elemento
       USE BIG_STUFF      
@@ -1297,15 +1665,15 @@ c     *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C     include 'bloclagatbig.for'
 
-c     aqui eu colo amortecimento só no inicio
-      call leielast             !definição da lei constitutiva elástica para cada elemento
+c     aqui eu colo amortecimento sï¿½ no inicio
+      call leielast             !definiï¿½ï¿½o da lei constitutiva elï¿½stica para cada elemento
       
-      fri=0.                    !força residual inercial
-      frib=0.                   !força residual de amortecimento
-      ue=0.                     !energia de deformação (curiosidade)
+      fri=0.                    !forï¿½a residual inercial
+      frib=0.                   !forï¿½a residual de amortecimento
+      ue=0.                     !energia de deformaï¿½ï¿½o (curiosidade)
       
       ng=notl(j)
-c     atualizar configuração nos elementos
+c     atualizar configuraï¿½ï¿½o nos elementos
       call geometriaatual 
       
 c     residuo inercial
@@ -1325,34 +1693,34 @@ c     residuo inercial
             fri(i1)=fri(i1)+rmg(i1,j1,j)*frib(j1)
          enddo
       enddo
-c     Fim do resíduo inercial
+c     Fim do resï¿½duo inercial
       
-c     Aquisição das coordenadas e pesos de Gauss
+c     Aquisiï¿½ï¿½o das coordenadas e pesos de Gauss
       call gauss(ng,qsi,w)
       call gauss(ng3,qsi3,w3)
 c     call dgqrul(ng,1,0.d0,0.d0,0,qsi,qsi,w)
 c     call dgqrul(ng3,1,0.d0,0.d0,0,qsi3,qsi3,w3)
       
-      do ig1=1,ng               !Laço nos pontos de Gauss ao longo do elemento
+      do ig1=1,ng               !Laï¿½o nos pontos de Gauss ao longo do elemento
          xsi1=qsi(ig1)
 c     **********************************************************************
 c     Novidade
-c     variaveis necessárias para função de forma e derivadas de ordem qualquer
+c     variaveis necessï¿½rias para funï¿½ï¿½o de forma e derivadas de ordem qualquer
          call suportefuncoesdeforma
          call formaederi0      
          
-         do igf=1,3             !Laço para fibras da seção transversal (novidade)
-            do ig3=1,ng3        !Laço para Pontos de Gauss em cada fibra
-               up=0.            !Direção local da fibra na configuração inicial (ao longo do elemento)
-               vp=0.            !Direção local da fibra na configuração inicial (transversal ao elemento)
+         do igf=1,3             !Laï¿½o para fibras da seï¿½ï¿½o transversal (novidade)
+            do ig3=1,ng3        !Laï¿½o para Pontos de Gauss em cada fibra
+               up=0.            !Direï¿½ï¿½o local da fibra na configuraï¿½ï¿½o inicial (ao longo do elemento)
+               vp=0.            !Direï¿½ï¿½o local da fibra na configuraï¿½ï¿½o inicial (transversal ao elemento)
                wp=0.            !Casca
-c     Para a terceira direção a função de forma é o próprio qsi
+c     Para a terceira direï¿½ï¿½o a funï¿½ï¿½o de forma ï¿½ o prï¿½prio qsi
                xsi3=qsi3(ig3)   !Ponto de Gauss
                
 c     Novidade (conceito posicional)
 c     Chamada da subrotina que calcula o gradiente da 
-c     Mudança de configuração fictícia, do espaço adimensional de Gauss
-c     Para a configuração inicial do corpo
+c     Mudanï¿½a de configuraï¿½ï¿½o fictï¿½cia, do espaï¿½o adimensional de Gauss
+c     Para a configuraï¿½ï¿½o inicial do corpo
                call calc_A0     !matriz gradiente do adimensional para inicial      
                up(1)=cos(salfa-pi/2.)
                up(2)=sin(salfa-pi/2.)
@@ -1361,29 +1729,29 @@ c     Para a configuração inicial do corpo
                
 c     Novidade (conceito posicional)
 c     Chamada da subrotina que calcula o gradiente da 
-c     Mudança de configuração fictícia, do espaço adimensional de Gauss
-c     Para a configuração atual do corpo
+c     Mudanï¿½a de configuraï¿½ï¿½o fictï¿½cia, do espaï¿½o adimensional de Gauss
+c     Para a configuraï¿½ï¿½o atual do corpo
                call calc_Af     !gradiente da transformacao total (dps)
                call cauchy      !Tensor de alongamento de Cauchy Green
                acp=0.
                aval=0.
                
-c     Opção de trabalho em direção principal do alongamento de cauchy-green
+c     Opï¿½ï¿½o de trabalho em direï¿½ï¿½o principal do alongamento de cauchy-green
 c     call devcsf(2,ch,2,aval,acp,2)
 c     up(1)=acp(1,1)
 c     up(2)=acp(2,1)
 c     vp(1)=acp(1,2)
 c     vp(2)=acp(2,2)
                
-c     up(1)=1. !opção de coordenadas globais
+c     up(1)=1. !opï¿½ï¿½o de coordenadas globais
 c     vp(2)=1.
                
 c     Novidade
 c     A partir do tensor de alongamento de cauchy Green calculam-se
-c     as deformações de engenharia
-c     Os softwreas tradicionais não usam medidas de engenharia
+c     as deformaï¿½ï¿½es de engenharia
+c     Os softwreas tradicionais nï¿½o usam medidas de engenharia
                call deformacoes !deformacoes longitudinais, distorcoes e alongamentos
-               call energia     !cálculo da energia de deformação, opcional
+               call energia     !cï¿½lculo da energia de deformaï¿½ï¿½o, opcional
                drex=0.
                drey=0.
                drez=0.
@@ -1398,12 +1766,12 @@ c     Os softwreas tradicionais não usam medidas de engenharia
                
                do li =1,notl(j) 
                   call derivadps !derivadas dos dps 
-c     Derivada do gradiente da mudança de configuração
-c     fictícia (Gauss-atual) A1 em relação aos graus de liberdade
-                  call dcauchy  !derivada do tensor decauchy para os gl do nó li
-                  call deridef  !derivadas das deformações em relação ao gl local para
+c     Derivada do gradiente da mudanï¿½a de configuraï¿½ï¿½o
+c     fictï¿½cia (Gauss-atual) A1 em relaï¿½ï¿½o aos graus de liberdade
+                  call dcauchy  !derivada do tensor decauchy para os gl do nï¿½ li
+                  call deridef  !derivadas das deformaï¿½ï¿½es em relaï¿½ï¿½o ao gl local para
                   call derivener !vetor de forcas internas ou derivada da energia de
-c     deformação em relação aos parâmetros nodais gls
+c     deformaï¿½ï¿½o em relaï¿½ï¿½o aos parï¿½metros nodais gls
                enddo
                
                do li=1,notl(j)
@@ -1415,18 +1783,18 @@ c     deformação em relação aos parâmetros nodais gls
                      d2rey=0.
                      d2rexy=0.
                      d2ch=0.
-                     call d2cauchy !Segunda derivada do tensor de Cauchy-Green em relação aos gls
-                     call deri2def !Segunda derivada da deformação em relação aos gls
-c     Determinação da matriz hessiana
-c     ou segunda derivada da energia de deformação em relação aos parâmetros nodais, gls
+                     call d2cauchy !Segunda derivada do tensor de Cauchy-Green em relaï¿½ï¿½o aos gls
+                     call deri2def !Segunda derivada da deformaï¿½ï¿½o em relaï¿½ï¿½o aos gls
+c     Determinaï¿½ï¿½o da matriz hessiana
+c     ou segunda derivada da energia de deformaï¿½ï¿½o em relaï¿½ï¿½o aos parï¿½metros nodais, gls
                      call segderene
                   enddo
                enddo
             enddo               !ng1
-         enddo                  !igf=1,3 são as três faixas
+         enddo                  !igf=1,3 sï¿½o as trï¿½s faixas
       enddo                     !ng
       
-      if ((rgn.ne.1.).or.(rgn.ne.1.).or.(rgn.ne.1.)) then !dinâmico
+      if ((rgn.ne.1.).or.(rgn.ne.1.).or.(rgn.ne.1.)) then !dinï¿½mico
          do i1=1,3*notl(j)
             vtl(i1,j)=vtl(i1,j)+fri(i1)
             do j1=1,3*notl(j)
@@ -1435,7 +1803,7 @@ c     ou segunda derivada da energia de deformação em relação aos parâmetros nod
             enddo
          enddo
       else
-c     estático
+c     estï¿½tico
       endif
       
       return
@@ -1443,12 +1811,12 @@ c     estático
       
 c     *******************************************
 c     Subrotina que monta a matriz de rigidez global
-c     monta-se apenas o número de linhas referente aos graus
-c     de liberdade de cada nó utilizando a incidência inversa
-c     pega-se este conjunto e leva-se os valores não nulos
-c     para a Matriz-Vetor que será utilizada no solver MA27
-c     Novidade (sistema de montagem muito econômico e rápido, 
-c     além de simples, tem´po de processamento similar
+c     monta-se apenas o nï¿½mero de linhas referente aos graus
+c     de liberdade de cada nï¿½ utilizando a incidï¿½ncia inversa
+c     pega-se este conjunto e leva-se os valores nï¿½o nulos
+c     para a Matriz-Vetor que serï¿½ utilizada no solver MA27
+c     Novidade (sistema de montagem muito econï¿½mico e rï¿½pido, 
+c     alï¿½m de simples, temï¿½po de processamento similar
 c     ao dos comerciais internacionais)
 c     *******************************************   
       subroutine montalinha(ib,j1)
@@ -1458,9 +1826,9 @@ c     *******************************************
 C     include 'bloclagatbig.for'
       
       nol=ib                    !no global
-c     j1 é o jj fora da  subrotina, número local do elemento na incidência inversa
-      do ie=1,notl(j)           !número de nó do elemento j
-         if (ic(j,ie).eq.nol) then !identifica nó local do elemento a ser considerado
+c     j1 ï¿½ o jj fora da  subrotina, nï¿½mero local do elemento na incidï¿½ncia inversa
+      do ie=1,notl(j)           !nï¿½mero de nï¿½ do elemento j
+         if (ic(j,ie).eq.nol) then !identifica nï¿½ local do elemento a ser considerado
             i=ie
             goto 100
          else 
@@ -1468,7 +1836,7 @@ c     j1 é o jj fora da  subrotina, número local do elemento na incidência inver
       enddo
  100  continue
       
-c     o i é o nó local do elemnto j global, relacionado ao no global nol e elemento loca jj
+c     o i ï¿½ o nï¿½ local do elemnto j global, relacionado ao no global nol e elemento loca jj
       nol=ic(j,i)
       nl0=(nol-1)*3
       
@@ -1476,7 +1844,7 @@ c     montagen do vetor de forcas internas
       do k=1,3
          ill=(i-1)*3+k
          ilg=glgl(ib,k)         !ib e nol sao iguais
-         if(k.eq.3) ilg=glgl(ib,iglv(ib,j)) !rótulas
+         if(k.eq.3) ilg=glgl(ib,iglv(ib,j)) !rï¿½tulas
          vint(ilg)=vint(ilg)+vtl(ill,j) !vtl forca interna
       enddo
       
@@ -1484,7 +1852,7 @@ c     montagem da hessiana
       do k=1,3
          ill=(i-1)*3+k
          ilg=glgl(ib,k)
-         if(k.eq.3) ilg=glgl(ib,iglv(ib,j)) !rótulas
+         if(k.eq.3) ilg=glgl(ib,iglv(ib,j)) !rï¿½tulas
          if(ko(ilg).eq.0) then
             do jj=1,notl(j)
                noj=ic(j,jj)
@@ -1493,16 +1861,16 @@ c     montagem da hessiana
                   icl=(jj-1)*3+kj
 c	    icg=nc0+kj
                   icg=glgl(noj,kj)
-                  if(kj.eq.3) icg=glgl(noj,iglv(noj,j)) !rótulas
+                  if(kj.eq.3) icg=glgl(noj,iglv(noj,j)) !rï¿½tulas
                   if (ko(icg).eq.0) then
                      kd=k
-                     if(k.eq.3) kd=iglv(ib,j) !rótula
-                     h(kd,icg)=rkl(ill,icl,j)+h(kd,icg) !k é sempre de 1 ate o numero de gl(3)
+                     if(k.eq.3) kd=iglv(ib,j) !rï¿½tula
+                     h(kd,icg)=rkl(ill,icl,j)+h(kd,icg) !k ï¿½ sempre de 1 ate o numero de gl(3)
                   else
                   endif
                enddo
             enddo
-c     o conjunto de linhas está montado
+c     o conjunto de linhas estï¿½ montado
          else 
          endif
       enddo
@@ -1513,8 +1881,8 @@ c     o conjunto de linhas está montado
 
 c    ************************************************
 c    subrotina que calcula a matriz gradiente da
-c    mudança de configuração fictícia do epaço adimensional de
-c    Gauss para a configuração inicial (a0)
+c    mudanï¿½a de configuraï¿½ï¿½o fictï¿½cia do epaï¿½o adimensional de
+c    Gauss para a configuraï¿½ï¿½o inicial (a0)
 c    ****************************************************
       Subroutine calc_A0
       USE BIG_STUFF
@@ -1522,51 +1890,51 @@ c    ****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C     include 'bloclagatbig.for'
 
-c     a1=resp(j)/2. !altura de uma seção inteira (abolido)
+c     a1=resp(j)/2. !altura de uma seï¿½ï¿½o inteira (abolido)
       a1=hb(j,igf)/2.           !altura de uma fibra
 
-      alfa=0.                   !ângulo em um ponto de gauss
-      dalfa=0.                  !derivada do mesmo em relação à coordenada xsi
-c     eta é o xsi3       
-      pxsi=0.                   !derivada da posição em relação à xsi (longitudinal)
-      peta=0.                   !derivada da posição em relação à eta (transversal)
+      alfa=0.                   !ï¿½ngulo em um ponto de gauss
+      dalfa=0.                  !derivada do mesmo em relaï¿½ï¿½o ï¿½ coordenada xsi
+c     eta ï¿½ o xsi3       
+      pxsi=0.                   !derivada da posiï¿½ï¿½o em relaï¿½ï¿½o ï¿½ xsi (longitudinal)
+      peta=0.                   !derivada da posiï¿½ï¿½o em relaï¿½ï¿½o ï¿½ eta (transversal)
 
       do il=1,notl(j)
          alfa=alfa+fi(il)*pl0(j,3,il)
          dalfa=dalfa+dfi(il,1)*pl0(j,3,il)
       enddo
 
-      salfa=alfa                !ângulo que é usado para calcular a direção local desejada
+      salfa=alfa                !ï¿½ngulo que ï¿½ usado para calcular a direï¿½ï¿½o local desejada
       do il=1,notl(j)
-         pxsi(1)=pxsi(1)+dfi(il,1)*pl0(j,1,il) !(1) posição x (na linha referência)
-         pxsi(2)=pxsi(2)+dfi(il,1)*pl0(j,2,il) !(2) posição y (na linha referência)
+         pxsi(1)=pxsi(1)+dfi(il,1)*pl0(j,1,il) !(1) posiï¿½ï¿½o x (na linha referï¿½ncia)
+         pxsi(2)=pxsi(2)+dfi(il,1)*pl0(j,2,il) !(2) posiï¿½ï¿½o y (na linha referï¿½ncia)
       enddo
 
-      pxsi(1)=pxsi(1)-sin(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posição efetiva
-      pxsi(2)=pxsi(2)+cos(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posição efetiva
+      pxsi(1)=pxsi(1)-sin(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posiï¿½ï¿½o efetiva
+      pxsi(2)=pxsi(2)+cos(alfa)*dalfa*(a1*xsi3+fd(j,igf)) !na posiï¿½ï¿½o efetiva
 
-      peta(1)=cos(alfa)*a1      !derivada em relação a xsi3
-      peta(2)=sin(alfa)*a1      !derivada em relação a xsi3
+      peta(1)=cos(alfa)*a1      !derivada em relaï¿½ï¿½o a xsi3
+      peta(2)=sin(alfa)*a1      !derivada em relaï¿½ï¿½o a xsi3
 
-c     matriz gradiente para configuração inicial
+c     matriz gradiente para configuraï¿½ï¿½o inicial
       a0(1,1)=pxsi(1)
       a0(1,2)=peta(1)
       a0(2,1)=pxsi(2)
       a0(2,2)=peta(2)
 
-      rjac0=a0(1,1)*a0(2,2)-a0(1,2)*a0(2,1) !jacobiano para integração
-      rjac1=dsqrt(pxsi(1)**2+pxsi(2)**2) !para usar no cáculo da forca distribuida
+      rjac0=a0(1,1)*a0(2,2)-a0(1,2)*a0(2,1) !jacobiano para integraï¿½ï¿½o
+      rjac1=dsqrt(pxsi(1)**2+pxsi(2)**2) !para usar no cï¿½culo da forca distribuida
 
       rjac0=rjac0*brd(j,igf)    !no volume total
-      rjac2=a1*brd(j,igf)       !para usar no cálculo dos esforços solicitante (na área)
+      rjac2=a1*brd(j,igf)       !para usar no cï¿½lculo dos esforï¿½os solicitante (na ï¿½rea)
       return
       end
 
 
 c    ************************************************
 c    subrotina que calcula a matriz gradiente da
-c    mudança de configuração fictícia do epaço adimensional de
-c    Gauss para a configuração final (af)
+c    mudanï¿½a de configuraï¿½ï¿½o fictï¿½cia do epaï¿½o adimensional de
+c    Gauss para a configuraï¿½ï¿½o final (af)
 c    ****************************************************
       Subroutine calc_Af
       USE BIG_STUFF
@@ -1577,14 +1945,14 @@ C      include 'bloclagatbig.for'
 c     a1=resp(j)/2.
       a1=hb(j,igf)/2.           !considera-se a espessura constante
       
-c     repete-se o cálculo de a0 trocando pl0 por pl
+c     repete-se o cï¿½lculo de a0 trocando pl0 por pl
       alfa=0.
       dalfa=0.
       
       pxsi=0.
       peta=0.
       
-c     eta é o xsi3       
+c     eta ï¿½ o xsi3       
       
       do il=1,notl(j)
          alfa=alfa+fi(il)*pl(j,3,il)
@@ -1602,7 +1970,7 @@ c     eta é o xsi3
       peta(1)=cos(alfa)*a1
       peta(2)=sin(alfa)*a1
       
-c     Matriz gradiente da mudança de configuração (gauss - final)
+c     Matriz gradiente da mudanï¿½a de configuraï¿½ï¿½o (gauss - final)
       af(1,1)=pxsi(1)
       af(1,2)=peta(1)
       af(2,1)=pxsi(2)
@@ -1613,8 +1981,8 @@ c     Matriz gradiente da mudança de configuração (gauss - final)
 
 c     ************************************************
 c     Subrotina que calcula o tensor de cauchy e
-c     o gradientes da mudança de confihuração 
-c     da configuração inicial para final
+c     o gradientes da mudanï¿½a de confihuraï¿½ï¿½o 
+c     da configuraï¿½ï¿½o inicial para final
 c     ****************************************************
       Subroutine cauchy
       USE BIG_STUFF
@@ -1649,7 +2017,7 @@ c     alongamento de Cauchy green
       end
 
 c     ************************************************
-c     Subrotina que calcula deformaçõess, distorções e alongamentos
+c     Subrotina que calcula deformaï¿½ï¿½ess, distorï¿½ï¿½es e alongamentos
 c     Faz uso do tensor alongamento de cauchy-green (ch)
 c     ****************************************************
       Subroutine deformacoes
@@ -1659,7 +2027,7 @@ c     ****************************************************
 C     include 'bloclagatbig.for'
 
       aup=0.
-      rlex=0.                   !alongamento na direção up 
+      rlex=0.                   !alongamento na direï¿½ï¿½o up 
       do ii=1,2
          do jj=1,2
             aup(ii)=aup(ii)+ch(ii,jj)*up(jj)
@@ -1669,7 +2037,7 @@ C     include 'bloclagatbig.for'
       rlex=dsqrt(rlex)
       
       aup=0.
-      rley=0.                   !alongamento na direção vp
+      rley=0.                   !alongamento na direï¿½ï¿½o vp
       do ii=1,2
          do jj=1,2
             aup(ii)=aup(ii)+ch(ii,jj)*vp(jj)
@@ -1691,7 +2059,7 @@ c     casca retirado
       rlez=dsqrt(rlez)
  10   continue                  !fim casca
 
-c     Deformações de engenharia
+c     Deformaï¿½ï¿½es de engenharia
       rex=rlex-1.
       rey=rley-1.
 c     rez=rlez-1. !casca
@@ -1705,8 +2073,8 @@ c     rez=rlez-1. !casca
          enddo
          rlexy=rlexy+aup(ii)*up(ii)
       enddo
-      rexy=(pi/2.-dacos(rlexy/rlex/rley))/2. !deformação de distorção
-      rexy=rexy*2.              !distorção de engenharia
+      rexy=(pi/2.-dacos(rlexy/rlex/rley))/2. !deformaï¿½ï¿½o de distorï¿½ï¿½o
+      rexy=rexy*2.              !distorï¿½ï¿½o de engenharia
 
 c     Casca
       goto 20                   !2d
@@ -1741,11 +2109,11 @@ c     Casca
 
 c     ************************************************
 c     Calculou-se af que foi utilizada para calcular ch
-c     Ainda teremos que calcular a derivada de ch em relação 
-c     Aos parâmetros incógnitos: posições nodais atuais
-c     Para tanto devemos derivar as derivadas das posições
-c     em relação às coordenadas adimensionais
-c     agora em relação às posições nodais
+c     Ainda teremos que calcular a derivada de ch em relaï¿½ï¿½o 
+c     Aos parï¿½metros incï¿½gnitos: posiï¿½ï¿½es nodais atuais
+c     Para tanto devemos derivar as derivadas das posiï¿½ï¿½es
+c     em relaï¿½ï¿½o ï¿½s coordenadas adimensionais
+c     agora em relaï¿½ï¿½o ï¿½s posiï¿½ï¿½es nodais
 c     ****************************************************
       Subroutine derivadps
       USE BIG_STUFF	 
@@ -1753,18 +2121,18 @@ c     ****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C      include 'bloclagatbig.for'
       
-c     Na expressão pi(jj,kk,li) entende-se
-c     i=1 se falamos da p1 (posição x) (mapa real)
-c     i=2 de falamos da p2 (posição y) (mapa real)
+c     Na expressï¿½o pi(jj,kk,li) entende-se
+c     i=1 se falamos da p1 (posiï¿½ï¿½o x) (mapa real)
+c     i=2 de falamos da p2 (posiï¿½ï¿½o y) (mapa real)
 
 c     jj=1 para xsi longitudinal
 c     jj=2 para eta (xsi3 transversal)
 
-c     kk=1 derivando no gl1 (posição nodal x)
-c     kk=2 derivando no gl2 (posição noda y)
-c     kk=3 derivando no gl3 (posiçãonodal teta)
+c     kk=1 derivando no gl1 (posiï¿½ï¿½o nodal x)
+c     kk=2 derivando no gl2 (posiï¿½ï¿½o noda y)
+c     kk=3 derivando no gl3 (posiï¿½ï¿½onodal teta)
 
-c     li para o nó a que se refere a derivada que se calcula
+c     li para o nï¿½ a que se refere a derivada que se calcula
       
 
 c     a1=resp(j)/2.
@@ -1777,7 +2145,7 @@ c     larg=ra(j)
 
       pxsi=0.
       peta=0.
-c     eta é o xsi3       
+c     eta ï¿½ o xsi3       
 
       do il=1,notl(j)
          alfa=alfa+fi(il)*pl(j,3,il)
@@ -1809,7 +2177,7 @@ c     zero para p1 eta e delta derivados em p2 e p3
 c     ************************************************
 c     Subrotina que calcula derivadas do tensor de 
 c     alongamento de Cauchy-green para cada grau de liberdade
-c     de cada nó do elemento finito
+c     de cada nï¿½ do elemento finito
 c     ****************************************************
       Subroutine dcauchy
       USE BIG_STUFF
@@ -1817,9 +2185,9 @@ c     ****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C      include 'bloclagatbig.for'
 
-c     mudando a notação da subrotina anterior para tensor derivada de af
+c     mudando a notaï¿½ï¿½o da subrotina anterior para tensor derivada de af
       do k2=1,3
-         daf(1,1,li,k2)=p1(1,k2,li) !k2 é o gl refernte ao nó li
+         daf(1,1,li,k2)=p1(1,k2,li) !k2 ï¿½ o gl refernte ao nï¿½ li
          daf(1,2,li,k2)=p1(2,k2,li)
          daf(2,1,li,k2)=p2(1,k2,li)
          daf(2,2,li,k2)=p2(2,k2,li)
@@ -1862,9 +2230,9 @@ c     mudando a notação da subrotina anterior para tensor derivada de af
       end
 
 c     ************************************************
-c     Subrotina que calcula derivadas das deformações
-c     em função das posições nodais (gls) locais
-c     para cada no li=> dão origem às forças nodais equivalentes
+c     Subrotina que calcula derivadas das deformaï¿½ï¿½es
+c     em funï¿½ï¿½o das posiï¿½ï¿½es nodais (gls) locais
+c     para cada no li=> dï¿½o origem ï¿½s forï¿½as nodais equivalentes
 c     ****************************************************
       Subroutine deridef
       USE BIG_STUFF
@@ -1872,7 +2240,7 @@ c     ****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C      include 'bloclagatbig.for'
 
-c     precisamos registrar qual é o nó do elemento que estamos considerando
+c     precisamos registrar qual ï¿½ o nï¿½ do elemento que estamos considerando
 c     para usar na segunda derivada (Hessiana)
 
       do k1=1,3
@@ -1934,7 +2302,7 @@ c     derivada da deformacao exy
      #+rlex*drey(k1,li)))
      #/(2.*rlex*rley*dsqrt((rlex*rley)**2.-aur1**2.))
 
-         drexy(k1,li)=drexy(k1,li)*2. !derivada da distorção
+         drexy(k1,li)=drexy(k1,li)*2. !derivada da distorï¿½ï¿½o
 
 c     casca
          goto 20                !2d
@@ -2000,7 +2368,7 @@ c     derivada da deformacao eyz
 
 
 c     ************************************************
-c     Subrotina opcional calcula a energia de deformão
+c     Subrotina opcional calcula a energia de deformï¿½o
 c     ****************************************************
       Subroutine energia
       USE BIG_STUFF
@@ -2016,9 +2384,9 @@ C      include 'bloclagatbig.for'
       end
 
 c     ************************************************
-c     Subrotina que calcula as tensões de engenharia
+c     Subrotina que calcula as tensï¿½es de engenharia
 c     Chama subrotina de retorno (plasticidade)
-c     e calcula as forças internas
+c     e calcula as forï¿½as internas
 c     ****************************************************
       Subroutine derivener
       USE BIG_STUFF
@@ -2027,51 +2395,51 @@ c     ****************************************************
 C     include 'bloclagatbig.for'
 
 
-c     cálculo do valor da temperatura para o ponto de integração
+c     cï¿½lculo do valor da temperatura para o ponto de integraï¿½ï¿½o
       tpos=(a1*xsi3+fd(j,igf))*(temc(j)-temb(j))/2.+ (temc(j)+temb(j))
      $     /2.
 
 c     CHAMADA DA SUBROTINA DE RETORNO.
-      et(1)=rex-tpos*calt(j)    !deformações totais
+      et(1)=rex-tpos*calt(j)    !deformaï¿½ï¿½es totais
       et(2)=rey-tpos*0.
       et(3)=rez                 !casca=0 aqui
       et(4)=rexy
       et(5)=rexz                !casca=0 aqui
       et(6)=reyz                !casca=0 aqui
 
-c     chamada do modelo constitutivo elastoplástico
-      if (ia.ge.1) call retorno !precaução para problemas controle delsocamento
+c     chamada do modelo constitutivo elastoplï¿½stico
+      if (ia.ge.1) call retorno !precauï¿½ï¿½o para problemas controle delsocamento
 c     call retorno
-c     vamos corrigir o valor das tensões calculadas
+c     vamos corrigir o valor das tensï¿½es calculadas
 
       do iep=1,6
-         ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep) !deformação plástica acumulada
+         ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep) !deformaï¿½ï¿½o plï¿½stica acumulada
       enddo
       s=0.
 
       do i=1,6
          do jr=1,6
-            s(i)=s(i)+ceret(i,jr)*ee(jr) !lei constitutiva elastoplástica
+            s(i)=s(i)+ceret(i,jr)*ee(jr) !lei constitutiva elastoplï¿½stica
          enddo
       enddo
 
-      duex=s(1)                 !tensões armazenadas em variáveis que serão utilizadas (melhorar escrita para próxima versão)
+      duex=s(1)                 !tensï¿½es armazenadas em variï¿½veis que serï¿½o utilizadas (melhorar escrita para prï¿½xima versï¿½o)
       duey=s(2)
       duez=s(3)
       duexy=s(4)
       duexz=s(5)
       dueyz=s(6)
 
-c     due é a derivada da energia em relação a cada gl
-c     de um determindo nó li de um elemento j
+c     due ï¿½ a derivada da energia em relaï¿½ï¿½o a cada gl
+c     de um determindo nï¿½ li de um elemento j
 c     para um ponto de Gauss
 
-      iloc=(li-1)*3             !pequena incidência local
+      iloc=(li-1)*3             !pequena incidï¿½ncia local
 
       do k1=1,3
          due(k1)=duex*drex(k1,li)+duey*drey(k1,li)+
      #(duexy*drexy(k1,li))      !gama
-c     aqui vamos fazer uma pequena montagen do vetor de forças
+c     aqui vamos fazer uma pequena montagen do vetor de forï¿½as
 c     temos o due(3) que devera se transformar no vtl(3*notl(j))
          i1=iloc+k1
 c     vtl(i1,j)=vtl(i1,j)+due(k1)*w(ig1)*w(ig2)*w3(ig3)*rjac0 !casca
@@ -2084,9 +2452,9 @@ c     vtl(i1,j)=vtl(i1,j)+due(k1)*w(ig1)*w(ig2)*w3(ig3)*rjac0 !casca
 
 c     ************************************************
 c     Subrotina que calcula a matriz hessiana local
-c     É uma matriz semi tangente fisicamente pois se usa 
-c     a tesão real nos termos nlg e elásticas nos termos
-c     geométricamente lineares (é mais segura doque a tangente total)
+c     ï¿½ uma matriz semi tangente fisicamente pois se usa 
+c     a tesï¿½o real nos termos nlg e elï¿½sticas nos termos
+c     geomï¿½tricamente lineares (ï¿½ mais segura doque a tangente total)
 c     pois evita singularidades, apesar de taxa de convergencia ligeiramente inferior
 c     ****************************************************
       Subroutine segderene
@@ -2096,7 +2464,7 @@ c     ****************************************************
 C      include 'bloclagatbig.for'
 
       d2ue=0.
-      s=0.                      !recuperando as tensões
+      s=0.                      !recuperando as tensï¿½es
       do i=1,6
          do jr=1,6
             s(i)=s(i)+ceret(i,jr)*ee(jr)
@@ -2110,7 +2478,7 @@ C      include 'bloclagatbig.for'
       duexz=s(5)
       dueyz=s(6)
 
-      iloc=(li-1)*3             !incidência de montagem local
+      iloc=(li-1)*3             !incidï¿½ncia de montagem local
       jloc=(lj-1)*3
 
       do k1=1,3
@@ -2140,8 +2508,8 @@ C      include 'bloclagatbig.for'
       end
 
 c     *****************************************
-c     Subrotina que aplica forças internas e externas
-c     respeitando as condições de contorno
+c     Subrotina que aplica forï¿½as internas e externas
+c     respeitando as condiï¿½ï¿½es de contorno
 c     ***************************************
       subroutine condcon
       USE BIG_STUFF
@@ -2151,7 +2519,7 @@ C      include 'bloclagatbig.for'
 
       v=0.
       do i=1,n-3*nnosdp
-         if (ko(i).eq.1) then   !será usado no impacto entre duas estruturas (futura versão)
+         if (ko(i).eq.1) then   !serï¿½ usado no impacto entre duas estruturas (futura versï¿½o)
          else
             v(i)=f(i)-vint(i)
 
@@ -2186,7 +2554,7 @@ C      include 'bloclagatbig.for'
       
       do j=1,n
          if (ko(j).eq.1) then
-            f(j)=v(j)/rrrf      !V É O DELTA P
+            f(j)=v(j)/rrrf      !V ï¿½ O DELTA P
             v(j)=0.
          else
             p(j)=p(j)+v(j)/rrrf
@@ -2212,9 +2580,9 @@ C      include 'bloclagatbig.for'
       end
 
 c     *****************************************
-c     Subrotina que após a solução do sistem
-c     Atualiza a posição dos pontos livres
-c     Garda trajetória para impacto
+c     Subrotina que apï¿½s a soluï¿½ï¿½o do sistem
+c     Atualiza a posiï¿½ï¿½o dos pontos livres
+c     Garda trajetï¿½ria para impacto
 c     Chama rotina de impacto
 c     ***************************************
       subroutine destroca1
@@ -2223,7 +2591,7 @@ c     ***************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 C      include 'bloclagatbig.for'
       
-      p0i=p                     !guardando valor anterior para cálculo de impacto
+      p0i=p                     !guardando valor anterior para cï¿½lculo de impacto
       
       do j=1,n-3*nnosdp
          if ((ko(j).eq.1)) then
@@ -2232,7 +2600,7 @@ C      include 'bloclagatbig.for'
          else
             p(j)=p(j)+v(j)
          endif
-c     if ((ko1(j).eq.1)) vint(j)=0. !lembrete para aplicação da força interna no corpo alvo
+c     if ((ko1(j).eq.1)) vint(j)=0. !lembrete para aplicaï¿½ï¿½o da forï¿½a interna no corpo alvo
       enddo
       ko1=0
       call box                  !impacto com atrito
@@ -2254,8 +2622,8 @@ c$$$  enddo
 
 c     *****************************************
 c     Impacto com atrito
-c     por enquanto trata região retangular
-c     para limite de análise
+c     por enquanto trata regiï¿½o retangular
+c     para limite de anï¿½lise
 c     ***************************************
       subroutine box
       USE BIG_STUFF
@@ -2270,7 +2638,7 @@ C     include 'bloclagatbig.for'
       
       do j=1,nnos
          
-c     marcando o nó impactante      
+c     marcando o nï¿½ impactante      
          if (p(glgl(j,1)).ge.xb1) then
             ko1(glgl(j,1))=1
             ko1(glgl(j,2))=1
@@ -2291,12 +2659,12 @@ c     marcando o nó impactante
             ko1(glgl(j,2))=1
          endif
          
-c     Novidade (procedimento geométrico de impacto)
-c     ao se corrigir a posição do nó impactante
-c     força-se o cálculo de um força interna
-c     que ao final das interações
-c     resulta na força externa aplicada no nó impactante
-c     ou seja, se iguala à força de contato nodal equivalente
+c     Novidade (procedimento geomï¿½trico de impacto)
+c     ao se corrigir a posiï¿½ï¿½o do nï¿½ impactante
+c     forï¿½a-se o cï¿½lculo de um forï¿½a interna
+c     que ao final das interaï¿½ï¿½es
+c     resulta na forï¿½a externa aplicada no nï¿½ impactante
+c     ou seja, se iguala ï¿½ forï¿½a de contato nodal equivalente
          
          if (p(glgl(j,1)).ge.xb1) then
             if (dabs(p(glgl(j,1))-p0i(glgl(j,1))).gt.1.d-13) then
@@ -2391,7 +2759,7 @@ c$$$  endif
 
 c     *****************************************
 c     Subrotina que calcula norma
-c     critério de parada
+c     critï¿½rio de parada
 c     ***************************************
       subroutine calculanorma
       USE BIG_STUFF
@@ -2432,7 +2800,7 @@ C     include 'bloclagatbig.for'
          write(5,*)
          write(5,*)'posicao dos nos, passo, numero de iteracoes',ipt,ia
          write(5,*) 'no,x,y'
-c     posição dos nos
+c     posiï¿½ï¿½o dos nos
 c     no,x,y
          do i=1,nnos
             write(5,10) i,(p(glgl(i,kk)),kk=1,ngl(i))
@@ -2440,9 +2808,9 @@ c     no,x,y
          
          
          write(5,*)
-         write(5,*)'Forças reativas',ipt,ia
+         write(5,*)'Forï¿½as reativas',ipt,ia
          write(5,*) 'no,fx,fy,mz'
-c     posição dos nos
+c     posiï¿½ï¿½o dos nos
 c     no,x,y
          do i=1,nnos
             km=0
@@ -2458,14 +2826,14 @@ c     no,x,y
          write(5,*)
          write(5,*)'velocidades',ipt,ia
          write(5,*) 'no,vx,vy'
-c     posição dos nos
+c     posiï¿½ï¿½o dos nos
 c     no,x,y
          do i=1,nnos
             write(5,10) i,(vs(glgl(i,kk)),kk=1,ngl(i))
          enddo
          
 
-c     escrita do primeiro no escolhido para gráfico
+c     escrita do primeiro no escolhido para grï¿½fico
          nprint1=glgl(ngf,1)
          nprint2=glgl(ngf,2)
          nprint3=glgl(ngf,3)
@@ -2487,7 +2855,7 @@ c$$$  #,vint(nprint2),vint(nprint3)
 
          write(12,11) ipt*dt, p(glgl(16,2))-p0(glgl(16,2))
 
-c     escrita do segundo no escolhido para gráfico
+c     escrita do segundo no escolhido para grï¿½fico
          nprint1=glgl(ngf1,1)
          nprint2=glgl(ngf1,2)
          nprint3=glgl(ngf1,3)
@@ -2515,7 +2883,7 @@ c$$$  #,(p(nprint3)-p0(nprint3)),f(nprint1),f(nprint2),f(nprint3)
 
 
 c      *******************************************
-c      Saida para pos processamento posições e deslocamentos
+c      Saida para pos processamento posiï¿½ï¿½es e deslocamentos
 c      ******************************************* 
 
 c     *******************************************
@@ -2812,7 +3180,7 @@ c$$$     #  p(glgl(i,1))-p0(glgl(i,1)),p(glgl(i,2))-p0(glgl(i,2))
 c$$$     #,p(glgl(i,3))-p0(glgl(i,3)) !giro do primeiro elemento
 c$$$	 enddo
 c$$$	 write(8,*)
-c$$$	 write(8,*)'tipoetc     *grauaprox nó1 nó2...non'
+c$$$	 write(8,*)'tipoetc     *grauaprox nï¿½1 nï¿½2...non'
 c$$$	 write(8,201)
 c$$$       do j=1,nel
 c$$$        write(8,20) 1,(notl(j)-1),(ic(j,k),k=1,notl(j))      
@@ -2833,7 +3201,7 @@ c$$$
 c$$$      if ((ipt.eq.1).or.((ipt/(nprint*1.)-int(ipt/(nprint*1.)))
 c$$$     # .lt.1.0d-6)) then
 c$$$	 write(8,*)
-c$$$	 write(8,*)'título da lista e dados dos nós'
+c$$$	 write(8,*)'tï¿½tulo da lista e dados dos nï¿½s'
 c$$$	 write(8,201)
 c$$$       write(8,*) 'DESL X',ipt
 c$$$	 do ibet=1,nnos
@@ -2842,7 +3210,7 @@ c$$$     #-p0(glgl(ibet,2)),0.,p(glgl(ibet,1))
 c$$$     #-p0(glgl(ibet,1))
 c$$$	 enddo
 c$$$ 	 write(8,*)
-c$$$	 write(8,*)'título da lista e dados dos nós'
+c$$$	 write(8,*)'tï¿½tulo da lista e dados dos nï¿½s'
 c$$$	 write(8,201)
 c$$$       write(8,*) 'DESL y',ipt
 c$$$	 do ibet=1,nnos
@@ -2851,7 +3219,7 @@ c$$$     #-p0(glgl(ibet,2)),0.,p(glgl(ibet,2))
 c$$$     #-p0(glgl(ibet,2))
 c$$$	 enddo
 c$$$	 write(8,*)
-c$$$	 write(8,*)'título da lista e dados dos nós'
+c$$$	 write(8,*)'tï¿½tulo da lista e dados dos nï¿½s'
 c$$$	 write(8,201)
 c$$$       write(8,*) 'DESL z',ipt
 c$$$	 do ibet=1,nnos
@@ -2870,7 +3238,7 @@ c$$$      end
 c      
 c      *******************************************
 c      Subrotina que calcula as funcoes de forma
-c      e suas derivadas para qualquer ordem de aproximação
+c      e suas derivadas para qualquer ordem de aproximaï¿½ï¿½o
 c      novidade em MEF
 c      *******************************************   
       subroutine formaederi0
@@ -2880,9 +3248,9 @@ c      *******************************************
 C     include 'bloclagatbig.for'
       
 c     o valor do ponto de interesse xsi1 vem de fora da subrotina
-c     pode ser um ponto de Gauss (no procedimento de integração)
+c     pode ser um ponto de Gauss (no procedimento de integraï¿½ï¿½o)
 c     Ou uma coordenada qualquer (usualmente nodal)
-c     para cálculo de esforço interno por exemplo   
+c     para cï¿½lculo de esforï¿½o interno por exemplo   
       
       drl1=0.
       do ks=1,notl(j)
@@ -2890,7 +3258,7 @@ c     para cálculo de esforço interno por exemplo
          do is=1,notl(j)
             drl1e=1.
             if(ks.ne.is) then
-               rl1(ks)=rl1(ks)*(xsi1-xs1(is))/(xs1(ks)-xs1(is)) !função
+               rl1(ks)=rl1(ks)*(xsi1-xs1(is))/(xs1(ks)-xs1(is)) !funï¿½ï¿½o
                do js=1,notl(j)
                   if ((is.ne.js).and.(ks.ne.js)) then
                      drl1e=drl1e*(xsi1-xs1(js)) !derivada
@@ -2913,7 +3281,7 @@ c     para cálculo de esforço interno por exemplo
       enddo
       
       do is=1,notl(j)
-         fi(is)=rl1(is)         !função
+         fi(is)=rl1(is)         !funï¿½ï¿½o
       enddo
       
       do is=1,notl(j)
@@ -2934,7 +3302,7 @@ c     ****************************************************
 C     include 'bloclagatbig.for'
 
 
-c     Constantes elásticas anisotropica, 
+c     Constantes elï¿½sticas anisotropica, 
 c     aqui serao isotropicas por enquanto
 c     ex,ey,ez,rxy,rxz,ryz,gxy,gxz,gyz
 c     estamos usando o modulo de elasticidade
@@ -2966,14 +3334,14 @@ c     do elemento 1 depois generalizaremos
       de(5,5)=1./gxz
       de(6,6)=1./gyz
 
-c     a inversa da de é a ce que na realidade é a hook
+c     a inversa da de ï¿½ a ce que na realidade ï¿½ a hook
 c     call dlinrg(6,de,6,ceret,6)
       call inverse(6,de,ceret)
 
-c     Constantes Plásticas ex,ey,ez,rxy,rxz,ryz,gxy,gxz,gyz
-c     aqui o retorno será na mesma direção da tentativa elástica
-c     no futuro teremos que criar a plástica diferente da elastica
-c     e ler os valores dos módulos plásticos (que só influenciam na direção do fluxo)
+c     Constantes Plï¿½sticas ex,ey,ez,rxy,rxz,ryz,gxy,gxz,gyz
+c     aqui o retorno serï¿½ na mesma direï¿½ï¿½o da tentativa elï¿½stica
+c     no futuro teremos que criar a plï¿½stica diferente da elastica
+c     e ler os valores dos mï¿½dulos plï¿½sticos (que sï¿½ influenciam na direï¿½ï¿½o do fluxo)
 c     read(3,*)
 c     read(3,*) ex,ey,ez,rxy,rxz,ryz
 
@@ -3006,7 +3374,7 @@ c     call dlinrg(6,dpret,6,cp,6)
 
 c     ************************************************
 c     subrotina que define a lei constitutiva
-c     deverá ser unificada em notação com a anterior
+c     deverï¿½ ser unificada em notaï¿½ï¿½o com a anterior
 c     ****************************************************
       Subroutine definelei
       USE BIG_STUFF
@@ -3026,7 +3394,7 @@ C     include 'bloclagatbig.for'
          rhook(j,2,2)=rrk*(1.-rri)
          rhook(j,3,3)=rrg
 
-c     rhook é o mesmo que a cret, deverá ser unificada a notação n programa
+c     rhook ï¿½ o mesmo que a cret, deverï¿½ ser unificada a notaï¿½ï¿½o n programa
 c     em breve
 
       enddo
@@ -3035,7 +3403,7 @@ c     em breve
 
 
 c     ************************************************
-c     Subrotina que define a lei constitutiva estado plano de tensões
+c     Subrotina que define a lei constitutiva estado plano de tensï¿½es
 c     desativado
 c     ****************************************************
       Subroutine defineleiEPT
@@ -3065,7 +3433,7 @@ c     ************************************************
 c     Subrotina que calcula segundas derivadas das deformacoes
 c     em funcao das posicoes nodais (gls) locais
 c     para cada no li
-c     novidade semelhante à deridef
+c     novidade semelhante ï¿½ deridef
 c     ****************************************************
       Subroutine deri2def
       USE BIG_STUFF	 
@@ -3326,8 +3694,8 @@ c
 c     *******************************************
 c     Gerencia o calculo de tensoes
 c     para as fibras superiores de uma barra
-c     intuito apenas de preparação
-c     para pós-orocessamento
+c     intuito apenas de preparaï¿½ï¿½o
+c     para pï¿½s-orocessamento
 c     *******************************************   
       subroutine tensaoacima
       USE BIG_STUFF
@@ -3335,7 +3703,7 @@ c     *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
 
-c     nel é o numero de elementos
+c     nel ï¿½ o numero de elementos
 
       do j=1,nel
          call eletensaoacima
@@ -3353,12 +3721,12 @@ c     *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
       
-c     atualizar configuração nos elementos
+c     atualizar configuraï¿½ï¿½o nos elementos
       
       call leielast
       
       ng=notl(j)
-c     aquisição das coordenadas e pesos de gaus já fiz no início do programa
+c     aquisiï¿½ï¿½o das coordenadas e pesos de gaus jï¿½ fiz no inï¿½cio do programa
       call gauss(ng,qsi,w)
       call gauss(ng3,qsi3,w3)
 c     
@@ -3375,11 +3743,11 @@ c     xsi1=(2.*ig1-(1.+notl(j)))/(notl(j)-1.)
          
          xsi1=qsi(ig1)
 c     ***********************
-c     variaveis necessárias para funcao de forma e derivadas de ordem qualquer
+c     variaveis necessï¿½rias para funcao de forma e derivadas de ordem qualquer
          call suportefuncoesdeforma
          call formaederi0      
          
-         igf=3                  ! a terceira fibra é a de cima
+         igf=3                  ! a terceira fibra ï¿½ a de cima
          ig3=ng3
          
          
@@ -3414,8 +3782,8 @@ c     xsi 3 para face inferior
 
 c      
 c     *******************************************
-c     Gerencia o cálculo os esforços solicitantes internos
-c     preparação de resultados para pós-processamento
+c     Gerencia o cï¿½lculo os esforï¿½os solicitantes internos
+c     preparaï¿½ï¿½o de resultados para pï¿½s-processamento
 c     de engenharia
 c     *******************************************   
       subroutine momento
@@ -3424,7 +3792,7 @@ c     *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c      include 'bloclagatbig.for'
       
-c     nel é o numero de elementos
+c     nel ï¿½ o numero de elementos
       
       rmz=0
       rvy=0.
@@ -3438,7 +3806,7 @@ c     nel é o numero de elementos
       end
 c     
 c     *******************************************
-c     Calcula os esforços
+c     Calcula os esforï¿½os
 c     *******************************************   
       subroutine elemom
       USE BIG_STUFF
@@ -3448,11 +3816,11 @@ c     include 'bloclagatbig.for'
       
       call leielast
       
-c     atualizar configuração nos elementos
+c     atualizar configuraï¿½ï¿½o nos elementos
       
       
       ng=notl(j)
-c     aquisição das coordenadas e pesos de gaus já fiz no início do programa
+c     aquisiï¿½ï¿½o das coordenadas e pesos de gaus jï¿½ fiz no inï¿½cio do programa
       call gauss(ng,qsi,w)
       call gauss(ng3,qsi3,w3)
 c$$$  c
@@ -3470,11 +3838,11 @@ c$$$  call dgqrul(ng3,1,0.d0,0.d0,0,qsi3,qsi3,w3)
          
 c     xsi1=qsi(ig1)
 c     ***********************
-c     variaveis necessárias para funcao de forma e derivadas de ordem qualquer
+c     variaveis necessï¿½rias para funcao de forma e derivadas de ordem qualquer
          call suportefuncoesdeforma
          call formaederi0      
          
-         do igf=1,3             ! a terceira fibra é a de cima
+         do igf=1,3             ! a terceira fibra ï¿½ a de cima
             do ig3=1,ng3
                up=0.
                vp=0.
@@ -3510,8 +3878,8 @@ c
 c     *******************************************
 c     Gerencia o calculo de tensoes
 c     para as fibras inferiores de uma barra
-c     intuito apenas de preparação
-c     para pós-orocessamento
+c     intuito apenas de preparaï¿½ï¿½o
+c     para pï¿½s-orocessamento
 c     *******************************************   
       subroutine tensaoabaixo
       USE BIG_STUFF
@@ -3519,7 +3887,7 @@ c     *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c      include 'bloclagatbig.for'
       
-c     nel é o numero de elementos
+c     nel ï¿½ o numero de elementos
       
       do j=1,nel
          call eletensaoabaixo
@@ -3537,12 +3905,12 @@ c     *******************************************
       USE BLOCLAGATBIG
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c      include 'bloclagatbig.for'
-c     atualizar configuração nos elementos
+c     atualizar configuraï¿½ï¿½o nos elementos
       
       call leielast
       
       ng=notl(j)
-c     aquisição das coordenadas e pesos de gaus já fiz no início do programa
+c     aquisiï¿½ï¿½o das coordenadas e pesos de gaus jï¿½ fiz no inï¿½cio do programa
       call gauss(ng,qsi,w)
       call gauss(ng3,qsi3,w3)     
 c$$$  call dgqrul(ng,1,0.d0,0.d0,0,qsi,qsi,w)
@@ -3557,11 +3925,11 @@ c     xsi1=(2.*ig1-(1.+notl(j)))/(notl(j)-1.)
          
          xsi1=qsi(ig1)
 c     ***********************
-c     variaveis necessárias para funcao de forma e derivadas de ordem qualquer
+c     variaveis necessï¿½rias para funcao de forma e derivadas de ordem qualquer
          call suportefuncoesdeforma
          call formaederi0      
          
-         igf=1                  ! a terceira fibra é a de cima
+         igf=1                  ! a terceira fibra ï¿½ a de cima
          ig3=1
          
 c     xsi 3 para face inferior 
@@ -3591,8 +3959,8 @@ c     xsi 3 para face inferior
 
 
 c     ************************************************
-c     Subrotina que calcula as tensões de engenharia
-c     para pós-processamento semelhante à derivener
+c     Subrotina que calcula as tensï¿½es de engenharia
+c     para pï¿½s-processamento semelhante ï¿½ derivener
 c     ****************************************************
       Subroutine derivenertensao
       USE BIG_STUFF
@@ -3600,14 +3968,14 @@ c     ****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
 
-c     duex, duey, duez etc sao as tensoes x, y, z etc elásticas fictícias
-c     retirando destas as tensões plásticas acumuladas teremos a tensão tentativa
-c     entrando na rotina de retorno, teremos como resposta o nível de tensão real
-c     que deverá ocupar a posição dos duex, duey, duez etc no cáculo da 
+c     duex, duey, duez etc sao as tensoes x, y, z etc elï¿½sticas fictï¿½cias
+c     retirando destas as tensï¿½es plï¿½sticas acumuladas teremos a tensï¿½o tentativa
+c     entrando na rotina de retorno, teremos como resposta o nï¿½vel de tensï¿½o real
+c     que deverï¿½ ocupar a posiï¿½ï¿½o dos duex, duey, duez etc no cï¿½culo da 
 c     forca interna.
 
 
-c     cálculo do valor da temperatura para o ponto de integração
+c     cï¿½lculo do valor da temperatura para o ponto de integraï¿½ï¿½o
       
       tpos=(a1*xsi3+fd(j,igf))*(temc(j)-temb(j))/2.+(temc(j)+temb(j))
      $     /2.
@@ -3620,7 +3988,7 @@ c     cálculo do valor da temperatura para o ponto de integração
       et(6)=reyz
 
 c     CHAMADA DA SUBROTINA DE RETORNO na derivener
-c     vamos corrigir o valor das tensóes calculadas
+c     vamos corrigir o valor das tensï¿½es calculadas
 
       do iep=1,6
          ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep)
@@ -3649,8 +4017,8 @@ c     vamos corrigir o valor das tensóes calculadas
       end
 
 c     ************************************************
-c     Subrotina que calcula as tensões de engenharia
-c     para integração dos esforços solicitantes
+c     Subrotina que calcula as tensï¿½es de engenharia
+c     para integraï¿½ï¿½o dos esforï¿½os solicitantes
 c     ****************************************************
       Subroutine derivenermom
       USE BIG_STUFF
@@ -3658,13 +4026,13 @@ c     ****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
 
-c     duex, duey, duez etc sao as tensoes x, y, z etc elásticas fictícias
-c     retirando destas as tensões plásticas acumuladas teremos a tensão tentativa
-c     entrando na rotina de retorno, teremos como resposta o nível de tensão real
-c     que deverá ocupar a posição dos duex, duey, duez etc no cáculo da 
+c     duex, duey, duez etc sao as tensoes x, y, z etc elï¿½sticas fictï¿½cias
+c     retirando destas as tensï¿½es plï¿½sticas acumuladas teremos a tensï¿½o tentativa
+c     entrando na rotina de retorno, teremos como resposta o nï¿½vel de tensï¿½o real
+c     que deverï¿½ ocupar a posiï¿½ï¿½o dos duex, duey, duez etc no cï¿½culo da 
 c     forca interna.
 
-c     cálculo do valor da temperatura para o ponto de integração
+c     cï¿½lculo do valor da temperatura para o ponto de integraï¿½ï¿½o
       
       tpos=(a1*xsi3+fd(j,igf))*(temc(j)-temb(j))/2.+(temc(j)+temb(j))
      $     /2.
@@ -3678,7 +4046,7 @@ c     cálculo do valor da temperatura para o ponto de integração
 
 
 c     CHAMADA DA SUBROTINA DE RETORNO na derivener
-c     vamos corrigir o valor das tensões calculadas
+c     vamos corrigir o valor das tensï¿½es calculadas
 
       do iep=1,6
          ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep)
@@ -3707,7 +4075,7 @@ c     vamos corrigir o valor das tensões calculadas
 
 
 c      *******************************************
-c      Saida para pos processamento tensões nas fibras superiores
+c      Saida para pos processamento tensï¿½es nas fibras superiores
 c      ******************************************* 
       subroutine saidaposnovtensaoacima
       USE BIG_STUFF
@@ -3735,7 +4103,7 @@ c      include 'bloclagatbig.for'
      #-p0(glgl(i,2)),p(glgl(i,3))-p0(glgl(i,3))
          enddo
          write(9,*)
-         write(9,*)'tipoetc     *grauaprox nó1 nó2...non'
+         write(9,*)'tipoetc     *grauaprox nï¿½1 nï¿½2...non'
          write(9,201)
          do j=1,nel
             write(9,20) 1,(notl(j)-1),(ic(j,k),k=1,notl(j))      
@@ -3781,7 +4149,7 @@ c     valor=sx
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(9,*)
-         write(9,*)'título da lista e dados dos nós'
+         write(9,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(9,201)
          write(9,*) 'sx',ipt
          do ibet=1,nnos
@@ -3812,7 +4180,7 @@ c     preparando tensao y
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(9,*)
-         write(9,*)'título da lista e dados dos nós'
+         write(9,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(9,201)
          write(9,*) 'sy',ipt
          do ibet=1,nnos
@@ -3843,7 +4211,7 @@ c     preparando tensaoxy
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(9,*)
-         write(9,*)'título da lista e dados dos nós'
+         write(9,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(9,201)
          write(9,*) 'sxy',ipt
          do ibet=1,nnos
@@ -3860,8 +4228,8 @@ c     preparando tensaoxy
       end
 
 c      *******************************************
-c      Saida para pos processamento de esforços solicitantes
-c       por nó
+c      Saida para pos processamento de esforï¿½os solicitantes
+c       por nï¿½
 c      ******************************************* 
       subroutine saidaposmomento
       USE BIG_STUFF
@@ -3889,7 +4257,7 @@ c     include 'bloclagatbig.for'
      $           ,p(glgl(i,3))-p0(glgl(i,3))
          enddo
          write(90,*)
-         write(90,*)'tipoetc     *grauaprox nó1 nó2...non'
+         write(90,*)'tipoetc     *grauaprox nï¿½1 nï¿½2...non'
          write(90,201)
          do j=1,nel
             write(90,20) 1,(notl(j)-1),(ic(j,k),k=1,notl(j))      
@@ -3934,7 +4302,7 @@ c     preparando a forca normal
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(90,*)
-         write(90,*)'título da lista e dados dos nós'
+         write(90,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(90,201)
          write(90,*) 'N',ipt
          do ibet=1,nnos
@@ -3965,7 +4333,7 @@ c     preparando forca cortant
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(90,*)
-         write(90,*)'título da lista e dados dos nós'
+         write(90,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(90,201)
          write(90,*) 'V',ipt
          do ibet=1,nnos
@@ -3996,7 +4364,7 @@ c     preparando momento fletor
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(90,*)
-         write(90,*)'título da lista e dados dos nós'
+         write(90,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(90,201)
          write(90,*) 'M',ipt
          do ibet=1,nnos
@@ -4205,7 +4573,7 @@ c      include 'bloclagatbig.for'
 
 
          write(90,*)
-         write(90,*)'tipoetc     *grauaprox nó1 nó2...non'
+         write(90,*)'tipoetc     *grauaprox nï¿½1 nï¿½2...non'
          write(90,201)
          kl=0
          do j=1,nel
@@ -4240,7 +4608,7 @@ c     preparando a forca normal nos nos do elemento
 
 
       write(90,*)
-      write(90,*)'título da lista e dados dos nós'
+      write(90,*)'tï¿½tulo da lista e dados dos nï¿½s'
       write(90,201)
       write(90,*) 'N',ipt
       write(5,*) 'N',ipt
@@ -4274,7 +4642,7 @@ c     preparando forca cortant no elemento
 
 
 	 write(90,*)
-	 write(90,*)'título da lista e dados dos nós'
+	 write(90,*)'tï¿½tulo da lista e dados dos nï¿½s'
 	 write(90,201)
        write(90,*) 'V',ipt
        write(5,*) 'V',ipt
@@ -4303,7 +4671,7 @@ c     preparando momento fletor no elemento
 
 
 	 write(90,*)
-	 write(90,*)'título da lista e dados dos nós'
+	 write(90,*)'tï¿½tulo da lista e dados dos nï¿½s'
 	 write(90,201)
        write(90,*) 'M',ipt
        write(5,*) 'M',ipt
@@ -4333,7 +4701,7 @@ c     preparando momento fletor no elemento
       end
 
 c      *******************************************
-c      Saida para pos processamento tensões nas fibras inferiores
+c      Saida para pos processamento tensï¿½es nas fibras inferiores
 c      ******************************************* 
       subroutine saidaposnovtensaoabaixo
       USE BIG_STUFF
@@ -4361,7 +4729,7 @@ c     include 'bloclagatbig.for'
      #p(glgl(i,3))-p0(glgl(i,3))
          enddo
          write(19,*)
-         write(19,*)'tipoetc     *grauaprox nó1 nó2...non'
+         write(19,*)'tipoetc     *grauaprox nï¿½1 nï¿½2...non'
          write(19,201)
          do j=1,nel
             write(19,20) 1,(notl(j)-1),(ic(j,k),k=1,notl(j))      
@@ -4403,7 +4771,7 @@ c     preparando o tensao principal1
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(19,*)
-         write(19,*)'título da lista e dados dos nós'
+         write(19,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(19,201)
          write(19,*) 's1',ipt
          do ibet=1,nnos
@@ -4434,7 +4802,7 @@ c     preparando tensao principal 2
             fno(j)=fno(j)/(kn(j)*1.)
          enddo
          write(19,*)
-         write(19,*)'título da lista e dados dos nós'
+         write(19,*)'tï¿½tulo da lista e dados dos nï¿½s'
          write(19,201)
          write(19,*) 's2',ipt
          do ibet=1,nnos
@@ -4451,8 +4819,8 @@ c     preparando tensao principal 2
       end
 
 c     *******************************************
-c     Criação de matriz tranformação de valores nos pontos de Gauss
-c     para valores nos nós do elemento
+c     Criaï¿½ï¿½o de matriz tranformaï¿½ï¿½o de valores nos pontos de Gauss
+c     para valores nos nï¿½s do elemento
 c     novidade para mef
 c     *******************************************   
       subroutine prepara
@@ -4464,7 +4832,7 @@ c     include 'bloclagatbig.for'
       ALLOCATE (rmfi(ng,ng))
       rmfi=0.
       
-c     Aquisição das coordenadas e pesos de Gauss
+c     Aquisiï¿½ï¿½o das coordenadas e pesos de Gauss
       call gauss(ng,qsi,w)
 c     call dgqrul(ng,1,0.d0,0.d0,0,qsi,qsi,w)
 
@@ -4474,7 +4842,7 @@ c     xsi1=qsi(ig1)
          xsi1=(2.*ig1-(1.+notl(j)))/(notl(j)-1.) !neste caso as funcoes de forma sao em numero igual ao pontos de gaus
 
 c     ***********************
-c     variaveis necessárias para funcao de forma e derivadas de ordem qualquer
+c     variaveis necessï¿½rias para funcao de forma e derivadas de ordem qualquer
          call suportefuncoesdeforma
          call formaederi0
 
@@ -4491,8 +4859,8 @@ c     CALL DLINRG(ng,rmfi,ng,rmfi,ng) !problema com a dimensao
 
 c      *******************************************
 c      Subrotina que calcula a matriz de massa (lagrangeana, constante)
-c      e também a matriz que transforma carregamentos 
-c      distribuídos em concentrados equivalentes.
+c      e tambï¿½m a matriz que transforma carregamentos 
+c      distribuï¿½dos em concentrados equivalentes.
 c      *******************************************   
       subroutine massa
       USE BIG_STUFF
@@ -4501,7 +4869,7 @@ c      *******************************************
 c     include 'bloclagatbig.for'
       
       ng=notl(j)
-c     Aquisição das coordenadas e pesos de Gauss
+c     Aquisiï¿½ï¿½o das coordenadas e pesos de Gauss
       call gauss(ng,qsi,w)
       call gauss(ng3,qsi3,w3)
 c     
@@ -4512,7 +4880,7 @@ c     call dgqrul(ng3,1,0.d0,0.d0,0,qsi3,qsi3,w3)
       do ig1=1,ng
          xsi1=qsi(ig1)
 c     ***********************
-c     Variaveis necessárias para funcao de forma e derivadas de ordem qualquer
+c     Variaveis necessï¿½rias para funcao de forma e derivadas de ordem qualquer
          call suportefuncoesdeforma
          call formaederi0      
          do igf=1,3             !Para as faixas (fibras)
@@ -4529,7 +4897,7 @@ c     Variaveis necessárias para funcao de forma e derivadas de ordem qualquer
          enddo                  !altura
       enddo                     !comprimento
       
-c     Expandindo para massa grande (a memos de inércia rotacional (não incluida)
+c     Expandindo para massa grande (a memos de inï¿½rcia rotacional (nï¿½o incluida)
       do ir=1,notl(j)
          ib=(ir-1)*3
          do ik=1,2
@@ -4548,7 +4916,7 @@ c     Calculando rmp para usar na carga (sem densidade)
          enddo
       enddo
 
-      do ig1=1,ng               !A integral é apenas na longitudinal
+      do ig1=1,ng               !A integral ï¿½ apenas na longitudinal
          xsi1=qsi(ig1)
          call suportefuncoesdeforma
          call formaederi0  
@@ -4574,8 +4942,28 @@ c      *******************************************
       USE BLOCLAGATBIG
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
-
-c     primeira etapa: alocar algumas variáveis para calcular outras
+      if (allocated(ngl)) then
+         deallocate(ngl)
+      end if
+      if (allocated(iglv)) then
+         deallocate(iglv)
+      end if
+      if (allocated(glgl)) then
+         deallocate(glgl)
+      end if
+      if (allocated(itr)) then
+         deallocate(itr)
+      end if
+      if (allocated(kn)) then
+         deallocate(kn)
+      end if
+      if (allocated(im)) then
+         deallocate(im)
+      end if
+      if (allocated(ic)) then
+         deallocate(ic)
+      end if
+c     primeira etapa: alocar algumas variï¿½veis para calcular outras
       ALLOCATE (ngl(nnos)) 
       ALLOCATE (iglv(nnos,nel))
       ALLOCATE (glgl(nnos,17))
@@ -4600,22 +4988,22 @@ c     elemento, no1, no2,...no6
       write(5,*) 'incidenca dos elementos'
       write(5,*) 'elemento, no1, no2,...no6'
       
-      do j=1,nel                !Laço para todos os elementos
+      do j=1,nel                !Laï¿½o para todos os elementos
          read(3,*) k,(ic(k,i),i=1,notl(k))
          write(5,*) k,(ic(k,i),i=1,notl(k))
          
-c     Novidade incidência inversa para montagem rápida ma Matriz-vetor MA27
+c     Novidade incidï¿½ncia inversa para montagem rï¿½pida ma Matriz-vetor MA27
 c     A quais elementos pertence o no?
          do i=1,notl(k)         ! notl(j)=numero de nos do elemento
-c     kn(nnos) informa quantos elementos estao conectados no nó      
-            kn(ic(k,i))=kn(ic(k,i))+1 !k elemento i é o no local e ic e a incidencia
+c     kn(nnos) informa quantos elementos estao conectados no nï¿½      
+            kn(ic(k,i))=kn(ic(k,i))+1 !k elemento i ï¿½ o no local e ic e a incidencia
 c     incidencia inversa im(no-global,numero do elento)
             im(ic(k,i),kn(ic(k,i)))=k
          enddo
-      enddo                     !fim do laço para todos os elementos
+      enddo                     !fim do laï¿½o para todos os elementos
 
 
-c     Informamos as rótulas através dos nós de extremidade dos elementos
+c     Informamos as rï¿½tulas atravï¿½s dos nï¿½s de extremidade dos elementos
       read (3,*)
       read (3,*)	  
 c     Tipo do no de extremidade
@@ -4657,7 +5045,7 @@ c     Elemento, noi, tipo, nof, tipo ! 0=restrito 1=livre (rotulado)
 
       enddo
 
-c     Informando a incidência inversa
+c     Informando a incidï¿½ncia inversa
       write(5,*) 'no,numero de elementos a que pertence'
       do i=1,nnos
          write(5,*) i,kn(i)
@@ -4669,61 +5057,61 @@ c     Informando a incidência inversa
 
 
 
-c     Início do processo de definição da conectividade entre nós 
+c     Inï¿½cio do processo de definiï¿½ï¿½o da conectividade entre nï¿½s 
 c     e graus de liberdade.
-c     Um nó que pertence a mais de um emento possuirá duas translações
-c     Porém poderá asumir mais de um giro
-c     Assim, se pertence apenas a um elemento possui três graus de liberdade
+c     Um nï¿½ que pertence a mais de um emento possuirï¿½ duas translaï¿½ï¿½es
+c     Porï¿½m poderï¿½ asumir mais de um giro
+c     Assim, se pertence apenas a um elemento possui trï¿½s graus de liberdade
 c     Se pertence a dois elementos e no segundo
-c     elemento é rotulado terá quatro graus de liberdade
-c     Duas translações e dois giros
-c     Caso Pertença a três elementos e for rotulado apenas em um possui 
-c     quatro gls. Caso pertença a três elementos e for rotulado em dois
-c     terá 5 gls. E assim sucessivamente
+c     elemento ï¿½ rotulado terï¿½ quatro graus de liberdade
+c     Duas translaï¿½ï¿½es e dois giros
+c     Caso Pertenï¿½a a trï¿½s elementos e for rotulado apenas em um possui 
+c     quatro gls. Caso pertenï¿½a a trï¿½s elementos e for rotulado em dois
+c     terï¿½ 5 gls. E assim sucessivamente
       
-      do ib=1,nnos              !Laço sobre os nós
-         iloc=2                 !duas translações impostas
-         do jj=1,kn(ib)         !Laço sobre os elementos conectados ao nó jj = elemento local
-            j=im(ib,jj)         !j é o elemento global
-            do ie=1,notl(j)     !Laço sobre os nós do elemento em questão
-               if (ic(j,ie).eq.ib) then !Descobrindo o nó local correspondente ao nó ib investigado
+      do ib=1,nnos              !Laï¿½o sobre os nï¿½s
+         iloc=2                 !duas translaï¿½ï¿½es impostas
+         do jj=1,kn(ib)         !Laï¿½o sobre os elementos conectados ao nï¿½ jj = elemento local
+            j=im(ib,jj)         !j ï¿½ o elemento global
+            do ie=1,notl(j)     !Laï¿½o sobre os nï¿½s do elemento em questï¿½o
+               if (ic(j,ie).eq.ib) then !Descobrindo o nï¿½ local correspondente ao nï¿½ ib investigado
                   i=ie          !no local 
                   goto 100
                else
                endif
-            enddo               !Fim do laço sobre os nós do elemento em questão      
+            enddo               !Fim do laï¿½o sobre os nï¿½s do elemento em questï¿½o      
  100        continue
             iloc=iloc+itr(j,i)  !Somando o grau de liberdade de giro para barras rotuladas
-            if(jj.eq.1) iloc=3  !se é aprimeira barra esse grau é o 3 sempre
-            iglv(ib,j)=iloc     ! Registrando o número local do grau de liberdade de giro para o nó global e elemento global
-         enddo                  !Fim do laço sobre os elementos conectados ao nó jj = elemento local
-         ngl(ib)=iloc           !registrando o número de graus de liberdade para cada nó
-      enddo                     !Fim do laço sobre o nós
+            if(jj.eq.1) iloc=3  !se ï¿½ aprimeira barra esse grau ï¿½ o 3 sempre
+            iglv(ib,j)=iloc     ! Registrando o nï¿½mero local do grau de liberdade de giro para o nï¿½ global e elemento global
+         enddo                  !Fim do laï¿½o sobre os elementos conectados ao nï¿½ jj = elemento local
+         ngl(ib)=iloc           !registrando o nï¿½mero de graus de liberdade para cada nï¿½
+      enddo                     !Fim do laï¿½o sobre o nï¿½s
 
       gl0=0.                    !contador base de graus de liberdade
-      do ib=1,nnos              !Laço sobre os nós da estrutura
-         glgl(ib,1)=gl0+1       !registrando translação 1
-         glgl(ib,2)=gl0+2       !registrando translação 1
-         do jj=3,ngl(ib)        !Laço sobre o número giros
+      do ib=1,nnos              !Laï¿½o sobre os nï¿½s da estrutura
+         glgl(ib,1)=gl0+1       !registrando translaï¿½ï¿½o 1
+         glgl(ib,2)=gl0+2       !registrando translaï¿½ï¿½o 1
+         do jj=3,ngl(ib)        !Laï¿½o sobre o nï¿½mero giros
             glgl(ib,jj)=glgl(ib,jj-1)+1 !registrando giro jj
          enddo
-         gl0=glgl(ib,ngl(ib))   !atualizando o contador base para cada nó
-      enddo                     !fim do laço sobre os nós da estrutura
-      n=gl0+nnosdp*3            !registrando o número de graus de liberdade total do problema
+         gl0=glgl(ib,ngl(ib))   !atualizando o contador base para cada nï¿½
+      enddo                     !fim do laï¿½o sobre os nï¿½s da estrutura
+      n=gl0+nnosdp*3            !registrando o nï¿½mero de graus de liberdade total do problema
       
       return
       end
 
 c      *******************************************
 c      Subrotina que ajeita as secoes transversais
-c      O usuário de engenharia básica entrará com
-c      dados de área, momento de inércia, posicao 
+c      O usuï¿½rio de engenharia bï¿½sica entrarï¿½ com
+c      dados de ï¿½rea, momento de inï¿½rcia, posicao 
 c      do cg e altura da secao e o programa 
-c      transforma esses dados em três faixas genéricas.
-c      em versão posterior um usuário mais avançado
-c      poderá informar características para cada fibra
-c      de sua seção transversal. Esta opção estará disponível
-c      em uma segunda versão do software.
+c      transforma esses dados em trï¿½s faixas genï¿½ricas.
+c      em versï¿½o posterior um usuï¿½rio mais avanï¿½ado
+c      poderï¿½ informar caracterï¿½sticas para cada fibra
+c      de sua seï¿½ï¿½o transversal. Esta opï¿½ï¿½o estarï¿½ disponï¿½vel
+c      em uma segunda versï¿½o do software.
 c      *******************************************   
       subroutine secoes
       USE BIG_STUFF
@@ -4733,9 +5121,9 @@ c     include 'bloclagatbig.for'
 
       do j=1,nel
          hh=resp(j)             !altura total
-         aa=ra(j)               !área total
-         rii=rib(j)             !Momento de inércia total
-         yyb=yb(j)              !posição do cg (da seção total)
+         aa=ra(j)               !ï¿½rea total
+         rii=rib(j)             !Momento de inï¿½rcia total
+         yyb=yb(j)              !posiï¿½ï¿½o do cg (da seï¿½ï¿½o total)
          rde=dsqrt(aa*(432*rii+aa*(-47*hh**2+108*hh*yyb-108*yyb**2)))
          hd1=-(aa*(hh-18*yyb)+rde)/12./aa
          hd2=-(aa*(hh-18*yyb)-rde)/12./aa
@@ -4755,9 +5143,9 @@ c     include 'bloclagatbig.for'
          y1b=hb(j,1)/2. 
          y2b=hb(j,1)+hb(j,2)/2.
          y3b=hb(j,1)+hb(j,2)+hb(j,3)/2.
-         fd(j,1)=y1b-yyb        !posição do cg da fibra 1
-         fd(j,2)=y2b-yyb        !posição do cg da fibra 2
-         fd(j,3)=y3b-yyb        !posição do cg da fibra 1
+         fd(j,1)=y1b-yyb        !posiï¿½ï¿½o do cg da fibra 1
+         fd(j,2)=y2b-yyb        !posiï¿½ï¿½o do cg da fibra 2
+         fd(j,3)=y3b-yyb        !posiï¿½ï¿½o do cg da fibra 1
       enddo
       return
       end
@@ -4799,7 +5187,7 @@ c$$$      enddo
 
 c      *******************************************
 c      subrotina que transforma as cargas distribuidas
-c      não conservativas em nodais equivalentes
+c      nï¿½o conservativas em nodais equivalentes
 c      *******************************************   
       subroutine alocanco
       USE BIG_STUFF
@@ -4807,8 +5195,8 @@ c      *******************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
       
-c     O comportamento temporal da carga ainda segue o mesmo padrão
-c     da carga consevativa, pode ser melhorado em versão futura
+c     O comportamento temporal da carga ainda segue o mesmo padrï¿½o
+c     da carga consevativa, pode ser melhorado em versï¿½o futura
       raux=
      #(ca+cb*ipc*dt+cc*(ipc*dt)**2+cd*sin(ce*ipc*dt)+cf*cos(cg*ipc*dt)
      #+crh*exp(cri*ipc*dt)+cj*exp(ck*ipc*dt))
@@ -4844,13 +5232,13 @@ c     *****************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
 
-c     Leitura dos parâmetros de resistência
+c     Leitura dos parï¿½metros de resistï¿½ncia
 c     nos moldes do modelo constitutivo de Drucke-Prager
-c     com possibilidade de características anisotrópicas 
-c     Cone não simétrico
+c     com possibilidade de caracterï¿½sticas anisotrï¿½picas 
+c     Cone nï¿½o simï¿½trico
 c     Esta subrotina foi deixada para ser usada
-c     na versão de casca a ser implementada
-
+c     na versï¿½o de casca a ser implementada
+      rewind(4)
       read(4,*)                 ! matriz dos parametros de resistencia
       read(4,*) rpret(1,1),rpret(1,2),rpret(1,3),rpret(1,4)
      #,rpret(1,5),rpret(1,6)
@@ -4867,26 +5255,35 @@ c     na versão de casca a ser implementada
 
       rpret=rpret/2.
 
-      read(4,*)                 ! matriz dos parâmetros de abertura do cone
+      read(4,*)                 ! matriz dos parï¿½metros de abertura do cone
       read(4,*) rl(1),rl(2),rl(3),rl(4),rl(5),rl(6)
       read(4,*)                 !numero de trechs  adicionais nL
-c     (o primeiro trecho segue comportamento elastoplástico comum)
+c     (o primeiro trecho segue comportamento elastoplï¿½stico comum)
       read(4,*) nt
       
-c     Alocação dinâmica de termos de plasticidade
-c     observar que como pertence ao big stuff está presente em todo o 
-c     programa como variável global
+c     Alocaï¿½ï¿½o dinï¿½mica de termos de plasticidade
+c     observar que como pertence ao big stuff estï¿½ presente em todo o 
+c     programa como variï¿½vel global
+      if (allocated(defl)) then
+         deallocate(defl)
+      end if
+      if (allocated(rhdg)) then
+         deallocate(rhdg)
+      end if
+      if (allocated(rhvg)) then
+         deallocate(rhvg)
+      end if
       ALLOCATE (defl(2,nt+2))
       ALLOCATE (rhdg(2,nt+2))
       ALLOCATE (rhvg(2,nt+2))
       defl=0.
       rhdg=0.
       rhvg=0.
-c     Novidade (Endurecimento volumétrico e desviador)
-      read(4,*)                 ! Resistência, hardening vol, hard dev (tracao e compressao)
+c     Novidade (Endurecimento volumï¿½trico e desviador)
+      read(4,*)                 ! Resistï¿½ncia, hardening vol, hard dev (tracao e compressao)
       read(4,*) st,sc,rhvg(1,1),rhdg(1,1),rhvg(2,1),rhdg(2,1)
 
-      do it=1,nt                !número de trechos não lineares além do primeiro
+      do it=1,nt                !nï¿½mero de trechos nï¿½o lineares alï¿½m do primeiro
          read(4,*)              ! hardeningv hardeningd def (tracao e compressao)
          read(4,*) rhvg(1,it+1),rhdg(1,it+1),defl(1,it)
      #,rhvg(2,it+1),rhdg(2,it+1),defl(2,it)
@@ -4903,7 +5300,7 @@ c     Novidade (Endurecimento volumétrico e desviador)
       end
 
 c     **************************************************************
-c     Subrotina de retorno para calculo da tensão real (plasticidade)
+c     Subrotina de retorno para calculo da tensï¿½o real (plasticidade)
 c     *************************************************************
       subroutine retorno
       USE BIG_STUFF
@@ -4911,8 +5308,8 @@ c     *************************************************************
       implicit real*8(a-h),integer*4(i-n),real*8(o-z)
 c     include 'bloclagatbig.for'
 
-      rtest=et(1)+et(2)+et(3)   !variável para testar trecho do cone
-c     (tração ou compressão)
+      rtest=et(1)+et(2)+et(3)   !variï¿½vel para testar trecho do cone
+c     (traï¿½ï¿½o ou compressï¿½o)
       imret=1
 
       if (rtest.lt.0.) imret=2 
@@ -4925,8 +5322,8 @@ c     (tração ou compressão)
          rhd(2)=rhdg(imret,2)
       endif
 
-c     Calculo da deformação total equivalente
-c     usando  norma do modelo constitutivo anisotrópico
+c     Calculo da deformaï¿½ï¿½o total equivalente
+c     usando  norma do modelo constitutivo anisotrï¿½pico
 
       rpe=0.
       do i=1,6
@@ -4945,16 +5342,16 @@ c     usando  norma do modelo constitutivo anisotrópico
          rle=rle+rl(i)*et(i)
       enddo
       
-      eeqa=eeq(j,ig1,ig3,igf)   !deformação equivalente anterior
-      eeq(j,ig1,ig3,igf)=dsqrt(rde)+rle !deformação equivalente atual
+      eeqa=eeq(j,ig1,ig3,igf)   !deformaï¿½ï¿½o equivalente anterior
+      eeq(j,ig1,ig3,igf)=dsqrt(rde)+rle !deformaï¿½ï¿½o equivalente atual
       eeq1=eeq(j,ig1,ig3,igf) 
 
       auxesc=1.
       na=1
 
       do itret=1,nt 
-C     estabelecendo mudança de hardening nos cantos
-c     mudança de trecho de hardening lineares
+C     estabelecendo mudanï¿½a de hardening nos cantos
+c     mudanï¿½a de trecho de hardening lineares
          if((eeq1.gt.defl(imret,itret)).and.
      #(eeqa.lt.defl(imret,itret))) then
             rhv(1)=rhvg(imret,itret+1*0)
@@ -4981,10 +5378,10 @@ c     mudança de trecho de hardening lineares
       enddo
 
 
-      do iaret=1,na             !caso não haja mudança de hardening na=1
-         dlam=0.                !zerando multiplicador plástico
+      do iaret=1,na             !caso nï¿½o haja mudanï¿½a de hardening na=1
+         dlam=0.                !zerando multiplicador plï¿½stico
          if(iaret.eq.2) et=et/auxesc
-         prsi=0.                !zerando força interna (conjugado da deformação equivalete)
+         prsi=0.                !zerando forï¿½a interna (conjugado da deformaï¿½ï¿½o equivalete)
          do iep=1,6
             ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep)
          enddo
@@ -4999,7 +5396,7 @@ c     mudança de trecho de hardening lineares
             rls=rls+rl(i)*s(i)
          enddo
          f0=rls-s0-prsi0(j,ig1,ig3,igf)
-         if(f0.gt.0.) then      !teste de degeneração da superfície plástica
+         if(f0.gt.0.) then      !teste de degeneraï¿½ï¿½o da superfï¿½cie plï¿½stica
             f0=0.
             rhv(1)=0. 
             rhv(2)=0.
@@ -5068,12 +5465,12 @@ c     mudança de trecho de hardening lineares
          enddo
          rcret=raret+rbret
          seq=dsqrt(rd)+rls
-         fret=f0+dsqrt(rd)      !cálculo do valor da função objetiva
+         fret=f0+dsqrt(rd)      !cï¿½lculo do valor da funï¿½ï¿½o objetiva
          alfret=0.
          betret=0.
          gamret=0.
          delt=0.
-         if(fret.gt.1.0d-10) then !violou o critério de plastificação?
+         if(fret.gt.1.0d-10) then !violou o critï¿½rio de plastificaï¿½ï¿½o?
             alfret=rg1-rcret**2  
             betret=2.*rcret*f0-reret-rfret
             gamret=rd-f0**2.
@@ -5092,25 +5489,25 @@ c     caso delta seja nulo o bascara resulta em uma unica raiz dada por (cuidado
             endif
             dlam=0.
             if ((dl1.gt.0.).and.(dl1.lt.dl2)) then
-               dlam=dl1         !multiplicador plástico
+               dlam=dl1         !multiplicador plï¿½stico
             else
-               dlam=dl2         !multiplicador plástico
+               dlam=dl2         !multiplicador plï¿½stico
             endif
             if((dlam).lt.1.d-15) then
                dlam=0.
             else
-               prsi=dlam*rbret  !variação da força interna
+               prsi=dlam*rbret  !variaï¿½ï¿½o da forï¿½a interna
                do iep=1,6
                   ep(j,ig1,ig3,igf,iep)=ep(j,ig1,ig3,igf,iep)
-     $                 +dlam*rhret(iep) !deformação plástica
+     $                 +dlam*rhret(iep) !deformaï¿½ï¿½o plï¿½stica
                enddo
             endif
-            prsi0(j,ig1,ig3,igf)=prsi0(j,ig1,ig3,igf)+prsi !atualização da força interna
+            prsi0(j,ig1,ig3,igf)=prsi0(j,ig1,ig3,igf)+prsi !atualizaï¿½ï¿½o da forï¿½a interna
             do iep=1,6
-               ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep) !deformação elástica
+               ee(iep)=et(iep)-ep(j,ig1,ig3,igf,iep) !deformaï¿½ï¿½o elï¿½stica
             enddo
-c     goto 10 !fim das iterações se o programa 
-c     de retorno fosse desacoplado de um problema mecânicao
+c     goto 10 !fim das iteraï¿½ï¿½es se o programa 
+c     de retorno fosse desacoplado de um problema mecï¿½nicao
          else
          endif
          if(iaret.eq.2) eeq1=eeq2 
@@ -5122,7 +5519,7 @@ c     de retorno fosse desacoplado de um problema mecânicao
 
 
 c      *************************************
-c       Resolve o sistema subrotina de conhecimento público
+c       Resolve o sistema subrotina de conhecimento pï¿½blico
 c      *************************************
       subroutine ma27
       USE BIG_STUFF	 
@@ -7387,7 +7784,7 @@ c      enddo
 !
 !  ROTINA:     INVERSE
 !
-!  PROPÓSITO:  Inverter uma matriz
+!  PROPï¿½SITO:  Inverter uma matriz
 !
 !
 !****************************************************************************
@@ -7399,11 +7796,11 @@ c      enddo
       real*8 Id(iEq,iEq), dbAux
 
 
-      ! iEq            - numero de equações
+      ! iEq            - numero de equaï¿½ï¿½es
       ! dbMin            - Matriz a ser resolvida 
 
-      ! Gera a matriz identidade (onde estará a resposta - dbMout)
-      ! Copia dbMin para não alterá-la - Id no final será a matriz identidade
+      ! Gera a matriz identidade (onde estarï¿½ a resposta - dbMout)
+      ! Copia dbMin para nï¿½o alterï¿½-la - Id no final serï¿½ a matriz identidade
 
       do ii = 1,iEq
             do ij = 1,iEq
@@ -7704,19 +8101,19 @@ c$$$     $        p(glgl(inode,2)), fi(k)
       USE BLOCLAGATBIG
       implicit none
 
-c     call saidaposmomento !Pos processa os esforcospor nó
+c     call saidaposmomento !Pos processa os esforcospor nï¿½
       
 c$$$  rteste=ipt/(nprint*1.)-int(ipt/(nprint*1.)) !Frequencia de impressao para posproc
 c$$$  if ((dabs(rteste).lt.0.000001).or.(ipt.eq.1)) then
 c     pos-processamentos gerais
-      call saida                !Lista completa de posições e tempo
+      call saida                !Lista completa de posiï¿½ï¿½es e tempo
       call saidaposnov          !Pos processamento do deslocamento
-      call tensaoacima          !Calcula as tensões nominais tensao nominal
+      call tensaoacima          !Calcula as tensï¿½es nominais tensao nominal
       call saidaposnovtensaoacima !Pos processa tensoes nominais
       call tensaoabaixo         !Cacula tensoe principais
       call saidaposnovtensaoabaixo !Pos-processa tensoe principais
       call momento              !Calcula os esforcos solicitantes
-      call saidaposmomento      !Pos processa os esforcospor nó
+      call saidaposmomento      !Pos processa os esforcospor nï¿½
       call esforcosinternos
 c     call momentonovo   !pos processa os esforcos por elemento	
 c$$$  else
@@ -7731,12 +8128,12 @@ c$$$  endif
       USE BLOCLAGATBIG
       implicit none
 
-c$$$      as1=p/rbn/dt**2-qs        !Atualizando aceleração presente para ser usada
-c$$$      vs=vs+dt*(1.-rgn)*as+rgn*dt*as1 !Acertando velocidade passado (desnecessário guardar presente)
+c$$$      as1=p/rbn/dt**2-qs        !Atualizando aceleraï¿½ï¿½o presente para ser usada
+c$$$      vs=vs+dt*(1.-rgn)*as+rgn*dt*as1 !Acertando velocidade passado (desnecessï¿½rio guardar presente)
 c$$$      as=as1      
 
-      qs=p/rbn/dt**2+vs/rbn/dt+(1/2./rbn-1.)*as !Resíduo do Método de Newmark
-      rs=vs+dt*(1.-rgn)*as      !Resíduo dó Método de Newmark
+      qs=p/rbn/dt**2+vs/rbn/dt+(1/2./rbn-1.)*as !Resï¿½duo do Mï¿½todo de Newmark
+      rs=vs+dt*(1.-rgn)*as      !Resï¿½duo dï¿½ Mï¿½todo de Newmark
 
 
       return
@@ -7800,19 +8197,19 @@ c$$$      as=as1
       integer*4 ipt2
 
 c     **********************************************************
-c     Este subprograma serve para as variáveis menores, alocação estática
+c     Este subprograma serve para as variï¿½veis menores, alocaï¿½ï¿½o estï¿½tica
 c     **************************************************************
       
       INTEGER(2) IHRI,IMINI,ISECI,I100THI,IHRF,IMINF,ISECF,I100THF !so uso para marcar tempo
 
       ipt = ipt2
 
-      call destroca1            !Utilizando a última iteração ainda não aproveitada
+      call destroca1            !Utilizando a ï¿½ltima iteraï¿½ï¿½o ainda nï¿½o aproveitada
       vs_ant = vs
 
-      as1=p/rbn/dt**2-qs        !Atualizando aceleração presente para ser usada
-      vs=vs+dt*(1.-rgn)*as+rgn*dt*as1 !Acertando velocidade passado (desnecessário guardar presente)
-      as=as1                    !aceleração passado sendo atualizada
+      as1=p/rbn/dt**2-qs        !Atualizando aceleraï¿½ï¿½o presente para ser usada
+      vs=vs+dt*(1.-rgn)*as+rgn*dt*as1 !Acertando velocidade passado (desnecessï¿½rio guardar presente)
+      as=as1                    !aceleraï¿½ï¿½o passado sendo atualizada
       !write(*,*) 'numero de iteracoes',ia,ipt,ipt
       
       call momento              !Calcula os esforcos solicitantes
@@ -7830,24 +8227,24 @@ c     write(*,*)'ruptura0',rmsd,rmrd,j,ino
             
 c$$$  
 c$$$  
-c     Verificação da ruptura por momento:
+c     Verificaï¿½ï¿½o da ruptura por momento:
             if(dabs(rmsd).gt.rmrd)then
                iresistcrit(ic(j,ino))=0
                write(99,*)'rupturam',ino,j,rmsd,rmrd,ipt
             endif
-c     Verificação da ruptura por cortante:
+c     Verificaï¿½ï¿½o da ruptura por cortante:
             if(dabs(rvsd).gt.rvrd)then
                iresistcrit(ic(j,ino))=0
                write(99,*)'rupturav',ino,j,rvsd,rvrd,ipt
             endif
-c     Verificação da ruptura por normal:
+c     Verificaï¿½ï¿½o da ruptura por normal:
             if(dabs(rnsd).gt.rnrd)then
                iresistcrit(ic(j,ino))=0
                write(99,*)'rupturan',ino,j,rnsd,rnrd,ipt
 c     read(*,*)
             endif
-c     Verificação da ruptura combinada porn normal e momento:
-c$$$  c     Verificação da ruptura por ação combinada
+c     Verificaï¿½ï¿½o da ruptura combinada porn normal e momento:
+c$$$  c     Verificaï¿½ï¿½o da ruptura por aï¿½ï¿½o combinada
 c$$$  
 c$$$  resistcomb=rmsd*rmsd/(rmrd*rmrd)+rnsd*rnsd/(rnrd
 c$$$  $               *rnrd)+rvsd*rvsd/(rvrd*rvrd)

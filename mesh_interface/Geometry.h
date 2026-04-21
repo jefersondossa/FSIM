@@ -65,7 +65,7 @@ public:
 
 	Circle* addCircle(std::vector<Point*> points, const bool& discretization = true);
 
-	Ellipse* addEllipse(std::vector<Point*> points, double rx, double ry, double startangle = 0, double finalangle = 360, double angle = 0, const bool& discretization = true);
+	Ellipse* addEllipse(std::vector<Point*> points, const bool& discretization = true);
 
 	Spline* addSpline(std::vector<Point*> points, double(*function)(double), const int& ndiv, const bool& discretization = true);
 

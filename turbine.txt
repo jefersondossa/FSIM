@@ -2,9 +2,9 @@ quer ler posicao inicial diferente de repouso (sim=1, nao=0)
 0
 nnos(numero de nos),nel(numero de elementos),nfc(numero de fases de carga),tol,ngf(no para saida),ngf1(nopara saida)
 43,14,1000,0.0000000001,7,24
-numero de nós multiplos (colocar zero se nao for colapso progressivo)
+numero de nï¿½s multiplos (colocar zero se nao for colapso progressivo)
 0
-nos multiplos, substitutos (até 4) (não colocar nada se nao for colapso)
+nos multiplos, substitutos (atï¿½ 4) (nï¿½o colocar nada se nao for colapso)
 pontos de gauss altura, frequencia de impressao
 5,1
 elemento, numero de nos
@@ -135,8 +135,8 @@ numero de nos com velocidade inicial
 1
 no, velox, vely, velz
 1 0 0 
-Impacto sem atrito, região quadrada
-Entrar com o centro e a distância das faces ao centro
+Impacto sem atrito, regiï¿½o quadrada
+Entrar com o centro e a distï¿½ncia das faces ao centro
 xp,yp,xc,yc,coeficiente de atrito ao impacto
 -100000,-100000,1000000,100000,0.
 primeira fase de carga
