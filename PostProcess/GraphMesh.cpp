@@ -48,7 +48,7 @@ GraphMesh::GraphMesh(CompMesh *cmesh){
         if (cel->Dimension() != cmesh->Dimension()) continue;
         if (cel->GetWeakForm() == nullptr) continue;
         fGElementToMElement[elcount] = iel;
-        int nelnodes = cel->Reference()->NCornerNodes();
+        int nelnodes = cel->Reference()->NGeometricNodes();
         fElementTypes[elcount] = cel->Reference()->PrintType();
         fElementConnects[elcount].resize(nelnodes);
         for (int inode = 0; inode < nelnodes; inode++){

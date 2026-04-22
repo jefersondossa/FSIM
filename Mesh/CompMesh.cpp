@@ -88,16 +88,58 @@ void CompMesh::BuildConnectivity(){
 }
 
 void CompMesh::BuildConnects(){
-    int nconnects = 0;
-    int64_t seqnum = 0;
-
     switch (fApproxType)
     {
     case ApproxType::EHierarquic:
         BuildHierarquicConnects();
         break;
     case ApproxType::EIsoparametric:
-        nconnects = fReference->NNodes();
+        BuildIsoparametricConnects();        
+        break;
+    default:
+        std::cout << "Unknown approximation type. Please check it. \n";
+        PanicButton();
+        break;
+    }    
+}
+
+
+void CompMesh::BuildIsoparametricConnects(){
+    
+    if (fIsDisconnected){
+        // count the number of connects based on the number of elements, since each element will have 
+        // its own set of connects
+        int64_t seqnum = 0;
+        int64_t nconnects = 0;
+        for (int64_t iel = 0; iel < NElements(); iel++){
+            Element *el = fElementVector[iel];
+            if (el->Dimension() != fDimension) {
+                el->getConnectivity().resize(0);
+                el->NLocDOF() = 0;
+                continue;
+            }
+            nconnects += fElementVector[iel]->Reference()->NGeometricNodes();
+        }
+        fConnectVector.resize(nconnects);
+        int64_t connect_index = 0;
+        for (int64_t iel = 0; iel < NElements(); iel++){
+            Element *el = fElementVector[iel];
+            if (el->Dimension() != fDimension) continue;
+            VecInt &geoNodes = el->Reference()->getGeometricNodes();
+            VecInt connect(geoNodes.size());
+            for (int i = 0; i < geoNodes.size(); i++){
+                fConnectVector[connect_index] = new Connect(fNState,1,fOrder,connect_index,seqnum);
+                connect[i] = connect_index;
+                connect_index++;
+                seqnum++;
+            }
+            el->setConnectivity(connect);
+        }
+        fNGlobalDOF = nconnects * fNState;
+
+    } else {
+        int64_t seqnum = 0;
+        int64_t nconnects = fReference->NNodes();
         fConnectVector.resize(nconnects);
         for (int64_t i = 0; i < nconnects; i++){
             fConnectVector[i] = new Connect(fNState,1,fOrder,i,seqnum);
@@ -109,15 +151,9 @@ void CompMesh::BuildConnects(){
             el->setConnectivity(geoNodes);
         }
         fNGlobalDOF = nconnects * fNState;
-        break;
-    default:
-        std::cout << "Unknown approximation type. Please check it. \n";
-        PanicButton();
-        break;
-    }
-
-    
+    }   
 }
+
 
 void CompMesh::BuildHierarquicConnects(){
 
@@ -129,173 +165,266 @@ void CompMesh::BuildHierarquicConnects(){
     // para implementar, mas manteria a banda da matriz menor.
 
 
-    int nconnects = 0;
-    fConnectVector.reserve(NElements());
-    std::map<int,int> node_to_connect;
-    std::map<std::vector<int>,int> edge_to_connect;
-    std::map<std::vector<int>,int> face_to_connect;
-    std::map<std::vector<int>,int> volume_to_connect;
 
-    int edgecount = 0;
-    int facecount = 0;
-    int volumecount = 0;
-    int64_t seqnum = 0;
-
-    for (auto el:fElementVector){
-        if (!el) continue;
-
-        if (fOrder == 0){
+    if (fIsDisconnected){
+        // count the number of connects based on the number of elements, since each element will have 
+        // its own set of connects
+        int64_t seqnum = 0;
+        int64_t nconnects = 0;
+        for (int64_t iel = 0; iel < NElements(); iel++){
+            Element *el = fElementVector[iel];
             if (el->Dimension() != fDimension) {
                 el->getConnectivity().resize(0);
                 el->NLocDOF() = 0;
                 continue;
             }
-            //For order 0, we create only one connect for the element, and all nodes, edges and faces are associated with it
-            fConnectVector.push_back(new Connect(fNState,1,0,nconnects,seqnum));
-            seqnum += fNState;
-            VecInt connect(1);
-            connect[0] = nconnects;
-            el->getConnectivity().resize(1);
+            nconnects += el->NSides();
+        }
+        fConnectVector.reserve(nconnects);
+        int64_t connect_index = 0;
+        int64_t globaldof = 0;
+        for (auto el:fElementVector){
+            if (!el) continue;
+
+            if (fOrder == 0){
+                if (el->Dimension() != fDimension) {
+                    el->getConnectivity().resize(0);
+                    el->NLocDOF() = 0;
+                    continue;
+                }
+                //For order 0, we create only one connect for the element, and all nodes, edges and faces are associated with it
+                fConnectVector.push_back(new Connect(fNState,1,0,connect_index,seqnum));
+                seqnum += fNState;
+                globaldof += fNState;
+                VecInt connect(1);
+                connect[0] = connect_index;
+                el->getConnectivity().resize(1);
+                el->setConnectivity(connect);
+                connect_index++;
+                continue;
+            }
+            if (el->Dimension() != fDimension) continue;
+            int ncorner = el->Reference()->NCornerNodes();
+            int nedges = el->Reference()->NEdges();
+            int nfaces = el->Reference()->NFaces();
+            int nvolumes = el->Reference()->NVolumes();
+            int nsides = el->NSides();
+            VecInt connect(nsides);
+            connect.setZero(); 
+
+            // Corner connects
+            for (int icorner = 0; icorner < ncorner; icorner++){
+                int nshape = HierarquicalOneD::NShapeFunctions(1,fOrder);
+                int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                fConnectVector.push_back(new Connect(fNState,nshape,fOrder,connect_index,ef_seqnum));
+                connect[icorner] = connect_index;
+                connect_index++;
+                globaldof += nshape * fNState;
+                seqnum += nshape * fNState;
+            }
+            // Edge connects
+            for (int iedge = 0; iedge < nedges; iedge++){
+                int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
+                int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                fConnectVector.push_back(new Connect(fNState,nshape,fOrder,connect_index,ef_seqnum));
+                connect[ncorner + iedge] = connect_index;
+                connect_index++;
+                globaldof += nshape * fNState;
+                seqnum += nshape * fNState;
+            }
+            // Face connects
+            for (int iface = 0; iface < nfaces; iface++){
+                int nshape = 0;
+                switch (el->Reference()->Type()){
+                    case ElementType::EQuadrilateral:
+                        nshape = HierarquicalQuad::NShapeFunctions(nsides-1,fOrder);
+                        break;
+                    case ElementType::ETriangle:
+                        nshape = HierarquicalTriangle::NShapeFunctions(nsides-1,fOrder);
+                        break;
+                    default:
+                        std::cout << "Face type not supported for hierarchical approximation. Please check it. \n";
+                        PanicButton();
+                }
+                int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                fConnectVector.push_back(new Connect(fNState,nshape,fOrder,connect_index,ef_seqnum));
+                connect[ncorner + nedges + iface] = connect_index;
+                connect_index++;
+                globaldof += nshape * fNState;
+                seqnum += nshape * fNState;
+            }
             el->setConnectivity(connect);
-            nconnects++;
-            continue;
+        }
+        fNGlobalDOF = globaldof;
+
+    } else {
+        int nconnects = 0;
+        fConnectVector.reserve(NElements());
+        std::map<int,int> node_to_connect;
+        std::map<std::vector<int>,int> edge_to_connect;
+        std::map<std::vector<int>,int> face_to_connect;
+        std::map<std::vector<int>,int> volume_to_connect;
+
+        int edgecount = 0;
+        int facecount = 0;
+        int volumecount = 0;
+        int64_t seqnum = 0;
+
+        for (auto el:fElementVector){
+            if (!el) continue;
+
+            if (fOrder == 0){
+                if (el->Dimension() != fDimension) {
+                    el->getConnectivity().resize(0);
+                    el->NLocDOF() = 0;
+                    continue;
+                }
+                //For order 0, we create only one connect for the element, and all nodes, edges and faces are associated with it
+                fConnectVector.push_back(new Connect(fNState,1,0,nconnects,seqnum));
+                seqnum += fNState;
+                VecInt connect(1);
+                connect[0] = nconnects;
+                el->getConnectivity().resize(1);
+                el->setConnectivity(connect);
+                nconnects++;
+                continue;
+            }
+            
+            VecInt &geoNodes = el->Reference()->getGeometricNodes();
+            int ncorner = el->Reference()->NCornerNodes();
+            int nedges = el->Reference()->NEdges();
+            int nfaces = el->Reference()->NFaces();
+            int nvolumes = el->Reference()->NVolumes();
+            int nsides = el->NSides();
+            VecInt connect(nsides);
+            connect.setZero(); 
+
+            //Start the connectivity with the corner nodes
+            for (int i = 0; i < ncorner; i++){
+                if (node_to_connect.find(geoNodes[i]) == node_to_connect.end()){
+                    fConnectVector.push_back(new Connect(fNState,1,1,nconnects,seqnum));
+                    seqnum += fNState; // Nodes have only 1 associated shape function
+                    node_to_connect[geoNodes[i]] = nconnects;
+                    connect[i] = node_to_connect[geoNodes[i]];
+                    nconnects++;
+                } else {
+                    connect[i] = node_to_connect[geoNodes[i]];
+                }
+            }
+
+            //Create connects for the edges
+            for (int i = ncorner; i < ncorner + nedges; i++){
+                std::vector<int> sideNodes(2), sideNodesSorted(2);
+                for (int j = 0; j < 2; j++){
+                    sideNodes[j] = geoNodes[el->SideNodeLocIndex(i,j)];
+                }
+                sideNodesSorted[0] = sideNodes[1];
+                sideNodesSorted[1] = sideNodes[0];
+
+                //Varrer todos os elementos vizinhos e verificar se os dois nos participam
+                //do vetor geo nodes. Se sim, então há um connect comum para os dois.
+                // Caso contrário, criar um novo connect de aresta.
+                int numNeig=el->Reference()->getNumberOfNeighborElements(); 
+                for (int ineig = 0; ineig < numNeig; ineig++){
+                    auto neig = el->Reference()->getNeighborElement(ineig);
+                    if (!fElementVector[neig]) continue;
+                    if (fElementVector[neig]->Dimension() == 0) continue;
+
+                    VecInt &neigNodes = fElementVector[neig]->Reference()->getGeometricNodes();
+                    std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
+                    if (neighNodesVec.find(sideNodes[0])!= neighNodesVec.end() &&
+                        neighNodesVec.find(sideNodes[1])!= neighNodesVec.end()){
+                        //achou um elemento vizinho que tem os dois nos da aresta
+                        //verificar se ja existe um connect para essa aresta
+                        if (edge_to_connect.find(sideNodes) == edge_to_connect.end() &&
+                            edge_to_connect.find(sideNodesSorted) == edge_to_connect.end()){
+                            int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
+                            int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                            fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
+                            seqnum += nshape * fNState;
+                            edge_to_connect[sideNodes] = nconnects;
+                            edge_to_connect[sideNodesSorted] = nconnects;
+                            connect[i] = nconnects;
+                            nconnects++;
+                        } else {
+                            //ja existe um connect para essa aresta
+                            connect[i] = edge_to_connect[sideNodes];
+                        }
+                    }
+                }
+            }
+
+            //Create connects for the faces
+            for (int i=ncorner+nedges; i < ncorner+nedges+nfaces; i++){
+                int nsidenodes = el->NSideNodes(i);
+                std::vector<int> sideNodes(nsidenodes);
+                for (int j = 0; j < nsidenodes; j++){
+                    sideNodes[j] = geoNodes[j];
+                }
+
+                //Varrer todos os elementos vizinhos e verificar se os dois nos participam
+                //do vetor geo nodes. Se sim, então há um connect comum para os dois.
+                // Caso contrário, criar um novo connect de aresta.
+                int numNeig=el->Reference()->getNumberOfNeighborElements(); 
+                for (int ineig = 0; ineig < numNeig; ineig++){
+                    auto neig = el->Reference()->getNeighborElement(ineig);
+                    if (!fElementVector[neig]) continue;
+                    if (fElementVector[neig]->Dimension() == 0) continue;
+
+                    VecInt &neigNodes = fElementVector[neig]->Reference()->getGeometricNodes();
+                    std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
+
+                    bool allNodesFound = true;
+                    for (int j = 0; j < nsidenodes; j++){
+                        if (neighNodesVec.find(sideNodes[j]) == neighNodesVec.end()){
+                            allNodesFound = false;
+                            break;
+                        }
+                    }
+
+                    if (allNodesFound){
+                        //achou um elemento vizinho que tem os dois nos da aresta
+                        //verificar se ja existe um connect para essa aresta
+                        if (face_to_connect.find(sideNodes) == face_to_connect.end()){
+
+
+                            int nshape = 0;
+                            switch (el->Reference()->Type()){
+                                case ElementType::EQuadrilateral:
+                                    nshape = HierarquicalQuad::NShapeFunctions(i,fOrder);
+                                    break;
+                                case ElementType::ETriangle:
+                                    nshape = HierarquicalTriangle::NShapeFunctions(i,fOrder);
+                                    break;
+                                default:
+                                    std::cout << "Face type not supported for hierarchical approximation. Please check it. \n";
+                                    PanicButton();
+                            }
+                            
+                            int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                            fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
+                            seqnum += nshape * fNState;
+                            face_to_connect[sideNodes] = nconnects;
+                            connect[i] = nconnects;
+                            nconnects++;
+                        } else {
+                            //ja existe um connect para essa face
+                            connect[i] = face_to_connect[sideNodes];
+                        }
+                    }
+                }
+            }
+
+
+            el->setConnectivity(connect);
+
         }
         
-        VecInt &geoNodes = el->Reference()->getGeometricNodes();
-        int ncorner = el->Reference()->NCornerNodes();
-        int nedges = el->Reference()->NEdges();
-        int nfaces = el->Reference()->NFaces();
-        int nvolumes = el->Reference()->NVolumes();
-        int nsides = el->NSides();
-        VecInt connect(nsides);
-        connect.setZero(); 
-
-        //Start the connectivity with the corner nodes
-        for (int i = 0; i < ncorner; i++){
-            if (node_to_connect.find(geoNodes[i]) == node_to_connect.end()){
-                fConnectVector.push_back(new Connect(fNState,1,1,nconnects,seqnum));
-                seqnum += fNState; // Nodes have only 1 associated shape function
-                node_to_connect[geoNodes[i]] = nconnects;
-                connect[i] = node_to_connect[geoNodes[i]];
-                nconnects++;
-            } else {
-                connect[i] = node_to_connect[geoNodes[i]];
-            }
+        fNGlobalDOF = 0;
+        for (int64_t i = 0; i < fConnectVector.size(); i++){
+            fNGlobalDOF += fConnectVector[i]->GetNShapeFunctions() * fNState;
         }
-
-        //Create connects for the edges
-        for (int i = ncorner; i < ncorner + nedges; i++){
-            std::vector<int> sideNodes(2), sideNodesSorted(2);
-            for (int j = 0; j < 2; j++){
-                sideNodes[j] = geoNodes[el->SideNodeLocIndex(i,j)];
-            }
-            sideNodesSorted[0] = sideNodes[1];
-            sideNodesSorted[1] = sideNodes[0];
-
-            //Varrer todos os elementos vizinhos e verificar se os dois nos participam
-            //do vetor geo nodes. Se sim, então há um connect comum para os dois.
-            // Caso contrário, criar um novo connect de aresta.
-            int numNeig=el->Reference()->getNumberOfNeighborElements(); 
-            for (int ineig = 0; ineig < numNeig; ineig++){
-                auto neig = el->Reference()->getNeighborElement(ineig);
-                if (!fElementVector[neig]) continue;
-                if (fElementVector[neig]->Dimension() == 0) continue;
-
-                VecInt &neigNodes = fElementVector[neig]->Reference()->getGeometricNodes();
-                std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
-                if (neighNodesVec.find(sideNodes[0])!= neighNodesVec.end() &&
-                    neighNodesVec.find(sideNodes[1])!= neighNodesVec.end()){
-                    //achou um elemento vizinho que tem os dois nos da aresta
-                    //verificar se ja existe um connect para essa aresta
-                    if (edge_to_connect.find(sideNodes) == edge_to_connect.end() &&
-                        edge_to_connect.find(sideNodesSorted) == edge_to_connect.end()){
-                        int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
-                        int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
-                        fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
-                        seqnum += nshape * fNState;
-                        edge_to_connect[sideNodes] = nconnects;
-                        edge_to_connect[sideNodesSorted] = nconnects;
-                        connect[i] = nconnects;
-                        nconnects++;
-                    } else {
-                        //ja existe um connect para essa aresta
-                        connect[i] = edge_to_connect[sideNodes];
-                    }
-                }
-            }
-        }
-
-        //Create connects for the faces
-        for (int i=ncorner+nedges; i < ncorner+nedges+nfaces; i++){
-            int nsidenodes = el->NSideNodes(i);
-            std::vector<int> sideNodes(nsidenodes);
-            for (int j = 0; j < nsidenodes; j++){
-                sideNodes[j] = geoNodes[j];
-            }
-
-            //Varrer todos os elementos vizinhos e verificar se os dois nos participam
-            //do vetor geo nodes. Se sim, então há um connect comum para os dois.
-            // Caso contrário, criar um novo connect de aresta.
-            int numNeig=el->Reference()->getNumberOfNeighborElements(); 
-            for (int ineig = 0; ineig < numNeig; ineig++){
-                auto neig = el->Reference()->getNeighborElement(ineig);
-                if (!fElementVector[neig]) continue;
-                if (fElementVector[neig]->Dimension() == 0) continue;
-
-                VecInt &neigNodes = fElementVector[neig]->Reference()->getGeometricNodes();
-                std::set<int> neighNodesVec(neigNodes.data(),neigNodes.data()+neigNodes.size());
-
-                bool allNodesFound = true;
-                for (int j = 0; j < nsidenodes; j++){
-                    if (neighNodesVec.find(sideNodes[j]) == neighNodesVec.end()){
-                        allNodesFound = false;
-                        break;
-                    }
-                }
-
-                if (allNodesFound){
-                    //achou um elemento vizinho que tem os dois nos da aresta
-                    //verificar se ja existe um connect para essa aresta
-                    if (face_to_connect.find(sideNodes) == face_to_connect.end()){
-
-
-                        int nshape = 0;
-                        switch (el->Reference()->Type()){
-                            case ElementType::EQuadrilateral:
-                                nshape = HierarquicalQuad::NShapeFunctions(i,fOrder);
-                                break;
-                            case ElementType::ETriangle:
-                                nshape = HierarquicalTriangle::NShapeFunctions(i,fOrder);
-                                break;
-                            default:
-                                std::cout << "Face type not supported for hierarchical approximation. Please check it. \n";
-                                PanicButton();
-                        }
-                        
-                        int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
-                        fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
-                        seqnum += nshape * fNState;
-                        face_to_connect[sideNodes] = nconnects;
-                        connect[i] = nconnects;
-                        nconnects++;
-                    } else {
-                        //ja existe um connect para essa face
-                        connect[i] = face_to_connect[sideNodes];
-                    }
-                }
-            }
-        }
-
-
-        el->setConnectivity(connect);
-
     }
-    
-    fNGlobalDOF = 0;
-    for (int64_t i = 0; i < fConnectVector.size(); i++){
-        fNGlobalDOF += fConnectVector[i]->GetNShapeFunctions() * fNState;
-    }
-
 
 }
 

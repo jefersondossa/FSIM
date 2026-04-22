@@ -53,6 +53,8 @@ protected:
     ApproxType fApproxType = ApproxType::EIsoparametric;
 
     GeoMesh* fReference = nullptr;
+
+    bool fIsDisconnected = false;
     
 public:
     int* part_elem;      //Domain Decomposition - Elements
@@ -151,9 +153,13 @@ public:
     void BuildConnectivity();
     void BuildConnects();
     void BuildHierarquicConnects();
+    void BuildIsoparametricConnects();
 
     void Print(std::string filename);
 
+    void CreateDisconnectedElements(){
+        fIsDisconnected = true;
+    }
     
 };
 

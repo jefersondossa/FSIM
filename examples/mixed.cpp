@@ -112,6 +112,7 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
 
+    cmesh->CreateDisconnectedElements();
     cmesh->AutoBuild();
     
     cmesh->Print("cmesh_pressure.txt");

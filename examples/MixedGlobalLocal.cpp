@@ -68,6 +68,7 @@ int main(int argc, char **args) {
     
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
+    return 0;
 
     //Automatic search the connects to be enriched in the global model
     for (auto celEl:cmeshG->ElementVec()){
@@ -189,6 +190,7 @@ MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshve
     meshvector[1]->InsertMaterial(matbc2);
     meshvector[1]->InsertMaterial(matbc3);
 
+    meshvector[1]->CreateDisconnectedElements();
     meshvector[1]->AutoBuild();
 
     //MixedCompMesh

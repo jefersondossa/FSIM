@@ -476,7 +476,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
         auto compel = cmesh->ElementVec()[graphmesh->GraphElementToMeshElement(iel)];
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
-        int nelnodes = compel->Reference()->NCornerNodes();
+        int nelnodes = compel->Reference()->NGeometricNodes();
         for (int inode = 0; inode < nelnodes; inode++){
             auto xparametric = compel->Reference()->NodeCoord(inode);
             compel->IntegrationData().fAdimCoord = xparametric;
