@@ -500,6 +500,14 @@
     arlequinProblem.setFluidModels(coarseModel, fineModel);
     coupledProblem.setArlequinAndSolidModels(arlequinProblem,in_solid);
 
+    //Remove the laplace contrain for the turbine axis
+    for (int i = 0; i < arlequinProblem->nodesFine_.size(); i++){
+        if (arlequinProblem->nodesFine_[i]->getConstrain(0) == 1 || arlequinProblem->nodesFine_[i]->getConstrain(1) == 1){
+            arlequinProblem->nodesFine_[i]->setConstrainsLaplace(0,0,0);
+            arlequinProblem->nodesFine_[i]->setConstrainsLaplace(1,0,0);
+        }
+    }
+
     arlequinProblem.UnsetUseSNES();
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
 
