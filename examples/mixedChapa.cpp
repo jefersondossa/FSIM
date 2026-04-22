@@ -130,7 +130,7 @@ void SolveProblem(CompMesh *cmesh);
 int main(int argc, char **args) {   
     //Geometric Mesh
     GeoMesh * gmesh = new GeoMesh();
-    GmshTools::Read(*gmesh,"../chapaLRef1.msh");
+    GmshTools::Read(*gmesh,"../chapaLRef4.msh");
     gmesh->Print("gmesh.txt");
 
     //Create displacement mesh
@@ -234,7 +234,7 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 CompMesh* CreatePressureMesh(GeoMesh *gmesh){
 
     CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(0);
+    cmesh->SetDefaultOrder(1);
 
     int nstate = 1;
     WeakForm * mat = new WeakForm(1, nstate);
@@ -245,12 +245,12 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     val1.setZero();
     VecDouble val2(nstate);
     val2.setZero();
-    L2Projection * matbc1 = new L2Projection(4,1,BoundaryConditionType::kNeumann,val1,val2);
-    L2Projection * matbc2 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
-    L2Projection * matbc3 = new L2Projection(6,1,BoundaryConditionType::kNeumann,val1,val2);
-    L2Projection * matbc4 = new L2Projection(7,1,BoundaryConditionType::kNeumann,val1,val2);
-    L2Projection * matbc5 = new L2Projection(2,1,BoundaryConditionType::kNeumann,val1,val2);
-    L2Projection * matbc6 = new L2Projection(3,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc1 = new L2Projection(2,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc2 = new L2Projection(3,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc3 = new L2Projection(4,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc4 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc5 = new L2Projection(6,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc6 = new L2Projection(7,1,BoundaryConditionType::kNeumann,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
@@ -270,7 +270,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
 
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
-    MixedElasticity * mat = new MixedElasticity(1, 2, 1.0, 0.3);
+    MixedElasticity * mat = new MixedElasticity(1, 2, 1.0, 0.49999);
     cmesh->InsertMaterial(mat);
 
     cmesh->AutoBuild();

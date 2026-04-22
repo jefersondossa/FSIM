@@ -18,7 +18,7 @@ void IntRuleQuad::SetOrder(int order) {
     }
 #endif
 
-    int nPoints = 2; //2*order-1;
+    int nPoints =  2*order-1;
     if (order == 0) {
         nPoints = 1;
     }

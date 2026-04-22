@@ -140,8 +140,8 @@ int main(int argc, char **args) {
 MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvector){
 
     //Displacement Cmesh
-    meshvector[0] = new CompMesh(gmesh, ApproxType::EHierarquic);
-    meshvector[0]->SetDefaultOrder(2);
+    meshvector[0] = new CompMesh(gmesh, ApproxType::EIsoparametric);
+    //meshvector[0]->SetDefaultOrder(2);
     int nstate = 2;
     WeakForm *matelasticityG1 = new WeakForm(1, nstate); //região de sobreposição do domínio local no domínio global
     WeakForm *matelasticityG2 = new WeakForm(2, nstate); //domínio global complementar
@@ -234,8 +234,8 @@ void SolveGlobalProblem(CompMesh *cmeshG){
 
 MixedCompMesh* CreateLocalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvector, CompMesh *cmeshG){
     //Displacement Cmesh
-    meshvector[0] = new CompMesh(gmesh, ApproxType::EHierarquic);
-    meshvector[0]->SetDefaultOrder(2);
+    meshvector[0] = new CompMesh(gmesh, ApproxType::EIsoparametric);
+    //meshvector[0]->SetDefaultOrder(2);
 
     int nstate = 2;
     WeakForm* matelasticityL = new WeakForm(1, nstate);
