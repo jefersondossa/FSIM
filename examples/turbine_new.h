@@ -222,8 +222,8 @@
         fluid2 -> addBoundaryCondition("NEUMANN", l126, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l127, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l128, {}, {}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("NEUMANN", l116, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l117, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l118, {}, {}, {}, "GLOBAL");
 
         fluid2 -> addBoundaryCondition("GLUE", l129, {0}, {0}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("GLUE", l130, {0}, {0}, {}, "GLOBAL");
@@ -330,8 +330,8 @@
         fluid2 -> addBoundaryCondition("NEUMANN", l126, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l127, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l128, {}, {}, {}, "GLOBAL");
-        fluid2 -> addBoundaryCondition("NEUMANN", l116, {}, {}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("NEUMANN", l117, {}, {}, {}, "GLOBAL");
+        fluid2 -> addBoundaryCondition("NEUMANN", l118, {}, {}, {}, "GLOBAL");
 
         fluid2 -> addBoundaryCondition("GLUE", l129, {0}, {0}, {}, "GLOBAL");
         fluid2 -> addBoundaryCondition("GLUE", l130, {0}, {0}, {}, "GLOBAL");
