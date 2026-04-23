@@ -172,8 +172,8 @@ void SolveProblem(CompMesh *cmesh){
         if (fabs(sol[i])>1.e3 || fabs(rhs[i])>1.e3)continue;
         strainEnergy2 += sol[i]*rhs[i]/2.;
     }
-    std::cout << "Strain Energy: "<< strainEnergy << std::endl;
-    std::cout << "Strain Energy 2: "<< strainEnergy2 << std::endl;
+    std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
+    std::cout << std::fixed << std::setprecision(10) << "Strain Energy 2: "<< strainEnergy2 << std::endl;
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Pressure"};

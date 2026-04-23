@@ -199,8 +199,8 @@ int main(int argc, char **args) {
     GmshTools::Read(*gmeshG,"../chapaLGlobal.msh");
     CompMesh *cmeshG = new CompMesh(gmeshG,ApproxType::EIsoparametric);
     CreateGlobalModel(cmeshG);
-    gmeshG->Print("gmeshGlobal.txt");
-    //cmeshG->Print("cmeshGlobal.txt");
+    //gmeshG->Print("gmeshGlobal.txt");
+    cmeshG->Print("cmeshGlobal.txt");
     
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
@@ -306,7 +306,7 @@ void CreateGlobalModel(CompMesh *cmeshG){
     enrichedConnects[783]=-1;
     enrichedConnects[809]=-1;*/
 
-    enrichedConnects[73]=-1;
+    /*enrichedConnects[73]=-1;
     enrichedConnects[74]=-1;
     enrichedConnects[75]=-1;
     enrichedConnects[76]=-1;
@@ -369,7 +369,7 @@ void CreateGlobalModel(CompMesh *cmeshG){
     enrichedConnects[811]=-1;
     enrichedConnects[812]=-1;
     enrichedConnects[813]=-1;
-    enrichedConnects[814]=-1;
+    enrichedConnects[814]=-1;*/
     
     //BC 
     MatrixDouble val1(2,2);
@@ -439,7 +439,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
     double strainEnergy = (sol.dot(rhs))/2;
-    std::cout << "Strain Energy: "<< strainEnergy << std::endl;
+    std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
 
     VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
 }
