@@ -17,8 +17,8 @@ Plane Surface(1) = {1};
 //Physical groups
 Physical Surface("Dominio", 1) = {1};
 Physical Line("Desloc. prescrito", 2) = {3};
-Physical Line("Apoio móvel vertical", 3) = {1};
-Physical Point("Apoio horizontal", 4) = {1,2};
+Physical Line("Apoio móvel vertical", 3) = {4};
+Physical Line("Apoio horizontal", 4) = {1};
 
 Transfinite Curve {1, 2, 3, 4} = 3;
 

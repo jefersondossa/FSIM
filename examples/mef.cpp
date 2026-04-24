@@ -55,7 +55,8 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
 };
 
 void CreateModel(CompMesh *cmesh);
-void SolveProblem(CompMesh *cmesh);
+void CreateModel2(CompMesh *cmesh);
+void SolveProblem(CompMesh *cmesh,VecDouble &Solution);
 
 double ModElasticity = 1.e6;
 double PoissonRatio = 0.3;
@@ -67,11 +68,33 @@ int main(int argc, char **args) {
     GmshTools::Read(*gmesh,"../chapaQuadrada.msh");
     CompMesh *cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     CreateModel(cmesh);
+
+    CompMesh *cmeshaux = new CompMesh(gmesh,ApproxType::EIsoparametric);
+    CreateModel2(cmeshaux);
     //gmesh->Print("gmesh.txt");
     cmesh->Print("cmesh.txt");
     
+    VecDouble Solution;
     //Solve Problem
-    SolveProblem(cmesh);
+    SolveProblem(cmesh,Solution);
+
+    //Compute strain energy
+    LinearAnalysis an(cmeshaux,SolverType::ELDLt);
+    an.Compute();   
+    // an.PrintGlobalMatrix();
+
+    EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(an.GlobalMatrix());
+    if (!spMat) {
+        std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
+    }
+    auto globalMat = spMat->Matrix();
+
+    // std::cout << "Global Matrix: \n" << globalMat << std::endl;
+
+    VecDouble Force = globalMat * Solution;
+    // std::cout << "Force: \n" << Force << std::endl;
+    double strainEnergy = (Solution.dot(Force))/2;
+    std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
     
 }   
 
@@ -89,7 +112,7 @@ void CreateModel(CompMesh *cmesh){
 
     //Chapa quadrada cisalhamento
     val2[0] = 0.001;
-    L2Projection * matbc1 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+    L2Projection * matbc1 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
     val2.setZero();
     val2[1] = 1.0;
     L2Projection * matbc2 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
@@ -104,7 +127,36 @@ void CreateModel(CompMesh *cmesh){
     cmesh->AutoBuild();
 }
 
-void SolveProblem(CompMesh *cmesh){
+void CreateModel2(CompMesh *cmesh){
+
+    Elasticity2D *matelasticity = new Elasticity2D(1, ModElasticity, PoissonRatio, false, 1.0); //domínio global
+
+    cmesh->InsertMaterial(matelasticity);
+    
+    // //BC 
+    // MatrixDouble val1(2,2);
+    // val1.setZero();
+    // VecDouble val2(2);
+    // val2.setZero();
+
+    // //Chapa quadrada cisalhamento
+    // val2[0] = 0.001;
+    // L2Projection * matbc1 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+    // val2.setZero();
+    // val2[1] = 1.0;
+    // L2Projection * matbc2 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    // val2.setZero();
+    // //val2[0] = 1.0;
+    // L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
+
+    // cmesh->InsertMaterial(matbc1);
+    // cmesh->InsertMaterial(matbc2);
+    // cmesh->InsertMaterial(matbc3);
+    
+    cmesh->AutoBuild();
+}
+
+void SolveProblem(CompMesh *cmesh, VecDouble &Solution){
 
     LinearAnalysis an(cmesh,SolverType::ELDLt);
        
@@ -113,9 +165,9 @@ void SolveProblem(CompMesh *cmesh){
     VectorNames = {"Displacement"}; //, "ExactDisplacement"}
 
     an.Run();
-    an.PrintGlobalMatrix();
-    an.PrintSolution();
-    an.PrintGlobalRhs();
+    // an.PrintGlobalMatrix();
+    // an.PrintSolution();
+    // an.PrintGlobalRhs();
 
     //VecDouble errors(4);
     //anG.PostProcessError(errors);
@@ -128,12 +180,8 @@ void SolveProblem(CompMesh *cmesh){
 
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
-    // auto globalMat = spMat->Matrix();
-
-    // std::cout << "Global Matrix: \n" << globalMat << std::endl;
-
-    // VecDouble Force = globalMat * sol;
-    // std::cout << "Force: \n" << Force << std::endl;
+    Solution = sol;
+    
 
     double strainEnergy = (sol.dot(rhs))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;

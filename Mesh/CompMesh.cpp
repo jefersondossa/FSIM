@@ -147,6 +147,7 @@ void CompMesh::BuildIsoparametricConnects(){
         }
         for (int64_t iel=0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
+            if (!el) continue;
             VecInt &geoNodes = el->Reference()->getGeometricNodes();
             el->setConnectivity(geoNodes);
         }
