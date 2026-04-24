@@ -57,7 +57,7 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
 void CreateModel(CompMesh *cmesh);
 void SolveProblem(CompMesh *cmesh);
 
-double ModElasticity = 1.;
+double ModElasticity = 1.e6;
 double PoissonRatio = 0.3;
 
 int main(int argc, char **args) { 
@@ -89,7 +89,7 @@ void CreateModel(CompMesh *cmesh){
 
     //Chapa quadrada cisalhamento
     val2[0] = 0.001;
-    L2Projection * matbc1 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirectionalNonHomogeneousDirichlet,val1,val2);
+    L2Projection * matbc1 = new L2Projection(2,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
     val2.setZero();
     val2[1] = 1.0;
     L2Projection * matbc2 = new L2Projection(3,dimension-1,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
@@ -109,13 +109,13 @@ void SolveProblem(CompMesh *cmesh){
     LinearAnalysis an(cmesh,SolverType::ELDLt);
        
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"SigmaX","SigmaY","TauXY"};
+    ScalarNames = {"SigmaX","SigmaY","TauXY","StrainEnergy"};
     VectorNames = {"Displacement"}; //, "ExactDisplacement"}
 
     an.Run();
-    //anG.PrintGlobalMatrix();
-    //anG.PrintSolution();
-    //anG.PrintGlobalRhs();
+    an.PrintGlobalMatrix();
+    an.PrintSolution();
+    an.PrintGlobalRhs();
 
     //VecDouble errors(4);
     //anG.PostProcessError(errors);
@@ -128,6 +128,13 @@ void SolveProblem(CompMesh *cmesh){
 
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
+    // auto globalMat = spMat->Matrix();
+
+    // std::cout << "Global Matrix: \n" << globalMat << std::endl;
+
+    // VecDouble Force = globalMat * sol;
+    // std::cout << "Force: \n" << Force << std::endl;
+
     double strainEnergy = (sol.dot(rhs))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
 

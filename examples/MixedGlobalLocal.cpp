@@ -68,7 +68,6 @@ int main(int argc, char **args) {
     
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
-    return 0;
 
     //Automatic search the connects to be enriched in the global model
     for (auto celEl:cmeshG->ElementVec()){
@@ -216,7 +215,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     VectorNames = {"Displacement"};
 
     anG.Run();
-    anG.PrintGlobalMatrix();
+    // anG.PrintGlobalMatrix();
     // anG.PrintSolution();
     // anG.PrintGlobalRhs();
 
@@ -305,7 +304,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.Run();
     // anL.PrintGlobalMatrix();
     // anL.PrintGlobalRhs();
-    // anL.PrintSolution();
+    anL.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anL.GlobalMatrix());
     if (!spMat) {

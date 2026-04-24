@@ -47,7 +47,8 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     //int64_t elGlobalIndex = globalElementCorrespondence->at(fLocalElement->Index());
     MatrixDouble elGlobalXsi = globalNodeCorrespondence->at(fLocalElement->Index());
     // auto intrule = fLeftElement->GetIntRule();
-    ElementMixed *mixed = dynamic_cast<ElementMixed*>(fGlobalElement);
+    ElementMixed *mixedGlobal = dynamic_cast<ElementMixed*>(fGlobalElement);
+    ElementMixed *mixedLocal = dynamic_cast<ElementMixed*>(fLocalElement);
 
 
     for(int it = 0; it < fLocalElement->getNumberOfIntegrationPoints(); it++){
@@ -70,22 +71,37 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
         //Computes spatial derivatives
         fLocalElement->ComputeSpatialDerivatives();
         std::vector<IntPointData *> data(2);
-        if (mixed){
-            for (int i = 0; i < mixed->SubElements().size(); i++){
-                mixed->SubElements()[i]->IntegrationData().fAdimCoord = fGlobalElement->IntegrationData().fAdimCoord;
-                mixed->SubElements()[i]->IntegrationData().fWeight = fGlobalElement->IntegrationData().fWeight;
-                mixed->SubElements()[i]->IntegrationData().fA0 = fGlobalElement->IntegrationData().fA0;
-                mixed->SubElements()[i]->IntegrationData().fA0Inv = fGlobalElement->IntegrationData().fA0Inv;
-                mixed->SubElements()[i]->IntegrationData().fAxes0 = fGlobalElement->IntegrationData().fAxes0;
-                mixed->SubElements()[i]->IntegrationData().fJacA0 = fGlobalElement->IntegrationData().fJacA0;
-                mixed->SubElements()[i]->IntegrationData().fX = fGlobalElement->IntegrationData().fX;
+        if (mixedGlobal){
+            for (int i = 0; i < mixedGlobal->SubElements().size(); i++){
+                mixedGlobal->SubElements()[i]->IntegrationData().fAdimCoord = fGlobalElement->IntegrationData().fAdimCoord;
+                mixedGlobal->SubElements()[i]->IntegrationData().fWeight = fGlobalElement->IntegrationData().fWeight;
+                mixedGlobal->SubElements()[i]->IntegrationData().fA0 = fGlobalElement->IntegrationData().fA0;
+                mixedGlobal->SubElements()[i]->IntegrationData().fA0Inv = fGlobalElement->IntegrationData().fA0Inv;
+                mixedGlobal->SubElements()[i]->IntegrationData().fAxes0 = fGlobalElement->IntegrationData().fAxes0;
+                mixedGlobal->SubElements()[i]->IntegrationData().fJacA0 = fGlobalElement->IntegrationData().fJacA0;
+                mixedGlobal->SubElements()[i]->IntegrationData().fX = fGlobalElement->IntegrationData().fX;
 
                 //Computes spatial derivatives
-                mixed->SubElements()[i]->ComputeSpatialDerivatives();
-                mixed->SubElements()[i]->interpolateSolution();
-                mixed->SubElements()[i]->interpolateSolDerivatives();
-                data[i] = &mixed->SubElements()[i]->IntegrationData();
+                mixedGlobal->SubElements()[i]->ComputeSpatialDerivatives();
+                mixedGlobal->SubElements()[i]->interpolateSolution();
+                mixedGlobal->SubElements()[i]->interpolateSolDerivatives();
+                data[i] = &mixedGlobal->SubElements()[i]->IntegrationData();
             }
+            for (int i = 0; i < mixedLocal->SubElements().size(); i++){
+                mixedLocal->SubElements()[i]->IntegrationData().fAdimCoord = fLocalElement->IntegrationData().fAdimCoord;
+                mixedLocal->SubElements()[i]->IntegrationData().fWeight = fLocalElement->IntegrationData().fWeight;
+                mixedLocal->SubElements()[i]->IntegrationData().fA0 = fLocalElement->IntegrationData().fA0;
+                mixedLocal->SubElements()[i]->IntegrationData().fA0Inv = fLocalElement->IntegrationData().fA0Inv;
+                mixedLocal->SubElements()[i]->IntegrationData().fAxes0 = fLocalElement->IntegrationData().fAxes0;
+                mixedLocal->SubElements()[i]->IntegrationData().fJacA0 = fLocalElement->IntegrationData().fJacA0;
+                mixedLocal->SubElements()[i]->IntegrationData().fX = fLocalElement->IntegrationData().fX;
+
+                //Computes spatial derivatives
+                mixedLocal->SubElements()[i]->ComputeSpatialDerivatives();
+                mixedLocal->SubElements()[i]->interpolateSolution();
+                mixedLocal->SubElements()[i]->interpolateSolDerivatives();
+            }
+            
         } else {
             fGlobalElement->ComputeSpatialDerivatives();
             if (fGlobalElement->IntegrationData().fNeedsSol) fGlobalElement->interpolateSolution();
@@ -258,8 +274,11 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
                 //Enriched DOFs x Enriched DOFs - Off-diagonal
                 for (auto locconnect:locIndexes){
                     if (locconnect == locConnectIndex) continue;
+                    // tem alguma coisa errada aqui, revisar depois
                     StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locconnect*nstatei + k) = Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locconnect*nstatei + k);
-                    StiffnessCorrect(nglobalDOF + locconnect*nstatei + k,nglobalDOF + locConnectIndex*nstatei + j) = Stiffness(nglobalDOF + locconnect*nstatei + k,nglobalDOF + i*nstatei + j);
+
+                    // StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locconnect*nstatei + k) = Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locconnect*nstatei + k);
+                    StiffnessCorrect(nglobalDOF + locconnect*nstatei + k,nglobalDOF + locConnectIndex*nstatei + j) = Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locconnect*nstatei + k);
                 }
             }
         }
@@ -280,12 +299,12 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
                 StiffnessCorrect(k,nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j) = Stiffness(k, nglobalDOF*nstateEnriched + (i-pressureCount)*nstatei + j);   
             }
             //Enriched DOFs x Pressure DOFs
-            for (auto locconnect:locIndexes){
-                for (int k = 0; k < nshapei*nstatei; k++){
-                    StiffnessCorrect(nglobalDOF + locconnect*nstatei + k, nglobalDOF + locIndexes.size()*nstatei + (i-pressureCount)*nstatei + j) = Stiffness(nglobalDOF + locconnect*nstatei + k, nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j);
-                    StiffnessCorrect(nglobalDOF + locIndexes.size()*nstatei + (i-pressureCount)*nstatei + j, nglobalDOF + locconnect*nstatei + k) = Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locconnect*nstatei + k);
-                }
-            }
+            // for (auto locconnect:locIndexes){
+            //     for (int k = 0; k < nshapei*nstatei; k++){
+            //         StiffnessCorrect(nglobalDOF + locconnect*nstatei + k, nglobalDOF + locIndexes.size()*nstatei + (i-pressureCount)*nstatei + j) = Stiffness(nglobalDOF + locconnect*nstatei + k, nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j);
+            //         StiffnessCorrect(nglobalDOF + locIndexes.size()*nstatei + (i-pressureCount)*nstatei + j, nglobalDOF + locconnect*nstatei + k) = Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locconnect*nstatei + k);
+            //     }
+            // }
             //Pressure DOFs x Pressure DOFs
             for (int k = 0; k < nshapei*nstatei; k++){
                 StiffnessCorrect(nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j, nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + k) = Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + k);
