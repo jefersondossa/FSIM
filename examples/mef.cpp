@@ -28,30 +28,6 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
-
-    double young = 1.0;
-    double nu = 0.3;
-    double kappa = 3 - 4*nu;
-    double G = young / (2*(1+nu));
-
-    u[0] = (A/(2*G)) * pow(r, lambda) * ((kappa - Q * (lambda+1))*cos(lambda*theta) - lambda*cos((lambda-2)*theta));
-    u[1] = (A/(2*G)) * pow(r, lambda) * ((kappa + Q * (lambda+1))*sin(lambda*theta) + lambda*sin((lambda-2)*theta));
-    
-    double dUxdr = (A/(2*G)) * lambda * pow(r, (lambda-1)) * ((kappa - Q*(lambda+1))*cos(lambda*theta) - lambda*cos((lambda-2)*theta));
-    double dUydr = (A/(2*G)) * lambda * pow(r, (lambda-1)) * ((kappa + Q*(lambda+1))*cos(lambda*theta) + lambda*cos((lambda-2)*theta));
-
-    double dUxdtheta = (A/(2*G)) * pow(r, lambda) * (-(kappa - Q*(lambda+1)) * lambda * sin(lambda*theta) + lambda * (lambda-2) * sin((lambda-2)*theta));
-    double dUydtheta = (A/(2*G)) * pow(r, lambda) * ((kappa + Q*(lambda+1)) * lambda * cos(lambda*theta) + lambda * (lambda-2) * cos((lambda-2)*theta));
-
-    gradU(0,0) = dUxdr*(x/r) + dUxdtheta*(-y/pow(r, 2));
-    gradU(0,1) = dUxdr*(y/r) + dUxdtheta*(x/pow(r, 2));
-    gradU(1,0) = dUydr*(x/r) + dUydtheta*(-y/pow(r, 2));
-    gradU(1,1) = dUydr*(y/r) + dUxdtheta*(x/pow(r, 2));
 };
 
 void CreateModel(CompMesh *cmesh);
@@ -59,7 +35,7 @@ void CreateModel2(CompMesh *cmesh);
 void SolveProblem(CompMesh *cmesh,VecDouble &Solution);
 
 double ModElasticity = 1.e6;
-double PoissonRatio = 0.3;
+double PoissonRatio = 0.49999;
 
 int main(int argc, char **args) { 
 
@@ -68,11 +44,12 @@ int main(int argc, char **args) {
     GmshTools::Read(*gmesh,"../chapaQuadrada.msh");
     CompMesh *cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     CreateModel(cmesh);
+    cmesh->Print("cmesh.txt");
 
     CompMesh *cmeshaux = new CompMesh(gmesh,ApproxType::EIsoparametric);
     CreateModel2(cmeshaux);
     //gmesh->Print("gmesh.txt");
-    cmesh->Print("cmesh.txt");
+    cmeshaux->Print("cmeshAux.txt");
     
     VecDouble Solution;
     //Solve Problem
@@ -183,8 +160,8 @@ void SolveProblem(CompMesh *cmesh, VecDouble &Solution){
     Solution = sol;
     
 
-    double strainEnergy = (sol.dot(rhs))/2;
-    std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
+    //double strainEnergy = (sol.dot(rhs))/2;
+    //std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
 
     VTUGenerator::PrintResults(cmesh,"mefResult",ScalarNames,VectorNames);
 }

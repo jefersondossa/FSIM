@@ -34,3 +34,6 @@ target_link_libraries(mixedChapaL PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC
 
 add_executable(mef mef.cpp)
 target_link_libraries(mef PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(chapaQuad mixedChapaQuadrada.cpp)
+target_link_libraries(chapaQuad PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
