@@ -304,7 +304,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.Run();
     // anL.PrintGlobalMatrix();
     // anL.PrintGlobalRhs();
-    anL.PrintSolution();
+    // anL.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anL.GlobalMatrix());
     if (!spMat) {
@@ -328,8 +328,8 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
 
     anE.Run();
     anE.PrintGlobalMatrix();
-    anE.PrintGlobalRhs();
-    anE.PrintSolution();
+    // anE.PrintGlobalRhs();
+    // anE.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anE.GlobalMatrix());
     if (!spMat) {

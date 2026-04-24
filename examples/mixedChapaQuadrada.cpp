@@ -67,6 +67,7 @@ int main(int argc, char **args) {
 
     VecDouble Force = globalMat * solution;
     // std::cout << "Force: \n" << Force << std::endl;
+    // std::cout << "solution: \n" << solution << std::endl;
     double strainEnergy = (solution.dot(Force))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
     

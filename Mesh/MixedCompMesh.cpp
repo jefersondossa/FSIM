@@ -48,6 +48,7 @@ void MixedCompMesh::CreateMixedConnects(){
         }
 
 #ifdef DEBUG_BUILD
+        if (!elvector[0]) continue;
         if (elvector[0]->Reference()->Index() != elvector[0]->Reference()->Index()) {
             std::cout << "Error: The reference element of the subelements must be the same." << std::endl;
             PanicButton();
