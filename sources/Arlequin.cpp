@@ -3433,7 +3433,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
     VecDuplicate(b, &u);
 
 
-    for (iTimeStep = 0; iTimeStep < 20; iTimeStep++){
+    for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
         // if(iTimeStep == 10){
         //     double dd = 0.75;

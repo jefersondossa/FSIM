@@ -355,7 +355,7 @@
 
         FluidDomain* problem2 = new FluidDomain(fluid2);
         // problem2 -> addSurfaceMaterial({ s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
-        problem2 -> generateMesh(T6, FRONT, "fine", "", true, true);
+        problem2 -> generateMesh(T6, FRONT, "fine", "", false, true);
 
         // FluidDomain* problem = new FluidDomain(fluid1);
         // problem -> addSurfaceMaterial({ s001,s002,s003,s004,s005,s006,s007,s008,s009 }, 1.0, 1.0, 1.0, "PLANE_STRESS");
