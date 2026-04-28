@@ -1095,7 +1095,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblem(int numTimeSteps){
                     aux2 += (deltaXi[i]-deltaXii[i]) * (deltaXi[i]-deltaXii[i]);
                 }
 
-                mu = mu + (mu - 1.0) * aux1 / sqrt(aux2);
+                mu = mu - (mu - 1.0) * aux1 / sqrt(aux2);
             };        
             
             residual = 0.;
@@ -1476,7 +1476,7 @@ void FSInteraction<DIM,DEG>::solveFSIProblemArlequin(int numTimeSteps){
                     aux2 += (deltaXi[i]-deltaXii[i]) * (deltaXi[i]-deltaXii[i]);
                 }
                 // std::cout << "AASDASD " << aux1 << " " << aux2 << std::endl;
-                mu = mu + (mu - 1.0) * aux1 / sqrt(aux2);
+                mu = mu - (mu - 1.0) * aux1 / sqrt(aux2);
             };        
             
             residual = 0.;
