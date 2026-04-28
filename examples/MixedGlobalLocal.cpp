@@ -22,8 +22,8 @@ const int dimension = 2;
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    // force[0] = -1*y;
-    force[0] = -1.;
+    force[0] = -1*y;
+    // force[0] = -1.;
 };
 
 MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvector);
@@ -217,7 +217,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     anG.Run();
     // anG.PrintGlobalMatrix();
     // anG.PrintSolution();
-    // anG.PrintGlobalRhs();
+    anG.PrintGlobalRhs();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anG.GlobalMatrix());
     if (!spMat) {
@@ -327,7 +327,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     LinearAnalysis anE(cmeshG,SolverType::ELU);
 
     anE.Run();
-    // anE.PrintGlobalMatrix();
+    anE.PrintGlobalMatrix();
     anE.PrintGlobalRhs();
     anE.PrintSolution();
 
@@ -348,7 +348,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
 
     std::vector<std::string> ScalarNames, VectorNames;
     // ScalarNames = {"SigmaX","SigmaY","TauXY"};
-    VectorNames = {"Displacement"};
+    // VectorNames = {"Displacement"};
 
     // VTUGenerator::PrintResults(cmeshG,"Enriched",ScalarNames,VectorNames); 
 };

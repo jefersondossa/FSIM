@@ -113,7 +113,7 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
 
 void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata, std::vector<IntPointData*> &globaldata, VecDouble &Rhs){
     
-    if (globaldata[0]->fA0.rows() != 2) return;
+    if (globaldata[0]->fA0.rows() == 2) return;
 
     int nphi = globaldata[0]->fPhi.size();
     double WJ = localdata.fWeight * localdata.fJacA0;

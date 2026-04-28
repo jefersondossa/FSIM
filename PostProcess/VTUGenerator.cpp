@@ -287,6 +287,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
             }
             
             for (int iscal = 0; iscal < scalnames.size(); iscal++){
+                if (!compel->GetWeakForm()) continue;
                 int varindex = compel->GetWeakForm()->VariableIndex(scalnames[iscal]);
                 int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
                 VecDouble Sol(nvar);
@@ -297,6 +298,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
                 scalSol[graphconnect[inode]->Index()][iscal]=Sol;
             }
             for (int ivect = 0; ivect < vecnames.size(); ivect++){
+                if (!compel->GetWeakForm()) continue;
                 int varindex = compel->GetWeakForm()->VariableIndex(vecnames[ivect]);
                 int nvar = compel->GetWeakForm()->NSolutionVariables(varindex);
                 VecDouble Sol(nvar);
