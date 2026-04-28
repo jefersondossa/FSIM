@@ -254,7 +254,7 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
             if(fConnect[ic]->Index() == enrichConnectIndex) {
                 c = fConnect[ic];
                 locConnectIndex = ic;
-                locIndToEnrichIndex[locConnectIndex] = i;
+                locIndToEnrichIndex[locConnectIndex-fGlobalElement->NSides()] = i;
                 break;
             }
         }
@@ -284,12 +284,12 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
                     if (locconnect == locConnectIndex) continue;
                     
                     // tem alguma coisa errada aqui, revisar depois
-                    if (fabs(Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[i]*nstatei + k)) > 1e-12){
-                        std::cout << "Enriched off-diagonal term found! \n";
-                        std::cout << "icorrect = " << nglobalDOF + locConnectIndex*nstatei + j << " jcorrect = " << nglobalDOF + locconnect*nstatei + k << '\n';
-                        std::cout << "i = " << nglobalDOF + i*nstatei + j << " j = " << nglobalDOF + locIndToEnrichIndex[i]*nstatei + k << '\n';
-                        std::cout << "Stiffness off-diagonal = " << Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[i]*nstatei + k) << '\n';
-                    }
+                    // if (fabs(Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k)) > 1e-12){
+                    //     std::cout << "Enriched off-diagonal term found! \n";
+                    //     std::cout << "icorrect = " << nglobalDOF + locConnectIndex*nstatei + j << " jcorrect = " << nglobalDOF + locconnect*nstatei + k << '\n';
+                    //     std::cout << "i = " << nglobalDOF + i*nstatei + j << " j = " << nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k << '\n';
+                    //     std::cout << "Stiffness off-diagonal = " << Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k) << '\n';
+                    // }
                     
                     StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locconnect*nstatei + k) = Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[i]*nstatei + k);
                     // Stiffness(nglobalDOF + locconnect*nstatei + j,nglobalDOF + i*nstatei + k);
@@ -309,7 +309,7 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
         int nshapei = c->GetNShapeFunctions();
         int nstatei = c->GetNStateVariables();
         for (int j = 0; j < nshapei*nstatei; j++){
-            RhsCorrect[nglobalDOF + locIndexes.size()*nstatei + (i-pressureCount)*nstatei + j] = Rhs[nglobalDOF + (pressureCount + i - pressureCount)*nstatei + j];
+            RhsCorrect[nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j] = Rhs[nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j];
             //Global DOFs x Pressure DOFs
             for (int k = 0; k < nglobalDOF; k++){
                 StiffnessCorrect(nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j,k) = Stiffness(nglobalDOF*nstateEnriched + (i-pressureCount)*nstatei + j, k);   
@@ -317,15 +317,16 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
             }
             //Enriched DOFs x Pressure DOFs
             for (auto locconnect:locIndexes){
-                for (int k = 0; k < nshapei*nstatei; k++){
-                    // if (fabs(Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[i]*nstatei + k)) > 1e-12){
-                    //     std::cout << "icorrect = " << nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j << " jcorrect = " << nglobalDOF + locconnect*nstatei + k << '\n';
-                    //     std::cout << "i = " << nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j << " j = " << nglobalDOF + locIndToEnrichIndex[i]*nstatei + k << '\n';
-                    //     std::cout << "Stiffness off-diagonal = " << Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[i]*nstatei + k) << '\n';
+                for (int k = 0; k < nshapei*nstateEnriched; k++){
+                    
+                    // if (fabs(Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k)) > 1e-12){
+                    //     std::cout << "i = " << nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j << " j = " << nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k << '\n';
+                    //     std::cout << "icorrect = " << nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j << " jcorrect = " << nglobalDOF + locconnect*nstateEnriched + k << '\n';
+                    //     std::cout << "Stiffness off-diagonal = " << Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k) << '\n';
                     // }
                     
-                    StiffnessCorrect(nglobalDOF + locconnect*nstatei + k, nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j) = Stiffness(nglobalDOF + locIndToEnrichIndex[i]*nstatei + k, nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j);
-                    StiffnessCorrect(nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j, nglobalDOF + locconnect*nstatei + k) = Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[i]*nstatei + k);
+                    StiffnessCorrect(nglobalDOF + locconnect*nstateEnriched + k, nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j) = Stiffness(nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k, nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j);
+                    StiffnessCorrect(nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j, nglobalDOF + locconnect*nstateEnriched + k) = Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k);
                 }
             }
             //Pressure DOFs x Pressure DOFs

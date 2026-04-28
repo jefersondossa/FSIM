@@ -14,6 +14,10 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector);
 // Defines the problem dimension
 const int dimension = 2;
 
+
+double ModElasticity = 1.e7;
+double PoissonRatio = 0.3;
+
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
@@ -26,7 +30,7 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    double E = 1.e7;
+    double E = ModElasticity;
 
     u[0] = (1/E) * (24*x*y - 120*x);
     u[1] = (1/E) * (-12*x*x - 3.6*y*y + 36*y);
@@ -35,8 +39,6 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
 
 void SolveProblem(CompMesh *cmesh);
 
-double ModElasticity = 1.e7;
-double PoissonRatio = 0.49999;
 
 int main(int argc, char **args) {   
     //Geometric Mesh
@@ -88,7 +90,7 @@ void SolveProblem(CompMesh *cmesh){
 
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"Pressure"};
-    VectorNames = {"Displacement"}; //,"ExactDisplacement"};
+    VectorNames = {"Displacement","ExactDisplacement"};
 
     VTUGenerator::PrintResults(cmesh,"mixed",ScalarNames,VectorNames);
 
@@ -122,10 +124,12 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
     L2Projection * matbc2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val3);
     matbc3->SetForcingFunction(forcingFunction);
+    L2Projection * matbc4 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val3);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
+    cmesh->InsertMaterial(matbc4);
 
     cmesh->AutoBuild(); 
 
@@ -149,10 +153,12 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     L2Projection * matbc1 = new L2Projection(2,1,BoundaryConditionType::kNeumann,val1,val2);
     L2Projection * matbc2 = new L2Projection(3,1,BoundaryConditionType::kNeumann,val1,val2);
     L2Projection * matbc3 = new L2Projection(4,1,BoundaryConditionType::kNeumann,val1,val2);
+    L2Projection * matbc4 = new L2Projection(5,1,BoundaryConditionType::kNeumann,val1,val2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
+    cmesh->InsertMaterial(matbc4);
 
     cmesh->CreateDisconnectedElements();
     cmesh->AutoBuild();
@@ -167,7 +173,7 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector){
     MixedCompMesh* cmesh = new MixedCompMesh(meshvector);
 
     MixedElasticity * mat = new MixedElasticity(1, dimension, ModElasticity, PoissonRatio);
-    //mat->SetExactSolution(exactSol);
+    mat->SetExactSolution(exactSol);
 
     cmesh->InsertMaterial(mat);
 

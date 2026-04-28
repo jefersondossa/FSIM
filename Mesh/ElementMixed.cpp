@@ -169,3 +169,50 @@ void ElementMixed::ComputeElContribution(std::vector<MatrixDouble> &jacobianNRMa
     return;
 };
 
+void ElementMixed::ComputeError(VecDouble &errors){
+    if (!this->fWeakForm) return;
+
+    int DIM = this->fReference->Dimension();
+    
+    this->fIntegData.fA0Inv.resize(DIM,DIM);
+    this->fIntegData.fAdimCoord.resize(DIM);
+
+    int index = 0;
+    int nsub = fSubElements.size();
+
+    for(int it = 0; it < fSubElements[0]->getNumberOfIntegrationPoints(); it++){
+
+        //Defines the integration points adimentional coordinates
+        for (int k = 0; k < DIM; k++) this->fIntegData.fAdimCoord[k] = fSubElements[0]->IntegPointCoordinate(index,k);
+
+        //Returns the quadrature integration weight
+        this->fIntegData.fWeight = fSubElements[0]->IntegPointWeight(index);
+
+        //Computes the jacobian matrix
+        //Computes the jacobian matrix
+        this->fReference->ComputeJacobian(this->fIntegData);
+        for (int i = 0; i < nsub; i++){
+            fSubElements[i]->IntegrationData().fA0 = this->fIntegData.fA0;
+            fSubElements[i]->IntegrationData().fA0Inv = this->fIntegData.fA0Inv;
+            fSubElements[i]->IntegrationData().fAxes0 = this->fIntegData.fAxes0;
+            fSubElements[i]->IntegrationData().fJacA0 = this->fIntegData.fJacA0;
+            fSubElements[i]->IntegrationData().fX = this->fIntegData.fX;
+
+            //Computes spatial derivatives
+            fSubElements[i]->ComputeSpatialDerivatives();
+            fSubElements[i]->interpolateSolution();
+            fSubElements[i]->interpolateSolDerivatives();
+        }
+        
+        //Computes the element error
+        std::vector<IntPointData *> data(fSubElements.size());
+        for (int i = 0; i < fSubElements.size(); i++){
+            data[i] = &fSubElements[i]->IntegrationData();
+        }
+        this->fWeakForm->ComputeError(data, errors); 
+
+        index++;        
+    };
+    // std::cout << "\nErrors Element " << this->Index() << "\n" << errors;
+    return;
+};

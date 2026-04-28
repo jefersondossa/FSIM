@@ -38,6 +38,7 @@ public:
     void ComputeElContribution(std::vector<VecDouble> &Rhs) override{
         PanicButton();
     };
+    void ComputeError(VecDouble &errors) override;
 
     void ComputeSpatialDerivatives() override{
         fSubElements[0]->ComputeSpatialDerivatives();

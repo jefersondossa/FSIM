@@ -327,9 +327,9 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     LinearAnalysis anE(cmeshG,SolverType::ELU);
 
     anE.Run();
-    anE.PrintGlobalMatrix();
-    // anE.PrintGlobalRhs();
-    // anE.PrintSolution();
+    // anE.PrintGlobalMatrix();
+    anE.PrintGlobalRhs();
+    anE.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anE.GlobalMatrix());
     if (!spMat) {
@@ -337,6 +337,8 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
         return;
     }
 
+    // std::cout << "GlobalMatrix=\n"<< spMat->Matrix() << std::endl;
+    
     VecDouble currentSol = spMat->Solution();
 
     VecDouble rhs = spMat->Rhs();
