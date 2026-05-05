@@ -383,7 +383,6 @@
     coarseModel.getFluidParameters().setSolver(SolverType::EMumps);
     fineModel.getFluidParameters().setSolver(SolverType::EMumps);
 
-
     coarseModel.setProblemType(ProblemType::ENavierStokes);
     fineModel.setProblemType(ProblemType::ENavierStokes);
         
@@ -399,8 +398,12 @@
         }
     }
 
+    fineModel.readInitialValues("../resultFine107000.h5","../resultFine107001.h5");
+    coarseModel.readInitialValues("../resultCoarse107000.h5","../resultCoarse107001.h5");
+
+
     arlequinProblem.UnsetUseSNES();
-    arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
 
 
     // coupledProblem.solveFSIProblemArlequin(100000);

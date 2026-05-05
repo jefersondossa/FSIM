@@ -184,6 +184,7 @@
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
 
+
     coarseModel.getFluidParameters().setSolver(SolverType::EMumps);
     fineModel.getFluidParameters().setSolver(SolverType::EMumps);
 

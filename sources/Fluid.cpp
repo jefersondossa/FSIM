@@ -102,7 +102,7 @@ void Fluid<DIM,DEG>::readInputFile(const std::string& inputFile, std::ofstream& 
     fluidParameters.setVelocityInf(velocityInf);
 
     //Drag and lift
-    system("pwd");
+    // system("pwd");
     inputData >> computeDragAndLift >> numberOfLines; 
     dragAndLiftBoundary.reserve(numberOfLines);
     for (int i = 0; i < numberOfLines; ++i)
@@ -1211,7 +1211,7 @@ void Fluid<DIM,DEG>::readInitialValues(const std::string& inputPrev, const std::
     double *scaValues;
     vecValues = new double[3*numNodes];
     scaValues = new double[numNodes];
-
+    std::cout << "Reading initial values from HDF5 files..." << std::endl;
     filePrevious = H5Fopen(inputPrev.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
     fileCurrent = H5Fopen(inputCurr.c_str(),H5F_ACC_RDONLY,H5P_DEFAULT);
 
@@ -1270,6 +1270,7 @@ void Fluid<DIM,DEG>::readInitialValues(const std::string& inputPrev, const std::
     //End HDF5 file
     status = H5Fclose(filePrevious);
 
+    std::cout << "Initial values read successfully." << std::endl;
     return;
 }
 
