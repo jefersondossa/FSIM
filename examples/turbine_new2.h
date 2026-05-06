@@ -401,6 +401,8 @@
     fineModel.readInitialValues("../resultFine107000.h5","../resultFine107001.h5");
     coarseModel.readInitialValues("../resultCoarse107000.h5","../resultCoarse107001.h5");
 
+    fineModel.getNumberOfTimeSteps() = 20;
+    coarseModel.getNumberOfTimeSteps() = 20;
 
     arlequinProblem.UnsetUseSNES();
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
