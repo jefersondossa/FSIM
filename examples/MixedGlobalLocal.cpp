@@ -22,8 +22,8 @@ const int dimension = 2;
 auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = -1*y;
-    // force[0] = -1.;
+    // force[0] = -1*y;
+    force[0] = -1.;
 };
 
 MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvector);
@@ -168,7 +168,7 @@ MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshve
 
     //Pressure Cmesh
     meshvector[1] = new CompMesh(gmesh, ApproxType::EHierarquic);
-    meshvector[1]->SetDefaultOrder(0);
+    meshvector[1]->SetDefaultOrder(1);
 
     WeakForm* matelasticityG3 = new WeakForm(1, 1);
     WeakForm* matelasticityG4 = new WeakForm(2, 1);
@@ -217,7 +217,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     anG.Run();
     // anG.PrintGlobalMatrix();
     // anG.PrintSolution();
-    anG.PrintGlobalRhs();
+    // anG.PrintGlobalRhs();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anG.GlobalMatrix());
     if (!spMat) {
@@ -263,7 +263,7 @@ MixedCompMesh* CreateLocalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvec
 
     //Pressure Cmesh
     meshvector[1] = new CompMesh(gmesh, ApproxType::EHierarquic);
-    meshvector[1]->SetDefaultOrder(0);
+    meshvector[1]->SetDefaultOrder(1);
 
     WeakForm* matelasticityL1 = new WeakForm(1, 1);
     meshvector[1]->InsertMaterial(matelasticityL1);
@@ -281,6 +281,7 @@ MixedCompMesh* CreateLocalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvec
     meshvector[1]->InsertMaterial(matbc2);
     meshvector[1]->InsertMaterial(matbc3);
 
+    meshvector[1]->CreateDisconnectedElements();
     meshvector[1]->AutoBuild();
 
     //MixedCompMesh
@@ -304,6 +305,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.Run();
     // anL.PrintGlobalMatrix();
     // anL.PrintGlobalRhs();
+    // std::cout << "Local Solution: \n";
     // anL.PrintSolution();
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(anL.GlobalMatrix());
