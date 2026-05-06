@@ -159,7 +159,7 @@ public:
 
     /// Gets the number of time steps
     /// @return number of time steps
-    int getNumberOfTimeSteps(){return numTimeSteps;};
+    int &getNumberOfTimeSteps(){return numTimeSteps;};
 
     /// Gets the time step size
     /// @return time step size

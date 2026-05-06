@@ -89,12 +89,12 @@ c$$$  #+cd*dsin(ce*ipc*dt)+cf*dcos(cg*ipc*dt)
 c$$$  #+crh*dexp(cri*ipc*dt)+cj*dexp(ck*ipc*dt))
       enddo
 
-      if (ipt2 .le. 50) then
-         f(2) = f(2) + 10.;
-         f(113) = f(113) - 10.;
-         f(131) = f(131) + 10.;
-         f(242) = f(242) - 10.;
-      endif
+c      if (ipt2 .le. 50) then
+c         f(2) = f(2) + 10.;
+c         f(113) = f(113) - 10.;
+c         f(131) = f(131) + 10.;
+c         f(242) = f(242) - 10.;
+c      endif
 
 
  10   continue                  !La�o de itera��es

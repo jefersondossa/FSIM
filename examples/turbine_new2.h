@@ -379,7 +379,7 @@
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
 
-    char in_solid[32] = "../two_turbines.txt";
+    char in_solid[32] = "../two_turbines_rotated.txt";
     coarseModel.getFluidParameters().setSolver(SolverType::EMumps);
     fineModel.getFluidParameters().setSolver(SolverType::EMumps);
 
@@ -403,10 +403,10 @@
 
 
     arlequinProblem.UnsetUseSNES();
-    arlequinProblem.solveArlequinProblem(1, 1.e-7, 2, 1);
+    arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
 
 
-    // coupledProblem.solveFSIProblemArlequin(100000);
+    coupledProblem.solveFSIProblemArlequin(100000);
     
     // coupledProblem.solveFSIProblemArlequin(100000);
 

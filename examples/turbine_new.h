@@ -508,6 +508,7 @@
         }
     }
 
+    fineModel.getNumberOfTimeSteps() = 20;
     arlequinProblem.UnsetUseSNES();
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
 
