@@ -264,8 +264,9 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *
 
         //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
         auto elConnects = globalEl->getConnectivity();
+        int nconnects = elConnects.size()/2;
         std::vector<Connect *> enrichedCon = globalElMixed->SubElements()[0]->getConnectivity();
-        for (int i = 0; i < elConnects.size(); i++){
+        for (int i = 0; i < nconnects; i++){
             if (enrichedConnects.find(elConnects[i]->Index()) != enrichedConnects.end()){
                 enrichedCon.resize(enrichedCon.size() + 1); // Increase size by 1
                 enrichedCon[enrichedCon.size() - 1] = mixedCmeshG->MeshVector()[0]->ConnectVec()[enrichedConnects[elConnects[i]->Index()]];          

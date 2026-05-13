@@ -63,9 +63,9 @@ int main(int argc, char **args) {
     std::vector<CompMesh *> meshvectorG = {cmeshDispG, cmeshPressG};
     MixedCompMesh *cmeshG = CreateGlobalModel(gmeshG,meshvectorG);
 
-    gmeshG->Print("gmeshGlobal.txt");
     cmeshG->Print("cmeshGlobal.txt");
-    
+    gmeshG->Print("gmeshGlobal.txt");
+
     //Solve Global Problem
     SolveGlobalProblem(cmeshG);
 

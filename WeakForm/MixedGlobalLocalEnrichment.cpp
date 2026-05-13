@@ -88,6 +88,7 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
     MatrixDouble C = matBTot.transpose() * m * globaldata[1]->fPhi.transpose() * WJ;
     MatrixDouble  V = -globaldata[1]->fPhi * globaldata[1]->fPhi.transpose() * WJ / fBulkModulus;
     //std::cout << "Mat BTot =\n"<< matBTot.transpose() << std::endl;
+    // PrintMathematica(C, "MatC");
 
     int ndofu = 2*nphiU*2;
     int ndofp = nphiP;
