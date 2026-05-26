@@ -16,13 +16,20 @@ const int dimension = 2;
 
 
 double ModElasticity = 1.e7;
-double PoissonRatio = 0.3;
+double PoissonRatio = 0.49999;
 
-auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
+auto forcingFunction1 = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
     force[0] = 24*y - 120;
+    force[1] = 0;
+};
+auto forcingFunction2 = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    force[0] = -24*y + 120;
     force[1] = 0;
 };
 
@@ -100,8 +107,8 @@ void SolveProblem(CompMesh *cmesh){
 
 CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 
-    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
-    cmesh->SetDefaultOrder(2);
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIsoparametric); 
+    //cmesh->SetDefaultOrder(2);
 
     int nstate = 2;
     WeakForm * mat = new WeakForm(1, nstate);
@@ -123,8 +130,9 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
     val2[0] = 1.0;
     L2Projection * matbc2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val3);
-    matbc3->SetForcingFunction(forcingFunction);
+    matbc3->SetForcingFunction(forcingFunction1);
     L2Projection * matbc4 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val3);
+    matbc4->SetForcingFunction(forcingFunction2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
@@ -160,7 +168,7 @@ CompMesh* CreatePressureMesh(GeoMesh *gmesh){
     cmesh->InsertMaterial(matbc3);
     cmesh->InsertMaterial(matbc4);
 
-    cmesh->CreateDisconnectedElements();
+    //cmesh->CreateDisconnectedElements();
     cmesh->AutoBuild();
     
     //cmesh->Print("cmesh_pressure.txt");

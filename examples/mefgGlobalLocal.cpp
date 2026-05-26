@@ -172,7 +172,7 @@ int overlappingNHNeumannBoundary;
 int globalLocalIterations;
 double globalLocalTolerance;
 double ModElasticity = 1.;
-double PoissonRatio = 0.3;
+double PoissonRatio = 0.49999;
 
 VecDouble previousSol;
 VecDouble currentSol;

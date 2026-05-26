@@ -17,12 +17,122 @@
 
 // Defines the problem dimension
 const int dimension = 2;
-auto forcingFunction = [](const VecDouble &coord, VecDouble &force){
+auto forcingFunction1 = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
     force[0] = 24*y - 120;
     force[1] = 0;
+};
+auto forcingFunction2 = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    force[0] = -24*y + 120;
+    force[1] = 0;
+};
+auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = sqrt(2)/2;
+    n[1] = sqrt(2)/2;
+
+    force = stress * n;
+};
+
+auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = - sqrt(2)/2;
+    n[1] = sqrt(2)/2;
+
+    force = stress * n;
+};
+
+auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = -sqrt(2)/2;
+    n[1] = -sqrt(2)/2;
+
+    force = stress * n;
+};
+
+auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    
+    double A = 1.0;
+    double Q = 0.543075579;
+    double lambda = 0.544483737;
+    double r = sqrt(x*x + y*y);
+    double theta = atan2(y, x);
+
+    MatrixDouble stress(2,2);
+    //stress x
+    stress(0,0) = A*lambda*pow(r, lambda-1)*((2 - Q*(lambda+1))*cos((lambda-1)*theta) - (lambda-1)*cos((lambda-3)*theta));
+    //stress y
+    stress(1,1) = A*lambda*pow(r, lambda-1)*((2 + Q*(lambda+1))*cos((lambda-1)*theta) + (lambda-1)*cos((lambda-3)*theta));
+    //stress xy
+    stress(0,1) = A*lambda*pow(r, lambda-1)*((lambda-1)*sin((lambda-3)*theta) + Q*(lambda+1)*sin((lambda-1)*theta));
+    stress(1,0) = stress(0,1);
+
+    VecDouble n(2);
+    n[0] = sqrt(2)/2;
+    n[1] = -sqrt(2)/2;
+
+    force = stress * n;
 };
 
 auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
@@ -40,17 +150,18 @@ void CreateModel(CompMesh *cmesh);
 // void CreateModel2(CompMesh *cmesh);
 void SolveProblem(CompMesh *cmesh);
 
-double ModElasticity = 1.e7;
-double PoissonRatio = 0.49999;
+double ModElasticity = 1.;
+double PoissonRatio = 0.2;
 
 int main(int argc, char **args) { 
 
     //Create Model
     GeoMesh *gmesh = new GeoMesh();
-    GmshTools::Read(*gmesh,"../viga.msh");
+    GmshTools::Read(*gmesh,"../example.msh");
     CompMesh *cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     CreateModel(cmesh);
     cmesh->Print("cmesh.txt");
+    gmesh->Print("gmesh.txt");
 
     // CompMesh *cmeshaux = new CompMesh(gmesh,ApproxType::EIsoparametric);
     // CreateModel2(cmeshaux);
@@ -83,8 +194,8 @@ int main(int argc, char **args) {
 
 void CreateModel(CompMesh *cmesh){
 
-    Elasticity2D *matelasticity = new Elasticity2D(1, ModElasticity, PoissonRatio, true, 1.0); //domínio global
-    matelasticity->SetExactSolution(exactSol);
+    Elasticity2D *matelasticity = new Elasticity2D(1, ModElasticity, PoissonRatio, false, 1.0); //domínio global
+    //matelasticity->SetExactSolution(exactSol);
 
     cmesh->InsertMaterial(matelasticity);
     
@@ -93,6 +204,23 @@ void CreateModel(CompMesh *cmesh){
     val1.setZero();
     VecDouble val2(2);
     val2.setZero();
+
+    //Chapa L: apoio horizontal no pontos B e F, apoio vertical no ponto A
+    /*val2[0] = 1.0;
+    L2Projection * matbc1 = new L2Projection(2,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    val2.setZero();
+    val2[1] = 1.0;
+    L2Projection * matbc2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    
+    val2.setZero();
+    L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbc3->SetForcingFunction(forcingFunctionAB);
+    L2Projection * matbc4 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbc4->SetForcingFunction(forcingFunctionBC);
+    L2Projection * matbc5 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbc5->SetForcingFunction(forcingFunctionEF);
+    L2Projection * matbc6 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    matbc6->SetForcingFunction(forcingFunctionFA);*/
 
     //Chapa quadrada cisalhamento
     // val2[0] = 0.001;
@@ -109,11 +237,16 @@ void CreateModel(CompMesh *cmesh){
     val2[0] = 1.0;
     L2Projection * matbc2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbc3->SetForcingFunction(forcingFunction);
+    matbc3->SetForcingFunction(forcingFunction1);
+    //L2Projection * matbc4 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    //matbc4->SetForcingFunction(forcingFunction2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
+    //cmesh->InsertMaterial(matbc4);
+    //cmesh->InsertMaterial(matbc5);
+    //cmesh->InsertMaterial(matbc6);
     
     cmesh->AutoBuild();
 }
@@ -139,8 +272,8 @@ void SolveProblem(CompMesh *cmesh){
     // an.PrintSolution();
     // an.PrintGlobalRhs();
 
-    VecDouble errors(4);
-    an.PostProcessError(errors);
+    //VecDouble errors(4);
+    //an.PostProcessError(errors);
 
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(an.GlobalMatrix());
     if (!spMat) {

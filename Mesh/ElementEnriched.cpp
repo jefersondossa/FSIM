@@ -126,7 +126,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     if (globalLocal) AccountForEnrichment(jacobianNRMatrix, rhsVector);
     if (globalLocalMixed) AccountForEnrichmentMixed(jacobianNRMatrix, rhsVector);
 
-    PrintMathematica(jacobianNRMatrix, "Stiffness");
+    //PrintMathematica(jacobianNRMatrix, "Stiffness");
     // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
     // std::cout << "Rhs \n" << rhsVector << '\n';
 
@@ -352,7 +352,7 @@ void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDoub
     }
     
     
-    PrintMathematica(Stiffness, "StiffnessBefore");
+    //PrintMathematica(Stiffness, "StiffnessBefore");
     // std::cout << "Stiffness before \n" << Stiffness << '\n';
     // std::cout << "Rhs \n" << rhsVector << '\n';
 
