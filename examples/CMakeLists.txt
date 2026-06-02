@@ -26,6 +26,9 @@ target_link_libraries(mefg_test PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_L
 add_executable(mixedGL MixedGlobalLocal.cpp)
 target_link_libraries(mixedGL PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 
+add_executable(mixedGL_test MixedGlobalLocal_test.cpp)
+target_link_libraries(mixedGL_test PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
 add_executable(poisson poisson.cpp)
 target_link_libraries(poisson PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
 

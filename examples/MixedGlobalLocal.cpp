@@ -162,7 +162,7 @@ int main(int argc, char **args) {
     
     //Create Global Model
     GeoMesh *gmeshG = new GeoMesh();
-    GmshTools::Read(*gmeshG,"../chapaLGlobal.msh");
+    GmshTools::Read(*gmeshG,"../../chapaLGlobal.msh");
     CompMesh *cmeshDispG, *cmeshPressG;
     std::vector<CompMesh *> meshvectorG = {cmeshDispG, cmeshPressG};
     MixedCompMesh *cmeshG = CreateGlobalModel(gmeshG,meshvectorG);
@@ -191,7 +191,7 @@ int main(int argc, char **args) {
     // }   
     
     GeoMesh * gmeshL = new GeoMesh();
-    GmshTools::Read(*gmeshL,"../chapaLLocalRef1.msh");
+    GmshTools::Read(*gmeshL,"../../chapaLLocalRef1.msh");
     CompMesh *cmeshDispL, *cmeshPressL;
     std::vector<CompMesh *> meshvectorL = {cmeshDispL, cmeshPressL};
     MixedCompMesh *cmeshL = CreateLocalModel(gmeshL, meshvectorL,cmeshG);
@@ -364,7 +364,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
     LinearAnalysis anG(cmeshG,SolverType::ELDLt);
        
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"SigmaX","SigmaY","TauXY"};
+    ScalarNames = {"SigmaX","SigmaY","TauXY","Pressure"};
     VectorNames = {"Displacement"};
 
     anG.Run();
@@ -474,7 +474,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.GlobalMatrix()->SolutionNorm();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"SigmaX","SigmaY","TauXY"};
+    ScalarNames = {"SigmaX","SigmaY","TauXY","Pressure"};
     VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
