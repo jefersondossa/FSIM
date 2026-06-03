@@ -41,7 +41,7 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
     }
     // std::cout << "matB =\n"<< matB << std::endl;
     // std::cout << "rotation =\n"<< rotation << std::endl;
-    // std::cout << "K =\n"<< matB.transpose() * matB << std::endl;
+    // std::cout << "K =\n"<< rotation * matB.transpose() * matB * rotation.transpose() << std::endl;
     Stiffness += rotation * matB.transpose() * matB * rotation.transpose() * WJ * elementLenght * K;
 
 }
@@ -166,6 +166,8 @@ int ElasticTruss::VariableIndex(const std::string &name) const{
     
     if(!strcmp("Displacement",name.c_str()))           return 1;
     if(!strcmp("Stress",name.c_str()))           return 2;
+    if(!strcmp("Strain",name.c_str()))           return 6;
+    if(!strcmp("AxialForce",name.c_str()))           return 7;
     if(!strcmp("ExactDisplacement",name.c_str()))      return 3;
     if(!strcmp("ExactStress",name.c_str()))      return 4;
     if(!strcmp("ExactForce",name.c_str()))             return 5;
@@ -184,6 +186,8 @@ int ElasticTruss::NSolutionVariables(int var) const{
         return 3;
     case 2:
     case 4:
+    case 6:
+    case 7:
         return 1;
 
     default:
@@ -209,6 +213,29 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[0] = fYoungModulus * (data.fDSolDx(1,0)*sina - data.fDSolDx(0,0)*cosa) ;
         return;
     };
+    // Strain
+    if (var == 6){
+        double cosa = data.fAxes0(0,0) / data.fJacA0;
+        double sina = data.fAxes0(1,0) / data.fJacA0;
+        Sol[0] = sqrt(data.fDSolDx(1,0)*data.fDSolDx(1,0) + data.fDSolDx(0,0)*data.fDSolDx(0,0)) ;
+        return;
+    }
+
+    // Axial Force
+    if (var == 7){
+        double cosa = data.fAxes0(0,0) / data.fJacA0;
+        double sina = data.fAxes0(1,0) / data.fJacA0;
+        double dudx = data.fSol[0]*data.fDPhiX0(0,0);
+        double dudy = data.fSol[0]*data.fDPhiX0(0,1);
+        double dvdx = data.fSol[1]*data.fDPhiX0(0,0);
+        double dvdy = data.fSol[1]*data.fDPhiX0(0,1);
+        double epsilon = sqrt(dudx*dudx+dudy*dudy) + sqrt(dvdx*dvdx+dvdy*dvdy);
+        double aux = fYoungModulus * fArea * epsilon;
+        std::cout << "dsoldx = " << data.fDSolDx << std::endl;
+        std::cout << "dphidx = " << data.fDPhiX0 << std::endl;
+        Sol[0] = fYoungModulus * fArea * sqrt(data.fDSolDx(1,0)*data.fDSolDx(1,0) + data.fDSolDx(0,0)*data.fDSolDx(0,0));
+        return;
+    }
 
     VecDouble forcingF(fDimension);
     VecDouble x_ = data.fX;

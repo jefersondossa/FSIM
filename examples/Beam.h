@@ -14,17 +14,17 @@ const int dimension = 1;
 auto forcing = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = -1;
+    force[0] = x*x+y*y;
 };
 
 {
 
     //Geometric Mesh
     GeoMesh * gmesh = new GeoMesh();
-    GmshTools::Read(*gmesh,"../hierarquic2d.msh");
+    GmshTools::Read(*gmesh,"hierarquic2d.msh");
     gmesh->Print("gmesh.txt");
 
-    CompMesh* cmesh = new CompMesh(ApproxType::EIsoparametric);
+    CompMesh* cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
 
 
     Poisson * matelas = new Poisson(8,1,1);
