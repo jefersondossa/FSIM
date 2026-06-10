@@ -5,9 +5,12 @@
 #include "Tensor3D.h"
 #include <optional>
 
+class Element;
+
 class IntPointData {
 
 public:
+    Element* fElement = nullptr;
     int64_t fElementIndex;
     int fIndex;
     /// @brief Jacobian transform related to the initial mesh

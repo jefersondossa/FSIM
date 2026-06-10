@@ -4,7 +4,6 @@
 
 #include "CompMeshTools.h"
 #include "DataTypes.h"
-#include "Element.h"
 #include "Analysis.h"
 #include "GmshTools.h"
 #include "WeakForm.h"
@@ -25,6 +24,7 @@ class Element;
 class Analysis;
 class GraphMesh;
 class GeoMesh;
+class WeakForm;
 
 class CompMesh{
 protected:

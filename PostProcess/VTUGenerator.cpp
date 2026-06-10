@@ -276,7 +276,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
                 compel->IntegrationData().fNeedsSol = true;
                 compel->IntegrationData().fNeedsDSol = true;
                 compel->IntegrationData().fSol.resize(compel->GetWeakForm()->NState());
-                compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),compel->Dimension());
+                compel->IntegrationData().fDSolDx.resize(compel->GetWeakForm()->NState(),cmesh->Dimension());
             }
             compel->Reference()->ComputeJacobian(compel->IntegrationData());
             compel->ComputeSpatialDerivatives();

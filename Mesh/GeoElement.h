@@ -2,11 +2,10 @@
 #define GeoElement_h
 
 #include "GeoMesh.h"
-#include "IntPointData.h"
-#include "Element.h"
 
 class GeoMesh;
 class Element;
+class IntPointData;
 
 class GeoElement
 {

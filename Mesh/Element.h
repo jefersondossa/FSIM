@@ -2,7 +2,6 @@
 #define ELEMENT
 
 #include "DataTypes.h"
-#include "CompMesh.h"
 #include "IntPointData.h"
 #include "WeakForm.h"
 #include "GeoElement.h"
@@ -11,6 +10,7 @@
 class GeoElement;
 class CompMesh;
 class Connect;
+class IntPointData;
 
 class Element{
 protected:
@@ -29,7 +29,9 @@ protected:
     GeoElement *fReference = nullptr;
 
 public:
-    Element() = default;
+    Element(){
+        fIntegData.fElement = this;
+    };
 
     virtual ~Element() = default;
 

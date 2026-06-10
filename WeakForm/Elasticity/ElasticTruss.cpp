@@ -217,7 +217,20 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
     if (var == 6){
         double cosa = data.fAxes0(0,0) / data.fJacA0;
         double sina = data.fAxes0(1,0) / data.fJacA0;
-        Sol[0] = sqrt(data.fDSolDx(1,0)*data.fDSolDx(1,0) + data.fDSolDx(0,0)*data.fDSolDx(0,0)) ;
+
+        MatrixDouble rotation(2,2);
+        rotation(0,0) = cosa;
+        rotation(1,0) = sina;
+        rotation(0,1) = -sina;
+        rotation(1,1) = cosa;
+        
+        // solução gambiarra é colocar um ponteiro para o próprio elemento dentro do IntPointData.
+
+        auto strain = rotation * data.fDSolDx;
+        
+        double strainlong = sqrt(strain(0,0)*strain(0,0) + strain(1,0)*strain(1,0));
+
+        Sol[0] = fYoungModulus * fArea * strainlong;
         return;
     }
 
@@ -231,8 +244,8 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
         double dvdy = data.fSol[1]*data.fDPhiX0(0,1);
         double epsilon = sqrt(dudx*dudx+dudy*dudy) + sqrt(dvdx*dvdx+dvdy*dvdy);
         double aux = fYoungModulus * fArea * epsilon;
-        std::cout << "dsoldx = " << data.fDSolDx << std::endl;
-        std::cout << "dphidx = " << data.fDPhiX0 << std::endl;
+        // std::cout << "dsoldx = " << data.fDSolDx << std::endl;
+        // std::cout << "dphidx = " << data.fDPhiX0 << std::endl;
         Sol[0] = fYoungModulus * fArea * sqrt(data.fDSolDx(1,0)*data.fDSolDx(1,0) + data.fDSolDx(0,0)*data.fDSolDx(0,0));
         return;
     }

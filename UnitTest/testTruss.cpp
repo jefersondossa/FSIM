@@ -60,7 +60,7 @@ int main()
     an.PrintGlobalRhs();
     an.PrintSolution();
 
-    VTUGenerator::PrintResults(cmesh,"resultTruss",ScalarNames,VectorNames); 
+    VTUGenerator::PrintResultsHierarquic(cmesh,"resultTruss",ScalarNames,VectorNames); 
 
     return 0;
 }
