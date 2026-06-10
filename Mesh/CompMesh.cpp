@@ -32,6 +32,14 @@ GraphMesh* CompMesh::GetGraphMesh(){
     return fGraphMesh;
 }
 
+GraphMesh* CompMesh::GetGraphMesh(std::set<int64_t> &elsToPrint){
+    if (!fGraphMesh){
+        fGraphMesh = new GraphMesh(this,elsToPrint);
+    }
+    return fGraphMesh;
+}
+
+
 void CompMesh::InsertMaterial(WeakForm *wf){
     fMaterialVector[wf->Id()] = wf;
     if (fNState == 0){

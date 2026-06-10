@@ -135,6 +135,13 @@ public:
     /// @brief Returns the graphycal mesh to print results.
     /// @return graphycal mesh 
     GraphMesh* GetGraphMesh();
+    GraphMesh* GetGraphMesh(std::set<int64_t> &elsToPrint);
+    void ClearGraphMesh(){
+        if (fGraphMesh){
+            delete fGraphMesh;
+            fGraphMesh = nullptr;
+        }
+    }
 
     void Integrate(std::set<int> &matIds, std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result);
 

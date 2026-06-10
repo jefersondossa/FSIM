@@ -200,94 +200,315 @@ void MEFGGlobalLocalTools::CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmesh
 
 };
 
-
-void MEFGGlobalLocalTools::CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL, 
-                                               std::map<int64_t,int64_t> &globalElementCorrespondence, 
-                                               std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
-                                               std::map<int64_t,int64_t> &enrichedConnects,
-                                               int overlappingNHNeumannBoundary,
-                                               MixedGlobalLocalEnrichment *globalLocal){
+void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
+    CompMesh *cmeshG,
+    CompMesh *cmeshL,
+    std::map<int64_t,int64_t> &globalElementCorrespondence,
+    std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
+    std::map<int64_t,int64_t> &enrichedConnects,
+    int overlappingNHNeumannBoundary,
+    MixedGlobalLocalEnrichment *globalLocal)
+{
+    if (!cmeshG || !cmeshL || !globalLocal) {
+        PanicButton();
+        return;
+    }
 
     MixedCompMesh *mixedCmeshG = dynamic_cast<MixedCompMesh *>(cmeshG);
     MixedCompMesh *mixedCmeshL = dynamic_cast<MixedCompMesh *>(cmeshL);
 
-    // Create the new connects in the global mesh for the enriched nodes and resize the connect vector of the global mesh accordingly. 
-    // The number of new connects is equal to the number of enriched nodes, since we are considering only one degree of freedom per node, 
-    // but it can be easily generalized for more degrees of freedom per node.
-    int64_t nConnects = mixedCmeshG->MeshVector()[0]->NConnects();
-    int64_t nEnrichedConnects = enrichedConnects.size();
-    mixedCmeshG->MeshVector()[0]->ConnectVec().resize(nConnects + nEnrichedConnects);
-    int count = 0;
-    int64_t SeqNum = cmeshG->NGlobalDOF();
-    for(auto &con:enrichedConnects){;
-        Connect* originalConnect = mixedCmeshG->MeshVector()[0]->ConnectVec()[con.first];
-        int nshape = originalConnect->GetNShapeFunctions();
-        int order = originalConnect->GetOrder();
-        int nstate = originalConnect->GetNStateVariables();
-        Connect* c = new Connect(nstate, nshape, order, nConnects+count, SeqNum);
-        SeqNum += nstate;
-        con.second = nConnects+count;
-        mixedCmeshG->MeshVector()[0]->ConnectVec()[nConnects+count] = c;
+    if (!mixedCmeshG || !mixedCmeshL) {
+        PanicButton();
+        return;
+    }
+
+    if (mixedCmeshG->MeshVector().empty()) {
+        PanicButton();
+        return;
+    }
+
+    CompMesh *dispMeshG = mixedCmeshG->MeshVector()[0];
+
+    if (!dispMeshG) {
+        PanicButton();
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // 1. Create enriched connects in the displacement mesh
+    // ------------------------------------------------------------
+
+    const int64_t nConnects = dispMeshG->NConnects();
+    const int64_t nEnrichedConnects =
+        static_cast<int64_t>(enrichedConnects.size());
+
+    dispMeshG->ConnectVec().resize(nConnects + nEnrichedConnects);
+
+    int64_t seqNum = cmeshG->NGlobalDOF();
+    int64_t count = 0;
+
+    for (auto &con : enrichedConnects) {
+
+        const int64_t originalConnectIndex = con.first;
+
+        if (originalConnectIndex < 0 || originalConnectIndex >= nConnects) {
+            PanicButton();
+            return;
+        }
+
+        Connect *originalConnect =
+            dispMeshG->ConnectVec()[originalConnectIndex];
+
+        if (!originalConnect) {
+            PanicButton();
+            return;
+        }
+
+        const int nshape = originalConnect->GetNShapeFunctions();
+        const int order  = originalConnect->GetOrder();
+        const int nstate = originalConnect->GetNStateVariables();
+
+        const int64_t newConnectIndex = nConnects + count;
+
+        Connect *newConnect =
+            new Connect(nstate, nshape, order, newConnectIndex, seqNum);
+
+        seqNum += nshape * nstate;
+
+        con.second = newConnectIndex;
+        dispMeshG->ConnectVec()[newConnectIndex] = newConnect;
+
         count++;
     }
 
-    // mixedCmeshG->MeshVector()[0]->Print("cmeshGEnriched.txt");
+    // ------------------------------------------------------------
+    // 2. Count local elements to enrich
+    // ------------------------------------------------------------
 
-    //Count the number local elements to enrich in the global mesh
-    int nelsToEnrich = 0;
-    for (auto el:cmeshL->ElementVec()){
-        if (el->Dimension() != cmeshL->Dimension() && el->Reference()->Material() != overlappingNHNeumannBoundary) continue;
+    int64_t nelsToEnrich = 0;
+
+    for (auto localEl : cmeshL->ElementVec()) {
+
+        if (!localEl) continue;
+        if (!localEl->Reference()) continue;
+
+        const bool isDomainElement =
+            localEl->Dimension() == cmeshL->Dimension();
+
+        const bool isNeumannBoundary =
+            localEl->Reference()->Material() == overlappingNHNeumannBoundary;
+
+        if (!isDomainElement && !isNeumannBoundary) continue;
+
         nelsToEnrich++;
     }
-    int64_t nElementsG = mixedCmeshG->MeshVector()[0]->NElements();
-    mixedCmeshG->MeshVector()[0]->ElementVec().resize(mixedCmeshG->MeshVector()[0]->NElements() + nelsToEnrich);
-    cmeshG->ElementVec().resize(cmeshG->NElements() + nelsToEnrich);
-    //Create the enriched elements in the global mesh
-    count = 0;
-    for (auto localEl:cmeshL->ElementVec()){
-        if (localEl->Dimension() != cmeshL->Dimension() && localEl->Reference()->Material() != overlappingNHNeumannBoundary) continue;
-        Element* globalEl = cmeshG->ElementVec()[globalElementCorrespondence[localEl->Index()]];
-        ElementEnriched *enrichedEl = new ElementEnriched(nElementsG+count, localEl, globalEl, mixedCmeshG, globalLocal);
-        enrichedEl->setCorrespondence(&globalElementCorrespondence, &globalNodeCorrespondence);
-        ElementMixed* globalElMixed = dynamic_cast<ElementMixed*>(globalEl);
-        // std::vector<Element *> elMixedEnriched = {enrichedEl, localEl};
-        // ElementMixed *enrichedElMixed = new ElementMixed(nElementsG+count, elMixedEnriched, mixedCmeshG, globalLocal);
 
-        //Sets which node will have enriched solution
+    const int64_t nElementsDispG  = dispMeshG->NElements();
+    const int64_t nElementsMixedG = cmeshG->NElements();
+
+    dispMeshG->ElementVec().resize(nElementsDispG + nelsToEnrich);
+    cmeshG->ElementVec().resize(nElementsMixedG + nelsToEnrich);
+
+    // ------------------------------------------------------------
+    // 3. Create enriched elements
+    // ------------------------------------------------------------
+
+    count = 0;
+
+    for (auto localEl : cmeshL->ElementVec()) {
+
+        if (!localEl) continue;
+        if (!localEl->Reference()) continue;
+
+        const bool isDomainElement =
+            localEl->Dimension() == cmeshL->Dimension();
+
+        const bool isNeumannBoundary =
+            localEl->Reference()->Material() == overlappingNHNeumannBoundary;
+
+        if (!isDomainElement && !isNeumannBoundary) continue;
+
+        auto itCorrespondence =
+            globalElementCorrespondence.find(localEl->Index());
+
+        if (itCorrespondence == globalElementCorrespondence.end()) {
+            PanicButton();
+            return;
+        }
+
+        const int64_t globalElIndex = itCorrespondence->second;
+
+        if (globalElIndex < 0 ||
+            globalElIndex >= static_cast<int64_t>(cmeshG->ElementVec().size()))
+        {
+            PanicButton();
+            return;
+        }
+
+        Element *globalEl = cmeshG->ElementVec()[globalElIndex];
+
+        if (!globalEl) {
+            PanicButton();
+            return;
+        }
+
+        ElementMixed *globalElMixed =
+            dynamic_cast<ElementMixed *>(globalEl);
+
+        if (!globalElMixed) {
+            PanicButton();
+            return;
+        }
+
+        if (globalElMixed->SubElements().size() < 2 ||
+            !globalElMixed->SubElements()[0] ||
+            !globalElMixed->SubElements()[1])
+        {
+            PanicButton();
+            return;
+        }
+
+        const int64_t newDispElementIndex  = nElementsDispG  + count;
+        const int64_t newMixedElementIndex = nElementsMixedG + count;
+
+        ElementEnriched *enrichedEl =
+            new ElementEnriched(
+                newMixedElementIndex,
+                localEl,
+                globalEl,
+                mixedCmeshG,
+                globalLocal
+            );
+
+        enrichedEl->setCorrespondence(
+            &globalElementCorrespondence,
+            &globalNodeCorrespondence
+        );
+
         enrichedEl->SetEnrichmentData(&enrichedConnects);
 
-        //Remove global element weak form, for skipping it when contributing in the global stiffness matrix and rhs.
-        if (globalEl->Dimension() == mixedCmeshG->MeshVector()[0]->Dimension()){
-            mixedCmeshG->MeshVector()[0]->ElementVec()[globalElementCorrespondence[localEl->Index()]]->SetWeakForm(nullptr);
+        // --------------------------------------------------------
+        // Remove original global element weak form
+        // --------------------------------------------------------
+
+        if (globalEl->Dimension() == dispMeshG->Dimension()) {
+
+            if (globalElIndex >= 0 &&
+                globalElIndex < static_cast<int64_t>(dispMeshG->ElementVec().size()) &&
+                dispMeshG->ElementVec()[globalElIndex])
+            {
+                dispMeshG->ElementVec()[globalElIndex]->SetWeakForm(nullptr);
+            }
+
             globalEl->SetWeakForm(nullptr);
         }
 
-        //Seek how many connects will be enriched in the global element and construct the proper connectivity for the enriched element.
-        auto elConnects = globalEl->getConnectivity();
-        int nconnects = elConnects.size();
-        std::vector<Connect *> enrichedCon = globalElMixed->SubElements()[0]->getConnectivity();
-        for (int i = 0; i < nconnects; i++){
-            if (enrichedConnects.find(elConnects[i]->Index()) != enrichedConnects.end()){
-                enrichedCon.push_back(mixedCmeshG->MeshVector()[0]->ConnectVec()[enrichedConnects[elConnects[i]->Index()]]);
+        // --------------------------------------------------------
+        // Connectivity order:
+        //
+        // [standard displacement connects]
+        // [enriched displacement connects]
+        // [pressure connects]
+        // --------------------------------------------------------
+
+        std::vector<Connect *> enrichedConnectivity =
+            globalElMixed->SubElements()[0]->getConnectivity();
+
+        auto globalDispConnects =
+            globalElMixed->SubElements()[0]->getConnectivity();
+
+        for (auto connect : globalDispConnects) {
+
+            if (!connect) continue;
+
+            auto itEnriched =
+                enrichedConnects.find(connect->Index());
+
+            if (itEnriched == enrichedConnects.end()) continue;
+
+            const int64_t enrichedConnectIndex = itEnriched->second;
+
+            if (enrichedConnectIndex < 0 ||
+                enrichedConnectIndex >=
+                    static_cast<int64_t>(dispMeshG->ConnectVec().size()))
+            {
+                PanicButton();
+                return;
             }
+
+            Connect *enrichedConnect =
+                dispMeshG->ConnectVec()[enrichedConnectIndex];
+
+            if (!enrichedConnect) {
+                PanicButton();
+                return;
+            }
+
+            enrichedConnectivity.push_back(enrichedConnect);
         }
-        std::vector<Connect *> presscon = globalElMixed->SubElements()[1]->getConnectivity();
-        enrichedCon.insert(enrichedCon.end(), presscon.begin(), presscon.end());
-        
-        enrichedEl->setConnectivity(enrichedCon);
-        mixedCmeshG->MeshVector()[0]->ElementVec()[nElementsG+count] = enrichedEl;
-        cmeshG->ElementVec()[nElementsG+count] = enrichedEl;
+
+        std::vector<Connect *> pressureConnectivity =
+            globalElMixed->SubElements()[1]->getConnectivity();
+
+        enrichedConnectivity.insert(
+            enrichedConnectivity.end(),
+            pressureConnectivity.begin(),
+            pressureConnectivity.end()
+        );
+
+        enrichedEl->setConnectivity(enrichedConnectivity);
+
+        if (newDispElementIndex < 0 ||
+            newDispElementIndex >=
+                static_cast<int64_t>(dispMeshG->ElementVec().size()))
+        {
+            PanicButton();
+            return;
+        }
+
+        if (newMixedElementIndex < 0 ||
+            newMixedElementIndex >=
+                static_cast<int64_t>(cmeshG->ElementVec().size()))
+        {
+            PanicButton();
+            return;
+        }
+
+        dispMeshG->ElementVec()[newDispElementIndex] = enrichedEl;
+        cmeshG->ElementVec()[newMixedElementIndex] = enrichedEl;
+
         count++;
     }
-    // Update the problem size
-    int64_t fNGlobalDOF  = 0;
-    for (int imesh = 0; imesh < mixedCmeshG->MeshVector().size(); imesh++){
-        for (int64_t i = 0; i < mixedCmeshG->MeshVector()[imesh]->NConnects(); i++){
-            Connect* con = mixedCmeshG->MeshVector()[imesh]->ConnectVec()[i];
-            int nstate = con->GetNStateVariables();
-            fNGlobalDOF += mixedCmeshG->MeshVector()[imesh]->ConnectVec()[i]->GetNShapeFunctions() * nstate;
+
+    // ------------------------------------------------------------
+    // 4. Update total number of global DOFs
+    // ------------------------------------------------------------
+
+    int64_t nGlobalDOF = 0;
+
+    for (int imesh = 0;
+         imesh < static_cast<int>(mixedCmeshG->MeshVector().size());
+         imesh++)
+    {
+        CompMesh *mesh = mixedCmeshG->MeshVector()[imesh];
+
+        if (!mesh) continue;
+
+        for (int64_t ic = 0; ic < mesh->NConnects(); ic++) {
+
+            Connect *con = mesh->ConnectVec()[ic];
+
+            if (!con) {
+                PanicButton();
+                return;
+            }
+
+            const int nshape = con->GetNShapeFunctions();
+            const int nstate = con->GetNStateVariables();
+
+            nGlobalDOF += nshape * nstate;
         }
     }
-    cmeshG->NGlobalDOF() = fNGlobalDOF;
 
+    cmeshG->NGlobalDOF() = nGlobalDOF;
 }

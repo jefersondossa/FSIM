@@ -4,6 +4,7 @@
 #include<fstream>
 #include<iostream>
 #include<string>
+#include<set>
 #include "CompMesh.h"
 
 class CompMesh;
@@ -29,6 +30,7 @@ private:
 public:
     // graph mesh constructor
     GraphMesh(CompMesh *cmesh);
+    GraphMesh(CompMesh *cmesh, std::set<int64_t> &elsToPrint);
 
     // Default destructor
     ~GraphMesh(){ };

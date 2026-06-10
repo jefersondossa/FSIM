@@ -314,7 +314,7 @@ MixedCompMesh* CreateGlobalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshve
 
     //Pressure Cmesh
     meshvector[1] = new CompMesh(gmesh, ApproxType::EHierarquic);
-    meshvector[1]->SetDefaultOrder(0);
+    meshvector[1]->SetDefaultOrder(1);
 
     WeakForm* matelasticityG3 = new WeakForm(1, 1);
     WeakForm* matelasticityG4 = new WeakForm(2, 1);
@@ -421,7 +421,7 @@ MixedCompMesh* CreateLocalModel(GeoMesh *gmesh, std::vector<CompMesh *> &meshvec
 
     //Pressure Cmesh
     meshvector[1] = new CompMesh(gmesh, ApproxType::EHierarquic);
-    meshvector[1]->SetDefaultOrder(0);
+    meshvector[1]->SetDefaultOrder(1);
 
     WeakForm* matelasticityL1 = new WeakForm(1, 1);
     meshvector[1]->InsertMaterial(matelasticityL1);
@@ -474,7 +474,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     anL.GlobalMatrix()->SolutionNorm();
 
     std::vector<std::string> ScalarNames, VectorNames;
-    ScalarNames = {"SigmaX","SigmaY","TauXY","Pressure"};
+    ScalarNames = {"Pressure"};
     VectorNames = {"Displacement"};
 
     VTUGenerator::PrintResults(cmeshL,"localResult",ScalarNames,VectorNames); 
@@ -505,8 +505,9 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
 
 
     std::vector<std::string> ScalarNames, VectorNames;
-    // ScalarNames = {"SigmaX","SigmaY","TauXY"};
-    // VectorNames = {"Displacement"};
+    ScalarNames = {"SigmaX","SigmaY","TauXY", "Pressure"};
+    VectorNames = {"Displacement"};
 
-    // VTUGenerator::PrintResults(cmeshG,"Enriched",ScalarNames,VectorNames); 
+    cmeshG->ClearGraphMesh(); //Force the graph mesh to be rebuilt with the solution for the correct results in the VTU file.
+    VTUGenerator::PrintResults(cmeshG,"Enriched",ScalarNames,VectorNames); 
 };

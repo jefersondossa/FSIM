@@ -204,162 +204,249 @@ void ElementEnriched::AccountForEnrichment(MatrixDouble &Stiffness, VecDouble &R
 
 }
 
-void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness, VecDouble &Rhs){
 
-    if (this->Dimension()!= this->Mesh()->Dimension()) return;
+void ElementEnriched::AccountForEnrichmentMixed(MatrixDouble &Stiffness,
+                                                VecDouble &Rhs)
+{
+    if (this->Dimension() != this->Mesh()->Dimension()) return;
 
-    //Resize the stiffnes matrix and vector to account only the enriched DOFs
-    int nDOFcorrect=0;
-    // int nglobalDOF = fGlobalElement->NLocDOF();
     ElementMixed *mixed = dynamic_cast<ElementMixed*>(fGlobalElement);
-    if (!mixed){
+    if (!mixed) {
         PanicButton();
         return;
     }
-    int nglobalDOF = mixed->SubElements()[0]->NLocDOF();
 
-    // for (int i = 0; i < mixed->SubElements().size(); i++){
-        // auto connect = mixed->SubElements()[i]->getConnectivity();
-        for (int j = 0; j < fConnect.size(); j++){
-            Connect * c = fConnect[j];
-            nDOFcorrect += c->GetNStateVariables() * c->GetNShapeFunctions();
-        }
-    // }
-    
-    
-
-    MatrixDouble StiffnessCorrect(nDOFcorrect, nDOFcorrect);
-    VecDouble RhsCorrect(nDOFcorrect);
-    StiffnessCorrect.setZero(); RhsCorrect.setZero();
-    //Account the standard DOFs in the stiffness matrix and rhs vector
-    for (int i = 0; i < nglobalDOF; i++){
-        RhsCorrect[i] = Rhs[i];
-        for (int j = 0; j < nglobalDOF; j++){
-            StiffnessCorrect(i,j) = Stiffness(i,j);   
-        }
+    if (Stiffness.rows() != Stiffness.cols()) {
+        PanicButton();
+        return;
     }
 
-    int nstateEnriched = 0;
-    //Account the enriched DOFs in the stiffness matrix and rhs vector
-    std::set<int> locIndexes;
-    std::map<int,int> locIndToEnrichIndex;
+    if (Rhs.size() != Stiffness.rows()) {
+        PanicButton();
+        return;
+    }
+
     auto globalConnects = fGlobalElement->getConnectivity();
-    int nEnrichedConnects = this->getConnectivity().size() - globalConnects.size();
-    int nPressureConnects = mixed->SubElements()[1]->getConnectivity().size();
-    
-    for (size_t i = 0; i < globalConnects.size()-nPressureConnects; i++){
-        if (!(*connectEnrichment)[globalConnects[i]->Index()])continue;
-        int enrichConnectIndex = (*connectEnrichment)[globalConnects[i]->Index()];
-        Connect *c;
-        int locConnectIndex = -1;
-        for(int ic = 0; ic < fConnect.size(); ic++) {
-            if(fConnect[ic]->Index() == enrichConnectIndex) {
-                c = fConnect[ic];
-                locConnectIndex = ic;
-                locIndToEnrichIndex[locConnectIndex-fGlobalElement->NSides()] = i;
+
+    const int nGlobalConnects = static_cast<int>(globalConnects.size());
+    const int nPressureConnects =
+        static_cast<int>(mixed->SubElements()[1]->getConnectivity().size());
+
+    if (nPressureConnects > nGlobalConnects) {
+        PanicButton();
+        return;
+    }
+
+    const int nDispGlobalConnects = nGlobalConnects - nPressureConnects;
+
+    const int nglobalDOF = mixed->SubElements()[0]->NLocDOF();
+
+    // ------------------------------------------------------------
+    // Original assumed layout:
+    //
+    // [ standard displacement DOFs ]
+    // [ candidate enriched displacement DOFs ]
+    // [ pressure DOFs ]
+    // ------------------------------------------------------------
+
+    std::vector<int> keptOldDofs;
+
+    // ------------------------------------------------------------
+    // 1. Keep standard displacement DOFs
+    // ------------------------------------------------------------
+    for (int idof = 0; idof < nglobalDOF; idof++) {
+        keptOldDofs.push_back(idof);
+    }
+
+    // ------------------------------------------------------------
+    // 2. Build accumulated offsets for candidate enriched DOFs
+    // ------------------------------------------------------------
+    std::vector<int> oldEnrichedStart(nDispGlobalConnects + 1, 0);
+    oldEnrichedStart[0] = nglobalDOF;
+
+    for (int ic = 0; ic < nDispGlobalConnects; ic++) {
+
+        Connect *c = globalConnects[ic];
+
+        const int ndof =
+            c->GetNShapeFunctions() *
+            c->GetNStateVariables();
+
+        oldEnrichedStart[ic + 1] = oldEnrichedStart[ic] + ndof;
+    }
+
+    const int oldPressureOffset = oldEnrichedStart[nDispGlobalConnects];
+
+    // ------------------------------------------------------------
+    // 3. Identify existing enriched connects in this element
+    // ------------------------------------------------------------
+    struct EnrichedInfo {
+        int localConnectIndex;
+        int globalDispConnectIndex;
+        int oldStart;
+        int ndof;
+    };
+
+    std::vector<EnrichedInfo> enrichedInfos;
+
+    for (int ig = 0; ig < nDispGlobalConnects; ig++) {
+
+        const int globalConnectIndex = globalConnects[ig]->Index();
+
+        auto it = connectEnrichment->find(globalConnectIndex);
+        if (it == connectEnrichment->end()) continue;
+
+        const int enrichedConnectIndex = it->second;
+
+        Connect *localConnect = nullptr;
+        int localConnectIndex = -1;
+
+        for (int iloc = 0; iloc < static_cast<int>(fConnect.size()); iloc++) {
+            if (fConnect[iloc]->Index() == enrichedConnectIndex) {
+                localConnect = fConnect[iloc];
+                localConnectIndex = iloc;
                 break;
             }
         }
-        locConnectIndex -= fGlobalElement->NSides();
-        locIndexes.insert(locConnectIndex);
-        int nshapei = c->GetNShapeFunctions();
-        int nstatei = c->GetNStateVariables();
-        nstateEnriched = nstatei;
-        for (int j = 0; j < nshapei*nstatei; j++){
-            RhsCorrect[nglobalDOF + locConnectIndex*nstatei + j] = Rhs[nglobalDOF + i*nstatei + j];
-            //Global DOFs x Enriched DOFs
-            for (int k = 0; k < nglobalDOF; k++){
-                StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,k) = Stiffness(nglobalDOF + i*nstatei + j, k);   
-                StiffnessCorrect(k,nglobalDOF + locConnectIndex*nstatei + j) = Stiffness(k,nglobalDOF + i*nstatei + j);   
-            }
-            for (int k = 0; k < nshapei*nstatei; k++){
-                //Enriched DOFs x Enriched DOFs - Diagonal
-                StiffnessCorrect(nglobalDOF + locConnectIndex*nstatei + j,nglobalDOF + locConnectIndex*nstatei + k) = Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + i*nstatei + k);   
-                // if (fabs(Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + i*nstatei + k)) > 1e-12){
-                // std::cout << "Enriched diagonal term found! \n";
-                // std::cout << "icorrect = " << nglobalDOF + locConnectIndex*nstatei + j << " jcorrect = " << nglobalDOF + locConnectIndex*nstatei + k << '\n';
-                // std::cout << "i = " << nglobalDOF + i*nstatei + j << " j = " << nglobalDOF + i*nstatei + k << '\n';
-                // std::cout << "Stiffness diagonal = " << Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + i*nstatei + k) << '\n';
-                // }
 
-                //Enriched DOFs x Enriched DOFs - Off-diagonal
-                for (auto locconnect:locIndexes){
-                    if (locconnect == locConnectIndex) continue;
-                    // if (fabs(Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k)) > 1e-12){
-                    //     std::cout << "Enriched off-diagonal term found! \n";
-                    //     std::cout << "icorrect = " << nglobalDOF + locConnectIndex*nstatei + j << " jcorrect = " << nglobalDOF + locconnect*nstatei + k << '\n';
-                    //     std::cout << "i = " << nglobalDOF + i*nstatei + j << " j = " << nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k << '\n';
-                    //     std::cout << "Stiffness off-diagonal = " << Stiffness(nglobalDOF + i*nstatei + j,nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k) << '\n';
-                    // }
-                    int rowcorrect = nglobalDOF + locConnectIndex*nstatei + j;
-                    int colcorrect = nglobalDOF + locconnect*nstatei + k;
-                    int row = nglobalDOF + i*nstatei + j;
-                    int col = nglobalDOF + locIndToEnrichIndex[locconnect]*nstatei + k;
-                    StiffnessCorrect(rowcorrect,colcorrect) = Stiffness(row,col);
-                    StiffnessCorrect(colcorrect,rowcorrect) = Stiffness(row,col);
-                }
+        if (!localConnect || localConnectIndex < 0) {
+            PanicButton();
+            return;
+        }
+
+        const int ndof =
+            localConnect->GetNShapeFunctions() *
+            localConnect->GetNStateVariables();
+
+        const int oldStart = oldEnrichedStart[ig];
+
+        enrichedInfos.push_back({
+            localConnectIndex,
+            ig,
+            oldStart,
+            ndof
+        });
+    }
+
+    std::sort(
+        enrichedInfos.begin(),
+        enrichedInfos.end(),
+        [](const EnrichedInfo &a, const EnrichedInfo &b) {
+            return a.localConnectIndex < b.localConnectIndex;
+        }
+    );
+
+    // ------------------------------------------------------------
+    // 4. Keep enriched DOFs that actually exist in this element
+    // ------------------------------------------------------------
+    for (const auto &info : enrichedInfos) {
+
+        for (int idof = 0; idof < info.ndof; idof++) {
+
+            const int oldDof = info.oldStart + idof;
+
+            if (oldDof < 0 || oldDof >= Stiffness.rows()) {
+                PanicButton();
+                return;
             }
+
+            keptOldDofs.push_back(oldDof);
         }
     }
 
-    //Account pressure DOFs in the stiffness matrix and rhs vector
-    int pressureCount = this->getConnectivity().size() - nPressureConnects;
-    int nPressShape = 0;
-    for (int i = pressureCount; i < this->getConnectivity().size(); i++){
-        Connect * c = fConnect[i];
-        nPressShape += c->GetNShapeFunctions();
-    }
-    for (int i = pressureCount; i < this->getConnectivity().size(); i++){
-        Connect * c = fConnect[i];
-        int nshapei = c->GetNShapeFunctions();
-        int nstatei = c->GetNStateVariables();
-        for (int j = 0; j < nshapei*nstatei; j++){
-            RhsCorrect[nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j] = Rhs[nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j];
-            //Global DOFs x Pressure DOFs
-            for (int k = 0; k < nglobalDOF; k++){
-                int dofCorrectRow = nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j;
-                int dofRow = nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j;
-                StiffnessCorrect(dofCorrectRow,k) = Stiffness(dofRow, k);   
-                StiffnessCorrect(k,dofCorrectRow) = Stiffness(k, dofRow);   
-            }
-            //Enriched DOFs x Pressure DOFs
-            for (auto locconnect:locIndexes){
-                for (int k = 0; k < nshapei*nstateEnriched; k++){
-                    // if (fabs(Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k)) > 1e-12){
-                    //     std::cout << "i = " << nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j << " j = " << nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k << '\n';
-                    //     std::cout << "icorrect = " << nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j << " jcorrect = " << nglobalDOF + locconnect*nstateEnriched + k << '\n';
-                    //     std::cout << "Stiffness off-diagonal = " << Stiffness(nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j, nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k) << '\n';
-                    // }
-                    int rowcorrect = nglobalDOF + locconnect*nstateEnriched + k;
-                    int colcorrect = nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j;
-                    int row = nglobalDOF + locIndToEnrichIndex[locconnect]*nstateEnriched + k;
-                    int col = nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j;
-                    StiffnessCorrect(rowcorrect, colcorrect) = Stiffness(row,col);
-                    StiffnessCorrect(colcorrect, rowcorrect) = Stiffness(row,col);
-                }
-            }
-            //Pressure DOFs x Pressure DOFs
-            for (int k = 0; k < nPressShape-(i-pressureCount); k++){
-                int dofCorrectRow = nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + j;
-                int dofCorrectCol = nglobalDOF + locIndexes.size()*nstateEnriched + (i-pressureCount)*nstatei + k;
-                int dofRow = nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + j;
-                int dofCol = nglobalDOF*nstateEnriched + (i - pressureCount)*nstatei + k;
-                StiffnessCorrect(dofCorrectRow, dofCorrectCol) = Stiffness(dofRow, dofCol);
-                StiffnessCorrect(dofCorrectCol,dofCorrectRow) = Stiffness(dofRow, dofCol);
-            }
-        }
-        
-    }
-    
-    
-    //PrintMathematica(Stiffness, "StiffnessBefore");
-    // std::cout << "Stiffness before \n" << Stiffness << '\n';
-    // std::cout << "Rhs \n" << rhsVector << '\n';
+    // ------------------------------------------------------------
+    // 5. Keep pressure DOFs
+    // ------------------------------------------------------------
+    const int pressureStartConnect =
+        static_cast<int>(fConnect.size()) - nPressureConnects;
 
-    // Stiffness.setZero(); Rhs.setZero();
+    if (pressureStartConnect < 0) {
+        PanicButton();
+        return;
+    }
+
+    int pressureOffset = 0;
+
+    for (int ic = pressureStartConnect;
+         ic < static_cast<int>(fConnect.size());
+         ic++)
+    {
+        Connect *c = fConnect[ic];
+
+        const int ndof =
+            c->GetNShapeFunctions() *
+            c->GetNStateVariables();
+
+        for (int idof = 0; idof < ndof; idof++) {
+
+            const int oldDof =
+                oldPressureOffset +
+                pressureOffset +
+                idof;
+
+            if (oldDof < 0 || oldDof >= Stiffness.rows()) {
+                PanicButton();
+                return;
+            }
+
+            keptOldDofs.push_back(oldDof);
+        }
+
+        pressureOffset += ndof;
+    }
+
+    // ------------------------------------------------------------
+    // 6. Build old-to-new DOF map
+    // ------------------------------------------------------------
+    std::vector<int> oldToNew(Stiffness.rows(), -1);
+
+    for (int newDof = 0; newDof < static_cast<int>(keptOldDofs.size()); newDof++) {
+
+        const int oldDof = keptOldDofs[newDof];
+
+        if (oldDof < 0 || oldDof >= Stiffness.rows()) {
+            PanicButton();
+            return;
+        }
+
+        if (oldToNew[oldDof] != -1) {
+            // Same old DOF inserted twice
+            PanicButton();
+            return;
+        }
+
+        oldToNew[oldDof] = newDof;
+    }
+
+    const int nCorrectDOF = static_cast<int>(keptOldDofs.size());
+
+    MatrixDouble StiffnessCorrect(nCorrectDOF, nCorrectDOF);
+    VecDouble RhsCorrect(nCorrectDOF);
+
+    StiffnessCorrect.setZero();
+    RhsCorrect.setZero();
+
+    // ------------------------------------------------------------
+    // 7. Copy RHS and stiffness matrix using the map
+    // ------------------------------------------------------------
+    for (int iold = 0; iold < Stiffness.rows(); iold++) {
+
+        const int inew = oldToNew[iold];
+
+        if (inew < 0) continue;
+
+        RhsCorrect[inew] = Rhs[iold];
+
+        for (int jold = 0; jold < Stiffness.cols(); jold++) {
+
+            const int jnew = oldToNew[jold];
+
+            if (jnew < 0) continue;
+
+            StiffnessCorrect(inew, jnew) = Stiffness(iold, jold);
+        }
+    }
+
     Stiffness = StiffnessCorrect;
     Rhs = RhsCorrect;
-
-    // std::cout << "Stiffness after \n" << Stiffness << '\n';
-
 }

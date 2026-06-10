@@ -64,3 +64,33 @@ GraphMesh::GraphMesh(CompMesh *cmesh){
     
 
 }
+
+
+
+GraphMesh::GraphMesh(CompMesh *cmesh, std::set<int64_t> &elsToPrint){
+    int64_t nElements = elsToPrint.size();
+
+    fElementConnects.resize(nElements);
+    fElementTypes.resize(nElements);
+
+    int64_t nodecount = 0;
+    int64_t elcount = 0;
+    for (auto iel : elsToPrint){
+        auto cel = cmesh->ElementVec()[iel];
+        fGElementToMElement[elcount] = iel;
+        int nelnodes = cel->Reference()->NGeometricNodes();
+        fElementTypes[elcount] = cel->Reference()->PrintType();
+        fElementConnects[elcount].resize(nelnodes);
+        for (int inode = 0; inode < nelnodes; inode++){
+            fNodes.push_back(cmesh->Reference()->NodeVec()[cel->Reference()->getGeometricNodes()[inode]]->getCoordinates());
+            fGNodeToMNode[nodecount] = cel->Reference()->getGeometricNodes()[inode];
+            fMNodeToGNode[cel->Reference()->getGeometricNodes()[inode]] = nodecount;
+            fElementConnects[elcount][inode] = nodecount;
+            nodecount++;
+        }
+        elcount++;
+    }
+    
+    
+
+}
