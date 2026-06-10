@@ -7,6 +7,7 @@ GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double yo
     fPoissonRatio = poisson;
     fPlaneStress = planes;
     fThickness = thick;
+    this->fType = WeakFormType::kGlobalLocalEnrichment;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
 

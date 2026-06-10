@@ -46,11 +46,8 @@ void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNR
     this->fIntegData.fDPhi.resize(compshape::Dimension,compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()));
 
     this->fIntegData.fElementIndex = this->fIndex;
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (this->fWeakForm);
-    auto *pos2dt = dynamic_cast<TransientPositionalFrame2D *> (this->fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (this->fWeakForm);
 
-    if (pos2dt){
+    if (this->fWeakForm->Type() == WeakFormType::kPositionalTruss){
         this->fIntegData.fDSolDAdim.resize(this->fWeakForm->NState(), DIM);
         this->fIntegData.fNeedsDSolDAdim = true;
     }
@@ -70,7 +67,9 @@ void ElementTransient<compshape>::ComputeElContribution(MatrixDouble &jacobianNR
         this->ComputeSpatialDerivatives();
 
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || pos2dt || truss){
+        if (this->fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            this->fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            this->fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             this->fReference->ComputeCurrentJacobian(this->fIntegData,this);
             this->ComputeCurrentSpatialDerivatives();
         }

@@ -6,6 +6,7 @@ TransientPositional2D::TransientPositional2D(int matid, double young, double poi
     fDensity = dens;
     fTimeStep = dt;
     fIntegScheme = integscheme;
+    this->fType = WeakFormType::kTransientPositional2D;
 };
 
 void TransientPositional2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

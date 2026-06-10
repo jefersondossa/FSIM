@@ -5,6 +5,7 @@ TransientElasticTruss::TransientElasticTruss(int matid, int dim, double young, d
     fDensity = dens;
     fTimeStep = dt;
     fIntegScheme = tscheme;
+    this->fType = WeakFormType::kTransientElasticTruss;
 };
 
 

@@ -8,6 +8,7 @@ LinearFrame::LinearFrame(int matid, double young, double inertia, double area) :
     fYoungModulus = young;
     fInertia = inertia;
     fArea = area;
+    this->fType = WeakFormType::kLinearFrame;
 };
 
 

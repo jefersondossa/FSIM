@@ -7,6 +7,7 @@ ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double p
     fYoungModulus = young;
     fPoissonRatio = poisson;
     fPlaneStress = planes;
+    this->fType = WeakFormType::kElasticityPositional2D;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
     fThickness = thick;

@@ -5,6 +5,7 @@ Poisson::Poisson(int matid, int dim, int nState) : WeakForm() {
     fMatId = matid;
     fDimension = dim;
     fNState = nState;
+    this->fType = WeakFormType::kPoisson;
 };
 
 void Poisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

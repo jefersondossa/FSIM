@@ -7,6 +7,7 @@ LinearBeam::LinearBeam(int matid, double young, double inertia) : WeakForm() {
     fNState = 2;
     fYoungModulus = young;
     fInertia = inertia;
+    this->fType = WeakFormType::kLinearBeam;
 };
 
 

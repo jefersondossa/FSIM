@@ -10,6 +10,7 @@ InterpolatedBC::InterpolatedBC(int matid, int dim, int nstate,
     this->fMatId = matid;
     fNState = nstate;
     BCType = bctype;
+    this->fType = WeakFormType::kInterpolatedBC;
     fGlobalElementCorrespondence = globalElementCorrespondence;
     fGlobalNodeCorrespondence = globalNodeCorrespondence;
     fGlobalMesh = globalmesh;

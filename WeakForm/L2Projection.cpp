@@ -7,6 +7,7 @@ L2Projection::L2Projection(int matid, int dim, BoundaryConditionType bctype, Mat
     BCType = bctype;
     BCVal1 = val1;
     BCVal2 = val2;
+    this->fType = WeakFormType::kL2Projection;
 };
 
 void L2Projection::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

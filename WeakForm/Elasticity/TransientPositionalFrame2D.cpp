@@ -4,6 +4,7 @@ TransientPositionalFrame2D::TransientPositionalFrame2D(int matid, double young, 
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
+    this->fType = WeakFormType::kTransientPositionalFrame2D;
 };
 
 void TransientPositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

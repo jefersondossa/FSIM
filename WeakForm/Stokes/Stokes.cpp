@@ -7,6 +7,7 @@ Stokes::Stokes(int matid, int dim, double density, double viscosity) : WeakForm(
     fNState = dim+1;
     fViscosity = viscosity;
     fDensity = density;
+    this->fType = WeakFormType::kStokes;
 };
 
 //Stabilization parameters computation

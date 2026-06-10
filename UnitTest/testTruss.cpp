@@ -60,6 +60,8 @@ int main()
     an.PrintGlobalRhs();
     an.PrintSolution();
 
+    //Put a check criterion here.
+
     VTUGenerator::PrintResultsHierarquic(cmesh,"resultTruss",ScalarNames,VectorNames); 
 
     return 0;

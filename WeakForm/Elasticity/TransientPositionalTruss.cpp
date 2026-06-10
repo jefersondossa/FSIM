@@ -4,6 +4,7 @@ TransientPositionalTruss::TransientPositionalTruss(int matid, int dim, double yo
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
+    this->fType = WeakFormType::kTransientPositionalTruss;
 };
 
 void TransientPositionalTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

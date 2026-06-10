@@ -6,6 +6,7 @@ MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisso
     fDimension = dim;
     fYoungModulus = young;
     fPoissonRatio = poisson;
+    this->fType = WeakFormType::kMixedElasticity;
     fBulkModulus = fYoungModulus / (3. * (1. - 2. * fPoissonRatio));
     fShearModulus = fYoungModulus / (2. * (1. + fPoissonRatio));
 

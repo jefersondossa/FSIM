@@ -9,6 +9,7 @@ PositionalFrame2D::PositionalFrame2D(int matid, double young, double base, doubl
     fYoungModulus = young;
     fDepth = base;
     fHeight = height;
+    this->fType = WeakFormType::kPositionalFrame2D;
 };
 
 

@@ -1,4 +1,5 @@
 #include "ElasticTruss.h"
+#include "Element.h"
 
 ElasticTruss::ElasticTruss(int matid, int dim, double young, double area) : WeakForm() {
     this->fMatId = matid;
@@ -6,6 +7,7 @@ ElasticTruss::ElasticTruss(int matid, int dim, double young, double area) : Weak
     fNState = dim;
     fYoungModulus = young;
     fArea = area;
+    this->fType = WeakFormType::kElasticTruss;
 };
 
 
@@ -169,9 +171,7 @@ int ElasticTruss::VariableIndex(const std::string &name) const{
     if(!strcmp("Strain",name.c_str()))           return 6;
     if(!strcmp("AxialForce",name.c_str()))           return 7;
     if(!strcmp("ExactDisplacement",name.c_str()))      return 3;
-    if(!strcmp("ExactStress",name.c_str()))      return 4;
-    if(!strcmp("ExactForce",name.c_str()))             return 5;
-
+    
     // std::cout << "Post Process variable not implemented \n";
     // PanicButton();
     return -1;
@@ -182,10 +182,8 @@ int ElasticTruss::NSolutionVariables(int var) const{
     {
     case 1:
     case 3:
-    case 5:
         return 3;
     case 2:
-    case 4:
     case 6:
     case 7:
         return 1;
@@ -198,6 +196,19 @@ int ElasticTruss::NSolutionVariables(int var) const{
 
 void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
+    double cosa = data.fAxes0(0,0) / data.fJacA0;
+    double sina = data.fAxes0(1,0) / data.fJacA0;
+
+    VecDouble nodalSol(4);
+    auto connect = data.fElement->getConnectivity();
+    for (int i = 0; i < 2; i++){
+        nodalSol[2*i  ] = connect[i]->GetSolution(0);
+        nodalSol[2*i+1] = connect[i]->GetSolution(1);
+    }
+    double elementLenght = 2.*data.fJacA0;
+
+    double strain = (nodalSol[2]-nodalSol[0])*cosa/elementLenght + (nodalSol[3]-nodalSol[1])*sina/elementLenght;
+
     //Displacement
     if (var == 1){
         Sol[0] = data.fSol[0];
@@ -208,45 +219,18 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //NormalStress
     if (var == 2){
-        double cosa = data.fAxes0(0,0) / data.fJacA0;
-        double sina = data.fAxes0(1,0) / data.fJacA0;
-        Sol[0] = fYoungModulus * (data.fDSolDx(1,0)*sina - data.fDSolDx(0,0)*cosa) ;
+        Sol[0] = fYoungModulus * strain;
         return;
     };
     // Strain
     if (var == 6){
-        double cosa = data.fAxes0(0,0) / data.fJacA0;
-        double sina = data.fAxes0(1,0) / data.fJacA0;
-
-        MatrixDouble rotation(2,2);
-        rotation(0,0) = cosa;
-        rotation(1,0) = sina;
-        rotation(0,1) = -sina;
-        rotation(1,1) = cosa;
-        
-        // solução gambiarra é colocar um ponteiro para o próprio elemento dentro do IntPointData.
-
-        auto strain = rotation * data.fDSolDx;
-        
-        double strainlong = sqrt(strain(0,0)*strain(0,0) + strain(1,0)*strain(1,0));
-
-        Sol[0] = fYoungModulus * fArea * strainlong;
+        Sol[0] = strain;
         return;
     }
 
     // Axial Force
     if (var == 7){
-        double cosa = data.fAxes0(0,0) / data.fJacA0;
-        double sina = data.fAxes0(1,0) / data.fJacA0;
-        double dudx = data.fSol[0]*data.fDPhiX0(0,0);
-        double dudy = data.fSol[0]*data.fDPhiX0(0,1);
-        double dvdx = data.fSol[1]*data.fDPhiX0(0,0);
-        double dvdy = data.fSol[1]*data.fDPhiX0(0,1);
-        double epsilon = sqrt(dudx*dudx+dudy*dudy) + sqrt(dvdx*dvdx+dvdy*dvdy);
-        double aux = fYoungModulus * fArea * epsilon;
-        // std::cout << "dsoldx = " << data.fDSolDx << std::endl;
-        // std::cout << "dphidx = " << data.fDPhiX0 << std::endl;
-        Sol[0] = fYoungModulus * fArea * sqrt(data.fDSolDx(1,0)*data.fDSolDx(1,0) + data.fDSolDx(0,0)*data.fDSolDx(0,0));
+        Sol[0] = fYoungModulus * fArea * strain;
         return;
     }
 
@@ -265,22 +249,6 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
         Sol[2] = 0.;
         return;
     };
-    
-    //Exact Sigma X
-    if (var == 4){
-        double epsilon = gradDisp.norm();
-        Sol[0] = fYoungModulus * epsilon;
-        return;
-    };
-
-    //Exact Force
-    if (var == 5){
-        Sol[0] = forcingF[0];
-        Sol[1] = forcingF[1];
-        Sol[2] = 0.;
-        return;
-    };
-
 }; 
 
 MatrixDouble &ElasticTruss::ConstitutiveMatrix(){

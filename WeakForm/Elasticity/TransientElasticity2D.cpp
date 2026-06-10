@@ -6,6 +6,7 @@ TransientElasticity2D::TransientElasticity2D(int matid, double young, double poi
     fDensity = dens;
     fTimeStep = dt;
     fIntegScheme = integscheme;
+    this->fType = WeakFormType::kTransientElasticity2D;
 };
 
 

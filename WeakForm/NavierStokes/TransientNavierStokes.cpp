@@ -7,6 +7,7 @@ TransientNavierStokes::TransientNavierStokes(int matid, int dim, double density,
     fAlphaF = 1. / (1. + specRadius);
     fAlphaM = 0.5 * (3. - specRadius)/(1. + specRadius);
     fGamma = 0.5 + fAlphaM - fAlphaF;
+    this->fType = WeakFormType::kTransientNavierStokes;
 };
 
 //Stabilization parameters computation

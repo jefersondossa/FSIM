@@ -6,6 +6,7 @@ Elasticity3D::Elasticity3D(int matid, double young, double poisson) : WeakForm()
     fNState = 3;
     fYoungModulus = young;
     fPoissonRatio = poisson;
+    this->fType = WeakFormType::kElasticity3D;
     fConstitutiveMatrix.resize(6,6);
     fConstitutiveMatrix.setZero();
 

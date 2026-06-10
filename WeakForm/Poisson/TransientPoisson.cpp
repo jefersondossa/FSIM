@@ -6,6 +6,7 @@ TransientPoisson::TransientPoisson(int matid, int dim, double damp, double dens,
     fDensity = dens;
     fIntegScheme = integscheme;
     fTimeStep = dt;
+    this->fType = WeakFormType::kTransientPoisson;
 };
 
 void TransientPoisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

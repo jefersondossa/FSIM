@@ -6,6 +6,7 @@ PositionalTruss::PositionalTruss(int matid, int dim, double young, double area) 
     fNState = dim;
     fYoungModulus = young;
     fArea = area;
+    this->fType = WeakFormType::kPositionalTruss;
 };
 
 void PositionalTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){

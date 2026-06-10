@@ -5,6 +5,38 @@
 #include "IntPointData.h"
 #include "Node.h"
 
+enum class WeakFormType
+{
+    kNone = 0,
+    kL2Projection = 1,
+    kElasticTruss = 2,
+    kElasticity2D = 3,
+    kElasticity3D = 4,
+    kElasticityPositional2D = 5,
+    kLinearBeam = 6,
+    kLinearFrame = 7,
+    kMixedElasticity = 8,
+    kPositionalFrame2D = 9,
+    kPositionalTruss = 10,
+    kTransientElasticity2D = 11,
+    kTransientElasticTruss = 12,
+    kTransientPositional2D = 13,
+    kTransientPositionalFrame2D = 14,
+    kTransientPositionalTruss = 15,
+    kNavierStokes = 16,
+    kTransientNavierStokes = 17,
+    kPoisson = 18,
+    kTransientPoisson = 19,
+    kStokes = 20,
+    kGlobalLocalEnrichment = 21,
+    kMixedGlobalLocalEnrichment = 22,
+    kInterpolatedBC = 23,
+    kCouplingLocal = 24,
+    kCouplingGlobal = 25
+};
+
+
+
 /// @brief Implements a base for all Weak Forms 
 class WeakForm
 {
@@ -23,7 +55,8 @@ protected:
     std::function<void (const VecDouble &coord, VecDouble &force)> fForceFunction = 0; 
     // If elemental stiffness matrix can be reused accross multiple runs.
     bool fHasMemory = true;
-
+    // Weak Form type
+    WeakFormType fType = WeakFormType::kNone;
 public:
 
     /// @brief Default constructor
@@ -157,6 +190,10 @@ public:
 
     void SetHasMemory(bool new_has_memory) {
         fHasMemory = new_has_memory;
+    }
+
+    WeakFormType Type() const {
+        return fType;
     }
 };
 

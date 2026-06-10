@@ -8,6 +8,7 @@ Elasticity2D::Elasticity2D(int matid, double young, double poisson, bool planes,
     fPoissonRatio = poisson;
     fPlaneStress = planes;
     fThickness = thick;
+    this->fType = WeakFormType::kElasticity2D;
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
 

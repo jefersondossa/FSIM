@@ -6,6 +6,7 @@ MixedGlobalLocalEnrichment::MixedGlobalLocalEnrichment(int matid, int dimension,
     fDimension = dimension;
     fYoungModulus = young;
     fPoissonRatio = poisson;
+    this->fType = WeakFormType::kMixedGlobalLocalEnrichment;
     fBulkModulus = fYoungModulus / (3. * (1. - 2. * fPoissonRatio));
     fShearModulus = fYoungModulus / (2. * (1. + fPoissonRatio));
 

@@ -607,11 +607,7 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
     fIntegData.fNeedsSol = true;
     fIntegData.fSol.resize(this->fWeakForm->NState());
 
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
-    auto *frame2d = dynamic_cast<PositionalFrame2D *> (fWeakForm);
-
-    if (frame2d){
+    if (this->fWeakForm->Type() == WeakFormType::kPositionalFrame2D){
         fIntegData.fDSolDAdim.resize(this->fWeakForm->NState(), DIM);
         fIntegData.fNeedsDSolDAdim = true;
     }
@@ -633,7 +629,9 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss || frame2d){
+        if (this->fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            this->fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            this->fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
@@ -653,8 +651,13 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
     // PrintMathematica(jacobianNRMatrix, "Stiffness");
     // PrintMathematica(rhsVector, "Rhs");
     // Set stiffness matrix to cache.
-    // fIntegData.fStiffnessMatrix = jacobianNRMatrix;
-    // fIntegData.fRHS = rhsVector;
+    if (fWeakForm->Type() == WeakFormType::kElasticTruss ||
+        fWeakForm->Type() == WeakFormType::kElasticity2D || 
+        fWeakForm->Type() == WeakFormType::kLinearBeam ||
+        fWeakForm->Type() == WeakFormType::kLinearFrame) {
+        fIntegData.fStiffnessMatrix = jacobianNRMatrix;
+        fIntegData.fRHS = rhsVector;
+    }
 
     return;
 };
@@ -666,8 +669,6 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
 
     int DIM = compshape::Dimension;
 
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
     fIntegData.fElementIndex = this->fIndex;
     int index = 0;
     double val = 0.;
@@ -686,7 +687,9 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
@@ -713,9 +716,6 @@ void ElementT<compshape>::ComputeElContribution(VecDouble &rhsVector){
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
     fIntegData.fNeedsSol = true;
     fIntegData.fSol.resize(this->fWeakForm->NState());
-
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
     
     int index = 0;
     double val = 0.;
@@ -734,7 +734,9 @@ void ElementT<compshape>::ComputeElContribution(VecDouble &rhsVector){
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }     
@@ -771,8 +773,6 @@ void ElementT<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacob
     fIntegData.fSol.resize(this->fWeakForm->NState());
 
     int index = 0;
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
 
     for(int it = 0; it < fIntRule.NPoints(); it++){
 
@@ -789,7 +789,9 @@ void ElementT<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacob
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
@@ -822,8 +824,6 @@ void ElementT<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacob
     fIntegData.fAdimCoord.resize(DIM);
 
     int index = 0;
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
 
     for(int it = 0; it < fIntRule.NPoints(); it++){
 
@@ -840,7 +840,9 @@ void ElementT<compshape>::ComputeElContribution(std::vector<MatrixDouble> &jacob
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
@@ -866,8 +868,6 @@ void ElementT<compshape>::ComputeElContribution(std::vector<VecDouble> &rhsVecto
     fIntegData.fAdimCoord.resize(DIM);
 
     int index = 0;
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
 
     for(int it = 0; it < fIntRule.NPoints(); it++){
 
@@ -884,7 +884,9 @@ void ElementT<compshape>::ComputeElContribution(std::vector<VecDouble> &rhsVecto
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
@@ -925,8 +927,6 @@ void ElementT<compshape>::ComputeError(VecDouble &errors){
     fIntegData.fDSolDx.resize(fWeakForm->NState(),fWeakForm->Dimension());
 
     int index = 0;
-    auto *pos2d = dynamic_cast<ElasticityPositional2D *> (fWeakForm);
-    auto *truss = dynamic_cast<PositionalTruss *> (fWeakForm);
     errors.setZero();
 
     for(int it = 0; it < fIntRule.NPoints(); it++){
@@ -944,7 +944,9 @@ void ElementT<compshape>::ComputeError(VecDouble &errors){
         ComputeSpatialDerivatives();
         
         // Computes current spatial derivatives (only for position-based weak forms)
-        if (pos2d || truss){
+        if (fWeakForm->Type() == WeakFormType::kPositionalFrame2D || 
+            fWeakForm->Type() == WeakFormType::kPositionalTruss || 
+            fWeakForm->Type() == WeakFormType::kElasticityPositional2D){
             fReference->ComputeCurrentJacobian(fIntegData,this);
             ComputeCurrentSpatialDerivatives();
         }
