@@ -61,23 +61,22 @@ void LinearAnalysis::UpdateSolution(){
         int64_t nstartDOF = 0;
         for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
             if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
-            for (int i = 0; i < this->MeshVector()[imesh]->NConnects(); ++i){
-                for (int iconnect = 0; iconnect < this->MeshVector()[imesh]->NConnects(); iconnect++){
-                    Connect * c = this->MeshVector()[imesh]->ConnectVec()[iconnect];
-                    int64_t fSeqnum = c->GetSequenceNumber();
-                    if (fSeqnum < 0) continue;
-                    int nstate = c->GetNStateVariables();
-                    if (c->GetNShapeFunctions() == 0) continue;
-                    for (int k = 0; k<nstate; k++){
-                        Ii = nstartDOF + fSeqnum + k;
-                        val = this->GlobalMatrix()->GetValueSolution(Ii);
-                        // ierr = VecGetValues(All, Ione, &Ii, &val);
-                        int nshape = c->GetNShapeFunctions();
-                        if (nshape == 0) continue;
-                        double sol = c -> Solution()[k];
-                        c -> SetPreviousSolution(k,sol);
-                        c -> SetSolution(k,val);
-                    }
+            
+            for (int iconnect = 0; iconnect < this->MeshVector()[imesh]->NConnects(); iconnect++){
+                Connect * c = this->MeshVector()[imesh]->ConnectVec()[iconnect];
+                int64_t fSeqnum = c->GetSequenceNumber();
+                if (fSeqnum < 0) continue;
+                int nstate = c->GetNStateVariables();
+                if (c->GetNShapeFunctions() == 0) continue;
+                for (int k = 0; k<nstate; k++){
+                    Ii = nstartDOF + fSeqnum + k;
+                    val = this->GlobalMatrix()->GetValueSolution(Ii);
+                    // ierr = VecGetValues(All, Ione, &Ii, &val);
+                    int nshape = c->GetNShapeFunctions();
+                    if (nshape == 0) continue;
+                    double sol = c -> Solution()[k];
+                    c -> SetPreviousSolution(k,sol);
+                    c -> SetSolution(k,val);
                 }
             };
         }
