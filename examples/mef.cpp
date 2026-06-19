@@ -151,13 +151,13 @@ void CreateModel(CompMesh *cmesh);
 void SolveProblem(CompMesh *cmesh);
 
 double ModElasticity = 1.;
-double PoissonRatio = 0.2;
+double PoissonRatio = 0.3;
 
 int main(int argc, char **args) { 
 
     //Create Model
     GeoMesh *gmesh = new GeoMesh();
-    GmshTools::Read(*gmesh,"../example.msh");
+    GmshTools::Read(*gmesh,"../chapaLRef1.msh");
     CompMesh *cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     CreateModel(cmesh);
     cmesh->Print("cmesh.txt");
@@ -206,7 +206,7 @@ void CreateModel(CompMesh *cmesh){
     val2.setZero();
 
     //Chapa L: apoio horizontal no pontos B e F, apoio vertical no ponto A
-    /*val2[0] = 1.0;
+    val2[0] = 1.0;
     L2Projection * matbc1 = new L2Projection(2,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
     val2.setZero();
     val2[1] = 1.0;
@@ -220,7 +220,7 @@ void CreateModel(CompMesh *cmesh){
     L2Projection * matbc5 = new L2Projection(6,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     matbc5->SetForcingFunction(forcingFunctionEF);
     L2Projection * matbc6 = new L2Projection(7,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbc6->SetForcingFunction(forcingFunctionFA);*/
+    matbc6->SetForcingFunction(forcingFunctionFA);
 
     //Chapa quadrada cisalhamento
     // val2[0] = 0.001;
@@ -233,20 +233,20 @@ void CreateModel(CompMesh *cmesh){
     // L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kDirichlet,val1,val2);
 
     //Viga flexão pura
-    L2Projection * matbc1 = new L2Projection(2,dimension-2,BoundaryConditionType::kDirichlet,val1,val2);
-    val2[0] = 1.0;
-    L2Projection * matbc2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
-    L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
-    matbc3->SetForcingFunction(forcingFunction1);
+    //L2Projection * matbc1 = new L2Projection(2,dimension-2,BoundaryConditionType::kDirichlet,val1,val2);
+    //val2[0] = 1.0;
+    //L2Projection * matbc2 = new L2Projection(3,dimension-2,BoundaryConditionType::kDirectionalHomogeneousDirichlet,val1,val2);
+    //L2Projection * matbc3 = new L2Projection(4,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
+    //matbc3->SetForcingFunction(forcingFunction1);
     //L2Projection * matbc4 = new L2Projection(5,dimension-1,BoundaryConditionType::kNeumann,val1,val2);
     //matbc4->SetForcingFunction(forcingFunction2);
 
     cmesh->InsertMaterial(matbc1);
     cmesh->InsertMaterial(matbc2);
     cmesh->InsertMaterial(matbc3);
-    //cmesh->InsertMaterial(matbc4);
-    //cmesh->InsertMaterial(matbc5);
-    //cmesh->InsertMaterial(matbc6);
+    cmesh->InsertMaterial(matbc4);
+    cmesh->InsertMaterial(matbc5);
+    cmesh->InsertMaterial(matbc6);
     
     cmesh->AutoBuild();
 }
@@ -282,10 +282,10 @@ void SolveProblem(CompMesh *cmesh){
     }
 
     VecDouble sol = spMat->Solution();
-    VecDouble rhs = spMat->Rhs();    
+    VecDouble rhs = spMat->Rhs();   
 
     double strainEnergy = (sol.dot(rhs))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
 
-    VTUGenerator::PrintResults(cmesh,"mefResult",ScalarNames,VectorNames);
+    //VTUGenerator::PrintResults(cmesh,"mefResult",ScalarNames,VectorNames);
 }
