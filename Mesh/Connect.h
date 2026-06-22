@@ -8,8 +8,8 @@ private:
     int fNState;
     int fNShape;
     int fOrder;
-    int64_t fIndex;
-    int64_t fSequenceNumber;
+    int fIndex;
+    int fSequenceNumber;
 
     /// @brief Solution
     VecDouble fSolution;
@@ -27,7 +27,7 @@ private:
     double    fPrevWeightFunction;
 
 public:
-    Connect(int nstate, int nshape, int order, int64_t index, int64_t seqnum);
+    Connect(int nstate, int nshape, int order, int index, int seqnum);
     // void CreateConnections();
 
     void AllocateTimeDerivatives();
@@ -44,15 +44,15 @@ public:
         return fOrder;
     };
 
-    int64_t Index(){
+    int Index(){
         return fIndex;
     };
 
-    int64_t GetSequenceNumber(){
+    int GetSequenceNumber(){
         return fSequenceNumber;
     };
 
-    void SetSequenceNumber(int64_t seqnum){
+    void SetSequenceNumber(int seqnum){
         fSequenceNumber = seqnum;
     };
 

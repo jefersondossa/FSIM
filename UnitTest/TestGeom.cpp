@@ -28,7 +28,7 @@
 //     coord[0] = 1.;
 //     coord[1] = 2.;
 //     coord[2] = 3.;
-//     int64_t index = 1000;
+//     int index = 1000;
 
 //     GeometricNode *node2 = new GeometricNode(coord,index);
 //     VecDouble n2coord = node2->GetCoordinates();
@@ -94,7 +94,7 @@
 //     double deltaX = 1./nElements;
 //     double deltaY = 0.1;
 
-//     int64_t index = 0;
+//     int index = 0;
 //     GeometricNode *nodeAux = new GeometricNode(coord,index);  
 //     gmesh->SetNode(nodeAux->GetIndex(),*nodeAux);
 

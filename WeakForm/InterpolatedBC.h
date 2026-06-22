@@ -15,8 +15,8 @@ protected:
     // 4 = Directional Non-Homogeneous Dirichlet - apply Dirichlet BC in the non zero Val2 entry  
     BoundaryConditionType BCType{BoundaryConditionType::kDirichlet};
     
-    std::map<int64_t,int64_t> *fGlobalElementCorrespondence;
-    std::map<int64_t, MatrixDouble> *fGlobalNodeCorrespondence;
+    std::map<int,int> *fGlobalElementCorrespondence;
+    std::map<int, MatrixDouble> *fGlobalNodeCorrespondence;
     CompMesh *fGlobalMesh;
 
 public:
@@ -25,8 +25,8 @@ public:
     /// @param dim problem dimension
     /// @param bctype BC type
     InterpolatedBC(int matid, int dim, int nstate, BoundaryConditionType bctype, 
-        std::map<int64_t,int64_t> *globalElementCorrespondence,
-        std::map<int64_t, MatrixDouble> *globalNodeCorrespondence,
+        std::map<int,int> *globalElementCorrespondence,
+        std::map<int, MatrixDouble> *globalNodeCorrespondence,
         CompMesh *fGlobalMesh);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided

@@ -40,11 +40,11 @@ double ModElasticity = 1.;
 double PoissonRatio = 0.0;
 
 //Local index to global index correspondence for elements
-std::map<int64_t,int64_t> globalElementCorrespondence;
+std::map<int,int> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
-std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
+std::map<int, MatrixDouble> globalNodeCorrespondence;
 //Global connects to be enriched to the index of the new connect associated with the enriched degree of freedom
-std::map<int64_t,int64_t> enrichedConnects;
+std::map<int,int> enrichedConnects;
 
 int main(int argc, char **args) { 
 

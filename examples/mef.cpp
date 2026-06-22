@@ -155,6 +155,11 @@ double PoissonRatio = 0.3;
 
 int main(int argc, char **args) { 
 
+#ifdef HAS_PETSC
+    // Starts main program invoking PETSc
+    PetscInitialize(&argc, &args, (char*)0, (char*)0);
+#endif
+
     //Create Model
     GeoMesh *gmesh = new GeoMesh();
     GmshTools::Read(*gmesh,"../chapaLRef1.msh");
@@ -190,6 +195,13 @@ int main(int argc, char **args) {
     // double strainEnergy = (Solution.dot(Force))/2;
     // std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
     
+
+#ifdef HAS_PETSC
+    //Finalize main program   
+    PetscFinalize();
+#endif
+
+
 }   
 
 void CreateModel(CompMesh *cmesh){
@@ -261,8 +273,8 @@ void CreateModel(CompMesh *cmesh){
 
 void SolveProblem(CompMesh *cmesh){
 
-    LinearAnalysis an(cmesh,SolverType::ELDLt);
-       
+    LinearAnalysis an(cmesh,SolverType::ELU);
+    
     std::vector<std::string> ScalarNames, VectorNames;
     ScalarNames = {"SigmaX","SigmaY","TauXY","StrainEnergy"};
     VectorNames = {"Displacement","ExactDisplacement"}; //, "ExactDisplacement"}
@@ -275,6 +287,22 @@ void SolveProblem(CompMesh *cmesh){
     //VecDouble errors(4);
     //an.PostProcessError(errors);
 
+#ifdef HAS_PETSC
+    PETScMatrix *spMat = dynamic_cast<PETScMatrix *>(an.GlobalMatrix());
+    if (!spMat) {
+        std::cerr << "Error: GlobalMatrix is not of type PETSc." << std::endl;
+        return;
+    }
+
+    Vec sol = spMat->Solution();
+    Vec rhs = spMat->Rhs();   
+    double strainEnergy;
+    VecDot(sol, rhs, &strainEnergy);
+    std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy/2 << std::endl;
+
+
+
+#else
     EigenSpMatrix *spMat = dynamic_cast<EigenSpMatrix *>(an.GlobalMatrix());
     if (!spMat) {
         std::cerr << "Error: GlobalMatrix is not of type EigenSpMatrix." << std::endl;
@@ -287,5 +315,9 @@ void SolveProblem(CompMesh *cmesh){
     double strainEnergy = (sol.dot(rhs))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
 
-    //VTUGenerator::PrintResults(cmesh,"mefResult",ScalarNames,VectorNames);
+
+#endif
+    
+   
+    VTUGenerator::PrintResults(cmesh,"mefResult",ScalarNames,VectorNames);
 }

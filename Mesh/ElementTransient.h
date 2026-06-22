@@ -16,7 +16,7 @@ public:
     ElementTransient() : ElementT<compshape>(){
     };
 
-    ElementTransient(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
+    ElementTransient(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs) override;

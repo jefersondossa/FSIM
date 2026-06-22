@@ -40,15 +40,15 @@ public:
     /// @return fluid model nodes information
     std::vector<Node *> &NodeVec(){return fNodeVector;}
    
-    int64_t NNodes(){return fNodeVector.size();}
-    void SetNumNodes(int64_t nnodes){fNodeVector.resize(nnodes);}
+    int NNodes(){return fNodeVector.size();}
+    void SetNumNodes(int nnodes){fNodeVector.resize(nnodes);}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
     std::vector<GeoElement *> &ElementVec(){return fElementVector;}
-    int64_t NElements(){return fElementVector.size();}
-    void SetNumElements(int64_t nelements){fElementVector.resize(nelements);}
+    int NElements(){return fElementVector.size();}
+    void SetNumElements(int nelements){fElementVector.resize(nelements);}
 
     void Print(std::string filename);
 

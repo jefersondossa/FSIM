@@ -2,9 +2,9 @@
 
 void PrintMathematica(MatrixDouble &mat, std::string name = "A"){
     std::cout << name << " = {";
-    for (int64_t i = 0; i < mat.rows(); i++){
+    for (int i = 0; i < mat.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < mat.cols(); j++){
+        for (int j = 0; j < mat.cols(); j++){
             if (fabs(mat(i,j))<1.e-13) {
                 std::cout << 0.;
             } else {
@@ -20,7 +20,7 @@ void PrintMathematica(MatrixDouble &mat, std::string name = "A"){
 
 void PrintMathematica(VecDouble &vec, std::string name = "b"){
     std::cout << name << " = {";
-    for (int64_t i = 0; i < vec.size(); i++) {
+    for (int i = 0; i < vec.size(); i++) {
         if (fabs(vec(i))<1.e-13) {
             std::cout << 0.;
         } else {

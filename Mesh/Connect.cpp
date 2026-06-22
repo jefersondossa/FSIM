@@ -4,7 +4,7 @@
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
 
-Connect::Connect(int nstate, int nshape, int order, int64_t index, int64_t seqnum){
+Connect::Connect(int nstate, int nshape, int order, int index, int seqnum){
     fNState = nstate;
     fNShape = nshape;
     fOrder = order;

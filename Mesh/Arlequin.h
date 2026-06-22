@@ -23,15 +23,15 @@ enum ArlequinStabType{ENoStab, EOption1, EOption2, EOption3, EOption4, EOption5}
 /// Mounts the overlapping mesh problem for solving the incompressible flow problem
 class Arlequin{
 public:
-    std::set<int64_t> fGluingElementIndex;
+    std::set<int> fGluingElementIndex;
 
-    std::map<int64_t,int64_t> fNodeLocalToElementGlobal;
-    std::map<int64_t,VecDouble> fNodeLocalToXsiGlobal;
+    std::map<int,int> fNodeLocalToElementGlobal;
+    std::map<int,VecDouble> fNodeLocalToXsiGlobal;
 
-    std::map<int64_t,VecDouble> fLocalIntPointToGlobalElement;
-    std::map<int64_t,MatrixDouble> fLocalIntPointToGlobalXsi;
+    std::map<int,VecDouble> fLocalIntPointToGlobalElement;
+    std::map<int,MatrixDouble> fLocalIntPointToGlobalXsi;
 
-    std::map<int64_t,std::set<int64_t>> fGlobalElToLocalEl;
+    std::map<int,std::set<int>> fGlobalElToLocalEl;
     std::set<int> fGlueMatID;
 private:
     double fGlueZoneThickness = 0.0;
@@ -45,9 +45,9 @@ private:
     bool fInvertSignaledDistance = false;
 
     /// @brief Data structure relating signaled distance of local model nodes
-    std::map<int64_t,double> fLocalSignaledDistance;
+    std::map<int,double> fLocalSignaledDistance;
     /// @brief Data structure relating signaled distance of global model nodes
-    std::map<int64_t,double> fGlobalSignaledDistance;
+    std::map<int,double> fGlobalSignaledDistance;
     
     /// @brief Arlequin stabilization type
     ArlequinStabType fArlequinStab = ArlequinStabType::ENoStab;
@@ -139,12 +139,12 @@ public:
     double GlobalWeightFunction(double dist);
     double LocalWeightFunction(double dist);
 
-    void ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIntersected);
+    void ComputeTriangleIntersections(int iEl, std::set<int> &elIntersected);
 
-    double LocalNodeSignaledDistance(int64_t node){
+    double LocalNodeSignaledDistance(int node){
         return fLocalSignaledDistance[node];
     }
-    double GlobalNodeSignaledDistance(int64_t node){
+    double GlobalNodeSignaledDistance(int node){
         return fGlobalSignaledDistance[node];
     }
 

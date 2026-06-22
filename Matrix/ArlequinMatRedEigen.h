@@ -7,27 +7,27 @@
 class ArlequinMatRedEigen : public MatrixType
 {
 protected:
-    int64_t       fDim0,fDim1,fDimLagrange;
+    int       fDim0,fDim1,fDimLagrange;
     SparseMat     fK0,fK1,fL0,fL1,fE,fL0T,fL1T;
     MatrixDouble  fU0,fU1,fLambda;
     MatrixDouble  fF0,fF1,fG;
 
 public:
-    ArlequinMatRedEigen(int64_t dim0, int64_t dim1, int64_t dimLagrange);
+    ArlequinMatRedEigen(int dim0, int dim1, int dimLagrange);
 
     ~ArlequinMatRedEigen();
 
-    void AddValueMatrix(int64_t &row, int64_t &col, double &val);
-    void PutValueMatrix(int64_t &row, int64_t &col, double &val);
-    double GetValueMatrix(int64_t &row, int64_t &col);
+    void AddValueMatrix(int &row, int &col, double &val);
+    void PutValueMatrix(int &row, int &col, double &val);
+    double GetValueMatrix(int &row, int &col);
 
-    void AddValueRhs(int64_t &row, double &val);
-    void PutValueRhs(int64_t &row, double &val);
-    double GetValueRhs(int64_t &row);
+    void AddValueRhs(int &row, double &val);
+    void PutValueRhs(int &row, double &val);
+    double GetValueRhs(int &row);
 
-    void AddValueSolution(int64_t &row, double &val);
-    void PutValueSolution(int64_t &row, double &val);
-    double GetValueSolution(int64_t &row);
+    void AddValueSolution(int &row, double &val);
+    void PutValueSolution(int &row, double &val);
+    double GetValueSolution(int &row);
     
     virtual SparseMat &K0(){return fK0;}
     virtual SparseMat &K1(){return fK1;}

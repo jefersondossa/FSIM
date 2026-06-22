@@ -19,7 +19,7 @@ public:
     ElementWithMem() : ElementT<compshape>(){
     };
 
-    ElementWithMem(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
+    ElementWithMem(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
     void ComputeElContribution(MatrixDouble &Stiffness) override;

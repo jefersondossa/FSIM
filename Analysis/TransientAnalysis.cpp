@@ -8,9 +8,9 @@ TransientAnalysis::TransientAnalysis(CompMesh *cmesh, SolverType stype, bool lin
 };
 
 
-void TransientAnalysis::Run(int64_t nsteps){
+void TransientAnalysis::Run(int nsteps){
 
-    for (int64_t i = 0; i < nsteps; i++){
+    for (int i = 0; i < nsteps; i++){
         
         std::cout << "Time Step = " << i << std::endl;
         if (IsLinear){
@@ -43,7 +43,7 @@ void TransientAnalysis::Run(int64_t nsteps){
         fGlobalMatrix->ZeroMatrix();
         fGlobalMatrix->ZeroRhs();
         fGlobalMatrix->ZeroSolution();
-        for (int64_t i=0; i<NEquations(); i++){
+        for (int i=0; i<NEquations(); i++){
             double val = 1.e-20;
             fGlobalMatrix->AddValueMatrix(i,i,val);
         }

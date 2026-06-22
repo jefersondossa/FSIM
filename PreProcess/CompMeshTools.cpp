@@ -67,7 +67,7 @@ void CompMeshTools::DomainDecompositionMETIS(CompMesh *cmesh){
 }
 
 
-bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, Element *elemsearch){
+bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int &elCorr, VecDouble &xsiCorr, Element *elemsearch){
     
     int DIM = cmesh->Dimension();
     int DEG = cmesh->GetDefaultOrder();

@@ -177,11 +177,11 @@ double PoissonRatio = 0.49999;
 VecDouble previousSol;
 VecDouble currentSol;
 //Local index to global index correspondence for elements
-std::map<int64_t,int64_t> globalElementCorrespondence;
+std::map<int,int> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
-std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
+std::map<int, MatrixDouble> globalNodeCorrespondence;
 //Global connects to be enriched to the index of the new connect associated with the enriched degree of freedom
-std::map<int64_t,int64_t> enrichedConnects;
+std::map<int,int> enrichedConnects;
 
 int main(int argc, char **args) { 
 
@@ -497,7 +497,7 @@ void SolveLocalProblem(CompMesh *cmeshL){
     VecDouble rhs = spMat->Rhs();
 
     double bignumber = 1.e20;
-    for (int64_t i = 0; i < rhs.size(); i++){
+    for (int i = 0; i < rhs.size(); i++){
         if (rhs[i]>1.e10) rhs[i] = 0.;
         if (rhs[i]<-1.e10) rhs[i] = 0.;
     }

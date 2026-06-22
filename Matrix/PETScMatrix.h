@@ -18,20 +18,20 @@ private:
 
 public:
     
-    PETScMatrix(int64_t rows, int64_t cols, PETScMatType mtype = ESeq);
+    PETScMatrix(int rows, int cols, PETScMatType mtype = ESeq);
     ~PETScMatrix();
 
-    void AddValueMatrix(int64_t &row, int64_t &col, double &val) override;
-    void PutValueMatrix(int64_t &row, int64_t &col, double &val) override;
-    double GetValueMatrix(int64_t &row, int64_t &col) override;
+    void AddValueMatrix(int &row, int &col, double &val) override;
+    void PutValueMatrix(int &row, int &col, double &val) override;
+    double GetValueMatrix(int &row, int &col) override;
 
-    void AddValueRhs(int64_t &row, double &val) override;
-    void PutValueRhs(int64_t &row, double &val) override;
-    double GetValueRhs(int64_t &row) override;
+    void AddValueRhs(int &row, double &val) override;
+    void PutValueRhs(int &row, double &val) override;
+    double GetValueRhs(int &row) override;
 
-    void AddValueSolution(int64_t &row, double &val) override;
-    void PutValueSolution(int64_t &row, double &val) override;
-    double GetValueSolution(int64_t &row) override;
+    void AddValueSolution(int &row, double &val) override;
+    void PutValueSolution(int &row, double &val) override;
+    double GetValueSolution(int &row) override;
 
     void ZeroMatrix() override;
     void ZeroRhs() override;

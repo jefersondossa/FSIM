@@ -98,7 +98,7 @@ void ArlequinRedSolverPETSc::Solve(){
     //Sets 1 to zero diagonals
     PetscInt rows,cols;
     MatGetSize(pmat->E(), &rows, &cols);
-    std::vector<int64_t> indices;
+    std::vector<PetscInt> indices;
     for (PetscInt i = 0; i < rows; i++){
         PetscScalar val;
         MatGetValue(pmat->E(), i, i, &val);

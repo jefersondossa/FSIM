@@ -177,7 +177,7 @@ std::vector<PointTriangle> TriangleIntersectionPoints(const std::vector<PointTri
 //------------------------------------------------------------------------------
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
-void Arlequin::ComputeTriangleIntersections(int64_t iEl, std::set<int64_t> &elIntersected){
+void Arlequin::ComputeTriangleIntersections(int iEl, std::set<int> &elIntersected){
     // auto refElement = fMeshVector[2]->ElementVec()[iEl];
     // auto connectref = fMeshVector[0]->ElementVec()[iEl]->getConnectivity();
     // std::set<int> pointsInsideRefElement;
@@ -246,11 +246,11 @@ void Arlequin::CreateGlobalCouplingElements(){
     //we look for the interesected global element. Then, for each intersected global
     // element we create an ElCouplingGlobal associated with the corresponding local element.
     int numberIntPoints = fMeshVector[2]->ElementVec()[0] -> getNumberOfIntegrationPoints();
-    int64_t nEl = fMeshVector[2]->NElements();
-    int64_t index = nEl; 
+    int nEl = fMeshVector[2]->NElements();
+    int index = nEl; 
     for (int iel = 0; iel<nEl; iel++){
         auto jel = fMeshVector[2]->ElementVec()[iel];
-        std::set<int64_t> elIntersected;
+        std::set<int> elIntersected;
         for (int i=0; i<numberIntPoints; i++){
             elIntersected.insert(fLocalIntPointToGlobalElement[iel][i]);
         };
@@ -955,7 +955,7 @@ void Arlequin::setCouplingZone(){
     //Compute number of nodes in the glue zone
     // numNodesGlueZoneFine = 0;
     std::map<int,int> FineToGluing;
-    int64_t nodeindex = 0;
+    int nodeindex = 0;
     for (int i = 0; i < fMeshVector[1]->Reference()->NNodes(); i++){
         if(nodesCZ[i] > 0) {
             // numNodesGlueZoneFine++;

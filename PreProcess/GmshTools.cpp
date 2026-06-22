@@ -421,7 +421,7 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
             // std::pair<int, std::string> chunk;
 
 
-            for (int64_t i_name = 0; i_name < n_physical_names; i_name++) {
+            for (int i_name = 0; i_name < n_physical_names; i_name++) {
                 
                 read.getline(buf, 1024);
                 read >> dimension;
@@ -477,7 +477,7 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
             
             
             for (int i_dim = 0; i_dim <4; i_dim++) {
-                for (int64_t i_entity = 0; i_entity < n_entities[i_dim]; i_entity++) {
+                for (int i_entity = 0; i_entity < n_entities[i_dim]; i_entity++) {
                     
                     read.getline(buf, 1024);
                     read >> chunk.first;
@@ -533,18 +533,18 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
         if(str == "$Nodes" || str == "$Nodes\r")
         {
             
-            int64_t n_entity_blocks, n_nodes, min_node_tag, max_node_tag;
+            int n_entity_blocks, n_nodes, min_node_tag, max_node_tag;
             read >> n_entity_blocks;
             read >> n_nodes;
             read >> min_node_tag;
             read >> max_node_tag;
             
-            int64_t node_id;
+            int node_id;
             VecDouble coord(3);
             gmesh.SetNumNodes(max_node_tag);
             
             int entity_tag, entity_dim, entity_parametric, entity_nodes;
-            for (int64_t i_block = 0; i_block < n_entity_blocks; i_block++)
+            for (int i_block = 0; i_block < n_entity_blocks; i_block++)
             {
                 read.getline(buf, 1024);
                 read >> entity_dim;
@@ -557,11 +557,11 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
                     PanicButton();
                 }
                 
-                std::vector<int64_t> nodeids(entity_nodes,-1);
-                for (int64_t inode = 0; inode < entity_nodes; inode++) {
+                std::vector<int> nodeids(entity_nodes,-1);
+                for (int inode = 0; inode < entity_nodes; inode++) {
                     read >> nodeids[inode];
                 }
-                for (int64_t inode = 0; inode < entity_nodes; inode++) {
+                for (int inode = 0; inode < entity_nodes; inode++) {
                     read >> coord[0];
                     read >> coord[1];
                     read >> coord[2];
@@ -587,16 +587,16 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
         if(str == "$Elements" || str == "$Elements\r")
         {
             
-            int64_t n_entity_blocks, n_elements, min_element_tag, max_element_tag;
+            int n_entity_blocks, n_elements, min_element_tag, max_element_tag;
             read >> n_entity_blocks;
             read >> n_elements;
             read >> min_element_tag;
             read >> max_element_tag;
             gmesh.SetNumElements(n_elements);
-            int64_t elcount = 0;
+            int elcount = 0;
             
             int entity_tag, entity_dim, entity_el_type, entity_elements;
-            for (int64_t i_block = 0; i_block < n_entity_blocks; i_block++)
+            for (int i_block = 0; i_block < n_entity_blocks; i_block++)
             {
                 read.getline(buf, 1024);
                 read >> entity_dim;
@@ -608,7 +608,7 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
                     std::cout << "The entity with tag " << entity_tag << " does not have elements to insert" << std::endl;
                 }
                 
-                for (int64_t iel = 0; iel < entity_elements; iel++) {
+                for (int iel = 0; iel < entity_elements; iel++) {
                     int physical_identifier;
                     int n_physical_identifier = 0;
                     if(m_dim_entity_tag_and_physical_tag[entity_dim].find(entity_tag) != m_dim_entity_tag_and_physical_tag[entity_dim].end())

@@ -11,13 +11,13 @@ private:
     std::vector<std::string> fScalVars;
     std::vector<std::string> fVectVars;
     std::string fFilename;
-    int64_t fNSteps;
+    int fNSteps;
 
 public:
     TransientAnalysis() : NonLinearAnalysis(){};
     TransientAnalysis(CompMesh *cmesh, SolverType stype, bool linear = true);
 
-    void Run(int64_t nsteps);
+    void Run(int nsteps);
 
     void Run() override{
         PanicButton();

@@ -1,6 +1,6 @@
 #include "CouplingLocal.h"
 
-CouplingLocal::CouplingLocal(int dim, int64_t fineindex, CompMesh* meshlocal, double k0, double k1) : WeakForm(){
+CouplingLocal::CouplingLocal(int dim, int fineindex, CompMesh* meshlocal, double k0, double k1) : WeakForm(){
     fLocalMesh = meshlocal;
     fLocalIndex = fineindex;
     fDimension = dim;

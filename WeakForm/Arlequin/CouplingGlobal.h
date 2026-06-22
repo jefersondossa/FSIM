@@ -9,7 +9,7 @@ class CouplingGlobal : public WeakForm
 {
 private:
     // Global element index
-    int64_t fGlobalIndex;
+    int fGlobalIndex;
     // Global element computational mesh
     CompMesh * fGlobalMesh;
     // Global element adim coord
@@ -22,11 +22,11 @@ private:
 
 public:
     // Global coupling Arlequin constructor
-    CouplingGlobal(int dim, int64_t globindex, CompMesh* meshlocal, double k0, double k1);
+    CouplingGlobal(int dim, int globindex, CompMesh* meshlocal, double k0, double k1);
 
     /// @brief Returns the element global index
     /// @return element global index
-    int64_t &GetGlobalIndex(){
+    int &GetGlobalIndex(){
         return fGlobalIndex;
     }
     /// @brief Sets the global element parametric coordinates with respect to the local element

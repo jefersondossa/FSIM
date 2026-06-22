@@ -5,7 +5,7 @@
 //--------------------------------IMPLEMENTATION--------------------------------
 //------------------------------------------------------------------------------
 
-Node::Node(VecDouble &coor, int64_t index){
+Node::Node(VecDouble &coor, int index){
     fIndex = index;
     fCoord.resize(coor.size());
 

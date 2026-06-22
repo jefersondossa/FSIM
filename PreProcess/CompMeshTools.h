@@ -18,7 +18,7 @@ namespace CompMeshTools{
     /// @param elCorr correpondence element
     /// @param xsiCorr correspondence Xsi
     /// @param elemsearch the first guess element
-    bool searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int64_t &elCorr, VecDouble &xsiCorr, Element *elemsearch);
+    bool searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int &elCorr, VecDouble &xsiCorr, Element *elemsearch);
 }
 
 

@@ -42,7 +42,7 @@ public:
 
     Analysis(Arlequin *arl, SolverType stype, bool reduced = true);
     
-    int64_t NEquations();
+    int NEquations();
 
     MatrixType * GlobalMatrix() {return fGlobalMatrix;}
 

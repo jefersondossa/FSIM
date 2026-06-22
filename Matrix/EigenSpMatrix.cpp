@@ -1,7 +1,7 @@
 #include "EigenSpMatrix.h"
 
 
-EigenSpMatrix::EigenSpMatrix(int64_t rows, int64_t cols) : MatrixType(rows,cols){
+EigenSpMatrix::EigenSpMatrix(int rows, int cols) : MatrixType(rows,cols){
     
     fMatrix.resize(rows, cols);
     fMatrix.reserve(VectorXi::Constant(cols, 128));
@@ -30,33 +30,33 @@ void EigenSpMatrix::ZeroRhs(){
     fRhs.setZero();
 }
 
-void EigenSpMatrix::AddValueMatrix(int64_t &row, int64_t &col, double &val) {
+void EigenSpMatrix::AddValueMatrix(int &row, int &col, double &val) {
     fMatrix.coeffRef(row, col) += val;
 };
-void EigenSpMatrix::PutValueMatrix(int64_t &row, int64_t &col, double &val) {
+void EigenSpMatrix::PutValueMatrix(int &row, int &col, double &val) {
     fMatrix.coeffRef(row, col) = val;
 };
-double EigenSpMatrix::GetValueMatrix(int64_t &row, int64_t &col) {
+double EigenSpMatrix::GetValueMatrix(int &row, int &col) {
     return fMatrix.coeffRef(row, col);
 };
 
-void EigenSpMatrix::AddValueRhs(int64_t &row, double &val) {
+void EigenSpMatrix::AddValueRhs(int &row, double &val) {
     fRhs(row,0) += val;
 };
-void EigenSpMatrix::PutValueRhs(int64_t &row, double &val) {
+void EigenSpMatrix::PutValueRhs(int &row, double &val) {
     fRhs(row,0) = val;
 };
-double EigenSpMatrix::GetValueRhs(int64_t &row) {
+double EigenSpMatrix::GetValueRhs(int &row) {
     return fRhs(row,0);
 };
 
-void EigenSpMatrix::AddValueSolution(int64_t &row, double &val) {
+void EigenSpMatrix::AddValueSolution(int &row, double &val) {
     fSolution(row,0) += val;
 };
-void EigenSpMatrix::PutValueSolution(int64_t &row, double &val) {
+void EigenSpMatrix::PutValueSolution(int &row, double &val) {
     fSolution(row,0) = val;
 };
-double EigenSpMatrix::GetValueSolution(int64_t &row) {
+double EigenSpMatrix::GetValueSolution(int &row) {
     return fSolution(row,0);
 };
 
@@ -67,9 +67,9 @@ double EigenSpMatrix::SolutionNorm(){
 void EigenSpMatrix::PrintMatrix(){
     // std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
     std::cout << "GlobalMatrix = {\n";
-    for (int64_t i = 0; i < fMatrix.rows(); i++){
+    for (int i = 0; i < fMatrix.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < fMatrix.cols(); j++){
+        for (int j = 0; j < fMatrix.cols(); j++){
             if (fabs(fMatrix.coeffRef(i,j))<1.e-13) {
                 std::cout << 0.;
             } else {
@@ -83,7 +83,7 @@ void EigenSpMatrix::PrintMatrix(){
     std::cout << "};\n"; 
 
     // std::cout << "Matrix Diagonal = {\n";
-    // for (int64_t i = 0; i < fMatrix.rows(); i++){
+    // for (int i = 0; i < fMatrix.rows(); i++){
     //     std::cout << "{";
     //     if (fabs(fMatrix.coeffRef(i,i))<1.e-13) {
     //         std::cout << 0.;
@@ -99,7 +99,7 @@ void EigenSpMatrix::PrintMatrix(){
 void EigenSpMatrix::PrintRhs(){
     // std::cout << "Global RHS = \n"<< fRhs << std::endl;
     std::cout << "RHS = {\n";
-    for (int64_t i = 0; i < fRhs.rows(); i++){
+    for (int i = 0; i < fRhs.rows(); i++){
         std::cout << "{";
         if (fabs(fRhs(i,0))<1.e-13) {
             std::cout << 0.;
@@ -116,7 +116,7 @@ void EigenSpMatrix::PrintRhs(){
 void EigenSpMatrix::PrintSolution(){
     // std::cout << "Solution = \n"<< fSolution << std::endl;
     std::cout << "Solution = {\n";
-    for (int64_t i = 0; i < fSolution.rows(); i++){
+    for (int i = 0; i < fSolution.rows(); i++){
         std::cout << "{";
         if (fabs(fSolution(i,0))<1.e-13) {
             std::cout << 0.;

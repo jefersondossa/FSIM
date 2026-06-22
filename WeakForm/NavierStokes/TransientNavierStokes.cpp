@@ -470,7 +470,7 @@ void TransientNavierStokes::Solution(IntPointData &data, int var, VecDouble &Sol
 
 void TransientNavierStokes::UpdateTimeDerivatives(CompMesh *cmesh){
     
-    for (int64_t inode = 0; inode < cmesh->NConnects(); inode++){
+    for (int inode = 0; inode < cmesh->NConnects(); inode++){
         for (int j = fDimension; j--; ){
             double u_ = cmesh->ConnectVec()[inode] -> GetSolution(j);
             double uprev = cmesh->ConnectVec()[inode] -> GetPreviousSolution(j);

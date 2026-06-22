@@ -35,7 +35,7 @@ protected:
     int fOrder = 1;
 
     ///Number of DOFS
-    int64_t fNGlobalDOF = 0;
+    int fNGlobalDOF = 0;
 
     // /// Defines the vector of fluid nodes
     // std::vector<Node *>       fNodeVector;
@@ -88,15 +88,15 @@ public:
     
 
     std::vector<Connect *> &ConnectVec(){return fConnectVector;}
-    int64_t NConnects(){return fConnectVector.size();}
-    void SetNumConnects(int64_t nconnects){fConnectVector.resize(nconnects);}
+    int NConnects(){return fConnectVector.size();}
+    void SetNumConnects(int nconnects){fConnectVector.resize(nconnects);}
 
     /// Gets the fluid model elements and export for solving the overlapping
     /// mesh problem with the Arlequin method
     /// @return fluid model elements information
     std::vector<Element *> &ElementVec(){return fElementVector;}
-    int64_t NElements(){return fElementVector.size();}
-    void SetNumElements(int64_t nelements){fElementVector.resize(nelements);}
+    int NElements(){return fElementVector.size();}
+    void SetNumElements(int nelements){fElementVector.resize(nelements);}
 
     void SetDefaultOrder(int order){
         fOrder = order;
@@ -128,14 +128,14 @@ public:
 
     /// @brief returns the number of global DOF's
     /// @return number of DOF's
-    int64_t &NGlobalDOF() {
+    int &NGlobalDOF() {
         return fNGlobalDOF;
     }
 
     /// @brief Returns the graphycal mesh to print results.
     /// @return graphycal mesh 
     GraphMesh* GetGraphMesh();
-    GraphMesh* GetGraphMesh(std::set<int64_t> &elsToPrint);
+    GraphMesh* GetGraphMesh(std::set<int> &elsToPrint);
     void ClearGraphMesh(){
         if (fGraphMesh){
             delete fGraphMesh;

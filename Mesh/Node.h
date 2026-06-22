@@ -36,22 +36,22 @@ private:
     /// @brief Initial coordinates
     VecDouble fInitialCoord;
     /// @brief Node index
-    int64_t fIndex;
+    int fIndex;
     /// @brief Inverse incidence, i.e., elements connected by the node
-    std::vector<int64_t> fInverseIncidence;
+    std::vector<int> fInverseIncidence;
     
 public:
     /// @brief Class constructor
     /// @param coor Nodal coordinates
     /// @param index Node index
-    Node(VecDouble &coor, int64_t index);
+    Node(VecDouble &coor, int index);
 
     /// @brief Default destructor
     ~Node() = default;
 
     /// @brief Returns the node index
     /// @return index
-    int64_t &Index() {
+    int &Index() {
         return fIndex;
     }
 
@@ -105,7 +105,7 @@ public:
 
     /// Gets the number of elements which contains the node
     /// @return int number of elements which contains the node
-    int64_t getNumberOfElements() const {
+    int getNumberOfElements() const {
         return fInverseIncidence.size();
     }
 

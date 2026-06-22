@@ -8,8 +8,8 @@
 #include "ElementMixed.h"
 
 void MEFGGlobalLocalTools::LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL, 
-                                                       std::map<int64_t,int64_t> &globalElementCorrespondence, 
-                                                       std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
+                                                       std::map<int,int> &globalElementCorrespondence, 
+                                                       std::map<int, MatrixDouble> &globalNodeCorrespondence,
                                                        int overlappingRegion, int overlappingNHDirichletBoundary){
     
     Element *localElement = nullptr;
@@ -20,7 +20,7 @@ void MEFGGlobalLocalTools::LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMes
     VecDouble xsiCorr(2);
 
     MatrixDouble globalNode;
-    int64_t elCorr;
+    int elCorr;
 
     for (int i=0; i<cmeshL->NElements(); i++){
         if(cmeshL->ElementVec()[i]->Dimension() == cmeshL->Dimension() || cmeshL->ElementVec()[i]->Reference()->Material() == overlappingNHDirichletBoundary){
@@ -63,8 +63,8 @@ void MEFGGlobalLocalTools::LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMes
 }
 
 void MEFGGlobalLocalTools::LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL,
-                                                           std::map<int64_t,int64_t> &globalElementCorrespondence,
-                                                           std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
+                                                           std::map<int,int> &globalElementCorrespondence,
+                                                           std::map<int, MatrixDouble> &globalNodeCorrespondence,
                                                            int overlappingNHNeumannBoundary){
 
     Element *localElement = nullptr;
@@ -75,7 +75,7 @@ void MEFGGlobalLocalTools::LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG,
     VecDouble xsiCorr(1);
 
     MatrixDouble globalNode;
-    int64_t elCorr;
+    int elCorr;
 
     for (int i=0; i<cmeshL->NElements(); i++){
         localElement = cmeshL->ElementVec()[i];
@@ -121,9 +121,9 @@ void MEFGGlobalLocalTools::LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG,
 
 
 void MEFGGlobalLocalTools::CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL, 
-                                               std::map<int64_t,int64_t> &globalElementCorrespondence, 
-                                               std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
-                                               std::map<int64_t,int64_t> &enrichedConnects,
+                                               std::map<int,int> &globalElementCorrespondence, 
+                                               std::map<int, MatrixDouble> &globalNodeCorrespondence,
+                                               std::map<int,int> &enrichedConnects,
                                                int overlappingNHNeumannBoundary,
                                                GlobalLocalEnrichment *globalLocal){
 
@@ -132,11 +132,11 @@ void MEFGGlobalLocalTools::CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmesh
     // Create the new connects in the global mesh for the enriched nodes and resize the connect vector of the global mesh accordingly. 
     // The number of new connects is equal to the number of enriched nodes, since we are considering only one degree of freedom per node, 
     // but it can be easily generalized for more degrees of freedom per node.
-    int64_t nConnects = cmeshG->NConnects();
-    int64_t nEnrichedConnects = enrichedConnects.size();
+    int nConnects = cmeshG->NConnects();
+    int nEnrichedConnects = enrichedConnects.size();
     cmeshG->ConnectVec().resize(nConnects + nEnrichedConnects);
     int count = 0;
-    int64_t SeqNum = cmeshG->NGlobalDOF();
+    int SeqNum = cmeshG->NGlobalDOF();
     int nstate = cmeshG->NState();
     for(auto &con:enrichedConnects){;
         Connect* originalConnect = cmeshG->ConnectVec()[con.first];
@@ -157,7 +157,7 @@ void MEFGGlobalLocalTools::CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmesh
         if (el->Dimension() != cmeshL->Dimension() && el->Reference()->Material() != overlappingNHNeumannBoundary) continue;
         nelsToEnrich++;
     }
-    int64_t nElementsG = cmeshG->NElements();
+    int nElementsG = cmeshG->NElements();
     cmeshG->ElementVec().resize(cmeshG->NElements() + nelsToEnrich);
     //Create the enriched elements in the global mesh
     count = 0;
@@ -190,8 +190,8 @@ void MEFGGlobalLocalTools::CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmesh
         count++;
     }
     // Update the problem size
-    int64_t fNGlobalDOF  = 0;
-    for (int64_t i = 0; i < cmeshG->NConnects(); i++){
+    int fNGlobalDOF  = 0;
+    for (int i = 0; i < cmeshG->NConnects(); i++){
         int nstate = cmeshG->NState();
         fNGlobalDOF += cmeshG->ConnectVec()[i]->GetNShapeFunctions() * nstate;
     }
@@ -203,9 +203,9 @@ void MEFGGlobalLocalTools::CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmesh
 void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
     CompMesh *cmeshG,
     CompMesh *cmeshL,
-    std::map<int64_t,int64_t> &globalElementCorrespondence,
-    std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
-    std::map<int64_t,int64_t> &enrichedConnects,
+    std::map<int,int> &globalElementCorrespondence,
+    std::map<int, MatrixDouble> &globalNodeCorrespondence,
+    std::map<int,int> &enrichedConnects,
     int overlappingNHNeumannBoundary,
     MixedGlobalLocalEnrichment *globalLocal)
 {
@@ -238,18 +238,18 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
     // 1. Create enriched connects in the displacement mesh
     // ------------------------------------------------------------
 
-    const int64_t nConnects = dispMeshG->NConnects();
-    const int64_t nEnrichedConnects =
-        static_cast<int64_t>(enrichedConnects.size());
+    const int nConnects = dispMeshG->NConnects();
+    const int nEnrichedConnects =
+        static_cast<int>(enrichedConnects.size());
 
     dispMeshG->ConnectVec().resize(nConnects + nEnrichedConnects);
 
-    int64_t seqNum = cmeshG->NGlobalDOF();
-    int64_t count = 0;
+    int seqNum = cmeshG->NGlobalDOF();
+    int count = 0;
 
     for (auto &con : enrichedConnects) {
 
-        const int64_t originalConnectIndex = con.first;
+        const int originalConnectIndex = con.first;
 
         if (originalConnectIndex < 0 || originalConnectIndex >= nConnects) {
             PanicButton();
@@ -268,7 +268,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
         const int order  = originalConnect->GetOrder();
         const int nstate = originalConnect->GetNStateVariables();
 
-        const int64_t newConnectIndex = nConnects + count;
+        const int newConnectIndex = nConnects + count;
 
         Connect *newConnect =
             new Connect(nstate, nshape, order, newConnectIndex, seqNum);
@@ -285,7 +285,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
     // 2. Count local elements to enrich
     // ------------------------------------------------------------
 
-    int64_t nelsToEnrich = 0;
+    int nelsToEnrich = 0;
 
     for (auto localEl : cmeshL->ElementVec()) {
 
@@ -303,8 +303,8 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
         nelsToEnrich++;
     }
 
-    const int64_t nElementsDispG  = dispMeshG->NElements();
-    const int64_t nElementsMixedG = cmeshG->NElements();
+    const int nElementsDispG  = dispMeshG->NElements();
+    const int nElementsMixedG = cmeshG->NElements();
 
     dispMeshG->ElementVec().resize(nElementsDispG + nelsToEnrich);
     cmeshG->ElementVec().resize(nElementsMixedG + nelsToEnrich);
@@ -336,10 +336,10 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
             return;
         }
 
-        const int64_t globalElIndex = itCorrespondence->second;
+        const int globalElIndex = itCorrespondence->second;
 
         if (globalElIndex < 0 ||
-            globalElIndex >= static_cast<int64_t>(cmeshG->ElementVec().size()))
+            globalElIndex >= static_cast<int>(cmeshG->ElementVec().size()))
         {
             PanicButton();
             return;
@@ -368,8 +368,8 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
             return;
         }
 
-        const int64_t newDispElementIndex  = nElementsDispG  + count;
-        const int64_t newMixedElementIndex = nElementsMixedG + count;
+        const int newDispElementIndex  = nElementsDispG  + count;
+        const int newMixedElementIndex = nElementsMixedG + count;
 
         ElementEnriched *enrichedEl =
             new ElementEnriched(
@@ -394,7 +394,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
         if (globalEl->Dimension() == dispMeshG->Dimension()) {
 
             if (globalElIndex >= 0 &&
-                globalElIndex < static_cast<int64_t>(dispMeshG->ElementVec().size()) &&
+                globalElIndex < static_cast<int>(dispMeshG->ElementVec().size()) &&
                 dispMeshG->ElementVec()[globalElIndex])
             {
                 dispMeshG->ElementVec()[globalElIndex]->SetWeakForm(nullptr);
@@ -426,11 +426,11 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
 
             if (itEnriched == enrichedConnects.end()) continue;
 
-            const int64_t enrichedConnectIndex = itEnriched->second;
+            const int enrichedConnectIndex = itEnriched->second;
 
             if (enrichedConnectIndex < 0 ||
                 enrichedConnectIndex >=
-                    static_cast<int64_t>(dispMeshG->ConnectVec().size()))
+                    static_cast<int>(dispMeshG->ConnectVec().size()))
             {
                 PanicButton();
                 return;
@@ -460,7 +460,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
 
         if (newDispElementIndex < 0 ||
             newDispElementIndex >=
-                static_cast<int64_t>(dispMeshG->ElementVec().size()))
+                static_cast<int>(dispMeshG->ElementVec().size()))
         {
             PanicButton();
             return;
@@ -468,7 +468,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
 
         if (newMixedElementIndex < 0 ||
             newMixedElementIndex >=
-                static_cast<int64_t>(cmeshG->ElementVec().size()))
+                static_cast<int>(cmeshG->ElementVec().size()))
         {
             PanicButton();
             return;
@@ -484,7 +484,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
     // 4. Update total number of global DOFs
     // ------------------------------------------------------------
 
-    int64_t nGlobalDOF = 0;
+    int nGlobalDOF = 0;
 
     for (int imesh = 0;
          imesh < static_cast<int>(mixedCmeshG->MeshVector().size());
@@ -494,7 +494,7 @@ void MEFGGlobalLocalTools::CreateMixedEnrichedModel(
 
         if (!mesh) continue;
 
-        for (int64_t ic = 0; ic < mesh->NConnects(); ic++) {
+        for (int ic = 0; ic < mesh->NConnects(); ic++) {
 
             Connect *con = mesh->ConnectVec()[ic];
 

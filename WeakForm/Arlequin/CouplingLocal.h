@@ -8,7 +8,7 @@
 class CouplingLocal : public WeakForm {
 protected:
     // Local element index
-    int64_t fLocalIndex;
+    int fLocalIndex;
     // Local computational mesh
     CompMesh * fLocalMesh;
     // Arlequin stabilization parameter
@@ -19,11 +19,11 @@ protected:
 
 public:
     // Local coupling constructor
-    CouplingLocal(int dim, int64_t fineindex, CompMesh* meshlocal, double k0, double k1);
+    CouplingLocal(int dim, int fineindex, CompMesh* meshlocal, double k0, double k1);
 
     /// @brief Returns the element local index
     /// @return local mesh element index
-    int64_t &GetLocalIndex(){
+    int &GetLocalIndex(){
         return fLocalIndex;
     }
 

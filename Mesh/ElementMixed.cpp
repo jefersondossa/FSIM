@@ -1,6 +1,6 @@
 #include "ElementMixed.h"
 
-ElementMixed::ElementMixed(int64_t index, std::vector<Element *> elvector, MixedCompMesh* mesh, WeakForm *wf){
+ElementMixed::ElementMixed(int index, std::vector<Element *> elvector, MixedCompMesh* mesh, WeakForm *wf){
     int DIM = elvector[0]->Dimension();
     fSubElements = elvector;
     this->fIndex = index;

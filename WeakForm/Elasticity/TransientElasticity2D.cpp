@@ -91,7 +91,7 @@ void TransientElasticity2D::UpdateTimeDerivatives(CompMesh *cmesh){
     switch (fIntegScheme){
     case ENewmark:
         {
-            for (int64_t inode = 0; inode < cmesh->NConnects(); inode++){
+            for (int inode = 0; inode < cmesh->NConnects(); inode++){
                 //Update Acceleration
                 auto acelPrev = cmesh->ConnectVec()[inode]->SolutionDDTime();
                 auto velPrev = cmesh->ConnectVec()[inode]->SolutionDTime();

@@ -1,7 +1,7 @@
 #include "ArlequinMatRedEigen.h"
 
 
-ArlequinMatRedEigen::ArlequinMatRedEigen(int64_t dim0, int64_t dim1, int64_t dimLagrange) : MatrixType(dim0+dim1+dimLagrange,dim0+dim1+dimLagrange){
+ArlequinMatRedEigen::ArlequinMatRedEigen(int dim0, int dim1, int dimLagrange) : MatrixType(dim0+dim1+dimLagrange,dim0+dim1+dimLagrange){
     fDim0 = dim0;
     fDim1 = dim1;
     fDimLagrange = dimLagrange;
@@ -62,7 +62,7 @@ void ArlequinMatRedEigen::ZeroRhs(){
     fG.setZero();
 }
 
-void ArlequinMatRedEigen::AddValueMatrix(int64_t &row, int64_t &col, double &val) {
+void ArlequinMatRedEigen::AddValueMatrix(int &row, int &col, double &val) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         fK0.coeffRef(row, col) += val;
         return;
@@ -88,7 +88,7 @@ void ArlequinMatRedEigen::AddValueMatrix(int64_t &row, int64_t &col, double &val
         PanicButton();
     }
 };
-void ArlequinMatRedEigen::PutValueMatrix(int64_t &row, int64_t &col, double &val) {
+void ArlequinMatRedEigen::PutValueMatrix(int &row, int &col, double &val) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         fK0.coeffRef(row, col) = val;
         return;
@@ -108,7 +108,7 @@ void ArlequinMatRedEigen::PutValueMatrix(int64_t &row, int64_t &col, double &val
         PanicButton();
     }
 };
-double ArlequinMatRedEigen::GetValueMatrix(int64_t &row, int64_t &col) {
+double ArlequinMatRedEigen::GetValueMatrix(int &row, int &col) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         return fK0.coeffRef(row, col);
     } else if (row < fDim0 && col > fDim0+fDim1){ // Belongs to L0
@@ -124,7 +124,7 @@ double ArlequinMatRedEigen::GetValueMatrix(int64_t &row, int64_t &col) {
     }
 };
 
-void ArlequinMatRedEigen::AddValueRhs(int64_t &row, double &val) {
+void ArlequinMatRedEigen::AddValueRhs(int &row, double &val) {
     if (row < fDim0){// Belongs to F0
         fF0(row,0) += val;
         return;
@@ -138,7 +138,7 @@ void ArlequinMatRedEigen::AddValueRhs(int64_t &row, double &val) {
         PanicButton();
     }   
 };
-void ArlequinMatRedEigen::PutValueRhs(int64_t &row, double &val) {
+void ArlequinMatRedEigen::PutValueRhs(int &row, double &val) {
     if (row < fDim0){// Belongs to F0
         fF0(row,0) = val;
         return;
@@ -152,7 +152,7 @@ void ArlequinMatRedEigen::PutValueRhs(int64_t &row, double &val) {
         PanicButton();
     }   
 };
-double ArlequinMatRedEigen::GetValueRhs(int64_t &row) {
+double ArlequinMatRedEigen::GetValueRhs(int &row) {
     if (row < fDim0){// Belongs to F0
         return fF0(row,0);
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to F1
@@ -164,7 +164,7 @@ double ArlequinMatRedEigen::GetValueRhs(int64_t &row) {
     }   
 };
 
-void ArlequinMatRedEigen::AddValueSolution(int64_t &row, double &val) {
+void ArlequinMatRedEigen::AddValueSolution(int &row, double &val) {
     if (row < fDim0){// Belongs to U0
         fU0(row,0) += val;
         return;
@@ -178,7 +178,7 @@ void ArlequinMatRedEigen::AddValueSolution(int64_t &row, double &val) {
         PanicButton();
     }   
 };
-void ArlequinMatRedEigen::PutValueSolution(int64_t &row, double &val) {
+void ArlequinMatRedEigen::PutValueSolution(int &row, double &val) {
     if (row < fDim0){// Belongs to U0
         fU0(row,0) = val;
         return;
@@ -192,7 +192,7 @@ void ArlequinMatRedEigen::PutValueSolution(int64_t &row, double &val) {
         PanicButton();
     }   
 };
-double ArlequinMatRedEigen::GetValueSolution(int64_t &row) {
+double ArlequinMatRedEigen::GetValueSolution(int &row) {
     if (row < fDim0){// Belongs to U0
         return fU0(row,0);
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to U1
@@ -211,9 +211,9 @@ double ArlequinMatRedEigen::SolutionNorm(){
 void ArlequinMatRedEigen::PrintMatrix(){
     // std::cout << "Global Matrix = \n"<< fMatrix << std::endl;
     std::cout << "K0 = {\n";
-    for (int64_t i = 0; i < fK0.rows(); i++){
+    for (int i = 0; i < fK0.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < fK0.cols(); j++){
+        for (int j = 0; j < fK0.cols(); j++){
             std::cout << fK0.coeffRef(i,j);
             if (j<fK0.cols()-1) std::cout << ",";
         }
@@ -223,9 +223,9 @@ void ArlequinMatRedEigen::PrintMatrix(){
     std::cout << "};\n"; 
 
     std::cout << "K1 = {\n";
-    for (int64_t i = 0; i < fK1.rows(); i++){
+    for (int i = 0; i < fK1.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < fK1.cols(); j++){
+        for (int j = 0; j < fK1.cols(); j++){
             std::cout << fK1.coeffRef(i,j);
             if (j<fK1.cols()-1) std::cout << ",";
         }
@@ -235,9 +235,9 @@ void ArlequinMatRedEigen::PrintMatrix(){
     std::cout << "};\n";
     
     std::cout << "L0 = {\n";
-    for (int64_t i = 0; i < fL0.rows(); i++){
+    for (int i = 0; i < fL0.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < fL0.cols(); j++){
+        for (int j = 0; j < fL0.cols(); j++){
             std::cout << fL0.coeffRef(i,j);
             if (j<fL0.cols()-1) std::cout << ",";
         }
@@ -247,9 +247,9 @@ void ArlequinMatRedEigen::PrintMatrix(){
     std::cout << "};\n"; 
 
     std::cout << "L1 = {\n";
-    for (int64_t i = 0; i < fL1.rows(); i++){
+    for (int i = 0; i < fL1.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < fL1.cols(); j++){
+        for (int j = 0; j < fL1.cols(); j++){
             std::cout << fL1.coeffRef(i,j);
             if (j<fL1.cols()-1) std::cout << ",";
         }
@@ -259,9 +259,9 @@ void ArlequinMatRedEigen::PrintMatrix(){
     std::cout << "};\n"; 
 
     std::cout << "E = {\n";
-    for (int64_t i = 0; i < fE.rows(); i++){
+    for (int i = 0; i < fE.rows(); i++){
         std::cout << "{";
-        for (int64_t j = 0; j < fE.cols(); j++){
+        for (int j = 0; j < fE.cols(); j++){
             std::cout << fE.coeffRef(i,j);
             if (j<fE.cols()-1) std::cout << ",";
         }
@@ -274,21 +274,21 @@ void ArlequinMatRedEigen::PrintMatrix(){
 void ArlequinMatRedEigen::PrintRhs(){
     // std::cout << "Global RHS = \n"<< fRhs << std::endl;
     std::cout << "F0 = {\n";
-    for (int64_t i = 0; i < fF0.rows(); i++){
+    for (int i = 0; i < fF0.rows(); i++){
         std::cout << "{" << fF0(i,0) << "}";
         if (i<fF0.rows()-1) std::cout << ",\n";
     }
     std::cout << "};\n";
 
     std::cout << "F1 = {\n";
-    for (int64_t i = 0; i < fF1.rows(); i++){
+    for (int i = 0; i < fF1.rows(); i++){
         std::cout << "{" << fF1(i,0) << "}";
         if (i<fF1.rows()-1) std::cout << ",\n";
     }
     std::cout << "};\n"; 
 
     std::cout << "G = {\n";
-    for (int64_t i = 0; i < fG.rows(); i++){
+    for (int i = 0; i < fG.rows(); i++){
         std::cout << "{" << fG(i,0) << "}";
         if (i<fG.rows()-1) std::cout << ",\n";
     }
@@ -299,21 +299,21 @@ void ArlequinMatRedEigen::PrintRhs(){
 void ArlequinMatRedEigen::PrintSolution(){
     // std::cout << "Solution = \n"<< fSolution << std::endl;
     std::cout << "U0 = {\n";
-    for (int64_t i = 0; i < fU0.rows(); i++){
+    for (int i = 0; i < fU0.rows(); i++){
         std::cout << "{" << fU0(i,0) << "}";
         if (i<fU0.rows()-1) std::cout << ",\n";
     }
     std::cout << "};\n";
 
     std::cout << "U1 = {\n";
-    for (int64_t i = 0; i < fU1.rows(); i++){
+    for (int i = 0; i < fU1.rows(); i++){
         std::cout << "{" << fU1(i,0) << "}";
         if (i<fU1.rows()-1) std::cout << ",\n";
     }
     std::cout << "};\n";
 
     std::cout << "Lambda = {\n";
-    for (int64_t i = 0; i < fLambda.rows(); i++){
+    for (int i = 0; i < fLambda.rows(); i++){
         std::cout << "{" << fLambda(i,0) << "}";
         if (i<fLambda.rows()-1) std::cout << ",\n";
     }

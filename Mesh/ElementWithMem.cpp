@@ -6,7 +6,7 @@
 #include "PositionalTruss.h"
 
 template<class compshape>
-ElementWithMem<compshape>::ElementWithMem(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index, gel, mesh, wf){
+ElementWithMem<compshape>::ElementWithMem(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index, gel, mesh, wf){
     auto fPlasticityModel = dynamic_cast<PlasticityModel *> (wf);
     if (fPlasticityModel){
         this->fIntegData.fYieldFunction.resize(this->fIntRule.NPoints());

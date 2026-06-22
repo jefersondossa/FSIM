@@ -1,6 +1,6 @@
 #include "CouplingGlobal.h"
 
-CouplingGlobal::CouplingGlobal(int dim, int64_t globindex, CompMesh* meshlocal, double k0, double k1):WeakForm(){
+CouplingGlobal::CouplingGlobal(int dim, int globindex, CompMesh* meshlocal, double k0, double k1):WeakForm(){
     fGlobalMesh = meshlocal;
     fDimension = dim;
     fK0 = k0;

@@ -7,7 +7,7 @@
 #include "MixedGlobalLocalEnrichment.h"
 #include "ElementMixed.h"
 
-ElementEnriched::ElementEnriched(int64_t index, Element* localEl, Element* globalEl, CompMesh* cmesh, WeakForm *wf) : Element(){
+ElementEnriched::ElementEnriched(int index, Element* localEl, Element* globalEl, CompMesh* cmesh, WeakForm *wf) : Element(){
     this->fIndex = index;
     fMesh = cmesh;
     fLocalElement = localEl;
@@ -44,7 +44,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     
     int DIM = fLocalElement->Dimension();
     int index = 0;
-    //int64_t elGlobalIndex = globalElementCorrespondence->at(fLocalElement->Index());
+    //int elGlobalIndex = globalElementCorrespondence->at(fLocalElement->Index());
     MatrixDouble elGlobalXsi = globalNodeCorrespondence->at(fLocalElement->Index());
     // auto intrule = fLeftElement->GetIntRule();
     ElementMixed *mixedGlobal = dynamic_cast<ElementMixed*>(fGlobalElement);

@@ -16,7 +16,7 @@ class Element{
 protected:
     CompMesh                *fMesh = nullptr;
     std::vector<Connect *>  fConnect;  // element connectivity
-    int64_t                 fIndex;    //Element index
+    int                 fIndex;    //Element index
 
     int nLocDOF = 0;
 
@@ -92,7 +92,7 @@ public:
     
     void SetMesh(CompMesh* mesh){fMesh = mesh;}
 
-    int64_t &Index(){return fIndex;}
+    int &Index(){return fIndex;}
 
     virtual void interpolateSolution(int &index, VecDouble &u_) = 0;
     virtual void interpolateSolution(VecDouble &phi, VecDouble &u_) = 0;

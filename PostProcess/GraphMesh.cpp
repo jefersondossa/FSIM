@@ -2,14 +2,14 @@
 
 
 // GraphMesh::GraphMesh(CompMesh *cmesh){
-//     int64_t nElements = cmesh->NElements();
+//     int nElements = cmesh->NElements();
 
 //     fElementConnects.resize(nElements);
 //     fElementTypes.resize(nElements);
 
-//     int64_t nodecount = 0;
+//     int nodecount = 0;
 
-//     for (int64_t iel = 0; iel < nElements; iel++){
+//     for (int iel = 0; iel < nElements; iel++){
 //         fElementTypes[iel] = cmesh->ElementVec()[iel]->PrintType();
 //         fElementConnects[iel] = cmesh->ElementVec()[iel]->getConnectivity();
 //         for (int iconnect = 0; iconnect < fElementConnects[iel].size(); iconnect++){
@@ -28,9 +28,9 @@
 
 
 GraphMesh::GraphMesh(CompMesh *cmesh){
-    int64_t nElements =0;
+    int nElements =0;
 
-    for (int64_t iel = 0; iel < cmesh->NElements(); iel++){
+    for (int iel = 0; iel < cmesh->NElements(); iel++){
         auto cel = cmesh->ElementVec()[iel];
         if (cel->Dimension() != cmesh->Dimension()) continue;
         if (cel->GetWeakForm() == nullptr) continue;
@@ -41,9 +41,9 @@ GraphMesh::GraphMesh(CompMesh *cmesh){
     fElementConnects.resize(nElements);
     fElementTypes.resize(nElements);
 
-    int64_t nodecount = 0;
-    int64_t elcount = 0;
-    for (int64_t iel = 0; iel < cmesh->NElements(); iel++){
+    int nodecount = 0;
+    int elcount = 0;
+    for (int iel = 0; iel < cmesh->NElements(); iel++){
         auto cel = cmesh->ElementVec()[iel];
         if (cel->Dimension() != cmesh->Dimension()) continue;
         if (cel->GetWeakForm() == nullptr) continue;
@@ -67,14 +67,14 @@ GraphMesh::GraphMesh(CompMesh *cmesh){
 
 
 
-GraphMesh::GraphMesh(CompMesh *cmesh, std::set<int64_t> &elsToPrint){
-    int64_t nElements = elsToPrint.size();
+GraphMesh::GraphMesh(CompMesh *cmesh, std::set<int> &elsToPrint){
+    int nElements = elsToPrint.size();
 
     fElementConnects.resize(nElements);
     fElementTypes.resize(nElements);
 
-    int64_t nodecount = 0;
-    int64_t elcount = 0;
+    int nodecount = 0;
+    int elcount = 0;
     for (auto iel : elsToPrint){
         auto cel = cmesh->ElementVec()[iel];
         fGElementToMElement[elcount] = iel;

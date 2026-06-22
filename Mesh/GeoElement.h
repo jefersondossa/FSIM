@@ -14,11 +14,11 @@ protected:
 
     VecInt        fGeoNodes; // geometric nodes
 
-    int64_t       fIndex;    //Element index
+    int       fIndex;    //Element index
     
     VecDouble     xK, XK;    // Bounding box coordinates
 
-    std::vector<int64_t> fNeighborElements;
+    std::vector<int> fNeighborElements;
 
     int fMaterial;
 
@@ -39,7 +39,7 @@ public:
 
     int &PrintType() {return fPrintType;}
     int &Material() {return fMaterial;}
-    int64_t &Index() {return fIndex;}
+    int &Index() {return fIndex;}
 
     /// Pushs back a term of the inverse incidence, i.e., an element which
     /// contains the node
@@ -57,7 +57,7 @@ public:
 
     /// Gets an specific member of the inverse incidence
     /// @param int index @return int element of the inverse incidence
-    int64_t &getNeighborElement(int i){
+    int &getNeighborElement(int i){
         return fNeighborElements[i];
     }
 

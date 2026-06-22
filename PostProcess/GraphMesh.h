@@ -21,64 +21,64 @@ private:
     // vector of element types
     std::vector<int>       fElementTypes;
     // a map relating a graph node to the comp mesh node 
-    std::map<int64_t,int64_t> fGNodeToMNode;
+    std::map<int,int> fGNodeToMNode;
     // a map relating a comp mesh node to the graph node
-    std::map<int64_t,int64_t> fMNodeToGNode;
+    std::map<int,int> fMNodeToGNode;
     // a map relating a graph element to the comp mesh element
-    std::map<int64_t,int64_t> fGElementToMElement;
+    std::map<int,int> fGElementToMElement;
 
 public:
     // graph mesh constructor
     GraphMesh(CompMesh *cmesh);
-    GraphMesh(CompMesh *cmesh, std::set<int64_t> &elsToPrint);
+    GraphMesh(CompMesh *cmesh, std::set<int> &elsToPrint);
 
     // Default destructor
     ~GraphMesh(){ };
 
     /// @brief Returns the number of elements in the graph mesh
     /// @return number of elements
-    int64_t NElements(){
+    int NElements(){
         return fElementConnects.size();
     }
 
     /// @brief Returns the number of nodes in the graph mesh 
     /// @return number of nodes
-    int64_t NNodes(){
+    int NNodes(){
         return fNodes.size();
     }
 
     /// @brief Returns node coordinates
     /// @param index node index
     /// @return node coordinates
-    VecDouble &Node(int64_t index){
+    VecDouble &Node(int index){
         return fNodes[index];
     }
 
     /// @brief Returns element connectivity
     /// @param index element index
     /// @return element connectivity
-    VecInt &Connect(int64_t index){return fElementConnects[index];}
+    VecInt &Connect(int index){return fElementConnects[index];}
 
     /// @brief Returns the element type
     /// @param index element index
     /// @return element type
-    int &ElType(int64_t index){return fElementTypes[index];}
+    int &ElType(int index){return fElementTypes[index];}
 
     /// @brief Returns the correspondence between a graph node to the comp mesh node
     /// @param graphnode graph node
     /// @return comp mesh node
-    int64_t GraphNodeToMeshNode(int64_t graphnode){
+    int GraphNodeToMeshNode(int graphnode){
         return fGNodeToMNode[graphnode];
     };
     
     /// @brief Returns the correspondence between a comp mesh node to the graph node
     /// @param meshnode comp mesh node
     /// @return graph node
-    int64_t MeshNodeToGraphNode(int64_t meshnode){
+    int MeshNodeToGraphNode(int meshnode){
         return fMNodeToGNode[meshnode];
     };
 
-    int64_t GraphElementToMeshElement(int64_t graphel){
+    int GraphElementToMeshElement(int graphel){
         return fGElementToMElement[graphel];
     }
 };

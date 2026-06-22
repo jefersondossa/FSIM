@@ -22,12 +22,12 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
     ScalarNames = {"Compliance"};
     VTUGenerator::PrintResults(&model, "cantilever_2d_beam", ScalarNames, VectorNames);
 
-    int64_t already_removed = 0;
+    int already_removed = 0;
     const double min_percentage_vol = target_final_vol;
 
     const auto n_elements = model.NElements();
 
-    std::vector<std::pair<int64_t, double>> compliances{n_elements, std::make_pair<int64_t, double>(0, 0.0)};
+    std::vector<std::pair<int, double>> compliances{n_elements, std::make_pair<int, double>(0, 0.0)};
     std::vector<double> eles_rho(model.NElements(), 1.0);
     const auto n_mat_eles = std::count_if(model.ElementVec().begin(), model.ElementVec().end(), 
         [model_dim = model.Dimension()](Element* pElement) {return pElement && pElement->Dimension() == model_dim; });
@@ -40,7 +40,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
 
     while (vol_percentage > min_percentage_vol)
     {
-        for (int64_t i_el = 0; i_el < model.NElements(); i_el++)
+        for (int i_el = 0; i_el < model.NElements(); i_el++)
         {
             auto elem = model.ElementVec()[i_el];
 
@@ -56,7 +56,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
             elemental_compliances[i_el] = sol[0];
         }
 
-        for (int64_t i_el = 0; i_el < model.NElements(); i_el++)
+        for (int i_el = 0; i_el < model.NElements(); i_el++)
         {
             if(elemental_compliances[i_el] == std::numeric_limits<double>::max())
             {

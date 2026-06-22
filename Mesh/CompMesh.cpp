@@ -32,7 +32,7 @@ GraphMesh* CompMesh::GetGraphMesh(){
     return fGraphMesh;
 }
 
-GraphMesh* CompMesh::GetGraphMesh(std::set<int64_t> &elsToPrint){
+GraphMesh* CompMesh::GetGraphMesh(std::set<int> &elsToPrint){
     if (!fGraphMesh){
         fGraphMesh = new GraphMesh(this,elsToPrint);
     }
@@ -53,7 +53,7 @@ void CompMesh::InsertMaterial(WeakForm *wf){
 
 void CompMesh::Integrate(std::set<int> &matIds, std::vector<std::string> &varNames, std::map<std::string,VecDouble> &result){
 
-    for (int64_t iel = 0; iel < NElements(); iel++){
+    for (int iel = 0; iel < NElements(); iel++){
         int elMatid = fElementVector[iel]->GetWeakForm()->Id();
         const bool is_in = matIds.find(elMatid) != matIds.end();
         if (!is_in) continue;
@@ -69,7 +69,7 @@ void CompMesh::SetSolution(VecDouble &sol){
         std::cout << "The solution vector size is different from the number of state variables. Please check it. \n";
         PanicButton();
     }
-    for (int64_t iconnect = 0; iconnect < NConnects() ; iconnect++){
+    for (int iconnect = 0; iconnect < NConnects() ; iconnect++){
         for (int istate = 0; istate < fNState; istate++){
             fConnectVector[iconnect]->SetSolution(istate,sol[istate]);
             fConnectVector[iconnect]->SetPreviousSolution(istate,sol[istate]);
@@ -117,9 +117,9 @@ void CompMesh::BuildIsoparametricConnects(){
     if (fIsDisconnected){
         // count the number of connects based on the number of elements, since each element will have 
         // its own set of connects
-        int64_t seqnum = 0;
-        int64_t nconnects = 0;
-        for (int64_t iel = 0; iel < NElements(); iel++){
+        int seqnum = 0;
+        int nconnects = 0;
+        for (int iel = 0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
             if (el->Dimension() != fDimension) {
                 el->getConnectivity().resize(0);
@@ -129,8 +129,8 @@ void CompMesh::BuildIsoparametricConnects(){
             nconnects += fElementVector[iel]->Reference()->NGeometricNodes();
         }
         fConnectVector.resize(nconnects);
-        int64_t connect_index = 0;
-        for (int64_t iel = 0; iel < NElements(); iel++){
+        int connect_index = 0;
+        for (int iel = 0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
             if (el->Dimension() != fDimension) continue;
             VecInt &geoNodes = el->Reference()->getGeometricNodes();
@@ -146,14 +146,14 @@ void CompMesh::BuildIsoparametricConnects(){
         fNGlobalDOF = nconnects * fNState;
 
     } else {
-        int64_t seqnum = 0;
-        int64_t nconnects = fReference->NNodes();
+        int seqnum = 0;
+        int nconnects = fReference->NNodes();
         fConnectVector.resize(nconnects);
-        for (int64_t i = 0; i < nconnects; i++){
+        for (int i = 0; i < nconnects; i++){
             fConnectVector[i] = new Connect(fNState,1,fOrder,i,seqnum);
             seqnum += fNState;
         }
-        for (int64_t iel=0; iel < NElements(); iel++){
+        for (int iel=0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
             if (!el) continue;
             VecInt &geoNodes = el->Reference()->getGeometricNodes();
@@ -178,9 +178,9 @@ void CompMesh::BuildHierarquicConnects(){
     if (fIsDisconnected){
         // count the number of connects based on the number of elements, since each element will have 
         // its own set of connects
-        int64_t seqnum = 0;
-        int64_t nconnects = 0;
-        for (int64_t iel = 0; iel < NElements(); iel++){
+        int seqnum = 0;
+        int nconnects = 0;
+        for (int iel = 0; iel < NElements(); iel++){
             Element *el = fElementVector[iel];
             if (el->Dimension() != fDimension) {
                 el->getConnectivity().resize(0);
@@ -190,8 +190,8 @@ void CompMesh::BuildHierarquicConnects(){
             nconnects += el->NSides();
         }
         fConnectVector.reserve(nconnects);
-        int64_t connect_index = 0;
-        int64_t globaldof = 0;
+        int connect_index = 0;
+        int globaldof = 0;
         for (auto el:fElementVector){
             if (!el) continue;
 
@@ -224,7 +224,7 @@ void CompMesh::BuildHierarquicConnects(){
             // Corner connects
             for (int icorner = 0; icorner < ncorner; icorner++){
                 int nshape = HierarquicalOneD::NShapeFunctions(1,fOrder);
-                int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                int ef_seqnum = nshape == 0 ? -1 : seqnum;
                 fConnectVector.push_back(new Connect(fNState,nshape,fOrder,connect_index,ef_seqnum));
                 connect[icorner] = connect_index;
                 connect_index++;
@@ -234,7 +234,7 @@ void CompMesh::BuildHierarquicConnects(){
             // Edge connects
             for (int iedge = 0; iedge < nedges; iedge++){
                 int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
-                int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                int ef_seqnum = nshape == 0 ? -1 : seqnum;
                 fConnectVector.push_back(new Connect(fNState,nshape,fOrder,connect_index,ef_seqnum));
                 connect[ncorner + iedge] = connect_index;
                 connect_index++;
@@ -255,7 +255,7 @@ void CompMesh::BuildHierarquicConnects(){
                         std::cout << "Face type not supported for hierarchical approximation. Please check it. \n";
                         PanicButton();
                 }
-                int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                int ef_seqnum = nshape == 0 ? -1 : seqnum;
                 fConnectVector.push_back(new Connect(fNState,nshape,fOrder,connect_index,ef_seqnum));
                 connect[ncorner + nedges + iface] = connect_index;
                 connect_index++;
@@ -277,7 +277,7 @@ void CompMesh::BuildHierarquicConnects(){
         int edgecount = 0;
         int facecount = 0;
         int volumecount = 0;
-        int64_t seqnum = 0;
+        int seqnum = 0;
 
         for (auto el:fElementVector){
             if (!el) continue;
@@ -348,7 +348,7 @@ void CompMesh::BuildHierarquicConnects(){
                         if (edge_to_connect.find(sideNodes) == edge_to_connect.end() &&
                             edge_to_connect.find(sideNodesSorted) == edge_to_connect.end()){
                             int nshape = HierarquicalOneD::NShapeFunctions(2,fOrder);
-                            int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                            int ef_seqnum = nshape == 0 ? -1 : seqnum;
                             fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
                             seqnum += nshape * fNState;
                             edge_to_connect[sideNodes] = nconnects;
@@ -410,7 +410,7 @@ void CompMesh::BuildHierarquicConnects(){
                                     PanicButton();
                             }
                             
-                            int64_t ef_seqnum = nshape == 0 ? -1 : seqnum;
+                            int ef_seqnum = nshape == 0 ? -1 : seqnum;
                             fConnectVector.push_back(new Connect(fNState,nshape,fOrder,nconnects,ef_seqnum));
                             seqnum += nshape * fNState;
                             face_to_connect[sideNodes] = nconnects;
@@ -430,7 +430,7 @@ void CompMesh::BuildHierarquicConnects(){
         }
         
         fNGlobalDOF = 0;
-        for (int64_t i = 0; i < fConnectVector.size(); i++){
+        for (int i = 0; i < fConnectVector.size(); i++){
             fNGlobalDOF += fConnectVector[i]->GetNShapeFunctions() * fNState;
         }
     }
@@ -461,7 +461,7 @@ void CompMesh::Print(std::string filename){
 
 
     file << "Connects Information:\n";
-    for (int64_t i = 0; i < NConnects(); i++)
+    for (int i = 0; i < NConnects(); i++)
     {
         Connect *c = fConnectVector[i];
         file << "Connect " << i << ": ";
@@ -480,7 +480,7 @@ void CompMesh::Print(std::string filename){
 
     file << "--------------------------------\n";
     file << "Elements Information:\n";
-    for (int64_t i = 0; i < NElements(); i++)
+    for (int i = 0; i < NElements(); i++)
     {
         Element *el = fElementVector[i];
         if (!el) continue;
@@ -532,7 +532,7 @@ void CompMesh::Print(std::string filename){
 
 void CompMesh::BuildElements(){
     fElementVector.resize(fReference->NElements());
-    for (int64_t iel = 0; iel < NElements(); iel++){
+    for (int iel = 0; iel < NElements(); iel++){
         int elType = fReference->ElementVec()[iel]->PrintType();
         int matid = fReference->ElementVec()[iel]->Material();
 

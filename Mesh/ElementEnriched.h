@@ -22,9 +22,9 @@ class ElementEnriched : public Element{
 private:
     Element* fLocalElement;
     Element* fGlobalElement;
-    std::map<int64_t,int64_t> *globalElementCorrespondence;
-    std::map<int64_t, MatrixDouble> *globalNodeCorrespondence;
-    std::map<int64_t, int64_t> *connectEnrichment;
+    std::map<int,int> *globalElementCorrespondence;
+    std::map<int, MatrixDouble> *globalNodeCorrespondence;
+    std::map<int, int> *connectEnrichment;
     
 public:
     ElementEnriched() : Element(){
@@ -32,17 +32,17 @@ public:
 
     virtual Element *Clone() const;
 
-    ElementEnriched(int64_t index, Element* localEl, Element* globalEl, CompMesh* mesh, WeakForm *wf);
+    ElementEnriched(int index, Element* localEl, Element* globalEl, CompMesh* mesh, WeakForm *wf);
 
     void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) override;
 
-    void setCorrespondence(std::map<int64_t,int64_t> *elCorresp, std::map<int64_t, MatrixDouble> *nodeCorresp){
+    void setCorrespondence(std::map<int,int> *elCorresp, std::map<int, MatrixDouble> *nodeCorresp){
 
         globalElementCorrespondence = elCorresp;
         globalNodeCorrespondence = nodeCorresp;
     };
 
-    void SetEnrichmentData(std::map<int64_t, int64_t> *connectEnrichment_){
+    void SetEnrichmentData(std::map<int, int> *connectEnrichment_){
         connectEnrichment = connectEnrichment_;
     };
 

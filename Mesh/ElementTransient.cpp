@@ -6,7 +6,7 @@
 #include "TransientPositionalFrame2D.h"
 
 template<class compshape>
-ElementTransient<compshape>::ElementTransient(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index, gel, mesh, wf){
+ElementTransient<compshape>::ElementTransient(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : ElementT<compshape>(index, gel, mesh, wf){
     int DIM = compshape::Dimension;
     this->fIntegData.fAdimCoord.resize(DIM);
     this->fIntegData.fAdimCoord.setZero();

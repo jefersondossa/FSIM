@@ -6,7 +6,7 @@ GeoElementT<geoshape>::GeoElementT() : GeoElement(){
 };
 
 template<class geoshape>
-GeoElementT<geoshape>::GeoElementT(int64_t index, VecInt &geonodes, GeoMesh* mesh, int &material) : GeoElement(){
+GeoElementT<geoshape>::GeoElementT(int index, VecInt &geonodes, GeoMesh* mesh, int &material) : GeoElement(){
     fMesh = mesh;
     fGeoNodes.resize(geoshape::NShape);
     fIndex = index;

@@ -2,7 +2,7 @@
 
 #ifdef HAS_PETSC
 
-ArlequinMatRedPETSc::ArlequinMatRedPETSc(int64_t dim0, int64_t dim1, int64_t dimLagrange, PETScMatType mtype) : MatrixType(dim0+dim1+dimLagrange,dim0+dim1+dimLagrange){
+ArlequinMatRedPETSc::ArlequinMatRedPETSc(int dim0, int dim1, int dimLagrange, PETScMatType mtype) : MatrixType(dim0+dim1+dimLagrange,dim0+dim1+dimLagrange){
     
     fDim0 = dim0;
     fDim1 = dim1;
@@ -79,38 +79,39 @@ ArlequinMatRedPETSc::~ArlequinMatRedPETSc(){
 }
 
 
-void ArlequinMatRedPETSc::AddValueMatrix(int64_t &row, int64_t &col, double &val) {
+void ArlequinMatRedPETSc::AddValueMatrix(int &row, int &col, double &val) {
+
     if (row < fDim0 && col < fDim0){// Belongs to K0
         MatSetValues(fK0,1,&row,1,&col,&val,ADD_VALUES);
         return;
     } else if (row < fDim0 && col > fDim0+fDim1-1){ // Belongs to L0
-        int64_t posrow = row;
-        int64_t poscol = col-fDim0-fDim1;
+        PetscInt posrow = (row);
+        PetscInt poscol = (col-fDim0-fDim1);
         MatSetValues(fL0,1,&posrow,1,&poscol,&val,ADD_VALUES);
         return;
     } else if (col < fDim0 && row > fDim0+fDim1-1){// Belongs to L0T
-        int64_t posrow = row-fDim0-fDim1;
-        int64_t poscol = col;
+        PetscInt posrow = (row-fDim0-fDim1);
+        PetscInt poscol = (col);
         MatSetValues(fL0T,1,&posrow,1,&poscol,&val,ADD_VALUES);
         return;
     } else if (row > fDim0-1 && row < fDim0+fDim1 && col > fDim0-1 && col < fDim0+fDim1){ // Belongs to K1
-        int64_t posrow = row-fDim0;
-        int64_t poscol = col-fDim1;
+        PetscInt posrow = (row-fDim0);
+        PetscInt poscol = (col-fDim1);
         MatSetValues(fK1,1,&posrow,1,&poscol,&val,ADD_VALUES);
         return;
     } else if (row > fDim0-1 && row < fDim0+fDim1 && col > fDim0+fDim1-1){ // Belongs to L1
-        int64_t posrow = row-fDim0;
-        int64_t poscol = col-fDim0-fDim1;
+        PetscInt posrow = (row-fDim0);
+        PetscInt poscol = (col-fDim0-fDim1);
         MatSetValues(fL1,1,&posrow,1,&poscol,&val,ADD_VALUES);
         return;
     } else if (col > fDim0-1 && col < fDim0+fDim1 && row > fDim0+fDim1-1){ // Belongs to L1T
-        int64_t posrow = row-fDim0-fDim1;
-        int64_t poscol = col-fDim0;
+        PetscInt posrow = (row-fDim0-fDim1);
+        PetscInt poscol = (col-fDim0);
         MatSetValues(fL1T,1,&posrow,1,&poscol,&val,ADD_VALUES);
         return;
     } else if (row > fDim0+fDim1-1 && col > fDim0+fDim1-1){ // Belongs to E
-        int64_t posrow = row-fDim0-fDim1;
-        int64_t poscol = col-fDim0-fDim1;
+        PetscInt posrow = (row-fDim0-fDim1);
+        PetscInt poscol = (col-fDim0-fDim1);
         MatSetValues(fE,1,&posrow,1,&poscol,&val,ADD_VALUES);
         return;
     } else {
@@ -119,38 +120,40 @@ void ArlequinMatRedPETSc::AddValueMatrix(int64_t &row, int64_t &col, double &val
     
 };
 
-void ArlequinMatRedPETSc::PutValueMatrix(int64_t &row, int64_t &col, double &val) {
+void ArlequinMatRedPETSc::PutValueMatrix(int &row, int &col, double &val) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
-        MatSetValues(fK0,1,&row,1,&col,&val,INSERT_VALUES);
+        PetscInt rowpetsc = (row);
+        PetscInt colpetsc = (col);
+        MatSetValues(fK0,1,&rowpetsc,1,&colpetsc,&val,INSERT_VALUES);
         return;
     } else if (row < fDim0 && col > fDim0+fDim1-1){ // Belongs to L0
-        int64_t posrow = row;
-        int64_t poscol = col-fDim0-fDim1;
+        PetscInt posrow = (row);
+        PetscInt poscol = (col-fDim0-fDim1);
         MatSetValues(fL0,1,&posrow,1,&poscol,&val,INSERT_VALUES);
         return;
     } else if (col < fDim0 && row > fDim0+fDim1-1){// Belongs to L0T
-        int64_t posrow = row-fDim0-fDim1;
-        int64_t poscol = col;
+        PetscInt posrow = (row-fDim0-fDim1);
+        PetscInt poscol = (col);
         MatSetValues(fL0T,1,&posrow,1,&poscol,&val,INSERT_VALUES);
         return;
     } else if (row > fDim0-1 && row < fDim0+fDim1 && col > fDim0-1 && col < fDim0+fDim1){ // Belongs to K1
-        int64_t posrow = row-fDim0;
-        int64_t poscol = col-fDim1;
+        PetscInt posrow = (row-fDim0);
+        PetscInt poscol = (col-fDim1);
         MatSetValues(fK1,1,&posrow,1,&poscol,&val,INSERT_VALUES);
         return;
     } else if (row > fDim0-1 && row < fDim0+fDim1 && col > fDim0+fDim1-1){ // Belongs to L1
-        int64_t posrow = row-fDim0;
-        int64_t poscol = col-fDim0-fDim1;
+        PetscInt posrow = (row-fDim0);
+        PetscInt poscol = (col-fDim0-fDim1);
         MatSetValues(fL1,1,&posrow,1,&poscol,&val,INSERT_VALUES);
         return;
     } else if (col > fDim0-1 && col < fDim0+fDim1 && row > fDim0+fDim1-1){ // Belongs to L1T
-        int64_t posrow = row-fDim0-fDim1;
-        int64_t poscol = col-fDim0;
+        PetscInt posrow = row-fDim0-fDim1;
+        PetscInt poscol = col-fDim0;
         MatSetValues(fL1T,1,&posrow,1,&poscol,&val,INSERT_VALUES);
         return;
     } else if (row > fDim0+fDim1-1 && col > fDim0+fDim1-1){ // Belongs to E
-        int64_t posrow = row-fDim0-fDim1;
-        int64_t poscol = col-fDim0-fDim1;
+        PetscInt posrow = row-fDim0-fDim1;
+        PetscInt poscol = col-fDim0-fDim1;
         MatSetValues(fE,1,&posrow,1,&poscol,&val,INSERT_VALUES);
         return;
     } else {
@@ -159,7 +162,7 @@ void ArlequinMatRedPETSc::PutValueMatrix(int64_t &row, int64_t &col, double &val
     
 };
 
-double ArlequinMatRedPETSc::GetValueMatrix(int64_t &row, int64_t &col) {
+double ArlequinMatRedPETSc::GetValueMatrix(int &row, int &col) {
     std::cout << "It may need a scatter context. Please check PETSc manual and implement it. \n";
     PanicButton();
 };
@@ -267,16 +270,16 @@ void ArlequinMatRedPETSc::VecAssemble(){
     VecAssemblyEnd(fG);
 }
 
-void ArlequinMatRedPETSc::AddValueRhs(int64_t &row, double &val) {
+void ArlequinMatRedPETSc::AddValueRhs(int &row, double &val) {
     if (row < fDim0){// Belongs to F0
         VecSetValues(fF0, 1, &row, &val, ADD_VALUES);
         return;
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to F1
-        int64_t posrow = row-fDim0;
+        PetscInt posrow = row-fDim0;
         VecSetValues(fF1, 1, &posrow, &val, ADD_VALUES);
         return;
     } else if (row >= fDim0+fDim1){ // Belongs to G
-        int64_t posrow = row-fDim0-fDim1;
+        PetscInt posrow = row-fDim0-fDim1;
         VecSetValues(fG, 1, &posrow, &val, ADD_VALUES);
         return;
     } else {
@@ -284,16 +287,16 @@ void ArlequinMatRedPETSc::AddValueRhs(int64_t &row, double &val) {
     }   
 };
 
-void ArlequinMatRedPETSc::PutValueRhs(int64_t &row, double &val) {
+void ArlequinMatRedPETSc::PutValueRhs(int &row, double &val) {
     if (row < fDim0){// Belongs to F0
         VecSetValues(fF0, 1, &row, &val, INSERT_VALUES);
         return;
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to F1
-        int64_t posrow = row-fDim0;
+        PetscInt posrow = row-fDim0;
         VecSetValues(fF1, 1, &posrow, &val, INSERT_VALUES);
         return;
     } else if (row >= fDim0+fDim1){ // Belongs to G
-        int64_t posrow = row-fDim0-fDim1;
+        PetscInt posrow = row-fDim0-fDim1;
         VecSetValues(fG, 1, &posrow, &val, INSERT_VALUES);
         return;
     } else {
@@ -301,21 +304,21 @@ void ArlequinMatRedPETSc::PutValueRhs(int64_t &row, double &val) {
     }   
 };
 
-double ArlequinMatRedPETSc::GetValueRhs(int64_t &row) {
+double ArlequinMatRedPETSc::GetValueRhs(int &row) {
     std::cout << "This vector need a scatter context to get values. Please implement it. \n";
     PanicButton();
 };
 
-void ArlequinMatRedPETSc::AddValueSolution(int64_t &row, double &val) {
+void ArlequinMatRedPETSc::AddValueSolution(int &row, double &val) {
     if (row < fDim0){// Belongs to U0
         VecSetValues(fU0, 1, &row, &val, ADD_VALUES);
         return;
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to U1
-        int64_t posrow = row-fDim0;
+        int posrow = row-fDim0;
         VecSetValues(fU1, 1, &posrow, &val, ADD_VALUES);
         return;
     } else if (row >= fDim0+fDim1){ // Belongs to Lambda
-        int64_t posrow = row-fDim0-fDim1;
+        int posrow = row-fDim0-fDim1;
         VecSetValues(fLambda, 1, &posrow, &val, ADD_VALUES);
         return;
     } else {
@@ -323,16 +326,16 @@ void ArlequinMatRedPETSc::AddValueSolution(int64_t &row, double &val) {
     }   
 };
 
-void ArlequinMatRedPETSc::PutValueSolution(int64_t &row, double &val) {
+void ArlequinMatRedPETSc::PutValueSolution(int &row, double &val) {
     if (row < fDim0){// Belongs to U0
         VecSetValues(fU0, 1, &row, &val, INSERT_VALUES);
         return;
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to U1
-        int64_t posrow = row-fDim0;
+        int posrow = row-fDim0;
         VecSetValues(fU1, 1, &posrow, &val, INSERT_VALUES);
         return;
     } else if (row >= fDim0+fDim1){ // Belongs to Lambda
-        int64_t posrow = row-fDim0-fDim1;
+        int posrow = row-fDim0-fDim1;
         VecSetValues(fLambda, 1, &posrow, &val, INSERT_VALUES);
         return;
     } else {
@@ -340,8 +343,8 @@ void ArlequinMatRedPETSc::PutValueSolution(int64_t &row, double &val) {
     }
 };
 
-double ArlequinMatRedPETSc::GetValueSolution(int64_t &row) {
-    int64_t Ione = 1;
+double ArlequinMatRedPETSc::GetValueSolution(int &row) {
+    int Ione = 1;
     double val;
     VecGetValues(fSolutionAll, Ione, &row, &val);
     return val;

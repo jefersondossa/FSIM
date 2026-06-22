@@ -3,10 +3,10 @@
 #include "CouplingGlobal.h"
 #include "Arlequin.h"
 
-void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
+void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int startDOF){
     std::cout << "Assembling..." << std::endl;
 
-    for (int64_t jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
+    for (int jel = 0; jel < fAnalysis->MeshVector()[mesh]->NElements(); jel++){   
         // if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
             Element* el = fAnalysis->MeshVector()[mesh]->ElementVec()[jel];
@@ -33,21 +33,21 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 int nstatei = connectivity[i]->GetNStateVariables();
                 int nshapei = connectivity[i]->GetNShapeFunctions();
                 
-                int64_t seqnumi = connectivity[i]->GetSequenceNumber();
+                int seqnumi = connectivity[i]->GetSequenceNumber();
                 if (nstatei*nshapei == 0) continue;
                 int shapejcount = 0;
                 for (int j=0; j<nConnects; j++){
                     int nstatej = connectivity[j]->GetNStateVariables();
                     int nshapej = connectivity[j]->GetNShapeFunctions();
                     
-                    int64_t seqnumj = connectivity[j]->GetSequenceNumber();
+                    int seqnumj = connectivity[j]->GetSequenceNumber();
                     if (nstatej*nshapej == 0) continue;
                     for (int istate = 0; istate < nstatei; istate++){
                         for (int jstate = 0; jstate < nstatej; jstate++){
                             for (int ishape = 0; ishape < nshapei; ishape++){
                                 for (int jshape = 0; jshape < nshapej; jshape++){
-                                    int64_t dof_i = startDOF + seqnumi + istate;
-                                    int64_t dof_j = startDOF + seqnumj + jstate;
+                                    int dof_i = startDOF + seqnumi + istate;
+                                    int dof_j = startDOF + seqnumj + jstate;
                                     int locdofi = shapeicount+istate+ishape;
                                     int locdofj = shapejcount+jstate+jshape; 
                                     fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(locdofi,locdofj)); 
@@ -60,7 +60,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
                     for (int ishape = 0; ishape < nshapei; ishape++){
-                        int64_t dof_i = startDOF + seqnumi + istate;
+                        int dof_i = startDOF + seqnumi + istate;
                         int locdofi = shapeicount+istate+ishape;
                         fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[locdofi]);
                     }
@@ -73,7 +73,7 @@ void Assemble::Monomodel(Analysis *fAnalysis, int mesh, int64_t startDOF){
     }; //Elements
 }
 
-void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
+void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int startDOF){
     for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
         // if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
@@ -103,8 +103,8 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
                         for (int ishape = 0; ishape < nshapei; ishape++){
                             for (int jshape = 0; jshape < nshapej; jshape++){
                                 for (int jstate = 0; jstate < nstatej; jstate++){
-                                    int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
-                                    int64_t dof_j = startDOF + nstatej * (connec[j]+jshape) + jstate; 
+                                    int dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                                    int dof_j = startDOF + nstatej * (connec[j]+jshape) + jstate; 
                                     fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix(nstatei*(i+ishape)+istate,nstatej*(j+jshape)+jstate)); 
                                 }
                             } 
@@ -116,7 +116,7 @@ void Assemble::MonomodelMatrix(Analysis *fAnalysis, int mesh, int64_t startDOF){
     }; //Elements
 }
 
-void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
+void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int startDOF){
     for (int jel = fAnalysis->MeshVector()[mesh]->NElements(); jel-- ;){   
         // if (fAnalysis->MeshVector()[mesh]->part_elem[jel] == 0) {
             //Compute Element matrix
@@ -140,7 +140,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
                 //Rhs vector
                 for (int istate = 0; istate < nstatei; istate++){
                     for (int ishape = 0; ishape < nshapei; ishape++){
-                        int64_t dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
+                        int dof_i = startDOF + nstatei * (connec[i]+ishape) + istate;
                         fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[nstatei*i+istate]);
                     }
                 }
@@ -150,7 +150,7 @@ void Assemble::MonomodelVector(Analysis *fAnalysis, int mesh, int64_t startDOF){
 }
 
 
-void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
+void Assemble::Coupling(Analysis *fAnalysis, int startDOF){
     
 #ifdef HAS_PETSC
     // int rank=0;
@@ -162,15 +162,15 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
     
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
-    int64_t GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
-    int64_t LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
+    int GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
 
     //Lagrange Multipliers
-    for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
+    for (int jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
         auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivityIndices();
         auto *elclocal = dynamic_cast<CouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         auto *elcglobal = dynamic_cast<CouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
-        int64_t jelcoupled = 0;
+        int jelcoupled = 0;
 
         //Determine if the coupling element is from global or local model
 #ifdef DEBUG_BUILD
@@ -195,7 +195,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
         rhs[0].resize(2*nLocDOF); rhs[1].resize(2*nLocDOF);
         rhs[0].setZero(); rhs[1].setZero();
         VecInt connec;
-        int64_t startDOF = 0;
+        int startDOF = 0;
         //Gets the right connectivity
         if(elclocal){
             connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivityIndices();
@@ -219,8 +219,8 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
                 for (int istate = 0; istate < nState; istate++){
                     for (int jstate = 0; jstate < nState; jstate++){
                         if (fabs(matrix[0](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                            int64_t d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                            int64_t d_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                            int d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                            int d_j = startDOF + nStateMonomodel*connec[j] + jstate;
                             fAnalysis->GlobalMatrix()->AddValueMatrix(d_i,d_j,matrix[0](nState*i+istate,nState*j+jstate));
                             fAnalysis->GlobalMatrix()->AddValueMatrix(d_j,d_i,matrix[0](nState*i+istate,nState*j+jstate));
                         };
@@ -232,15 +232,15 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
                         for (int jstate = 0; jstate < nState; jstate++){
                             //Diagonal term
                             if (fabs(matrix[1](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                                int64_t dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                                int64_t dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
+                                int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                int dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
                                 fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix[1](nState*i+istate,nState*j+jstate));
                             };
                             //Non Diagonal term
                             for (int iarl = 2; iarl < matrix.size(); iarl++){
                                 if (fabs(matrix[iarl](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                                    int64_t dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                                    int64_t dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                                    int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                    int dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
                                     fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix[iarl](nState*i+istate,nState*j+jstate));
                                 };
                             }
@@ -251,7 +251,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
             //RHS VECTOR
             //COUPLING OPERATOR
             for (int istate = 0; istate < nState; istate++){
-                int64_t dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                 fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[0][nState*i+istate]);
                 
                 dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
@@ -260,7 +260,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
             //Arlequin Stabilization
             if (fAnalysis->ArlequinModel()->getArlequinStabilization() != ENoStab){
                 for (int istate = 0; istate < nState; istate++){
-                    int64_t dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                    int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                     fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[1][nState*i+istate]);
                     
                     dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
@@ -278,7 +278,7 @@ void Assemble::Coupling(Analysis *fAnalysis, int64_t startDOF){
     }; // Glue zone
 }
 
-void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
+void Assemble::CouplingMatrix(Analysis *fAnalysis, int startDOF){
     
 #ifdef HAS_PETSC
     // int rank=0;
@@ -286,15 +286,15 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
 #endif
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
-    int64_t GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
-    int64_t LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
+    int GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
 
     //Lagrange Multipliers
-    for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
+    for (int jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
         auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivityIndices();
         auto *elclocal = dynamic_cast<CouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         auto *elcglobal = dynamic_cast<CouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
-        int64_t jelcoupled = 0;
+        int jelcoupled = 0;
 
         //Determine if the coupling element is from global or local model
 #ifdef DEBUG_BUILD
@@ -317,7 +317,7 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
         matrix[0].setZero();
         
         VecInt connec;
-        int64_t startDOF = 0;
+        int startDOF = 0;
         //Gets the right connectivity
         if(elclocal){
             connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivityIndices();
@@ -343,8 +343,8 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
                 for (int istate = 0; istate < nState; istate++){
                     for (int jstate = 0; jstate < nState; jstate++){
                         if (fabs(matrix[0](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                            int64_t d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                            int64_t d_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                            int d_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                            int d_j = startDOF + nStateMonomodel*connec[j] + jstate;
                             fAnalysis->GlobalMatrix()->AddValueMatrix(d_i,d_j,matrix[0](nState*i+istate,nState*j+jstate));
                             fAnalysis->GlobalMatrix()->AddValueMatrix(d_j,d_i,matrix[0](nState*i+istate,nState*j+jstate));
                         };
@@ -356,15 +356,15 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
                         for (int jstate = 0; jstate < nState; jstate++){
                             //Diagonal term
                             if (fabs(matrix[1](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                                int64_t dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                                int64_t dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
+                                int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                int dof_j = GloDOF + LocDOF + nState*connecL[j] + jstate;
                                 fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix[1](nState*i+istate,nState*j+jstate));
                             };
                             //Non Diagonal term
                             for (int iarl = 2; iarl < matrix.size(); iarl++){
                                 if (fabs(matrix[iarl](nState*i+istate,nState*j+jstate)) >= 1.e-15){
-                                    int64_t dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
-                                    int64_t dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
+                                    int dof_i = GloDOF + LocDOF + nState*connecL[i] + istate;
+                                    int dof_j = startDOF + nStateMonomodel*connec[j] + jstate;
                                     fAnalysis->GlobalMatrix()->AddValueMatrix(dof_i,dof_j,matrix[iarl](nState*i+istate,nState*j+jstate));
                                 };
                             }
@@ -376,7 +376,7 @@ void Assemble::CouplingMatrix(Analysis *fAnalysis, int64_t startDOF){
     }; // Glue zone
 }
 
-void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
+void Assemble::CouplingVector(Analysis *fAnalysis, int startDOF){
     
 #ifdef HAS_PETSC
     // int rank=0;
@@ -384,15 +384,15 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
 #endif
     int DIM = fAnalysis->MeshVector()[2]->Dimension();
     int DEG = fAnalysis->MeshVector()[2]->GetDefaultOrder();
-    int64_t GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
-    int64_t LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
+    int GloDOF = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int LocDOF = fAnalysis->MeshVector()[1]->NGlobalDOF();
 
     //Lagrange Multipliers
-    for (int64_t jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
+    for (int jelc=0; jelc< fAnalysis->MeshVector()[2]->NElements(); jelc++){
         auto connecL = fAnalysis->MeshVector()[2]->ElementVec()[jelc]->getConnectivityIndices();
         auto *elclocal = dynamic_cast<CouplingLocal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
         auto *elcglobal = dynamic_cast<CouplingGlobal *> (fAnalysis->MeshVector()[2]->ElementVec()[jelc]->GetWeakForm());
-        int64_t jelcoupled = 0;
+        int jelcoupled = 0;
 
         //Determine if the coupling element is from global or local model
 #ifdef DEBUG_BUILD
@@ -414,7 +414,7 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
         rhs[0].resize(2*nLocDOF); rhs[1].resize(2*nLocDOF);
         rhs[0].setZero(); rhs[1].setZero();
         VecInt connec;
-        int64_t startDOF = 0;
+        int startDOF = 0;
         //Gets the right connectivity
         if(elclocal){
             connec = fAnalysis->MeshVector()[1]->ElementVec()[jelcoupled]->getConnectivityIndices();
@@ -439,7 +439,7 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
             //RHS VECTOR
             //COUPLING OPERATOR
             for (int istate = 0; istate < nState; istate++){
-                int64_t dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                 fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[0][nState*i+istate]);
                 
                 dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
@@ -448,7 +448,7 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
             //Arlequin Stabilization
             if (fAnalysis->ArlequinModel()->getArlequinStabilization() != ENoStab){
                 for (int istate = 0; istate < nState; istate++){
-                    int64_t dof_i = startDOF + nStateMonomodel*connec[i]+istate;
+                    int dof_i = startDOF + nStateMonomodel*connec[i]+istate;
                     fAnalysis->GlobalMatrix()->AddValueRhs(dof_i,rhs[1][nState*i+istate]);
                     
                     dof_i = GloDOF + LocDOF + nState*connecL[i]+istate;
@@ -461,11 +461,11 @@ void Assemble::CouplingVector(Analysis *fAnalysis, int64_t startDOF){
 
 void Assemble::Arlequin(Analysis *fAnalysis){
     std::cout << "Assembling Global model..." << std::endl;
-    int64_t numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
     Monomodel(fAnalysis,0,0);
 
     std::cout << "Assembling Local model..." << std::endl;
-    int64_t numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
+    int numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
     Monomodel(fAnalysis,1,numDOFGlobal);
 
     std::cout << "Assembling Coupling operator..." << std::endl;
@@ -474,11 +474,11 @@ void Assemble::Arlequin(Analysis *fAnalysis){
 
 void Assemble::ArlequinMatrix(Analysis *fAnalysis){
     std::cout << "Assembling Global model..." << std::endl;
-    int64_t numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
     MonomodelMatrix(fAnalysis,0,0);
 
     std::cout << "Assembling Local model..." << std::endl;
-    int64_t numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
+    int numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
     MonomodelMatrix(fAnalysis,1,numDOFGlobal);
 
     std::cout << "Assembling Coupling operator..." << std::endl;
@@ -487,11 +487,11 @@ void Assemble::ArlequinMatrix(Analysis *fAnalysis){
 
 void Assemble::ArlequinVector(Analysis *fAnalysis){
     std::cout << "Assembling Global model..." << std::endl;
-    int64_t numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
+    int numDOFGlobal = fAnalysis->MeshVector()[0]->NGlobalDOF();
     MonomodelVector(fAnalysis,0,0);
 
     std::cout << "Assembling Local model..." << std::endl;
-    int64_t numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
+    int numDOFLocal = fAnalysis->MeshVector()[1]->NGlobalDOF();
     MonomodelVector(fAnalysis,1,numDOFGlobal);
 
     std::cout << "Assembling Coupling operator..." << std::endl;
@@ -499,7 +499,7 @@ void Assemble::ArlequinVector(Analysis *fAnalysis){
 }
 
 
-void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs, int64_t &element){
+void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> &Stiffness, std::vector<VecDouble> &Rhs, int &element){
     // return;
     //There are in general three main options for taking the norm of a matrix: the L2, L2 and Linfty norms.
     //In eigen they can be simply obtained by:

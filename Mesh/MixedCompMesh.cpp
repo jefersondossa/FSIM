@@ -24,8 +24,8 @@ void MixedCompMesh::AutoBuild(){
 void MixedCompMesh::CreateMixedConnects(){
 
     int nElements = fMeshVector[0]->NElements(); 
-    int64_t nEl0 = fMeshVector[0]->NElements();
-    int64_t nEl1 = fMeshVector[1]->NElements();
+    int nEl0 = fMeshVector[0]->NElements();
+    int nEl1 = fMeshVector[1]->NElements();
 
 #ifdef DEBUG_BUILD
     if (nEl0 != nEl1) {
@@ -38,9 +38,9 @@ void MixedCompMesh::CreateMixedConnects(){
     this->SetNumElements(nEl0);
 
     //maps the space to the connect
-    std::map<int,int64_t> fixedConnects;
+    std::map<int,int> fixedConnects;
 
-    for (int64_t iel = 0; iel < nEl0; iel++){
+    for (int iel = 0; iel < nEl0; iel++){
         std::vector<Element*> elvector(fNSpaces);
 
         for (int ispaces = 0; ispaces < fNSpaces; ispaces++){
@@ -73,11 +73,11 @@ void MixedCompMesh::CreateMixedConnects(){
     }
 
     //fix the sequence number
-    int64_t seqnum = 0;
+    int seqnum = 0;
     for (int ispace = 1; ispace < fNSpaces; ispace++){
         seqnum += fMeshVector[ispace-1]->NGlobalDOF();
         for (int iconnect = 0; iconnect < fMeshVector[ispace]->NConnects(); iconnect++){
-            int64_t current_seqnum = fMeshVector[ispace]->ConnectVec()[iconnect]->GetSequenceNumber();
+            int current_seqnum = fMeshVector[ispace]->ConnectVec()[iconnect]->GetSequenceNumber();
             if (current_seqnum < 0) continue;
             fMeshVector[ispace]->ConnectVec()[iconnect]->SetSequenceNumber(current_seqnum+seqnum);
         }
@@ -104,7 +104,7 @@ void MixedCompMesh::Print(std::string filename){
         file << "--------------------------------\n";
 
         file << "Connects Information:\n";
-        for (int64_t i = 0; i < fMeshVector[ispace]->NConnects(); i++)
+        for (int i = 0; i < fMeshVector[ispace]->NConnects(); i++)
         {
             Connect *c = fMeshVector[ispace]->ConnectVec()[i];
             file << "Connect " << i << ": ";
@@ -123,7 +123,7 @@ void MixedCompMesh::Print(std::string filename){
 
         file << "--------------------------------\n";
         file << "Elements Information:\n";
-        for (int64_t i = 0; i < fMeshVector[ispace]->NElements(); i++)
+        for (int i = 0; i < fMeshVector[ispace]->NElements(); i++)
         {
             Element *el = fMeshVector[ispace]->ElementVec()[i];
             if (!el) continue;

@@ -15,7 +15,7 @@ void GeoMesh::Print(std::string filename){
 
     file << "--------------------------------\n";
     file << "Nodes Information:\n";
-    for (int64_t i = 0; i < NNodes(); i++)
+    for (int i = 0; i < NNodes(); i++)
     {
         Node *node = fNodeVector[i];
         file << "Node " << i << ": ";
@@ -31,7 +31,7 @@ void GeoMesh::Print(std::string filename){
 
     file << "--------------------------------\n";
     file << "Elements Information:\n";
-    for (int64_t i = 0; i < NElements(); i++)
+    for (int i = 0; i < NElements(); i++)
     {
         GeoElement *el = fElementVector[i];
         file << "Element " << i << ": ";

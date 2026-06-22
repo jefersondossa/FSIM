@@ -10,11 +10,11 @@ void NonLinearAnalysis::UpdateSolution(){
     this->GlobalMatrix()->ExpandSolution();
 
     //Updates nodal values
-    int64_t Ione = 1;
-    int64_t Ii;
+    int Ione = 1;
+    int Ii;
     double val;
     
-    int64_t nstartDOF = 0;
+    int nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
         for (int i = 0; i < this->MeshVector()[imesh]->NConnects(); ++i){
@@ -60,15 +60,15 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
     PetscInt nstartDOF = 0;
     for (int imesh = 0; imesh < an->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += an->MeshVector()[imesh-1]->NGlobalDOF();
-        for (int i = 0; i < an->MeshVector()[imesh]->NNodes(); ++i){
+        for (int i = 0; i < an->MeshVector()[imesh]->NConnects(); ++i){
             int nstate = an->MeshVector()[imesh]->NState();
             for (int k = 0; k<nstate; k++){
                 Ii = nstartDOF + nstate*i+k;
-                int64_t Ione = 1;
+                int Ione = 1;
                 PetscScalar val;
                 VecGetValues(SolAll, Ione, &Ii, &val);
                 // double prevsol = an->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
-                an->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
+                an->MeshVector()[imesh]->ConnectVec()[i] -> SetSolution(k,val);
             }
         };
     }
@@ -117,7 +117,7 @@ void NonLinearAnalysis::Run(){
     
     // //Save Previous solution
     // for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
-    //     for (int64_t inode = 0; inode < this->MeshVector()[imesh]->NNodes(); inode++){
+    //     for (int inode = 0; inode < this->MeshVector()[imesh]->NNodes(); inode++){
     //         int nstate = this->MeshVector()[imesh]->NState();
     //         for (int istate = 0; istate < nstate; istate++){
     //             double Sol = this->MeshVector()[imesh]->NodeVec()[inode]->GetSolution(istate);
@@ -187,7 +187,7 @@ void NonLinearAnalysis::Run(){
         this->GlobalMatrix()->ZeroMatrix();
         this->GlobalMatrix()->ZeroRhs();
         this->GlobalMatrix()->ZeroSolution();
-        for (int64_t i=0; i<NEquations(); i++){
+        for (int i=0; i<NEquations(); i++){
             double val = 1.e-20;
             this->GlobalMatrix()->AddValueMatrix(i,i,val);
         }

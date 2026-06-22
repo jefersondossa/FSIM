@@ -11,7 +11,7 @@ class IntPointData {
 
 public:
     Element* fElement = nullptr;
-    int64_t fElementIndex;
+    int fElementIndex;
     int fIndex;
     /// @brief Jacobian transform related to the initial mesh
     MatrixDouble fA0 = {};

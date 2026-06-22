@@ -9,7 +9,7 @@ ElementT<compshape>::ElementT() : Element(){
 };
 
 template<class compshape>
-ElementT<compshape>::ElementT(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : Element(){
+ElementT<compshape>::ElementT(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf) : Element(){
     fReference = gel;
     int DIM = compshape::Dimension;
     fMesh = mesh;

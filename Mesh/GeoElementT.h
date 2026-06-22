@@ -15,7 +15,7 @@ public:
     GeoElementT();
     ~GeoElementT() = default;
 
-    GeoElementT(int64_t index, VecInt &geonodes, GeoMesh* mesh, int &material);
+    GeoElementT(int index, VecInt &geonodes, GeoMesh* mesh, int &material);
 
 
     int Dimension() override{

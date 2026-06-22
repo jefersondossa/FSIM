@@ -12,27 +12,27 @@ class Element;
 namespace MEFGGlobalLocalTools{
 
     void LocalToGlobalCorrespondence(CompMesh *cmeshG, CompMesh *cmeshL, 
-                                     std::map<int64_t,int64_t> &globalElementCorrespondence, 
-                                     std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
+                                     std::map<int,int> &globalElementCorrespondence, 
+                                     std::map<int, MatrixDouble> &globalNodeCorrespondence,
                                      int overlappingRegion, int overlappingNHDirichletBoundary = -1);
     
     
     void LocalToGlobalCorrespondenceBoundary(CompMesh *cmeshG, CompMesh *cmeshL,
-                                           std::map<int64_t,int64_t> &globalElementCorrespondence,
-                                           std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
+                                           std::map<int,int> &globalElementCorrespondence,
+                                           std::map<int, MatrixDouble> &globalNodeCorrespondence,
                                            int overlappingNHNeumannBoundary = -1);
 
     void CreateEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL, 
-                            std::map<int64_t,int64_t> &globalElementCorrespondence, 
-                            std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
-                            std::map<int64_t,int64_t> &enrichedConnects,
+                            std::map<int,int> &globalElementCorrespondence, 
+                            std::map<int, MatrixDouble> &globalNodeCorrespondence,
+                            std::map<int,int> &enrichedConnects,
                             int overlappingNHNeumannBoundary,
                             GlobalLocalEnrichment *globalLocal);
 
     void CreateMixedEnrichedModel(CompMesh *cmeshG, CompMesh *cmeshL, 
-                                std::map<int64_t,int64_t> &globalElementCorrespondence, 
-                                std::map<int64_t, MatrixDouble> &globalNodeCorrespondence,
-                                std::map<int64_t,int64_t> &enrichedConnects,
+                                std::map<int,int> &globalElementCorrespondence, 
+                                std::map<int, MatrixDouble> &globalNodeCorrespondence,
+                                std::map<int,int> &enrichedConnects,
                                 int overlappingNHNeumannBoundary,
                                 MixedGlobalLocalEnrichment *globalLocal);
 };

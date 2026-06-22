@@ -25,8 +25,8 @@ Analysis::Analysis(Arlequin *arl, SolverType stype, bool reduced){
 };
 
 
-int64_t Analysis::NEquations(){
-    int64_t fNumEquations = 0;
+int Analysis::NEquations(){
+    int fNumEquations = 0;
     for (auto mesh:fMeshVector){
         fNumEquations += mesh->NGlobalDOF();
     }
@@ -85,7 +85,7 @@ void Analysis::AllocateMonomodel(){
         fGlobalMatrix = new EigenSpMatrix(numDOF,numDOF);
 #endif
     }
-    for (int64_t i=0; i<numDOF; i++){
+    for (int i=0; i<numDOF; i++){
         double val = 1.e-20;
         fGlobalMatrix->AddValueMatrix(i,i,val);
     }
@@ -100,10 +100,10 @@ void Analysis::AllocateArlequin(){
         fGlobalMatrix = nullptr;
     }
 
-    int64_t numDOFGlobal = fMeshVector[0]->NGlobalDOF();
-    int64_t numDOFLocal = fMeshVector[1]->NGlobalDOF();
-    int64_t numDOFLagMul = fMeshVector[2]->NGlobalDOF();
-    int64_t numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
+    int numDOFGlobal = fMeshVector[0]->NGlobalDOF();
+    int numDOFLocal = fMeshVector[1]->NGlobalDOF();
+    int numDOFLagMul = fMeshVector[2]->NGlobalDOF();
+    int numDOF = numDOFGlobal + numDOFLocal + numDOFLagMul;
     if (fSolverType == SolverType::EUmfpack){
 #ifdef HAS_PETSC
     if (fReducedArlequin){
@@ -147,7 +147,7 @@ void Analysis::AllocateArlequin(){
     }
 #endif
     }
-    for (int64_t i=0; i<numDOF; i++){
+    for (int i=0; i<numDOF; i++){
         double val = 1.e-20;
         fGlobalMatrix->AddValueMatrix(i,i,val);
     }

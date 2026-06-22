@@ -12,21 +12,21 @@ protected:
     MatrixDouble  fRhs;
 
 public:
-    EigenSpMatrix(int64_t rows, int64_t cols);
+    EigenSpMatrix(int rows, int cols);
 
     ~EigenSpMatrix();
 
-    void AddValueMatrix(int64_t &row, int64_t &col, double &val);
-    void PutValueMatrix(int64_t &row, int64_t &col, double &val);
-    double GetValueMatrix(int64_t &row, int64_t &col);
+    void AddValueMatrix(int &row, int &col, double &val);
+    void PutValueMatrix(int &row, int &col, double &val);
+    double GetValueMatrix(int &row, int &col);
 
-    void AddValueRhs(int64_t &row, double &val);
-    void PutValueRhs(int64_t &row, double &val);
-    double GetValueRhs(int64_t &row);
+    void AddValueRhs(int &row, double &val);
+    void PutValueRhs(int &row, double &val);
+    double GetValueRhs(int &row);
 
-    void AddValueSolution(int64_t &row, double &val);
-    void PutValueSolution(int64_t &row, double &val);
-    double GetValueSolution(int64_t &row);
+    void AddValueSolution(int &row, double &val);
+    void PutValueSolution(int &row, double &val);
+    double GetValueSolution(int &row);
     
     virtual SparseMat &Matrix(){return fMatrix;}
     virtual MatrixDouble &Rhs(){return fRhs;}

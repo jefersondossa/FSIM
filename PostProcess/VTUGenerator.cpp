@@ -71,10 +71,10 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
     output_v << "    <PointData>" << std::endl;
 
     //Scalar values
-    std::map<int64_t,std::vector<VecDouble>> scalSol;
-    std::map<int64_t,std::vector<VecDouble>> vectSol;
+    std::map<int,std::vector<VecDouble>> scalSol;
+    std::map<int,std::vector<VecDouble>> vectSol;
     // std::vector<std::vector<VecDouble,scalnames.size()>,graphmesh->NNodes()> scalSol;
-    for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
+    for (int iel = 0; iel < graphmesh->NElements(); iel++){
         auto compel = cmesh->ElementVec()[iel];
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
@@ -109,7 +109,7 @@ void VTUGenerator::PrintResultsGraph(CompMesh *cmesh, std::string filename, std:
             }
         }
     }
-    for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
+    for (int iel = 0; iel < graphmesh->NElements(); iel++){
         auto compel = cmesh->ElementVec()[iel];
         if (compel->Dimension() == cmesh->Dimension()) continue;
         auto graphconnect = graphmesh->Connect(iel);
@@ -198,7 +198,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     std::fstream output_v(s.c_str(), std::ios_base::out);
 
     //Skip enchiched elements.
-    std::set<int64_t> elsToPrint;
+    std::set<int> elsToPrint;
     for (int iel = 0; iel < cmesh->NElements(); iel++){
         auto compel = cmesh->ElementVec()[iel];
         if (compel->Dimension() != cmesh->Dimension()) continue;
@@ -280,8 +280,8 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
     output_v << "    <PointData>" << std::endl;
 
     //Scalar values
-    std::map<int64_t,std::vector<VecDouble>> scalSol;
-    std::map<int64_t,std::vector<VecDouble>> vectSol;
+    std::map<int,std::vector<VecDouble>> scalSol;
+    std::map<int,std::vector<VecDouble>> vectSol;
     // std::vector<std::vector<VecDouble,scalnames.size()>,graphmesh->NNodes()> scalSol;
     for (int i=0; i<graphmesh->NElements(); i++){
         auto compel = cmesh->ElementVec()[graphmesh->GraphElementToMeshElement(i)];
@@ -329,7 +329,7 @@ void VTUGenerator::PrintResultsIsoparametric(CompMesh *cmesh, std::string filena
             }
         }
     }
-    // for (int64_t iel = 0; iel < cmesh->NElements(); iel++){
+    // for (int iel = 0; iel < cmesh->NElements(); iel++){
     //     auto compel = cmesh->ElementVec()[iel];
     //     if (compel->Dimension() == cmesh->Dimension()) continue;
     //     auto graphconnect = cmesh->ElementVec()[iel]->getConnectivity();
@@ -490,10 +490,10 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
     output_v << "    <PointData>" << std::endl;
 
     //Scalar values
-    std::map<int64_t,std::vector<VecDouble>> scalSol;
-    std::map<int64_t,std::vector<VecDouble>> vectSol;
+    std::map<int,std::vector<VecDouble>> scalSol;
+    std::map<int,std::vector<VecDouble>> vectSol;
     // std::vector<std::vector<VecDouble,scalnames.size()>,graphmesh->NNodes()> scalSol;
-    for (int64_t iel = 0; iel < graphmesh->NElements(); iel++){
+    for (int iel = 0; iel < graphmesh->NElements(); iel++){
         auto compel = cmesh->ElementVec()[graphmesh->GraphElementToMeshElement(iel)];
         auto graphconnect = graphmesh->Connect(iel);
         if (compel->Dimension() != cmesh->Dimension()) continue;
@@ -538,7 +538,7 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
             }
         }
     }
-    // for (int64_t iel = 0; iel < cmesh->NElements(); iel++){
+    // for (int iel = 0; iel < cmesh->NElements(); iel++){
     //     auto compel = cmesh->ElementVec()[iel];
     //     if (compel->Dimension() == cmesh->Dimension()) continue;
     //     auto graphconnect = cmesh->ElementVec()[iel]->getConnectivity();

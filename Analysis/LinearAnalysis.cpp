@@ -32,7 +32,7 @@ void LinearAnalysis::UpdateSolution(){
     this->GlobalMatrix()->ExpandSolution();
 
     //Updates nodal values
-    int64_t Ii;
+    int Ii;
     double val;
     
     
@@ -58,13 +58,13 @@ void LinearAnalysis::UpdateSolution(){
             }
         }
     } else {
-        int64_t nstartDOF = 0;
+        int nstartDOF = 0;
         for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
             if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
             
             for (int iconnect = 0; iconnect < this->MeshVector()[imesh]->NConnects(); iconnect++){
                 Connect * c = this->MeshVector()[imesh]->ConnectVec()[iconnect];
-                int64_t fSeqnum = c->GetSequenceNumber();
+                int fSeqnum = c->GetSequenceNumber();
                 if (fSeqnum < 0) continue;
                 int nstate = c->GetNStateVariables();
                 if (c->GetNShapeFunctions() == 0) continue;
@@ -84,7 +84,7 @@ void LinearAnalysis::UpdateSolution(){
 
     // for (int iconnect = 0; iconnect < fMeshVector[0]->NConnects(); iconnect++){
     //     Connect * c = fMeshVector[0]->ConnectVec()[iconnect];
-    //     int64_t fSeqnum = c->GetSequenceNumber();
+    //     int fSeqnum = c->GetSequenceNumber();
     //     if (fSeqnum < 0) continue;
     //     int nstate = c->GetNStateVariables();
     //     for (int k = 0; k<nstate; k++){

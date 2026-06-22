@@ -11,7 +11,7 @@ class ArlequinMatRedPETSc : public MatrixType
 {
     
 private:
-    int64_t  fDim0,fDim1,fDimLagrange;
+    int  fDim0,fDim1,fDimLagrange;
     PETScMat fK0,fK1,fL0,fL1,fE,fL0T,fL1T;
     PETScVec fF0,fF1,fG;
     PETScVec fU0,fU1,fLambda;
@@ -19,20 +19,20 @@ private:
 
 public:
     
-    ArlequinMatRedPETSc(int64_t dim0, int64_t dim1, int64_t dimLagrange, PETScMatType mtype = ESeq);
+    ArlequinMatRedPETSc(int dim0, int dim1, int dimLagrange, PETScMatType mtype = ESeq);
     ~ArlequinMatRedPETSc();
 
-    void AddValueMatrix(int64_t &row, int64_t &col, double &val) override;
-    void PutValueMatrix(int64_t &row, int64_t &col, double &val) override;
-    double GetValueMatrix(int64_t &row, int64_t &col) override;
+    void AddValueMatrix(int &row, int &col, double &val) override;
+    void PutValueMatrix(int &row, int &col, double &val) override;
+    double GetValueMatrix(int &row, int &col) override;
 
-    void AddValueRhs(int64_t &row, double &val) override;
-    void PutValueRhs(int64_t &row, double &val) override;
-    double GetValueRhs(int64_t &row) override;
+    void AddValueRhs(int &row, double &val) override;
+    void PutValueRhs(int &row, double &val) override;
+    double GetValueRhs(int &row) override;
 
-    void AddValueSolution(int64_t &row, double &val) override;
-    void PutValueSolution(int64_t &row, double &val) override;
-    double GetValueSolution(int64_t &row) override;
+    void AddValueSolution(int &row, double &val) override;
+    void PutValueSolution(int &row, double &val) override;
+    double GetValueSolution(int &row) override;
 
     void ZeroMatrix() override;
     void ZeroRhs() override;

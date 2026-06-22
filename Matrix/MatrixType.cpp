@@ -1,6 +1,6 @@
 #include "MatrixType.h"
 
-MatrixType::MatrixType(int64_t rows, int64_t cols){
+MatrixType::MatrixType(int rows, int cols){
     fRows = rows;
     fCols = cols;
 }

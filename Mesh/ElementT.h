@@ -24,7 +24,7 @@ protected:
 public:
     ElementT();
 
-    ElementT(int64_t index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
+    ElementT(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
 
     double InterpolateVariable(VecDouble &nValues, int point) override;
     void ComputeIntegPointCoordinates() override;

@@ -91,7 +91,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // VectorNames = {"Displacement"};
     // // VectorNames = {"Displacement","ExactDisplacement"};
     // an.GlobalMatrix()->ZeroSolution();
-    // int64_t row = 9;
+    // int row = 9;
     // double val = 1.;
     // an.GlobalMatrix()->PutValueSolution(row,val);
     // an.UpdateSolution();

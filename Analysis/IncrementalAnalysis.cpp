@@ -103,11 +103,11 @@ void IncrementalAnalysis::UpdateSolution(){
     this->GlobalMatrix()->ExpandSolution();
 
     //Updates nodal values
-    int64_t Ione = 1;
-    int64_t Ii;
+    int Ione = 1;
+    int Ii;
     double val;
     
-    int64_t nstartDOF = 0;
+    int nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
         for (int i = 0; i < this->MeshVector()[imesh]->NNodes(); ++i){
@@ -131,11 +131,11 @@ void IncrementalAnalysis::UpdateSolution(){
     this->GlobalMatrix()->ExpandSolution();
 
     //Updates nodal values
-    int64_t Ione = 1;
-    int64_t Ii;
+    int Ione = 1;
+    int Ii;
     double val;
     
-    int64_t nstartDOF = 0;
+    int nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
         if (imesh > 0) nstartDOF += this->MeshVector()[imesh-1]->NGlobalDOF();
         for (int i = 0; i < this->MeshVector()[imesh]->NConnects(); ++i){

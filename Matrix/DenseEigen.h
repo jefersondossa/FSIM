@@ -16,7 +16,7 @@ typedef Eigen::MatrixXd MatrixDouble;
 typedef Eigen::MatrixXi MatrixInt;
 
 /// @brief Vector (1d tensor) of integers
-typedef Eigen::Matrix<int64_t, Dynamic, 1> VecInt;
+typedef Eigen::Matrix<int, Dynamic, 1> VecInt;
 /// @brief Vector (1d tensor) of doubles
 typedef Eigen::VectorXd VecDouble;
 /// @brief Vector (1d tensor) of booleans

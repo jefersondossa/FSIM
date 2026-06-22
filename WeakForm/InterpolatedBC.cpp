@@ -3,8 +3,8 @@
 
 InterpolatedBC::InterpolatedBC(int matid, int dim, int nstate, 
         BoundaryConditionType bctype, 
-        std::map<int64_t,int64_t> *globalElementCorrespondence,
-        std::map<int64_t, MatrixDouble> *globalNodeCorrespondence,
+        std::map<int,int> *globalElementCorrespondence,
+        std::map<int, MatrixDouble> *globalNodeCorrespondence,
         CompMesh *globalmesh) : WeakForm() {
     this->fDimension = dim;
     this->fMatId = matid;
@@ -51,7 +51,7 @@ void InterpolatedBC::ComputeResidual(int &index, IntPointData &data, VecDouble &
     double WJ = data.fWeight * data.fJacA0;
     double nphi = data.fPhi.size();
 
-    int64_t myIndex = data.fElementIndex;
+    int myIndex = data.fElementIndex;
     Element *el = fGlobalMesh->ElementVec()[(*fGlobalElementCorrespondence)[myIndex]];
     int nshape = 0;
     VecDouble Sol;

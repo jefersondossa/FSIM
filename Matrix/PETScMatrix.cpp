@@ -1,12 +1,17 @@
 #include "PETScMatrix.h"
 
 #ifdef HAS_PETSC
+#include <petscsys.h>
 
-PETScMatrix::PETScMatrix(int64_t rows, int64_t cols, PETScMatType mtype) : MatrixType(rows,cols){
+PETScMatrix::PETScMatrix(int rows, int cols, PETScMatType mtype) : MatrixType(rows,cols){
+
+    std::cout << "sizeof(PetscInt) = " << sizeof(PetscInt) << std::endl;
+    std::cout << "PETSC_DECIDE = " << PETSC_DECIDE << std::endl;
+
     switch (mtype)
     {
     case ESeq:
-        MatCreateSeqAIJ(PETSC_COMM_WORLD, rows, cols, 100,NULL,&fMatrix);
+        MatCreateSeqAIJ(PETSC_COMM_SELF, rows, cols, 100,NULL,&fMatrix);
         break;
     case ESeqSym:
         MatCreateSeqAIJ(PETSC_COMM_WORLD, rows, cols, 100,NULL,&fMatrix);
@@ -14,15 +19,18 @@ PETScMatrix::PETScMatrix(int64_t rows, int64_t cols, PETScMatType mtype) : Matri
         break;
     case EAij:
         MatCreateAIJ(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-                        rows, cols,1000,NULL,1000,NULL,&fMatrix); 
+                        rows, cols,100,NULL,100,NULL,&fMatrix); 
         break;
     
     default:
         PanicButton();
         break;
     }
+    // VecDestroy(fRhs);
+    // VecDestroy(fSolution);
+
     //Create PETSc vectors
-    VecCreate(PETSC_COMM_WORLD,&fRhs);
+    VecCreate(PETSC_COMM_SELF,&fRhs);
     VecSetSizes(fRhs,PETSC_DECIDE,rows);
     
     VecSetFromOptions(fRhs);
@@ -36,15 +44,15 @@ PETScMatrix::~PETScMatrix(){
 }
 
 
-void PETScMatrix::AddValueMatrix(int64_t &row, int64_t &col, double &val) {
+void PETScMatrix::AddValueMatrix(int &row, int &col, double &val) {
     MatSetValues(fMatrix,1,&row,1,&col,&val,ADD_VALUES);
 };
 
-void PETScMatrix::PutValueMatrix(int64_t &row, int64_t &col, double &val) {
+void PETScMatrix::PutValueMatrix(int &row, int &col, double &val) {
     MatSetValues(fMatrix,1,&row,1,&col,&val,INSERT_VALUES);
 };
 
-double PETScMatrix::GetValueMatrix(int64_t &row, int64_t &col) {
+double PETScMatrix::GetValueMatrix(int &row, int &col) {
     std::cout << "It may need a scatter context. Please check PETSc manual and implement it. \n";
     PanicButton();
 };
@@ -94,29 +102,29 @@ void PETScMatrix::VecAssemble(){
     VecAssemblyEnd(fRhs);
 }
 
-void PETScMatrix::AddValueRhs(int64_t &row, double &val) {
+void PETScMatrix::AddValueRhs(int &row, double &val) {
     VecSetValues(fRhs, 1, &row, &val, ADD_VALUES);
 };
 
-void PETScMatrix::PutValueRhs(int64_t &row, double &val) {
+void PETScMatrix::PutValueRhs(int &row, double &val) {
     VecSetValues(fRhs, 1, &row, &val, INSERT_VALUES);
 };
 
-double PETScMatrix::GetValueRhs(int64_t &row) {
+double PETScMatrix::GetValueRhs(int &row) {
     std::cout << "This vector need a scatter context to get values. Please implement it. \n";
     PanicButton();
 };
 
-void PETScMatrix::AddValueSolution(int64_t &row, double &val) {
+void PETScMatrix::AddValueSolution(int &row, double &val) {
     VecSetValues(fSolution, 1, &row, &val, ADD_VALUES);
 };
 
-void PETScMatrix::PutValueSolution(int64_t &row, double &val) {
+void PETScMatrix::PutValueSolution(int &row, double &val) {
     VecSetValues(fSolution, 1, &row, &val, INSERT_VALUES);
 };
 
-double PETScMatrix::GetValueSolution(int64_t &row) {
-    int64_t Ione = 1;
+double PETScMatrix::GetValueSolution(int &row) {
+    int Ione = 1;
     double val;
     VecGetValues(fSolutionAll, Ione, &row, &val);
     return val;
