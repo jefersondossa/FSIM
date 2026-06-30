@@ -11,7 +11,6 @@ LinearFrame::LinearFrame(int matid, double young, double inertia, double area) :
     this->fType = WeakFormType::kLinearFrame;
 };
 
-
 void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness){
     if (!data.fNeedsDSol || !data.fNeedsSol){
         data.fNeedsDSol = true;
@@ -25,31 +24,32 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
     double sina = data.fAxes0(1,0) / data.fJacA0;
     MatrixDouble rotation(6,6);
     rotation.setZero();
+    int npoints = 1;//data.fWeightFunction.size();
 
     //Local Stiffness
-    Stiffness(0,0) = (fYoungModulus * fArea) / (Length);
+    Stiffness(0,0) = (fYoungModulus * fArea) / (Length) / npoints;
     Stiffness(0,1) = Stiffness(1,0) = Stiffness(0,2) = Stiffness(2,0) = 0.;
-    Stiffness(0,3) = Stiffness(3,0) = -(fYoungModulus * fArea) / (Length);
+    Stiffness(0,3) = Stiffness(3,0) = -(fYoungModulus * fArea) / (Length) / npoints;
     Stiffness(0,4) = Stiffness(4,0) = Stiffness(0,5) = Stiffness(5,0) = 0.;
 
-    Stiffness(1,1) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length));
-    Stiffness(1,2) = Stiffness(2,1) = (6. * (fYoungModulus * fInertia) / (Length * Length));
-    Stiffness(1,3) = Stiffness(3,1) = 0.;
-    Stiffness(1,4) = Stiffness(4,1) = -(12. * (fYoungModulus * fInertia) / (Length * Length * Length));
-    Stiffness(1,5) = Stiffness(5,1) = (6. * (fYoungModulus * fInertia) / (Length * Length));
+    Stiffness(1,1) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
+    Stiffness(1,2) = Stiffness(2,1) = (6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(1,3) = Stiffness(3,1) = 0;
+    Stiffness(1,4) = Stiffness(4,1) = -(12. * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
+    Stiffness(1,5) = Stiffness(5,1) = (6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
 
-    Stiffness(2,2) = (4. * (fYoungModulus * fInertia) / Length);
-    Stiffness(2,3) = Stiffness(3,2) = 0.;
-    Stiffness(2,4) = Stiffness(4,2) = -(6. * (fYoungModulus * fInertia) / (Length * Length));
-    Stiffness(2,5) = Stiffness(5,2) = (2. * (fYoungModulus * fInertia) / Length);
+    Stiffness(2,2) = (4. * (fYoungModulus * fInertia) / Length) / npoints;
+    Stiffness(2,3) = Stiffness(3,2) = 0;
+    Stiffness(2,4) = Stiffness(4,2) = -(6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(2,5) = Stiffness(5,2) = (2. * (fYoungModulus * fInertia) / Length) / npoints;
 
-    Stiffness(3,3) = (fYoungModulus * fArea) / (Length);
-    Stiffness(3,4) = Stiffness(4,3) = Stiffness(3,5) = Stiffness(5,3) = 0.;
+    Stiffness(3,3) = (fYoungModulus * fArea) / (Length) / npoints;
+    Stiffness(3,4) = Stiffness(4,3) = Stiffness(3,5) = Stiffness(5,3) = 0;
 
-    Stiffness(4,4) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length));
-    Stiffness(4,5) = Stiffness(5,4) = -(6. * (fYoungModulus * fInertia) / (Length * Length));
+    Stiffness(4,4) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
+    Stiffness(4,5) = Stiffness(5,4) = -(6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
 
-    Stiffness(5,5) = (4. * (fYoungModulus * fInertia) / Length);
+    Stiffness(5,5) = (4. * (fYoungModulus * fInertia) / Length) / npoints;
 
     //Rotation matrix
     for (int j = 0; j < 2; j++){
@@ -59,10 +59,9 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
         rotation(3*j+1,3*j+1) = cosa;
         rotation(3*j+2,3*j+2) = 1.;
     }
-    std::cout << "Stiffness before rotation: \n" << Stiffness << std::endl; 
-    std::cout << "Rotation matrix: \n" << rotation << std::endl;
+    // std::cout << "Stiffness before rotation: \n" << Stiffness << std::endl; 
+    // std::cout << "Rotation matrix: \n" << rotation << std::endl;
     Stiffness = rotation.transpose() * Stiffness * rotation;
-
 }
 
 void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
@@ -100,7 +99,7 @@ void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs
         rotation(3*j+1,3*j+1) = cosa;
         rotation(3*j+2,3*j+2) = 1.;
     }
-
+    std::cout << "Rotation matrix: \n" << rotation << std::endl;
     Rhs += rotation.transpose() * Rhsaux;
     
 };

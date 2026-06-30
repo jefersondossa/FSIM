@@ -567,11 +567,11 @@ void VTUGenerator::PrintResultsHierarquic(CompMesh *cmesh, std::string filename,
         output_v<< "      <DataArray type=\"Float64\" NumberOfComponents=\"3\" "
             << "Name=\"" << vecnames[iscal] << "\" format=\"ascii\">" << std::endl;
         for (int i=0; i<graphmesh->NNodes(); i++){
-            // if (vectSol[i].size()==0){
-                // output_v <<std::scientific<< "0,0,0" << std::endl;
-            // }else{
+            if (vectSol[i].size()==0){
+               output_v <<std::scientific<< "0 0 0" << std::endl;
+            }else{
                 output_v<<std::scientific << vectSol[i][iscal][0] << " " << vectSol[i][iscal][1] << " " << vectSol[i][iscal][2] << std::endl;    
-            // }
+            }
         }
         output_v << "      </DataArray> " << std::endl;
     }

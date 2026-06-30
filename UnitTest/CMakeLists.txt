@@ -12,3 +12,12 @@ add_unit_test(TestTensor TestTensor.cpp)
 
 add_executable(testTruss testTruss.cpp)
 target_link_libraries(testTruss PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(testBeam testBeam.cpp)
+target_link_libraries(testBeam PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(testFrame testFrame.cpp)
+target_link_libraries(testFrame PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(testFrame2 testFrame2.cpp)
+target_link_libraries(testFrame2 PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
