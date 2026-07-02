@@ -20,22 +20,21 @@ void LinearBeam::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &
     }
 
     double Length = 2.*data.fJacA0;
-    int npoints = data.fWeightFunction.size();
 
     //Local Stiffness
-    Stiffness(0,0) = (12 * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
-    Stiffness(0,1) = Stiffness(1,0) = (6 * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
-    Stiffness(0,2) = Stiffness(2,0) = -(12 * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
-    Stiffness(0,3) = Stiffness(3,0) = (6 * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(0,0) = (12 * (fYoungModulus * fInertia) / (Length * Length * Length));
+    Stiffness(0,1) = Stiffness(1,0) = (6 * (fYoungModulus * fInertia) / (Length * Length));
+    Stiffness(0,2) = Stiffness(2,0) = -(12 * (fYoungModulus * fInertia) / (Length * Length * Length));
+    Stiffness(0,3) = Stiffness(3,0) = (6 * (fYoungModulus * fInertia) / (Length * Length));
 
-    Stiffness(1,1) = (4 * (fYoungModulus * fInertia) / Length) / npoints;
-    Stiffness(1,2) = Stiffness(2,1) = -(6 * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
-    Stiffness(1,3) = Stiffness(3,1) = (2 * (fYoungModulus * fInertia) / Length) / npoints;    
+    Stiffness(1,1) = (4 * (fYoungModulus * fInertia) / Length);
+    Stiffness(1,2) = Stiffness(2,1) = -(6 * (fYoungModulus * fInertia) / (Length * Length));
+    Stiffness(1,3) = Stiffness(3,1) = (2 * (fYoungModulus * fInertia) / Length);    
 
-    Stiffness(2,2) = (12 * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
-    Stiffness(2,3) = Stiffness(3,2) = -(6 * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(2,2) = (12 * (fYoungModulus * fInertia) / (Length * Length * Length));
+    Stiffness(2,3) = Stiffness(3,2) = -(6 * (fYoungModulus * fInertia) / (Length * Length));
 
-    Stiffness(3,3) = (4 * (fYoungModulus * fInertia) / Length) / npoints;
+    Stiffness(3,3) = (4 * (fYoungModulus * fInertia) / Length);
 
 }
 
@@ -54,7 +53,7 @@ void LinearBeam::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     
     for (int i = 4; i--; ){
         //External force
-        double corr = i%2 == 0 ? 1. : 0.5;
+        double corr = i%2 == 0 ? 1. : data.fJacA0; // in this case the jacobian needs to be squared
         double Fx = forcingF[0] * phi[i] * corr;
         Rhs[i] += Fx * WJ;
     };

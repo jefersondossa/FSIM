@@ -24,32 +24,31 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
     double sina = data.fAxes0(1,0) / data.fJacA0;
     MatrixDouble rotation(6,6);
     rotation.setZero();
-    int npoints = 1;//data.fWeightFunction.size();
 
     //Local Stiffness
-    Stiffness(0,0) = (fYoungModulus * fArea) / (Length) / npoints;
+    Stiffness(0,0) = (fYoungModulus * fArea) / (Length);
     Stiffness(0,1) = Stiffness(1,0) = Stiffness(0,2) = Stiffness(2,0) = 0.;
-    Stiffness(0,3) = Stiffness(3,0) = -(fYoungModulus * fArea) / (Length) / npoints;
+    Stiffness(0,3) = Stiffness(3,0) = -(fYoungModulus * fArea) / (Length);
     Stiffness(0,4) = Stiffness(4,0) = Stiffness(0,5) = Stiffness(5,0) = 0.;
 
-    Stiffness(1,1) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
-    Stiffness(1,2) = Stiffness(2,1) = (6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(1,1) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length));
+    Stiffness(1,2) = Stiffness(2,1) = (6. * (fYoungModulus * fInertia) / (Length * Length));
     Stiffness(1,3) = Stiffness(3,1) = 0;
-    Stiffness(1,4) = Stiffness(4,1) = -(12. * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
-    Stiffness(1,5) = Stiffness(5,1) = (6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(1,4) = Stiffness(4,1) = -(12. * (fYoungModulus * fInertia) / (Length * Length * Length));
+    Stiffness(1,5) = Stiffness(5,1) = (6. * (fYoungModulus * fInertia) / (Length * Length));
 
-    Stiffness(2,2) = (4. * (fYoungModulus * fInertia) / Length) / npoints;
+    Stiffness(2,2) = (4. * (fYoungModulus * fInertia) / Length);
     Stiffness(2,3) = Stiffness(3,2) = 0;
-    Stiffness(2,4) = Stiffness(4,2) = -(6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
-    Stiffness(2,5) = Stiffness(5,2) = (2. * (fYoungModulus * fInertia) / Length) / npoints;
+    Stiffness(2,4) = Stiffness(4,2) = -(6. * (fYoungModulus * fInertia) / (Length * Length));
+    Stiffness(2,5) = Stiffness(5,2) = (2. * (fYoungModulus * fInertia) / Length);
 
-    Stiffness(3,3) = (fYoungModulus * fArea) / (Length) / npoints;
+    Stiffness(3,3) = (fYoungModulus * fArea) / (Length);
     Stiffness(3,4) = Stiffness(4,3) = Stiffness(3,5) = Stiffness(5,3) = 0;
 
-    Stiffness(4,4) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length)) / npoints;
-    Stiffness(4,5) = Stiffness(5,4) = -(6. * (fYoungModulus * fInertia) / (Length * Length)) / npoints;
+    Stiffness(4,4) = (12. * (fYoungModulus * fInertia) / (Length * Length * Length));
+    Stiffness(4,5) = Stiffness(5,4) = -(6. * (fYoungModulus * fInertia) / (Length * Length));
 
-    Stiffness(5,5) = (4. * (fYoungModulus * fInertia) / Length) / npoints;
+    Stiffness(5,5) = (4. * (fYoungModulus * fInertia) / Length);
 
     //Rotation matrix
     for (int j = 0; j < 2; j++){
@@ -84,8 +83,8 @@ void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs
     Rhsaux[1] = forcingF[1] * phi[0] * WJ;
     Rhsaux[4] = forcingF[1] * phi[2] * WJ;
 
-    Rhsaux[2] = forcingF[1] * phi[1] * WJ * 0.5;
-    Rhsaux[5] = forcingF[1] * phi[3] * WJ * 0.5;
+    Rhsaux[2] = forcingF[1] * phi[1] * WJ * data.fJacA0; // in this case the jacobian needs to be squared
+    Rhsaux[5] = forcingF[1] * phi[3] * WJ * data.fJacA0;
 
     double cosa = data.fAxes0(0,0) / data.fJacA0;
     double sina = data.fAxes0(1,0) / data.fJacA0;
