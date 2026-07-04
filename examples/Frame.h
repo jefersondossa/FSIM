@@ -6,7 +6,7 @@ auto forcing = [](const VecDouble &coord, VecDouble &force){
     const auto &y=coord[1];
     force[1] = x-1.;
 };
-auto forcingTransient = [](const VecDouble &coord, double &t, VecDouble &force){
+auto forcingTransient = [](const VecDouble &coord, REAL &t, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     force[1] = 100.;//*std::sin(0.2*t);

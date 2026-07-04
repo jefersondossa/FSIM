@@ -7,9 +7,9 @@
 class ElasticTruss : public WeakForm{
 protected:
     // Material Young modulus
-    double       fYoungModulus;
+    REAL       fYoungModulus;
     // Cross section area
-    double       fArea;
+    REAL       fArea;
 
 public:    
     /// @brief Elastic truss class constructor
@@ -17,7 +17,7 @@ public:
     /// @param dim problem dimension (2 or 3)
     /// @param young material Young modulus
     /// @param area cross section area
-    ElasticTruss(int matid, int dim, double young, double area);
+    ElasticTruss(int matid, int dim, REAL young, REAL area);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -58,7 +58,7 @@ public:
 
     /// @brief Returns the material young modulus
     /// @return Young modulus
-    double &YoungModulus(){
+    REAL &YoungModulus(){
         return fYoungModulus;
     }
 

@@ -62,7 +62,7 @@ void ArlequinMatRedEigen::ZeroRhs(){
     fG.setZero();
 }
 
-void ArlequinMatRedEigen::AddValueMatrix(int &row, int &col, double &val) {
+void ArlequinMatRedEigen::AddValueMatrix(int &row, int &col, REAL &val) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         fK0.coeffRef(row, col) += val;
         return;
@@ -88,7 +88,7 @@ void ArlequinMatRedEigen::AddValueMatrix(int &row, int &col, double &val) {
         PanicButton();
     }
 };
-void ArlequinMatRedEigen::PutValueMatrix(int &row, int &col, double &val) {
+void ArlequinMatRedEigen::PutValueMatrix(int &row, int &col, REAL &val) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         fK0.coeffRef(row, col) = val;
         return;
@@ -108,7 +108,7 @@ void ArlequinMatRedEigen::PutValueMatrix(int &row, int &col, double &val) {
         PanicButton();
     }
 };
-double ArlequinMatRedEigen::GetValueMatrix(int &row, int &col) {
+REAL ArlequinMatRedEigen::GetValueMatrix(int &row, int &col) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         return fK0.coeffRef(row, col);
     } else if (row < fDim0 && col > fDim0+fDim1){ // Belongs to L0
@@ -124,7 +124,7 @@ double ArlequinMatRedEigen::GetValueMatrix(int &row, int &col) {
     }
 };
 
-void ArlequinMatRedEigen::AddValueRhs(int &row, double &val) {
+void ArlequinMatRedEigen::AddValueRhs(int &row, REAL &val) {
     if (row < fDim0){// Belongs to F0
         fF0(row,0) += val;
         return;
@@ -138,7 +138,7 @@ void ArlequinMatRedEigen::AddValueRhs(int &row, double &val) {
         PanicButton();
     }   
 };
-void ArlequinMatRedEigen::PutValueRhs(int &row, double &val) {
+void ArlequinMatRedEigen::PutValueRhs(int &row, REAL &val) {
     if (row < fDim0){// Belongs to F0
         fF0(row,0) = val;
         return;
@@ -152,7 +152,7 @@ void ArlequinMatRedEigen::PutValueRhs(int &row, double &val) {
         PanicButton();
     }   
 };
-double ArlequinMatRedEigen::GetValueRhs(int &row) {
+REAL ArlequinMatRedEigen::GetValueRhs(int &row) {
     if (row < fDim0){// Belongs to F0
         return fF0(row,0);
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to F1
@@ -164,7 +164,7 @@ double ArlequinMatRedEigen::GetValueRhs(int &row) {
     }   
 };
 
-void ArlequinMatRedEigen::AddValueSolution(int &row, double &val) {
+void ArlequinMatRedEigen::AddValueSolution(int &row, REAL &val) {
     if (row < fDim0){// Belongs to U0
         fU0(row,0) += val;
         return;
@@ -178,7 +178,7 @@ void ArlequinMatRedEigen::AddValueSolution(int &row, double &val) {
         PanicButton();
     }   
 };
-void ArlequinMatRedEigen::PutValueSolution(int &row, double &val) {
+void ArlequinMatRedEigen::PutValueSolution(int &row, REAL &val) {
     if (row < fDim0){// Belongs to U0
         fU0(row,0) = val;
         return;
@@ -192,7 +192,7 @@ void ArlequinMatRedEigen::PutValueSolution(int &row, double &val) {
         PanicButton();
     }   
 };
-double ArlequinMatRedEigen::GetValueSolution(int &row) {
+REAL ArlequinMatRedEigen::GetValueSolution(int &row) {
     if (row < fDim0){// Belongs to U0
         return fU0(row,0);
     } else if (row >= fDim0 && row < fDim0+fDim1){ // Belongs to U1
@@ -204,7 +204,7 @@ double ArlequinMatRedEigen::GetValueSolution(int &row) {
     }   
 };
 
-double ArlequinMatRedEigen::SolutionNorm(){
+REAL ArlequinMatRedEigen::SolutionNorm(){
     return fU0.norm()+fU1.norm();
 }
 

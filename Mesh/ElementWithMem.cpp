@@ -28,7 +28,7 @@ ElementWithMem<compshape>::ElementWithMem(int index, GeoElement* gel, CompMesh* 
         fElasticConstitutiveMatrix = 2.*fPlasticityModel->ShearModulus()*fPlasticityModel->fIdentity4Dev + fPlasticityModel->BulkModulus()*fPlasticityModel->fId2xId2;
         if (fPlasticityModel->PlaneStress()){
             fElasticConstitutiveMatrix.setZero();
-            double alpha = (3.*fPlasticityModel->BulkModulus() - 2.*fPlasticityModel->ShearModulus()) / (3.*fPlasticityModel->BulkModulus() + 4.*fPlasticityModel->ShearModulus());
+            REAL alpha = (3.*fPlasticityModel->BulkModulus() - 2.*fPlasticityModel->ShearModulus()) / (3.*fPlasticityModel->BulkModulus() + 4.*fPlasticityModel->ShearModulus());
             fElasticConstitutiveMatrix(0,0) = fElasticConstitutiveMatrix(1,1) = 1. + alpha;
             fElasticConstitutiveMatrix(0,1) = fElasticConstitutiveMatrix(1,0) = alpha;
             fElasticConstitutiveMatrix(5,5) = 0.5;
@@ -78,7 +78,7 @@ void ElementWithMem<compshape>::ComputeTrialStress(int &index,Tensor3D &ElasStre
         this->fIntegData.fElasticStrainIncrement[index].fYY() = Sol[1];
         this->fIntegData.fElasticStrainIncrement[index].fXY() = Sol[2];
         if (fPlasticityModel->PlaneStress()){
-            double poisson = fPlasticityModel->PoissonRatio();
+            REAL poisson = fPlasticityModel->PoissonRatio();
             this->fIntegData.fElasticStrain[index].fZZ() -= poisson/(1.-poisson) * (Sol[0] + Sol[1]);
             this->fIntegData.fElasticStrainIncrement[index].fZZ() = -poisson/(1.-poisson) * (Sol[0] + Sol[1]);
         }   
@@ -159,7 +159,7 @@ void ElementWithMem<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMa
         ComputeTrialStress(index,this->fIntegData.fElasticStress[index]);        
 
         //Check the Yield crieterion
-        double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+        REAL YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
 
         if (YieldFunction < 1.e-8){
             //Elastic step
@@ -239,7 +239,7 @@ void ElementWithMem<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMa
         // ComputeTrialStress(index,ElasStress);        
 
         // //Check the Yield crieterion
-        // double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
+        // REAL YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,ElasStress);
     
         if (this->fIntegData.fYieldFunction[index] < 1.e-8){
             //Elastic step
@@ -319,7 +319,7 @@ void ElementWithMem<compshape>::ComputeElContribution(VecDouble &rhsVector){
         ComputeTrialStress(index,this->fIntegData.fElasticStress[index]);        
 
         //Check the Yield crieterion
-        double YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
+        REAL YieldFunction = fPlasticityModel->YieldFunction(index,this->fIntegData,this->fIntegData.fElasticStress[index]);
 
         if (YieldFunction < 1.e-8){
             //Elastic step

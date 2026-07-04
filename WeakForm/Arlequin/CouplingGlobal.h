@@ -17,12 +17,12 @@ private:
     // Global element correspondence to local mesh
     VecDouble fGlobalElemCorresp;
     // K0 and K1 in the classic Arlequin formulation (corresponding to L2 and H1(energy) portions)
-    double fK0;
-    double fK1;
+    REAL fK0;
+    REAL fK1;
 
 public:
     // Global coupling Arlequin constructor
-    CouplingGlobal(int dim, int globindex, CompMesh* meshlocal, double k0, double k1);
+    CouplingGlobal(int dim, int globindex, CompMesh* meshlocal, REAL k0, REAL k1);
 
     /// @brief Returns the element global index
     /// @return element global index
@@ -59,10 +59,10 @@ public:
     void ComputeError(IntPointData &data, VecDouble &errors) override {};
     
     /// @brief Computes the stabilized Arlequin stiffness matrix
-    void ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness);
+    void ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, REAL &weight_, REAL &djac_, std::vector<MatrixDouble> &Stiffness);
 
     /// @brief Computes the stabilized arlequin resudial vector 
-    void ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, double &weight_, double &djac_, std::vector<VecDouble> &Rhs);
+    void ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, REAL &weight_, REAL &djac_, std::vector<VecDouble> &Rhs);
 };
 
 

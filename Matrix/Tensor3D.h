@@ -29,26 +29,26 @@ public:
     void SetData(MatrixDouble &tensor);
 
     //Tensor invariants
-    double I1() const;
-    double I2() const;
-    double I3() const;
+    REAL I1() const;
+    REAL I2() const;
+    REAL I3() const;
 
-    double J1();
-    double J2() const;
-    double J3();
+    REAL J1();
+    REAL J2() const;
+    REAL J3();
 
-    double Trace() const;
+    REAL Trace() const;
 
     Tensor3D Deviatory();
 
     Tensor3D Hydrostatic();
 
-    double Determinant();
+    REAL Determinant();
 
-    double Norm();
-    double DeviatoryNorm();
+    REAL Norm();
+    REAL DeviatoryNorm();
 
-    double DoubleContraction(Tensor3D &t);
+    REAL DoubleContraction(Tensor3D &t);
     void Identity();
     Tensor3D Normalized();
     Tensor3D NormalizedDeviatory();
@@ -60,11 +60,11 @@ public:
     Tensor3D operator-(const Tensor3D &sum) const;
     const Tensor3D & operator-=(const Tensor3D &sum);
 
-    Tensor3D operator*(const double &multipl) const;
-    const Tensor3D & operator*=(const double &multipl);
+    Tensor3D operator*(const REAL &multipl) const;
+    const Tensor3D & operator*=(const REAL &multipl);
 
-    Tensor3D operator/(const double &multipl) const;
-    const Tensor3D & operator/=(const double &multipl);
+    Tensor3D operator/(const REAL &multipl) const;
+    const Tensor3D & operator/=(const REAL &multipl);
 
     Tensor3D & operator=(const Tensor3D &source){
         fData = source.fData;
@@ -87,22 +87,22 @@ public:
     void SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixDouble> &eigenprojections);
 
 
-    double &fXX(){
+    REAL &fXX(){
         return fData[XX];
     }
-    double &fYY(){
+    REAL &fYY(){
         return fData[YY];
     }
-    double &fZZ(){
+    REAL &fZZ(){
         return fData[ZZ];
     }
-    double &fXY(){
+    REAL &fXY(){
         return fData[XY];
     }
-    double &fXZ(){
+    REAL &fXZ(){
         return fData[XZ];
     }
-    double &fYZ(){
+    REAL &fYZ(){
         return fData[YZ];
     }
 

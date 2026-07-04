@@ -47,7 +47,7 @@ public:
     virtual void ComputeCurrentSpatialDerivatives() = 0;
     virtual void ComputeHighOrderSpatialDerivatives() = 0;
 
-    virtual double getJacobian() = 0;
+    virtual REAL getJacobian() = 0;
     
     virtual void ComputeElContribution(MatrixDouble &Stiffness, VecDouble &Rhs) = 0;
     virtual void ComputeElContribution(MatrixDouble &Stiffness) = 0;
@@ -61,15 +61,15 @@ public:
     virtual void ComputeResidual(int &index, std::vector<VecDouble> &Rhs){};
     virtual void ComputeError(VecDouble &errors){};
     
-    virtual double InterpolateVariable(VecDouble &nValues, int point) = 0;
+    virtual REAL InterpolateVariable(VecDouble &nValues, int point) = 0;
 
     WeakForm *GetWeakForm(){return fWeakForm;}
     void SetWeakForm(WeakForm *weak){fWeakForm=weak;}
 
     virtual void ComputeIntPointDistFunction(VecDouble &nodalval) = 0;
     virtual int getNumberOfIntegrationPoints() = 0;
-    virtual double IntegPointWeight(int index) = 0;
-    virtual double IntegPointCoordinate(int index, int dir) = 0;
+    virtual REAL IntegPointWeight(int index) = 0;
+    virtual REAL IntegPointCoordinate(int index, int dir) = 0;
 
     /// Sets the element connectivity
     /// @param int* element connectivity
@@ -119,21 +119,21 @@ public:
 
     /// Sets the integration point energy weight function
     /// @param int integration point index 
-    /// @param double energy weight function value
+    /// @param REAL energy weight function value
     virtual void setIntegPointWeightFunction() = 0;
-    void setIntegPointWeightFunction(int index, double val){
+    void setIntegPointWeightFunction(int index, REAL val){
         fIntegData.fWeightFunction[index] = val;
     };
 
     /// Gets the integration point energy weight function
     /// @param int integration point index @return energy weight function value
-    double &getIntegPointWeightFunction(int index) {return fIntegData.fWeightFunction[index];};
+    REAL &getIntegPointWeightFunction(int index) {return fIntegData.fWeightFunction[index];};
 
     virtual int NSides() = 0;
     virtual int NSideNodes(int iside) = 0;
     virtual int SideNodeLocIndex(int side, int node) = 0;
 
-    double &GetIntPointDistFunction(int index){
+    REAL &GetIntPointDistFunction(int index){
         return  fIntegData.fDistFunction[index];
     }
 

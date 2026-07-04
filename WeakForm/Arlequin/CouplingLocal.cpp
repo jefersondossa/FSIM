@@ -1,6 +1,6 @@
 #include "CouplingLocal.h"
 
-CouplingLocal::CouplingLocal(int dim, int fineindex, CompMesh* meshlocal, double k0, double k1) : WeakForm(){
+CouplingLocal::CouplingLocal(int dim, int fineindex, CompMesh* meshlocal, REAL k0, REAL k1) : WeakForm(){
     fLocalMesh = meshlocal;
     fLocalIndex = fineindex;
     fDimension = dim;
@@ -25,13 +25,13 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
 
     int DIM = fDimension;
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
     int nstate = NState();
     // if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
     
     for (int i = 0; i < nphi; i++){
         for (int j = 0; j < nphi; j++){
-            double l2 = data.fPhi[i] * data.fPhi[j] * WJ * fK0;
+            REAL l2 = data.fPhi[i] * data.fPhi[j] * WJ * fK0;
                 for (int istate = 0; istate < nstate; istate++){
                 // L2 COUPLING OPERATOR
                 Stiffness[0](nstate*i+istate,nstate*j+istate) -= l2;
@@ -40,7 +40,7 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
                 if (fK1 > 0){
                     for (int k = DIM; k--;  ){
                         for (int l = DIM; l--; ){
-                            double K = data.fDPhi(i,l) * data.fDPhi(j,k) * fK1;
+                            REAL K = data.fDPhi(i,l) * data.fDPhi(j,k) * fK1;
                             if (k==l) for (int m = DIM; m--; ) K += data.fDPhiX0(m,i) * data.fDPhiX0(m,j);
                             Stiffness[0](DIM*i+k,DIM*j+l) -= K * WJ;
                         }
@@ -49,7 +49,7 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
  
                 // for (int l = 0; l < DIM; l++){
                 //     
-                //     double K = data.fDPhiX0(i,l) * data.fDPhiX0(j,l);
+                //     REAL K = data.fDPhiX0(i,l) * data.fDPhiX0(j,l);
                 //     Stiffness[0](i,j) -= K * WJ * fK1;
                 // };
             };
@@ -58,13 +58,13 @@ void CouplingLocal::ComputeStiffness(int &index, IntPointData &data, std::vector
     // } else {
     //     for (int i = 0; i < nphi; i++){
     //         for (int j = 0; j < nphi; j++){
-    //             double l2 = data.fPhi[i] * data.fPhi[j] * WJ * fK0;
+    //             REAL l2 = data.fPhi[i] * data.fPhi[j] * WJ * fK0;
     //             for (int k = 0; k < DIM; k++){
     //                 // L2 COUPLING OPERATOR
     //                 Stiffness[0](DIM*i+k,DIM*j+k) -= l2;
     //                 for (int l = 0; l < DIM; l++){
     //                     //H1 COUPLING OPERATOR
-    //                     double K = data.fDPhiX0(i,l) * data.fDPhiX0(j,k);
+    //                     REAL K = data.fDPhiX0(i,l) * data.fDPhiX0(j,k);
     //                     if (k==l) for (int m = DIM; m--; ) K += data.fDPhiX0(i,m) * data.fDPhiX0(j,m);
 
     //                     Stiffness[0](DIM*i+k,DIM*j+l) -= K * WJ * fK1;
@@ -96,19 +96,19 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
     MatrixDouble du_dx(fNState+1,DIM);
     ellocal->interpolateSolDerivatives(data.fDPhiX0,du_dx);
     
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
 
     // if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < nphi; i++){
             //Solution residual
-            double L2u = u_[0] * data.fPhi[i] * fK0;
-            double H1u = 0.;
+            REAL L2u = u_[0] * data.fPhi[i] * fK0;
+            REAL H1u = 0.;
             for (int l=DIM; l--; ) H1u += data.fDPhiX0(l,i) * du_dx(0,l) * fK1;
             Rhs[0][nphi*fNState+i] += (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
-            double L2 = data.fSol[0] * data.fPhi[i] * fK0;
-            double H1 = 0.;
+            REAL L2 = data.fSol[0] * data.fPhi[i] * fK0;
+            REAL H1 = 0.;
             for (int l=DIM; l--; ) H1 += data.fDPhiX0(l,i) * data.fDSolDx(0,l) * fK1;
             Rhs[0][i] += (L2 + H1) * WJ;
         };
@@ -116,15 +116,15 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
     //     for (int i = 0; i < nphi; i++){
     //         for (int k = 0; k < DIM; k++){
     //             //Solution residual
-    //             double L2u = u_[k] * data.fPhi[i] * fK0;
-    //             double H1u = 0.;
+    //             REAL L2u = u_[k] * data.fPhi[i] * fK0;
+    //             REAL H1u = 0.;
     //             for (int l=DIM; l--; ) H1u += data.fDPhiX0(i,l) * du_dx(k,l) * fK1;
     //             for (int l=DIM; l--; ) H1u += data.fDPhiX0(i,l) * du_dx(l,k) * fK1;
     //             Rhs[0][Element::NLocDOF()+DIM*i+k] += (L2u + H1u) * WJ;
                 
     //             //Lagrange multipliers residual
-    //             double L2 = lagM_[k] * data.fPhi[i] * fK0;
-    //             double H1 = 0.;
+    //             REAL L2 = lagM_[k] * data.fPhi[i] * fK0;
+    //             REAL H1 = 0.;
     //             for (int l=DIM; l--; ) H1 += data.fDPhiX0(i,l) * dL_dx(k,l) * fK1;
     //             for (int l=DIM; l--; ) H1 += data.fDPhiX0(i,l) * dL_dx(l,k) * fK1;
     //             Rhs[0][DIM*i+k] += (L2 + H1) * WJ;
@@ -137,7 +137,7 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 }
 
  
-// void CouplingLocal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness){
+// void CouplingLocal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, REAL &weight_, REAL &djac_, std::vector<MatrixDouble> &Stiffness){
 
 //     int DIM = fDimension;
 //     VecDouble xsi(DIM);
@@ -161,22 +161,22 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //     PanicButton();//Update it to compute in integPointData.
 //     // this->getHighOrderSpatialDerivatives(xsi, ainv_, dphi_dx, ddphi_dx);
 
-//     double WJ = djac_ * weight_ * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index); 
+//     REAL WJ = djac_ * weight_ * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index); 
 
 //     if (this->Mesh()->getProblemParameters().ProbType() == EPoisson){
 //         for (int i = 0; i < nphi; i++){
-//             double shapeFi = data.fPhi[i];
+//             REAL shapeFi = data.fPhi[i];
 //             for (int j = 0; j < nphi; j++){        
-//                 double shapeFj = data.fPhi[j];
+//                 REAL shapeFj = data.fPhi[j];
 //                 //ARLEQUIN STABILIZATION TERMS
-//                 double LL = 0.;
+//                 REAL LL = 0.;
 //                 for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
 //                 // LL = shapeFi * shapeFj;
 
 //                 Stiffness[1](i,j) -= 2. * (LL) * weight_ * djac_;
                 
 //                 //High order derivative
-//                 double LH = 0.;
+//                 REAL LH = 0.;
 //                 // for (int m = DIM; m--; ) LH -= dphi_dx(i,m) * (ddphi_dx(j,0) + ddphi_dx(j,1));
 //                 Stiffness[2](i,j) += LH * WJ; 
 //             };
@@ -188,9 +188,9 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //         MatrixDouble Hooke(3,3);
 //         Hooke.setZero();
 //         // For EPT
-//         double elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
-//         double poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
-//         double k = elastic_ / (1. - poisson_ * poisson_);
+//         REAL elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
+//         REAL poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
+//         REAL k = elastic_ / (1. - poisson_ * poisson_);
 //         Hooke(0,0) = k;
 //         Hooke(0,1) = k * poisson_;
 //         Hooke(1,0) = k * poisson_;
@@ -210,14 +210,14 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //         // for (int i = 0; i < tshape::NElNodes; i++){
 //         //     for (int j = 0; j < tshape::NElNodes; j++){ 
 //         //         //ARLEQUIN STABILIZATION TERMS
-//         //         double LL = 0.;
+//         //         REAL LL = 0.;
 //         //         for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dx(j,m);
 
 //         //         Stiffness[1](i,j) += (LL) * weight_ * djac_;
 //         //         for (int k = DIM; k--; ) Stiffness[1](DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
                 
 //         //         //High order derivative
-//         //         double LH = 0.;
+//         //         REAL LH = 0.;
 //         //         // for (int m = DIM; m--; ) LH -= dphi_dx(i,m) * (ddphi_dx(j,0) + ddphi_dx(j,1));
 //         //         Stiffness[2](i,j) += LH * WJ;   
 
@@ -225,9 +225,9 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //         // }     
 //                 // PanicButton();
 //         //         //ARLEQUIN STABILIZATION TERMS
-//         //         double AM = 0.;
-//         //         double Lpx = 0.; double Lpy = 0.;
-//         //         double LC = 0.; double LL = 0.;
+//         //         REAL AM = 0.;
+//         //         REAL Lpx = 0.; REAL Lpy = 0.;
+//         //         REAL LC = 0.; REAL LL = 0.;
 
 //         //         AM = data.fPhi[i] * data.fPhi[j] * tARLQ_ * wna_* alpha_m;
 
@@ -271,13 +271,13 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //         //     };
 
 //         //     //ARLEQUIN STABILIZATION TERMS
-//         //     double LCx = 0.; double LCy = 0.;
-//         //     double LPx = 0.; double LPy = 0.;
+//         //     REAL LCx = 0.; REAL LCy = 0.;
+//         //     REAL LPx = 0.; REAL LPy = 0.;
 
 //         //     for (int k = DIM; k--; ){
-//         //         double LLx = 0.;
+//         //         REAL LLx = 0.;
 //         //         for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
-//         //         double Amx = - data.fPhi[i] * am_[k] * tARLQ_;
+//         //         REAL Amx = - data.fPhi[i] * am_[k] * tARLQ_;
 //         //         arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
 //         //     }
 
@@ -313,7 +313,7 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 // };
 
  
-// void CouplingLocal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs){
+// void CouplingLocal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, REAL &weight_, REAL &djac_, std::vector<VecDouble> &Rhs){
 //     auto force = this->Mesh()->getProblemParameters().getForcingFunction();    
 //     int DIM = tshape::Dimension;
 //     VecDouble xna_(DIM);
@@ -322,7 +322,7 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //     if (force) force(xna_,forcingF);
 
 //     auto ellocal = fMeshVector[1]->ElementVec()[fLocalIndex];
-//     double WJ = djac_ * weight_ * ellocal->getIntegPointWeightFunction(index); 
+//     REAL WJ = djac_ * weight_ * ellocal->getIntegPointWeightFunction(index); 
 
 //     //Lagrange Multiplier
 //     VecDouble lagM_(this->Mesh()->NState()+1);
@@ -336,14 +336,14 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //     if (this->Mesh()->getProblemParameters().ProbType() == EPoisson){
 //         for (int i = 0; i < tshape::NElNodes; i++){
 //             //ARLEQUIN STABILIZATION TERMS
-//             double LLx = 0.;
-//             double LF = 0.;
-//             double shapeFi = data.fPhi[i];
+//             REAL LLx = 0.;
+//             REAL LF = 0.;
+//             REAL shapeFi = data.fPhi[i];
 //             for (int m = DIM; m--; ) LLx -= 2.*dphi_dx(i,m) * dL_dx(0,m);
-//             // double shapeFi = data.fPhi[i];
+//             // REAL shapeFi = data.fPhi[i];
 //             // for (int m = DIM; m--; ) LLx += 2*shapeFi* lagM_[0];
 //             // for (int m = DIM; m--; ) LF +=  dphi_dx(i,m) * forcingF[0] * fMeshVector[1]->ElementVec()[fLocalIndex]->getIntegPointWeightFunction(index);
-//             // double LF2 = -xna_[0]*xna_[0]*ellocal->getIntegPointWeightFunction(index)*shapeFi;
+//             // REAL LF2 = -xna_[0]*xna_[0]*ellocal->getIntegPointWeightFunction(index)*shapeFi;
 //             // Rhs[1][i] += (LF2) * weight_ * djac_;
 //             Rhs[1][tshape::NElNodes+i] += (LLx + LF) * weight_ * djac_;
 //         };    
@@ -354,9 +354,9 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //         MatrixDouble Hooke(3,3);
 //         Hooke.setZero();
 //         // For EPT
-//         double elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
-//         double poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
-//         double k = elastic_ / (1. - poisson_ * poisson_);
+//         REAL elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
+//         REAL poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
+//         REAL k = elastic_ / (1. - poisson_ * poisson_);
 //         Hooke(0,0) = k;
 //         Hooke(0,1) = k * poisson_;
 //         Hooke(1,0) = k * poisson_;
@@ -384,10 +384,10 @@ void CouplingLocal::ComputeResidual(int &index, IntPointData &data, std::vector<
 //         for (int i = nphi; i--; ){
 //             Rhs[1][2*nphi+2*i  ] += aux[2*i];
 //             Rhs[1][2*nphi+2*i+1] += aux[2*i+1];
-//             double shapeFi = data.fPhi[i];
+//             REAL shapeFi = data.fPhi[i];
 //             //External force
-//             double Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
-//             double Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
+//             REAL Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
+//             REAL Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
 //             Rhs[1][2*nphi+2*i  ] += Fx * WJ;
 //             Rhs[1][2*nphi+2*i+1] += Fy * WJ;
 //         };

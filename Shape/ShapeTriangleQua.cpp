@@ -11,9 +11,9 @@ const ElementType ShapeTriangleQua::ElType;
 
 void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = 1. - xsi1 - xsi2;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = 1. - xsi1 - xsi2;
     
     phi[0] = xsi3 * (2.0 * xsi3 - 1.0);
     phi[1] = xsi1 * (2.0 * xsi1 - 1.0);
@@ -42,8 +42,8 @@ void ShapeTriangleQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, 
 }
 
 void ShapeTriangleQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
+    const REAL xsi1 = xi[0];
+    const REAL xsi2 = xi[1];
     
     ddphi[0](0,0) = 4.;
     ddphi[0](0,1) = 4.;

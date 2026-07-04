@@ -148,7 +148,7 @@ void ElementT<compshape>::ComputeHighOrderSpatialDerivatives() {
     // // }
     
     // //Shape functions spatial second derivatives
-    // double ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
+    // REAL ddx_dxsi, ddx_deta, ddx_dxsideta, ddy_dxsi, ddy_deta, ddy_dxsideta;
     // VecDouble xna_(DIM);
 
     // for (int i = nshape; i--; ){
@@ -311,7 +311,7 @@ void ElementT<compshape>::interpolateMeshVelocity(int &index, VecDouble &umesh_,
     PanicButton();
     
     // for (int i = compshape::NShape; i--; ){
-    //     double shapeFi = fIntegData.fPhi[i];
+    //     REAL shapeFi = fIntegData.fPhi[i];
     //     for (int j = DIM; j--; ){
     //         umesh_[j] += fMesh->ConnectVec()[fConnect[i]] -> getMeshVelocity(j) * shapeFi;
     //     }
@@ -325,7 +325,7 @@ void ElementT<compshape>::interpolateSolution(int &index, VecDouble &u_) {
     u_.setZero();
 
     for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
-        double shapeFi = fIntegData.fPhi[i];
+        REAL shapeFi = fIntegData.fPhi[i];
         int nstate = fConnect[i]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
             u_[j] += fConnect[i] -> GetSolution(j) * shapeFi;
@@ -333,8 +333,8 @@ void ElementT<compshape>::interpolateSolution(int &index, VecDouble &u_) {
     }
 }
 template<class compshape>
-double ElementT<compshape>::InterpolateVariable(VecDouble &nValues, int point) {
-    double val = 0.;
+REAL ElementT<compshape>::InterpolateVariable(VecDouble &nValues, int point) {
+    REAL val = 0.;
     int nshape = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder());
     fIntegData.fPhi.resize(nshape);
     fIntegData.fPhi.setZero();
@@ -346,7 +346,7 @@ double ElementT<compshape>::InterpolateVariable(VecDouble &nValues, int point) {
 
     compshape::Shape(fIntegData.fAdimCoord,fIntegData.fPhi,fIntegData.fDPhi,orders);
     for (int i = nshape; i--; ){
-        double shapeFi = fIntegData.fPhi[i];
+        REAL shapeFi = fIntegData.fPhi[i];
         val += nValues[i] * shapeFi;
     }
     return val;
@@ -365,7 +365,7 @@ void ElementT<compshape>::interpolateSolDTimeDerivatives() {
         int nstate = fMesh->NState();
     
         for (int ishape = 0; ishape < nshape; ishape++){
-            double shapeFi = fIntegData.fPhi[count];
+            REAL shapeFi = fIntegData.fPhi[count];
             for (int j = 0; j < nstate; j++ ){
                 fIntegData.fDSolDt[j] += fConnect[iside] -> GetDSolutionDTime(j) * shapeFi;
                 fIntegData.fDSolDDt[j] += fConnect[iside] -> GetDSolutionDDTime(j) * shapeFi;
@@ -380,7 +380,7 @@ void ElementT<compshape>::interpolateSolDTimeDerivatives(VecDouble &du_dt, VecDo
     fIntegData.fDSolDt.setZero();
     fIntegData.fDSolDDt.setZero();
     for (int i = compshape::NShapeFunctions(this->fMesh->GetDefaultOrder()); i--; ){
-        double shapeFi = fIntegData.fPhi[i];
+        REAL shapeFi = fIntegData.fPhi[i];
         int nstate = fConnect[i]->GetNStateVariables();
         for (int j = 0; j < nstate; j++ ){
             fIntegData.fDSolDt[j] += fConnect[i] -> GetDSolutionDTime(j) * shapeFi;
@@ -416,7 +416,7 @@ void ElementT<compshape>::interpolateSolution() {
             
 
             for (int ishape = 0; ishape < nshape; ishape++){
-                double shapeFi = fIntegData.fPhi[count];
+                REAL shapeFi = fIntegData.fPhi[count];
                 for (int j = 0; j < nstate; j++ ){
                     fIntegData.fSol[j] += fConnect[iside] -> GetSolution(j) * shapeFi;
                     if (fIntegData.fSolPrev.size() != 0) {
@@ -448,7 +448,7 @@ void ElementT<compshape>::interpolateSolution(VecDouble &phi, VecDouble &u_) {
 
     int count = 0;
     for (int iside = 0; iside < compshape::NSides; iside++){
-        double shapeFi = phi[count];
+        REAL shapeFi = phi[count];
         int nshape = compshape::NShapeFunctions(iside,this->fMesh->GetDefaultOrder());
         if (nshape == 0) continue;
         int nstate = fMesh->NState();
@@ -613,7 +613,7 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
     }
     
     int index = 0;
-    double val = 0.;
+    REAL val = 0.;
     for(int it = 0; it < fIntRule.NPoints(); it++){
  
         //Defines the integration points adimentional coordinates
@@ -671,7 +671,7 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix){
 
     fIntegData.fElementIndex = this->fIndex;
     int index = 0;
-    double val = 0.;
+    REAL val = 0.;
     for(int it = 0; it < fIntRule.NPoints(); it++){
  
         //Defines the integration points adimentional coordinates
@@ -718,7 +718,7 @@ void ElementT<compshape>::ComputeElContribution(VecDouble &rhsVector){
     fIntegData.fSol.resize(this->fWeakForm->NState());
     
     int index = 0;
-    double val = 0.;
+    REAL val = 0.;
     for(int it = 0; it < fIntRule.NPoints(); it++){
  
         //Defines the integration points adimentional coordinates
@@ -1006,7 +1006,7 @@ void ElementT<compshape>::Integrate(std::vector<std::string> &varNames, std::map
             interpolateSolution();
             interpolateSolDerivatives();
 
-            double WJ = fIntegData.fWeight * fIntegData.fJacA0;
+            REAL WJ = fIntegData.fWeight * fIntegData.fJacA0;
             Sol.setZero();
             fIntegData.fIndex = index;
             fWeakForm->Solution(fIntegData,varindex,Sol);

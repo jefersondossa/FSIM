@@ -9,9 +9,9 @@ const int ShapeHexahedron::NVolumes;
 const ElementType ShapeHexahedron::ElType;
 
 void ShapeHexahedron::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = xi[2];
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = xi[2];
 
     phi[0] = 0.125 * (1. - xsi1)*(1. - xsi2)*(1. - xsi3);
     phi[1] = 0.125 * (1. + xsi1)*(1. - xsi2)*(1. - xsi3);

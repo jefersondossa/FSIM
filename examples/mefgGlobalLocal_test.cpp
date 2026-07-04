@@ -35,8 +35,8 @@ int overlappingRegion;
 int overlappingNHDirichletBoundary;
 int overlappingNHNeumannBoundary;
 int globalLocalIterations;
-double ModElasticity = 1.;
-double PoissonRatio = 0.0;
+REAL ModElasticity = 1.;
+REAL PoissonRatio = 0.0;
 
 //Local index to global index correspondence for elements
 std::map<int,int> globalElementCorrespondence;
@@ -182,7 +182,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
 
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (sol.dot(rhs))/2;
+    REAL strainEnergy = (sol.dot(rhs))/2;
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
     //anG.PrintGlobalRhs();
@@ -249,7 +249,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     VecDouble currentSol = spMat->Solution();
 
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (currentSol.dot(rhs))/2;
+    REAL strainEnergy = (currentSol.dot(rhs))/2;
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
 

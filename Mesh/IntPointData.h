@@ -28,12 +28,12 @@ public:
     MatrixDouble fAxes1Prev = {};
 
     /// @brief Initial element Jacobian determinant
-    double fJacA0 = {};
+    REAL fJacA0 = {};
     /// @brief Current element Jacobian determinant
-    double fJacA1 = {};
+    REAL fJacA1 = {};
 
     /// @brief Integration weight
-    double fWeight = {};
+    REAL fWeight = {};
     /// @brief Integration point coordinates in local axes
     VecDouble fAdimCoord = {};
 

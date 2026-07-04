@@ -1,6 +1,6 @@
 #include "TransientPositionalFrame2D.h"
 
-TransientPositionalFrame2D::TransientPositionalFrame2D(int matid, double young, double base, double height, double damp, double dens, double dt, TimeIntegScheme tscheme) : PositionalFrame2D(matid,young,base,height) {    
+TransientPositionalFrame2D::TransientPositionalFrame2D(int matid, REAL young, REAL base, REAL height, REAL damp, REAL dens, REAL dt, TimeIntegScheme tscheme) : PositionalFrame2D(matid,young,base,height) {    
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
@@ -12,9 +12,9 @@ void TransientPositionalFrame2D::ComputeStiffness(int &index, IntPointData &data
     PositionalFrame2D::ComputeStiffness(index,data,Stiffness);
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
     
-    double initLenght = 2.*data.fJacA0;
+    REAL initLenght = 2.*data.fJacA0;
     MatrixDouble Mass(3*nphi,3*nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -40,7 +40,7 @@ void TransientPositionalFrame2D::ComputeResidual(int &index, IntPointData &data,
 
     PositionalFrame2D::ComputeResidual(index,data,Rhs);
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * fDepth * fDensity;
+    REAL WJ = data.fWeight * data.fJacA0 * fDepth * fDensity;
     
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;
@@ -53,15 +53,15 @@ void TransientPositionalFrame2D::ComputeResidual(int &index, IntPointData &data,
     VecDouble forcingF(3);
     forcingF.setZero();
     VecDouble x_ = data.fX;
-    double time = fTimeInstant * fTimeStep;
+    REAL time = fTimeInstant * fTimeStep;
     if (force) force(x_, time, forcingF);
 
-    double a0 = 1./(fBeta * fTimeStep * fTimeStep);
-    double a1 = fGamma / (fBeta * fTimeStep);
-    double a2 = 1./(fTimeStep * fBeta);
-    double a3 = 1. / (2. * fBeta);
-    double a4 = fGamma / fBeta;
-    double a5 = fTimeStep * (fGamma / (2. * fBeta) - 1);
+    REAL a0 = 1./(fBeta * fTimeStep * fTimeStep);
+    REAL a1 = fGamma / (fBeta * fTimeStep);
+    REAL a2 = 1./(fTimeStep * fBeta);
+    REAL a3 = 1. / (2. * fBeta);
+    REAL a4 = fGamma / fBeta;
+    REAL a5 = fTimeStep * (fGamma / (2. * fBeta) - 1);
     
     for (size_t i = 0; i < nphi; i++){
         Rhs[3*i  ] += forcingF[0] * data.fPhi[i] * WJ

@@ -62,13 +62,13 @@ void WindowConstructor::fApply_WF_cb(){
     Str = "";
     Oss.str("");
 
-    double a; 
-    double b; 
-    double c; 
-    double d; 
-    double e;
-    double f;
-    double g;
+    REAL a; 
+    REAL b; 
+    REAL c; 
+    REAL d; 
+    REAL e;
+    REAL f;
+    REAL g;
   
     string ea;
     string eb;

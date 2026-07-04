@@ -16,7 +16,7 @@ auto exactSolStokes = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gra
 auto forcingFunctionStokes = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    double visc = 0.01;
+    REAL visc = 0.01;
 
     force[0] = -(1+2.*visc)*sin(x)*sin(y);
     force[1] = (1-2.*visc)*cos(x)*cos(y);
@@ -25,7 +25,7 @@ auto forcingFunctionStokes = [](const VecDouble &coord, VecDouble &force){
 auto forcingFunctionNavierStokes = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    double visc = 0.01;
+    REAL visc = 0.01;
 
     force[0] = -(sin(x)*(cos(x - 2.*y) + cos(x + 2.*y) - 2.*(1. + 2.*visc)*sin(y)))/2.;
     force[1] = -cos(y)*(cos(x) - 2.*visc*cos(x) + cos(x)*cos(x)*sin(y) - sin(x)*sin(x)*sin(y));

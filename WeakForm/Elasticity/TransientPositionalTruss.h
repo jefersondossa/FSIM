@@ -8,17 +8,17 @@
 class TransientPositionalTruss : public PositionalTruss, public TransientWeakForm{
 protected:
     // Damping
-    double fDamping;
+    REAL fDamping;
     // Density
-    double fDensity;
+    REAL fDensity;
     // Integration parameters
-    double fBeta = 0.25;
-    double fGamma = 0.5;
-    double fSpectralRadius = 1.;
+    REAL fBeta = 0.25;
+    REAL fGamma = 0.5;
+    REAL fSpectralRadius = 1.;
 
 public:
     //Positional elasticity 2D constructor
-    TransientPositionalTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme = ENewmark);
+    TransientPositionalTruss(int matid, int dim, REAL young, REAL area, REAL damp, REAL dens, REAL dt, TimeIntegScheme tscheme = ENewmark);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

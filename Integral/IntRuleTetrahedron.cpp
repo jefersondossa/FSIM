@@ -417,7 +417,7 @@ long double QUAD_TETRA_P14_pts[Length(QUAD_TETRA_P14_wts) * 4] = {
 int ComputingSymmetricCubatureRule(int order, MatrixDouble &Points, VecDouble &Weights) {
     if (order > 14) order = 14;
     int NRGAUPO[15] = {1, 1, 4, 8, 14, 14, 24, 35, 46, 61, 81, 109, 140, 171, 236};
-    double npoints = NRGAUPO[order];
+    REAL npoints = NRGAUPO[order];
 
     Points.resize(npoints, 3);
     Weights.resize(npoints);

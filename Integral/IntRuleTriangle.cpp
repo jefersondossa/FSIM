@@ -51,11 +51,11 @@ void IntRuleTriangle::SetOrder(int order) {
     {
         fPoints.resize(7,2);
         fWeights.resize(7);
-        double g1 = (6. - std::sqrt(15.)) / 21.;
-        double g2 = (6. + std::sqrt(15.)) / 21.;
+        REAL g1 = (6. - std::sqrt(15.)) / 21.;
+        REAL g2 = (6. + std::sqrt(15.)) / 21.;
 
-        double w1 = (155. - std::sqrt(15.)) / 2400.;
-        double w2 = (155. + std::sqrt(15.)) / 2400.;
+        REAL w1 = (155. - std::sqrt(15.)) / 2400.;
+        REAL w2 = (155. + std::sqrt(15.)) / 2400.;
 
         fPoints(0,0) = 1. / 3.;
         fPoints(0,1) = 1. / 3.;

@@ -1,6 +1,6 @@
 #include "DruckerPrager.h"
 
-DruckerPrager::DruckerPrager(WeakForm *elast, double phi, double psi, bool oe) : PlasticityModel(elast){
+DruckerPrager::DruckerPrager(WeakForm *elast, REAL phi, REAL psi, bool oe) : PlasticityModel(elast){
 
     fInternalFriction = phi;
     fOuterEdges = oe;
@@ -18,8 +18,8 @@ DruckerPrager::DruckerPrager(WeakForm *elast, double phi, double psi, bool oe) :
         fXi = 6.*cos(fInternalFriction)/(sqrt(3.)*(3.+sin(fInternalFriction))); 
         fEtaBar = 6.*sin(fDilatancyAngle)/(sqrt(3.)*(3.+sin(fDilatancyAngle)));
     }
-    double tanphi = tan(fInternalFriction);
-    double tanpsi = tan(fDilatancyAngle);
+    REAL tanphi = tan(fInternalFriction);
+    REAL tanpsi = tan(fDilatancyAngle);
     fEta = 3. * tanphi / sqrt(9. + 12.*tanphi*tanphi);
     fXi = 3. / sqrt(9. + 12.*tanphi*tanphi);
     fEtaBar = 3. * tanpsi / sqrt(9. + 12.*tanpsi*tanpsi);
@@ -45,9 +45,9 @@ void DruckerPrager::ComputeTangentStiffness(int &index, IntPointData &data, Matr
         // if (fApex){
         //     fTangentTensor3D = fBulkModulus*(1.-fBulkModulus/(fBulkModulus+fAlpha*fBeta*fHardening))*fId2xId2;  
         // }else{
-        //     double A = 1./(fShearModulus + fBulkModulus*fEta*fEtaBar + fXi*fXi*fHardening);
-        //     double sq2 = sqrt(2.);
-        //     double devstrainnorm = fTrialDevStrain.Norm();
+        //     REAL A = 1./(fShearModulus + fBulkModulus*fEta*fEtaBar + fXi*fXi*fHardening);
+        //     REAL sq2 = sqrt(2.);
+        //     REAL devstrainnorm = fTrialDevStrain.Norm();
         //     if (fabs(devstrainnorm) > 1.e-10){
         //         fTrialDevStrain /= devstrainnorm;
         //     } else {
@@ -93,51 +93,51 @@ void DruckerPrager::ComputeError(IntPointData &data, VecDouble &errors){
 };
 
 
-double DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
-    double YF = 0.;
-    double fCohesion = 0.;
+REAL DruckerPrager::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
+    REAL YF = 0.;
+    REAL fCohesion = 0.;
     if (fPlaneStress){
          
     } else {
         //Equation 8.101
-        double p = Stress.Trace()/3.;
+        REAL p = Stress.Trace()/3.;
         
         fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
         YF = sqrt(Stress.J2()) + fEta*p - fXi*fCohesion;
     }
-    // double tanphi = tan(fInternalFriction);
+    // REAL tanphi = tan(fInternalFriction);
     // fAlpha2 = tanphi / sqrt(9. + 12.*tanphi*tanphi);
     // fK = 3.*fCohesion / sqrt(9. + 12.*tanphi*tanphi); 
-    // double YF2 = sqrt(Stress.J2()) - fAlpha2 * Stress.I1() - fK;
+    // REAL YF2 = sqrt(Stress.J2()) - fAlpha2 * Stress.I1() - fK;
     return YF;
 }
 
-double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
+REAL DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
 
     // fEtaBar criasdo no .h
-    // double plinha = sqrt(Stress.J2()) / fK * (1. + 9.*fAlpha2*fAlpha2*fBulkModulus/fShearModulus);
-    // double sigmaDepsilon = data.fElasticStrainIncrement[index].DoubleContraction(Stress);
-    // double demm = data.fElasticStrainIncrement[index].Trace();
-    // double lambda = (sigmaDepsilon-(fK/(3.*fAlpha2))*demm*(plinha-1.))/(plinha*fK);
+    // REAL plinha = sqrt(Stress.J2()) / fK * (1. + 9.*fAlpha2*fAlpha2*fBulkModulus/fShearModulus);
+    // REAL sigmaDepsilon = data.fElasticStrainIncrement[index].DoubleContraction(Stress);
+    // REAL demm = data.fElasticStrainIncrement[index].Trace();
+    // REAL lambda = (sigmaDepsilon-(fK/(3.*fAlpha2))*demm*(plinha-1.))/(plinha*fK);
     //  auto plaststrain = data.fEffectivePlasticStrain[index];
-    // double dGamma = 0.;
+    // REAL dGamma = 0.;
     // if (fPlaneStress){
     //     PanicButton();
     // } else {
-    //     double p = Stress.Trace()/3.;
-    //     double sqJ2 = sqrt(Stress.J2());
+    //     REAL p = Stress.Trace()/3.;
+    //     REAL sqJ2 = sqrt(Stress.J2());
 
-    //     double fCohesion = 0.;
+    //     REAL fCohesion = 0.;
     //     fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
-    //     double PhiTil = sqJ2 + fEta*p -fXi*fCohesion;
+    //     REAL PhiTil = sqJ2 + fEta*p -fXi*fCohesion;
 
     //     int maxiter = 100;
     //     int iter = 0;
     //     while (fabs(PhiTil) > 1.e-5){
     //         iter++;
     //         if (iter == maxiter) break;
-    //         double d = -fShearModulus - fBulkModulus*fEtaBar*fEta - fHardening*fXi*fXi;
+    //         REAL d = -fShearModulus - fBulkModulus*fEtaBar*fEta - fHardening*fXi*fXi;
     //         dGamma -= PhiTil/d;
 
     //         data.fEffectivePlasticStrain[index] = plaststrain + fXi*dGamma;
@@ -156,11 +156,11 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D
     //         // PanicButton();
     //         //fAlpha and fBeta created on .h
     //         fApex = true;
-    //         double ptrial = Stress.Trace()/3.;
-    //         double fCohesion = 0.;
+    //         REAL ptrial = Stress.Trace()/3.;
+    //         REAL fCohesion = 0.;
     //         fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
-    //         double r = fCohesion*fBeta - ptrial;
-    //         double depsilon =0;
+    //         REAL r = fCohesion*fBeta - ptrial;
+    //         REAL depsilon =0;
     //         //Box 8.10
     //         int maxiter = 100;
     //         int iter = 0;
@@ -168,7 +168,7 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D
     //         while (fabs(r) > 1.e-5){
     //             iter++;
     //             if (iter == maxiter) break;
-    //             double d = fAlpha*fBeta*fHardening + fBulkModulus;
+    //             REAL d = fAlpha*fBeta*fHardening + fBulkModulus;
     //             depsilon -= r/d;
 
     //             data.fEffectivePlasticStrain[index] = plaststrain + fAlpha*depsilon;
@@ -183,48 +183,48 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D
     //     }
     // }
 
-    double dGamma = 0.;
-    double EETV = data.fElasticStrain[index].Trace();
-    double EPBARN = data.fEffectivePlasticStrain[index];
-    double PT = EETV * fBulkModulus;
-    double EEVD3=EETV / 3.;
+    REAL dGamma = 0.;
+    REAL EETV = data.fElasticStrain[index].Trace();
+    REAL EPBARN = data.fEffectivePlasticStrain[index];
+    REAL PT = EETV * fBulkModulus;
+    REAL EEVD3=EETV / 3.;
     Tensor3D strial;
     strial.Zero();
-    double P,EPBAR;
+    REAL P,EPBAR;
 
     strial.fXX() = 2. * fShearModulus * (data.fElasticStrain[index].fXX() - EEVD3);
     strial.fYY() = 2. * fShearModulus * (data.fElasticStrain[index].fYY() - EEVD3);
     strial.fZZ() = 2. * fShearModulus * (data.fElasticStrain[index].fZZ() - EEVD3);
     strial.fXY() = 2. * fShearModulus * (data.fElasticStrain[index].fXY()*0.5);
 
-    double VARJ2T = strial.fXY()*strial.fXY() + .5*(strial.fXX()*strial.fXX()+strial.fYY()*strial.fYY()+strial.fZZ()*strial.fZZ());
+    REAL VARJ2T = strial.fXY()*strial.fXY() + .5*(strial.fXX()*strial.fXX()+strial.fYY()*strial.fYY()+strial.fZZ()*strial.fZZ());
     
-    double fCohesion = 0.;
+    REAL fCohesion = 0.;
     fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
         
-    double SQRJ2T=sqrt(VARJ2T);
-    double PHI=SQRJ2T+fEta*PT-fXi*fCohesion;
-    double RES=PHI;
+    REAL SQRJ2T=sqrt(VARJ2T);
+    REAL PHI=SQRJ2T+fEta*PT-fXi*fCohesion;
+    REAL RES=PHI;
     if (fCohesion != 0.)RES=RES/fabs(fCohesion);
 
-    double tol = 1.e-8;
+    REAL tol = 1.e-8;
     int maxiter = 100;
-    double FACTOR = 0.;
+    REAL FACTOR = 0.;
 
     if (RES > tol){
         fApex = false;
         int iter = 0;
         while (iter < maxiter){
-            double DENOM = -fShearModulus-fBulkModulus*fEtaBar*fEta-fXi*fXi*fHardening;
-            double DDGAMA = -PHI/DENOM;
-            double dGamma = dGamma + DDGAMA;
+            REAL DENOM = -fShearModulus-fBulkModulus*fEtaBar*fEta-fXi*fXi*fHardening;
+            REAL DDGAMA = -PHI/DENOM;
+            REAL dGamma = dGamma + DDGAMA;
             EPBAR = EPBARN + fXi*dGamma;
             fUniaxialYield(EPBAR,fCohesion,fHardening);
-            double SQRJ2 = SQRJ2T - fShearModulus*dGamma;
+            REAL SQRJ2 = SQRJ2T - fShearModulus*dGamma;
             P = PT-fBulkModulus*fEtaBar*dGamma;
             PHI = SQRJ2+fEta*P-fXi*fCohesion;
 
-            double RESNOR = fabs(PHI);
+            REAL RESNOR = fabs(PHI);
             
             if (fCohesion != 0) RESNOR = RESNOR/fabs(fCohesion);
             if (RESNOR <= tol){
@@ -239,13 +239,13 @@ double DruckerPrager::PlasticMultiplier(int &index, IntPointData &data, Tensor3D
                 if (fEta == 0 || fEtaBar == 0){
                     PanicButton();
                 }
-                double DEPV = 0.;
+                REAL DEPV = 0.;
                 EPBAR = EPBARN;
                 fUniaxialYield(EPBAR,fCohesion,fHardening);
                 RES = fBeta * fCohesion - PT;
                 while (iter < maxiter){
                     DENOM=fAlpha*fBeta*fHardening+fBulkModulus;
-                    double DDEPV=-RES/DENOM;
+                    REAL DDEPV=-RES/DENOM;
                     DEPV=DEPV+DDEPV;
                     EPBAR=EPBARN+fAlpha*DEPV;
                     fUniaxialYield(EPBAR,fCohesion,fHardening);

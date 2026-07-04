@@ -1,7 +1,7 @@
 #include "ElasticTruss.h"
 #include "Element.h"
 
-ElasticTruss::ElasticTruss(int matid, int dim, double young, double area) : WeakForm() {
+ElasticTruss::ElasticTruss(int matid, int dim, REAL young, REAL area) : WeakForm() {
     this->fMatId = matid;
     fDimension = dim;
     fNState = dim;
@@ -19,19 +19,19 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fSol.resize(fNState);
     }
     
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
-    double elementLenght = 2.*data.fJacA0;
-    double K = fYoungModulus * fArea / elementLenght;
+    REAL elementLenght = 2.*data.fJacA0;
+    REAL K = fYoungModulus * fArea / elementLenght;
 
 
     MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
     MatrixDouble matB(fDimension,fDimension*nphi);
     rotation.setZero();
     matB.setZero();
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
-    double check = sina*sina+cosa*cosa;
+    REAL cosa = data.fAxes0(0,0) / data.fJacA0;
+    REAL sina = data.fAxes0(1,0) / data.fJacA0;
+    REAL check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
         // for (int i = 0; i < fDimension; i++){
             matB(0,fDimension*j) = data.fDPhiX0(0,j);
@@ -51,22 +51,22 @@ void ElasticTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
 void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     auto force = fForceFunction;
     VecDouble forcingF(fDimension);
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
     
-    double elementLenght = 2.*data.fJacA0;
-    double K = fYoungModulus * fArea / elementLenght;
+    REAL elementLenght = 2.*data.fJacA0;
+    REAL K = fYoungModulus * fArea / elementLenght;
 
     MatrixDouble rotation(fDimension*nphi,fDimension*nphi);
     MatrixDouble matB(fDimension,fDimension*nphi);
     rotation.setZero();
     matB.setZero();
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
-    double check = sina*sina+cosa*cosa;
+    REAL cosa = data.fAxes0(0,0) / data.fJacA0;
+    REAL sina = data.fAxes0(1,0) / data.fJacA0;
+    REAL check = sina*sina+cosa*cosa;
     for (int j = 0; j < nphi; j++){
         // for (int i = 0; i < fDimension; i++){
             matB(0,fDimension*j) = data.fDPhiX0(0,j);
@@ -85,10 +85,10 @@ void ElasticTruss::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     Rhs += rotation * matB.transpose() * sol * WJ * elementLenght * K;
 
     for (int i = nphi; i--; ){
-        double shapeFi = data.fPhi[i];
+        REAL shapeFi = data.fPhi[i];
         //External force
-        double Fx = forcingF[0] * shapeFi;
-        double Fy = forcingF[1] * shapeFi;
+        REAL Fx = forcingF[0] * shapeFi;
+        REAL Fy = forcingF[1] * shapeFi;
         Rhs[2*i  ] += Fx * WJ;
         Rhs[2*i+1] += Fy * WJ;
     };
@@ -196,8 +196,8 @@ int ElasticTruss::NSolutionVariables(int var) const{
 
 void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
+    REAL cosa = data.fAxes0(0,0) / data.fJacA0;
+    REAL sina = data.fAxes0(1,0) / data.fJacA0;
 
     VecDouble nodalSol(4);
     auto connect = data.fElement->getConnectivity();
@@ -205,9 +205,9 @@ void ElasticTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
         nodalSol[2*i  ] = connect[i]->GetSolution(0);
         nodalSol[2*i+1] = connect[i]->GetSolution(1);
     }
-    double elementLenght = 2.*data.fJacA0;
+    REAL elementLenght = 2.*data.fJacA0;
 
-    double strain = (nodalSol[2]-nodalSol[0])*cosa/elementLenght + (nodalSol[3]-nodalSol[1])*sina/elementLenght;
+    REAL strain = (nodalSol[2]-nodalSol[0])*cosa/elementLenght + (nodalSol[3]-nodalSol[1])*sina/elementLenght;
 
     //Displacement
     if (var == 1){

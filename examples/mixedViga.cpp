@@ -15,8 +15,8 @@ MixedCompMesh* CreateMixedMesh(std::vector<CompMesh *> &meshvector);
 const int dimension = 2;
 
 
-double ModElasticity = 1.e7;
-double PoissonRatio = 0.49999;
+REAL ModElasticity = 1.e7;
+REAL PoissonRatio = 0.49999;
 
 auto forcingFunction1 = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
@@ -37,7 +37,7 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    double E = ModElasticity;
+    REAL E = ModElasticity;
 
     u[0] = (1/E) * (24*x*y - 120*x);
     u[1] = (1/E) * (-12*x*x - 3.6*y*y + 36*y);
@@ -86,8 +86,8 @@ void SolveProblem(CompMesh *cmesh){
     
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (sol.dot(rhs))/2;
-    double strainEnergy2 = 0.0;
+    REAL strainEnergy = (sol.dot(rhs))/2;
+    REAL strainEnergy2 = 0.0;
     for (int i = 0; i < sol.size(); i++){
         if (fabs(sol[i])>1.e3 || fabs(rhs[i])>1.e3)continue;
         strainEnergy2 += sol[i]*rhs[i]/2.;

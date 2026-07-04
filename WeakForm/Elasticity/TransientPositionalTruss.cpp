@@ -1,6 +1,6 @@
 #include "TransientPositionalTruss.h"
 
-TransientPositionalTruss::TransientPositionalTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme) : PositionalTruss(matid,dim,young,area) {    
+TransientPositionalTruss::TransientPositionalTruss(int matid, int dim, REAL young, REAL area, REAL damp, REAL dens, REAL dt, TimeIntegScheme tscheme) : PositionalTruss(matid,dim,young,area) {    
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
@@ -12,9 +12,9 @@ void TransientPositionalTruss::ComputeStiffness(int &index, IntPointData &data, 
     PositionalTruss::ComputeStiffness(index,data,Stiffness);
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     
-    double initLenght = 2.*data.fJacA0;
+    REAL initLenght = 2.*data.fJacA0;
     MatrixDouble Mass(2*nphi,2*nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -40,7 +40,7 @@ void TransientPositionalTruss::ComputeResidual(int &index, IntPointData &data, V
 
     PositionalTruss::ComputeResidual(index,data,Rhs);
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fArea * fDensity;
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fArea * fDensity;
     
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;

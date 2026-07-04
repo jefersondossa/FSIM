@@ -1,6 +1,6 @@
 #include "GlobalLocalEnrichment.h"
 
-GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double young, double poisson, bool planes, double thick) : WeakForm() {
+GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, REAL young, REAL poisson, bool planes, REAL thick) : WeakForm() {
     this->fMatId = matid;
     fNState = 2;
     fYoungModulus = young;
@@ -12,9 +12,9 @@ GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double yo
     fConstitutiveMatrix.setZero();
 
     if (fPlaneStress){//Plane Stress Matrix
-        double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
-        double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
-        double k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
+        REAL fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        REAL fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+        REAL k = fYoungModulus / (1. - fPoissonRatio * fPoissonRatio);
         fConstitutiveMatrix(0,0) = k;
         fConstitutiveMatrix(0,1) = k * fPoissonRatio;
         fConstitutiveMatrix(1,0) = k * fPoissonRatio;
@@ -22,9 +22,9 @@ GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, double yo
         fConstitutiveMatrix(2,2) = k * (1. - fPoissonRatio) * 0.5; 
     }else{
         //Plane Strain Matrix
-        double fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
-        double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
-        double aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
+        REAL fBulkModulus = fYoungModulus / (3. * (1.-2.*fPoissonRatio));
+        REAL fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+        REAL aux = fYoungModulus /(( 1. + fPoissonRatio)*(1.-2.*fPoissonRatio));
         fConstitutiveMatrix(0,0) = (1.-fPoissonRatio) * aux;
         fConstitutiveMatrix(0,1) = aux * fPoissonRatio;
         fConstitutiveMatrix(1,0) = aux * fPoissonRatio;
@@ -47,7 +47,7 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
         globaldata.fSol.resize(fNState);
     }
 
-    double WJ = localdata.fWeight * localdata.fJacA0;
+    REAL WJ = localdata.fWeight * localdata.fJacA0;
     int nphi = globaldata.fPhi.size();
 
     MatrixDouble matB(3,2*nphi);
@@ -58,12 +58,12 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
     matBEnr.setZero();
     matBTot.setZero();
 
-    double uXInterp = localdata.fSol[0];
-    double uYInterp = localdata.fSol[1];
-    double dUxdx = localdata.fDSolDx(0,0);
-    double dUydy = localdata.fDSolDx(1,1);
-    double dUxdy = localdata.fDSolDx(0,1);
-    double dUydx = localdata.fDSolDx(1,0);
+    REAL uXInterp = localdata.fSol[0];
+    REAL uYInterp = localdata.fSol[1];
+    REAL dUxdx = localdata.fDSolDx(0,0);
+    REAL dUydy = localdata.fDSolDx(1,1);
+    REAL dUxdy = localdata.fDSolDx(0,1);
+    REAL dUydx = localdata.fDSolDx(1,0);
 
     for (int j = 0; j < nphi; j++){
 
@@ -96,7 +96,7 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
     if (globaldata.fA0.rows() == 2) return;
 
     int nphi = globaldata.fPhi.size();
-    double WJ = localdata.fWeight * localdata.fJacA0;
+    REAL WJ = localdata.fWeight * localdata.fJacA0;
 
     // MatrixDouble matB(3,2*nphi);
     // MatrixDouble matBEnr(3,2*nphi);
@@ -112,12 +112,12 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
     VecDouble x_ = globaldata.fX;
     if (force) force(x_,forcingF);
 
-    double uXInterp = localdata.fSol[0];
-    double uYInterp = localdata.fSol[1];
-    // double dUxdx = localdata.fDSolDx(0,0);
-    // double dUydy = localdata.fDSolDx(1,1);
-    // double dUxdy = localdata.fDSolDx(0,1);
-    // double dUydx = localdata.fDSolDx(1,0);
+    REAL uXInterp = localdata.fSol[0];
+    REAL uYInterp = localdata.fSol[1];
+    // REAL dUxdx = localdata.fDSolDx(0,0);
+    // REAL dUydy = localdata.fDSolDx(1,1);
+    // REAL dUxdy = localdata.fDSolDx(0,1);
+    // REAL dUydx = localdata.fDSolDx(1,0);
     
     // for (int j = 0; j < nphi; j++){
     //     matB(0,2*j  ) = globaldata.fDPhiX0(0,j);
@@ -143,10 +143,10 @@ void GlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &localdata,
     // Rhs -= matBTot.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
-        double shapeFi = globaldata.fPhi[i];
+        REAL shapeFi = globaldata.fPhi[i];
         //External force
-        double Fx = forcingF[0] * uXInterp * shapeFi; 
-        double Fy = forcingF[1] * uYInterp * shapeFi;
+        REAL Fx = forcingF[0] * uXInterp * shapeFi; 
+        REAL Fy = forcingF[1] * uYInterp * shapeFi;
         Rhs[2*nphi + 2*i] += Fx * WJ;
         Rhs[2*nphi + 2*i+1] += Fy * WJ;
     };

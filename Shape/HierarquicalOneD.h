@@ -55,8 +55,8 @@ public:
 
 
 
-    static void Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
-    static void Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi);
+    static void Chebyshev(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi);
+    static void Legendre(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi);
 
     
 };

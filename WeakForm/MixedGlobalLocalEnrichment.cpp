@@ -1,6 +1,6 @@
 #include "MixedGlobalLocalEnrichment.h"
 
-MixedGlobalLocalEnrichment::MixedGlobalLocalEnrichment(int matid, int dimension, double young, double poisson) : WeakForm() {
+MixedGlobalLocalEnrichment::MixedGlobalLocalEnrichment(int matid, int dimension, REAL young, REAL poisson) : WeakForm() {
     this->fMatId = matid;
     this->fNState = 2;
     fDimension = dimension;
@@ -43,7 +43,7 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
     
     if (globaldata[0]->fA0.rows() != 2) return;
 
-    double WJ = localdata.fWeight * localdata.fJacA0;
+    REAL WJ = localdata.fWeight * localdata.fJacA0;
     int nphiU = globaldata[0]->fPhi.size();
     int nphiP = globaldata[1]->fPhi.size();
 
@@ -55,12 +55,12 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
     matBEnr.setZero();
     matBTot.setZero();
 
-    double uXInterp = localdata.fSol[0];
-    double uYInterp = localdata.fSol[1];
-    double dUxdx = localdata.fDSolDx(0,0);
-    double dUydy = localdata.fDSolDx(1,1);
-    double dUxdy = localdata.fDSolDx(0,1);
-    double dUydx = localdata.fDSolDx(1,0);
+    REAL uXInterp = localdata.fSol[0];
+    REAL uYInterp = localdata.fSol[1];
+    REAL dUxdx = localdata.fDSolDx(0,0);
+    REAL dUydy = localdata.fDSolDx(1,1);
+    REAL dUxdy = localdata.fDSolDx(0,1);
+    REAL dUydx = localdata.fDSolDx(1,0);
 
     for (int j = 0; j < nphiU; j++){
 
@@ -118,7 +118,7 @@ void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &local
     if (globaldata[0]->fA0.rows() == 2) return;
 
     int nphi = globaldata[0]->fPhi.size();
-    double WJ = localdata.fWeight * localdata.fJacA0;
+    REAL WJ = localdata.fWeight * localdata.fJacA0;
 
     // MatrixDouble matB(3,2*nphi);
     // MatrixDouble matBEnr(3,2*nphi);
@@ -134,12 +134,12 @@ void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &local
     VecDouble x_ = globaldata[0]->fX;
     if (force) force(x_,forcingF);
 
-    double uXInterp = localdata.fSol[0];
-    double uYInterp = localdata.fSol[1];
-    // double dUxdx = localdata.fDSolDx(0,0);
-    // double dUydy = localdata.fDSolDx(1,1);
-    // double dUxdy = localdata.fDSolDx(0,1);
-    // double dUydx = localdata.fDSolDx(1,0);
+    REAL uXInterp = localdata.fSol[0];
+    REAL uYInterp = localdata.fSol[1];
+    // REAL dUxdx = localdata.fDSolDx(0,0);
+    // REAL dUydy = localdata.fDSolDx(1,1);
+    // REAL dUxdy = localdata.fDSolDx(0,1);
+    // REAL dUydx = localdata.fDSolDx(1,0);
     
     // for (int j = 0; j < nphi; j++){
     //     matB(0,2*j  ) = globaldata.fDPhiX0(0,j);
@@ -165,10 +165,10 @@ void MixedGlobalLocalEnrichment::ComputeResidual(int &index, IntPointData &local
     // Rhs -= matBTot.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
-        double shapeFi = globaldata[0]->fPhi[i];
+        REAL shapeFi = globaldata[0]->fPhi[i];
         //External force
-        double Fx = forcingF[0] * uXInterp * shapeFi; 
-        double Fy = forcingF[1] * uYInterp * shapeFi;
+        REAL Fx = forcingF[0] * uXInterp * shapeFi; 
+        REAL Fy = forcingF[1] * uYInterp * shapeFi;
         Rhs[2*nphi + 2*i] += Fx * WJ;
         Rhs[2*nphi + 2*i+1] += Fy * WJ;
     };

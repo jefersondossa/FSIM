@@ -26,7 +26,7 @@ void WindowConstructor::fHeaderFile(){
     new_header << endl;
     new_header << "{" << endl;
 
-    new_header << "auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){" << endl;
+    new_header << "auto yieldFunction = [](const REAL &plast, REAL &sigma_y, REAL &hardening){" << endl;
     new_header << "hardening = 500.;" << endl;
     new_header << "sigma_y =.5+hardening*plast;" << endl;
     new_header << "};" << endl;

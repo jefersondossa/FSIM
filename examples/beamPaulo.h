@@ -65,9 +65,9 @@
     // std::set<int> matid = {6};
     // std::map<std::string,VecDouble> result;
     // cmesh->Integrate(matid,integrate,result);
-    // double aux = 206.9/((1.29)*(1.-2.*.29));
-    // double valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
-    // double valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
+    // REAL aux = 206.9/((1.29)*(1.-2.*.29));
+    // REAL valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
+    // REAL valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
     // int a = 0;
     
 }           

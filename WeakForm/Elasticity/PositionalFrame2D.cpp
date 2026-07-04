@@ -2,7 +2,7 @@
 #include "IntRule1d.h"
 
 
-PositionalFrame2D::PositionalFrame2D(int matid, double young, double base, double height) : WeakForm() {
+PositionalFrame2D::PositionalFrame2D(int matid, REAL young, REAL base, REAL height) : WeakForm() {
     this->fMatId = matid;
     fDimension = 1;
     fNState = 3;
@@ -25,15 +25,15 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
 
     //Tangent vector
     VecDouble normalVersor(2), normalVersorUp(2);
-    double normTangent = sqrt(data.fAxes0(0,0)*data.fAxes0(0,0) + data.fAxes0(1,0)*data.fAxes0(1,0));
-    double normTangentUp = sqrt(data.fAxes1(0,0)*data.fAxes1(0,0) + data.fAxes1(1,0)*data.fAxes1(1,0));
+    REAL normTangent = sqrt(data.fAxes0(0,0)*data.fAxes0(0,0) + data.fAxes0(1,0)*data.fAxes0(1,0));
+    REAL normTangentUp = sqrt(data.fAxes1(0,0)*data.fAxes1(0,0) + data.fAxes1(1,0)*data.fAxes1(1,0));
     normalVersor[0] = -data.fAxes0(1,0)/normTangent;
     normalVersor[1] =  data.fAxes0(0,0)/normTangent;
     normalVersorUp[0] = -data.fAxes1(1,0)/normTangentUp;
     normalVersorUp[1] =  data.fAxes1(0,0)/normTangentUp;
-    double theta0 = atan2(normalVersor[1],normalVersor[0]);
-    // double theta1 = atan2(normalVersorUp[1],normalVersorUp[0]);
-    double theta1 = theta0 + data.fSol[2];
+    REAL theta0 = atan2(normalVersor[1],normalVersor[0]);
+    // REAL theta1 = atan2(normalVersorUp[1],normalVersorUp[0]);
+    REAL theta1 = theta0 + data.fSol[2];
 
     int nphi = data.fPhi.size();
 
@@ -43,8 +43,8 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
     A1.setZero();
 
     for (int eta = 0; eta < ruleEta.NPoints(); eta++){
-        double coordEta = ruleEta.PointList(eta,0);
-        double weightEta = ruleEta.WeightList(eta);
+        REAL coordEta = ruleEta.PointList(eta,0);
+        REAL weightEta = ruleEta.WeightList(eta);
         
         ComputeA0A1(data, coordEta, theta0, theta1, A0, A1);
         
@@ -53,7 +53,7 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
         ComputeGreenStrain(data, A0inv, A1, E);
 
         //Jacobian value (Equation 6.50)
-        double J0 = A0(0,0) * A0(1,1) - A0(0,1) * A0(1,0);
+        REAL J0 = A0(0,0) * A0(1,1) - A0(0,1) * A0(1,0);
 
         //Saint-Venant_Kirchhoff Stress
         //Equation 6.62 to 6.65)
@@ -101,8 +101,8 @@ void PositionalFrame2D::ComputeStiffness(int &index, IntPointData &data, MatrixD
                         MatrixDouble DSDy = fYoungModulus * DEDy_zeta;
 
                         //Equation 6.76
-                        double DSDYcDEDy = DoubleContraction(DSDy,DEDy_beta);
-                        double ScD2EDY2 = DoubleContraction(S,D2E_DY2);                  
+                        REAL DSDYcDEDy = DoubleContraction(DSDy,DEDy_beta);
+                        REAL ScD2EDY2 = DoubleContraction(S,D2E_DY2);                  
 
                         int j = 3 * (beta) + alpha;
                         int i = 3 * (zeta) + gama;
@@ -127,13 +127,13 @@ void PositionalFrame2D::ComputeResidual(int &index, IntPointData &data, VecDoubl
 
     //Tangent vector
     VecDouble normalVersor(2);
-    double normTangent = sqrt(data.fAxes0(0,0)*data.fAxes0(0,0) + data.fAxes0(1,0)*data.fAxes0(1,0));
-    double normTangentUp = sqrt(data.fAxes1(0,0)*data.fAxes1(0,0) + data.fAxes1(1,0)*data.fAxes1(1,0));
+    REAL normTangent = sqrt(data.fAxes0(0,0)*data.fAxes0(0,0) + data.fAxes0(1,0)*data.fAxes0(1,0));
+    REAL normTangentUp = sqrt(data.fAxes1(0,0)*data.fAxes1(0,0) + data.fAxes1(1,0)*data.fAxes1(1,0));
     normalVersor[0] = -data.fAxes0(1,0)/normTangent;
     normalVersor[1] =  data.fAxes0(0,0)/normTangent;
-    double theta0 = atan2(normalVersor[1],normalVersor[0]);
-    // double theta1 = atan2(normalVersorUp[1],normalVersorUp[0]);
-    double theta1 = theta0 + data.fSol[2];
+    REAL theta0 = atan2(normalVersor[1],normalVersor[0]);
+    // REAL theta1 = atan2(normalVersorUp[1],normalVersorUp[0]);
+    REAL theta1 = theta0 + data.fSol[2];
     
     int nphi = data.fPhi.size();
 
@@ -143,8 +143,8 @@ void PositionalFrame2D::ComputeResidual(int &index, IntPointData &data, VecDoubl
     A1.setZero();
     
     for (int eta = 0; eta < ruleEta.NPoints(); eta++){
-        double coordEta = ruleEta.PointList(eta,0);
-        double weightEta = ruleEta.WeightList(eta);
+        REAL coordEta = ruleEta.PointList(eta,0);
+        REAL weightEta = ruleEta.WeightList(eta);
         
         ComputeA0A1(data, coordEta, theta0, theta1, A0, A1);
     
@@ -154,7 +154,7 @@ void PositionalFrame2D::ComputeResidual(int &index, IntPointData &data, VecDoubl
         ComputeGreenStrain(data, A0inv, A1, E);
 
         //Jacobian value (Equation 6.50)
-        double J0 = A0(0,0) * A0(1,1) - A0(0,1) * A0(1,0);
+        REAL J0 = A0(0,0) * A0(1,1) - A0(0,1) * A0(1,0);
 
         //Saint-Venant_Kirchhoff Stress
         //Equation 6.62 to 6.65)
@@ -172,7 +172,7 @@ void PositionalFrame2D::ComputeResidual(int &index, IntPointData &data, VecDoubl
                 ComputeDE_DY(A0inv, A1, DA1DY_beta, DEDy);
 
                 int i = 3 * (beta) + alpha;
-                double ScDEDY = DoubleContraction(S,DEDy);
+                REAL ScDEDY = DoubleContraction(S,DEDy);
 
                 Rhs[i] -= (ScDEDY + forcingF[alpha]) * weightEta * J0 * data.fWeight * fDepth;
             }
@@ -243,8 +243,8 @@ void PositionalFrame2D::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
 }; 
 
-void PositionalFrame2D::ComputeA0A1(IntPointData &data, double coordEta, double &theta0, double &theta1, MatrixDouble &A0, MatrixDouble &A1){
-    double dTheta0Dxi = 0.;
+void PositionalFrame2D::ComputeA0A1(IntPointData &data, REAL coordEta, REAL &theta0, REAL &theta1, MatrixDouble &A0, MatrixDouble &A1){
+    REAL dTheta0Dxi = 0.;
 
     //TODO: the following code works to straigt bars. Please implement the computation of theta_0 in the beggining of the analysis to ensure curved bars will be properly computed.
     for (int i = 0; i < data.fPhi.size(); i++){
@@ -270,13 +270,13 @@ void PositionalFrame2D::ComputeA0A1(IntPointData &data, double coordEta, double 
 void PositionalFrame2D::ComputeGreenStrain(IntPointData &data, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &E){
     //Cauchy_Green Stretching (Equation 6.46)
     MatrixDouble A = A1 * A0inv;
-    double detA = A.determinant();    
+    REAL detA = A.determinant();    
     //Green Deformation
-    MatrixDouble Identity = Matrix2d::Identity();
+    MatrixDouble Identity = Matrix2R::Identity();
     E = 0.5 * (A.transpose()*A - Identity);
 }
 
-void PositionalFrame2D::ComputeDA1_DY(IntPointData &data, int &direction, double &theta1, double &coordEta, int &beta, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY){
+void PositionalFrame2D::ComputeDA1_DY(IntPointData &data, int &direction, REAL &theta1, REAL &coordEta, int &beta, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY){
     DA1_DY.setZero();
     switch (direction){
     case 0:
@@ -310,6 +310,6 @@ void PositionalFrame2D::ComputeDE_DY(MatrixDouble &A0inv, MatrixDouble &A1, Matr
 }
 
 
-double PositionalFrame2D::DoubleContraction(const MatrixDouble &A, const MatrixDouble &B){
+REAL PositionalFrame2D::DoubleContraction(const MatrixDouble &A, const MatrixDouble &B){
     return A(0,0)*B(0,0) + A(1,0)*B(1,0) + A(0,1)*B(0,1) + A(1,1)*B(1,1);
 }

@@ -77,7 +77,7 @@ public:
         fLocalElement->ComputeCurrentSpatialDerivatives();
     };
 
-    double getJacobian()override{
+    REAL getJacobian()override{
         fLocalElement->getJacobian();
     };
 
@@ -137,11 +137,11 @@ public:
         return fLocalElement->getNumberOfIntegrationPoints();
     };
 
-    double IntegPointWeight(int index) override{
+    REAL IntegPointWeight(int index) override{
         return fLocalElement->IntegPointWeight(index);
     };
 
-    double IntegPointCoordinate(int index, int dir) override{
+    REAL IntegPointCoordinate(int index, int dir) override{
         return fLocalElement->IntegPointCoordinate(index, dir);
     };
 
@@ -149,7 +149,7 @@ public:
         return fLocalElement->ComputeIntPointDistFunction(nodalval);
     };
 
-    double InterpolateVariable(VecDouble &nValues, int point) override{
+    REAL InterpolateVariable(VecDouble &nValues, int point) override{
         return fLocalElement->InterpolateVariable(nValues, point);
     };
 

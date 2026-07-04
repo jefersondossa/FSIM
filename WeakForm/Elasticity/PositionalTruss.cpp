@@ -1,6 +1,6 @@
 #include "PositionalTruss.h"
 
-PositionalTruss::PositionalTruss(int matid, int dim, double young, double area) : WeakForm() {
+PositionalTruss::PositionalTruss(int matid, int dim, REAL young, REAL area) : WeakForm() {
     this->fMatId = matid;
     fDimension = dim;
     fNState = dim;
@@ -16,15 +16,15 @@ void PositionalTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDou
     }
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     
     //Green-Lagrange strain tensor
-    double initLenght = 2.*data.fJacA0;
-    double currLenght = 2.*data.fJacA1;
-    double E = 0.5 * (currLenght*currLenght/(initLenght*initLenght) - 1.);
+    REAL initLenght = 2.*data.fJacA0;
+    REAL currLenght = 2.*data.fJacA1;
+    REAL E = 0.5 * (currLenght*currLenght/(initLenght*initLenght) - 1.);
     
     //Piola-Kirchhoff stress tensor
-    double S = fYoungModulus * E;
+    REAL S = fYoungModulus * E;
 
     VecDouble DeltaY = (data.fAxes1 * 2.) / initLenght;
 
@@ -34,9 +34,9 @@ void PositionalTruss::ComputeStiffness(int &index, IntPointData &data, MatrixDou
             //element tangent matrix
             for (int b = 0; b < nphi; b++){
                 for (int l = 0; l < fDimension; l++){
-                    double dkronecker = 0.;
+                    REAL dkronecker = 0.;
                     if (k==l) dkronecker = 1.;
-                    double aux = pow(-1.,a+1) * pow(-1.,b+1) * (fYoungModulus*DeltaY[k]*DeltaY[l] + S*dkronecker) * (fArea / initLenght);
+                    REAL aux = pow(-1.,a+1) * pow(-1.,b+1) * (fYoungModulus*DeltaY[k]*DeltaY[l] + S*dkronecker) * (fArea / initLenght);
 
                     Stiffness(fDimension*a+k,fDimension*b+l) += aux * data.fWeight / 2.;
                 }
@@ -52,12 +52,12 @@ void PositionalTruss::ComputeResidual(int &index, IntPointData &data, VecDouble 
     int nphi = data.fPhi.size();
     
     //Green-Lagrange strain tensor
-    double initLenght = 2.*data.fJacA0;
-    double currLenght = 2.*data.fJacA1;
-    double E = 0.5 * (currLenght*currLenght/(initLenght*initLenght) - 1.);
+    REAL initLenght = 2.*data.fJacA0;
+    REAL currLenght = 2.*data.fJacA1;
+    REAL E = 0.5 * (currLenght*currLenght/(initLenght*initLenght) - 1.);
     
     //Piola-Kirchhoff stress tensor
-    double S = fYoungModulus * E;
+    REAL S = fYoungModulus * E;
 
     VecDouble DeltaY = (data.fAxes1 * 2.);
 
@@ -65,7 +65,7 @@ void PositionalTruss::ComputeResidual(int &index, IntPointData &data, VecDouble 
     for (int b = 0; b < nphi; b++){
         for (int k = 0; k < fDimension; k++){
             //Internal force
-            double aux = fArea * S * pow(-1.,b+1) * DeltaY[k] / currLenght;
+            REAL aux = fArea * S * pow(-1.,b+1) * DeltaY[k] / currLenght;
             
             Rhs[fDimension*b + k] -= aux * data.fWeight / 2.;
             
@@ -122,8 +122,8 @@ void PositionalTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
     //NormalStress
     if (var == 2){
-        double cosa = data.fAxes0(0,0) / data.fJacA0;
-        double sina = data.fAxes0(1,0) / data.fJacA0;
+        REAL cosa = data.fAxes0(0,0) / data.fJacA0;
+        REAL sina = data.fAxes0(1,0) / data.fJacA0;
         Sol[0] = fYoungModulus * (data.fDSolDx(1,0)*sina - data.fDSolDx(0,0)*cosa) ;
         return;
     };
@@ -146,7 +146,7 @@ void PositionalTruss::Solution(IntPointData &data, int var, VecDouble &Sol) {
     
     //Exact Sigma X
     if (var == 4){
-        double epsilon = gradDisp.norm();
+        REAL epsilon = gradDisp.norm();
         Sol[0] = fYoungModulus * epsilon;
         return;
     };

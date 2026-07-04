@@ -38,10 +38,10 @@ bool RunChamine(){
     internalField[0] = 42.5;//m/s
     
     //"standard" turbulence model parameters
-    double puniform = 0.0;
-    double nutuniform = 0.00001;
-    double kuniform = 0.00107334375;
-    double omegauniform = 100.0;
+    REAL puniform = 0.0;
+    REAL nutuniform = 0.00001;
+    REAL kuniform = 0.00107334375;
+    REAL omegauniform = 100.0;
     
     if (!openFOAMWriter.WriteInitialConditions(internalField,puniform,nutuniform,kuniform,omegauniform)) {
         std::cerr << "Failed to write initial conditions." << std::endl;
@@ -49,28 +49,28 @@ bool RunChamine(){
     };
 
     //Values for 300 Kelvin air
-    double visc = 1.85e-5;//kg/m-s
-    double dens = 1.226;//kg/m^3
+    REAL visc = 1.85e-5;//kg/m-s
+    REAL dens = 1.226;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
         std::cerr << "Failed to write the constant folder." << std::endl;
         return 1;
     };
 
     //Distance from inlet and outlet boundaries to the building - must be given in meters
-    double dInlet = 3.;
-    double dOutlet = 20.;
+    REAL dInlet = 3.;
+    REAL dOutlet = 20.;
     //Cell size must be given in meters - this represents the max size of elements.
-    double cellSizex = 0.5;
-    double cellSizey = 0.5;
-    double cellSizez = 4.;
+    REAL cellSizex = 0.5;
+    REAL cellSizey = 0.5;
+    REAL cellSizez = 4.;
     //Refinement levels from boundary to the building - default is 2 levels
     int nRefinements = 4;
     //Proportion of inlet and outlet distances to be refined from the building [0,1]
-    double refProportion = 0.2; 
+    REAL refProportion = 0.2; 
     //Time variables  - must be given in seconds
-    double dt = 0.01;
-    double endTime = 150.;
-    double writeInterval = 0.1; 
+    REAL dt = 0.01;
+    REAL endTime = 150.;
+    REAL writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
         return 1;
@@ -120,10 +120,10 @@ bool RunBuildingRafaelTCC(){
     internalField[0] = 30.;//m/s
     
     //"standard" turbulence model parameters
-    double puniform = 0.0;
-    double nutuniform = 0.00001;
-    double kuniform = 0.00107334375;
-    double omegauniform = 100.0;
+    REAL puniform = 0.0;
+    REAL nutuniform = 0.00001;
+    REAL kuniform = 0.00107334375;
+    REAL omegauniform = 100.0;
     
     if (!openFOAMWriter.WriteInitialConditions(internalField,puniform,nutuniform,kuniform,omegauniform)) {
         std::cerr << "Failed to write initial conditions." << std::endl;
@@ -131,28 +131,28 @@ bool RunBuildingRafaelTCC(){
     };
 
     //Values for 300 Kelvin air
-    double visc = 1.85e-5;//kg/m-s
-    double dens = 1.226;//kg/m^3
+    REAL visc = 1.85e-5;//kg/m-s
+    REAL dens = 1.226;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
         std::cerr << "Failed to write the constant folder." << std::endl;
         return 1;
     };
 
     //Distance from inlet and outlet boundaries to the building - must be given in meters
-    double dInlet = 40.;
-    double dOutlet = 200.;
+    REAL dInlet = 40.;
+    REAL dOutlet = 200.;
     //Cell size must be given in meters - this represents the max size of elements.
-    double cellSizex = 5.;
-    double cellSizey = 5.;
-    double cellSizez = 5.;
+    REAL cellSizex = 5.;
+    REAL cellSizey = 5.;
+    REAL cellSizez = 5.;
     //Refinement levels from boundary to the building - default is 2 levels
     int nRefinements = 2;
     //Proportion of inlet and outlet distances to be refined from the building [0,1]
-    double refProportion = 0.2; 
+    REAL refProportion = 0.2; 
     //Time variables  - must be given in seconds
-    double dt = 0.01;
-    double endTime = 160.;
-    double writeInterval = 0.1; 
+    REAL dt = 0.01;
+    REAL endTime = 160.;
+    REAL writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
         return 1;
@@ -201,10 +201,10 @@ bool RunBuildingMestrado(){
     internalField[0] = 30.;//m/s
     
     //"standard" turbulence model parameters
-    double puniform = 0.0;
-    double nutuniform = 0.00001;
-    double kuniform = 0.00107334375;
-    double omegauniform = 100.0;
+    REAL puniform = 0.0;
+    REAL nutuniform = 0.00001;
+    REAL kuniform = 0.00107334375;
+    REAL omegauniform = 100.0;
     
     if (!openFOAMWriter.WriteInitialConditions(internalField,puniform,nutuniform,kuniform,omegauniform)) {
         std::cerr << "Failed to write initial conditions." << std::endl;
@@ -212,28 +212,28 @@ bool RunBuildingMestrado(){
     };
 
     //Values for 300 Kelvin air
-    double visc = 1.85e-5;//kg/m-s
-    double dens = 1.226;//kg/m^3
+    REAL visc = 1.85e-5;//kg/m-s
+    REAL dens = 1.226;//kg/m^3
     if (!openFOAMWriter.WriteConstant(dens,visc)) {
         std::cerr << "Failed to write the constant folder." << std::endl;
         return 1;
     };
 
     //Distance from inlet and outlet boundaries to the building - must be given in meters
-    double dInlet = 40.;
-    double dOutlet = 200.;
+    REAL dInlet = 40.;
+    REAL dOutlet = 200.;
     //Cell size must be given in meters - this represents the max size of elements.
-    double cellSizex = 4;
-    double cellSizey = 4;
-    double cellSizez = 4;
+    REAL cellSizex = 4;
+    REAL cellSizey = 4;
+    REAL cellSizez = 4;
     //Refinement levels from boundary to the building - default is 2 levels
     int nRefinements = 2;
     //Proportion of inlet and outlet distances to be refined from the building [0,1]
-    double refProportion = 0.2; 
+    REAL refProportion = 0.2; 
     //Time variables  - must be given in seconds
-    double dt = 0.01;
-    double endTime = 160.;
-    double writeInterval = 0.1; 
+    REAL dt = 0.01;
+    REAL endTime = 160.;
+    REAL writeInterval = 0.1; 
     if (!openFOAMWriter.WriteSystem(dInlet, dOutlet, cellSizex, cellSizey, cellSizez, refProportion, nRefinements, dt, endTime, writeInterval)) {
         std::cerr << "Failed to write the system folder." << std::endl;
         return 1;

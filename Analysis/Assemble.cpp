@@ -520,15 +520,15 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
     
     case ArlequinStabType::EOption1:
         {
-            double normC = Stiffness[0].norm();
-            double normE = Stiffness[1].norm();
-            double normA = Stiffness[2].norm();
-            double normB = Rhs[1].norm();
+            REAL normC = Stiffness[0].norm();
+            REAL normE = Stiffness[1].norm();
+            REAL normA = Stiffness[2].norm();
+            REAL normB = Rhs[1].norm();
             if (normB == 0) normB = 1.e-10;
             if (normA == 0) normA = 1.e-10;
             if (normE == 0) normE = 1.e-10;
             if (normC == 0) PanicButton();
-            double tArlq = 1.e-0;//std::min({normC/normA, normC/normE, normC/normB});
+            REAL tArlq = 1.e-0;//std::min({normC/normA, normC/normE, normC/normB});
             Stiffness[1] *= tArlq;
             Stiffness[2] *= tArlq;
             Rhs[1] *= tArlq;
@@ -538,34 +538,34 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
     case ArlequinStabType::EOption2:
         {
             PanicButton();
-            // double normC0 = C0.norm();
-            // double normC1 = C1.norm();
-            // double normA0 = A0.norm();
-            // double normA1 = A1.norm();
-            // double normB0 = b0.norm();
-            // double normB1 = b1.norm();
-            // double normE = E.norm();
-            // double aux1 = std::min({normC0/normA0, normC0/normE, normC0/normB0, normC1/normA1, normC1/normE, normC1/normB1});
-            // double tArlq0 = aux1;
-            // double tArlq1 = aux1;
+            // REAL normC0 = C0.norm();
+            // REAL normC1 = C1.norm();
+            // REAL normA0 = A0.norm();
+            // REAL normA1 = A1.norm();
+            // REAL normB0 = b0.norm();
+            // REAL normB1 = b1.norm();
+            // REAL normE = E.norm();
+            // REAL aux1 = std::min({normC0/normA0, normC0/normE, normC0/normB0, normC1/normA1, normC1/normE, normC1/normB1});
+            // REAL tArlq0 = aux1;
+            // REAL tArlq1 = aux1;
             break;
         }
     
     case ArlequinStabType::EOption3:
         {
             PanicButton();
-            // double normC0 = C0.norm();
-            // double normC1 = C1.norm();
-            // double normA0 = A0.norm();
-            // double normA1 = A1.norm();
-            // double normE = E.norm();
-            // double normB0 = b0.norm();
-            // double normB1 = b1.norm();
+            // REAL normC0 = C0.norm();
+            // REAL normC1 = C1.norm();
+            // REAL normA0 = A0.norm();
+            // REAL normA1 = A1.norm();
+            // REAL normE = E.norm();
+            // REAL normB0 = b0.norm();
+            // REAL normB1 = b1.norm();
             
             // tArlq0 = std::min({normC0/normA0, normC0/normE, normC0/normB0});
             // tArlq1 = std::min({normC1/normA1, normC1/normE, normC1/normB1});
 
-            // double normC = std::min(normC0,normC1);
+            // REAL normC = std::min(normC0,normC1);
             // tArlq0 *= normC/normC0;
             // tArlq1 *= normC/normC1;
             break;
@@ -576,15 +576,15 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
             // ElCouplingGlobal *elglobal = dynamic_cast<ElCouplingGlobal*> (fAnalysis->MeshVector()[2]->ElementVec()[element]);
             // if (elglobal) return;
             PanicButton();
-            double normC = Stiffness[0].norm();
-            double normE = Stiffness[1].norm();
-            double normA = Stiffness[2].norm();
-            double normB = Rhs[1].norm();
+            REAL normC = Stiffness[0].norm();
+            REAL normE = Stiffness[1].norm();
+            REAL normA = Stiffness[2].norm();
+            REAL normB = Rhs[1].norm();
             if (normB == 0) normB = 1.e-10;
             if (normA == 0) normA = 1.e-10;
             if (normE == 0) normE = 1.e-10;
             if (normC == 0) PanicButton();
-            double tArlq = std::min({normC/normA, normC/normE, normC/normB});
+            REAL tArlq = std::min({normC/normA, normC/normE, normC/normB});
             Stiffness[1] *= tArlq;
             Stiffness[2] *= tArlq;
             Rhs[1] *= tArlq;
@@ -593,12 +593,12 @@ void Assemble::stabilizeArlequin(Analysis *fAnalysis, std::vector<MatrixDouble> 
 
     case ArlequinStabType::EOption5:
         {
-            // double normC0 = C0.norm();
-            // double normC1 = C1.norm();
-            // double normA1 = A1.norm();
-            // double normE = E.norm();
-            // double normB1 = b1.norm();
-            // double normC = std::min(normC0,normC1);
+            // REAL normC0 = C0.norm();
+            // REAL normC1 = C1.norm();
+            // REAL normA1 = A1.norm();
+            // REAL normE = E.norm();
+            // REAL normB1 = b1.norm();
+            // REAL normC = std::min(normC0,normC1);
             // tArlq0 = 0.;
             // tArlq1 = std::min({normC/normA1, normC/normE, normC/normB1});
             break;

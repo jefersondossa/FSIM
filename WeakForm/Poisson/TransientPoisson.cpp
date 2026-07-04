@@ -1,7 +1,7 @@
 #include "TransientPoisson.h"
 
 //Class constructor
-TransientPoisson::TransientPoisson(int matid, int dim, double damp, double dens, double dt, TimeIntegScheme integscheme, int nState) : Poisson(matid,dim,nState) {
+TransientPoisson::TransientPoisson(int matid, int dim, REAL damp, REAL dens, REAL dt, TimeIntegScheme integscheme, int nState) : Poisson(matid,dim,nState) {
     fDamping = damp;
     fDensity = dens;
     fIntegScheme = integscheme;
@@ -15,7 +15,7 @@ void TransientPoisson::ComputeStiffness(int &index, IntPointData &data, MatrixDo
 
     //Mass matrix
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     MatrixDouble Mass(nphi,nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -46,7 +46,7 @@ void TransientPoisson::ComputeResidual(int &index, IntPointData &data, VecDouble
     auto disp = data.fSol;
     auto dispPrev = data.fSolPrev;
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
 
     for (size_t i = 0; i < nphi; i++){
         Rhs[i] += (disp[0]/(fBeta * fTimeStep * fTimeStep) + 

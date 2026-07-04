@@ -7,7 +7,7 @@
 //==========================================================================
 //==============================PROBLEM MESHES==============================
 //==========================================================================
-auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+auto yieldFunction = [](const REAL &plast, REAL &sigma_y, REAL &hardening){
     // sigma_y =.5/sqrt(3.)+500.*plast;
     // sigma_y =50.+500.*plast;
     // hardening = 500.;
@@ -92,7 +92,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // // VectorNames = {"Displacement","ExactDisplacement"};
     // an.GlobalMatrix()->ZeroSolution();
     // int row = 9;
-    // double val = 1.;
+    // REAL val = 1.;
     // an.GlobalMatrix()->PutValueSolution(row,val);
     // an.UpdateSolution();
 

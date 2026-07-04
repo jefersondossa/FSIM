@@ -26,9 +26,9 @@ void ShapeQuadrilateralLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &d
 }
 
 void ShapeQuadrilateralLin::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = xi[2];
+    const REAL xsi1 = xi[0];
+    const REAL xsi2 = xi[1];
+    const REAL xsi3 = xi[2];
 
     ddphi[0](0,0) =  0.;
     ddphi[0](0,1) =  0.25;

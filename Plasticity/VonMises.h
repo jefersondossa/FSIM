@@ -7,7 +7,7 @@
 class VonMises : public PlasticityModel
 {
 protected:
-    double fVonMisesStress;
+    REAL fVonMisesStress;
 
     MatrixDouble fMatP;
     Tensor3D fFlowVector;
@@ -31,11 +31,11 @@ public:
     /// @param errors vector storing all errors
     void ComputeError(IntPointData &data, VecDouble &errors) override;
 
-    double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
 
     Tensor3D FlowVector(Tensor3D &Stress);
 
-    double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
 
     void UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress) override;
 };

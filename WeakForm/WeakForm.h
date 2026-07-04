@@ -48,7 +48,7 @@ protected:
     // Problem dimension
     int fDimension = 0;
     // Big number to enforce boundary conditions
-    static double fBigNumber;
+    static REAL fBigNumber;
     // Lambda function returning the exact solution and its gradient
     std::function<void (const VecDouble &coord, VecDouble &u, MatrixDouble &gradU)> fExactSol = 0; 
     // Lambda function returning the forcing function

@@ -43,7 +43,7 @@ public:
     }
 
     // Integration rule 1D method obtained from Numerical Recipes
-    static void gauleg(const double x1, const double x2, VecDouble &x, VecDouble &w);
+    static void gauleg(const REAL x1, const REAL x2, VecDouble &x, VecDouble &w);
     
 };
 

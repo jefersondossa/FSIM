@@ -14,8 +14,8 @@ protected:
 
 public:
     IncrementalAnalysis() : NonLinearAnalysis(){};
-    IncrementalAnalysis(CompMesh *cmesh, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol = 1.e-6, int maxIter = 10);
-    IncrementalAnalysis(Arlequin *arl, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol = 1.e-6, int maxIter = 10);
+    IncrementalAnalysis(CompMesh *cmesh, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, REAL tol = 1.e-6, int maxIter = 10);
+    IncrementalAnalysis(Arlequin *arl, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, REAL tol = 1.e-6, int maxIter = 10);
 
     int &NSteps(){return fNSteps;}
 

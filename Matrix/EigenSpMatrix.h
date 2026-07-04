@@ -16,17 +16,17 @@ public:
 
     ~EigenSpMatrix();
 
-    void AddValueMatrix(int &row, int &col, double &val);
-    void PutValueMatrix(int &row, int &col, double &val);
-    double GetValueMatrix(int &row, int &col);
+    void AddValueMatrix(int &row, int &col, REAL &val);
+    void PutValueMatrix(int &row, int &col, REAL &val);
+    REAL GetValueMatrix(int &row, int &col);
 
-    void AddValueRhs(int &row, double &val);
-    void PutValueRhs(int &row, double &val);
-    double GetValueRhs(int &row);
+    void AddValueRhs(int &row, REAL &val);
+    void PutValueRhs(int &row, REAL &val);
+    REAL GetValueRhs(int &row);
 
-    void AddValueSolution(int &row, double &val);
-    void PutValueSolution(int &row, double &val);
-    double GetValueSolution(int &row);
+    void AddValueSolution(int &row, REAL &val);
+    void PutValueSolution(int &row, REAL &val);
+    REAL GetValueSolution(int &row);
     
     virtual SparseMat &Matrix(){return fMatrix;}
     virtual MatrixDouble &Rhs(){return fRhs;}
@@ -40,7 +40,7 @@ public:
     void PrintRhs() override;
     void PrintSolution() override;
 
-    double SolutionNorm() override;
+    REAL SolutionNorm() override;
 
 };
 

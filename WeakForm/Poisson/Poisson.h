@@ -7,7 +7,7 @@
 class Poisson : public WeakForm{
 protected:
     // A scale factor for the Poisson problem
-    double  fScale = 1.;
+    REAL  fScale = 1.;
 
 public:
     /// @brief Poisson weak for constructor
@@ -34,12 +34,12 @@ public:
     void ComputeError(IntPointData &data, VecDouble &errors) override;
     
     /// Sets the Poisson problem scale factor
-    /// @param double scale factor
-    void SetScale(double &value) {fScale = value;};
+    /// @param REAL scale factor
+    void SetScale(REAL &value) {fScale = value;};
 
     /// Gets the Poisson problem scale factor
     /// @return scale factor
-    double &GetScale(){return fScale;};
+    REAL &GetScale(){return fScale;};
 
     /// @brief Returns the variable index of a given solution variable
     /// @param name solution variable name

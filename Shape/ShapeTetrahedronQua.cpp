@@ -11,10 +11,10 @@ const ElementType ShapeTetrahedronQua::ElType;
 
 void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = xi[2];
-    double xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = xi[2];
+    REAL xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
 
     phi[3] = 2.0 * (xsi1 - 0.50) * xsi1;
     phi[1] = 2.0 * (xsi2 - 0.50) * xsi2;
@@ -81,9 +81,9 @@ void ShapeTetrahedronQua::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dph
 }
 
 void ShapeTetrahedronQua::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = xi[2];
+    const REAL xsi1 = xi[0];
+    const REAL xsi2 = xi[1];
+    const REAL xsi3 = xi[2];
 
     ddphi[0](0,0) = 4.;
     ddphi[0](0,1) = 0.;

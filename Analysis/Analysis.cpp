@@ -86,7 +86,7 @@ void Analysis::AllocateMonomodel(){
 #endif
     }
     for (int i=0; i<numDOF; i++){
-        double val = 1.e-20;
+        REAL val = 1.e-20;
         fGlobalMatrix->AddValueMatrix(i,i,val);
     }
 
@@ -148,7 +148,7 @@ void Analysis::AllocateArlequin(){
 #endif
     }
     for (int i=0; i<numDOF; i++){
-        double val = 1.e-20;
+        REAL val = 1.e-20;
         fGlobalMatrix->AddValueMatrix(i,i,val);
     }
 }

@@ -11,7 +11,7 @@ public:
     /// @param dim problem dimension (2 or 3)
     /// @param density fluid density
     /// @param viscosity fluid dynamic viscosity
-    NavierStokes(int matid, int dim, double density, double viscosity);
+    NavierStokes(int matid, int dim, REAL density, REAL viscosity);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

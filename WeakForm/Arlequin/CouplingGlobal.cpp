@@ -1,6 +1,6 @@
 #include "CouplingGlobal.h"
 
-CouplingGlobal::CouplingGlobal(int dim, int globindex, CompMesh* meshlocal, double k0, double k1):WeakForm(){
+CouplingGlobal::CouplingGlobal(int dim, int globindex, CompMesh* meshlocal, REAL k0, REAL k1):WeakForm(){
     fGlobalMesh = meshlocal;
     fDimension = dim;
     fK0 = k0;
@@ -29,7 +29,7 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
     int nphi = data.fPhi.size();
     int DIM = fDimension;
 
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
     
     VecDouble XsiGlobal(DIM);
     for (int k = 0; k < DIM; k++) XsiGlobal[k] = fGlobalXsi(index,k);
@@ -50,7 +50,7 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
     
     for (int i = 0; i < nphi; i++){
         for (int j = 0; j < nphi; j++){
-            double l2 = data.fPhi[i] * dataglobal.fPhi[j] * WJ * fK0;
+            REAL l2 = data.fPhi[i] * dataglobal.fPhi[j] * WJ * fK0;
             for (int istate = 0; istate < nstate; istate++){
                 // L2 COUPLING OPERATOR
                 Stiffness[0](nstate*i+istate,nstate*j+istate) += l2;
@@ -58,7 +58,7 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
                 if (fK1 > 0){
                     for (int k = DIM; k--;  ){
                         for (int l = DIM; l--; ){
-                            double K = dphi_dx(i,l) * dphi_dxGlobal(j,k) * fK1;
+                            REAL K = dphi_dx(i,l) * dphi_dxGlobal(j,k) * fK1;
                             if (k==l) for (int m = DIM; m--; ) K += dphi_dx(m,i) * dphi_dxGlobal(m,j);
                             Stiffness[0](DIM*i+k,DIM*j+l) += K * WJ;
                         }
@@ -66,7 +66,7 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
                 }     
                 // for (int l = 0; l < DIM; l++){
                 //     //H1 COUPLING OPERATOR
-                //     double K = dphi_dx(i,l) * dphi_dxGlobal(j,l);
+                //     REAL K = dphi_dx(i,l) * dphi_dxGlobal(j,l);
                 //     Stiffness[0](i,j) += K * WJ * fK1;
                 // };
             };
@@ -75,13 +75,13 @@ void CouplingGlobal::ComputeStiffness(int &index, IntPointData &data, std::vecto
     // } else {
     //     for (int i = 0; i < nphi; i++){
     //         for (int j = 0; j < nphi; j++){
-    //             double l2 = data.fPhi[i] * phiGlobal[j] * WJ * fK0;
+    //             REAL l2 = data.fPhi[i] * phiGlobal[j] * WJ * fK0;
     //             for (int k = 0; k < DIM; k++){
     //                 // L2 COUPLING OPERATOR
     //                 Stiffness[0](DIM*i+k,DIM*j+k) += l2;
     //                 for (int l = 0; l < DIM; l++){
     //                     //H1 COUPLING OPERATOR
-    //                     double K = dphi_dx(i,l) * dphi_dx(j,k);
+    //                     REAL K = dphi_dx(i,l) * dphi_dx(j,k);
     //                     if (k==l) for (int m = DIM; m--; ) K += dphi_dx(i,m) * dphi_dxGlobal(j,m);
 
     //                     Stiffness[0](DIM*i+k,DIM*j+l) += K * WJ * fK1;
@@ -118,20 +118,20 @@ void CouplingGlobal::ComputeResidual(int &index, IntPointData &data, std::vector
     
     auto dphi_dxGlobal = dataglobal.fDPhiX0;
 
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
     auto dphi_dx = data.fDPhiX0;
 
     // if (this->Mesh()->getProblemParameters().ProbType() == ProblemType::EPoisson){
         for (int i = 0; i < nphi; i++){
             //Solution residual
-            double L2u = u_[0] * data.fPhi[i] * fK0;
-            double H1u = 0.;
+            REAL L2u = u_[0] * data.fPhi[i] * fK0;
+            REAL H1u = 0.;
             for (int l=DIM; l--; ) H1u += dphi_dx(l,i) * du_dx(0,l) * fK1;
             Rhs[0][nphi*fNState+i] -= (L2u + H1u) * WJ;
             
             // Lagrange multipliers residual
-            double L2 = data.fSol[0] * dataglobal.fPhi[i] * fK0;
-            double H1 = 0.;
+            REAL L2 = data.fSol[0] * dataglobal.fPhi[i] * fK0;
+            REAL H1 = 0.;
             for (int l=DIM; l--; ) H1 += dphi_dxGlobal(l,i) * data.fDSolDx(0,l) * fK1;
             Rhs[0][i] -= (L2 + H1) * WJ;
         };
@@ -139,15 +139,15 @@ void CouplingGlobal::ComputeResidual(int &index, IntPointData &data, std::vector
     //     for (int i = 0; i < nphi; i++){
     //         for (int k = 0; k < DIM; k++){
     //             //Solution residual
-    //             double L2u = u_[k] * data.fPhi[i] * fK0;
-    //             double H1u = 0.;
+    //             REAL L2u = u_[k] * data.fPhi[i] * fK0;
+    //             REAL H1u = 0.;
     //             for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(k,l) * fK1;
     //             for (int l=DIM; l--; ) H1u += dphi_dx(i,l) * du_dx(l,k) * fK1;
     //             Rhs[0][Element::NLocDOF()+DIM*i+k] -= (L2u + H1u) * WJ;
                 
     //             //Lagrange multipliers residual
-    //             double L2 = lagM_[k] * phiGlobal[i] * fK0;
-    //             double H1 = 0.;
+    //             REAL L2 = lagM_[k] * phiGlobal[i] * fK0;
+    //             REAL H1 = 0.;
     //             for (int l=DIM; l--; ) H1 += dphi_dxGlobal(i,l) * dL_dx(k,l) * fK1;
     //             for (int l=DIM; l--; ) H1 += dphi_dxGlobal(i,l) * dL_dx(l,k) * fK1;
     //             Rhs[0][DIM*i+k] -= (L2 + H1) * WJ;
@@ -160,7 +160,7 @@ void CouplingGlobal::ComputeResidual(int &index, IntPointData &data, std::vector
 }
 
 
-void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness){
+void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, REAL &weight_, REAL &djac_, std::vector<MatrixDouble> &Stiffness){
 
     // int DIM = tshape::Dimension;
     // int DEG = this->Mesh()->GetDefaultOrder();
@@ -175,25 +175,25 @@ void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, Ve
     // for (int k = 0; k < DIM; k++) xsi[k] = nQuad.PointList(index,k);
 
     // //Computes the jacobian matrix
-    // double djacG_;
+    // REAL djacG_;
     // MatrixDouble ainvG_(DIM,DIM);
     // // ComputeJacobian(xsi, ainvG_, djacG_, index);
     // // getHighOrderSpatialDerivatives(xsi, ainvG_, dphi_dxGlobal, ddphi_dxGlobal);
 
-    // double WJ = djac_ * weight_ * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index); 
+    // REAL WJ = djac_ * weight_ * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index); 
 
     // if (this->Mesh()->getProblemParameters().ProbType() == EPoisson){
     //     for (int i = 0; i < nphi; i++){
     //         for (int j = 0; j < nphi; j++){        
 
     //             //ARLEQUIN STABILIZATION TERMS
-    //             double LL = 0.;
+    //             REAL LL = 0.;
     //             // for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dxGlobal(j,m);
 
     //             // Stiffness[1](i,j) += (LL) * weight_ * djac_;
                 
     //             //High order derivative
-    //             double LH = 0.;
+    //             REAL LH = 0.;
     //             // for (int m = DIM; m--; ) LH -= dphi_dx(i,m) * (ddphi_dxGlobal(j,0) + ddphi_dxGlobal(j,1));
     //             Stiffness[2](i,j) += LH * WJ; 
     //         };
@@ -206,9 +206,9 @@ void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, Ve
     //     MatrixDouble Hooke(3,3);
     //     Hooke.setZero();
     //     // For EPT
-    //     double elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
-    //     double poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
-    //     double k = elastic_ / (1. - poisson_ * poisson_);
+    //     REAL elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
+    //     REAL poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
+    //     REAL k = elastic_ / (1. - poisson_ * poisson_);
     //     Hooke(0,0) = k;
     //     Hooke(0,1) = k * poisson_;
     //     Hooke(1,0) = k * poisson_;
@@ -233,14 +233,14 @@ void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, Ve
     //     // for (int i = 0; i < nphi; i++){
     //     //     for (int j = 0; j < nphi; j++){ 
     //     //         //ARLEQUIN STABILIZATION TERMS
-    //     //         double LL = 0.;
+    //     //         REAL LL = 0.;
     //     //         for (int m = DIM; m--; ) LL += dphi_dx(i,m) * dphi_dxGlobal(j,m);
 
     //     //         Stiffness[1](i,j) += (LL) * weight_ * djac_;
     //     //         for (int k = DIM; k--; ) Stiffness[1](DIM*i+k,DIM*j+k) += LL * weight_ * djac_;
                 
     //     //         //High order derivative
-    //     //         double LH = 0.;
+    //     //         REAL LH = 0.;
     //     //         // for (int m = DIM; m--; ) LH -= dphi_dx(i,m) * (ddphi_dx(j,0) + ddphi_dx(j,1));
     //     //         Stiffness[2](i,j) += LH * WJ;   
 
@@ -250,9 +250,9 @@ void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, Ve
     //         // for (int j = 0; j < nphi; j++){        
     //             // PanicButton();
     //     //         //ARLEQUIN STABILIZATION TERMS
-    //     //         double AM = 0.;
-    //     //         double Lpx = 0.; double Lpy = 0.;
-    //     //         double LC = 0.; double LL = 0.;
+    //     //         REAL AM = 0.;
+    //     //         REAL Lpx = 0.; REAL Lpy = 0.;
+    //     //         REAL LC = 0.; REAL LL = 0.;
 
     //     //         AM = data.fPhi[i] * data.fPhi[j] * tARLQ_ * wna_* alpha_m;
 
@@ -296,13 +296,13 @@ void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, Ve
     //     //     };
 
     //     //     //ARLEQUIN STABILIZATION TERMS
-    //     //     double LCx = 0.; double LCy = 0.;
-    //     //     double LPx = 0.; double LPy = 0.;
+    //     //     REAL LCx = 0.; REAL LCy = 0.;
+    //     //     REAL LPx = 0.; REAL LPy = 0.;
 
     //     //     for (int k = DIM; k--; ){
-    //     //         double LLx = 0.;
+    //     //         REAL LLx = 0.;
     //     //         for (int m = DIM; m--; ) LLx -= dphi_dx(i,m) * dL_dx(k,m)/wna_ * tARLQ_ / dens_;
-    //     //         double Amx = - data.fPhi[i] * am_[k] * tARLQ_;
+    //     //         REAL Amx = - data.fPhi[i] * am_[k] * tARLQ_;
     //     //         arlequinStabVector[DIM*i+k] += (Amx + LLx) * weight_ * djac_ * wna_;
     //     //     }
 
@@ -339,7 +339,7 @@ void CouplingGlobal::ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, Ve
 
 
 
-void CouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, double &weight_, double &djac_, std::vector<VecDouble> &Rhs){
+void CouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, VecDouble &phiGlobal, MatrixDouble &dphi_dxGlobal, REAL &weight_, REAL &djac_, std::vector<VecDouble> &Rhs){
     
     // auto force = this->Mesh()->getProblemParameters().getForcingFunction();    
     // VecDouble xna_(tshape::Dimension);
@@ -349,7 +349,7 @@ void CouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, Vec
     // // for (int i = 0; i < DIM; i++) xna_[i] = elglobal->setIntegPointWeightFunction(index,i);
     // if (force) force(xna_,forcingF);
 
-    // double WJ = djac_ * weight_ * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index); 
+    // REAL WJ = djac_ * weight_ * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index); 
 
     // //Lagrange Multiplier
     // VecDouble lagM_(this->Mesh()->NState()+1);
@@ -363,12 +363,12 @@ void CouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, Vec
     // if (this->Mesh()->getProblemParameters().ProbType() == EPoisson){
     //     for (int i = 0; i < nphi; i++){
     //         //ARLEQUIN STABILIZATION TERMS
-    //         double LLx = 0.;
-    //         double LF = 0.;
-    //         double shapeFi = data.fPhi[i];
+    //         REAL LLx = 0.;
+    //         REAL LF = 0.;
+    //         REAL shapeFi = data.fPhi[i];
     //         // for (int m = DIM; m--; ) LLx -= dphi_dxGlobal(i,m) * dL_dx(0,m);
     //         // for (int m = DIM; m--; ) LF +=  dphi_dxGlobal(i,m) * forcingF[0] * fMeshVector[0]->ElementVec()[fGlobalIndex]->getIntegPointWeightFunction(index);
-    //         // double LF2 = xna_[0]*xna_[0]*elglobal->getIntegPointWeightFunction(index)*shapeFi;
+    //         // REAL LF2 = xna_[0]*xna_[0]*elglobal->getIntegPointWeightFunction(index)*shapeFi;
 
     //         // Rhs[1][i] += (LF2) * weight_ * djac_;
     //         Rhs[1][nphi+i] += (LLx + LF) * weight_ * djac_;
@@ -380,9 +380,9 @@ void CouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, Vec
     //     MatrixDouble Hooke(3,3);
     //     Hooke.setZero();
     //     // For EPT
-    //     double elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
-    //     double poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
-    //     double k = elastic_ / (1. - poisson_ * poisson_);
+    //     REAL elastic_ = this->Mesh()->getProblemParameters().GetYoungModulus();
+    //     REAL poisson_ = this->Mesh()->getProblemParameters().GetPoissonRatio();
+    //     REAL k = elastic_ / (1. - poisson_ * poisson_);
     //     Hooke(0,0) = k;
     //     Hooke(0,1) = k * poisson_;
     //     Hooke(1,0) = k * poisson_;
@@ -411,10 +411,10 @@ void CouplingGlobal::ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, Vec
     //     for (int i = nphi; i--; ){
     //         Rhs[1][2*nphi+2*i  ] += aux[2*i];
     //         Rhs[1][2*nphi+2*i+1] += aux[2*i+1];
-    //         double shapeFi = phiGlobal[i];
+    //         REAL shapeFi = phiGlobal[i];
     //         //External force
-    //         double Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
-    //         double Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
+    //         REAL Fx = (fieldForce[0] + forcingF[0]) * shapeFi;
+    //         REAL Fy = (fieldForce[1] + forcingF[1]) * shapeFi;
     //         Rhs[1][2*nphi+2*i  ] += Fx * WJ;
     //         Rhs[1][2*nphi+2*i+1] += Fy * WJ;
     //     };

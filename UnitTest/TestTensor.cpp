@@ -17,19 +17,19 @@ void CheckInvariants(Tensor3D &Tensor3D)
     // std::cout << Tensor3D.MatrixForm() << std::endl;
     
     //Check I2
-    double I2 = Tensor3D.I2();
+    REAL I2 = Tensor3D.I2();
     REQUIRE(fabs(I2) > fTolerance);
 
     //Check I3
-    double I3 = Tensor3D.I3();
+    REAL I3 = Tensor3D.I3();
     REQUIRE(fabs(I3) > fTolerance);
 
     //Check J2
-    double J2 = Tensor3D.J2();
+    REAL J2 = Tensor3D.J2();
     REQUIRE(fabs(J2) > fTolerance);
 
     //Check J3
-    double J3 = Tensor3D.J3();
+    REAL J3 = Tensor3D.J3();
     REQUIRE(fabs(J3) > fTolerance);
 
 }

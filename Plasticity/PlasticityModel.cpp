@@ -65,7 +65,7 @@ PlasticityModel::PlasticityModel(WeakForm *elast){
         }
     }
 
-    double dik,djl,dil,djk;
+    REAL dik,djl,dil,djk;
 
     for (int i = 0; i < 3; i++){
         for (int j = 0; j < 3; j++){
@@ -207,7 +207,7 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
     // return;
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     MatrixDouble matB;
 
     if (this->Dimension() == 2){
@@ -263,7 +263,7 @@ void PlasticityModel::ComputeResidual(int &index, IntPointData &data, VecDouble 
     Rhs -= matB.transpose() * stress * WJ;
 
     for (int i = nphi; i--; ){
-        double shapeFi = data.fPhi[i];
+        REAL shapeFi = data.fPhi[i];
         //External force
         for (int k = 0; k < fDimension; k++){
             Rhs[fDimension*i+k] += forcingF[k] * shapeFi * WJ;

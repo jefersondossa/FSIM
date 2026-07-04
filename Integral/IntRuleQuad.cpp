@@ -39,7 +39,7 @@ void IntRuleQuad::SetOrder(int order) {
     }
 }
 
-void IntRuleQuad::gaulegQuad(const double x1, const double x2, VecDouble &co, VecDouble &w) {
+void IntRuleQuad::gaulegQuad(const REAL x1, const REAL x2, VecDouble &co, VecDouble &w) {
     IntRule1d x;
     IntRule1d y;
     

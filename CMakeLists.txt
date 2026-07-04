@@ -4,6 +4,37 @@ enable_language(CXX)
 
 list (APPEND CMAKE_MODULE_PATH "${FSArl_SOURCE_DIR}/cmake-modules")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+#To select type of REAL
+if (NOT REAL_TYPE)
+    message(STATUS "Setting REAL type to 'double' as none was specified.")
+    set(REAL_TYPE
+        double
+        CACHE STRING "Choose the type of REAL numbers." FORCE)
+    # Set the possible values of build type for cmake-gui, ccmake
+    set_property(
+        CACHE REAL_TYPE
+        PROPERTY STRINGS
+        "double"
+        "float"
+        "long double")
+endif ()
+
+if (REAL_TYPE STREQUAL "double")
+    set(REAL_TYPE_DEF "REALdouble")
+elseif (REAL_TYPE STREQUAL "float")
+    set(REAL_TYPE_DEF "REALfloat")
+elseif (REAL_TYPE STREQUAL "long double")
+    set(REAL_TYPE_DEF "REALlongdouble")
+else()
+    message(FATAL_ERROR "Please specify a valid type for REAL from the options: "
+            "'float', 'double', 'long double'.")
+endif()
+
+set (CONFIG_H "${PROJECT_SOURCE_DIR}/config.h")
+configure_file ("${PROJECT_SOURCE_DIR}/config.h.in" ${CONFIG_H})
+
 option(ENABLE_MPI_PETSC "Compile MPI and PETSc packages " OFF)
 if(ENABLE_MPI_PETSC)
    # find_package(MPI REQUIRED)
@@ -44,7 +75,7 @@ endif()
 # find_package (Gmsh REQUIRED)
 
 # Essential: include our directories first otherwise we can get internal headers from some installed path
-include_directories(include ${MPI_INCLUDE_PATH} ${PETSC_INCLUDES})
+include_directories("${FSArl_SOURCE_DIR}" include ${MPI_INCLUDE_PATH} ${PETSC_INCLUDES})
 add_definitions(${PETSC_DEFINITIONS})
 
 include_directories ("${FSArl_SOURCE_DIR}/include" "${FSArl_SOURCE_DIR}/include" ${PETSC_INCLUDES} ${PETSC_KSP_LIB})
@@ -62,7 +93,6 @@ enable_catch2()
 include(cmake-modules/EnableEigen.cmake)
 enable_eigen()
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #[[
 If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
 and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
@@ -101,6 +131,7 @@ endif()
 
 #Specify where the headers files must be found
 set(INCLUDE_DIRS_LIST 
+
 	"${PROJECT_SOURCE_DIR}/Analysis"
 	"${PROJECT_SOURCE_DIR}/GraphicInterface"
 	"${PROJECT_SOURCE_DIR}/Integral"
@@ -120,7 +151,7 @@ set(INCLUDE_DIRS_LIST
 	"${PROJECT_SOURCE_DIR}/WeakForm/NavierStokes"
 	"${PROJECT_SOURCE_DIR}/WeakForm/Stokes"
 	"${PROJECT_SOURCE_DIR}/WeakForm/UnitTest")
-
+# include_directories("${FSArl_SOURCE_DIR}")
 include_directories(${INCLUDE_DIRS_LIST})
 
 file(GLOB MY_MESH_FILES

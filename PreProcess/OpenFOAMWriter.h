@@ -10,7 +10,7 @@
 
 // Struct to store vertex data
 struct Vertex {
-    double x, y, z;
+    REAL x, y, z;
 };
 
 // Struct to store face data (triangular faces assumed)
@@ -23,10 +23,10 @@ class OpenFOAMWriter {
 protected:
     std::string fInputMsh;
     std::string fOutputObj;
-    double fMaxX, fMaxY, fMaxZ;
-    double fMinX, fMinY, fMinZ;
-    double fDInlet, fDOutlet;
-    double fRefProportion;
+    REAL fMaxX, fMaxY, fMaxZ;
+    REAL fMinX, fMinY, fMinZ;
+    REAL fDInlet, fDOutlet;
+    REAL fRefProportion;
     int fNSubdomains;
     std::string fClass;//NBR 6123 - Building Class
     int fNRefinements;
@@ -42,7 +42,7 @@ public:
 
     void ClearAllFiles();
 
-    void StartFromPreviousResults(double dt, double endTime, double writeInterval);
+    void StartFromPreviousResults(REAL dt, REAL endTime, REAL writeInterval);
 
     //Read the msh file
     bool ParseMSH(const std::string &inputFile, std::vector<Vertex> &vertices, std::vector<Face> &faces);
@@ -51,27 +51,27 @@ public:
     bool WriteOBJ(const std::string &outputFile, const std::vector<Vertex> &vertices, const std::vector<Face> &faces);
     
     //Find Max and Min coordinates of the building
-    void FindMaxMin(const std::vector<Vertex> &vertices, double &maxX, double &maxY, double &maxZ, double &minX, double &minY, double &minZ);
+    void FindMaxMin(const std::vector<Vertex> &vertices, REAL &maxX, REAL &maxY, REAL &maxZ, REAL &minX, REAL &minY, REAL &minZ);
 
     //folder 0
-    bool WriteInitialConditions(VecDouble &internalField, double puniform, double nutuniform, double kuniform, double omegauniform);
+    bool WriteInitialConditions(VecDouble &internalField, REAL puniform, REAL nutuniform, REAL kuniform, REAL omegauniform);
     bool UInitial();
-    bool pInitial(double puniform);
-    bool nutInitial(double nutuniform);
-    bool kInitial(double kuniform);
-    bool omegaInitial(double omegauniform);
+    bool pInitial(REAL puniform);
+    bool nutInitial(REAL nutuniform);
+    bool kInitial(REAL kuniform);
+    bool omegaInitial(REAL omegauniform);
     void VelocityNBR6123();
 
     //folder constant
-    bool WriteConstant(double density, double viscosity);
+    bool WriteConstant(REAL density, REAL viscosity);
     bool WriteMomentumTransport();
-    bool WritePhysicalProperties(double density, double viscosity); 
+    bool WritePhysicalProperties(REAL density, REAL viscosity); 
 
     //folder system
-    bool WriteSystem(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ, double refproportion, int nref, double dt, double endTime, double writeInterval);
-    bool WriteBlockMeshDict(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ);
+    bool WriteSystem(REAL dInlet, REAL dOutlet, REAL cellSizeX, REAL cellSizeY, REAL cellSizeZ, REAL refproportion, int nref, REAL dt, REAL endTime, REAL writeInterval);
+    bool WriteBlockMeshDict(REAL dInlet, REAL dOutlet, REAL cellSizeX, REAL cellSizeY, REAL cellSizeZ);
     bool WriteSurfaceFeaturesDict();
-    bool WriteControlDict(double dt, double endTime, double writeInterval);
+    bool WriteControlDict(REAL dt, REAL endTime, REAL writeInterval);
     bool WriteFvSchemes();
     bool WriteFvSolution();
     bool WriteSnappyHexMeshDict();

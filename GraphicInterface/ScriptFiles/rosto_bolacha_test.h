@@ -2,7 +2,7 @@
 const int dimension = d
 
 {
-auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+auto yieldFunction = [](const REAL &plast, REAL &sigma_y, REAL &hardening){
 hardening = 500.;
 sigma_y =.5+hardening*plast;
 };

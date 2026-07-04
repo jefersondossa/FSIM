@@ -7,15 +7,15 @@
 class Elasticity3D : public WeakForm{
 protected:
     // Young modulus
-    double       fYoungModulus;
+    REAL       fYoungModulus;
     // Poisson's ratio
-    double       fPoissonRatio;
+    REAL       fPoissonRatio;
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
 public:  
     // Elasticity 2D class constructor
-    Elasticity3D(int matid, double young, double poisson);
+    Elasticity3D(int matid, REAL young, REAL poisson);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -56,11 +56,11 @@ public:
 
     /// @brief Returns the material young modulus
     /// @return Young modulus
-    double &YoungModulus(){
+    REAL &YoungModulus(){
         return fYoungModulus;
     }
 
-    double &PoissonRatio(){
+    REAL &PoissonRatio(){
         return fPoissonRatio;
     }
 };

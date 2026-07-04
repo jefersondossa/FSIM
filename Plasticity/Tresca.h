@@ -10,7 +10,7 @@ class Tresca : public PlasticityModel
 private:
     enum ETrescaDirection{EMainPlane, ERightCorner, ELeftCorner};
     //The principal stresses
-    double fS1, fS2, fS3;
+    REAL fS1, fS2, fS3;
     std::vector<MatrixDouble> fEigenprojections;
     ETrescaDirection fReturnDirection;
 
@@ -27,11 +27,11 @@ public:
     /// @param Stiffness vector of stiffness matrices
     void ComputeTangentStiffness(int &index, IntPointData &data, MatrixDouble &Stiffness, Tensor3D &Stress) override;
     
-    double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
 
     Tensor3D FlowVector(Tensor3D &Stress);
 
-    double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
 
     void UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress) override;
     

@@ -42,7 +42,7 @@ std::pair<MatrixDouble, VecDouble> gaussQuadratureHexahedron(int numPointsPerAxi
     for (int k = 0; k < numPointsPerAxis; ++k) {
         for (int j = 0; j < numPointsPerAxis; ++j) {
             for (int i = 0; i < numPointsPerAxis; ++i) {
-                points.col(index) = Vector3d(gaussPoints1D(i), gaussPoints1D(j), gaussPoints1D(k));
+                points.col(index) = Vector3R(gaussPoints1D(i), gaussPoints1D(j), gaussPoints1D(k));
                 weights(index) = gaussWeights1D(i) * gaussWeights1D(j) * gaussWeights1D(k);
                 ++index;
             }
@@ -93,7 +93,7 @@ void IntRuleHexahedron::SetOrder(int order) {
     // std::cout << "fWeights" << fWeights << std::endl;
 }
 
-void IntRuleHexahedron::gaulegHexa(const double x1, const double x2, VecDouble &co, VecDouble &w) {
+void IntRuleHexahedron::gaulegHexa(const REAL x1, const REAL x2, VecDouble &co, VecDouble &w) {
     IntRule1d x;
     IntRule1d y;
     IntRule1d z;

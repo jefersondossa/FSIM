@@ -20,7 +20,7 @@ namespace
     {
         for (int k = 0; k < kMatrix.outerSize(); ++k)
         {
-            double max_val = 0.0;
+            REAL max_val = 0.0;
             for (SparseMatrix<double>::InnerIterator it(kMatrix, k); it; ++it)
             {
                 max_val = std::max(std::fabs(max_val), std::fabs(it.value()));
@@ -108,7 +108,7 @@ namespace
 
         using Solver = amgcl::make_solver<Preconditioner, LSSolver>;
 
-        constexpr double kTolerance = 1e-6;
+        constexpr REAL kTolerance = 1e-6;
         constexpr std::size_t kMaxIterations = 1'000;
 
         Solver::params prm;
@@ -126,11 +126,11 @@ namespace
 
 #if 0
         const auto get_norm_sparse_infinity = [](const auto& matrix) {
-            double k_norm_infinity = std::numeric_limits<double>::min();
+            REAL k_norm_infinity = std::numeric_limits<double>::min();
 
             for (int k=0; k<matrix.outerSize(); ++k)
             {
-                double curr_norm = 0;
+                REAL curr_norm = 0;
                 for (SparseMatrix<double>::InnerIterator it(matrix,k); it; ++it)
                 {
                     curr_norm += std::fabs(it.value());
@@ -145,11 +145,11 @@ namespace
         const auto norm_k_matrix = get_norm_sparse_infinity(kMatrix);
 
         const auto get_norm_dense_infinity = [](const auto& matrix) {
-            double k_norm_infinity = std::numeric_limits<double>::min();
+            REAL k_norm_infinity = std::numeric_limits<double>::min();
 
             for (int k=0; k<matrix.rows(); ++k)
             {
-                double curr_norm = 0;
+                REAL curr_norm = 0;
                 for (int j = 0; j < matrix.cols(); j++)
                 {
                     curr_norm += std::fabs(matrix(k,j));
@@ -176,7 +176,7 @@ namespace
         Solver solve{std::tie(ndofs, ptr_k_f, col_k_f, val_k_f), prm};
 
         int nItOut;
-        double errorOut;
+        REAL errorOut;
         std::tie(nItOut, errorOut) = solve(rhs_v, std::move(v_U_f));
 
         std::cout << "Solved using AMGCL." << std::endl;

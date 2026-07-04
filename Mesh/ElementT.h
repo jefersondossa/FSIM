@@ -26,7 +26,7 @@ public:
 
     ElementT(int index, GeoElement* gel, CompMesh* mesh, WeakForm *wf);
 
-    double InterpolateVariable(VecDouble &nValues, int point) override;
+    REAL InterpolateVariable(VecDouble &nValues, int point) override;
     void ComputeIntegPointCoordinates() override;
     
     /// Compute and store the shape function spatial derivatives
@@ -49,7 +49,7 @@ public:
     void ComputeIntPointDistFunction(VecDouble &nodalval) override;
     /// Gets the element jacobian determinant
     /// @return element jacobinan determinant
-    double getJacobian() override {
+    REAL getJacobian() override {
         // std::cout << "AAA 1 "<< std::endl;
         //Computes the jacobian matrix
         int index = 0;
@@ -63,9 +63,9 @@ public:
     };
 
     // /// Compute and store the drag and lift forces at the element boundary
-    // void computeDragAndLiftForces(double &pressureDragForce, double &pressureLiftForce, double &frictionDragForce,
-    //                               double &frictionLiftForce, double &dragForce, double &liftForce,
-    //                               double &pitchingMoment, double & perimeter);
+    // void computeDragAndLiftForces(REAL &pressureDragForce, REAL &pressureLiftForce, REAL &frictionDragForce,
+    //                               REAL &frictionLiftForce, REAL &dragForce, REAL &liftForce,
+    //                               REAL &pitchingMoment, REAL & perimeter);
 
     // /// Compute and store the boundary forces
     // void getBoundaryLoad(VecDouble &xsi, VecDouble &load);
@@ -81,10 +81,10 @@ public:
     /// Gets the number of integration points of the special quadrature rule
     /// @retunr number of integration point of the special quadrature rule
     int getNumberOfIntegrationPoints() override {return fIntRule.NPoints();};
-    double IntegPointWeight(int index) override {
+    REAL IntegPointWeight(int index) override {
         return fIntRule.WeightList(index);
     };
-    double IntegPointCoordinate(int index, int dir) override {
+    REAL IntegPointCoordinate(int index, int dir) override {
         return fIntRule.PointList(index, dir);
     };
 

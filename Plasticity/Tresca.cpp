@@ -20,14 +20,14 @@ void Tresca::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDoubl
     MatrixDouble d(2,2);
     d(0,0) = d(1,1) = +4.*fShearModulus+fHardening;
     d(0,1) = d(1,0) = +2.*fShearModulus+fHardening;
-    double detD = d(0,0)*d(1,1)-d(0,1)*d(1,0);
+    REAL detD = d(0,0)*d(1,1)-d(0,1)*d(1,0);
 
     switch (fReturnDirection)
     {
     case EMainPlane:
         {
             //Eq. 8.41
-            double f = 2.*fShearModulus / (4.*fShearModulus + fHardening);
+            REAL f = 2.*fShearModulus / (4.*fShearModulus + fHardening);
             dSdEpsilon(0,0) = dSdEpsilon(2,2) = 2.*fShearModulus * (1. - f);
             dSdEpsilon(1,1) = 2.*fShearModulus;
             dSdEpsilon(0,2) = dSdEpsilon(2,0) = 2.*fShearModulus * f;
@@ -77,7 +77,7 @@ void Tresca::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDoubl
     // for (int i = 0; i < 3; i++){
     //     for (int j = 0; j < 3; j++){
     //         for (int k = 0; k < 3; k++){
-    //             double dkj = k == j ? 1. : 0;
+    //             REAL dkj = k == j ? 1. : 0;
     //             fTangentTensor(i,j) = dSdEpsilon(i,k)*(dkj - 1./3.) + fBulkModulus;
     //         }
     //     }
@@ -102,8 +102,8 @@ void Tresca::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDoubl
     fElasticModel->ComputeStiffness(index,data,Stiffness);
 };
 
-double Tresca::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
-    double YF = 0.;
+REAL Tresca::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
+    REAL YF = 0.;
 
     if (fPlaneStress){
          
@@ -114,29 +114,29 @@ double Tresca::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
         fS1 = eigenvalues[0];
         fS2 = eigenvalues[1];
         fS3 = eigenvalues[2];
-        double sigmay = 0.;
+        REAL sigmay = 0.;
         fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
         YF = fS1-fS3-sigmay;
     }
     return YF;
 }
 
-double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
+REAL Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
-    double dGamma = 0.;
-    double s1 = 0.;
-    double s2 = 0.;
-    double s3 = 0.;
+    REAL dGamma = 0.;
+    REAL s1 = 0.;
+    REAL s2 = 0.;
+    REAL s3 = 0.;
 
     if (fPlaneStress){
         
     } else {
         // First attempt - return to main plane
-        double sigmay = 0.;
+        REAL sigmay = 0.;
         fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
-        double PhiTil = fS1-fS3-sigmay;
+        REAL PhiTil = fS1-fS3-sigmay;
         while (fabs(PhiTil) > 1.e-8){
-            double d = -4. * fShearModulus - fHardening;
+            REAL d = -4. * fShearModulus - fHardening;
             dGamma -= PhiTil/d;
             fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma,sigmay,fHardening);
             PhiTil = fS1 - fS3 - 4.*fShearModulus*dGamma - sigmay;
@@ -158,8 +158,8 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stres
             // PanicButton();
             //Return to corner - Box 8.3
             VecDouble PhiTilAB(2);
-            double sa = fS1-fS3;
-            double sb;
+            REAL sa = fS1-fS3;
+            REAL sb;
             fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
             if (fS1 + fS3 - 2.*fS2 > 0){//Apply return to the RIGHT corner
                 fReturnDirection = ERightCorner;
@@ -178,10 +178,10 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stres
             d(0,1) = d(1,0) = -2.*fShearModulus - fHardening;
             MatrixDouble dinv = d.inverse();
             int niterations = 0;
-            double epn = data.fEffectivePlasticStrain[index];
+            REAL epn = data.fEffectivePlasticStrain[index];
             while (fabs(PhiTilAB[0])+fabs(PhiTilAB[1]) > 1.e-8){
                 niterations++;
-                double dGammaBarra = dGammaAB[0] + dGammaAB[1];
+                REAL dGammaBarra = dGammaAB[0] + dGammaAB[1];
                 data.fEffectivePlasticStrain[index] += dGammaBarra;
                 dGammaAB -= dinv * PhiTilAB;
                 fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
@@ -217,7 +217,7 @@ double Tresca::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stres
 
 void Tresca::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress){
     //Box 8.1
-    double pressure = Stress.Trace() / 3.;
+    REAL pressure = Stress.Trace() / 3.;
 
     MatrixDouble sn1 = (pressure + fS1) * fEigenprojections[0]
                      +(pressure + fS2) * fEigenprojections[1]
@@ -238,7 +238,7 @@ void Tresca::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stre
     epsilonUpdated.fXZ() *= 2.;
     epsilonUpdated.fYZ() *= 2.;
     Tensor3D Ident;
-    double epslion_e_trial = data.fElasticStrain[index].Trace() / 3.;
+    REAL epslion_e_trial = data.fElasticStrain[index].Trace() / 3.;
     Ident.Identity();
     Ident *= epslion_e_trial;
     epsilonUpdated += Ident;

@@ -2,7 +2,7 @@
 #include "PanicButton.h"
 
 
-bool compare_head(const double& lhs, const double& rhs)
+bool compare_head(const REAL& lhs, const REAL& rhs)
 {
     return lhs > rhs;
 }
@@ -68,7 +68,7 @@ void Tensor3D::Zero(){
 Tensor3D Tensor3D::Hydrostatic(){
     Tensor3D fHydrostatic(*this);
     fHydrostatic.Zero();
-    double val = Trace() / 3.;
+    REAL val = Trace() / 3.;
     fHydrostatic.fData[XX] = val;
     fHydrostatic.fData[YY] = val;
     fHydrostatic.fData[ZZ] = val;
@@ -78,18 +78,18 @@ Tensor3D Tensor3D::Hydrostatic(){
 
 Tensor3D Tensor3D::Deviatory(){ 
     Tensor3D fDeviatory = *this;
-    double val = I1() / 3.;
+    REAL val = I1() / 3.;
     fDeviatory.fData[XX] -= val;
     fDeviatory.fData[YY] -= val;
     fDeviatory.fData[ZZ] -= val;
     return fDeviatory;
 }
 
-double Tensor3D::I1() const{
+REAL Tensor3D::I1() const{
     return fData[XX] + fData[YY] + fData[ZZ];
 }
 
-double Tensor3D::I2() const{
+REAL Tensor3D::I2() const{
     return -(fData[XY] * fData[XY] +
              fData[XZ] * fData[XZ] +
              fData[YZ] * fData[YZ])
@@ -98,7 +98,7 @@ double Tensor3D::I2() const{
              fData[XX] * fData[ZZ]);
 }
 
-double Tensor3D::I3() const{
+REAL Tensor3D::I3() const{
     return fData[XX] * fData[YY] * fData[ZZ]
          +(fData[XY] * fData[XZ] * fData[YZ]) * 2.
          -(fData[XX] * fData[YZ] * fData[YZ] +
@@ -106,26 +106,26 @@ double Tensor3D::I3() const{
            fData[ZZ] * fData[XY] * fData[XY]);
 }
 
-double Tensor3D::J1(){
+REAL Tensor3D::J1(){
     auto dev = Deviatory();
     return dev.fData[XX] + dev.fData[YY] + dev.fData[ZZ];
 }
 
-double Tensor3D::J2() const{
-    double i1 = I1();
-    double j2 = i1*i1 / 3. - I2();
+REAL Tensor3D::J2() const{
+    REAL i1 = I1();
+    REAL j2 = i1*i1 / 3. - I2();
     return j2;
 }
 
-double Tensor3D::Determinant(){
+REAL Tensor3D::Determinant(){
     return fData[XX] * fData[YY] * fData[ZZ] + fData[XY] * fData[XZ] * fData[YZ]*2. - fData[XZ] * fData[YY] * fData[XZ] -
            fData[XY] * fData[XY] * fData[ZZ] - fData[YZ] * fData[YZ] * fData[XX];
 }
 
 
-double Tensor3D::J3(){
+REAL Tensor3D::J3(){
     auto fDeviatory = Deviatory();
-    double det = fDeviatory.fData[XX] * fDeviatory.fData[YY] * fDeviatory.fData[ZZ] +
+    REAL det = fDeviatory.fData[XX] * fDeviatory.fData[YY] * fDeviatory.fData[ZZ] +
                  fDeviatory.fData[XY] * fDeviatory.fData[XZ] * fDeviatory.fData[YZ]*2. - 
                  fDeviatory.fData[XZ] * fDeviatory.fData[YY] * fDeviatory.fData[XZ] -
                  fDeviatory.fData[XY] * fDeviatory.fData[XY] * fDeviatory.fData[ZZ] - 
@@ -133,8 +133,8 @@ double Tensor3D::J3(){
     return det;
 }
 
-double Tensor3D::Norm(){
-    double norm = 0.;
+REAL Tensor3D::Norm(){
+    REAL norm = 0.;
     for (unsigned int i = 0; i < 6; i++) {
         norm += fData[i] * fData[i];
     }
@@ -144,9 +144,9 @@ double Tensor3D::Norm(){
     return sqrt(norm);
 }
 
-double Tensor3D::DeviatoryNorm(){
+REAL Tensor3D::DeviatoryNorm(){
     auto fDeviatory = Deviatory();
-    double norm = 0.;
+    REAL norm = 0.;
     for (unsigned int i = 0; i < 6; i++) {
         norm += fDeviatory.fData[i] * fDeviatory.fData[i];
     }
@@ -156,7 +156,7 @@ double Tensor3D::DeviatoryNorm(){
     return sqrt(norm);
 }
 
-double Tensor3D::DoubleContraction(Tensor3D &t){
+REAL Tensor3D::DoubleContraction(Tensor3D &t){
     return fData[XX]*t.fData[XX] + fData[YY]*t.fData[YY] + fData[ZZ]*t.fData[ZZ] + 
            2.*(fData[XY]*t.fData[XY] + fData[XZ]*t.fData[XZ] + fData[YZ]*t.fData[YZ]);
 }
@@ -168,24 +168,24 @@ void Tensor3D::Identity(){
     fData[ZZ] = 1.;
 }
 
-const Tensor3D & Tensor3D::operator*=(const double &multipl) {
+const Tensor3D & Tensor3D::operator*=(const REAL &multipl) {
     int i;
     for (i = 0; i < 6; i++)fData[i] *= multipl;
     return *this;
 }
 
-Tensor3D Tensor3D::operator*(const double &multipl) const {
+Tensor3D Tensor3D::operator*(const REAL &multipl) const {
     Tensor3D temp(*this);
     return temp *= multipl;
 }
 
-const Tensor3D & Tensor3D::operator/=(const double &multipl) {
+const Tensor3D & Tensor3D::operator/=(const REAL &multipl) {
     int i;
     for (i = 0; i < 6; i++)fData[i] /= multipl;
     return *this;
 }
 
-Tensor3D Tensor3D::operator/(const double &multipl) const {
+Tensor3D Tensor3D::operator/(const REAL &multipl) const {
     Tensor3D temp(*this);
     return temp /= multipl;
 }
@@ -224,7 +224,7 @@ Tensor3D Tensor3D::NormalizedDeviatory(){
     return temp;
 }
 
-double Tensor3D::Trace() const{
+REAL Tensor3D::Trace() const{
     return fData[XX] + fData[YY] + fData[ZZ];
 }
 
@@ -250,16 +250,16 @@ void Tensor3D::SpectralDecomposition(VecDouble &eigenvalues, std::vector<MatrixD
     eigenprojections.resize(3);
 
     //A.4 Souza Neto
-    double i1 = I1();
-    double i2 = I2();
-    double i3 = I3();
-    double R = (-2.*i1*i1*i1 + 9.*i1*i2 - 27.*i3) / 54.;
-    double Q = (i1*i1 - 3.*i2)/9.;
-    double sqQ = sqrt(Q);
-    double valcos = R/(Q*sqQ);
+    REAL i1 = I1();
+    REAL i2 = I2();
+    REAL i3 = I3();
+    REAL R = (-2.*i1*i1*i1 + 9.*i1*i2 - 27.*i3) / 54.;
+    REAL Q = (i1*i1 - 3.*i2)/9.;
+    REAL sqQ = sqrt(Q);
+    REAL valcos = R/(Q*sqQ);
     if (valcos < -1.) valcos = -1.;
     if (valcos >  1.) valcos = 1.;
-    double theta = acos(valcos);
+    REAL theta = acos(valcos);
     if (fabs(i2) < 1.e-10){
         eigenvalues.setZero();
         return;

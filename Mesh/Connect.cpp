@@ -26,24 +26,24 @@ void Connect::AllocateTimeDerivatives(){
     fDDTimeSolution.setZero();
 }
 
-void Connect::SetSolution(int istate, double sol){
+void Connect::SetSolution(int istate, REAL sol){
     // fPrevSolution[istate] = fSolution[istate];
     fSolution[istate] = sol;
 }
 
-void Connect::IncrementSolution(int istate, double sol){
+void Connect::IncrementSolution(int istate, REAL sol){
     fSolution[istate] += sol;
 }
 
-void Connect::SetDSolutionDTime(int istate, double val){
+void Connect::SetDSolutionDTime(int istate, REAL val){
     fDTimeSolution[istate] = val;
 };
 
-void Connect::SetDSolutionDDTime(int istate, double val){
+void Connect::SetDSolutionDDTime(int istate, REAL val){
     fDDTimeSolution[istate] = val;
 };
 
-void Connect::SetPreviousSolution(int istate, double val){
+void Connect::SetPreviousSolution(int istate, REAL val){
     fPrevSolution[istate] = val;
 };
 
@@ -54,11 +54,11 @@ void Connect::setMeshVelocity(VecDouble &u){
     };
 };
 
-void Connect::setMeshVelocityComponent(int dir,double u){
+void Connect::setMeshVelocityComponent(int dir,REAL u){
     fMeshVelocity[dir] = u;
 } ;
 
-void Connect::setWeightFunction(double val) {
+void Connect::setWeightFunction(REAL val) {
     fPrevWeightFunction = fWeightFunction; 
     fWeightFunction = val;
 };

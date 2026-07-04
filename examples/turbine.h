@@ -54,7 +54,7 @@
         PlaneSurface* s21 = fluid1 -> addPlaneSurface({ll1});
         PlaneSurface* s22 = fluid1 -> addPlaneSurface({ll2});
         PlaneSurface* s23 = fluid1 -> addPlaneSurface({ll3});
-        double h1 = 11; double v1 = 11;
+        REAL h1 = 11; REAL v1 = 11;
         fluid1 -> transfiniteLine({ l0 }, h1);
         fluid1 -> transfiniteLine({ l1 }, v1);
         fluid1 -> transfiniteLine({ l2 }, h1);

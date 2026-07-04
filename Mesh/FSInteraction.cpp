@@ -19,7 +19,7 @@
 //     //     int nElNodes = fluidModel->NElNodes();
 //     //     VecDouble phi_(nElNodes);
     
-//     //     double xsiCC[3];
+//     //     REAL xsiCC[3];
 //     //     // std::pair<double*,double*> XK;
 //     //     int elemC;
 
@@ -67,7 +67,7 @@
 //     //                 x_ += xint * phi_[i];
 //     //             };
                 
-//     //             double error = 1.e6;                
+//     //             REAL error = 1.e6;                
 //     //             int iterations = 0;
                 
 //     //             while ((error > 1.e-8) && (iterations < 4)) {
@@ -100,8 +100,8 @@
 //     //                 error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
 //     //             };
                 
-//     //             double t1 = -1.e-1;
-//     //             double t2 =  1. - t1;
+//     //             REAL t1 = -1.e-1;
+//     //             REAL t2 =  1. - t1;
                 
 //     //             xsiCC[0] = xsi[0];
 //     //             xsiCC[1] = xsi[1];       
@@ -141,7 +141,7 @@
 //     //     ShapeFunction shapeQuad(DIM,DEG);
 //     //     VecDouble phi_(nElNodes);
     
-//     //     double xsiCC[3];
+//     //     REAL xsiCC[3];
 //     //     // std::pair<typename Elements::DimVector,typename Elements::DimVector> XK;
 //     //     int elemC;
 
@@ -151,9 +151,9 @@
 //     //     VecDouble xsiC(DIM);
 //     //     for (int k = 0; k<DIM; k++) xsiC[k] = 1.e50;
 //     //     VecDouble xsi(DIM);
-//     //     double x_[DIM];
-//     //     double deltaX[DIM];
-//     //     double deltaXsi[DIM];
+//     //     REAL x_[DIM];
+//     //     REAL deltaX[DIM];
+//     //     REAL deltaXsi[DIM];
 //     //     // nodesSolid_[iSol][isolid] -> setNodalCorrespondence(elemC,xsiC);
         
 //     //     for (int ibound = 0; ibound < numElemArlequinBoundaryFine; ibound++){
@@ -188,7 +188,7 @@
 //     //                 for (int k = 0; k<DIM; k++) x_[k] += xint[k] * phi_[i];                
 //     //             };
                 
-//     //             double error = 1.e6;
+//     //             REAL error = 1.e6;
                 
 //     //             int iterations = 0;
                 
@@ -226,8 +226,8 @@
 //     //                 error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
 //     //             };
                 
-//     //             double t1 = -1.e-1;
-//     //             double t2 =  1. - t1;
+//     //             REAL t1 = -1.e-1;
+//     //             REAL t2 =  1. - t1;
                 
 //     //             xsiCC[0] = xsi[0];
 //     //             xsiCC[1] = xsi[1];       
@@ -258,7 +258,7 @@
 
 //     //     if (boundaryFluid_[ibound] -> getBoundaryGroup() == interface){    
 //     //         int elemC;
-//     //         double xsiC;
+//     //         REAL xsiC;
 
 //     //         VecInt connec = boundaryFluid_[ibound] -> getConnectivity();
 //     //         int nBdNodes = fluidModel->NBdNodes();
@@ -292,7 +292,7 @@
 //     //     if (boundaryArlequinFine_[ibound] -> getBoundaryGroup() == interface){
 //     //         flag++;
 //     //         int elemC;
-//     //         double xsiC;
+//     //         REAL xsiC;
 
 //     //         VecInt connec = boundaryArlequinFine_[ibound] -> getConnectivity();
 //     //         int nBdNodes = arlequinModel->MeshVec()[1]->NBdNodes();
@@ -321,7 +321,7 @@
     
 //     VecInt connec;
 //     VecDouble xk(DIM), Xk(DIM);
-//     double dCk[3], dck[3];
+//     REAL dCk[3], dck[3];
 
 //     //Compute element boxes for coarse model
 //     //Only function for straight elements
@@ -461,15 +461,15 @@
 //     // };
     
 //     // // Set element mesh moving parameters
-//     // double vMax = 0., vMin = 1.e10;
+//     // REAL vMax = 0., vMin = 1.e10;
 //     // for (int i = 0; i < numElemFluid; i++){
-//     //     double v = elementsFluid_[i] -> getJacobian();
+//     //     REAL v = elementsFluid_[i] -> getJacobian();
 //     //     if (v > vMax) vMax = v;
 //     //     if (v < vMin) vMin = v;
 //     // };
 //     // for (int i = 0; i < numElemFluid; i++){
-//     //     double v = elementsFluid_[i] -> getJacobian();
-//     //     double eta = 1 + (1. - vMin / vMax) / (v / vMax);
+//     //     REAL v = elementsFluid_[i] -> getJacobian();
+//     //     REAL eta = 1 + (1. - vMin / vMax) / (v / vMax);
 //     //     PanicButton();
 //     //     // elementsFluid_[i] -> setMeshMovingParameter(eta);
 
@@ -550,16 +550,16 @@
 //     };
 
 //     // Set element mesh moving parameters
-//     double vMax = 0., vMin = 1.e10;
+//     REAL vMax = 0., vMin = 1.e10;
 //     for (int i = 0; i < numElemArlequinFine; i++){
-//         double v = elementsArlequinFine_[i] -> getJacobian();
+//         REAL v = elementsArlequinFine_[i] -> getJacobian();
 //         if (v > vMax) vMax = v;
 //         if (v < vMin) vMin = v;
 //     };
 
 //     for (int i = 0; i < numElemArlequinFine; i++){
-//         double v = elementsArlequinFine_[i] -> getJacobian();
-//         double eta = 1 + (1. - vMin / vMax) / (v / vMax);
+//         REAL v = elementsArlequinFine_[i] -> getJacobian();
+//         REAL eta = 1 + (1. - vMin / vMax) / (v / vMax);
 //         PanicButton();
 //         // elementsArlequinFine_[i] -> setMeshMovingParameter(eta);
 
@@ -926,12 +926,12 @@
 //     std::ofstream saidaOmega(om.c_str());
 
 
-//     double sizeSolid = 3 * numNodesSolid;
+//     REAL sizeSolid = 3 * numNodesSolid;
 
-//     double *X_k;
-//     double *Y_k;
-//     double *deltaXi;
-//     double *deltaXii;  
+//     REAL *X_k;
+//     REAL *Y_k;
+//     REAL *deltaXi;
+//     REAL *deltaXii;  
 
 //     X_k = new double[3* numNodesSolid]();
 //     Y_k = new double[3* numNodesSolid]();
@@ -939,12 +939,12 @@
 //     deltaXii = new double[3* numNodesSolid]();
     
 
-//     double omega = 1.;
-//     double mu = 0.;
+//     REAL omega = 1.;
+//     REAL mu = 0.;
 
-//     // double &alpha_f = fluidModel->fProbParameters.getAlphaF();
-//     // double &alpha_m = fluidModel->fProbParameters.getAlphaM();
-//     // double &gamma = fluidModel->fProbParameters.getGamma();
+//     // REAL &alpha_f = fluidModel->fProbParameters.getAlphaF();
+//     // REAL &alpha_m = fluidModel->fProbParameters.getAlphaM();
+//     // REAL &gamma = fluidModel->fProbParameters.getGamma();
 
 //     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
@@ -961,7 +961,7 @@
 //         };
 
 //         // if (iTimeStep == 20){
-//         //     double integ = 1.0;
+//         //     REAL integ = 1.0;
 //         //     fluidModel->ProblemParameters.setSpectralRadius(integ);  
 //         // } 
         
@@ -976,7 +976,7 @@
             
 //         //     if (boundaryFluid_[ibound] -> getConstrain(0) == 1){
                 
-//         //         double value = boundaryFluid_[ibound] -> getConstrainValue(0) * 
+//         //         REAL value = boundaryFluid_[ibound] -> getConstrainValue(0) * 
 //         //             (1. - cos(0.4 * pi * dTime * iTimeStep));
 //         //         nodesFluid_[no1] -> setConstrains(0,boundaryFluid_[ibound] -> 
 //         //                                           getConstrain(0),value);
@@ -1028,8 +1028,8 @@
 //         //COMPUTING PREDICTOR
 //         for (int i = 0; i < numNodesSolid; i++){
 //             if (rank == 0) {
-//                 double v_ = 0.;
-//                 double v_prev = 0.;
+//                 REAL v_ = 0.;
+//                 REAL v_prev = 0.;
 //                 int dof = 3*i+1;
 //                 getposition_(&dof,&Y_k[3*i  ]);
 //                 getvelocity_(&dof,&v_);
@@ -1055,7 +1055,7 @@
            
 //         //X_k = Y_k;
 
-//         double residual = 1.e10;
+//         REAL residual = 1.e10;
 //         int iterations = 0;
 
 
@@ -1092,8 +1092,8 @@
             
 //             //Aitken Relaxation
 //             if (iterations > 0){
-//                 double aux1 = 0.;
-//                 double aux2 = 0.;
+//                 REAL aux1 = 0.;
+//                 REAL aux2 = 0.;
 
 //                 for (int i=0; i<sizeSolid; i++){
 //                     aux1 += (deltaXi[i]-deltaXii[i]) * deltaXii[i];
@@ -1194,20 +1194,20 @@
 //     std::ofstream saidaOmega(om.c_str());
 
 
-//     double sizeSolid = 3 * numNodesSolid;
+//     REAL sizeSolid = 3 * numNodesSolid;
 
-//     double *X_k;
-//     double *Y_k;
-//     double *deltaXi;
-//     double *deltaXii;  
+//     REAL *X_k;
+//     REAL *Y_k;
+//     REAL *deltaXi;
+//     REAL *deltaXii;  
 
 //     X_k = new double[3* numNodesSolid]();
 //     Y_k = new double[3* numNodesSolid]();
 //     deltaXi = new double[3* numNodesSolid]();
 //     deltaXii = new double[3* numNodesSolid]();
 
-//     double omega = 1.;
-//     double mu = 0.;
+//     REAL omega = 1.;
+//     REAL mu = 0.;
 
 //     if (rank == 0) {
 //         arlequinModel->printResultsCoarse(0);
@@ -1215,9 +1215,9 @@
 //         printstructure_();
 //     };
 
-//     // double &alpha_f = arlequinModel->MeshVec()[1]->fProbParameters.getAlphaF();
-//     // double &alpha_m = arlequinModel->MeshVec()[1]->fProbParameters.getAlphaM();
-//     // double &gamma = arlequinModel->MeshVec()[1]->fProbParameters.getGamma();
+//     // REAL &alpha_f = arlequinModel->MeshVec()[1]->fProbParameters.getAlphaF();
+//     // REAL &alpha_m = arlequinModel->MeshVec()[1]->fProbParameters.getAlphaM();
+//     // REAL &gamma = arlequinModel->MeshVec()[1]->fProbParameters.getGamma();
 
 //     for (int iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){  
 
@@ -1244,7 +1244,7 @@
             
 //         //     if (boundaryFluid_[ibound] -> getConstrain(0) == 1){
                 
-//         //         double value = boundaryFluid_[ibound] -> getConstrainValue(0) * 
+//         //         REAL value = boundaryFluid_[ibound] -> getConstrainValue(0) * 
 //         //             (1. - cos(0.4 * pi * dTime * iTimeStep));
 //         //         nodesFluid_[no1] -> setConstrains(0,boundaryFluid_[ibound] -> 
 //         //                                           getConstrain(0),value);
@@ -1260,7 +1260,7 @@
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 
 //         // if (iTimeStep == 10){
-//         //     double spec = 0.0;
+//         //     REAL spec = 0.0;
 //         //     arlequinModel->MeshVec()[1]->ProblemParameters.setSpectralRadius(spec);
 //         //     arlequinModel->MeshVec()[0]->ProblemParameters.setSpectralRadius(spec);
 //         //     std::cout << "AQUI " << rank << std::endl;
@@ -1316,23 +1316,23 @@
 
 //         //Compute Qs and Rs for mesh moving problem
 //         // for (int i = 0; i < numNodesArlequinFine; i++){
-//         //     double x = nodesArlequinFine_[i] -> getCoordinateValue(0);
-//         //     double y = nodesArlequinFine_[i] -> getCoordinateValue(1);
-//         //     double xp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(0);
-//         //     double yp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(1);
-//         //     double vx = nodesArlequinFine_[i] -> getMeshVelocity(0);
-//         //     double vy = nodesArlequinFine_[i] -> getMeshVelocity(1);
-//         //     double ax = nodesArlequinFine_[i] -> getMeshAcceleration(0);
-//         //     double ay = nodesArlequinFine_[i] -> getMeshAcceleration(1);
+//         //     REAL x = nodesArlequinFine_[i] -> getCoordinateValue(0);
+//         //     REAL y = nodesArlequinFine_[i] -> getCoordinateValue(1);
+//         //     REAL xp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(0);
+//         //     REAL yp = nodesArlequinFine_[i] -> getPreviousCoordinateValue(1);
+//         //     REAL vx = nodesArlequinFine_[i] -> getMeshVelocity(0);
+//         //     REAL vy = nodesArlequinFine_[i] -> getMeshVelocity(1);
+//         //     REAL ax = nodesArlequinFine_[i] -> getMeshAcceleration(0);
+//         //     REAL ay = nodesArlequinFine_[i] -> getMeshAcceleration(1);
 
-//         //     double accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
-//         //     double accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
+//         //     REAL accelx = (x - xp) / (0.25 * dTime * dTime) - vx / (0.25 * dTime) - ax * (0.5/0.25 - 1.0);
+//         //     REAL accely = (y - yp) / (0.25 * dTime * dTime) - vy / (0.25 * dTime) - ay * (0.5/0.25 - 1.0);
 
 //         //     nodesArlequinFine_[i] -> setMeshAccelerationComponent(0,accelx);
 //         //     nodesArlequinFine_[i] -> setMeshAccelerationComponent(1,accely);
 
-//         //     double velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
-//         //     double vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
+//         //     REAL velx = 0.5 * dTime * accelx + vx + dTime * (1.0 - 0.5) * ax;
+//         //     REAL vely = 0.5 * dTime * accely + vy + dTime * (1.0 - 0.5) * ay;
 
 //         //     nodesArlequinFine_[i] -> setMeshVelocityComponent(0,velx);
 //         //     nodesArlequinFine_[i] -> setMeshVelocityComponent(1,vely);
@@ -1365,8 +1365,8 @@
 //         //COMPUTING PREDICTOR
 //         for (int i = 0; i < numNodesSolid; i++){
 //             if (rank == 0) {
-//                 double v_ = 0.;
-//                 double v_prev = 0.;
+//                 REAL v_ = 0.;
+//                 REAL v_prev = 0.;
 //                 int dof = 3*i+1;
 //                 getposition_(&dof,&Y_k[3*i  ]);
 //                 getvelocity_(&dof,&v_);
@@ -1394,7 +1394,7 @@
 //         // MPI_Barrier(PETSC_COMM_WORLD);
 //         //X_k = Y_k;
 
-//         double residual = 1.e10;
+//         REAL residual = 1.e10;
 //         int iterations = 0;
 
 //         //Gauss-Seidel iterations
@@ -1435,7 +1435,7 @@
 //             if (rank == 0) transferArlequinLoad();
 //             // if ((rank == 0) && (iTimeStep < 250)) {
 //             //     int inode = 43;
-//             //     double load[2];
+//             //     REAL load[2];
 //             //     load[0] = 0.;
 //             //     load[1] = 500.;
 //             //     setcouplingload_(&load[0],&load[1],&inode);
@@ -1471,8 +1471,8 @@
             
 //             //Aitken Relaxation
 //              if (iterations > 0){
-//                 double aux1 = 0.;
-//                 double aux2 = 0.;
+//                 REAL aux1 = 0.;
+//                 REAL aux2 = 0.;
 
 //                 for (int i=0; i<sizeSolid; i++){
 //                     aux1 += (deltaXi[i]-deltaXii[i]) * deltaXii[i];

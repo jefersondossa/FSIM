@@ -470,8 +470,8 @@ void GmshTools::Read4(GeoMesh &gmesh, const std::string &file_name){
             int n_physical_tag;
             std::pair<int, std::vector<int> > chunk;
             /// Entity bounding box data
-            double x_min, y_min, z_min;
-            double x_max, y_max, z_max;
+            REAL x_min, y_min, z_min;
+            REAL x_max, y_max, z_max;
             std::vector<int> n_entities = {m_n_points,m_n_curves,m_n_surfaces,m_n_volumes};
             std::vector<int> n_entities_with_physical_tag = {0,0,0,0};
             

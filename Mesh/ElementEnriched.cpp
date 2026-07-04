@@ -55,7 +55,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
 
         // //Defines the integration points adimentional coordinates 
         for (int k = 0; k < DIM; k++){
-            double coord = fLocalElement->IntegPointCoordinate(index,k);
+            REAL coord = fLocalElement->IntegPointCoordinate(index,k);
             fLocalElement->IntegrationData().fAdimCoord[k] = coord;
             fGlobalElement->IntegrationData().fAdimCoord[k] = elGlobalXsi(index,k); 
         }         

@@ -110,7 +110,7 @@ bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int 
         }        
     };
 
-    double error = 1.e6;
+    REAL error = 1.e6;
     int iterations = 0;
 
     while ((error > 1.e-8) && (iterations < 4)) {
@@ -138,8 +138,8 @@ bool CompMeshTools::searchNodeCorrespondence(VecDouble &x, CompMesh *cmesh, int 
         error = std::sqrt(deltaXsi[0]*deltaXsi[0] + deltaXsi[1]*deltaXsi[1]);
     };
     
-    double t1 = -1.e-2;
-    double t2 =  1. - t1;
+    REAL t1 = -1.e-2;
+    REAL t2 =  1. - t1;
     
     xsiCC[0] = xsi[0];
     xsiCC[1] = xsi[1];

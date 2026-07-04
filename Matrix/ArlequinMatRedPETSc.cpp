@@ -79,7 +79,7 @@ ArlequinMatRedPETSc::~ArlequinMatRedPETSc(){
 }
 
 
-void ArlequinMatRedPETSc::AddValueMatrix(int &row, int &col, double &val) {
+void ArlequinMatRedPETSc::AddValueMatrix(int &row, int &col, REAL &val) {
 
     if (row < fDim0 && col < fDim0){// Belongs to K0
         MatSetValues(fK0,1,&row,1,&col,&val,ADD_VALUES);
@@ -120,7 +120,7 @@ void ArlequinMatRedPETSc::AddValueMatrix(int &row, int &col, double &val) {
     
 };
 
-void ArlequinMatRedPETSc::PutValueMatrix(int &row, int &col, double &val) {
+void ArlequinMatRedPETSc::PutValueMatrix(int &row, int &col, REAL &val) {
     if (row < fDim0 && col < fDim0){// Belongs to K0
         PetscInt rowpetsc = (row);
         PetscInt colpetsc = (col);
@@ -162,7 +162,7 @@ void ArlequinMatRedPETSc::PutValueMatrix(int &row, int &col, double &val) {
     
 };
 
-double ArlequinMatRedPETSc::GetValueMatrix(int &row, int &col) {
+REAL ArlequinMatRedPETSc::GetValueMatrix(int &row, int &col) {
     std::cout << "It may need a scatter context. Please check PETSc manual and implement it. \n";
     PanicButton();
 };
@@ -270,7 +270,7 @@ void ArlequinMatRedPETSc::VecAssemble(){
     VecAssemblyEnd(fG);
 }
 
-void ArlequinMatRedPETSc::AddValueRhs(int &row, double &val) {
+void ArlequinMatRedPETSc::AddValueRhs(int &row, REAL &val) {
     if (row < fDim0){// Belongs to F0
         VecSetValues(fF0, 1, &row, &val, ADD_VALUES);
         return;
@@ -287,7 +287,7 @@ void ArlequinMatRedPETSc::AddValueRhs(int &row, double &val) {
     }   
 };
 
-void ArlequinMatRedPETSc::PutValueRhs(int &row, double &val) {
+void ArlequinMatRedPETSc::PutValueRhs(int &row, REAL &val) {
     if (row < fDim0){// Belongs to F0
         VecSetValues(fF0, 1, &row, &val, INSERT_VALUES);
         return;
@@ -304,12 +304,12 @@ void ArlequinMatRedPETSc::PutValueRhs(int &row, double &val) {
     }   
 };
 
-double ArlequinMatRedPETSc::GetValueRhs(int &row) {
+REAL ArlequinMatRedPETSc::GetValueRhs(int &row) {
     std::cout << "This vector need a scatter context to get values. Please implement it. \n";
     PanicButton();
 };
 
-void ArlequinMatRedPETSc::AddValueSolution(int &row, double &val) {
+void ArlequinMatRedPETSc::AddValueSolution(int &row, REAL &val) {
     if (row < fDim0){// Belongs to U0
         VecSetValues(fU0, 1, &row, &val, ADD_VALUES);
         return;
@@ -326,7 +326,7 @@ void ArlequinMatRedPETSc::AddValueSolution(int &row, double &val) {
     }   
 };
 
-void ArlequinMatRedPETSc::PutValueSolution(int &row, double &val) {
+void ArlequinMatRedPETSc::PutValueSolution(int &row, REAL &val) {
     if (row < fDim0){// Belongs to U0
         VecSetValues(fU0, 1, &row, &val, INSERT_VALUES);
         return;
@@ -343,9 +343,9 @@ void ArlequinMatRedPETSc::PutValueSolution(int &row, double &val) {
     }
 };
 
-double ArlequinMatRedPETSc::GetValueSolution(int &row) {
+REAL ArlequinMatRedPETSc::GetValueSolution(int &row) {
     int Ione = 1;
-    double val;
+    REAL val;
     VecGetValues(fSolutionAll, Ione, &row, &val);
     return val;
 };
@@ -372,8 +372,8 @@ void ArlequinMatRedPETSc::ClearSolution(){
     VecDestroy(&fSolutionAll);
 }
 
-double ArlequinMatRedPETSc::SolutionNorm(){
-    double val;
+REAL ArlequinMatRedPETSc::SolutionNorm(){
+    REAL val;
     VecNorm(fSolutionAll,NORM_2,&val);
     return val;
 }

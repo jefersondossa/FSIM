@@ -6,12 +6,12 @@
 class PositionalTruss : public WeakForm{
 protected:
     // Material Young modulus
-    double fYoungModulus;
+    REAL fYoungModulus;
     // Material Area
-    double fArea;
+    REAL fArea;
 public:
     //Positional elasticity 2D constructor
-    PositionalTruss(int matid, int dim, double young, double area);
+    PositionalTruss(int matid, int dim, REAL young, REAL area);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -52,7 +52,7 @@ public:
 
     /// @brief Returns the material young modulus
     /// @return Young modulus
-    double &YoungModulus(){
+    REAL &YoungModulus(){
         return fYoungModulus;
     }
 

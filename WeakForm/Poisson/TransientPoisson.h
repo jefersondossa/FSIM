@@ -8,20 +8,20 @@
 class TransientPoisson : public Poisson, public TransientWeakForm{
 protected:
     // Damping
-    double fDamping;
+    REAL fDamping;
     // Density
-    double fDensity;
+    REAL fDensity;
     // Integration parameters
-    double fBeta = 0.25;
-    double fGamma = 0.5;
-    double fSpectralRadius = 1.;
+    REAL fBeta = 0.25;
+    REAL fGamma = 0.5;
+    REAL fSpectralRadius = 1.;
 
 public:
     /// @brief Poisson weak for constructor
     /// @param matid physical tag
     /// @param dim problem dimension
     /// @param nState number of state variables
-    TransientPoisson(int matid, int dim, double damp, double dens, double dt, TimeIntegScheme integscheme = ENewmark, int nState = 1);
+    TransientPoisson(int matid, int dim, REAL damp, REAL dens, REAL dt, TimeIntegScheme integscheme = ENewmark, int nState = 1);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -56,7 +56,7 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    void SetNewmarkParameters(double beta, double gamma){
+    void SetNewmarkParameters(REAL beta, REAL gamma){
         fBeta = beta;
         fGamma = gamma;
     }

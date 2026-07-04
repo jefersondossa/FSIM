@@ -1,6 +1,6 @@
 #include "ElasticityPositional2D.h"
 
-ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double poisson, double thick, bool planes) : WeakForm() {
+ElasticityPositional2D::ElasticityPositional2D(int matid, REAL young, REAL poisson, REAL thick, bool planes) : WeakForm() {
     this->fMatId = matid;
     fDimension = 2;
     fNState = 2;
@@ -19,9 +19,9 @@ ElasticityPositional2D::ElasticityPositional2D(int matid, double young, double p
         fConstitutiveMatrix(1,0) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio))*fPoissonRatio;
         fConstitutiveMatrix(2,2) = 2.0 * (fYoungModulus / (2.0 * (1.0+fPoissonRatio)));
     } else {
-        const double prop1 = fYoungModulus / ((1.0 + fPoissonRatio) * (1.0 - 2.0 * fPoissonRatio));
-        const double prop2 = 1.0 - fPoissonRatio;
-        const double prop3 = fYoungModulus / (1.0 + fPoissonRatio);
+        const REAL prop1 = fYoungModulus / ((1.0 + fPoissonRatio) * (1.0 - 2.0 * fPoissonRatio));
+        const REAL prop2 = 1.0 - fPoissonRatio;
+        const REAL prop3 = fYoungModulus / (1.0 + fPoissonRatio);
         fConstitutiveMatrix(0,0) = prop1*prop2;
         fConstitutiveMatrix(0,1) = prop1*fPoissonRatio;
         fConstitutiveMatrix(1,1) = prop1*prop2;
@@ -39,19 +39,19 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
         data.fDSolDx.resize(fNState,fDimension);
     }
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index] * fThickness;
     
     auto dphi_dx = data.fDPhiX0.transpose();
 
     //COMPUTE A1
     MatrixDouble dx_dxsi = data.fA0;
     MatrixDouble dy_dxsi = data.fA1;
-    double j0 = data.fJacA0;
+    REAL j0 = data.fJacA0;
 
     //dy_dx
     MatrixDouble dy_dx = dy_dxsi * data.fA0Inv;
     //jacobian
-    double jac = dy_dx.determinant();
+    REAL jac = dy_dx.determinant();
 
     //Green-Lagrange strain tensor
     MatrixDouble E(fDimension,fDimension);
@@ -110,13 +110,13 @@ void ElasticityPositional2D::ComputeStiffness(int &index, IntPointData &data, Ma
                     dS_dybl(0,1) = dS_dybl(1,0) = stress[2];
 
                     //elastic and geometric componentes of tangent matrix
-                    double e = 0.0;
+                    REAL e = 0.0;
                     for (int i = 0; i < fDimension; i++)
                         for (int j = 0; j < fDimension; j++)
                             e += dS_dybl(i,j) * dE_dyak(i,j) + SPKStress(i,j) * d2E_dyakbl(i,j);
 
                     //mass matrix
-                    double m = 0.;
+                    REAL m = 0.;
                     // (k==l)? m = (1.0 / (0.25 * dTime_)) *0* data.fPhi[a] * data.fPhi[b] : m = 0.0;
 
                     Stiffness(2 * a + k,2 * b + l) += (e+m) * j0 * data.fWeight * fThickness;
@@ -152,7 +152,7 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
                     dE_dyak(i,j) = 0.5 * (dphi_dx(a,i) * dy_dx(k,j) + dy_dx(k,i) * dphi_dx(a,j));
             
             //internal force
-            double f = 0.0;
+            REAL f = 0.0;
             for (int i = 0; i < fDimension; i++)
                 for (int j = 0; j < fDimension; j++)
                     f += SPKStress(i,j) * dE_dyak(i,j);
@@ -189,7 +189,7 @@ void ElasticityPositional2D::ComputeResidual(int &index, IntPointData &data, Vec
                     dE_dyak(i,j) = 0.5 * (dphi_dx(a,i) * dy_dx(k,j) + dy_dx(k,i) * dphi_dx(a,j));
             
             //internal force
-            double f = 0.0;
+            REAL f = 0.0;
             for (int i = 0; i < fDimension; i++)
                 for (int j = 0; j < fDimension; j++)
                     f += matStress(i,j) * dE_dyak(i,j);
@@ -404,7 +404,7 @@ void ElasticityPositional2D::Solution(IntPointData &data, int var, VecDouble &So
         //dy_dx
         MatrixDouble dy_dx = data.fA1 * data.fA0Inv;
         //jacobian
-        double jac = dy_dx.determinant();
+        REAL jac = dy_dx.determinant();
 
         //Green-Lagrange strain tensor
         MatrixDouble E(fDimension,fDimension);
@@ -420,9 +420,9 @@ void ElasticityPositional2D::Solution(IntPointData &data, int var, VecDouble &So
             constitutive(1,0) = constitutive(0,1);
             constitutive(1,1) = fYoungModulus / (1.0-(fPoissonRatio*fPoissonRatio)) * (E(1,1) + fPoissonRatio * E(0,0));
         } else {
-            const double prop1 = fYoungModulus / ((1.0 + fPoissonRatio) * (1.0 - 2.0 * fPoissonRatio));
-            const double prop2 = 1.0 - fPoissonRatio;
-            const double prop3 = fYoungModulus / (1.0 + fPoissonRatio);
+            const REAL prop1 = fYoungModulus / ((1.0 + fPoissonRatio) * (1.0 - 2.0 * fPoissonRatio));
+            const REAL prop2 = 1.0 - fPoissonRatio;
+            const REAL prop3 = fYoungModulus / (1.0 + fPoissonRatio);
             constitutive(0,0) = prop1 *(prop2 * E(0,0) + fPoissonRatio * E(1,1));    
             constitutive(1,1) = prop1 *(prop2 * E(1,1) + fPoissonRatio * E(0,0));    
             constitutive(0,1) = constitutive(1,0) = prop3 * E(1,0);      

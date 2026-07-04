@@ -63,14 +63,14 @@ public:
 
     /// Returns the node coordinate component value
     /// @return node coordinate component value
-    double getCoordinateValue(int dir) const {
+    REAL getCoordinateValue(int dir) const {
         return fCoord[dir];
     };
 
     /// @brief Returns the node component value for a given direction
     /// @param dir direction
     /// @return previous time/load step coordinate
-    double getPreviousCoordinateValue(int dir) const {
+    REAL getPreviousCoordinateValue(int dir) const {
         return fPrevCoord[dir];
     };
 
@@ -87,12 +87,12 @@ public:
     }
 
     /// Increment the coordinate vector
-    /// @param int direction @param double increment value
-    void incrementCoordinate(int dir, double u);
+    /// @param int direction @param REAL increment value
+    void incrementCoordinate(int dir, REAL u);
 
     /// Sets the previous coordinate vector
-    /// @param int direction @param double value
-    void setPreviousCoordinates(int dir, double u);
+    /// @param int direction @param REAL value
+    void setPreviousCoordinates(int dir, REAL u);
 
     /// Sets the node coordinate vector
     /// @param VecLocD Coordinate

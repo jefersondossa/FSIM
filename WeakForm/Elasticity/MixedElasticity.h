@@ -7,18 +7,18 @@
 class MixedElasticity : public WeakForm{
 protected:
     // Young modulus
-    double       fYoungModulus;
+    REAL       fYoungModulus;
     // Poisson's ratio
-    double       fPoissonRatio;
-    double       fBulkModulus;
-    double       fShearModulus;
+    REAL       fPoissonRatio;
+    REAL       fBulkModulus;
+    REAL       fShearModulus;
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
 
 public:  
     // MixedElasticity class constructor
-    MixedElasticity(int matid, int dim, double young, double poisson);
+    MixedElasticity(int matid, int dim, REAL young, REAL poisson);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -59,11 +59,11 @@ public:
 
     /// @brief Returns the material young modulus
     /// @return Young modulus
-    double &YoungModulus(){
+    REAL &YoungModulus(){
         return fYoungModulus;
     }
 
-    double &PoissonRatio(){
+    REAL &PoissonRatio(){
         return fPoissonRatio;
     }
 

@@ -37,7 +37,7 @@ int IntRule::NPoints() const {
 
 void IntRule::Print(std::ostream &out) const {
     VecDouble co(fPoints.cols());
-    double w;
+    REAL w;
 
     for (int i = 0; i < NPoints(); i++) {
         Point(i, co, w);
@@ -53,7 +53,7 @@ void IntRule::Print(std::ostream &out) const {
     }
 }
 
-void IntRule::Point(int p, VecDouble& co, double& w) const {
+void IntRule::Point(int p, VecDouble& co, REAL& w) const {
     int dim = co.size();
 
     for (int i = 0; i < dim; i++) {
@@ -62,10 +62,10 @@ void IntRule::Point(int p, VecDouble& co, double& w) const {
     w = fWeights[p];
 }
 
-double IntRule::PointList(int i, int j) const {
+REAL IntRule::PointList(int i, int j) const {
     return fPoints(i,j);
 }
 
-double IntRule::WeightList(int i) const {
+REAL IntRule::WeightList(int i) const {
     return fWeights[i];
 }

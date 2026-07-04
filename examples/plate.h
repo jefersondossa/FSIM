@@ -2,7 +2,7 @@
    // Defines the problem dimension
     const int dimension = 2;
 {
-auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+auto yieldFunction = [](const REAL &plast, REAL &sigma_y, REAL &hardening){
     // sigma_y =.5/sqrt(3.)+500.*plast;
     hardening = 00.;
     sigma_y =16000+hardening*plast;
@@ -50,7 +50,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 
     VonMises *plastmodel = new VonMises(matelas);
     // Tresca *plastmodel = new Tresca(matelas);
-    double angle = 00.*M_PI/180.;
+    REAL angle = 00.*M_PI/180.;
     // DruckerPrager *plastmodel = new DruckerPrager(matelas,angle,angle,false);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);
@@ -79,9 +79,9 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // std::set<int> matid = {6};
     // std::map<std::string,VecDouble> result;
     // cmesh->Integrate(matid,integrate,result);
-    // double aux = 206.9/((1.29)*(1.-2.*.29));
-    // double valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
-    // double valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
+    // REAL aux = 206.9/((1.29)*(1.-2.*.29));
+    // REAL valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
+    // REAL valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
     // int a = 0;
     
 }           

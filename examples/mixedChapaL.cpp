@@ -25,11 +25,11 @@ auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -51,11 +51,11 @@ auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -77,11 +77,11 @@ auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -103,11 +103,11 @@ auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -166,8 +166,8 @@ void SolveProblem(CompMesh *cmesh){
     
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (sol.dot(rhs))/2;
-    double strainEnergy2 = 0.0;
+    REAL strainEnergy = (sol.dot(rhs))/2;
+    REAL strainEnergy2 = 0.0;
     for (int i = 0; i < sol.size(); i++){
         if (fabs(sol[i])>1.e3 || fabs(rhs[i])>1.e3)continue;
         strainEnergy2 += sol[i]*rhs[i]/2.;

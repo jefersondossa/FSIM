@@ -16,21 +16,21 @@ extern "C" {void preprocessing_(char *solid_reading);};
 extern "C" {void solveframestructure_(int *ipt);};
 extern "C" {void getnumberofnodessolid_(int *n);};
 extern "C" {void getnumberofelementssolid_(int *n);};
-extern "C" {void getsolidposition_(int *node, double *x_, double *y_);};
-extern "C" {void searchcorrespondencefluid_(double *x_, double *y_, 
-                                            int *elem, double *xsi);};
-extern "C" {void getupdatedcoordinates_(double *x_, double *y_, 
-                                        int *elem, double *xsi);};
-extern "C" {void getinterpolatedvelocity_(double *x_, double *y_, 
-                                          int *elem, double *xsi);};
-extern "C" {void setcouplingload_(double *fx_, double *fy_, int *node);};
+extern "C" {void getsolidposition_(int *node, REAL *x_, REAL *y_);};
+extern "C" {void searchcorrespondencefluid_(REAL *x_, REAL *y_, 
+                                            int *elem, REAL *xsi);};
+extern "C" {void getupdatedcoordinates_(REAL *x_, REAL *y_, 
+                                        int *elem, REAL *xsi);};
+extern "C" {void getinterpolatedvelocity_(REAL *x_, REAL *y_, 
+                                          int *elem, REAL *xsi);};
+extern "C" {void setcouplingload_(REAL *fx_, REAL *fy_, int *node);};
 extern "C" {void clearcouplingloads_();};
 extern "C" {void printstructure_();};
 extern "C" {void updateqsrs_();};
-extern "C" {void getposition_(int *dof, double *p);};
-extern "C" {void setposition_(int *dof, double *p);};
-extern "C" {void getvelocity_(int *dof, double *p);};
-extern "C" {void getpreviousvelocity_(int *dof, double *p);};
+extern "C" {void getposition_(int *dof, REAL *p);};
+extern "C" {void setposition_(int *dof, REAL *p);};
+extern "C" {void getvelocity_(int *dof, REAL *p);};
+extern "C" {void getpreviousvelocity_(int *dof, REAL *p);};
 extern "C" {void updatesolid_(int *ipt);};
 
 /// Mounts and solve the Fluid-Structure interaction problem.
@@ -65,7 +65,7 @@ private:
     int numNodesSolid;
     int numElemSolid;
     int numInterfaces;
-    double dTime;
+    REAL dTime;
     static const int one=1;
 
     //Arlequin variables
@@ -78,7 +78,7 @@ private:
 
     int rank, size;
 
-    double pi = M_PI;
+    REAL pi = M_PI;
 
     std::vector<int>         groupInterfaces;
 

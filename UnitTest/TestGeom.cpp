@@ -91,8 +91,8 @@
 //     VecDouble coord(3);
 //     coord.setZero();
 
-//     double deltaX = 1./nElements;
-//     double deltaY = 0.1;
+//     REAL deltaX = 1./nElements;
+//     REAL deltaY = 0.1;
 
 //     int index = 0;
 //     GeometricNode *nodeAux = new GeometricNode(coord,index);  

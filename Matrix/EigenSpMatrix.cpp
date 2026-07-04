@@ -30,37 +30,37 @@ void EigenSpMatrix::ZeroRhs(){
     fRhs.setZero();
 }
 
-void EigenSpMatrix::AddValueMatrix(int &row, int &col, double &val) {
+void EigenSpMatrix::AddValueMatrix(int &row, int &col, REAL &val) {
     fMatrix.coeffRef(row, col) += val;
 };
-void EigenSpMatrix::PutValueMatrix(int &row, int &col, double &val) {
+void EigenSpMatrix::PutValueMatrix(int &row, int &col, REAL &val) {
     fMatrix.coeffRef(row, col) = val;
 };
-double EigenSpMatrix::GetValueMatrix(int &row, int &col) {
+REAL EigenSpMatrix::GetValueMatrix(int &row, int &col) {
     return fMatrix.coeffRef(row, col);
 };
 
-void EigenSpMatrix::AddValueRhs(int &row, double &val) {
+void EigenSpMatrix::AddValueRhs(int &row, REAL &val) {
     fRhs(row,0) += val;
 };
-void EigenSpMatrix::PutValueRhs(int &row, double &val) {
+void EigenSpMatrix::PutValueRhs(int &row, REAL &val) {
     fRhs(row,0) = val;
 };
-double EigenSpMatrix::GetValueRhs(int &row) {
+REAL EigenSpMatrix::GetValueRhs(int &row) {
     return fRhs(row,0);
 };
 
-void EigenSpMatrix::AddValueSolution(int &row, double &val) {
+void EigenSpMatrix::AddValueSolution(int &row, REAL &val) {
     fSolution(row,0) += val;
 };
-void EigenSpMatrix::PutValueSolution(int &row, double &val) {
+void EigenSpMatrix::PutValueSolution(int &row, REAL &val) {
     fSolution(row,0) = val;
 };
-double EigenSpMatrix::GetValueSolution(int &row) {
+REAL EigenSpMatrix::GetValueSolution(int &row) {
     return fSolution(row,0);
 };
 
-double EigenSpMatrix::SolutionNorm(){
+REAL EigenSpMatrix::SolutionNorm(){
     return fSolution.norm();
 }
 

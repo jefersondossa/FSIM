@@ -1,7 +1,7 @@
 #include "LinearBeam.h"
 
 
-LinearBeam::LinearBeam(int matid, double young, double inertia) : WeakForm() {
+LinearBeam::LinearBeam(int matid, REAL young, REAL inertia) : WeakForm() {
     this->fMatId = matid;
     fDimension = 2;
     fNState = 2;
@@ -19,7 +19,7 @@ void LinearBeam::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &
         data.fSol.resize(fNState);
     }
 
-    double Length = 2.*data.fJacA0;
+    REAL Length = 2.*data.fJacA0;
 
     //Local Stiffness
     Stiffness(0,0) = (12 * (fYoungModulus * fInertia) / (Length * Length * Length));
@@ -41,7 +41,7 @@ void LinearBeam::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &
 void LinearBeam::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
     int nphi = 4;
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
     auto force = fForceFunction;
     VecDouble forcingF(fDimension);
     VecDouble x_ = data.fX;
@@ -53,8 +53,8 @@ void LinearBeam::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs)
     
     for (int i = 4; i--; ){
         //External force
-        double corr = i%2 == 0 ? 1. : data.fJacA0; // in this case the jacobian needs to be squared
-        double Fx = forcingF[0] * phi[i] * corr;
+        REAL corr = i%2 == 0 ? 1. : data.fJacA0; // in this case the jacobian needs to be squared
+        REAL Fx = forcingF[0] * phi[i] * corr;
         Rhs[i] += Fx * WJ;
     };
     
@@ -141,7 +141,7 @@ void LinearBeam::Solution(IntPointData &data, int var, VecDouble &Sol) {
 }; 
 
 
-void LinearBeam::HermiteFunction(double &ksi, VecDouble &phi, VecDouble &dphi, VecDouble &d2phi, VecDouble &d3phi){
+void LinearBeam::HermiteFunction(REAL &ksi, VecDouble &phi, VecDouble &dphi, VecDouble &d2phi, VecDouble &d3phi){
     phi.resize(4);
     phi[0] = 0.5 - 0.75*ksi + 0.25*ksi*ksi*ksi;
     phi[1] = 0.25 - 0.25*ksi - 0.25*ksi*ksi + 0.25*ksi*ksi*ksi;

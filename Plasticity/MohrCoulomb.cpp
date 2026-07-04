@@ -2,7 +2,7 @@
 #include "ElasticTruss.h"
 #include "Elasticity2D.h"
 
-MohrCoulomb::MohrCoulomb(WeakForm *elast, double intfriction) : PlasticityModel(elast){
+MohrCoulomb::MohrCoulomb(WeakForm *elast, REAL intfriction) : PlasticityModel(elast){
     fInternalFriction = intfriction;
 
     
@@ -48,18 +48,18 @@ void MohrCoulomb::ComputeError(IntPointData &data, VecDouble &errors){
 };
 
 
-double MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
-    double YF = 0.;
-    double j2 = Stress.J2();
-    double j3 = Stress.J3();
-    double theta = -1./3. * asin(1.5*sqrt(3.)*j3/sqrt(j2*j2*j2));
+REAL MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
+    REAL YF = 0.;
+    REAL j2 = Stress.J2();
+    REAL j3 = Stress.J3();
+    REAL theta = -1./3. * asin(1.5*sqrt(3.)*j3/sqrt(j2*j2*j2));
 #ifdef DEBUG_BUILD
     if (theta < -M_PI/6. || theta > M_PI/6.){
         PanicButton();
     }
 #endif
-    double i1 = Stress.I1();
-    double fCohesion = 0.;
+    REAL i1 = Stress.I1();
+    REAL fCohesion = 0.;
     fUniaxialYield(data.fEffectivePlasticStrain[index],fCohesion,fHardening);
 
     YF = i1*sin(fInternalFriction) + sqrt(j2)*cos(theta) 
@@ -69,11 +69,11 @@ double MohrCoulomb::YieldFunction(int &index, IntPointData &data, Tensor3D &Stre
     return YF;
 }
 
-double MohrCoulomb::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
+REAL MohrCoulomb::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
 
     // fEtaBar criasdo no .h
-    double dGamma;
+    REAL dGamma;
     return dGamma;
 }
 

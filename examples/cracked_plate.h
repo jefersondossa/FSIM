@@ -2,7 +2,7 @@
    // Defines the problem dimension
     const int dimension = 2;
 {
-auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+auto yieldFunction = [](const REAL &plast, REAL &sigma_y, REAL &hardening){
     // sigma_y =.5/sqrt(3.)+500.*plast;
     hardening = 0.;
     sigma_y =.24e9+hardening*plast;
@@ -12,7 +12,7 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
 auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord;
     auto pi = M_PI;
-    double gPoisson = 0.;
+    REAL gPoisson = 0.;
 
     TVar2 Kolosov = 3. - 4.*gPoisson;
     TVar2 mu = gE / (2.*(1.+gPoisson));
@@ -54,8 +54,8 @@ auto exactSolElasticity2D = [](const VecDouble &coord, VecDouble &u, MatrixDoubl
 auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    double E=1.;
-    double poisson=0.;
+    REAL E=1.;
+    REAL poisson=0.;
     auto pi = M_PI;
     force[0] = -(E*pi*pi*cos(pi*x)*((1.+poisson)*sin(pi*y) + 2.*(3. - 2.*poisson)*sin(2.*pi*y)))/(2.*(-1. + poisson*poisson));
     force[1] = -(E*pi*pi*(-((-3. + poisson)*cos(pi*y)) + 2.*(1. + poisson)*cos(2*pi*y))*sin(pi*x))/(2.*(-1. + poisson*poisson));
@@ -120,9 +120,9 @@ auto forcingFunctionElasticity2D = [](const VecDouble &coord, VecDouble &force){
     // std::set<int> matid = {6};
     // std::map<std::string,VecDouble> result;
     // cmesh->Integrate(matid,integrate,result);
-    // double aux = 206.9/((1.29)*(1.-2.*.29));
-    // double valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
-    // double valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
+    // REAL aux = 206.9/((1.29)*(1.-2.*.29));
+    // REAL valX = aux * ((1.-.29)*result["DerivativeX"][0] + .29*result["DerivativeY"][0])/.45;
+    // REAL valY = aux * (.29*result["DerivativeX"][0] + (1.-.29)*result["DerivativeY"][0])/.45;
     // int a = 0;
     
 }           

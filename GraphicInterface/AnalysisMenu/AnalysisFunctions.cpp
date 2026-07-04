@@ -60,11 +60,11 @@ void WindowConstructor::fApply_Analysis_cb(){
      string st  = this->SolverType->text();
      string sit = FluidSimulation->text();
      string ft = FluidFlow->text();
-     double a; 
-     double b; 
-     double c; 
-     double d; 
-     double e; 
+     REAL a; 
+     REAL b; 
+     REAL c; 
+     REAL d; 
+     REAL e; 
      float f; 
 
      ScriptDisplay->buffer(Buffer);

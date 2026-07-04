@@ -16,11 +16,11 @@ Node::Node(VecDouble &coor, int index){
     fInverseIncidence.clear();
 }
 
-void Node::incrementCoordinate(int dir, double u){
+void Node::incrementCoordinate(int dir, REAL u){
     fCoord[dir] += u;
 };
 
-void Node::setPreviousCoordinates(int dir, double u){
+void Node::setPreviousCoordinates(int dir, REAL u){
     fPrevCoord[dir] = u;
 };
 

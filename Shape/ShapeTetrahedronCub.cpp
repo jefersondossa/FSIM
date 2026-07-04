@@ -11,10 +11,10 @@ const ElementType ShapeTetrahedronCub::ElType;
 
 void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = xi[2];
-    double xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = xi[2];
+    REAL xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
 
     phi[0] = (1.0 / 2.0) * (3.0 * xsi4 - 1.0) * (3.0 * xsi4 - 2.0) * xsi4;
     phi[1] = (1.0 / 2.0) * (3.0 * xsi1 - 1.0) * (3.0 * xsi1 - 2.0) * xsi1;
@@ -114,9 +114,9 @@ void ShapeTetrahedronCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dph
 }
 
 void ShapeTetrahedronCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
-    const double xsi3 = xi[2];
+    const REAL xsi1 = xi[0];
+    const REAL xsi2 = xi[1];
+    const REAL xsi3 = xi[2];
 
     ddphi[0](0,0) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;
     ddphi[0](0,1) = 18. - 27.*xsi1 - 27.*xsi2 - 27.*xsi3;

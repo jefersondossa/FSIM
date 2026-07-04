@@ -27,11 +27,11 @@ auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -53,11 +53,11 @@ auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -79,11 +79,11 @@ auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -105,11 +105,11 @@ auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -130,25 +130,25 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
-    double young = 1.0;
-    double nu = 0.3;
-    double kappa = 3 - 4*nu;
-    double G = young / (2*(1+nu));
+    REAL young = 1.0;
+    REAL nu = 0.3;
+    REAL kappa = 3 - 4*nu;
+    REAL G = young / (2*(1+nu));
 
     u[0] = (A/(2*G)) * pow(r, lambda) * ((kappa - Q * (lambda+1))*cos(lambda*theta) - lambda*cos((lambda-2)*theta));
     u[1] = (A/(2*G)) * pow(r, lambda) * ((kappa + Q * (lambda+1))*sin(lambda*theta) + lambda*sin((lambda-2)*theta));
     
-    double dUxdr = (A/(2*G)) * lambda * pow(r, (lambda-1)) * ((kappa - Q*(lambda+1))*cos(lambda*theta) - lambda*cos((lambda-2)*theta));
-    double dUydr = (A/(2*G)) * lambda * pow(r, (lambda-1)) * ((kappa + Q*(lambda+1))*cos(lambda*theta) + lambda*cos((lambda-2)*theta));
+    REAL dUxdr = (A/(2*G)) * lambda * pow(r, (lambda-1)) * ((kappa - Q*(lambda+1))*cos(lambda*theta) - lambda*cos((lambda-2)*theta));
+    REAL dUydr = (A/(2*G)) * lambda * pow(r, (lambda-1)) * ((kappa + Q*(lambda+1))*cos(lambda*theta) + lambda*cos((lambda-2)*theta));
 
-    double dUxdtheta = (A/(2*G)) * pow(r, lambda) * (-(kappa - Q*(lambda+1)) * lambda * sin(lambda*theta) + lambda * (lambda-2) * sin((lambda-2)*theta));
-    double dUydtheta = (A/(2*G)) * pow(r, lambda) * ((kappa + Q*(lambda+1)) * lambda * cos(lambda*theta) + lambda * (lambda-2) * cos((lambda-2)*theta));
+    REAL dUxdtheta = (A/(2*G)) * pow(r, lambda) * (-(kappa - Q*(lambda+1)) * lambda * sin(lambda*theta) + lambda * (lambda-2) * sin((lambda-2)*theta));
+    REAL dUydtheta = (A/(2*G)) * pow(r, lambda) * ((kappa + Q*(lambda+1)) * lambda * cos(lambda*theta) + lambda * (lambda-2) * cos((lambda-2)*theta));
 
     gradU(0,0) = dUxdr*(x/r) + dUxdtheta*(-y/pow(r, 2));
     gradU(0,1) = dUxdr*(y/r) + dUxdtheta*(x/pow(r, 2));
@@ -170,9 +170,9 @@ int overlappingRegion;
 int overlappingNHDirichletBoundary;
 int overlappingNHNeumannBoundary;
 int globalLocalIterations;
-double globalLocalTolerance;
-double ModElasticity = 1.;
-double PoissonRatio = 0.3;//0.49999;
+REAL globalLocalTolerance;
+REAL ModElasticity = 1.;
+REAL PoissonRatio = 0.3;//0.49999;
 
 VecDouble previousSol;
 VecDouble currentSol;
@@ -799,7 +799,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
 
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (sol.dot(rhs))/2;
+    REAL strainEnergy = (sol.dot(rhs))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
 
     VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
@@ -857,13 +857,13 @@ void SolveLocalProblem(CompMesh *cmeshL){
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
 
-    double bignumber = 1.e20;
+    REAL bignumber = 1.e20;
     for (int64_t i = 0; i < rhs.size(); i++){
         if (rhs[i]>1.e10) rhs[i] = 0.;
         if (rhs[i]<-1.e10) rhs[i] = 0.;
     }
 
-    double strainEnergy = (sol.dot(rhs))/2;
+    REAL strainEnergy = (sol.dot(rhs))/2;
     
     
 
@@ -890,7 +890,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     currentSol = spMat->Solution();
 
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (currentSol.dot(rhs))/2;
+    REAL strainEnergy = (currentSol.dot(rhs))/2;
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
     std::vector<std::string> ScalarNames, VectorNames;

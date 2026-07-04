@@ -9,17 +9,17 @@
 class TransientPositional2D : public ElasticityPositional2D, public TransientWeakForm{
 protected:
     // Damping
-    double fDamping;
+    REAL fDamping;
     // Density
-    double fDensity;
+    REAL fDensity;
     // Integration parameters
-    double fBeta = 0.25;
-    double fGamma = 0.5;
-    double fSpectralRadius = 1.;
+    REAL fBeta = 0.25;
+    REAL fGamma = 0.5;
+    REAL fSpectralRadius = 1.;
 
 public:
     //Positional elasticity 2D constructor
-    TransientPositional2D(int matid, double young, double poisson, bool planes, double damp, double dens, double dt, TimeIntegScheme integscheme = ENewmark);
+    TransientPositional2D(int matid, REAL young, REAL poisson, bool planes, REAL damp, REAL dens, REAL dt, TimeIntegScheme integscheme = ENewmark);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -54,7 +54,7 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    void SetNewmarkParameters(double beta, double gamma){
+    void SetNewmarkParameters(REAL beta, REAL gamma){
         fBeta = beta;
         fGamma = gamma;
     }

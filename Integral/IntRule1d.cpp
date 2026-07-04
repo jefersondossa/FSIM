@@ -59,12 +59,12 @@ void IntRule1d::SetOrder(int order) {
     // std::cout << "fWeights = " << fWeights << std::endl;
 }
 
-void IntRule1d::gauleg(const double x1, const double x2, VecDouble &co, VecDouble &w){
+void IntRule1d::gauleg(const REAL x1, const REAL x2, VecDouble &co, VecDouble &w){
     int n = w.size();
 
-    double EPS = 1.0e-14;
+    REAL EPS = 1.0e-14;
     int m, j, i;
-    double z1, z, xm, xl, pp, p3, p2, p1;    
+    REAL z1, z, xm, xl, pp, p3, p2, p1;    
     
     m = (n + 1) / 2;
     xm = 0.5 * (x2 + x1);

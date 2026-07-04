@@ -8,14 +8,14 @@ class MohrCoulomb : public PlasticityModel
 {
 private:
     // Internal friction angle
-    double fInternalFriction;
+    REAL fInternalFriction;
 
 public:
     /// @brief Linear hardening plasticity model constructor
     /// @param elast elasticity model
     /// @param cohesion cohesion 
     /// @param intfriction Internal friction
-    MohrCoulomb(WeakForm *elast, double intfriction);
+    MohrCoulomb(WeakForm *elast, REAL intfriction);
 
     /// @brief Overloads the updated weak form stiffness matrix computation for the plasticity model
     /// @param index integration point index
@@ -28,9 +28,9 @@ public:
     /// @param errors vector storing all errors
     void ComputeError(IntPointData &data, VecDouble &errors) override;
 
-    double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
 
-    double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
 
     void UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress) override;
 };

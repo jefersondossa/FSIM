@@ -149,7 +149,7 @@ void HierarquicalQuad::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &d
     return;
 }
 
-void HierarquicalQuad::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalQuad::Chebyshev(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();
@@ -171,7 +171,7 @@ void HierarquicalQuad::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDoubl
 
 
 
-void HierarquicalQuad::Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalQuad::Legendre(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();

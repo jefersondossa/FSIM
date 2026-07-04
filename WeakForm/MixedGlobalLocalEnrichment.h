@@ -7,16 +7,16 @@
 class MixedGlobalLocalEnrichment : public WeakForm {
 protected:
     // Young modulus
-    double fYoungModulus;
+    REAL fYoungModulus;
     // Poisson's ratio
-    double fPoissonRatio;
-    double fBulkModulus;
-    double fShearModulus;
+    REAL fPoissonRatio;
+    REAL fBulkModulus;
+    REAL fShearModulus;
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
 public:
-    MixedGlobalLocalEnrichment(int matid, int dimension, double young, double poisson);
+    MixedGlobalLocalEnrichment(int matid, int dimension, REAL young, REAL poisson);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

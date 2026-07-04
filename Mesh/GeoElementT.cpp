@@ -82,7 +82,7 @@ void GeoElementT<geoshape>::ComputeJacobian(IntPointData &data) {
                 v_1[i] = data.fAxes0(i, 0);
             }
 
-            double norm_v_1 = 0.;
+            REAL norm_v_1 = 0.;
             for (int i = 0; i < 3; i++) {
                 norm_v_1 += v_1[i] * v_1[i];
             }
@@ -115,9 +115,9 @@ void GeoElementT<geoshape>::ComputeJacobian(IntPointData &data) {
                     // v_2[i] = gradx(i, 1);
                 }
 
-                double norm_v_1_til = 0.0;
-                double norm_v_2_til = 0.0;
-                double v_1_dot_v_2 = 0.0;
+                REAL norm_v_1_til = 0.0;
+                REAL norm_v_2_til = 0.0;
+                REAL v_1_dot_v_2 = 0.0;
 
                 for (int i = 0; i < 3; i++) {
                     norm_v_1_til += v_1[i] * v_1[i];
@@ -265,7 +265,7 @@ void GeoElementT<geoshape>::ComputeJacobianSearch(IntPointData &data) {
             v_1(0) = data.fAxes0(0, 0);
             v_1(1) = data.fAxes0(1, 0);
             v_1(2) = data.fAxes0(2, 0);
-            double norm_v_1 = v_1.norm();
+            REAL norm_v_1 = v_1.norm();
             v_1 /= norm_v_1;
 
             v_1Normal(0) = -v_1(1);
@@ -353,7 +353,7 @@ void GeoElementT<geoshape>::ComputeCurrentJacobian(IntPointData &data, Element* 
             // Approximate the integration space
             data.fX1[j] += (fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) + cmesh->ConnectVec()[fGeoNodes[i]] -> GetSolution(j)) * data.fPhi(i);
             yna[j] = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) + cmesh->ConnectVec()[fGeoNodes[i]] -> GetSolution(j);
-            double yprev = 0.;
+            REAL yprev = 0.;
             if (data.fAxes1Prev.size() != 0){
                 yprev = fMesh->NodeVec()[fGeoNodes[i]] -> getCoordinateValue(j) + cmesh->ConnectVec()[fGeoNodes[i]] -> GetPreviousSolution(j);
             }
@@ -379,7 +379,7 @@ void GeoElementT<geoshape>::ComputeCurrentJacobian(IntPointData &data, Element* 
             v_1[i] = data.fAxes1(i, 0);
         }
 
-        double norm_v_1 = 0.;
+        REAL norm_v_1 = 0.;
         for (int i = 0; i < 3; i++) {
             norm_v_1 += v_1[i] * v_1[i];
         }

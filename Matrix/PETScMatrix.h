@@ -21,17 +21,17 @@ public:
     PETScMatrix(int rows, int cols, PETScMatType mtype = ESeq);
     ~PETScMatrix();
 
-    void AddValueMatrix(int &row, int &col, double &val) override;
-    void PutValueMatrix(int &row, int &col, double &val) override;
-    double GetValueMatrix(int &row, int &col) override;
+    void AddValueMatrix(int &row, int &col, REAL &val) override;
+    void PutValueMatrix(int &row, int &col, REAL &val) override;
+    REAL GetValueMatrix(int &row, int &col) override;
 
-    void AddValueRhs(int &row, double &val) override;
-    void PutValueRhs(int &row, double &val) override;
-    double GetValueRhs(int &row) override;
+    void AddValueRhs(int &row, REAL &val) override;
+    void PutValueRhs(int &row, REAL &val) override;
+    REAL GetValueRhs(int &row) override;
 
-    void AddValueSolution(int &row, double &val) override;
-    void PutValueSolution(int &row, double &val) override;
-    double GetValueSolution(int &row) override;
+    void AddValueSolution(int &row, REAL &val) override;
+    void PutValueSolution(int &row, REAL &val) override;
+    REAL GetValueSolution(int &row) override;
 
     void ZeroMatrix() override;
     void ZeroRhs() override;
@@ -57,7 +57,7 @@ public:
 
     void ExpandSolution() override;
     void ClearSolution() override;
-    double SolutionNorm() override;
+    REAL SolutionNorm() override;
 };
 
 #endif

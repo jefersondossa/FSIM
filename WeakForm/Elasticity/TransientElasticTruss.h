@@ -8,13 +8,13 @@
 class TransientElasticTruss : public ElasticTruss, public TransientWeakForm{
 private:
     // Damping
-    double fDamping;
+    REAL fDamping;
     // Density
-    double fDensity;
+    REAL fDensity;
     // Integration parameters
-    double fBeta = 0.25;
-    double fGamma = 0.5;
-    double fSpectralRadius = 1.;
+    REAL fBeta = 0.25;
+    REAL fGamma = 0.5;
+    REAL fSpectralRadius = 1.;
 
 public:    
     /// @brief Elastic truss class constructor
@@ -22,7 +22,7 @@ public:
     /// @param dim problem dimension (2 or 3)
     /// @param young material Young modulus
     /// @param area cross section area
-    TransientElasticTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme = ENewmark);
+    TransientElasticTruss(int matid, int dim, REAL young, REAL area, REAL damp, REAL dens, REAL dt, TimeIntegScheme tscheme = ENewmark);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

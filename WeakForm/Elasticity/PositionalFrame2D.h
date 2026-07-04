@@ -7,17 +7,17 @@ class PositionalFrame2D : public WeakForm
 {
 protected:
     // Material Young modulus
-    double       fYoungModulus;
+    REAL       fYoungModulus;
     // Cross section depth
-    double       fDepth;
+    REAL       fDepth;
     // Cross section height
-    double       fHeight;
+    REAL       fHeight;
 
 public:
     /// @brief Elastic truss class constructor
     /// @param matid physical tag
     /// @param young material Young modulus
-    PositionalFrame2D(int matid, double young, double base, double height);
+    PositionalFrame2D(int matid, REAL young, REAL base, REAL height);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -52,11 +52,11 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    void ComputeA0A1(IntPointData &data, double coordEta, double &theta0, double &theta1, MatrixDouble &A0, MatrixDouble &A1);
+    void ComputeA0A1(IntPointData &data, REAL coordEta, REAL &theta0, REAL &theta1, MatrixDouble &A0, MatrixDouble &A1);
     void ComputeGreenStrain(IntPointData &data, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &E);
-    void ComputeDA1_DY(IntPointData &data, int &direction, double &theta1, double &coordEta, int &beta, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY);
+    void ComputeDA1_DY(IntPointData &data, int &direction, REAL &theta1, REAL &coordEta, int &beta, MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY);
     void ComputeDE_DY(MatrixDouble &A0inv, MatrixDouble &A1, MatrixDouble &DA1_DY, MatrixDouble &DE_DY);
-    double DoubleContraction(const MatrixDouble &A, const MatrixDouble &B);
+    REAL DoubleContraction(const MatrixDouble &A, const MatrixDouble &B);
 };
 
 

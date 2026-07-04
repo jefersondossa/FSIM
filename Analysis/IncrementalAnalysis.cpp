@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include <ios>
 
-IncrementalAnalysis::IncrementalAnalysis(CompMesh *cmesh, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol, int maxIter) 
+IncrementalAnalysis::IncrementalAnalysis(CompMesh *cmesh, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, REAL tol, int maxIter) 
     : NonLinearAnalysis(cmesh,stype,tol,maxIter), fNSteps(nsteps){
     fIncrementBC = bcinc;
 };
 
 
-IncrementalAnalysis::IncrementalAnalysis(Arlequin *arl, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, double tol, int maxIter) 
+IncrementalAnalysis::IncrementalAnalysis(Arlequin *arl, SolverType stype, int nsteps, std::vector<L2Projection *> &bcinc, REAL tol, int maxIter) 
     : NonLinearAnalysis(arl,stype,tol,maxIter), fNSteps(nsteps){
     fIncrementBC = bcinc;
 };
@@ -82,13 +82,13 @@ void IncrementalAnalysis::Run(std::string filename, std::vector<std::string> &sc
             // std::set<int> matid = {6};
             // std::map<std::string,VecDouble> result;
             // MeshVector()[0]->Integrate(matid,integrate,result);
-            // double E = 1.e10;    
-            // double nu = 0.48;
-            // double sigmaY = 848700./sqrt(3.);
-            // double aux = E/((1.+nu)*(1.-2.*nu));
-            // double valX = result["DerivativeX"][0];
-            // double valY = result["DerivativeY"][0];
-            // double disp =  fIncrementBC[0]->BCValue()[1];// * 2. * E/(sigmaY*10.);
+            // REAL E = 1.e10;    
+            // REAL nu = 0.48;
+            // REAL sigmaY = 848700./sqrt(3.);
+            // REAL aux = E/((1.+nu)*(1.-2.*nu));
+            // REAL valX = result["DerivativeX"][0];
+            // REAL valY = result["DerivativeY"][0];
+            // REAL disp =  fIncrementBC[0]->BCValue()[1];// * 2. * E/(sigmaY*10.);
             // output << disp << " " << valX << " " << -valY << "\n";
         }
         iStep++;
@@ -105,7 +105,7 @@ void IncrementalAnalysis::UpdateSolution(){
     //Updates nodal values
     int Ione = 1;
     int Ii;
-    double val;
+    REAL val;
     
     int nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
@@ -116,7 +116,7 @@ void IncrementalAnalysis::UpdateSolution(){
                 Ii = nstartDOF + nstate*i+k;
                 val = this->GlobalMatrix()->GetValueSolution(Ii);
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
-                double prevsol = this->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
+                REAL prevsol = this->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
                 this->MeshVector()[imesh]->NodeVec()[i] -> SetPreviousSolution(k,prevsol);
                 this->MeshVector()[imesh]->NodeVec()[i] -> SetSolution(k,val);
             }
@@ -133,7 +133,7 @@ void IncrementalAnalysis::UpdateSolution(){
     //Updates nodal values
     int Ione = 1;
     int Ii;
-    double val;
+    REAL val;
     
     int nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
@@ -144,7 +144,7 @@ void IncrementalAnalysis::UpdateSolution(){
                 Ii = nstartDOF + nstate*i+k;
                 val = this->GlobalMatrix()->GetValueSolution(Ii);
                 // ierr = VecGetValues(All, Ione, &Ii, &val);
-                double prevsol = this->MeshVector()[imesh]->ConnectVec()[i] -> GetSolution(k);
+                REAL prevsol = this->MeshVector()[imesh]->ConnectVec()[i] -> GetSolution(k);
                 this->MeshVector()[imesh]->ConnectVec()[i] -> SetPreviousSolution(k,prevsol);
                 this->MeshVector()[imesh]->ConnectVec()[i] -> IncrementSolution(k,val);
             }

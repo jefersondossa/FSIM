@@ -7,19 +7,19 @@
 class DruckerPrager : public PlasticityModel
 {
 protected:
-    double fInternalFriction;
+    REAL fInternalFriction;
     bool fOuterEdges;
-    double fEta; // n com charme
-    double fXi; // E com charme
-    double fDilatancyAngle; 
-    double fEtaBar;
-    double fAlpha;
-    double fBeta;
+    REAL fEta; // n com charme
+    REAL fXi; // E com charme
+    REAL fDilatancyAngle; 
+    REAL fEtaBar;
+    REAL fAlpha;
+    REAL fBeta;
     bool fApex = false;
-    double fUpdatedPressure;
+    REAL fUpdatedPressure;
     Tensor3D fTrialDevStrain;
-    double fK;
-    double fAlpha2;
+    REAL fK;
+    REAL fAlpha2;
 
 public:
     /// @brief Linear hardening plasticity model constructor
@@ -31,7 +31,7 @@ public:
     /// @param psi dilatacy angle
     /// @param oe outer edges
     
-    DruckerPrager(WeakForm *elast, double phi, double psi, bool oe = true);
+    DruckerPrager(WeakForm *elast, REAL phi, REAL psi, bool oe = true);
 
     /// @brief Overloads the updated weak form stiffness matrix computation for the plasticity model
     /// @param index integration point index
@@ -44,9 +44,9 @@ public:
     /// @param errors vector storing all errors
     void ComputeError(IntPointData &data, VecDouble &errors) override;
 
-    double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL YieldFunction(int &index, IntPointData &data, Tensor3D &Stress) override;
 
-    double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
+    REAL PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress) override;
 
     void UpdateStateVariables(int &index, IntPointData &data, Tensor3D &Stress) override;
 };

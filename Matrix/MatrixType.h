@@ -14,17 +14,17 @@ public:
     MatrixType(int rows, int cols);
     virtual ~MatrixType();
 
-    virtual void AddValueMatrix(int &row, int &col, double &val) = 0;
-    virtual void PutValueMatrix(int &row, int &col, double &val) = 0;
-    virtual double GetValueMatrix(int &row, int &col) = 0;
+    virtual void AddValueMatrix(int &row, int &col, REAL &val) = 0;
+    virtual void PutValueMatrix(int &row, int &col, REAL &val) = 0;
+    virtual REAL GetValueMatrix(int &row, int &col) = 0;
 
-    virtual void AddValueRhs(int &row, double &val) = 0;
-    virtual void PutValueRhs(int &row, double &val) = 0;
-    virtual double GetValueRhs(int &row) = 0;
+    virtual void AddValueRhs(int &row, REAL &val) = 0;
+    virtual void PutValueRhs(int &row, REAL &val) = 0;
+    virtual REAL GetValueRhs(int &row) = 0;
 
-    virtual void AddValueSolution(int &row, double &val) = 0;
-    virtual void PutValueSolution(int &row, double &val) = 0;
-    virtual double GetValueSolution(int &row) = 0;
+    virtual void AddValueSolution(int &row, REAL &val) = 0;
+    virtual void PutValueSolution(int &row, REAL &val) = 0;
+    virtual REAL GetValueSolution(int &row) = 0;
 
     virtual void PrintMatrix() = 0;
     virtual void PrintRhs() = 0;
@@ -41,7 +41,7 @@ public:
     virtual void ExpandSolution(){};
     virtual void ClearSolution(){};
 
-    virtual double SolutionNorm() = 0; 
+    virtual REAL SolutionNorm() = 0; 
 
 };
 

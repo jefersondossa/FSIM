@@ -14,7 +14,7 @@ void Poisson::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Sti
         data.fDSolDx.resize(fNState,fDimension);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
 
     // Stiffness += data.fDPhiX0.transpose() * data.fDPhiX0 * WJ;
@@ -34,21 +34,21 @@ void Poisson::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     auto force = fForceFunction;
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0  * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0  * data.fWeightFunction[index];
 
     VecDouble forcingF(1);
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
 
     for (int i = nphi; i--; ){
-        double shapeFi = data.fPhi[i];
+        REAL shapeFi = data.fPhi[i];
 
         //Matrix residual
-        double K = 0.;
+        REAL K = 0.;
         for (int l=fDimension; l--; ) K += data.fDPhiX0(l,i) * data.fDSolDx(0,l);
 
         //Source term
-        double F = (forcingF[0]) * shapeFi;
+        REAL F = (forcingF[0]) * shapeFi;
 
         Rhs[i] += (-K + F) * WJ;
     };

@@ -6,7 +6,7 @@
 
 
 
-auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening){
+auto yieldFunction = [](const REAL &plast, REAL &sigma_y, REAL &hardening){
     // sigma_y =.5/sqrt(3.)+500.*plast;
     // sigma_y =50.+500.*plast;
     // hardening = 500.;
@@ -24,8 +24,8 @@ auto yieldFunction = [](const double &plast, double &sigma_y, double &hardening)
     // ElasticityPositional2D * matelas = new ElasticityPositional2D(17,20.e6,.25,false);
     Elasticity2D * matelas = new Elasticity2D(17,20.e6,.25,false);
     VonMises *plastmodel = new VonMises(matelas);
-    double phi = 40.*M_PI/180.;
-    double psi = 00.*M_PI/180.;
+    REAL phi = 40.*M_PI/180.;
+    REAL psi = 00.*M_PI/180.;
     // DruckerPrager *plastmodel = new DruckerPrager(matelas,phi,psi);
     plastmodel->SetUniaxialYieldFunction(yieldFunction);
     // cmesh->InsertMaterial(matelas);

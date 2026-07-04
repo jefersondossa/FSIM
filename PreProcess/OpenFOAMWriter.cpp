@@ -32,15 +32,15 @@ void OpenFOAMWriter::ClearAllFiles(){
 
 void OpenFOAMWriter::VelocityNBR6123(){
 
-    double dx = fMaxX-fMinX;
-    double dy = fMaxY-fMinY;
-    double dz = fMaxZ-fMinZ;
+    REAL dx = fMaxX-fMinX;
+    REAL dy = fMaxY-fMinY;
+    REAL dz = fMaxZ-fMinZ;
 
-    double dmax = std::max({dx, dy, dz});
-    double bm;
-    double Fr;
-    double p;
-    double zg = fMaxZ + fDInlet;
+    REAL dmax = std::max({dx, dy, dz});
+    REAL bm;
+    REAL Fr;
+    REAL p;
+    REAL zg = fMaxZ + fDInlet;
     
     //Table 1 and 2 - NBR 6123
     if (dmax <= 20.){
@@ -151,7 +151,7 @@ bool OpenFOAMWriter::ParseMSH(const std::string &inputFile, std::vector<Vertex> 
         if (readingNodes) {
             std::istringstream iss(line);
             int id;
-            double x, y, z;
+            REAL x, y, z;
             if (iss >> id >> x >> y >> z) {
                 vertices.push_back({x, y, z});
             }
@@ -207,7 +207,7 @@ bool OpenFOAMWriter::WriteOBJ(const std::string &outputFile, const std::vector<V
 
 
 // Find max and min values of x, y, z
-void OpenFOAMWriter::FindMaxMin(const std::vector<Vertex> &vertices, double &maxX, double &maxY, double &maxZ, double &minX, double &minY, double &minZ) {
+void OpenFOAMWriter::FindMaxMin(const std::vector<Vertex> &vertices, REAL &maxX, REAL &maxY, REAL &maxZ, REAL &minX, REAL &minY, REAL &minZ) {
     maxX = maxY = maxZ = -1e9;
     minX = minY = minZ = 1e9;
     for (const auto &vertex : vertices) {
@@ -221,7 +221,7 @@ void OpenFOAMWriter::FindMaxMin(const std::vector<Vertex> &vertices, double &max
 }
 
 // Function to write blockMeshDict file
-bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ) {
+bool OpenFOAMWriter::WriteBlockMeshDict(REAL dInlet, REAL dOutlet, REAL cellSizeX, REAL cellSizeY, REAL cellSizeZ) {
     
     std::vector<Vertex> vertices;
     std::vector<Face> faces;
@@ -249,8 +249,8 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
         return false;
     }
 
-    double maxX, maxY, maxZ;
-    double minX, minY, minZ;
+    REAL maxX, maxY, maxZ;
+    REAL minX, minY, minZ;
     FindMaxMin(vertices, maxX, maxY, maxZ, minX, minY, minZ);
     fMaxX = maxX;
     fMaxY = maxY;
@@ -372,7 +372,7 @@ bool OpenFOAMWriter::WriteBlockMeshDict(double dInlet, double dOutlet, double ce
     return true;
 }
 
-bool OpenFOAMWriter::WriteInitialConditions(VecDouble &internalField, double puniform, double nutuniform, double kuniform, double omegauniform){
+bool OpenFOAMWriter::WriteInitialConditions(VecDouble &internalField, REAL puniform, REAL nutuniform, REAL kuniform, REAL omegauniform){
 
     fInternalField = internalField;
     UInitial();
@@ -455,7 +455,7 @@ bool OpenFOAMWriter::UInitial(){
     return true;
 }
 
-bool OpenFOAMWriter::pInitial(double puniform){
+bool OpenFOAMWriter::pInitial(REAL puniform){
 
     std::ofstream PFile("OpenFOAMRun/0/p");
     if (!PFile.is_open()) {
@@ -507,7 +507,7 @@ bool OpenFOAMWriter::pInitial(double puniform){
     return true;
 }
 
-bool OpenFOAMWriter::nutInitial(double  nutuniform){
+bool OpenFOAMWriter::nutInitial(REAL  nutuniform){
 
     std::ofstream nutFile("OpenFOAMRun/0/nut");
     if (!nutFile.is_open()) {
@@ -558,7 +558,7 @@ bool OpenFOAMWriter::nutInitial(double  nutuniform){
     return true;
 }
 
-bool OpenFOAMWriter::kInitial(double kuniform){
+bool OpenFOAMWriter::kInitial(REAL kuniform){
     std::ofstream kFile("OpenFOAMRun/0/k");
     if (!kFile.is_open()) {
         std::cerr << "Error: Unable to open 0/k file." << std::endl;
@@ -610,7 +610,7 @@ bool OpenFOAMWriter::kInitial(double kuniform){
     return true;
 }
 
-bool OpenFOAMWriter::omegaInitial(double omegauniform){
+bool OpenFOAMWriter::omegaInitial(REAL omegauniform){
     std::ofstream omegaFile("OpenFOAMRun/0/omega");
     if (!omegaFile.is_open()) {
         std::cerr << "Error: Unable to open 0/omega file." << std::endl;
@@ -662,7 +662,7 @@ bool OpenFOAMWriter::omegaInitial(double omegauniform){
     return true;
 }
 
-bool OpenFOAMWriter::WriteConstant(double density, double viscosity){
+bool OpenFOAMWriter::WriteConstant(REAL density, REAL viscosity){
 
     WriteMomentumTransport();
     WritePhysicalProperties(density, viscosity);
@@ -706,7 +706,7 @@ bool OpenFOAMWriter::WriteMomentumTransport(){
     return true;
 }
 
-bool OpenFOAMWriter::WritePhysicalProperties(double density, double viscosity){
+bool OpenFOAMWriter::WritePhysicalProperties(REAL density, REAL viscosity){
 
     std::ofstream outFile("OpenFOAMRun/constant/physicalProperties");
     if (!outFile.is_open()) {
@@ -772,7 +772,7 @@ bool OpenFOAMWriter::WriteSurfaceFeaturesDict(){
     return true;
 }
 
-bool OpenFOAMWriter::WriteControlDict(double dt, double endTime, double writeInterval){
+bool OpenFOAMWriter::WriteControlDict(REAL dt, REAL endTime, REAL writeInterval){
     std::ofstream outFile("OpenFOAMRun/system/controlDict");
     if (!outFile.is_open()) {
         std::cerr << "Error: Unable to open system/controlDict file." << std::endl;
@@ -1381,12 +1381,12 @@ bool OpenFOAMWriter::WriteInitialFields(){
         std::cerr << "Error: Unable to open system/funkySetFieldsDict file." << std::endl;
         return false;
     }
-    const double V0 = fInternalField[0];
-    const double S1 = 1.;
-    const double S3 = 1.;
-    const double bm = 1.;
-    const double Fr = 0.16;
-    const double p = 0.65;
+    const REAL V0 = fInternalField[0];
+    const REAL S1 = 1.;
+    const REAL S3 = 1.;
+    const REAL bm = 1.;
+    const REAL Fr = 0.16;
+    const REAL p = 0.65;
 
     outFile << "/*--------------------------------*- C++ -*----------------------------------*\n";
     outFile << "  =========                 |\n";
@@ -1419,7 +1419,7 @@ bool OpenFOAMWriter::WriteInitialFields(){
     return true;
 }
 
-bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSizeX, double cellSizeY, double cellSizeZ, double refproportion, int nref, double dt, double endTime, double writeInterval){
+bool OpenFOAMWriter::WriteSystem(REAL dInlet, REAL dOutlet, REAL cellSizeX, REAL cellSizeY, REAL cellSizeZ, REAL refproportion, int nref, REAL dt, REAL endTime, REAL writeInterval){
     fRefProportion = refproportion;
     fNRefinements = nref;
     WriteBlockMeshDict(dInlet, dOutlet, cellSizeX, cellSizeY, cellSizeZ);
@@ -1436,7 +1436,7 @@ bool OpenFOAMWriter::WriteSystem(double dInlet, double dOutlet, double cellSizeX
 }
 
 
-void OpenFOAMWriter::StartFromPreviousResults(double dt, double endTime, double writeInterval){
+void OpenFOAMWriter::StartFromPreviousResults(REAL dt, REAL endTime, REAL writeInterval){
     WriteControlDict(dt, endTime, writeInterval);
 
 }

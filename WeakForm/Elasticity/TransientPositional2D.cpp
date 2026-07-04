@@ -1,6 +1,6 @@
 #include "TransientPositional2D.h"
 
-TransientPositional2D::TransientPositional2D(int matid, double young, double poisson, bool planes, double damp, double dens, double dt, TimeIntegScheme integscheme) : 
+TransientPositional2D::TransientPositional2D(int matid, REAL young, REAL poisson, bool planes, REAL damp, REAL dens, REAL dt, TimeIntegScheme integscheme) : 
                         ElasticityPositional2D(matid,young,poisson,planes) {
     fDamping = damp;
     fDensity = dens;
@@ -13,9 +13,9 @@ void TransientPositional2D::ComputeStiffness(int &index, IntPointData &data, Mat
     ElasticityPositional2D::ComputeStiffness(index,data,Stiffness);
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     
-    double initLenght = 2.*data.fJacA0;
+    REAL initLenght = 2.*data.fJacA0;
     MatrixDouble Mass(2*nphi,2*nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -42,7 +42,7 @@ void TransientPositional2D::ComputeResidual(int &index, IntPointData &data, VecD
     ElasticityPositional2D::ComputeResidual(index,data,Rhs);
 
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;

@@ -307,7 +307,7 @@ inline void backend(const std::string& name)
     detail::s_backend = name;
 }
 
-inline bool annotate(std::string annotation, double x, double y)
+inline bool annotate(std::string annotation, REAL x, REAL y)
 {
     detail::_interpreter::get();
 
@@ -388,7 +388,7 @@ PyObject* get_2darray(const std::vector<::std::vector<Numeric>>& v)
     PyArrayObject *varray =
         (PyArrayObject *)PyArray_SimpleNew(2, vsize, NPY_DOUBLE);
 
-    double *vd_begin = static_cast<double *>(PyArray_DATA(varray));
+    REAL *vd_begin = static_cast<REAL *>(PyArray_DATA(varray));
 
     for (const ::std::vector<Numeric> &v_row : v) {
       if (v_row.size() != static_cast<size_t>(vsize[1]))
@@ -629,7 +629,7 @@ void contour(const std::vector<::std::vector<Numeric>> &x,
 
 template <typename Numeric>
 void spy(const std::vector<::std::vector<Numeric>> &x,
-         const double markersize = -1,  // -1 for default matplotlib size
+         const REAL markersize = -1,  // -1 for default matplotlib size
          const std::map<std::string, std::string> &keywords = {})
 {
   detail::_interpreter::get();
@@ -887,7 +887,7 @@ bool arrow(Numeric x, Numeric y, Numeric end_x, Numeric end_y, const std::string
 
 template< typename Numeric>
 bool hist(const std::vector<Numeric>& y, long bins=10,std::string color="b",
-          double alpha=1.0, bool cumulative=false)
+          REAL alpha=1.0, bool cumulative=false)
 {
     detail::_interpreter::get();
 
@@ -994,7 +994,7 @@ void imshow(const cv::Mat &image, const std::map<std::string, std::string> &keyw
 template<typename NumericX, typename NumericY>
 bool scatter(const std::vector<NumericX>& x,
              const std::vector<NumericY>& y,
-             const double s=1.0, // The marker size in points**2
+             const REAL s=1.0, // The marker size in points**2
              const std::map<std::string, std::string> & keywords = {})
 {
     detail::_interpreter::get();
@@ -1028,7 +1028,7 @@ template<typename NumericX, typename NumericY, typename NumericColors>
     bool scatter_colored(const std::vector<NumericX>& x,
                  const std::vector<NumericY>& y,
                  const std::vector<NumericColors>& colors,
-                 const double s=1.0, // The marker size in points**2
+                 const REAL s=1.0, // The marker size in points**2
                  const std::map<std::string, std::string> & keywords = {})
     {
         detail::_interpreter::get();
@@ -1066,7 +1066,7 @@ template<typename NumericX, typename NumericY, typename NumericZ>
 bool scatter(const std::vector<NumericX>& x,
              const std::vector<NumericY>& y,
              const std::vector<NumericZ>& z,
-             const double s=1.0, // The marker size in points**2
+             const REAL s=1.0, // The marker size in points**2
              const std::map<std::string, std::string> & keywords = {},
              const long fig_number=0) {
   detail::_interpreter::get();
@@ -1224,7 +1224,7 @@ bool bar(const std::vector<Numeric> &               x,
          const std::vector<Numeric> &               y,
          std::string                                ec       = "black",
          std::string                                ls       = "-",
-         double                                     lw       = 1.0,
+         REAL                                     lw       = 1.0,
          const std::map<std::string, std::string> & keywords = {})
 {
   detail::_interpreter::get();
@@ -1264,7 +1264,7 @@ template <typename Numeric>
 bool bar(const std::vector<Numeric> &               y,
          std::string                                ec       = "black",
          std::string                                ls       = "-",
-         double                                     lw       = 1.0,
+         REAL                                     lw       = 1.0,
          const std::map<std::string, std::string> & keywords = {})
 {
   using T = typename std::remove_reference<decltype(y)>::type::value_type;
@@ -1279,7 +1279,7 @@ bool bar(const std::vector<Numeric> &               y,
 
 
 template<typename Numeric>
-bool barh(const std::vector<Numeric> &x, const std::vector<Numeric> &y, std::string ec = "black", std::string ls = "-", double lw = 1.0, const std::map<std::string, std::string> &keywords = { }) {
+bool barh(const std::vector<Numeric> &x, const std::vector<Numeric> &y, std::string ec = "black", std::string ls = "-", REAL lw = 1.0, const std::map<std::string, std::string> &keywords = { }) {
     PyObject *xarray = detail::get_array(x);
     PyObject *yarray = detail::get_array(y);
 
@@ -1331,7 +1331,7 @@ inline bool subplots_adjust(const std::map<std::string, double>& keywords = {})
 }
 
 template< typename Numeric>
-bool named_hist(std::string label,const std::vector<Numeric>& y, long bins=10, std::string color="b", double alpha=1.0)
+bool named_hist(std::string label,const std::vector<Numeric>& y, long bins=10, std::string color="b", REAL alpha=1.0)
 {
     detail::_interpreter::get();
 
@@ -2352,7 +2352,7 @@ inline void axis(const std::string &axisstr)
     Py_DECREF(res);
 }
 
-inline void axhline(double y, double xmin = 0., double xmax = 1., const std::map<std::string, std::string>& keywords = std::map<std::string, std::string>())
+inline void axhline(REAL y, REAL xmin = 0., REAL xmax = 1., const std::map<std::string, std::string>& keywords = std::map<std::string, std::string>())
 {
     detail::_interpreter::get();
 
@@ -2377,7 +2377,7 @@ inline void axhline(double y, double xmin = 0., double xmax = 1., const std::map
     if(res) Py_DECREF(res);
 }
 
-inline void axvline(double x, double ymin = 0., double ymax = 1., const std::map<std::string, std::string>& keywords = std::map<std::string, std::string>())
+inline void axvline(REAL x, REAL ymin = 0., REAL ymax = 1., const std::map<std::string, std::string>& keywords = std::map<std::string, std::string>())
 {
     detail::_interpreter::get();
 
@@ -2402,7 +2402,7 @@ inline void axvline(double x, double ymin = 0., double ymax = 1., const std::map
     if(res) Py_DECREF(res);
 }
 
-inline void axvspan(double xmin, double xmax, double ymin = 0., double ymax = 1., const std::map<std::string, std::string>& keywords = std::map<std::string, std::string>())
+inline void axvspan(REAL xmin, REAL xmax, REAL ymin = 0., REAL ymax = 1., const std::map<std::string, std::string>& keywords = std::map<std::string, std::string>())
 {
     // construct positional args
     PyObject* args = PyTuple_New(4);
@@ -2848,7 +2848,7 @@ struct plot_impl<std::true_type>
         if(begin(ticks) == end(ticks)) return true;
 
         // We could use additional meta-programming to deduce the correct element type of y,
-        // but all values have to be convertible to double anyways
+        // but all values have to be convertible to REAL anyways
         std::vector<double> y;
         for(auto x : ticks) y.push_back(f(x));
         return plot_impl<std::false_type>()(ticks,y,format);

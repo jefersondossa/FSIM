@@ -21,8 +21,8 @@ void VonMises::ComputeTangentStiffness(int &index, IntPointData &data, MatrixDou
     
     MatrixDouble NxN = fFlowVector.TensorProduct(fFlowVector);
     
-    double Afactor = 2. * fShearModulus *(1.-3.*fShearModulus*data.fPlasticMultiplier[index]/fVonMisesStress);
-    double Bfactor = 6. * fShearModulus * fShearModulus * (data.fPlasticMultiplier[index]/fVonMisesStress - 1./(3.*fShearModulus+fHardening));
+    REAL Afactor = 2. * fShearModulus *(1.-3.*fShearModulus*data.fPlasticMultiplier[index]/fVonMisesStress);
+    REAL Bfactor = 6. * fShearModulus * fShearModulus * (data.fPlasticMultiplier[index]/fVonMisesStress - 1./(3.*fShearModulus+fHardening));
 
     //Elastic operator 7.107
     if (fPlaneStress){
@@ -76,20 +76,20 @@ void VonMises::ComputeError(IntPointData &data, VecDouble &errors){
 };
 
 
-double VonMises::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
-    double YF = 0.;
+REAL VonMises::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
+    REAL YF = 0.;
     if (fPlaneStress){
         //Box 9.3
         VecDouble Sigma(3);
         Sigma[0] = Stress.fData[0];
         Sigma[1] = Stress.fData[1];
         Sigma[2] = Stress.fData[3];
-        double sigmay;
+        REAL sigmay;
         fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
         YF = 0.5 * Sigma.transpose()*fMatP*Sigma-sigmay*sigmay/3.; 
     } else {
         //Eq (7.74)
-        double sigmay;
+        REAL sigmay;
         fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
         YF = sqrt(3.*Stress.J2()) - sigmay;
     }
@@ -98,42 +98,42 @@ double VonMises::YieldFunction(int &index, IntPointData &data, Tensor3D &Stress)
 
 Tensor3D VonMises::FlowVector(Tensor3D &Stress){
     //Eq (7.117)
-    double devnorm = Stress.DeviatoryNorm();
+    REAL devnorm = Stress.DeviatoryNorm();
     auto temp = Stress.Deviatory();
     temp *= 1. / devnorm;
     auto norm = temp.Norm();
     return temp;
 }
 
-double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
+REAL VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
     //Newton-Raphson to find plastic multiplier
-    double DGAMA = 0.;
+    REAL DGAMA = 0.;
     if (fPlaneStress){//Box 9.5
-        double A1 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
-        double A2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
-        double A3 = Stress.fXY() * Stress.fXY();
-        double XI = A1 / 6. + 0.5 * A2 + 2. * A3;
-        double SIGMAY;
+        REAL A1 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
+        REAL A2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
+        REAL A3 = Stress.fXY() * Stress.fXY();
+        REAL XI = A1 / 6. + 0.5 * A2 + 2. * A3;
+        REAL SIGMAY;
         fUniaxialYield(data.fEffectivePlasticStrain[index],SIGMAY,fHardening);
-        double PHI = 0.5 * XI - SIGMAY*SIGMAY / 3.;
-        double EPBARN = data.fEffectivePlasticStrain[index];
-        double SQR2D3 = sqrt(2./3.);
-        double isValidStress = false;
+        REAL PHI = 0.5 * XI - SIGMAY*SIGMAY / 3.;
+        REAL EPBARN = data.fEffectivePlasticStrain[index];
+        REAL SQR2D3 = sqrt(2./3.);
+        REAL isValidStress = false;
         if (PHI/SIGMAY > 1.e-6){
-            double SQRTXI = sqrt(XI);
-            double B1 = 1.;
-            double B2 = 1.;
-            double FMODU = fYoungModulus/(3.*(1.-fPoissonRatio));
+            REAL SQRTXI = sqrt(XI);
+            REAL B1 = 1.;
+            REAL B2 = 1.;
+            REAL FMODU = fYoungModulus/(3.*(1.-fPoissonRatio));
             int NITER = 0;
-            double EPBAR = EPBARN;
+            REAL EPBAR = EPBARN;
             
             while (NITER < 100){
                 NITER ++;
                 //Compute residual derivative
-                double HSLOPE = fHardening;
-                double DXI = -A1*FMODU/(3.*B1*B1*B1)-2.*fShearModulus*(A2+4.*A3)/(B2*B2*B2);
-                double HBAR = 2.*SIGMAY*HSLOPE*SQR2D3*(SQRTXI+DGAMA*DXI/(2.*SQRTXI));
-                double DPHI=0.5*DXI-HBAR/3.;
+                REAL HSLOPE = fHardening;
+                REAL DXI = -A1*FMODU/(3.*B1*B1*B1)-2.*fShearModulus*(A2+4.*A3)/(B2*B2*B2);
+                REAL HBAR = 2.*SIGMAY*HSLOPE*SQR2D3*(SQRTXI+DGAMA*DXI/(2.*SQRTXI));
+                REAL DPHI=0.5*DXI-HBAR/3.;
                 //Compute Newton-Raphson increment and update equation variable DGAMA
                 DGAMA=DGAMA-PHI/DPHI;
                 //Compute new residual (yield function value)
@@ -145,18 +145,18 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Str
                 fUniaxialYield(EPBAR,SIGMAY,fHardening);
                 PHI=0.5*XI-SIGMAY*SIGMAY/3.;
                 //Check for convergence
-                double RESNOR=fabs(PHI/SIGMAY);
+                REAL RESNOR=fabs(PHI/SIGMAY);
                 if (RESNOR <= 1.e-6){
                     isValidStress = true;
                     // update accumulated plastic strain
                     data.fEffectivePlasticStrain[index] = EPBAR;
-                    double ASTAR1=3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*DGAMA);
-                    double ASTAR2=1./(1.+2.*fShearModulus*DGAMA);
-                    double A11=0.5*(ASTAR1+ASTAR2);
-                    double A22 = A11;
-                    double A12=0.5*(ASTAR1-ASTAR2);
-                    double A21 = A12;
-                    double A33 = ASTAR2;
+                    REAL ASTAR1=3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*DGAMA);
+                    REAL ASTAR2=1./(1.+2.*fShearModulus*DGAMA);
+                    REAL A11=0.5*(ASTAR1+ASTAR2);
+                    REAL A22 = A11;
+                    REAL A12=0.5*(ASTAR1-ASTAR2);
+                    REAL A21 = A12;
+                    REAL A33 = ASTAR2;
                     VecDouble StressUp(3);
                     StressUp[0] = A11*Stress.fXX()+A12*Stress.fYY();
                     StressUp[1] = A21*Stress.fXX()+A22*Stress.fYY();
@@ -165,10 +165,10 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Str
                     Stress.fYY() = StressUp[1];
                     Stress.fXY() = StressUp[2];
                     // compute corresponding elastic (engineering) strain components
-                    double FACTG=1./(2.*fShearModulus);
-                    double P=(StressUp[0]+StressUp[1])/3.;
-                    double EEV=P/fBulkModulus;
-                    double EEVD3=EEV/3.;
+                    REAL FACTG=1./(2.*fShearModulus);
+                    REAL P=(StressUp[0]+StressUp[1])/3.;
+                    REAL EEV=P/fBulkModulus;
+                    REAL EEVD3=EEV/3.;
                     VecDouble ElasticStrainUp(4);
                     ElasticStrainUp[0] = FACTG*(2.*StressUp[0]/3.-StressUp[1]/3.)+EEVD3;
                     ElasticStrainUp[1] = FACTG*(2.*StressUp[1]/3.-StressUp[0]/3.)+EEVD3;
@@ -189,19 +189,19 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Str
         
 
 
-        // double splus2 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
-        // double smin2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
-        // double t2 = Stress.fXY() * Stress.fXY();
-        // double xi = splus2 / 6. + smin2 / 2 + 2. * t2;
-        // double sigmay;
+        // REAL splus2 = (Stress.fXX()+Stress.fYY())*(Stress.fXX()+Stress.fYY());
+        // REAL smin2 = (Stress.fYY()-Stress.fXX())*(Stress.fYY()-Stress.fXX());
+        // REAL t2 = Stress.fXY() * Stress.fXY();
+        // REAL xi = splus2 / 6. + smin2 / 2 + 2. * t2;
+        // REAL sigmay;
         // fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
-        // double PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
+        // REAL PhiTil = 0.5 * xi - sigmay*sigmay / 3.;
         // while (fabs(PhiTil) > 1.e-5){
-        //     double dXi = (- splus2 * fYoungModulus/(1.-fPoissonRatio)) / (9.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),3))
+        //     REAL dXi = (- splus2 * fYoungModulus/(1.-fPoissonRatio)) / (9.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),3))
         //                - 2.*fShearModulus * (smin2+4.*t2) / pow(1.+2.*fShearModulus*dGamma,3);
         //     fUniaxialYield(data.fEffectivePlasticStrain[index]+dGamma*sqrt(2.*xi/3.),sigmay,fHardening);
-        //     double fHardBar = 2.*sigmay*fHardening*sqrt(2./3.)*(sqrt(xi)+dGamma*dXi/(2.*sqrt(xi)));
-        //     double dPhiTil = 0.5*dXi-fHardBar/3.;
+        //     REAL fHardBar = 2.*sigmay*fHardening*sqrt(2./3.)*(sqrt(xi)+dGamma*dXi/(2.*sqrt(xi)));
+        //     REAL dPhiTil = 0.5*dXi-fHardBar/3.;
         //     dGamma -= PhiTil/dPhiTil;
         //     xi = splus2/(6.*pow(1.+fYoungModulus*dGamma/(3.*(1.-fPoissonRatio)),2))+
         //         (0.5*smin2+2.*t2)/pow(1.+2.*fShearModulus*dGamma,2);
@@ -212,12 +212,12 @@ double VonMises::PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Str
     } else { //Box 7.4 Souza Neto
         fDeviatory = Stress.Deviatory();
         fVonMisesStress = sqrt(1.5*fDeviatory.DoubleContraction(fDeviatory))+3.*data.fPlasticMultiplier[index];
-        double sigmay = 0.;
+        REAL sigmay = 0.;
         fUniaxialYield(data.fEffectivePlasticStrain[index],sigmay,fHardening);
-        double PhiTil = fVonMisesStress-sigmay;
+        REAL PhiTil = fVonMisesStress-sigmay;
         
         while (fabs(PhiTil/sigmay) > 1.e-5){
-            double d = -3. * fShearModulus - fHardening;
+            REAL d = -3. * fShearModulus - fHardening;
             DGAMA -= PhiTil/d;
             fUniaxialYield(data.fEffectivePlasticStrain[index]+DGAMA,sigmay,fHardening);
             PhiTil = fVonMisesStress - 3.*fShearModulus*DGAMA-sigmay;
@@ -234,9 +234,9 @@ void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &St
         return;
         // MatrixDouble MatA(3,3);
         // MatA.setZero();
-        // double A11 = 3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*data.fPlasticMultiplier[index]);
-        // double A22 = 1./(1.+2.*fShearModulus*data.fPlasticMultiplier[index]);
-        // double A33 = A22;
+        // REAL A11 = 3.*(1.-fPoissonRatio)/(3.*(1.-fPoissonRatio)+fYoungModulus*data.fPlasticMultiplier[index]);
+        // REAL A22 = 1./(1.+2.*fShearModulus*data.fPlasticMultiplier[index]);
+        // REAL A33 = A22;
         // MatA(0,0) = MatA(1,1) = 0.5 * (A11+A22);
         // MatA(1,0) = MatA(0,1) = 0.5 * (A11-A22);
         // MatA(2,2) = A33;
@@ -251,7 +251,7 @@ void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &St
         // Stress.fYY() = res[1];
         // Stress.fXY() = res[2];
         // //Eq. 9.4
-        // double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+        // REAL alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
         // MatrixDouble MatD(3,3);
         // MatD.setZero();
         // MatD(0,0) = MatD(1,1) = 1. + alpha;
@@ -283,7 +283,7 @@ void VonMises::UpdateStateVariables(int &index, IntPointData &data, Tensor3D &St
         
         
         Tensor3D Ident;
-        double epslion_e_trial = (data.fElasticStrain[index]).Trace();
+        REAL epslion_e_trial = (data.fElasticStrain[index]).Trace();
         Ident.Identity();
         Ident *= epslion_e_trial / 3.;
         epsilonUpdated += Ident;

@@ -12,7 +12,7 @@ void NonLinearAnalysis::UpdateSolution(){
     //Updates nodal values
     int Ione = 1;
     int Ii;
-    double val;
+    REAL val;
     
     int nstartDOF = 0;
     for (int imesh = 0; imesh < this->MeshVector().size(); imesh++){
@@ -67,7 +67,7 @@ PetscErrorCode NonLinearAnalysis::FormFunction(SNES snes, Vec u, Vec b, void *pt
                 int Ione = 1;
                 PetscScalar val;
                 VecGetValues(SolAll, Ione, &Ii, &val);
-                // double prevsol = an->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
+                // REAL prevsol = an->MeshVector()[imesh]->NodeVec()[i] -> GetSolution(k);
                 an->MeshVector()[imesh]->ConnectVec()[i] -> SetSolution(k,val);
             }
         };
@@ -112,7 +112,7 @@ PetscErrorCode NonLinearAnalysis::FormJacobian(SNES snes,Vec u,Mat A, Mat B,void
 
 void NonLinearAnalysis::Run(){
     
-    double NRL2norm = 1000.;
+    REAL NRL2norm = 1000.;
     int iteration = 0;
     
     // //Save Previous solution
@@ -120,7 +120,7 @@ void NonLinearAnalysis::Run(){
     //     for (int inode = 0; inode < this->MeshVector()[imesh]->NNodes(); inode++){
     //         int nstate = this->MeshVector()[imesh]->NState();
     //         for (int istate = 0; istate < nstate; istate++){
-    //             double Sol = this->MeshVector()[imesh]->NodeVec()[inode]->GetSolution(istate);
+    //             REAL Sol = this->MeshVector()[imesh]->NodeVec()[inode]->GetSolution(istate);
     //             this->MeshVector()[imesh]->NodeVec()[inode]->SetPreviousSolution(istate,Sol);
     //         }
     //     }
@@ -188,7 +188,7 @@ void NonLinearAnalysis::Run(){
         this->GlobalMatrix()->ZeroRhs();
         this->GlobalMatrix()->ZeroSolution();
         for (int i=0; i<NEquations(); i++){
-            double val = 1.e-20;
+            REAL val = 1.e-20;
             this->GlobalMatrix()->AddValueMatrix(i,i,val);
         }
     }

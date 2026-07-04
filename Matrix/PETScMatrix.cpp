@@ -44,15 +44,15 @@ PETScMatrix::~PETScMatrix(){
 }
 
 
-void PETScMatrix::AddValueMatrix(int &row, int &col, double &val) {
+void PETScMatrix::AddValueMatrix(int &row, int &col, REAL &val) {
     MatSetValues(fMatrix,1,&row,1,&col,&val,ADD_VALUES);
 };
 
-void PETScMatrix::PutValueMatrix(int &row, int &col, double &val) {
+void PETScMatrix::PutValueMatrix(int &row, int &col, REAL &val) {
     MatSetValues(fMatrix,1,&row,1,&col,&val,INSERT_VALUES);
 };
 
-double PETScMatrix::GetValueMatrix(int &row, int &col) {
+REAL PETScMatrix::GetValueMatrix(int &row, int &col) {
     std::cout << "It may need a scatter context. Please check PETSc manual and implement it. \n";
     PanicButton();
 };
@@ -102,30 +102,30 @@ void PETScMatrix::VecAssemble(){
     VecAssemblyEnd(fRhs);
 }
 
-void PETScMatrix::AddValueRhs(int &row, double &val) {
+void PETScMatrix::AddValueRhs(int &row, REAL &val) {
     VecSetValues(fRhs, 1, &row, &val, ADD_VALUES);
 };
 
-void PETScMatrix::PutValueRhs(int &row, double &val) {
+void PETScMatrix::PutValueRhs(int &row, REAL &val) {
     VecSetValues(fRhs, 1, &row, &val, INSERT_VALUES);
 };
 
-double PETScMatrix::GetValueRhs(int &row) {
+REAL PETScMatrix::GetValueRhs(int &row) {
     std::cout << "This vector need a scatter context to get values. Please implement it. \n";
     PanicButton();
 };
 
-void PETScMatrix::AddValueSolution(int &row, double &val) {
+void PETScMatrix::AddValueSolution(int &row, REAL &val) {
     VecSetValues(fSolution, 1, &row, &val, ADD_VALUES);
 };
 
-void PETScMatrix::PutValueSolution(int &row, double &val) {
+void PETScMatrix::PutValueSolution(int &row, REAL &val) {
     VecSetValues(fSolution, 1, &row, &val, INSERT_VALUES);
 };
 
-double PETScMatrix::GetValueSolution(int &row) {
+REAL PETScMatrix::GetValueSolution(int &row) {
     int Ione = 1;
-    double val;
+    PETScScalar val;
     VecGetValues(fSolutionAll, Ione, &row, &val);
     return val;
 };
@@ -144,8 +144,8 @@ void PETScMatrix::ClearSolution(){
     VecDestroy(&fSolutionAll);
 }
 
-double PETScMatrix::SolutionNorm(){
-    double val;
+REAL PETScMatrix::SolutionNorm(){
+    REAL val;
     VecNorm(fSolution,NORM_2,&val);
     return val;
 }

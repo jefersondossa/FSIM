@@ -1,7 +1,7 @@
 #include "Stokes.h"
 
 //Class constructor
-Stokes::Stokes(int matid, int dim, double density, double viscosity) : WeakForm() {
+Stokes::Stokes(int matid, int dim, REAL density, REAL viscosity) : WeakForm() {
     this->fMatId = matid;
     fDimension = dim;
     fNState = dim+1;
@@ -14,25 +14,25 @@ Stokes::Stokes(int matid, int dim, double density, double viscosity) : WeakForm(
 void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
     int DIM = fDimension;
     int nphi = data.fPhi.size();
-    double tSUGN1_ = 0.;
-    double tSUGN2_ = 0.;
-    double tSUGN3_ = 0.;
-    double hRGN_ = 0.;
-    double r[DIM] = {};
-    double s[DIM] = {};
-    double hUGN_ = 0.;
+    REAL tSUGN1_ = 0.;
+    REAL tSUGN2_ = 0.;
+    REAL tSUGN3_ = 0.;
+    REAL hRGN_ = 0.;
+    REAL r[DIM] = {};
+    REAL s[DIM] = {};
+    REAL hUGN_ = 0.;
     auto dphi_dx = data.fDPhiX0;
     tSUPG_ = 0.;  
 
-    double u__[DIM] = {};
-    double aux = 0.;
-    double aux2 = 0.;
+    REAL u__[DIM] = {};
+    REAL aux = 0.;
+    REAL aux2 = 0.;
 
     for (int i = nphi; i--; ){
-        double a1 = 0.;
+        REAL a1 = 0.;
         for (int j = DIM; j--; ){
-            double ua = data.fSol(j);
-            double uma = 0.;
+            REAL ua = data.fSol(j);
+            REAL uma = 0.;
             ua -= uma;
             u__[j] += ua * data.fPhi[i];
             a1 += ua*ua;
@@ -44,7 +44,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
 
 
     for (int j = DIM; j--; ) aux += u__[j]*u__[j];
-    double uNorm = std::sqrt(aux);
+    REAL uNorm = std::sqrt(aux);
 
     // for (int i = fMesh->nElNodes; i--; ){
     //     for (int j = DIM; j--; ){
@@ -53,7 +53,7 @@ void Stokes::GetStabilizationParameter(int &index, IntPointData &data) {
     // }
 
     for (int j = DIM; j--; ) aux2 += r[j]*r[j];
-    double rNorm = std::sqrt(aux2);
+    REAL rNorm = std::sqrt(aux2);
 
     if(uNorm > 1.e-10){
         for (int j = DIM; j--; ) s[j] = u__[j] / uNorm;
@@ -130,32 +130,32 @@ void Stokes::ComputeStiffness(int &index, IntPointData &data, MatrixDouble &Stif
     auto dphi_dx = data.fDPhiX0;
     GetStabilizationParameter(index, data);
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
 
     for (int i = nphi; i-- ; ){        
-        double shapeFi = data.fPhi[i];
+        REAL shapeFi = data.fPhi[i];
         for (int j = nphi; j-- ; ){
             
-            double shapeFj = data.fPhi[j];
+            REAL shapeFj = data.fPhi[j];
 
             for (int k = DIM; k--;  ){
                 for (int l = DIM; l--; ){
 
                     //Diffusion matrix
-                    double K = dphi_dx(l,i) * dphi_dx(k,j) * fViscosity;
+                    REAL K = dphi_dx(l,i) * dphi_dx(k,j) * fViscosity;
                     if (k==l) for (int m = DIM; m--; ) K += dphi_dx(m,i) * dphi_dx(m,j)* fViscosity;
 
                     Stiffness((DIM+1)*i+k,(DIM+1)*j+l) += K * WJ;
                 }
                 //Gradient operator
                 //Divergent operator
-                double Q = dphi_dx(k,i) * shapeFj;
+                REAL Q = dphi_dx(k,i) * shapeFj;
 
                 Stiffness((DIM+1)*i+k,(DIM+1)*j+DIM) += -Q * WJ;
                 Stiffness((DIM+1)*j+DIM,(DIM+1)*i+k) += Q * WJ;
             }
             //PSPG stabilization
-            double Q = 0.;
+            REAL Q = 0.;
             for (int m = DIM; m--; ) Q += dphi_dx(m,i) * dphi_dx(m,j) * tPSPG_ / fDensity;
             Stiffness((DIM+1)*j+DIM,(DIM+1)*i+DIM) += Q * WJ;
         };
@@ -173,32 +173,32 @@ void Stokes::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
     VecDouble x_ = data.fX;
     if (force) force(x_,forcingF);
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     auto dphi_dx = data.fDPhiX0;
 
-    double divrU = 0.;
+    REAL divrU = 0.;
     for (int l=DIM; l--; ) divrU += data.fDSolDx(l,l);
 
     for (int i = nphi; i--; ){
         // std::cout << "Sol = " << this->Mesh()->NodeVec()[this->getConnectivity()[i]]->GetSolution(0) << std::endl;
-        double shapeFi = data.fPhi[i];
+        REAL shapeFi = data.fPhi[i];
 
         for (int k = DIM; k--; ){
             //Viscosity
-            double K = 0.;
+            REAL K = 0.;
             for (int l=DIM; l--; ) K += dphi_dx(l,i) * data.fDSolDx(k,l) * fViscosity;
             for (int l=DIM; l--; ) K += dphi_dx(l,i) * data.fDSolDx(l,k) * fViscosity;
 
             //Pressure + SUPG
-            double P = - (dphi_dx(k,i) * data.fSol[DIM]);
+            REAL P = - (dphi_dx(k,i) * data.fSol[DIM]);
 
             //External force
-            double F = (forcingF[k]) * shapeFi;
+            REAL F = (forcingF[k]) * shapeFi;
             
             Rhs[(DIM+1)*i+k] += (-K - P + F) * WJ;
         }
 
-        double Q = divrU * shapeFi;
+        REAL Q = divrU * shapeFi;
         for (int l=DIM; l--; ) Q += dphi_dx(l,i) * data.fDSolDx(DIM,l) * tPSPG_ / fDensity
                                   + dphi_dx(l,i) * (forcingF[l]/fDensity) * tPSPG_;
 

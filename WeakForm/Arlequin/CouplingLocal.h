@@ -12,14 +12,14 @@ protected:
     // Local computational mesh
     CompMesh * fLocalMesh;
     // Arlequin stabilization parameter
-    double tARLQ_ = 0.;
+    REAL tARLQ_ = 0.;
     // K0 and K1 in the classic Arlequin formulation (corresponding to L2 and H1(energy) portions)
-    double fK0;
-    double fK1;
+    REAL fK0;
+    REAL fK1;
 
 public:
     // Local coupling constructor
-    CouplingLocal(int dim, int fineindex, CompMesh* meshlocal, double k0, double k1);
+    CouplingLocal(int dim, int fineindex, CompMesh* meshlocal, REAL k0, REAL k1);
 
     /// @brief Returns the element local index
     /// @return local mesh element index
@@ -45,10 +45,10 @@ public:
     void ComputeError(IntPointData &data, VecDouble &errors) override {};
     
     /// @brief Computes the stabilized Arlequin stiffness matrix
-    void ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<MatrixDouble> &Stiffness);
+    void ArlequinStabStiffness(int &index, MatrixDouble &dphi_dx, REAL &weight_, REAL &djac_, std::vector<MatrixDouble> &Stiffness);
     
     /// @brief Computes the stabilized arlequin resudial vector 
-    void ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, double &weight_, double &djac_, std::vector<VecDouble> &Rhs);
+    void ArlequinStabResidual(int &index, MatrixDouble &dphi_dx, REAL &weight_, REAL &djac_, std::vector<VecDouble> &Rhs);
 };
 
 

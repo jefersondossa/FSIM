@@ -7,7 +7,7 @@
 #include <memory>
 #include <unordered_set>
 
-void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
+void RunEso(CompMesh& model, LinearAnalysis& an, REAL target_final_vol)
 {
     // Disables memory on elements
     // (makes sure elemental stiffness is not recalculated)
@@ -23,7 +23,7 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
     VTUGenerator::PrintResults(&model, "cantilever_2d_beam", ScalarNames, VectorNames);
 
     int already_removed = 0;
-    const double min_percentage_vol = target_final_vol;
+    const REAL min_percentage_vol = target_final_vol;
 
     const auto n_elements = model.NElements();
 
@@ -31,12 +31,12 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
     std::vector<double> eles_rho(model.NElements(), 1.0);
     const auto n_mat_eles = std::count_if(model.ElementVec().begin(), model.ElementVec().end(), 
         [model_dim = model.Dimension()](Element* pElement) {return pElement && pElement->Dimension() == model_dim; });
-    double vol_percentage = (n_mat_eles - already_removed) / ((double)n_mat_eles);
+    REAL vol_percentage = (n_mat_eles - already_removed) / ((double)n_mat_eles);
     int index_it = 0;
     std::vector<double> elemental_compliances;
     elemental_compliances.resize(model.NElements());
 
-    const double filter_radius = 0.1;
+    const REAL filter_radius = 0.1;
 
     while (vol_percentage > min_percentage_vol)
     {
@@ -68,14 +68,14 @@ void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol)
             const auto elem = model.ElementVec()[i_el];
             const VecDouble center_of_mass = elem->Reference()->GetGeometricCenter();
 
-            double sum = 0.0;
+            REAL sum = 0.0;
 
             std::vector<std::size_t> neighbors_to_visit{};
             std::unordered_set<std::size_t> neighbors_visited{};
 
             neighbors_to_visit.push_back(i_el);
 
-            double compliance_val = 0.0;
+            REAL compliance_val = 0.0;
             while (!neighbors_to_visit.empty())
             {
                 const auto iel_neighbor = neighbors_to_visit.front();

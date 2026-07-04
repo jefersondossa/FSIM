@@ -18,8 +18,8 @@ void SolveProblem(CompMesh *cmesh, VecDouble &solution);
 void CreateDAux(CompMesh *cmesh);
 void CreatePAux(CompMesh *cmesh);
 
-double ModElasticity = 1.e6;
-double PoissonRatio = 0.3;
+REAL ModElasticity = 1.e6;
+REAL PoissonRatio = 0.3;
 
 int main(int argc, char **args) {   
     //Geometric Mesh
@@ -71,7 +71,7 @@ int main(int argc, char **args) {
     VecDouble Force = globalMat * solution;
     //std::cout << "Force: \n" << Force << std::endl;
     //std::cout << "solution: \n" << solution << std::endl;
-    double strainEnergy = (solution.dot(Force))/2;
+    REAL strainEnergy = (solution.dot(Force))/2;
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
     
 } 

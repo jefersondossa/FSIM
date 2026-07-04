@@ -44,13 +44,13 @@ private:
     vector<int> matids;
 
 
-    double sum_x;
-    double sum_y;
-    double sum_z;
+    REAL sum_x;
+    REAL sum_y;
+    REAL sum_z;
 
-    double average_x;
-    double average_y;
-    double average_z;
+    REAL average_x;
+    REAL average_y;
+    REAL average_z;
 
 public:
 

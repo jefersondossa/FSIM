@@ -7,11 +7,11 @@
 class Stokes : public WeakForm{
 protected:
     // Fluid dynamic viscosity
-    double fViscosity;
+    REAL fViscosity;
     // Fluid density
-    double fDensity;
+    REAL fDensity;
     // Stabilization parameters
-    double tPSPG_, tSUPG_, tLSIC_; 
+    REAL tPSPG_, tSUPG_, tLSIC_; 
 
     /// @brief Computes the PSPG, SUPG and LSIC stabilization parameters
     /// @param index integration point index
@@ -24,7 +24,7 @@ public:
     /// @param dim problem dimension (2 or 3)
     /// @param density fluid density
     /// @param viscosity fluid dynamic viscosity
-    Stokes(int matid, int dim, double density, double viscosity);
+    Stokes(int matid, int dim, REAL density, REAL viscosity);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

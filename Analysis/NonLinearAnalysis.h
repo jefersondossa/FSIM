@@ -12,7 +12,7 @@ class NonLinearAnalysis : public LinearAnalysis
 {
 protected:
     int    fMaxIterations;
-    double fTolerance;
+    REAL fTolerance;
     NonLinearSolverType fSolverType = ENewtonRaphson;
 #ifdef HAS_PETSC
     SNES   fSNES;
@@ -20,8 +20,8 @@ protected:
 
 public:
     NonLinearAnalysis() : LinearAnalysis(){};
-    NonLinearAnalysis(CompMesh *cmesh, SolverType stype, double tol = 1.e-6, int maxIter = 10) : LinearAnalysis(cmesh,stype), fMaxIterations(maxIter), fTolerance(tol) {};
-    NonLinearAnalysis(Arlequin* arl, SolverType stype, double tol = 1.e-6, int maxIter = 10) : LinearAnalysis(arl,stype), fMaxIterations(maxIter), fTolerance(tol) {};
+    NonLinearAnalysis(CompMesh *cmesh, SolverType stype, REAL tol = 1.e-6, int maxIter = 10) : LinearAnalysis(cmesh,stype), fMaxIterations(maxIter), fTolerance(tol) {};
+    NonLinearAnalysis(Arlequin* arl, SolverType stype, REAL tol = 1.e-6, int maxIter = 10) : LinearAnalysis(arl,stype), fMaxIterations(maxIter), fTolerance(tol) {};
 
     void SetMaxIter(int maxiter){
         fMaxIterations = maxiter;

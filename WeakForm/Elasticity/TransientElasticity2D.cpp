@@ -1,6 +1,6 @@
 #include "TransientElasticity2D.h"
 
-TransientElasticity2D::TransientElasticity2D(int matid, double young, double poisson, bool planes, double damp, double dens, double dt, TimeIntegScheme integscheme) : 
+TransientElasticity2D::TransientElasticity2D(int matid, REAL young, REAL poisson, bool planes, REAL damp, REAL dens, REAL dt, TimeIntegScheme integscheme) : 
                         Elasticity2D(matid,young,poisson,planes) {
     fDamping = damp;
     fDensity = dens;
@@ -17,7 +17,7 @@ void TransientElasticity2D::ComputeStiffness(int &index, IntPointData &data, Mat
     
     //Mass matrix
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     MatrixDouble Mass(2*nphi,2*nphi);
     Mass.setZero();
     for (size_t i = 0; i < nphi; i++){
@@ -49,7 +49,7 @@ void TransientElasticity2D::ComputeResidual(int &index, IntPointData &data, VecD
     auto disp = data.fSol;
     auto dispPrev = data.fSolPrev;
     int nphi = data.fPhi.size();
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
 
     for (size_t i = 0; i < nphi; i++){
         Rhs[2*i  ] += (disp[0]/(fBeta * fTimeStep * fTimeStep) + 

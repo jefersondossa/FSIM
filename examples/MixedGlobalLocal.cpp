@@ -30,11 +30,11 @@ auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -56,11 +56,11 @@ auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -82,11 +82,11 @@ auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -108,11 +108,11 @@ auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -140,8 +140,8 @@ int overlappingRegion;
 int overlappingNHDirichletBoundary;
 int overlappingNHNeumannBoundary;
 int globalLocalIterations;
-double ModElasticity = 1.;
-double PoissonRatio = 0.49999;
+REAL ModElasticity = 1.;
+REAL PoissonRatio = 0.49999;
 
 //Local index to global index correspondence for elements
 std::map<int,int> globalElementCorrespondence;
@@ -714,7 +714,7 @@ void SolveGlobalProblem(CompMesh *cmeshG){
 
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (sol.dot(rhs))/2;
+    REAL strainEnergy = (sol.dot(rhs))/2;
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
     VTUGenerator::PrintResults(cmeshG,"globalResult",ScalarNames,VectorNames);
@@ -834,7 +834,7 @@ void SolveEnrichedProblem(CompMesh *cmeshG){
     VecDouble currentSol = spMat->Solution();
 
     VecDouble rhs = spMat->Rhs();
-    double strainEnergy = (currentSol.dot(rhs))/2;
+    REAL strainEnergy = (currentSol.dot(rhs))/2;
     std::cout << "Strain Energy: "<< strainEnergy << std::endl;
 
 

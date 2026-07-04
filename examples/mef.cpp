@@ -1,3 +1,4 @@
+#include "DataTypes.h"
 #include "GeoMesh.h"
 #include "LinearAnalysis.h"
 #include "MixedCompMesh.h"
@@ -35,11 +36,11 @@ auto forcingFunctionAB = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -61,11 +62,11 @@ auto forcingFunctionBC = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -87,11 +88,11 @@ auto forcingFunctionEF = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -113,11 +114,11 @@ auto forcingFunctionFA = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     
-    double A = 1.0;
-    double Q = 0.543075579;
-    double lambda = 0.544483737;
-    double r = sqrt(x*x + y*y);
-    double theta = atan2(y, x);
+    REAL A = 1.0;
+    REAL Q = 0.543075579;
+    REAL lambda = 0.544483737;
+    REAL r = sqrt(x*x + y*y);
+    REAL theta = atan2(y, x);
 
     MatrixDouble stress(2,2);
     //stress x
@@ -139,7 +140,7 @@ auto exactSol = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord[0];
     const auto &y=coord[1];
 
-    double E = 1.e7;
+    REAL E = 1.e7;
 
     u[0] = (1/E) * (24*x*y - 120*x);
     u[1] = (1/E) * (-12*x*x - 3.6*y*y + 36*y);
@@ -150,8 +151,8 @@ void CreateModel(CompMesh *cmesh);
 // void CreateModel2(CompMesh *cmesh);
 void SolveProblem(CompMesh *cmesh);
 
-double ModElasticity = 1.;
-double PoissonRatio = 0.3;
+REAL ModElasticity = 1.;
+REAL PoissonRatio = 0.3;
 
 int main(int argc, char **args) { 
 
@@ -192,7 +193,7 @@ int main(int argc, char **args) {
 
     // VecDouble Force = globalMat * Solution;
     // std::cout << "Force: \n" << Force << std::endl;
-    // double strainEnergy = (Solution.dot(Force))/2;
+    // REAL strainEnergy = (Solution.dot(Force))/2;
     // std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
     
 
@@ -296,7 +297,7 @@ void SolveProblem(CompMesh *cmesh){
 
     Vec sol = spMat->Solution();
     Vec rhs = spMat->Rhs();   
-    double strainEnergy;
+    REAL strainEnergy;
     VecDot(sol, rhs, &strainEnergy);
     std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy/2 << std::endl;
 
@@ -312,8 +313,8 @@ void SolveProblem(CompMesh *cmesh){
     VecDouble sol = spMat->Solution();
     VecDouble rhs = spMat->Rhs();   
 
-    double strainEnergy = (sol.dot(rhs))/2;
-    std::cout << std::fixed << std::setprecision(10) << "Strain Energy: "<< strainEnergy << std::endl;
+    REAL strainEnergy = (sol.dot(rhs))/2;
+    std::cout << std::fixed << std::setprecision(30) << "Strain Energy: "<< strainEnergy << std::endl;
 
 
 #endif

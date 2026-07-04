@@ -67,7 +67,7 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
 
         //Defines the integration points adimentional coordinates
         for (int k = 0; k < DIM; k++) {
-            double coord = fSubElements[0]->IntegPointCoordinate(index,k);
+            REAL coord = fSubElements[0]->IntegPointCoordinate(index,k);
             this->fIntegData.fAdimCoord[k] = coord;
             for (int i = 0; i < nsub; i++){
                 fSubElements[i]->IntegrationData().fAdimCoord[k] = coord;
@@ -75,7 +75,7 @@ void ElementMixed::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecDoub
         }
 
         //Returns the quadrature integration weight
-        double weight = fSubElements[0]->IntegPointWeight(index);
+        REAL weight = fSubElements[0]->IntegPointWeight(index);
         this->fIntegData.fWeight = weight;
         for (int i = 0; i < nsub; i++){
             fSubElements[i]->IntegrationData().fWeight = weight;

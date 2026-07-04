@@ -11,9 +11,9 @@ const ElementType ShapeTriangleCub::ElType;
 
 void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = 1. - xsi1 - xsi2;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = 1. - xsi1 - xsi2;
 
     phi[0] = (xsi1 * (3.0 * xsi1 - 2.0) * (3.0 * xsi1 - 1.0)) / 2.0;
     phi[1] = (xsi2 * (3.0 * xsi2 - 2.0) * (3.0 * xsi2 - 1.0)) / 2.0;
@@ -56,8 +56,8 @@ void ShapeTriangleCub::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, 
 }
 
 void ShapeTriangleCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &ddphi) {
-    const double xsi1 = xi[0];
-    const double xsi2 = xi[1];
+    const REAL xsi1 = xi[0];
+    const REAL xsi2 = xi[1];
     
     ddphi[0](0,0) = -9. + 27. * xsi1;
     ddphi[0](0,1) = 0.;

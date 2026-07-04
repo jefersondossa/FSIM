@@ -62,9 +62,9 @@ void HierarquicalTriangle::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dp
         return;
     }   
     
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = 1. - xsi1 - xsi2;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = 1. - xsi1 - xsi2;
 
     phi[0] = xsi3;
     phi[1] = xsi1;
@@ -88,7 +88,7 @@ void HierarquicalTriangle::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble 
     return;
 }
 
-void HierarquicalTriangle::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalTriangle::Chebyshev(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();
@@ -110,7 +110,7 @@ void HierarquicalTriangle::Chebyshev(double x, int num,MatrixDouble &phi,MatrixD
 
 
 
-void HierarquicalTriangle::Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalTriangle::Legendre(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();

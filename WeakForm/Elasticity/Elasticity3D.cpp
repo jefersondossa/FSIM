@@ -1,6 +1,6 @@
 #include "Elasticity3D.h"
 
-Elasticity3D::Elasticity3D(int matid, double young, double poisson) : WeakForm() {
+Elasticity3D::Elasticity3D(int matid, REAL young, REAL poisson) : WeakForm() {
     this->fMatId = matid;
     fDimension = 3;
     fNState = 3;
@@ -10,7 +10,7 @@ Elasticity3D::Elasticity3D(int matid, double young, double poisson) : WeakForm()
     fConstitutiveMatrix.resize(6,6);
     fConstitutiveMatrix.setZero();
 
-    double k = fYoungModulus/((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+    REAL k = fYoungModulus/((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
     fConstitutiveMatrix(0,0) = k * (1. - fPoissonRatio);
     fConstitutiveMatrix(0,1) = k * fPoissonRatio;
     fConstitutiveMatrix(0,2) = k * fPoissonRatio;
@@ -33,7 +33,7 @@ void Elasticity3D::ComputeStiffness(int &index, IntPointData &data, MatrixDouble
         data.fDSolDx.resize(fNState,fDimension);
     }
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
     MatrixDouble matB(6,3*nphi);
     matB.setZero();
@@ -59,7 +59,7 @@ void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
 
     int nphi = data.fPhi.size();
 
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     MatrixDouble matB(6,3*nphi);
     matB.setZero();
 
@@ -93,11 +93,11 @@ void Elasticity3D::ComputeResidual(int &index, IntPointData &data, VecDouble &Rh
     Rhs -= matB.transpose() * fConstitutiveMatrix * strain * WJ;
 
     for (int i = nphi; i--; ){
-        double shapeFi = data.fPhi[i];
+        REAL shapeFi = data.fPhi[i];
         //External force
-        double Fx = forcingF[0] * shapeFi;
-        double Fy = forcingF[1] * shapeFi;
-        double Fz = forcingF[2] * shapeFi;
+        REAL Fx = forcingF[0] * shapeFi;
+        REAL Fy = forcingF[1] * shapeFi;
+        REAL Fz = forcingF[2] * shapeFi;
         Rhs[3*i  ] += Fx * WJ;
         Rhs[3*i+1] += Fy * WJ;
         Rhs[3*i+2] += Fz * WJ;
@@ -131,9 +131,9 @@ void Elasticity3D::ComputeError(IntPointData &data, VecDouble &errors){
     StrainMEF(2) = 0.5 * (data.fDSolDx(1,0) + data.fDSolDx(0,1));
     auto StressMEF = fConstitutiveMatrix * StrainMEF;
 
-    double sigx = StressMEF[0] - exactStress[0];
-    double sigy = StressMEF[1] - exactStress[1];
-    double sigxy = StressMEF[2] - exactStress[2];
+    REAL sigx = StressMEF[0] - exactStress[0];
+    REAL sigy = StressMEF[1] - exactStress[1];
+    REAL sigxy = StressMEF[2] - exactStress[2];
 
     // Energy norm
     errors[1] = (sigx*(StrainMEF[0]-exactStrain[0])+sigy*(StrainMEF[1]-exactStrain[1])+2.*sigxy*(StrainMEF[2]-exactStrain[2]));
@@ -142,7 +142,7 @@ void Elasticity3D::ComputeError(IntPointData &data, VecDouble &errors){
     errors[2] = sigx*sigx + sigy*sigy + 2.*sigxy*sigxy;
     
 	// erro estimado na norma H1
-    double SemiH1 =0.;
+    REAL SemiH1 =0.;
     for(int i = 0; i < 2; i++) for(int j = 0; j < 2; j++) SemiH1 += (data.fDSolDx(i,j) - DuExact(i,j)) * (data.fDSolDx(i,j) - DuExact(i,j));
 	errors[3] = errors[0] + SemiH1;
 }

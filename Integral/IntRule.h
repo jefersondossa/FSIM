@@ -68,9 +68,9 @@ public:
     virtual int NPoints() const;
     
     // Function returning coordinates and weights of integration points
-    virtual void Point(int p, VecDouble &co, double &weight) const;
-    virtual double PointList(int i, int j) const;
-    virtual double WeightList(int i) const;
+    virtual void Point(int p, VecDouble &co, REAL &weight) const;
+    virtual REAL PointList(int i, int j) const;
+    virtual REAL WeightList(int i) const;
     
     MatrixDouble Points() {return fPoints;}
     VecDouble Weights() {return fWeights;}

@@ -1,0 +1,5 @@
+//Type defs
+#ifndef @REAL_TYPE_DEF@
+#define @REAL_TYPE_DEF@
+#endif
+

@@ -21,8 +21,8 @@ void InterpolatedBC::ComputeStiffness(int &index, IntPointData &data, MatrixDoub
         data.fNeedsSol = true;
         data.fSol.resize(fNState);
     }
-    double WJ = data.fWeight * data.fJacA0 * WeakForm::fBigNumber;
-    double nphi = data.fPhi.size();
+    REAL WJ = data.fWeight * data.fJacA0 * WeakForm::fBigNumber;
+    REAL nphi = data.fPhi.size();
     
     switch (BCType)
     {
@@ -48,8 +48,8 @@ void InterpolatedBC::ComputeStiffness(int &index, IntPointData &data, MatrixDoub
 
 void InterpolatedBC::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
-    double WJ = data.fWeight * data.fJacA0;
-    double nphi = data.fPhi.size();
+    REAL WJ = data.fWeight * data.fJacA0;
+    REAL nphi = data.fPhi.size();
 
     int myIndex = data.fElementIndex;
     Element *el = fGlobalMesh->ElementVec()[(*fGlobalElementCorrespondence)[myIndex]];

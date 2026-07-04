@@ -44,7 +44,7 @@ void TransientAnalysis::Run(int nsteps){
         fGlobalMatrix->ZeroRhs();
         fGlobalMatrix->ZeroSolution();
         for (int i=0; i<NEquations(); i++){
-            double val = 1.e-20;
+            REAL val = 1.e-20;
             fGlobalMatrix->AddValueMatrix(i,i,val);
         }
     }

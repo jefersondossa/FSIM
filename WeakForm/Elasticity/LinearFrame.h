@@ -7,18 +7,18 @@ class LinearFrame : public WeakForm
 {
 protected:
     // Material Young modulus
-    double       fYoungModulus;
+    REAL       fYoungModulus;
     // Cross section inertia
-    double       fInertia;
+    REAL       fInertia;
     // Cross section area
-    double       fArea;
+    REAL       fArea;
 
 public:
     /// @brief Elastic truss class constructor
     /// @param matid physical tag
     /// @param young material Young modulus
     /// @param inertia cross section inertia
-    LinearFrame(int matid, double young, double inertia, double area);
+    LinearFrame(int matid, REAL young, REAL inertia, REAL area);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -53,7 +53,7 @@ public:
     /// @param Sol solution vector
     void Solution(IntPointData &data, int var, VecDouble &Sol) override;
 
-    void HermiteFunction(double &ksi, VecDouble &phi, VecDouble &dphi,  VecDouble &d2phi, VecDouble &d3phi);
+    void HermiteFunction(REAL &ksi, VecDouble &phi, VecDouble &dphi,  VecDouble &d2phi, VecDouble &d3phi);
 };
 
 

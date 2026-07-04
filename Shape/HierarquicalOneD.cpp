@@ -94,7 +94,7 @@ void HierarquicalOneD::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble > &d
     return;
 }
 
-void HierarquicalOneD::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalOneD::Chebyshev(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();
@@ -116,7 +116,7 @@ void HierarquicalOneD::Chebyshev(double x, int num,MatrixDouble &phi,MatrixDoubl
 
 
 
-void HierarquicalOneD::Legendre(double x, int num,MatrixDouble &phi,MatrixDouble &dphi){
+void HierarquicalOneD::Legendre(REAL x, int num,MatrixDouble &phi,MatrixDouble &dphi){
     // Quadratic or higher shape functions
     if(num <= 0) return;
     phi.setZero();

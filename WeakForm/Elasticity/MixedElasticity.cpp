@@ -1,6 +1,6 @@
 #include "MixedElasticity.h"
 
-MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisson) : WeakForm() {
+MixedElasticity::MixedElasticity(int matid, int dim, REAL young, REAL poisson) : WeakForm() {
     this->fMatId = matid;
     this->fNState = 2;
     fDimension = dim;
@@ -47,7 +47,7 @@ MixedElasticity::MixedElasticity(int matid, int dim, double young, double poisso
 void MixedElasticity::ComputeStiffness(int &index, std::vector<IntPointData *> &data, MatrixDouble &Stiffness){
 
 
-    double WJ = data[0]->fWeight * data[0]->fJacA0;
+    REAL WJ = data[0]->fWeight * data[0]->fJacA0;
     int nphiU = data[0]->fPhi.size();
     int nphiP = data[1]->fPhi.size();
     MatrixDouble matB(3,2*nphiU);
@@ -97,7 +97,7 @@ void MixedElasticity::ComputeResidual(int &index, std::vector<IntPointData *> &d
     int nphiU = data[0]->fPhi.size();
 
 
-    double WJ = data[0]->fWeight * data[0]->fJacA0;
+    REAL WJ = data[0]->fWeight * data[0]->fJacA0;
     // MatrixDouble matB(3,2*nphi);
     // matB.setZero();
    
@@ -125,10 +125,10 @@ void MixedElasticity::ComputeResidual(int &index, std::vector<IntPointData *> &d
     // Rhs -= matB.transpose() * stress * WJ;
 
     for (int i = nphiU; i--; ){
-        double shapeFi = data[0]->fPhi[i];
+        REAL shapeFi = data[0]->fPhi[i];
         //Body force
-        double Fx = forcingF[0] * shapeFi;
-        double Fy = forcingF[1] * shapeFi;
+        REAL Fx = forcingF[0] * shapeFi;
+        REAL Fy = forcingF[1] * shapeFi;
         Rhs[2*i  ] += Fx * WJ;
         Rhs[2*i+1] += Fy * WJ;
     };
@@ -161,9 +161,9 @@ void MixedElasticity::ComputeError(std::vector<IntPointData *> &data, VecDouble 
     // StrainMEF(2) = 0.5 * (data.fDSolDx(1,0) + data.fDSolDx(0,1));
     // auto StressMEF = fConstitutiveMatrix * StrainMEF;
 
-    // double sigx = StressMEF[0] - exactStress[0];
-    // double sigy = StressMEF[1] - exactStress[1];
-    // double sigxy = StressMEF[2] - exactStress[2];
+    // REAL sigx = StressMEF[0] - exactStress[0];
+    // REAL sigy = StressMEF[1] - exactStress[1];
+    // REAL sigxy = StressMEF[2] - exactStress[2];
 
     // // Energy norm
     // errors[1] = (sigx*(StrainMEF[0]-exactStrain[0])+sigy*(StrainMEF[1]-exactStrain[1])+2.*sigxy*(StrainMEF[2]-exactStrain[2]));
@@ -172,7 +172,7 @@ void MixedElasticity::ComputeError(std::vector<IntPointData *> &data, VecDouble 
     // errors[2] = sigx*sigx + sigy*sigy + 2.*sigxy*sigxy;
     
 	// // erro estimado na norma H1
-    // double SemiH1 =0.;
+    // REAL SemiH1 =0.;
     // for(int i = 0; i < 2; i++) for(int j = 0; j < 2; j++) SemiH1 += (data.fDSolDx(i,j) - DuExact(i,j)) * (data.fDSolDx(i,j) - DuExact(i,j));
 	// errors[3] = errors[0] + SemiH1;
 }
@@ -258,10 +258,10 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         // epsilon[1] = data.fDSolDx(1,1);
         // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
-        //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
         // }        
         return;
@@ -274,10 +274,10 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         // epsilon[1] = data.fDSolDx(1,1);
         // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
-        //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
         // }      
         return;
@@ -290,10 +290,10 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         // epsilon[1] = data.fDSolDx(1,1);
         // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
-        //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (1.-fPoissonRatio) * epsilon[2];
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * (1.-2.*fPoissonRatio) * epsilon[2];
         // }      
         return;
@@ -339,10 +339,10 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         epsilon[1] = gradDisp(1,1);
         epsilon[2] = gradDisp(0,1)+gradDisp(1,0);
         // if (fPlaneStress){
-        //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
         // }        
         return;
@@ -355,10 +355,10 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         epsilon[1] = gradDisp(1,1);
         epsilon[2] = gradDisp(0,1)+gradDisp(1,0);
         // if (fPlaneStress){
-        //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[0] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
         // }      
         return;
@@ -371,10 +371,10 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         epsilon[1] = gradDisp(1,1);
         epsilon[2] = gradDisp(0,1)+gradDisp(1,0);
         // if (fPlaneStress){
-        //     double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[2] = k * (1.-2.*fPoissonRatio) * epsilon[2];
         // }      
         return;
@@ -411,9 +411,9 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         // epsilon[1] = data.fDSolDx(1,1);
         // epsilon[2] = data.fDSolDx(0,1)+data.fDSolDx(1,0);
         // if (fPlaneStress){
-        //     double fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
-        //     double fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
-        //     double alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
+        //     REAL fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
+        //     REAL fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
+        //     REAL alpha = (3.*fBulkModulus - 2.*fShearModulus) / (3.*fBulkModulus + 4.*fShearModulus);
         //     MatrixDouble MatAux(3,3);
         //     MatAux.setZero();
         //     MatAux(0,0) = MatAux(1,1) = 1. + alpha;
@@ -421,14 +421,14 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         //     MatAux(2,2) = 0.5;
         //     MatAux *= 2.*fShearModulus;
         //     Sol = MatAux*epsilon;
-        //     // double k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
+        //     // REAL k = fYoungModulus / (1.-fPoissonRatio*fPoissonRatio);
         //     // Sol[0] = k * (epsilon[0] + fPoissonRatio * epsilon[1]);
         //     // Sol[1] = k * (fPoissonRatio * epsilon[0] + epsilon[1]);
         //     // Sol[2] = k * (1.-fPoissonRatio) * epsilon[2];
         // } else {
-        //     double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+        //     REAL G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
             
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
         //     Sol[1] = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);
         //     Sol[2] = G * epsilon[2];
@@ -453,7 +453,7 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         // if (fPlaneStress){
         //     Sol[0] = 0.;
         // } else {
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Sol[0] = k * (fPoissonRatio * epsilon[0] + fPoissonRatio * epsilon[1]);
         // }      
         return;
@@ -489,8 +489,8 @@ void MixedElasticity::Solution(std::vector<IntPointData *> &data, int var, VecDo
         // if (fPlaneStress){
         //     PanicButton();
         // } else {
-        //     double G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
-        //     double k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
+        //     REAL G = fYoungModulus / (2. * ( 1. + fPoissonRatio));
+        //     REAL k = fYoungModulus / ((1.+fPoissonRatio)*(1.-2.*fPoissonRatio));
         //     Tensor3D Stress;
         //     Stress.fXX() = k * ((1.-fPoissonRatio) * epsilon[0] + fPoissonRatio * epsilon[1]);
         //     Stress.fYY() = k * (fPoissonRatio * epsilon[0] + (1.-fPoissonRatio) * epsilon[1]);

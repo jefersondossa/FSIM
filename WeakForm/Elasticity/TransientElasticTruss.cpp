@@ -1,6 +1,6 @@
 #include "TransientElasticTruss.h"
 
-TransientElasticTruss::TransientElasticTruss(int matid, int dim, double young, double area, double damp, double dens, double dt, TimeIntegScheme tscheme) : ElasticTruss(matid,dim,young,area) {
+TransientElasticTruss::TransientElasticTruss(int matid, int dim, REAL young, REAL area, REAL damp, REAL dens, REAL dt, TimeIntegScheme tscheme) : ElasticTruss(matid,dim,young,area) {
     fDamping = damp;
     fDensity = dens;
     fTimeStep = dt;
@@ -15,7 +15,7 @@ void TransientElasticTruss::ComputeStiffness(int &index, IntPointData &data, Mat
     K.setZero();
     ElasticTruss::ComputeStiffness(index,data,K);
     
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
 
     //Compute the mass matrix
@@ -45,7 +45,7 @@ void TransientElasticTruss::ComputeResidual(int &index, IntPointData &data, VecD
     Residual.setZero();
     ElasticTruss::ComputeResidual(index,data,Residual);
     
-    double WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
+    REAL WJ = data.fWeight * data.fJacA0 * data.fWeightFunction[index];
     int nphi = data.fPhi.size();
     auto vel = data.fDSolDt;
     auto acel = data.fDSolDDt;

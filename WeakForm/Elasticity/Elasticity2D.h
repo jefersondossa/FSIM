@@ -9,18 +9,18 @@ protected:
     // true if plane stress, false if plane strain
     bool         fPlaneStress;
     // Young modulus
-    double       fYoungModulus;
+    REAL       fYoungModulus;
     // Poisson's ratio
-    double       fPoissonRatio;
+    REAL       fPoissonRatio;
     // Thickness
-    double       fThickness;
+    REAL       fThickness;
     // Problem consitutive matrix
     MatrixDouble fConstitutiveMatrix;
 
 
 public:  
     // Elasticity 2D class constructor
-    Elasticity2D(int matid, double young, double poisson, bool planes = true, double thick=1);
+    Elasticity2D(int matid, REAL young, REAL poisson, bool planes = true, REAL thick=1);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index
@@ -61,11 +61,11 @@ public:
 
     /// @brief Returns the material young modulus
     /// @return Young modulus
-    double &YoungModulus(){
+    REAL &YoungModulus(){
         return fYoungModulus;
     }
 
-    double &PoissonRatio(){
+    REAL &PoissonRatio(){
         return fPoissonRatio;
     }
 
@@ -73,7 +73,7 @@ public:
         return fPlaneStress;
     }
 
-    double Thickness(){
+    REAL Thickness(){
         return fThickness;
     }
 };

@@ -7,10 +7,10 @@
 /// @brief Implements the stabilized Navier-Stokes weak form: SUPG, PSPG and LSIC stabilizations are employed
 class TransientNavierStokes : public NavierStokes, public TransientWeakForm{
 protected:
-    double fSpectralRadius;
-    double fAlphaM;
-    double fAlphaF;
-    double fGamma;
+    REAL fSpectralRadius;
+    REAL fAlphaM;
+    REAL fAlphaF;
+    REAL fGamma;
 
 public:
     /// @brief Navier-Stokes flow weak form constructor
@@ -18,7 +18,7 @@ public:
     /// @param dim problem dimension (2 or 3)
     /// @param density fluid density
     /// @param viscosity fluid dynamic viscosity
-    TransientNavierStokes(int matid, int dim, double density, double viscosity, double dTime, double specRadius);
+    TransientNavierStokes(int matid, int dim, REAL density, REAL viscosity, REAL dTime, REAL specRadius);
 
     /// @brief Overloads the weak form stiffness matrix computation in the case more than one contribution is provided
     /// @param index integration point index

@@ -11,8 +11,8 @@ void XDMFGenerator::ReadInitialSolution(const std::string& inputPrev, const std:
     // hid_t dataset;
     // herr_t status;
 
-    // double *vecValues;
-    // double *scaValues;
+    // REAL *vecValues;
+    // REAL *scaValues;
     // vecValues = new double[3*numNodes];
     // scaValues = new double[numNodes];
 

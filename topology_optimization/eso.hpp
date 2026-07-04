@@ -4,6 +4,6 @@
 class CompMesh;
 class LinearAnalysis;
 
-void RunEso(CompMesh& model, LinearAnalysis& an, double target_final_vol = 0.7);
+void RunEso(CompMesh& model, LinearAnalysis& an, REAL target_final_vol = 0.7);
 
 #endif

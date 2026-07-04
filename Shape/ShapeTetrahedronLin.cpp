@@ -11,10 +11,10 @@ const ElementType ShapeTetrahedronLin::ElType;
 
 void ShapeTetrahedronLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = xi[2];
-    double xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = xi[2];
+    REAL xsi4 = 1.0 - xsi1 - xsi2 - xsi3;
 
     phi[0] = 1.0 - xsi1 - xsi2 - xsi3;
     phi[1] = xsi1;

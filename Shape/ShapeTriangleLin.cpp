@@ -11,9 +11,9 @@ const ElementType ShapeTriangleLin::ElType;
 
 void ShapeTriangleLin::Shape(VecDouble &xi, VecDouble &phi, MatrixDouble &dphi, VecInt orders) {
 
-    double xsi1 = xi[0];
-    double xsi2 = xi[1];
-    double xsi3 = 1. - xsi1 - xsi2;
+    REAL xsi1 = xi[0];
+    REAL xsi2 = xi[1];
+    REAL xsi3 = 1. - xsi1 - xsi2;
 
     phi[0] = xsi3;
     phi[1] = xsi1;

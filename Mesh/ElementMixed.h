@@ -50,7 +50,7 @@ public:
     void ComputeHighOrderSpatialDerivatives() override{
         fSubElements[0]->ComputeHighOrderSpatialDerivatives();
     };
-    double getJacobian() override{
+    REAL getJacobian() override{
         return fSubElements[0]->getJacobian();
     };
 
@@ -130,16 +130,16 @@ public:
     int getNumberOfIntegrationPoints() override{
         return fSubElements[0]->getNumberOfIntegrationPoints();
     }
-    double IntegPointWeight(int index) override{
+    REAL IntegPointWeight(int index) override{
         return fSubElements[0]->IntegPointWeight(index);
     }
-    double IntegPointCoordinate(int index, int dir) override{
+    REAL IntegPointCoordinate(int index, int dir) override{
         return fSubElements[0]->IntegPointCoordinate(index, dir);
     }
     void ComputeIntPointDistFunction(VecDouble &nodalval) override{
         return fSubElements[0]->ComputeIntPointDistFunction(nodalval);
     }
-    double InterpolateVariable(VecDouble &nValues, int point) override{
+    REAL InterpolateVariable(VecDouble &nValues, int point) override{
         return fSubElements[0]->InterpolateVariable(nValues, point);
     }
 

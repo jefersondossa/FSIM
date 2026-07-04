@@ -33,7 +33,7 @@ void LinearAnalysis::UpdateSolution(){
 
     //Updates nodal values
     int Ii;
-    double val;
+    REAL val;
     
     
 
@@ -51,7 +51,7 @@ void LinearAnalysis::UpdateSolution(){
                     // ierr = VecGetValues(All, Ione, &Ii, &val);
                     int nshape = con->GetNShapeFunctions();
                     if (nshape == 0) continue;
-                    double sol = con -> Solution()[k];
+                    REAL sol = con -> Solution()[k];
                     con -> SetPreviousSolution(k,sol);
                     con -> SetSolution(k,val);
                 }
@@ -74,7 +74,7 @@ void LinearAnalysis::UpdateSolution(){
                     // ierr = VecGetValues(All, Ione, &Ii, &val);
                     int nshape = c->GetNShapeFunctions();
                     if (nshape == 0) continue;
-                    double sol = c -> Solution()[k];
+                    REAL sol = c -> Solution()[k];
                     c -> SetPreviousSolution(k,sol);
                     c -> SetSolution(k,val);
                 }
@@ -93,7 +93,7 @@ void LinearAnalysis::UpdateSolution(){
     //         // ierr = VecGetValues(All, Ione, &Ii, &val);
     //         int nshape = c->GetNShapeFunctions();
     //         if (nshape == 0) continue;
-    //         double sol = c -> Solution()[k];
+    //         REAL sol = c -> Solution()[k];
     //         c -> SetPreviousSolution(k,sol);
     //         c -> SetSolution(k,val);
     //     }

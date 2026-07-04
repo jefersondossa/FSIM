@@ -25,12 +25,12 @@
 //     integ.SetOrder(10);
 
 //     auto nshape = shape::NShapeFunctions(order);
-//     double Tol = 1.e-10;
+//     REAL Tol = 1.e-10;
 
 //     for (int i = 0; i < integ.NPoints(); i++)
 //     {
 //         MatDouble coord(1,1);
-//         double weig = 0.;
+//         REAL weig = 0.;
 //         integ.Point(i,coord,weig);
 //         // std::cout << "Point " << i << "; Coord = " << coord << " , Weight = " << weig << std::endl; 
     
@@ -42,8 +42,8 @@
 //         shape::Shape(xi,order,phi,DPhi,SLagrange);
 //         // std::cout <<"Shape = \n" << phi << " , \n DShape = \n" << DPhi << std::endl;
 
-//         double sumPhi = 0.;
-//         double sumDPhi = 0.;
+//         REAL sumPhi = 0.;
+//         REAL sumDPhi = 0.;
 //         for (int ishape = 0; ishape < nshape; ishape++){
 //             sumPhi += phi(ishape);
 //             sumDPhi += DPhi(0,ishape);
@@ -78,7 +78,7 @@
 //     for (int i = 0; i < integ.NPoints(); i++)
 //     {
 //         MatDouble coord(1,1);
-//         double weig = 0.;
+//         REAL weig = 0.;
 //         integ.Point(i,coord,weig);
 //         // std::cout << "Point " << i << "; Coord = " << coord << " , Weight = " << weig << std::endl; 
 

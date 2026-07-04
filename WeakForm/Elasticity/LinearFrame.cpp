@@ -1,7 +1,7 @@
 #include "LinearFrame.h"
 
 
-LinearFrame::LinearFrame(int matid, double young, double inertia, double area) : WeakForm() {
+LinearFrame::LinearFrame(int matid, REAL young, REAL inertia, REAL area) : WeakForm() {
     this->fMatId = matid;
     fDimension = 1;
     fNState = 3;
@@ -19,9 +19,9 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
         data.fSol.resize(fNState);
     }
     // Variable initialization
-    double Length = 2.*data.fJacA0;
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
+    REAL Length = 2.*data.fJacA0;
+    REAL cosa = data.fAxes0(0,0) / data.fJacA0;
+    REAL sina = data.fAxes0(1,0) / data.fJacA0;
     MatrixDouble rotation(6,6);
     rotation.setZero();
 
@@ -66,7 +66,7 @@ void LinearFrame::ComputeStiffness(int &index, IntPointData &data, MatrixDouble 
 void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs){
 
     int nphi = 4;
-    double WJ = data.fWeight * data.fJacA0;
+    REAL WJ = data.fWeight * data.fJacA0;
     auto force = fForceFunction;
     VecDouble forcingF(3);
     VecDouble x_ = data.fX;
@@ -86,8 +86,8 @@ void LinearFrame::ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs
     Rhsaux[2] = forcingF[1] * phi[1] * WJ * data.fJacA0; // in this case the jacobian needs to be squared
     Rhsaux[5] = forcingF[1] * phi[3] * WJ * data.fJacA0;
 
-    double cosa = data.fAxes0(0,0) / data.fJacA0;
-    double sina = data.fAxes0(1,0) / data.fJacA0;
+    REAL cosa = data.fAxes0(0,0) / data.fJacA0;
+    REAL sina = data.fAxes0(1,0) / data.fJacA0;
     MatrixDouble rotation(6,6);
     rotation.setZero();
     //Rotation matrix
@@ -168,7 +168,7 @@ void LinearFrame::Solution(IntPointData &data, int var, VecDouble &Sol) {
 
 }; 
 
-void LinearFrame::HermiteFunction(double &ksi, VecDouble &phi, VecDouble &dphi, VecDouble &d2phi, VecDouble &d3phi){
+void LinearFrame::HermiteFunction(REAL &ksi, VecDouble &phi, VecDouble &dphi, VecDouble &d2phi, VecDouble &d3phi){
     phi.resize(4);
     phi[0] = 0.5 - 0.75*ksi + 0.25*ksi*ksi*ksi;
     phi[1] = 0.25 - 0.25*ksi - 0.25*ksi*ksi + 0.25*ksi*ksi*ksi;

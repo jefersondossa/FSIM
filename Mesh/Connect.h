@@ -22,9 +22,9 @@ private:
         /// @brief Nodal mesh velocity
     VecDouble fMeshVelocity;
     /// @brief Nodal Arlequin weight function
-    double    fWeightFunction;
+    REAL    fWeightFunction;
     /// @brief Nodal Arlequin previous time step weight funtion
-    double    fPrevWeightFunction;
+    REAL    fPrevWeightFunction;
 
 public:
     Connect(int nstate, int nshape, int order, int index, int seqnum);
@@ -59,12 +59,12 @@ public:
     /// @brief Sets the solution
     /// @param istate state variable index
     /// @param sol solution
-    void SetSolution(int istate, double sol);
+    void SetSolution(int istate, REAL sol);
 
     /// @brief Increments the solution of a given state variable
     /// @param istate state variable index
     /// @param sol increment
-    void IncrementSolution(int istate, double sol);
+    void IncrementSolution(int istate, REAL sol);
 
     /// @brief Returns a vector with all solutions
     /// @return Solution vector
@@ -81,64 +81,64 @@ public:
     /// @brief Returns the solution of a given state variable
     /// @param istate state variable index
     /// @return solution
-    double GetSolution(int istate) const {
+    REAL GetSolution(int istate) const {
         return fSolution[istate];
     }
 
     /// @brief Returns the nodal solution of a given state variable in the previous time/load step
     /// @param istate state variable index
     /// @return solution
-    double GetPreviousSolution(int istate) const {
+    REAL GetPreviousSolution(int istate) const {
         return fPrevSolution[istate];
     }
-    void SetPreviousSolution(int istate, double val);
+    void SetPreviousSolution(int istate, REAL val);
 
     /// @brief Returns the solution first time derivative of a given state variable
     /// @param istate state variable index
     /// @return solution first time derivative
-    double GetDSolutionDTime(int istate) const {
+    REAL GetDSolutionDTime(int istate) const {
         return fDTimeSolution[istate];
     }
     VecDouble &SolutionDTime(){
         return fDTimeSolution;
     }
-    void SetDSolutionDTime(int istate, double val);
+    void SetDSolutionDTime(int istate, REAL val);
 
     /// @brief Returns the solution second time derivative of a given state variable
     /// @param istate state variable index
     /// @return solution second time derivative
-    double GetDSolutionDDTime(int istate) const {
+    REAL GetDSolutionDDTime(int istate) const {
         return fDDTimeSolution[istate];
     }
     VecDouble &SolutionDDTime(){
         return fDDTimeSolution;
     }
-    void SetDSolutionDDTime(int istate, double val);
+    void SetDSolutionDDTime(int istate, REAL val);
 
 
     //.........................Mesh Velocity functions..........................
     /// Sets the node mesh velocity
     /// @param double* mesh velocity
     void setMeshVelocity(VecDouble &u);
-    void setMeshVelocityComponent(int dir,double u);
+    void setMeshVelocityComponent(int dir,REAL u);
 
     /// Gets the node mesh velocity
     /// @param int direction @return mesh velocity component
-    double getMeshVelocity(int dir) const {
+    REAL getMeshVelocity(int dir) const {
         return fMeshVelocity[dir];
     }
    
     //............................Arlequin functions............................
     /// Sets the nodal energy weight function value
-    /// @param double weight function value
-    void setWeightFunction(double val);
+    /// @param REAL weight function value
+    void setWeightFunction(REAL val);
 
     /// Gets the nodal energy weight function value
     /// @return weight function value
-    double getWeightFunction() const {
+    REAL getWeightFunction() const {
         return fWeightFunction;
     };
-    double getPreviousWeightFunction() const {
+    REAL getPreviousWeightFunction() const {
         return fPrevWeightFunction;
     };
 };

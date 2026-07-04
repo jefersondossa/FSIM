@@ -19,17 +19,17 @@ protected:
     int fNStressComponents;
     
     // The Young modulus
-    double fYoungModulus;
-    double fPoissonRatio;
-    double fShearModulus;
-    double fBulkModulus;
+    REAL fYoungModulus;
+    REAL fPoissonRatio;
+    REAL fShearModulus;
+    REAL fBulkModulus;
     bool fPlaneStress = false;
-    double fThickness = 1.;
+    REAL fThickness = 1.;
 
-    double fHardening;
+    REAL fHardening;
 
     // Lambda function returning the stress-stran relation
-    std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> fUniaxialYield = 0; 
+    std::function<void (const REAL &plasticStrain, REAL &yieldStress, REAL &hardening)> fUniaxialYield = 0; 
 public:
     //2nd order identity tensor
     MatrixDouble fId2xId2;
@@ -60,7 +60,7 @@ public:
 
     void ComputeResidual(int &index, IntPointData &data, VecDouble &Rhs, Tensor3D &Stress) override;
 
-    virtual double PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
+    virtual REAL PlasticMultiplier(int &index, IntPointData &data, Tensor3D &Stress){
         PanicButton();
     };
 
@@ -83,17 +83,17 @@ public:
     /// @param voigt vector in Voigt notation
     void VoigtToTensor(MatrixDouble &tensor, VecDouble &voigt);
 
-    virtual double YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
+    virtual REAL YieldFunction(int &index, IntPointData &data, Tensor3D &Stress){
         PanicButton();
     }
 
     WeakForm* ElasticModel(){return fElasticModel;}
 
-    std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> &UniaxialYield(){
+    std::function<void (const REAL &plasticStrain, REAL &yieldStress, REAL &hardening)> &UniaxialYield(){
         return fUniaxialYield;
     }
 
-    void SetUniaxialYieldFunction(std::function<void (const double &plasticStrain, double &yieldStress, double &hardening)> yield){
+    void SetUniaxialYieldFunction(std::function<void (const REAL &plasticStrain, REAL &yieldStress, REAL &hardening)> yield){
         fUniaxialYield = yield;
     }
 
@@ -107,17 +107,17 @@ public:
         return fPlaneStress;
     }
 
-    double &YoungModulus(){
+    REAL &YoungModulus(){
         return fYoungModulus;
     }
 
-    double &PoissonRatio(){
+    REAL &PoissonRatio(){
         return fPoissonRatio;
     }
-    double &ShearModulus(){
+    REAL &ShearModulus(){
         return fShearModulus;
     }
-    double &BulkModulus(){
+    REAL &BulkModulus(){
         return fBulkModulus;
     }
 
