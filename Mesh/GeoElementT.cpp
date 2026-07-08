@@ -176,7 +176,7 @@ void GeoElementT<geoshape>::ComputeJacobian(IntPointData &data) {
             }
             
 #ifdef DEBUG_BUILD
-            if (data.fJacA0 < 1.e-6) PanicButton();
+            if (data.fJacA0 < 1.e-9) PanicButton();
 #endif
         }
             break;

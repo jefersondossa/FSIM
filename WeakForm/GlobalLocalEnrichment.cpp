@@ -11,6 +11,7 @@ GlobalLocalEnrichment::GlobalLocalEnrichment(int matid, int dimension, REAL youn
     fConstitutiveMatrix.resize(3,3);
     fConstitutiveMatrix.setZero();
 
+
     if (fPlaneStress){//Plane Stress Matrix
         REAL fBulkModulus = fYoungModulus / (2. * (1.-fPoissonRatio));
         REAL fShearModulus = fYoungModulus / (2. * (1.+fPoissonRatio));
@@ -86,6 +87,7 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
     //std::cout << "Mat BTot =\n"<< matBTot.transpose() << std::endl;
 
     Stiffness += matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
+    globaldata.fJacA1 += WJ;
 
     //std::cout << "Stiffness =\n"<< Stiffness << std::endl;
 };

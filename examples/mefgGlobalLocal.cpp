@@ -177,11 +177,11 @@ REAL PoissonRatio = 0.3;//0.49999;
 VecDouble previousSol;
 VecDouble currentSol;
 //Local index to global index correspondence for elements
-std::map<int64_t,int64_t> globalElementCorrespondence;
+std::map<int,int> globalElementCorrespondence;
 //Local node/integration point to global node/integration point correspondence 
-std::map<int64_t, MatrixDouble> globalNodeCorrespondence;
+std::map<int, MatrixDouble> globalNodeCorrespondence;
 //Global connects to be enriched to the index of the new connect associated with the enriched degree of freedom
-std::map<int64_t,int64_t> enrichedConnects;
+std::map<int,int> enrichedConnects;
 
 int main(int argc, char **args) { 
 
@@ -220,7 +220,7 @@ int main(int argc, char **args) {
         std::cout << "\nSolve Local Problem \n";
         if(it == 0){
             //Create Local Model
-            GmshTools::Read(*gmeshL,"../chapaLLocalRef.msh");
+            GmshTools::Read(*gmeshL,"../chapaLLocal.msh");
             cmeshL = new CompMesh(gmeshL,ApproxType::EIsoparametric);
             CreateLocalModel(cmeshG, cmeshL);
             gmeshL->Print("gmeshLocal.txt");
