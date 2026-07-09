@@ -108,6 +108,8 @@ void MixedGlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &loca
             Stiffness(ndofu+i,ndofu+j) += V(i,j);
         }
     }
+    
+    globaldata[0]->fJacA1 += WJ;
     // Stiffness += matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
 
     // std::cout << "Stiffness =\n"<< Stiffness << std::endl;

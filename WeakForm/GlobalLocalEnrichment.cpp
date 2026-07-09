@@ -87,6 +87,7 @@ void GlobalLocalEnrichment::ComputeStiffness(int &index, IntPointData &localdata
     //std::cout << "Mat BTot =\n"<< matBTot.transpose() << std::endl;
 
     Stiffness += matBTot.transpose() * fConstitutiveMatrix * matBTot * WJ;
+    
     globaldata.fJacA1 += WJ;
 
     //std::cout << "Stiffness =\n"<< Stiffness << std::endl;

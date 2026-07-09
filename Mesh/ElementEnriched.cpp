@@ -50,7 +50,7 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     ElementMixed *mixedGlobal = dynamic_cast<ElementMixed*>(fGlobalElement);
     ElementMixed *mixedLocal = dynamic_cast<ElementMixed*>(fLocalElement);
 
-    fGlobalElement->IntegrationData().fJacA1 = 0;
+    // fGlobalElement->IntegrationData().fJacA1 = 0;
 
     for(int it = 0; it < fLocalElement->getNumberOfIntegrationPoints(); it++){
 
@@ -127,9 +127,17 @@ void ElementEnriched::ComputeElContribution(MatrixDouble &jacobianNRMatrix, VecD
     if (globalLocal) AccountForEnrichment(jacobianNRMatrix, rhsVector);
     if (globalLocalMixed) AccountForEnrichmentMixed(jacobianNRMatrix, rhsVector);
 
-    std::cout << "Área global: " << fGlobalElement->IntegrationData().fJacA0 << '\n';
-    std::cout << "Área global/local: " << fGlobalElement->IntegrationData().fJacA1 << '\n';
-
+    if (globalLocal){
+        std::cout << "Global index: " << fGlobalElement->Index() << ", Local index: " << fLocalElement->Index() << '\n';
+        std::cout << "Área global: " << fGlobalElement->IntegrationData().fJacA0 << '\n';
+        std::cout << "Área global/local: " << fGlobalElement->IntegrationData().fJacA1 << '\n';
+    }
+    if (globalLocalMixed){
+        std::cout << "Global index: " << fGlobalElement->Index() << ", Local index: " << fLocalElement->Index() << '\n';
+        std::cout << "Área global: " << mixedGlobal->SubElements()[0]->IntegrationData().fJacA0 << '\n';
+        std::cout << "Área global/local: " << mixedGlobal->SubElements()[0]->IntegrationData().fJacA1 << '\n';
+    }
+   
     //PrintMathematica(jacobianNRMatrix, "Stiffness");
     // std::cout << "Stiffness \n" << jacobianNRMatrix << '\n';
     // std::cout << "Rhs \n" << rhsVector << '\n';
