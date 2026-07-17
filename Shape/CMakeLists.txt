@@ -32,6 +32,8 @@ file(GLOB shape
     HierarquicalQuad.cpp
     HierarquicalTriangle.h
     HierarquicalTriangle.cpp
+    IncompleteQuad.h
+    IncompleteQuad.cpp
 )
 
 set(SHAPE ${shape} PARENT_SCOPE)

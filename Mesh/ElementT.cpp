@@ -1033,6 +1033,7 @@ void ElementT<compshape>::Integrate(std::vector<std::string> &varNames, std::map
 #include "HierarquicalOneD.h"
 #include "HierarquicalQuad.h"
 #include "HierarquicalTriangle.h"
+#include "IncompleteQuad.h"
 
 template class ElementT<ShapePoint>;
 template class ElementT<ShapeOneDLin>;
@@ -1046,6 +1047,7 @@ template class ElementT<HierarquicalTriangle>;
 template class ElementT<ShapeQuadrilateralLin>;
 template class ElementT<ShapeQuadrilateralQua>;
 template class ElementT<HierarquicalQuad>;
+template class ElementT<IncompleteQuad>;
 template class ElementT<ShapeTetrahedronLin>;
 template class ElementT<ShapeTetrahedronQua>;
 template class ElementT<ShapeTetrahedronCub>;

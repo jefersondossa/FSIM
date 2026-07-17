@@ -159,7 +159,7 @@ void ElementTransient<compshape>::ComputeElContribution(std::vector<MatrixDouble
 #include "HierarquicalOneD.h"
 #include "HierarquicalQuad.h"
 #include "HierarquicalTriangle.h"
-
+#include "IncompleteQuad.h"
 
 template class ElementTransient<ShapePoint>;
 template class ElementTransient<ShapeOneDLin>;
@@ -173,6 +173,7 @@ template class ElementTransient<HierarquicalTriangle>;
 template class ElementTransient<ShapeQuadrilateralLin>;
 template class ElementTransient<ShapeQuadrilateralQua>;
 template class ElementTransient<HierarquicalQuad>;
+template class ElementTransient<IncompleteQuad>;
 template class ElementTransient<ShapeTetrahedronLin>;
 template class ElementTransient<ShapeTetrahedronQua>;
 template class ElementTransient<ShapeTetrahedronCub>;

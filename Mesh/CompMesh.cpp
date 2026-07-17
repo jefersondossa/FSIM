@@ -8,6 +8,7 @@
 #include "ElementT.h"
 #include "ElementWithMem.h"
 #include "ElementTransient.h"
+#include "IncompleteQuad.h"
 
 CompMesh::CompMesh(GeoMesh *gmesh, ApproxType approxType){
     fReference = gmesh;
@@ -99,6 +100,7 @@ void CompMesh::BuildConnects(){
     switch (fApproxType)
     {
     case ApproxType::EHierarquic:
+    case ApproxType::EIncompleteHierarquic:
         BuildHierarquicConnects();
         break;
     case ApproxType::EIsoparametric:
@@ -448,6 +450,7 @@ void CompMesh::Print(std::string filename){
     static const std::map<ApproxType, std::string> approxTypeNames = {
         {ApproxType::EIsoparametric, "Isoparametric"},
         {ApproxType::EHierarquic, "Hierarquic"},
+        {ApproxType::EIncompleteHierarquic, "IncompleteHierarquic"},
         {ApproxType::EIsogeometric, "Isogeometric"}
     };
 
@@ -552,8 +555,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementWithMem<ShapeOneDLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -563,8 +568,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementTransient<ShapeOneDLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -574,8 +581,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementT<ShapeOneDLin>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -592,7 +601,8 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -603,7 +613,8 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -614,7 +625,8 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -631,7 +643,11 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+                case ApproxType::EIncompleteHierarquic:
+                    fElementVector[iel] = new ElementWithMem<IncompleteQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+
                 default:
                     break;
                 }
@@ -642,7 +658,11 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+                case ApproxType::EIncompleteHierarquic:
+                    fElementVector[iel] = new ElementTransient<IncompleteQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+
                 default:
                     break;
                 }
@@ -653,7 +673,11 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+                case ApproxType::EIncompleteHierarquic:
+                    fElementVector[iel] = new ElementT<IncompleteQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+
                 default:
                     break;
                 }
@@ -745,8 +769,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementWithMem<ShapeOneDQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -756,8 +782,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementTransient<ShapeOneDQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -767,8 +795,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementT<ShapeOneDQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -824,7 +854,11 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+                case ApproxType::EIncompleteHierarquic:
+                    fElementVector[iel] = new ElementWithMem<IncompleteQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+
                 default:
                     break;
                 }
@@ -835,7 +869,11 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+                case ApproxType::EIncompleteHierarquic:
+                    fElementVector[iel] = new ElementTransient<IncompleteQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+
                 default:
                     break;
                 }
@@ -846,7 +884,11 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+                case ApproxType::EIncompleteHierarquic:
+                    fElementVector[iel] = new ElementT<IncompleteQuad>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+
                 default:
                     break;
                 }
@@ -875,7 +917,8 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -886,7 +929,8 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -897,7 +941,8 @@ void CompMesh::BuildElements(){
                     break;
                 case ApproxType::EHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalTriangle>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -913,8 +958,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementWithMem<ShapeOneDCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementWithMem<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -924,8 +971,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementTransient<ShapeOneDCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementTransient<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }
@@ -935,8 +984,10 @@ void CompMesh::BuildElements(){
                     fElementVector[iel] = new ElementT<ShapeOneDCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
                     break;
                 case ApproxType::EHierarquic:
+                case ApproxType::EIncompleteHierarquic:
                     fElementVector[iel] = new ElementT<HierarquicalOneD>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
-                
+                    break;
+
                 default:
                     break;
                 }

@@ -17,7 +17,8 @@ enum class ApproxType
 {
     EIsoparametric = 0,
     EHierarquic = 1,
-    EIsogeometric = 2
+    EIncompleteHierarquic = 2,
+    EIsogeometric = 3
 };
 
 class Element;

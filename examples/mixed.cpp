@@ -92,7 +92,7 @@ CompMesh* CreateDisplacementMesh(GeoMesh *gmesh){
 
 CompMesh* CreatePressureMesh(GeoMesh *gmesh){
 
-    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EHierarquic); 
+    CompMesh* cmesh = new CompMesh(gmesh, ApproxType::EIncompleteHierarquic); 
     cmesh->SetDefaultOrder(1);
 
     int nstate = 1;

@@ -409,6 +409,7 @@ void ElementWithMem<compshape>::ComputeElContribution(std::vector<MatrixDouble> 
 #include "HierarquicalOneD.h"
 #include "HierarquicalQuad.h"
 #include "HierarquicalTriangle.h"
+#include "IncompleteQuad.h"
 
 
 template class ElementWithMem<ShapePoint>;
@@ -423,6 +424,7 @@ template class ElementWithMem<HierarquicalTriangle>;
 template class ElementWithMem<ShapeQuadrilateralLin>;
 template class ElementWithMem<ShapeQuadrilateralQua>;
 template class ElementWithMem<HierarquicalQuad>;
+template class ElementWithMem<IncompleteQuad>;
 template class ElementWithMem<ShapeTetrahedronLin>;
 template class ElementWithMem<ShapeTetrahedronQua>;
 template class ElementWithMem<ShapeTetrahedronCub>;
