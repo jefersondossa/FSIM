@@ -1,5 +1,6 @@
 #ifndef ESO_HPP
 #define ESO_HPP
+#include "DenseEigen.h"
 
 class CompMesh;
 class LinearAnalysis;
