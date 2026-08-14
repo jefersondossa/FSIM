@@ -6,12 +6,14 @@
 #include <LinearFrame.h>
 #include <memory>
 
+\\Carga Distribuída
 auto forcing = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     force[1] = -5000;
 };
 
+\\Carga Concentrada
 auto forcing_concentrate = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];

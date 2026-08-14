@@ -21,3 +21,12 @@ target_link_libraries(testFrame PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_L
 
 add_executable(testFrame2 testFrame2.cpp)
 target_link_libraries(testFrame2 PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(testRelatorio testRelatorio.cpp)
+target_link_libraries(testRelatorio PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(testviga2_1 testviga2_1.cpp)
+target_link_libraries(testviga2_1 PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
+
+add_executable(testPoisson testPoisson.cpp)
+target_link_libraries(testPoisson PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})
