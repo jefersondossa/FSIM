@@ -71,7 +71,7 @@ void Poisson::ComputeError(IntPointData &data, VecDouble &errors){
 
     //L2 state variable
     errors[0] += (uExact[0]-data.fSol[0])*(uExact[0]-data.fSol[0]) * data.fWeight * data.fJacA0 ;
-        
+    // std::cout << "Uexact = " << DuExact(0,0) << " , " << data.fDSolDx(0,0)<< " , " << data.fX[0] << std::endl;
     //Semi H1 state variable
     for (int m = fDimension; m--; ){
         errors[1] += (DuExact(m,0)-data.fDSolDx(0,m))* (DuExact(m,0)-data.fDSolDx(0,m)) * data.fWeight * data.fJacA0;

@@ -1,5 +1,5 @@
 build*
 .vscode
 debug/*
-*.msh
+.msh
 config.h
