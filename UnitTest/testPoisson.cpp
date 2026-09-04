@@ -5,10 +5,10 @@
 #include <L2Projection.h>
 #include <Poisson.h>
 #include <memory>
-#define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
+#define fTolerance 1.e-10
+#define CATCH_CONFIG_MAIN
 using namespace Catch::literals;
-#define fTolerance  1.e-10
 
 auto forcing = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
@@ -73,12 +73,14 @@ auto exactSol2D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     u[0] = (x*(x-1.)*y*(y-1.));
     gradU(0,0) = ((-1.+2.*x)*(-1.+y)*y);
     gradU(0,1) = ((-1.+x)*x*(-1.+2.*y));
+    // Vinícius de Souza: Mais tarde inserir um comentário explicando o que é o u[0], gradU(0,0) e gradU(0,1)
 };
 
 auto forcing2D = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
     force[0] = 2.*(-1.+x)*x+2.*(-1.+y)*y;
+    // Vinícius de Souza: Mais tarde inserir um comentário explicando o que é o force[0]
 };
 
 void SolveProblemHarmonic(GeoMesh *gmesh){
@@ -257,26 +259,8 @@ void SolveProblemHierarquic(GeoMesh *gmesh, int order){
     REQUIRE(errors[2]<fTolerance);
 };
 
-// int main()
-// {
-//     //Geometric Mesh
-//     GeoMesh * gmesh = new GeoMesh();
-//     GmshTools::Read(*gmesh,"../../UnitTest/poisson1d.msh");
-//     gmesh->Print("gmesh.txt");
-
-//     // SolveProblem1(gmesh);
-
-//     // SolveProblem2(gmesh);
-
-//     SolveProblem3(gmesh);
-
-//     // SolveProblemHarmonic(gmesh);
-
-//     return 0;
-// }
-
 void SolveProblem2D(GeoMesh *gmesh, int order){
-    CompMesh* cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
+    CompMesh * cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     cmesh->Dimension() = 2;
 
     Poisson * mat = new Poisson(6,1,1);
@@ -310,7 +294,7 @@ void SolveProblem2D(GeoMesh *gmesh, int order){
     val2.setZero();
     
     // Homogeneous Dirichlet
-    L2Projection * matbc1 = new L2Projection(3,1,BoundaryConditionType::kDirichlet,val1,val2);
+    L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kDirichlet,val1,val2);
 
     //Apoio fixo
     if (order == 1){
@@ -339,7 +323,6 @@ void SolveProblem2D(GeoMesh *gmesh, int order){
 
 TEST_CASE("Poisson_test","[Poisson]")
 {
-
     SECTION("Check Isoparametric"){
         //Geometric Mesh
         GeoMesh * gmesh1 = new GeoMesh();
@@ -377,9 +360,28 @@ TEST_CASE("Poisson_test","[Poisson]")
     SECTION("Check 2D"){
         //Geometric Mesh
         GeoMesh * gmesh1 = new GeoMesh();
-        GmshTools::Read(*gmesh1,"../../UnitTest/poisson1d-1.msh");
+        GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
         //gmesh1->Print("gmesh.txt");
 
         SolveProblem2D(gmesh1, 1);    
     }
 }
+
+/*
+int main()
+{
+
+Geometric Mesh
+GeoMesh * gmesh = new GeoMesh();
+GmshTools::Read(*gmesh,"../../UnitTest/poisson1d.msh");
+gmesh->Print("gmesh.txt");
+
+SolveProblem1(gmesh);
+SolveProblem2(gmesh);
+SolveProblem3(gmesh);
+SolveProblemHarmonic(gmesh);
+
+return 0;
+
+}
+*/
