@@ -72,15 +72,18 @@ auto exactSol2D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
 
     u[0] = (x*(x-1.)*y*(y-1.));
     gradU(0,0) = ((-1.+2.*x)*(-1.+y)*y);
-    gradU(0,1) = ((-1.+x)*x*(-1.+2.*y));
-    // Vinícius de Souza: Mais tarde inserir um comentário explicando o que é o u[0], gradU(0,0) e gradU(0,1)
+    gradU(1,0) = ((-1.+x)*x*(-1.+2.*y));
+    // vs: u[0], solução do problema em questão;
+    // vs: gradU(0,0), derivada de U em relação a x;
+    // vs: gradU(0,1), derivada de U em relação a y;
 };
 
 auto forcing2D = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = 2.*(-1.+x)*x+2.*(-1.+y)*y;
-    // Vinícius de Souza: Mais tarde inserir um comentário explicando o que é o force[0]
+    force[0] = -2.*(-1.+x)*x+-2.*(-1.+y)*y;
+    // -2.*(-1.+x)*x+-2.*(-1.+y)*y
+    // vs: Laplaciano de U[0] = grad(0,0) + grad(0,1)
 };
 
 void SolveProblemHarmonic(GeoMesh *gmesh){
@@ -263,28 +266,10 @@ void SolveProblem2D(GeoMesh *gmesh, int order){
     CompMesh * cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     cmesh->Dimension() = 2;
 
-    Poisson * mat = new Poisson(6,1,1);
-    switch (order)
-    {
-    case 1:
-        mat->SetForcingFunction(forcing2D);
-        mat->SetExactSolution(exactSol2D);
-        break;
+    Poisson * mat = new Poisson(6,2,1);
 
-    case 2:
-        mat->SetForcingFunction(forcing2D);
-        mat->SetExactSolution(exactSol2D);
-        break;
-
-    case 3:
-        mat->SetForcingFunction(forcing2D);
-        mat->SetExactSolution(exactSol2D);
-        break;
-    
-    default:
-        std::cout<<"Order not implemented\n";
-        break;
-    }
+    mat->SetForcingFunction(forcing2D);
+    mat->SetExactSolution(exactSol2D);
     cmesh->InsertMaterial(mat);
 
     //BC
@@ -296,14 +281,7 @@ void SolveProblem2D(GeoMesh *gmesh, int order){
     // Homogeneous Dirichlet
     L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kDirichlet,val1,val2);
 
-    //Apoio fixo
-    if (order == 1){
-        val2[0]=1;
-    }
-    L2Projection * matbc2 = new L2Projection(4,1,BoundaryConditionType::kDirichlet,val1,val2);
-
     cmesh->InsertMaterial(matbc1);
-    cmesh->InsertMaterial(matbc2);
  
     cmesh->AutoBuild();
     cmesh->Print("cmesh.txt");
@@ -319,6 +297,50 @@ void SolveProblem2D(GeoMesh *gmesh, int order){
 
     VecDouble errors(3);
     an.PostProcessError(errors);
+    REQUIRE(errors[0]<fTolerance);
+    REQUIRE(errors[1]<fTolerance);
+    REQUIRE(errors[2]<fTolerance);
+};
+
+void SolveProblem2DHierarquic(GeoMesh *gmesh, int order){
+    CompMesh * cmesh = new CompMesh(gmesh,ApproxType::EHierarquic);
+    cmesh->SetDefaultOrder(2);
+    cmesh->Dimension() = 2;
+
+    Poisson * mat = new Poisson(6,2,1);
+
+    mat->SetForcingFunction(forcing2D);
+    mat->SetExactSolution(exactSol2D);
+    cmesh->InsertMaterial(mat);
+
+    //BC
+    MatrixDouble val1(1,1);
+    val1.setZero();
+    VecDouble val2(1);
+    val2.setZero();
+    
+    // Homogeneous Dirichlet
+    L2Projection * matbc1 = new L2Projection(5,1,BoundaryConditionType::kDirichlet,val1,val2);
+
+    cmesh->InsertMaterial(matbc1);
+ 
+    cmesh->AutoBuild();
+    cmesh->Print("cmesh.txt");
+
+    LinearAnalysis an(cmesh,SolverType::ELDLt);
+   
+    std::vector<std::string> ScalarNames, VectorNames;
+    ScalarNames = {"Solution","ExactSolution"};
+    VectorNames = {"Derivative"};
+    an.Run();
+
+    VTUGenerator::PrintResults(cmesh,"resultPoisson",ScalarNames,VectorNames); 
+
+    VecDouble errors(3);
+    an.PostProcessError(errors);
+    REQUIRE(errors[0]<fTolerance);
+    REQUIRE(errors[1]<fTolerance);
+    REQUIRE(errors[2]<fTolerance);
 };
 
 TEST_CASE("Poisson_test","[Poisson]")
@@ -362,12 +384,19 @@ TEST_CASE("Poisson_test","[Poisson]")
         GeoMesh * gmesh1 = new GeoMesh();
         GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
         //gmesh1->Print("gmesh.txt");
+        SolveProblem2D(gmesh1, 1);
+    }
 
-        SolveProblem2D(gmesh1, 1);    
+     SECTION("Check 2DHierarquic"){
+        //Geometric Mesh
+        GeoMesh * gmesh1 = new GeoMesh();
+        GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
+        //gmesh1->Print("gmesh.txt");
+        SolveProblem2DHierarquic(gmesh1, 1);
     }
 }
 
-/*
+/*  
 int main()
 {
 

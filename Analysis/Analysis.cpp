@@ -169,6 +169,7 @@ void Analysis::PostProcessError(VecDouble &errorsTotal){
         for (int jel = fMeshVector[imesh]->NElements(); jel--; ){
 
             VecDouble errors(errorsProcess.size());
+            errors.setZero();
 
             fMeshVector[imesh]->ElementVec()[jel] -> ComputeError(errors);
             errorsProcess += errors;
