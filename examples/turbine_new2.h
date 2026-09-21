@@ -374,8 +374,8 @@
 
 	MPI_Barrier(PETSC_COMM_WORLD);   
     
-    coarseModel.meshReading(fluid1,"../turbine_data.txt","coarse_2turbines.msh","mirror.txt",0);
-    fineModel.meshReading(fluid2,"../turbine_data.txt","fine_2turbines.msh","mirror_fine.txt",0);
+    coarseModel.meshReading(fluid1,"../turbine_data.txt","../coarse_2turbines.msh","mirror.txt",0);
+    fineModel.meshReading(fluid2,"../turbine_data.txt","../fine_2turbines.msh","mirror_fine.txt",0);
    // } 
 	MPI_Barrier(PETSC_COMM_WORLD);
 
