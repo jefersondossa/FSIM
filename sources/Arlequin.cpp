@@ -3432,7 +3432,7 @@ int Arlequin<DIM,DEG>::solveArlequinProblem(int iterNumber, double tolerance,
     VecSetFromOptions(b);
     VecDuplicate(b, &u);
 
-
+    std::cout << "Number of time steps = " << numTimeSteps << std::endl;
     for (iTimeStep = 0; iTimeStep < numTimeSteps; iTimeStep++){
 
         // if(iTimeStep == 10){

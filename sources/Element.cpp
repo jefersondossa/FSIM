@@ -778,7 +778,7 @@ void Element<DIM,DEG>::getBoundaryLoad(VecDouble &xsi, VecDouble &load) {
 
     for (int i = 0; i < DIM; i++)
         for (int j = 0; j < DIM; j++)
-            load[i] -= -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
+            load[i] += -p_ * ident[i][j] * n_vector[j] + shearStress[i][j] * n_vector[j];
     // load = -p_ * prod(ident,n_vector) + prod(shearStress,n_vector);
 
     //std::cout << "N Vector " << sideBoundary_ << " " <<  n_vector(0) << " " << n_vector(1) << " " << load(0) << " " << load(1) << " " << p_ << std::endl;

@@ -22,11 +22,11 @@
         Geometry* fluid1 = new Geometry(0);
         double e = 5;
 
-        double a1 = 2.5;
+        double a1 = 3;
         double z = 0.;
-        double a = 50.;
-        double b = 150.;
-        double as = 6.;
+        double a = 60.;
+        double b = 250.;
+        double as = 7.5;
 
         Point* p000 = fluid1 -> addPoint({-a,-a},a1,false);
         Point* p001 = fluid1 -> addPoint({-2-e,-a},a1,false);
@@ -398,60 +398,16 @@
         }
     }
 
-    fineModel.readInitialValues("../resultFine107000.h5","../resultFine107001.h5");
-    coarseModel.readInitialValues("../resultCoarse107000.h5","../resultCoarse107001.h5");
+    fineModel.readInitialValues("../resultFine104000.h5","../resultFine104001.h5");
+    coarseModel.readInitialValues("../resultCoarse104000.h5","../resultCoarse104001.h5");
 
-    fineModel.getNumberOfTimeSteps() = 20;
-    coarseModel.getNumberOfTimeSteps() = 20;
+    fineModel.getNumberOfTimeSteps() = 10;
+    coarseModel.getNumberOfTimeSteps() = 10;
+    arlequinProblem.numTimeSteps = 10;
 
     arlequinProblem.UnsetUseSNES();
     arlequinProblem.solveArlequinProblem(4, 1.e-7, 2, 1);
 
 
     coupledProblem.solveFSIProblemArlequin(100000);
-    
-    // coupledProblem.solveFSIProblemArlequin(100000);
-
-        // coupledProblem.solveFSIProblemGaussSeidelArlequin(1000);
-
-    //control.dataReading(".txt","mirror_coarse.txt");
-  
-    //Problem solving  
-         
-    //Solve Problem function needs three parameters:  
-    //1- The maximum number of iterations in the Newton-Raphson process
-    //2- The maximum relative error in the Newton-Raphson process (DU)
-    //3- The type of problem to be solved:  
-    //   1- Steady Stokes problem;   
-    //   2- Steady Navier-Stokes problem (solves the steady Stokes
-    //      in the first step to perform the initial guess);  
-     
-    //coarseModel.solveTransientProblem(2, 1.e-7, 2);
- 
-    //fluidCoarseMesh.solveTransientProblem(4, 1.e-16, 2); 
-  
-    
-    //control.solveTransientProblem(2, 1.e-6, 2); 
-     
-    //fineModel.solveTransientProblem(2, 1.e-16, 2);  
- 
-    // fineModel.solveSteadyLaplaceProblem(8, 1.e-16, 2);
-         
-  
-    //1- The maximum number of iterations in the Newton-Raphson process
-    //2- The maximum relative error in the Newton-Raphson process (DU)
-    //3- The type of problem to be solved:
-    //   1- Stokes problem;   
-    //   2- Navier-Stokes problem (solves the steady Stokes
-    //      in the first step to perform the initial guess);
-    //4- 0 - Steady problem 
-    //   1 - Transient problem  
-      
-    
-	// coarseModel.readInitialValues("initialVelocityCoarse7500.txt","initialPressureCoarse7500.txt");
-	// fineModel.readInitialValues("initialVelocityFine7500.txt","initialPressureFine7500.txt");
-
-    // arlequinProblem.setFluidModels(coarseModel, fineModel) ; 
-
-    // arlequinProblem.solveArlequinProblem(3, 1.e-7, 2, 1); 
-           
+   
