@@ -9,7 +9,7 @@ add_unit_test(TestShapeFunction TestShapeFunction.cpp)
 add_unit_test(TestGeom TestGeom.cpp)
 add_unit_test(TestTensor TestTensor.cpp)
 add_unit_test(TestPoisson testPoisson.cpp)
-
+add_unit_test(TestElasticity testElasticity.cpp)
 
 add_executable(testTruss testTruss.cpp)
 target_link_libraries(testTruss PRIVATE fsarl_library ${PETSC_KSP_LIB} ${PETSC_LIBRARIES} ${MPI_LIBRARIES} ${METIS_LIBRARIES} ${HDF5_LIBRARIES})

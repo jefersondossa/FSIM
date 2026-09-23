@@ -86,6 +86,26 @@ auto forcing2D = [](const VecDouble &coord, VecDouble &force){
     // vs: Laplaciano de U[0] = grad(0,0) + grad(0,1)
 };
 
+auto exactSol3D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+
+    u[0] = (x*(x-1.)*y*(y-1.));
+    gradU(0,0) = ((-1.+2.*x)*(-1.+y)*y);
+    gradU(1,0) = ((-1.+x)*x*(-1.+2.*y));
+    // vs: u[0], solução do problema em questão;
+    // vs: gradU(0,0), derivada de U em relação a x;
+    // vs: gradU(0,1), derivada de U em relação a y;
+};
+
+auto forcing3D = [](const VecDouble &coord, VecDouble &force){
+    const auto &x=coord[0];
+    const auto &y=coord[1];
+    force[0] = -2.*(-1.+x)*x+-2.*(-1.+y)*y;
+    // -2.*(-1.+x)*x+-2.*(-1.+y)*y
+    // vs: Laplaciano de U[0] = grad(0,0) + grad(0,1)
+};
+
 void SolveProblemHarmonic(GeoMesh *gmesh){
     CompMesh* cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
     cmesh->Dimension() = 1;
@@ -343,6 +363,49 @@ void SolveProblem2DHierarquic(GeoMesh *gmesh, int order){
     REQUIRE(errors[2]<fTolerance);
 };
 
+void SolveProblem3D(GeoMesh *gmesh, int order){
+    //TODO Implement 3d test
+    CompMesh * cmesh = new CompMesh(gmesh,ApproxType::EIsoparametric);
+    cmesh->Dimension() = 3;
+
+    Poisson * mat = new Poisson(14,3,1);
+
+    mat->SetForcingFunction(forcing3D);
+    mat->SetExactSolution(exactSol3D);
+    cmesh->InsertMaterial(mat);
+
+    //BC
+    MatrixDouble val1(1,1);
+    val1.setZero();
+    VecDouble val2(1);
+    val2.setZero();
+    
+    // Homogeneous Dirichlet
+    L2Projection * matbc1 = new L2Projection(13,2,BoundaryConditionType::kDirichlet,val1,val2);
+
+    cmesh->InsertMaterial(matbc1);
+ 
+    cmesh->AutoBuild();
+    cmesh->Print("cmesh.txt");
+
+    LinearAnalysis an(cmesh,SolverType::ELDLt);
+   
+    std::vector<std::string> ScalarNames, VectorNames;
+    ScalarNames = {"Solution","ExactSolution"};
+    VectorNames = {"Derivative"};
+    an.Run();
+    an.PrintGlobalMatrix();
+    an.PrintGlobalRhs();
+
+    VTUGenerator::PrintResults(cmesh,"resultPoisson",ScalarNames,VectorNames); 
+
+    VecDouble errors(3);
+    an.PostProcessError(errors);
+    REQUIRE(errors[0]<fTolerance);
+    REQUIRE(errors[1]<fTolerance);
+    REQUIRE(errors[2]<fTolerance);
+};
+
 TEST_CASE("Poisson_test","[Poisson]")
 {
     SECTION("Check Isoparametric"){
@@ -394,6 +457,7 @@ TEST_CASE("Poisson_test","[Poisson]")
         //gmesh1->Print("gmesh.txt");
         SolveProblem2DHierarquic(gmesh1, 1);
     }
+
 }
 
 /*  
