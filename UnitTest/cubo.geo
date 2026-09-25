@@ -1,6 +1,6 @@
 // Gmsh project created on Fri Sep 18 14:26:14 2026
 SetFactory("OpenCASCADE");
-N = 1;
+N = 4;
 Box(1) = {0, 0, 0, 1, 1, 1};
 Physical Surface("face", 13) = {6, 2, 5, 1, 4, 3};
 Physical Volume("volume", 14) = {1};

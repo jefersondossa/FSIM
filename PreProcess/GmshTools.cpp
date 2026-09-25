@@ -812,26 +812,31 @@ GeoElement* InsertElement(GeoMesh * gmesh, int & physical_identifier, int & el_t
         case 29:
         {   // Cubic Tetrahedron
             VecInt Topology2(20);
-            Topology2[0] = Topology[0];
-            Topology2[1] = Topology[1];
-            Topology2[2] = Topology[2];
-            Topology2[3] = Topology[3];
-            Topology2[4] = Topology[12];
-            Topology2[5] = Topology[13];
-            Topology2[6] = Topology[14];
-            Topology2[7] = Topology[15];
-            Topology2[8] = Topology[10];
-            Topology2[9] = Topology[11];
-            Topology2[10] = Topology[8];
-            Topology2[11] = Topology[9];
-            Topology2[12] = Topology[6];
-            Topology2[13] = Topology[7];
-            Topology2[14] = Topology[4];
-            Topology2[15] = Topology[5];
-            Topology2[16] = Topology[19];
+            // Vértices do tetraedro
+            Topology2[0]  = Topology[1];
+            Topology2[1]  = Topology[3];
+            Topology2[2]  = Topology[2];
+            Topology2[3]  = Topology[0];
+
+            // Nós das arestas
+            Topology2[4]  = Topology[15];
+            Topology2[5]  = Topology[14];
+            Topology2[6]  = Topology[12];
+            Topology2[7]  = Topology[13];
+            Topology2[8]  = Topology[7];
+            Topology2[9]  = Topology[6];
+            Topology2[10] = Topology[5];
+            Topology2[11] = Topology[4];
+            Topology2[12] = Topology[10];
+            Topology2[13] = Topology[11];
+            Topology2[14] = Topology[8];
+            Topology2[15] = Topology[9];
+
+            // Nós das faces
+            Topology2[16] = Topology[17];
             Topology2[17] = Topology[18];
-            Topology2[18] = Topology[17];
-            Topology2[19] = Topology[16];
+            Topology2[18] = Topology[16];
+            Topology2[19] = Topology[19];
             gel = new GeoElementT<ShapeTetrahedronCub>(el_identifier,Topology2,gmesh,physical_identifier);
             gel->PrintType() = 71;
             break;

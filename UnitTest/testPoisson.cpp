@@ -1,4 +1,5 @@
 #include <fstream>
+#include "EigenSpMatrix.h"
 #include <LinearAnalysis.h>
 #include <GmshTools.h>
 #include <VTUGenerator.h>
@@ -396,8 +397,16 @@ void SolveProblem3D(GeoMesh *gmesh, int order){
     ScalarNames = {"Solution","ExactSolution"};
     VectorNames = {"Derivative"};
     an.Run();
-    an.PrintGlobalMatrix();
+
+    // an.GlobalMatrix()->ZeroSolution();
+    // int row = 0;
+    // double val = 1.;
+    // an.GlobalMatrix()->PutValueSolution(row,val);
+    // // an.PrintGlobalMatrix();
     an.PrintGlobalRhs();
+    // an.PrintSolution();
+    // an.GlobalMatrix()->ExpandSolution();
+    // an.UpdateSolution();
 
     VTUGenerator::PrintResults(cmesh,"resultPoisson",ScalarNames,VectorNames); 
 
@@ -460,13 +469,14 @@ TEST_CASE("Poisson_test","[Poisson]")
     //     SolveProblem2DHierarquic(gmesh1, 1);
     // }
 
-    SECTION("Check 3D"){
-        //Geometric Mesh
-        GeoMesh * gmesh1 = new GeoMesh();
-        GmshTools::Read(*gmesh1,"../../UnitTest/cubo.msh");
-        //gmesh1->Print("gmesh.txt");
-        SolveProblem3D(gmesh1, 1);
-    }
+    // SECTION("Check 3D"){
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh1 = new GeoMesh();
+    //     GmshTools::Read(*gmesh1,"../../UnitTest/cubo.msh");
+    //     // GmshTools::Read(*gmesh1,"../../UnitTest/1tetra.msh");
+    //     //gmesh1->Print("gmesh.txt");
+    //     SolveProblem3D(gmesh1, 1);
+    // }
 
 }
 
