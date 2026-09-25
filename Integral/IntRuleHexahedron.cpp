@@ -26,6 +26,10 @@ void gaussQuadrature(int numPoints, VecDouble& points, VecDouble& weights) {
     } else if (numPoints == 5) {
         points << -0.9061798459386640, -0.5384693101056831, 0.0, 0.5384693101056831, 0.9061798459386640;
         weights << 0.2369268850561891, 0.4786286704993665, 0.5688888888888889, 0.4786286704993665, 0.2369268850561891;
+    } else {
+        // For more points, you can use a library or implement a method to compute the points and weights
+        std::cerr << "Gauss quadrature for " << numPoints << " points is not implemented." << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -36,7 +40,9 @@ std::pair<MatrixDouble, VecDouble> gaussQuadratureHexahedron(int numPointsPerAxi
     gaussQuadrature(numPointsPerAxis, gaussPoints1D, gaussWeights1D);
 
     MatrixDouble points(3, numPoints);
+    points.setZero();
     VecDouble weights(numPoints);
+    weights.setZero();
 
     int index = 0;
     for (int k = 0; k < numPointsPerAxis; ++k) {
@@ -74,21 +80,23 @@ void IntRuleHexahedron::SetOrder(int order) {
     if (order == 0) {
         nPoints = 1;
     }
-    // fPoints.resize(nPoints*nPoints*nPoints,3);
-    // fWeights.resize(nPoints);//is resized in GaulegQuad
-    auto vals= gaussQuadratureHexahedron(nPoints);
-    fPoints = vals.first.transpose();
-    fWeights = vals.second;
+    fPoints.resize(nPoints*nPoints*nPoints,3);
+    fWeights.resize(nPoints);//is resized in GaulegQuad
+    
+    
+    // auto vals= gaussQuadratureHexahedron(nPoints);
+    // fPoints = vals.first.transpose();
+    // fWeights = vals.second;
     // gaussQuadrature3D(nPoints, fPoints, fWeights);
 
-    // VecDouble coordAux(nPoints*nPoints*nPoints);
-    // gaulegHexa(-1,1,coordAux,fWeights);
+    VecDouble coordAux(nPoints*nPoints*nPoints);
+    gaulegHexa(-1,1,coordAux,fWeights);
 
-    // for (int i = 0; i < nPoints*nPoints*nPoints; i++){
-    //     fPoints(i,0) = coordAux[i];
-    //     fPoints(i,1) = coordAux[i+nPoints*nPoints*nPoints];
-    //     fPoints(i,2) = coordAux[i+2*nPoints*nPoints*nPoints];
-    // }
+    for (int i = 0; i < nPoints*nPoints*nPoints; i++){
+        fPoints(i,0) = coordAux[i];
+        fPoints(i,1) = coordAux[i+nPoints*nPoints*nPoints];
+        fPoints(i,2) = coordAux[i+2*nPoints*nPoints*nPoints];
+    }
     // std::cout << "fPoints" << fPoints << std::endl;
     // std::cout << "fWeights" << fWeights << std::endl;
 }

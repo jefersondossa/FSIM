@@ -604,8 +604,10 @@ void ElementT<compshape>::ComputeElContribution(MatrixDouble &jacobianNRMatrix, 
     int DIM = compshape::Dimension;
     fIntegData.fNeedsDSol = true;
     fIntegData.fDSolDx.resize(this->fWeakForm->NState(), DIM);
+    fIntegData.fDSolDx.setZero();
     fIntegData.fNeedsSol = true;
     fIntegData.fSol.resize(this->fWeakForm->NState());
+    fIntegData.fSol.setZero();
 
     if (this->fWeakForm->Type() == WeakFormType::kPositionalFrame2D){
         fIntegData.fDSolDAdim.resize(this->fWeakForm->NState(), DIM);

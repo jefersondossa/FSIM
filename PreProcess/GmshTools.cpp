@@ -328,6 +328,11 @@ int GetNumberofNodes(int & el_type){
             n_nodes = 16;  
         }
             break;
+        case 29:{
+            // Cubic Tetrahedron
+            n_nodes = 20;  
+        }
+            break;
         default:
         {
             std::cout << "Element not impelemented." << std::endl;
@@ -769,6 +774,23 @@ GeoElement* InsertElement(GeoMesh * gmesh, int & physical_identifier, int & el_t
             gel->PrintType() = 28;           
             break;
         }
+        case 11:
+        {   // Quadratic Tetrahedron
+            VecInt Topology2(10);
+            Topology2[0] = Topology[0];
+            Topology2[1] = Topology[3];
+            Topology2[2] = Topology[1];
+            Topology2[3] = Topology[2];
+            Topology2[4] = Topology[7];
+            Topology2[5] = Topology[9];
+            Topology2[6] = Topology[4];
+            Topology2[7] = Topology[6];
+            Topology2[8] = Topology[8];
+            Topology2[9] = Topology[5];
+            gel = new GeoElementT<ShapeTetrahedronQua>(el_identifier,Topology2,gmesh,physical_identifier);
+            gel->PrintType() = 24;
+            break;
+        }
         case 15:
         {   // Point
             gel = new GeoElementT<ShapePoint>(el_identifier,Topology,gmesh,physical_identifier);
@@ -785,6 +807,33 @@ GeoElement* InsertElement(GeoMesh * gmesh, int & physical_identifier, int & el_t
         {   // Cubic Line
             gel = new GeoElementT<ShapeOneDCub>(el_identifier,Topology,gmesh,physical_identifier);
             gel->PrintType() = 35;           
+            break;
+        }
+        case 29:
+        {   // Cubic Tetrahedron
+            VecInt Topology2(20);
+            Topology2[0] = Topology[0];
+            Topology2[1] = Topology[1];
+            Topology2[2] = Topology[2];
+            Topology2[3] = Topology[3];
+            Topology2[4] = Topology[12];
+            Topology2[5] = Topology[13];
+            Topology2[6] = Topology[14];
+            Topology2[7] = Topology[15];
+            Topology2[8] = Topology[10];
+            Topology2[9] = Topology[11];
+            Topology2[10] = Topology[8];
+            Topology2[11] = Topology[9];
+            Topology2[12] = Topology[6];
+            Topology2[13] = Topology[7];
+            Topology2[14] = Topology[4];
+            Topology2[15] = Topology[5];
+            Topology2[16] = Topology[19];
+            Topology2[17] = Topology[18];
+            Topology2[18] = Topology[17];
+            Topology2[19] = Topology[16];
+            gel = new GeoElementT<ShapeTetrahedronCub>(el_identifier,Topology2,gmesh,physical_identifier);
+            gel->PrintType() = 71;
             break;
         }
 

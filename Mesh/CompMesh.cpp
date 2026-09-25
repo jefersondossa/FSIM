@@ -722,6 +722,80 @@ void CompMesh::BuildElements(){
             }
             break;
         }
+        case 24:
+        {//Quadratic tetrahedron
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeTetrahedronQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeTetrahedronQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeTetrahedronQua>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+        case 71:
+        {//Cubic tetrahedron
+            if (plasticmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementWithMem<ShapeTetrahedronCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                default:
+                    break;
+                }
+            } else if (transientmaterial){
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementTransient<ShapeTetrahedronCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            } else {
+                switch (fApproxType){
+                case ApproxType::EIsoparametric:
+                    fElementVector[iel] = new ElementT<ShapeTetrahedronCub>(iel,fReference->ElementVec()[iel],this,Material(fReference->ElementVec()[iel]->Material()));
+                    break;
+                case ApproxType::EHierarquic:
+                    PanicButton(); //Hierarquic tetrahedron not implemented yet
+                
+                default:
+                    break;
+                }
+            }
+            break;
+        }
             
         case 12:
         {// Linear Hexahedron

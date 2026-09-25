@@ -15,8 +15,8 @@ int main() {
     //Create the mesh using the plane xy as the ground
 
     // RunBuildingRafaelTCC();
-    // RunBuildingMestrado();
-    RunChamine();
+    RunBuildingMestrado();
+    // RunChamine();
 
     std::cout << "Successfully run simmulation with OpenFOAM." << std::endl;
     return 0;

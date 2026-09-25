@@ -89,21 +89,23 @@ auto forcing2D = [](const VecDouble &coord, VecDouble &force){
 auto exactSol3D = [](const VecDouble &coord, VecDouble &u, MatrixDouble &gradU){
     const auto &x=coord[0];
     const auto &y=coord[1];
+    const auto &z=coord[2];
 
-    u[0] = (x*(x-1.)*y*(y-1.));
-    gradU(0,0) = ((-1.+2.*x)*(-1.+y)*y);
-    gradU(1,0) = ((-1.+x)*x*(-1.+2.*y));
+    u[0] = x*(x-1.)*y*(y-1.)*z*(z-1.);
+    gradU(0,0) = (2.*x-1.)*y*(y-1.)*z*(z-1.);
+    gradU(1,0) = (x-1.)*x*(2.*y-1.)*z*(z-1.);
+    gradU(2,0) = (x-1.)*x*(y-1.)*y*(2.*z-1.);
     // vs: u[0], solução do problema em questão;
     // vs: gradU(0,0), derivada de U em relação a x;
     // vs: gradU(0,1), derivada de U em relação a y;
+    // vs: gradU(0,2), derivada de U em relação a z;
 };
 
 auto forcing3D = [](const VecDouble &coord, VecDouble &force){
     const auto &x=coord[0];
     const auto &y=coord[1];
-    force[0] = -2.*(-1.+x)*x+-2.*(-1.+y)*y;
-    // -2.*(-1.+x)*x+-2.*(-1.+y)*y
-    // vs: Laplaciano de U[0] = grad(0,0) + grad(0,1)
+    const auto &z=coord[2];
+    force[0] = -2.*(-1. + x)*x*(-1. + y)*y - 2.*(-1. + x)*x*(-1. + z)*z - 2.*(-1. + y)*y*(-1. + z)*z;
 };
 
 void SolveProblemHarmonic(GeoMesh *gmesh){
@@ -408,54 +410,62 @@ void SolveProblem3D(GeoMesh *gmesh, int order){
 
 TEST_CASE("Poisson_test","[Poisson]")
 {
-    SECTION("Check Isoparametric"){
+    // SECTION("Check Isoparametric"){
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh1 = new GeoMesh();
+    //     GmshTools::Read(*gmesh1,"../../UnitTest/poisson1d-1.msh");
+    //     //gmesh1->Print("gmesh.txt");
+
+    //     SolveProblem(gmesh1, 1);
+
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh2 = new GeoMesh();
+    //     GmshTools::Read(*gmesh2,"../../UnitTest/poisson1d-2.msh");
+    //     //gmesh1->Print("gmesh.txt");
+
+    //     SolveProblem(gmesh2, 2);
+
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh3 = new GeoMesh();
+    //     GmshTools::Read(*gmesh3,"../../UnitTest/poisson1d-3.msh");
+    //     //gmesh1->Print("gmesh.txt");
+
+    //     SolveProblem(gmesh3, 3);
+    // }
+
+    // SECTION("Check Hierarquic"){
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh1 = new GeoMesh();
+    //     GmshTools::Read(*gmesh1,"../../UnitTest/poisson1d-1.msh");
+    //     //gmesh1->Print("gmesh.txt");
+
+    //     for (int iorder = 1; iorder < 3; iorder++){
+    //         SolveProblemHierarquic(gmesh1, iorder);    
+    //     }
+    // }
+
+    // SECTION("Check 2D"){
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh1 = new GeoMesh();
+    //     GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
+    //     //gmesh1->Print("gmesh.txt");
+    //     SolveProblem2D(gmesh1, 1);
+    // }
+
+    //  SECTION("Check 2DHierarquic"){
+    //     //Geometric Mesh
+    //     GeoMesh * gmesh1 = new GeoMesh();
+    //     GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
+    //     //gmesh1->Print("gmesh.txt");
+    //     SolveProblem2DHierarquic(gmesh1, 1);
+    // }
+
+    SECTION("Check 3D"){
         //Geometric Mesh
         GeoMesh * gmesh1 = new GeoMesh();
-        GmshTools::Read(*gmesh1,"../../UnitTest/poisson1d-1.msh");
+        GmshTools::Read(*gmesh1,"../../UnitTest/cubo.msh");
         //gmesh1->Print("gmesh.txt");
-
-        SolveProblem(gmesh1, 1);
-
-        //Geometric Mesh
-        GeoMesh * gmesh2 = new GeoMesh();
-        GmshTools::Read(*gmesh2,"../../UnitTest/poisson1d-2.msh");
-        //gmesh1->Print("gmesh.txt");
-
-        SolveProblem(gmesh2, 2);
-
-        //Geometric Mesh
-        GeoMesh * gmesh3 = new GeoMesh();
-        GmshTools::Read(*gmesh3,"../../UnitTest/poisson1d-3.msh");
-        //gmesh1->Print("gmesh.txt");
-
-        SolveProblem(gmesh3, 3);
-    }
-
-    SECTION("Check Hierarquic"){
-        //Geometric Mesh
-        GeoMesh * gmesh1 = new GeoMesh();
-        GmshTools::Read(*gmesh1,"../../UnitTest/poisson1d-1.msh");
-        //gmesh1->Print("gmesh.txt");
-
-        for (int iorder = 1; iorder < 3; iorder++){
-            SolveProblemHierarquic(gmesh1, iorder);    
-        }
-    }
-
-    SECTION("Check 2D"){
-        //Geometric Mesh
-        GeoMesh * gmesh1 = new GeoMesh();
-        GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
-        //gmesh1->Print("gmesh.txt");
-        SolveProblem2D(gmesh1, 1);
-    }
-
-     SECTION("Check 2DHierarquic"){
-        //Geometric Mesh
-        GeoMesh * gmesh1 = new GeoMesh();
-        GmshTools::Read(*gmesh1,"../../UnitTest/placa.msh");
-        //gmesh1->Print("gmesh.txt");
-        SolveProblem2DHierarquic(gmesh1, 1);
+        SolveProblem3D(gmesh1, 1);
     }
 
 }

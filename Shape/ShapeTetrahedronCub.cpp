@@ -321,83 +321,83 @@ void ShapeTetrahedronCub::ShapeHessian(VecDouble &xi, std::vector<MatrixDouble >
 }
 
 void ShapeTetrahedronCub::getCoordinates(MatrixDouble &coord) {
-
+    //node 0
     coord(0,0) = 0.0;
     coord(1,0) = 0.0;
     coord(2,0) = 0.0;
-
+    //node 1
     coord(0,1) = 1.0;
     coord(1,1) = 0.0;
     coord(2,1) = 0.0;
-
+    //node 2
     coord(0,2) = 0.0;
     coord(1,2) = 1.0;
     coord(2,2) = 0.0;
-
+    //node 3
     coord(0,3) = 0.0;
     coord(1,3) = 0.0;
     coord(2,3) = 1.0;
-
+    //node 4
     coord(0,4) = 1./3.;
     coord(1,4) = 0.0;
     coord(2,4) = 0.0;
-
+    //node 5
     coord(0,5) = 2./3.;
     coord(1,5) = 0.0;
     coord(2,5) = 0.0;
-
+    //node 6
     coord(0,6) = 0.0;
     coord(1,6) = 1./3.;
     coord(2,6) = 0.0;
-
+    //node 7
     coord(0,7) = 0.0;
     coord(1,7) = 2./3.;
     coord(2,7) = 0.0;
-
+    //node 8
     coord(0,8) = 0.0;
     coord(1,8) = 0.0;
     coord(2,8) = 1./3.;
-
+    //node 9
     coord(0,9) = 0.0;
     coord(1,9) = 0.0;
     coord(2,9) = 2./3.;
-
+    //node 10
     coord(0,10) = 2./3.;
     coord(1,10) = 1./3.;
     coord(2,10) = 0.0;
-
+    //node 11
     coord(0,11) = 1./3.;
     coord(1,11) = 2./3.;
     coord(2,11) = 0.0;
-
+    //node 12
     coord(0,12) = 0.0;
     coord(1,12) = 2./3.;
     coord(2,12) = 1./3.;
-
+    //node 13
     coord(0,13) = 0.0;
     coord(1,13) = 1./3.;
     coord(2,13) = 2./3.;
-
+    //node 14
     coord(0,14) = 2./3.;
     coord(1,14) = 0.0;
     coord(2,14) = 1./3.;
-
+    //node 15
     coord(0,15) = 1./3.;
     coord(1,15) = 0.0;
     coord(2,15) = 2./3.;
-
+    //node 16
     coord(0,16) = 1./3.;
     coord(1,16) = 1./3.;
     coord(2,16) = 0.0;
-
+    //node 17
     coord(0,17) = 1./3.;
     coord(1,17) = 0.0;
     coord(2,17) = 1./3.;
-
+    //node 18
     coord(0,18) = 0.0;
     coord(1,18) = 1./3.;
     coord(2,18) = 1./3.;
-
+    //node 19
     coord(0,19) = 1./3.;
     coord(1,19) = 1./3.;
     coord(2,19) = 1./3.;

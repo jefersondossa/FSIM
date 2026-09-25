@@ -85,10 +85,6 @@ set (FSArl_LIBRARIES FSArl ${FSArl_DEPENDENT_LIBRARIES})
 include_directories (${HDF5_INCLUDE_DIRS} ${HDF5_DEFINITIONS} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 include_directories(${MPI_INCLUDE_PATH})
 
-# Catch2
-include(cmake-modules/EnableCatch2.cmake)
-enable_catch2()
-
 # Eigen
 include(cmake-modules/EnableEigen.cmake)
 enable_eigen()
@@ -236,13 +232,9 @@ endif()
 #To enable unit test using Catch2 UnitTest framework
 option(BUILD_UNITTEST "Whether the Catch2 UnitTest will be linked in" OFF)
 if(BUILD_UNITTEST)
-  include(cmake-modules/add_unit_test.cmake)
-  include(cmake-modules/EnableCatch2.cmake)
-  enable_catch2()
-endif()
-
-
-if(BUILD_UNITTEST)
+	include(cmake-modules/add_unit_test.cmake)
+	include(cmake-modules/EnableCatch2.cmake)
+	enable_catch2()
     add_subdirectory(UnitTest)
     #Enabling tests
     ENABLE_TESTING()
